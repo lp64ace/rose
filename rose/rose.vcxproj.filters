@@ -1,0 +1,483 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{615d38e4-11a8-4916-a3ab-70f249dd7d75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\lib">
+      <UniqueIdentifier>{c92f6c9b-c889-43f4-9b86-73b27cb9eb22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ghost">
+      <UniqueIdentifier>{6c4f3837-9bc5-4ae0-a395-ec27135c41d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ghost\intern">
+      <UniqueIdentifier>{58096437-bdff-4722-bf3c-bf5f1c044286}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\utf">
+      <UniqueIdentifier>{54ff8a53-7cc3-4b9d-949a-ff99defe5431}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\utf\intern">
+      <UniqueIdentifier>{b892fad8-3ec7-46f7-b415-94736ec98aaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\gpu">
+      <UniqueIdentifier>{5e472993-c0eb-478a-b607-86c05215c968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\lib\intern">
+      <UniqueIdentifier>{ea7539a2-820a-4553-9a42-5b566b80e973}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\gpu\intern">
+      <UniqueIdentifier>{d785fd31-aebd-4fe1-a490-8bfd48e644cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\gpu\opengl">
+      <UniqueIdentifier>{37acfa0f-673d-4f94-a073-5f92311a885f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\lib\lib_utildefines.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_types.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_allocator.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_mem_utils.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_typed_buffer.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_vector.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_span.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_api.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_icontext.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_ievent.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_ievtconsumer.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_isystem.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_itimertask.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_iwindow.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\ghost_types.h">
+      <Filter>source\ghost</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_callbackconsumer.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_context.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_contextnone.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_contextwgl.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_event.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_eventmanager.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_system.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_systemwin32.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_timermanager.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_timertask.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_window.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_windowmanager.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ghost\intern\ghost_windowwin32.h">
+      <Filter>source\ghost\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\utf\utfconv.h">
+      <Filter>source\utf</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_compiler.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_string_util.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_alloc.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_vec.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_info.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_info_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_context.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_common.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_backend.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_backend.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_context.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_context_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_shader.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_shader_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_string.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_shader_create_info.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_string_ref.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_texture.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_shader_create_info_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_shader_dependency_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_shader.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_shader_interface.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_hash.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_vertex_format.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_shader_interface.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_bitmap.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_vertex_format_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_primitive.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_compute.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_compute.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_texture_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_texture.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_state_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_state.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_state.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_base.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_bits.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_vertex_buffer.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_vertex_buffer_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_vertex_buffer.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_index_buffer.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_index_buffer_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_index_buffer.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_uniform_buffer.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_uniform_buffer_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_uniform_buffer.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_batch.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_storage_buffer.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_storage_buffer_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_storage_buffer.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_batch_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_batch.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_vertex_array.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_immediate.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_immediate_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_matrix.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_base_safe.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_matrix.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_error.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu_framebuffer.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_framebuffer_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_framebuffer.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\intern\gpu_matrix_private.h">
+      <Filter>source\gpu\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_rotation.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_geom.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\gpu.h">
+      <Filter>source\gpu</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\ghost\intern\ghost_api.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_callbackconsumer.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_contextwgl.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_eventmanager.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_isystem.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_system.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_systemwin32.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_timermanager.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_window.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_windowmanager.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ghost\intern\ghost_windowwin32.cpp">
+      <Filter>source\ghost\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\utf\intern\utfconv.cpp">
+      <Filter>source\utf\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_string_util.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_alloc.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_info.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_context.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_backend.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_backend.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_context.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_string.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_shader_create_info.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_shader.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_shader_dependency.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_shader_interface.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_shader_interface.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_shader.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_vertex_format.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_compute.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_compute.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_texture.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_texture.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_state.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_vertex_buffer.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_vertex_buffer.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_index_buffer.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_index_buffer.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_uniform_buffer.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_uniform_buffer.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_storage_buffer.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_storage_buffer.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_batch.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_batch.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_vertex_array.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_immediate.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_math_matrix.c">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_error.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_framebuffer.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_framebuffer.cpp">
+      <Filter>source\gpu\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_state.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\intern\gpu_matrix.cpp">
+      <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_math_rotation.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_math_vector_inline.cc">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_math_vector.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
