@@ -34,6 +34,12 @@
     <Filter Include="source\gpu\infos">
       <UniqueIdentifier>{f4da41f7-8734-4e98-a056-701265b57bf7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\kernel">
+      <UniqueIdentifier>{099d9c42-a455-42f9-82ec-8b8480f71e8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\kernel\intern">
+      <UniqueIdentifier>{f5e5a488-030f-4aec-a006-d6cf444bdcf9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\lib\lib_utildefines.h">
@@ -333,6 +339,9 @@
     <ClInclude Include="source\gpu\infos\gpu_shader_create_info_list.h">
       <Filter>source\gpu\infos</Filter>
     </ClInclude>
+    <ClInclude Include="source\kernel\ker_files.h">
+      <Filter>source\kernel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ghost\intern\ghost_api.cpp">
@@ -502,6 +511,9 @@
     </ClCompile>
     <ClCompile Include="source\gpu\intern\gpu_init_exit.cc">
       <Filter>source\gpu\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\kernel\intern\ker_files.cpp">
+      <Filter>source\kernel\intern</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -11,6 +11,9 @@
 #include <string>
 
 class String {
+public:
+	static constexpr size_t npos = -1;
+private:
 	wchar_t *mBuffer;
 	size_t mAllocated;
 	size_t mSize;
@@ -25,6 +28,21 @@ public:
 	String ( const wchar_t *string , size_t len );
 	String ( std::initializer_list<String> list );
 	~String ( );
+
+	bool StartsWith ( const char suffix ) const;
+	bool StartsWith ( const wchar_t suffix ) const;
+	bool StartsWith ( const char *suffix ) const;
+	bool StartsWith ( const wchar_t *suffix ) const;
+	bool StartsWith ( const String &suffix ) const;
+
+	bool EndsWith ( const char suffix ) const;
+	bool EndsWith ( const wchar_t suffix ) const;
+	bool EndsWith ( const char *suffix ) const;
+	bool EndsWith ( const wchar_t *suffix ) const;
+	bool EndsWith ( const String& suffix ) const;
+
+	size_t Find ( const char c ) const;
+	size_t Find ( const wchar_t c ) const;
 
 	void Reserve ( size_t length );
 	void Resize ( size_t length );
@@ -42,6 +60,9 @@ public:
 	void Append ( const wchar_t c );
 
 	void Append ( const String &string );
+
+	const wchar_t &Back ( ) const;
+	wchar_t &Back ( );
 
 	String SubStr ( size_t offset , size_t length = -1 ) const;
 

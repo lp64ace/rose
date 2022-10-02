@@ -1,10 +1,11 @@
 #pragma once
 
 #include "lib_span.h"
-#include "lib_string.h"
 
+#include <sstream>
 #include <limits>
 #include <cassert>
+#include <string>
 
 class StringRef;
 
@@ -179,10 +180,7 @@ constexpr const char &StringRefBase::Back ( ) const { return this->mData [ this-
 
 constexpr size_t index_or_npos_to_size_t ( size_t index ) {
 	/* The compiler will probably optimize this check away. */
-	if ( index == std::string_view::npos ) {
-		return StringRef::npos;
-	}
-	return static_cast< int64_t >( index );
+	return ( index == std::string_view::npos ) ? StringRef::npos : index;
 }
 
 constexpr size_t StringRefBase::Find ( char c , size_t pos ) const {

@@ -1,6 +1,8 @@
 #include "ghost/ghost_api.h"
 #include "gpu/gpu.h"
 
+#include <stdlib.h>
+
 int main ( void ) {
 	GHOST_SystemHandle instance = ghostCreateSystem ( );
 

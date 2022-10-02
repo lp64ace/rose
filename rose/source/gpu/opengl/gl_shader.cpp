@@ -787,35 +787,6 @@ unsigned int GLShader::CreateShaderStage ( unsigned int gl_stage , MutableSpan<c
 	/* Patch the shader code using the first source slot. */
 	sources [ 0 ] = GetPatch ( gl_stage );
 
-	char filename [ 256 ];
-
-	switch ( gl_stage ) {
-		case GL_VERTEX_SHADER:
-		sprintf_s ( filename , 256 , "%s_%s.glsl" , this->GetName ( ) , "vert" );
-		break;
-		case GL_GEOMETRY_SHADER:
-		sprintf_s ( filename , 256 , "%s_%s.glsl" , this->GetName ( ) , "geom" );
-		break;
-		case GL_FRAGMENT_SHADER:
-		sprintf_s ( filename , 256 , "%s_%s.glsl" , this->GetName ( ) , "frag" );
-		break;
-		case GL_COMPUTE_SHADER:
-		sprintf_s ( filename , 256 , "%s_%s.glsl" , this->GetName ( ) , "comp" );
-		break;
-		default:
-		sprintf_s ( filename , 256 , "%s_%s.glsl" , this->GetName ( ) , "unknown" );
-		break;
-	}
-
-	FILE *out = stdout;// fopen_s ( &out , filename , "w" );
-	fprintf ( out , "// Name : %s\n" , filename );
-
-	for ( int i = 0; i < sources.Size ( ); i++ ) {
-		fprintf ( out , "%s\n" , sources [ i ] );
-	}
-
-	if ( out != stdout && out ) fclose ( out );
-
 	glShaderSource ( shader , sources.Size ( ) , sources.Data ( ) , nullptr );
 	glCompileShader ( shader );
 

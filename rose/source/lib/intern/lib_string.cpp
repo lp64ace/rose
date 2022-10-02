@@ -52,6 +52,122 @@ String::~String ( ) {
 	MEM_SAFE_FREE ( this->mBuffer );
 }
 
+const wchar_t &String::Back ( ) const { return this->mBuffer [ this->mSize - 1 ]; }
+wchar_t &String::Back ( ) { return this->mBuffer [ this->mSize - 1 ]; }
+
+bool String::StartsWith ( const char prefix ) const {
+	return this->mBuffer [ 0 ] == ( wchar_t ) prefix;
+}
+
+bool String::StartsWith ( const wchar_t prefix ) const {
+	return this->mBuffer [ 0 ] == prefix;
+}
+
+bool String::StartsWith ( const char *prefix ) const {
+	size_t prefix_size = strlen ( prefix );
+	if ( this->mSize < prefix_size ) {
+		return false;
+	}
+	for ( int64_t i = 0; i < prefix_size; i++ ) {
+		if ( this->mBuffer [ i ] != prefix [ i ] ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool String::StartsWith ( const wchar_t *prefix ) const {
+	size_t prefix_size = wcslen ( prefix );
+	if ( this->mSize < prefix_size ) {
+		return false;
+	}
+	for ( int64_t i = 0; i < prefix_size; i++ ) {
+		if ( this->mBuffer [ i ] != prefix [ i ] ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool String::StartsWith ( const String& prefix ) const {
+	if ( this->mSize < prefix.mSize ) {
+		return false;
+	}
+	for ( int64_t i = 0; i < prefix.mSize; i++ ) {
+		if ( this->mBuffer [ i ] != prefix.mBuffer [ i ] ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool String::EndsWith ( const char c ) const {
+	return this->Back ( ) == ( wchar_t ) c;
+}
+
+bool String::EndsWith ( const wchar_t c ) const {
+	return this->Back ( ) == c;
+}
+
+bool String::EndsWith ( const char *suffix ) const {
+	size_t suffx_size = strlen ( suffix );
+	if ( this->mSize < suffx_size ) {
+		return false;
+	}
+	const int64_t offset = this->mSize - suffx_size;
+	for ( int64_t i = 0; i < suffx_size; i++ ) {
+		if ( this->mBuffer [ offset + i ] != ( wchar_t ) suffix [ i ] ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool String::EndsWith ( const wchar_t *suffix ) const {
+	size_t suffx_size = wcslen ( suffix );
+	if ( this->mSize < suffx_size ) {
+		return false;
+	}
+	const int64_t offset = this->mSize - suffx_size;
+	for ( int64_t i = 0; i < suffx_size; i++ ) {
+		if ( this->mBuffer [ offset + i ] != suffix [ i ] ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool String::EndsWith ( const String &suffix ) const {
+	if ( this->mSize < suffix.mSize ) {
+		return false;
+	}
+	const int64_t offset = this->mSize - suffix.mSize;
+	for ( int64_t i = 0; i < suffix.mSize; i++ ) {
+		if ( this->mBuffer [ offset + i ] != suffix.mBuffer [ i ] ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+size_t String::Find ( const char c ) const {
+	for ( size_t i = 0; i < this->mSize; i++ ) {
+		if ( wchar_t ( c ) == this->mBuffer [ i ] ) {
+			return i;
+		}
+	}
+	return String::npos;
+}
+
+size_t String::Find ( const wchar_t c ) const {
+	for ( size_t i = 0; i < this->mSize; i++ ) {
+		if ( c == this->mBuffer [ i ] ) {
+			return i;
+		}
+	}
+	return String::npos;
+}
+
 void String::Append ( const char *string ) {
 	Append ( string , -1 );
 }

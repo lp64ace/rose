@@ -6,6 +6,8 @@
 
 #include "lib/lib_string_ref.h"
 
+#include "kernel/ker_files.h"
+
 #include "gpu_shader_create_info.h"
 #include "gpu_shader_dependency_private.h"
 
@@ -428,66 +430,39 @@ int gpu_shader_dependency_get_builtin_bits ( const StringRefNull shader_source_n
 	return source->BuiltinsGet ( );
 }
 
-std::string to_filename ( const StringRefNull path , const StringRefNull file ) {
-	if ( path.EndsWith ( "\\" ) ) {
-		return  path + file;
-	} else if ( path.EndsWith ( "/" ) ) {
-		return  path + file;
-	} else if ( path.Find ( "\\" ) != StringRefBase::npos ) {
-		return path + "\\" + file;
-	} else if ( path.Find ( "/" ) != StringRefBase::npos ) {
-		return path + "/" + file;
+GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull path , const StringRefNull file ) {
+	char *source = ( char * ) KER_import_file_c ( path.CStr ( ) , file.CStr ( ) );
+	if ( source ) {
+		// TODO : free source when no longer needed.
+		return ( *g_sources ) [ file ] = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , source , g_functions );
 	}
-	return path + "/" + file;
+	return nullptr;
 }
 
-bool gpu_file_exists ( const StringRefNull path , const StringRefNull file ) {
-	FILE *in; fopen_s ( &in , to_filename ( path , file ).c_str ( ) , "r" );
-	if ( in ) {
-		fclose ( in );
-		return true;
-	}
-	return false;
-}
-
-void gpu_shader_dependency_import_source ( const StringRefNull path , const StringRefNull file ) {
-	FILE *in; fopen_s ( &in , to_filename ( path , file ).c_str ( ) , "r" );
-	if ( in ) {
-		size_t alloc = 16 , length = 0;
-		char *code = ( char * ) MEM_mallocN ( alloc , file.CStr ( ) );
-
-		while ( fscanf_s ( in , "%c" , &code [ length++ ] ) != EOF ) {
-			while ( alloc <= length + 8 ) {
-				code = ( char * ) MEM_reallocN ( code , ( alloc += 64 ) );
-			}
-		}
-
-		code [ --length ] = 0;
-		( *g_sources ) [ file ] = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , code , g_functions );
-		fclose ( in );
-	}
-}
-
-void gpu_shader_dependency_try_to_locate_source ( const StringRefNull shader_source_name ) {
+GPU_Source *gpu_shader_dependency_try_to_locate_source ( const StringRefNull shader_source_name ) {
 	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
 	if ( itr == g_sources->end ( ) ) {
-		if ( gpu_file_exists ( "shaders" , shader_source_name ) ) {
-			gpu_shader_dependency_import_source ( "shaders" , shader_source_name );
-		} else if ( gpu_file_exists ( "../../shaders" , shader_source_name ) ) {
-			gpu_shader_dependency_import_source ( "../../shaders" , shader_source_name );
+		for ( int i = 0; i < KER_get_num_common_paths_to_files ( KER_FILES_SHADERS ); i++ ) {
+			const char *path = KER_get_common_path_to_files ( KER_FILES_SHADERS , i );
+			if ( KER_file_exists ( path , shader_source_name.CStr ( ) ) ) {
+				GPU_Source *source = gpu_shader_dependency_import_source ( path , shader_source_name );
+				if ( source ) {
+					return source;
+				}
+			}
 		}
+		return nullptr;
 	}
+	return itr->second;
 }
 
 Vector<const char *> gpu_shader_dependency_get_resolved_source ( const StringRefNull shader_source_name ) {
 	Vector<const char *> result;
-	gpu_shader_dependency_try_to_locate_source ( shader_source_name );
-	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
-	if ( itr == g_sources->end ( ) ) {
+	GPU_Source *src = gpu_shader_dependency_try_to_locate_source ( shader_source_name );
+	if ( !src ) {
 		std::cout << "Error source not found : " << shader_source_name << std::endl;
 		assert ( 0 );
 	}
-	GPU_Source *src = itr->second;
 	src->Build ( result );
 	return result;
 }
