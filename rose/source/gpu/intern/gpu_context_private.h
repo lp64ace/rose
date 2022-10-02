@@ -4,6 +4,7 @@
 
 #include "gpu_shader_private.h"
 #include "gpu_state_private.h"
+#include "gpu_immediate_private.h"
 
 struct GPU_MatrixState;
 
@@ -18,6 +19,7 @@ public:
 	StateManager *StateManager = nullptr;
 	FrameBuffer *ActiveFb = nullptr;
 	Shader *Shader = nullptr;
+	Immediate *Imm = nullptr;
 
 	/**
 	* All 4 window frame-buffers.

@@ -82,6 +82,7 @@
     <ClInclude Include="source\gpu\opengl\gl_compute.h" />
     <ClInclude Include="source\gpu\opengl\gl_context.h" />
     <ClInclude Include="source\gpu\opengl\gl_framebuffer.h" />
+    <ClInclude Include="source\gpu\opengl\gl_immediate.h" />
     <ClInclude Include="source\gpu\opengl\gl_index_buffer.h" />
     <ClInclude Include="source\gpu\opengl\gl_shader.h" />
     <ClInclude Include="source\gpu\opengl\gl_shader_interface.h" />
@@ -96,6 +97,7 @@
     <ClInclude Include="source\lib\lib_bitmap.h" />
     <ClInclude Include="source\lib\lib_error.h" />
     <ClInclude Include="source\lib\lib_hash.h" />
+    <ClInclude Include="source\lib\lib_math.h" />
     <ClInclude Include="source\lib\lib_math_base_safe.h" />
     <ClInclude Include="source\lib\lib_math_bits.h" />
     <ClInclude Include="source\lib\lib_math_geom.h" />
@@ -151,6 +153,7 @@
     <ClCompile Include="source\gpu\opengl\gl_compute.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_context.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_framebuffer.cpp" />
+    <ClCompile Include="source\gpu\opengl\gl_immediate.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_index_buffer.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_shader.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_shader_interface.cpp" />

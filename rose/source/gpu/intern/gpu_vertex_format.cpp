@@ -211,7 +211,7 @@ void GPU_vertformat_deinterleave ( GPU_VertFormat *format ) {
 	format->Deinterleaved = true;
 }
 
-unsigned int padding ( unsigned int offset , unsigned int alignment ) {
+unsigned int _padding ( unsigned int offset , unsigned int alignment ) {
 	const unsigned int mod = offset % alignment;
 	return ( mod == 0 ) ? 0 : ( alignment - mod );
 }
@@ -223,13 +223,13 @@ static void gpu_vertex_format_pack_impl ( GPU_VertFormat *format , unsigned int 
 
 	for ( unsigned int a_idx = 1; a_idx < format->AttrLen; a_idx++ ) {
 		GPU_VertAttr *a = &format->Attrs [ a_idx ];
-		unsigned int mid_padding = padding ( offset , attr_align ( a , minimum_stride ) );
+		unsigned int mid_padding = _padding ( offset , attr_align ( a , minimum_stride ) );
 		offset += mid_padding;
 		a->Offset = offset;
 		offset += a->Size;
 	}
 
-	unsigned int end_padding = padding ( offset , attr_align ( a0 , minimum_stride ) );
+	unsigned int end_padding = _padding ( offset , attr_align ( a0 , minimum_stride ) );
 
 	format->Stride = offset + end_padding;
 	format->Packed = true;

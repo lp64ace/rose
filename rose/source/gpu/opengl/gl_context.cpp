@@ -1,6 +1,7 @@
 #include "gl_context.h"
 #include "gl_backend.h"
 #include "gl_batch.h"
+#include "gl_immediate.h"
 
 #include "ghost/ghost_api.h"
 
@@ -15,9 +16,10 @@ GLContext::GLContext ( void *ghost_window , GLSharedOrphanLists &shared_orphan_l
 	glBindBuffer ( GL_ARRAY_BUFFER , this->mDefaultAttrVbo );
 	glBufferData ( GL_ARRAY_BUFFER , sizeof ( data ) , data , GL_STATIC_DRAW );
 	glBindBuffer ( GL_ARRAY_BUFFER , 0 );
-	
+
 	this->mGhostWindow = ghost_window;
 	if ( this->mGhostWindow ) {
+		ghostActivateWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow );
 		GHOST_Rect rect = gostGetWindowClientBounds ( ( GHOST_WindowHandle ) this->mGhostWindow );
 		int w = rect.right - rect.left;
 		int h = rect.bottom - rect.top;
@@ -45,6 +47,7 @@ GLContext::GLContext ( void *ghost_window , GLSharedOrphanLists &shared_orphan_l
 		this->BackLeft = new GLFrameBuffer ( "back_left" , this , GL_NONE , 0 , 0 , 0 );
 	}
 	this->StateManager = new GLStateManager ( );
+	this->Imm = new GLImmediate ( );
 
 	this->ActiveFb = this->BackLeft;
 	static_cast< GLStateManager * >( StateManager )->ActiveFb = static_cast< GLFrameBuffer * >( this->ActiveFb );
@@ -60,6 +63,8 @@ GLContext::~GLContext ( ) {
 
 void GLContext::Activate ( ) {
 	if ( this->mGhostWindow ) {
+		ghostActivateWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow );
+
 		GHOST_Rect rect = gostGetWindowClientBounds ( ( GHOST_WindowHandle ) this->mGhostWindow );
 		int w = rect.right - rect.left;
 		int h = rect.bottom - rect.top;
@@ -82,10 +87,15 @@ void GLContext::Activate ( ) {
 			this->BackRight->SetSize ( w , h );
 		}
 	}
+
+	immActivate ( );
 }
 
 void GLContext::Deactivate ( ) {
-	if ( ghostReleaseWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow ) ) {
+	immDeactivate ( );
+
+	if ( this->mGhostWindow ) {
+		ghostReleaseWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow );
 	}
 }
 

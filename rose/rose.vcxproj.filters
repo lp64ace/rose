@@ -318,6 +318,12 @@
     <ClInclude Include="source\gpu\gpu.h">
       <Filter>source\gpu</Filter>
     </ClInclude>
+    <ClInclude Include="source\lib\lib_math.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gpu\opengl\gl_immediate.h">
+      <Filter>source\gpu\opengl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ghost\intern\ghost_api.cpp">
@@ -478,6 +484,9 @@
     </ClCompile>
     <ClCompile Include="source\lib\intern\lib_math_vector.cpp">
       <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gpu\opengl\gl_immediate.cpp">
+      <Filter>source\gpu\opengl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

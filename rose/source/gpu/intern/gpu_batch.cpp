@@ -25,6 +25,12 @@ GPU_Batch *GPU_batch_calloc ( ) {
 	return batch;
 }
 
+GPU_Batch *GPU_batch_create_ex ( int prim_type , GPU_VertBuf *verts , GPU_IndexBuf *elem , unsigned int owns_flag ) {
+        GPU_Batch *batch = GPU_batch_calloc ( );
+        GPU_batch_init_ex ( batch , prim_type , verts , elem , owns_flag );
+        return batch;
+}
+
 void GPU_batch_init_ex ( GPU_Batch *batch ,
                          int prim_type ,
                          GPU_VertBuf *verts ,

@@ -31,6 +31,7 @@ Context::~Context ( ) {
 	delete this->BackLeft;
 	delete this->FrontRight;
 	delete this->BackRight;
+	delete this->Imm;
 }
 
 Context *Context::Get ( ) {

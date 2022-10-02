@@ -17,7 +17,7 @@ public:
 	// Length of the buffer in vertices.
 	unsigned int mVertexLen = 0;
 	// Which attributes of current vertex have not been given values?
-	uint16_t mUassignedAttrBits = 0;
+	uint16_t mUnassignedAttrBits = 0;
 	// Attributes that needs to be set. One bit per attribute.
 	uint16_t mEnabledAttrBits = 0;
 
@@ -45,3 +45,5 @@ public:
 
 void immActivate ( );
 void immDeactivate ( );
+
+GPU_Shader *immGetShader ( );

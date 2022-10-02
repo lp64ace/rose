@@ -7,3 +7,5 @@ struct GPU_VertFormat;
 void gpu_vertex_format_pack ( struct GPU_VertFormat *format );
 void gpu_vertex_format_texture_buffer_pack ( struct GPU_VertFormat *format );
 unsigned int vertex_buffer_size ( const struct GPU_VertFormat *format , unsigned int vertex_len );
+
+unsigned int _padding ( unsigned int offset , unsigned int alignment );
