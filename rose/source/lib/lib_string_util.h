@@ -45,3 +45,23 @@ char *LIB_strdupcat ( const char *__restrict str1 , const char *__restrict str2 
  * \retval Returns dst
  */
 char *LIB_strncpy ( char *__restrict dst , const char *__restrict src , size_t maxncpy ) ATTR_NONNULL ( );
+
+/**
+ * Like strncpy but ensures dst is always
+ * '\0' terminated.
+ *
+ * \note This is a duplicate of #BLI_strncpy that returns bytes copied.
+ * And is a drop in replacement for 'snprintf(str, sizeof(str), "%s", arg);'
+ *
+ * \param dst: Destination for copy
+ * \param src: Source string to copy
+ * \param maxncpy: Maximum number of characters to copy (generally
+ * the size of dst)
+ * \retval The number of bytes copied (The only difference from BLI_strncpy).
+ */
+size_t BLI_strcpy_rlen ( char *__restrict dst , const char *__restrict src ) ATTR_WARN_UNUSED_RESULT ATTR_NONNULL ( );
+
+/**
+ * Join an array of strings into a newly allocated, null terminated string.
+ */
+char *LIB_string_join_arrayN ( const char *strings [ ] , unsigned int strings_len ) ATTR_WARN_UNUSED_RESULT ATTR_NONNULL ( );

@@ -8,6 +8,10 @@
 #include "gpu_shader_create_info.h"
 #include "gpu_shader_interface.h"
 
+#include <sstream>
+#include <string>
+#include <cmath>
+
 namespace rose {
 namespace gpu {
 

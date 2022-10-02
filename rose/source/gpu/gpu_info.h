@@ -2,6 +2,10 @@
 
 #include "gpu_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define GPU_INFO_MAX_TEXTURES				0x0000
 #define GPU_INFO_MAX_TEXTURE_LAYERS			0x0001
 #define GPU_INFO_MAX_VERT_TEXTURES			0x0002
@@ -45,9 +49,9 @@
 
 #define GPU_INFO_LEN					0x0025
 
-int GPU_get_info_i ( unsigned int info );
+	int GPU_get_info_i ( unsigned int info );
 
-float GPU_get_info_f ( unsigned int info );
+	float GPU_get_info_f ( unsigned int info );
 
 #define GPU_BACKEND_NONE				0x00000000
 #define GPU_BACKEND_OPENGL				0x00000001
@@ -76,13 +80,17 @@ float GPU_get_info_f ( unsigned int info );
 #define GPU_SUPPORT_LEVEL_LIMITED			0x00000002
 #define GPU_SUPPORT_LEVEL_UNSUPPORTED			0x00000003
 
-bool GPU_type_matches ( int device , int os , int driver );
-bool GPU_type_matches_ex ( int device , int os , int driver , int backend );
+	bool GPU_type_matches ( int device , int os , int driver );
+	bool GPU_type_matches_ex ( int device , int os , int driver , int backend );
 
-int GPU_platform_support_level ( void );
+	int GPU_platform_support_level ( void );
 
-const char *GPU_platform_vendor ( void );
-const char *GPU_platform_renderer ( void );
-const char *GPU_platform_version ( void );
-const char *GPU_platform_support_level_key ( void );
-const char *GPU_platform_gpu_name ( void );
+	const char *GPU_platform_vendor ( void );
+	const char *GPU_platform_renderer ( void );
+	const char *GPU_platform_version ( void );
+	const char *GPU_platform_support_level_key ( void );
+	const char *GPU_platform_gpu_name ( void );
+
+#ifdef __cplusplus
+}
+#endif

@@ -123,7 +123,6 @@ GPU_Batch *immBeginBatchAtMost ( int prim , unsigned int vlen ) {
 
 void immEnd ( ) {
 	LIB_assert ( imm->mPrimType != GPU_PRIM_NONE ); // Make sure we're between a Begin/End pair.
-	LIB_assert ( imm->mVertexData || imm->mBatch );
 
 	if ( imm->mStrictVertexLen ) {
 		LIB_assert ( imm->mVertexIdx == imm->mVertexLen ); // With all vertices defined.

@@ -10,8 +10,8 @@ struct MemHead {
 	size_t Size;
 };
 
-#define MEMHEAD_FROM_PTR(ptr)		(((MemHead *)ptr)-1)
-#define PTR_FROM_MEMHEAD(memhead)	(((MemHead *)memhead)+1)
+#define MEMHEAD_FROM_PTR(ptr)		((ptr)?(((MemHead *)ptr)-1):((MemHead *)ptr))
+#define PTR_FROM_MEMHEAD(memhead)	((memhead)?(((MemHead *)memhead)+1):(memhead))
 
 void *MEM_mallocN ( size_t length , const char *name ) {
 	MemHead *head = ( MemHead * ) malloc ( sizeof ( MemHead ) + length );

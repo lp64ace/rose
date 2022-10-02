@@ -50,6 +50,26 @@
   _VA_NARGS_GLUE(_VA_NARGS_OVERLOAD_MACRO(name, VA_NARGS_COUNT(__VA_ARGS__)), (__VA_ARGS__))
 
 /* -------------------------------------------------------------------- */
+/** \name String Macros
+ * \{ */
+
+ /* Macro to convert a value to string in the preprocessor:
+  * - `STRINGIFY_ARG`: gives the argument as a string
+  * - `STRINGIFY_APPEND`: appends any argument 'b' onto the string argument 'a',
+  *   used by `STRINGIFY` because some preprocessors warn about zero arguments.
+  * - `STRINGIFY`: gives the argument's value as a string. */
+
+#define STRINGIFY_ARG(x) "" #x
+#define STRINGIFY_APPEND(a, b) "" a #b
+#define STRINGIFY(x) STRINGIFY_APPEND("", x)
+
+  /* generic strcmp macros */
+#if defined(_MSC_VER)
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
+#endif
+
+/* -------------------------------------------------------------------- */
 /** \name Equal to Any Element (ELEM) Macro
  * \{ */
 

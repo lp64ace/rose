@@ -39,3 +39,24 @@ char *LIB_strncpy ( char *__restrict dst , const char *__restrict src , const si
 	dst [ srclen ] = '\0';
 	return dst;
 }
+
+size_t BLI_strcpy_rlen ( char *__restrict dst , const char *__restrict src ) {
+	size_t srclen = strlen ( src );
+	memcpy ( dst , src , srclen + 1 );
+	return srclen;
+}
+
+char *LIB_string_join_arrayN ( const char *strings [ ] , unsigned int strings_len ) ATTR_WARN_UNUSED_RESULT ATTR_NONNULL ( ) {
+	unsigned int total_len = 1;
+	for ( unsigned int i = 0; i < strings_len; i++ ) {
+		total_len += strlen ( strings [ i ] );
+	}
+	char *result = ( char * ) MEM_mallocN ( sizeof ( char ) * total_len , __func__ );
+	char *c = result;
+	for ( unsigned int i = 0; i < strings_len; i++ ) {
+		c += BLI_strcpy_rlen ( c , strings [ i ] );
+	}
+	/* Only needed when `strings_len == 0`. */
+	*c = '\0';
+	return result;
+}

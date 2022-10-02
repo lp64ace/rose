@@ -2,7 +2,9 @@
 
 #include "ghost_types.h"
 
+#include <sstream>
 #include <string>
+#include <cmath>
 
 class GHOST_IntWindow {
 public:

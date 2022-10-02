@@ -16,3 +16,4 @@
 #include "gpu_matrix.h"
 #include "gpu_info.h"
 #include "gpu_state.h"
+#include "gpu_init_exit.h"

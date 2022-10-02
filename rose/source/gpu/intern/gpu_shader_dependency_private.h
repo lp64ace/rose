@@ -3,10 +3,6 @@
 #include "lib/lib_vector.h"
 #include "lib/lib_string_ref.h"
 
-
-namespace rose {
-namespace gpu {
-
 void gpu_shader_dependency_init ( void );
 void gpu_shader_dependency_exit ( void );
 
@@ -16,6 +12,3 @@ Vector<const char *> gpu_shader_dependency_get_resolved_source ( const StringRef
 StringRefNull gpu_shader_dependency_get_source ( const StringRefNull source_name );
 
 StringRefNull gpu_shader_dependency_get_filename_from_source_string ( const StringRefNull source_string );
-
-}
-}

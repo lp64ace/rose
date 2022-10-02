@@ -149,7 +149,7 @@ inline const char *ShaderInterface::BuiltinUniformName ( int u ) {
 		case GPU_UNIFORM_RESOURCE_ID: return "drw_ResourceID";
 		case GPU_UNIFORM_SRGB_TRANSFORM: return "srgbTarget";
 
-		default: return nullptr;
+		default: return "";
 	}
 }
 
@@ -161,7 +161,7 @@ inline const char *ShaderInterface::BuiltinUniformBlockName ( int u ) {
 
 		case GPU_UNIFORM_BLOCK_DRW_VIEW: return "drw_view";
 		case GPU_UNIFORM_BLOCK_DRW_MODEL: return "drw_matrices";
-		default: return nullptr;
+		default: return "";
 	}
 }
 
@@ -169,8 +169,7 @@ inline const char *ShaderInterface::BuiltinStorageBlockName ( int u ) {
 	switch ( u ) {
 		case GPU_STORAGE_BUFFER_DEBUG_VERTS: return "drw_debug_verts_buf";
 		case GPU_STORAGE_BUFFER_DEBUG_PRINT: return "drw_debug_print_buf";
-		default:
-		return nullptr;
+		default: return "";
 	}
 }
 

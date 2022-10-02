@@ -10,7 +10,7 @@ namespace rose {
 namespace gpu {
 
 using CreateInfoDictionnary = std::map<StringRef , ShaderCreateInfo *>;
-using InterfaceDictionnary = std::map<StringRef , ShaderCreateInfo *>;
+using InterfaceDictionnary = std::map<StringRef , StageInterfaceInfo *>;
 
 static CreateInfoDictionnary *g_create_infos = nullptr;
 static InterfaceDictionnary *g_interfaces = nullptr;
@@ -232,9 +232,30 @@ void ShaderCreateInfo::ValidateVertexAttributes ( const ShaderCreateInfo *other_
 	}
 }
 
+}
+}
+
+using namespace rose;
+using namespace rose::gpu;
+
 void gpu_shader_create_info_init ( ) {
 	g_create_infos = new CreateInfoDictionnary ( );
 	g_interfaces = new InterfaceDictionnary ( );
+
+#define GPU_SHADER_INTERFACE_INFO(_interface, _inst_name) \
+	auto *ptr_##_interface = new StageInterfaceInfo(#_interface, _inst_name); \
+	auto &_interface = *ptr_##_interface; \
+	(*g_interfaces)[#_interface] = ptr_##_interface; \
+	_interface
+
+#define GPU_SHADER_CREATE_INFO(_info) \
+	auto *ptr_##_info = new ShaderCreateInfo(#_info); \
+	auto &_info = *ptr_##_info; \
+	(*g_create_infos)[#_info] = ptr_##_info; \
+	_info
+
+#include "gpu/infos/gpu_shader_create_info_list.h"
+
 }
 
 void gpu_shader_create_info_exit ( ) {
@@ -289,7 +310,4 @@ const GPU_ShaderCreateInfo *gpu_shader_create_info_get ( const char *info_name )
 	}
 	ShaderCreateInfo *info = itr->second;
 	return reinterpret_cast< const GPU_ShaderCreateInfo * >( info );
-}
-
-}
 }

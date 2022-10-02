@@ -359,13 +359,13 @@ static void print_resource ( std::ostream &os , const ShaderCreateInfo::Resource
 		}break;
 		case ShaderCreateInfo::Resource::BindType::UNIFORM_BUFFER: {
 			array_offset = res.UniformBuf.Name.FindFirstOf ( "[" );
-			name_no_array = ( array_offset == -1 ) ? res.UniformBuf.Name :
+			name_no_array = ( array_offset == StringRefBase::npos ) ? res.UniformBuf.Name :
 				StringRef ( res.UniformBuf.Name.CStr ( ) , array_offset );
 			os << "uniform " << name_no_array << " { " << res.UniformBuf.TypeName << " _" << res.UniformBuf.Name << "; };\n";
 		}break;
 		case ShaderCreateInfo::Resource::BindType::STORAGE_BUFFER: {
 			array_offset = res.StorageBuf.Name.FindFirstOf ( "[" );
-			name_no_array = ( array_offset == -1 ) ? res.StorageBuf.Name :
+			name_no_array = ( array_offset == StringRefBase::npos ) ? res.StorageBuf.Name :
 				StringRef ( res.StorageBuf.Name.CStr ( ) , array_offset );
 			print_qualifier ( os , res.StorageBuf.Qualifiers );
 			os << "buffer ";
@@ -382,13 +382,13 @@ static void print_resource_alias ( std::ostream &os , const ShaderCreateInfo::Re
 	switch ( res.BindMethod ) {
 		case ShaderCreateInfo::Resource::BindType::UNIFORM_BUFFER: {
 			array_offset = res.UniformBuf.Name.FindFirstOf ( "[" );
-			name_no_array = ( array_offset == -1 ) ? res.UniformBuf.Name :
+			name_no_array = ( array_offset == StringRefBase::npos ) ? res.UniformBuf.Name :
 				StringRef ( res.UniformBuf.Name.CStr ( ) , array_offset );
 			os << "#define " << name_no_array << " (_" << name_no_array << ")\n";
 		}break;
 		case ShaderCreateInfo::Resource::BindType::STORAGE_BUFFER: {
 			array_offset = res.StorageBuf.Name.FindFirstOf ( "[" );
-			name_no_array = ( array_offset == -1 ) ? res.StorageBuf.Name :
+			name_no_array = ( array_offset == StringRefBase::npos ) ? res.StorageBuf.Name :
 				StringRef ( res.StorageBuf.Name.CStr ( ) , array_offset );
 			os << "#define " << name_no_array << " (_" << name_no_array << ")\n";
 		}break;
@@ -513,10 +513,10 @@ void GLShader::UniformFloat ( int location , int comp , int size , const float *
 			glUniform4fv ( location , size , data );
 		}break;
 		case 9: {
-			glUniformMatrix3fv ( location , size , 0 , data );
+			glUniformMatrix3fv ( location , size , GL_FALSE , data );
 		}break;
 		case 16: {
-			glUniformMatrix4fv ( location , size , 0 , data );
+			glUniformMatrix4fv ( location , size , GL_FALSE , data );
 		}break;
 		default: {
 			fprintf ( stderr , "Unknown uniform!\n" );
@@ -807,13 +807,14 @@ unsigned int GLShader::CreateShaderStage ( unsigned int gl_stage , MutableSpan<c
 		break;
 	}
 
-	FILE *out; fopen_s ( &out , filename , "w" );
+	FILE *out = stdout;// fopen_s ( &out , filename , "w" );
+	fprintf ( out , "// Name : %s\n" , filename );
 
 	for ( int i = 0; i < sources.Size ( ); i++ ) {
 		fprintf ( out , "%s\n" , sources [ i ] );
 	}
 
-	fclose ( out );
+	if ( out != stdout && out ) fclose ( out );
 
 	glShaderSource ( shader , sources.Size ( ) , sources.Data ( ) , nullptr );
 	glCompileShader ( shader );
@@ -855,7 +856,7 @@ std::string GLShader::WorkaroundGeometryShaderSourceCreate ( const ShaderCreateI
 	 * NOTE(@fclem): Assuming we will render TRIANGLES. This will not work with other primitive
 	 * types. In this case, it might not trigger an error on some implementations.
 	 */
-	info_modified.geometry_layout ( GPU_PRIMITIVE_IN_TRIANGLES , GPU_PRIMITIVE_OUT_TRIANGLE_STRIP , 3 );
+	info_modified.SetGeometryLayout ( GPU_PRIMITIVE_IN_TRIANGLES , GPU_PRIMITIVE_OUT_TRIANGLE_STRIP , 3 );
 
 	ss << GeometryLayoutDeclare ( info_modified );
 	ss << GeometryInterfaceDeclare ( info_modified );

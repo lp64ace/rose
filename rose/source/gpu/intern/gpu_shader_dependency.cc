@@ -11,6 +11,11 @@
 
 #include <map>
 
+extern "C" {
+#define SHADER_SOURCE(datatoc, filename, filepath) extern char datatoc[];
+#undef SHADER_SOURCE
+}
+
 namespace rose {
 namespace gpu {
 
@@ -148,7 +153,7 @@ struct GPU_Source {
 		int64_t pos = -1;
 		do {
 			pos = Source.Find ( '"' , pos + 1 );
-			if ( pos == -1 ) {
+			if ( pos == StringRefBase::npos ) {
 				break;
 			}
 			if ( !IsInComment ( Source , pos ) ) {
@@ -377,9 +382,19 @@ struct GPU_Source {
 
 };
 
+}
+}
+
+using namespace rose;
+using namespace rose::gpu;
+
 void gpu_shader_dependency_init ( ) {
 	g_sources = new GPUSourceDictionnary ( );
 	g_functions = new GPUFunctionDictionnary ( );
+
+#define SHADER_SOURCE(datatoc, filename, filepath) \
+	(*g_sources)[filename] = new GPU_Source(filepath, filename, datatoc, g_functions);
+#undef SHADER_SOURCE
 
 	int errors = 0;
 	for ( GPUSourceDictionnary::iterator itr = g_sources->begin ( ); itr != g_sources->end ( ); itr++ ) {
@@ -413,8 +428,60 @@ int gpu_shader_dependency_get_builtin_bits ( const StringRefNull shader_source_n
 	return source->BuiltinsGet ( );
 }
 
+std::string to_filename ( const StringRefNull path , const StringRefNull file ) {
+	if ( path.EndsWith ( "\\" ) ) {
+		return  path + file;
+	} else if ( path.EndsWith ( "/" ) ) {
+		return  path + file;
+	} else if ( path.Find ( "\\" ) != StringRefBase::npos ) {
+		return path + "\\" + file;
+	} else if ( path.Find ( "/" ) != StringRefBase::npos ) {
+		return path + "/" + file;
+	}
+	return path + "/" + file;
+}
+
+bool gpu_file_exists ( const StringRefNull path , const StringRefNull file ) {
+	FILE *in; fopen_s ( &in , to_filename ( path , file ).c_str ( ) , "r" );
+	if ( in ) {
+		fclose ( in );
+		return true;
+	}
+	return false;
+}
+
+void gpu_shader_dependency_import_source ( const StringRefNull path , const StringRefNull file ) {
+	FILE *in; fopen_s ( &in , to_filename ( path , file ).c_str ( ) , "r" );
+	if ( in ) {
+		size_t alloc = 16 , length = 0;
+		char *code = ( char * ) MEM_mallocN ( alloc , file.CStr ( ) );
+
+		while ( fscanf_s ( in , "%c" , &code [ length++ ] ) != EOF ) {
+			while ( alloc <= length + 8 ) {
+				code = ( char * ) MEM_reallocN ( code , ( alloc += 64 ) );
+			}
+		}
+
+		code [ --length ] = 0;
+		( *g_sources ) [ file ] = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , code , g_functions );
+		fclose ( in );
+	}
+}
+
+void gpu_shader_dependency_try_to_locate_source ( const StringRefNull shader_source_name ) {
+	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
+	if ( itr == g_sources->end ( ) ) {
+		if ( gpu_file_exists ( "shaders" , shader_source_name ) ) {
+			gpu_shader_dependency_import_source ( "shaders" , shader_source_name );
+		} else if ( gpu_file_exists ( "../../shaders" , shader_source_name ) ) {
+			gpu_shader_dependency_import_source ( "../../shaders" , shader_source_name );
+		}
+	}
+}
+
 Vector<const char *> gpu_shader_dependency_get_resolved_source ( const StringRefNull shader_source_name ) {
 	Vector<const char *> result;
+	gpu_shader_dependency_try_to_locate_source ( shader_source_name );
 	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
 	if ( itr == g_sources->end ( ) ) {
 		std::cout << "Error source not found : " << shader_source_name << std::endl;
@@ -427,6 +494,7 @@ Vector<const char *> gpu_shader_dependency_get_resolved_source ( const StringRef
 
 StringRefNull gpu_shader_dependency_get_source ( const StringRefNull shader_source_name ) {
 	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
+	gpu_shader_dependency_try_to_locate_source ( shader_source_name );
 	if ( itr == g_sources->end ( ) ) {
 		std::cout << "Error source not found : " << shader_source_name << std::endl;
 		assert ( 0 );
@@ -442,7 +510,4 @@ StringRefNull gpu_shader_dependency_get_filename_from_source_string ( const Stri
 		}
 	}
 	return "";
-}
-
-}
 }

@@ -4,6 +4,10 @@
 
 #include <utf/utfconv.h>
 
+#include <sstream>
+#include <string>
+#include <cmath>
+
 GHOST_WindowWin32::GHOST_WindowWin32 ( GHOST_WindowWin32 *parent , const char *title , int32_t left , int32_t top , uint32_t width , uint32_t height ) {
 	DWORD ExtendedStyle = ( parent ) ? 0 : WS_EX_APPWINDOW;
 	DWORD Style = ( parent ) ? WS_POPUPWINDOW | WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX : WS_OVERLAPPEDWINDOW;

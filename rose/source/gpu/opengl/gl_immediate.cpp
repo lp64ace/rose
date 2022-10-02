@@ -81,7 +81,6 @@ unsigned char *GLImmediate::Begin ( ) {
 		access |= GL_MAP_FLUSH_EXPLICIT_BIT;
 	}
 	void *data = glMapBufferRange ( GL_ARRAY_BUFFER , GetBufOffset ( ) , bytes_needed , access );
-	LIB_assert ( data != nullptr );
 
 	this->mBytesMapped = bytes_needed;
 	return ( unsigned char * ) data;

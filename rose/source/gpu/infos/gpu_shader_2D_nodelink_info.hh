@@ -1,0 +1,52 @@
+#pragma once
+
+#include "gpu/intern/gpu_shader_create_info.h"
+
+GPU_SHADER_INTERFACE_INFO(nodelink_iface, "")
+    .Smooth(Type::VEC4, "finalColor")
+    .Smooth(Type::FLOAT, "colorGradient")
+    .Smooth(Type::FLOAT, "lineU")
+    .Flat(Type::FLOAT, "lineLength")
+    .Flat(Type::FLOAT, "lineThickness")
+    .Flat(Type::FLOAT, "dashFactor")
+    .Flat(Type::FLOAT, "dashAlpha")
+    .Flat(Type::INT, "isMainLine");
+
+GPU_SHADER_CREATE_INFO(gpu_shader_2D_nodelink)
+    .VertexIn(0, Type::VEC2, "uv")
+    .VertexIn(1, Type::VEC2, "pos")
+    .VertexIn(2, Type::VEC2, "expand")
+    .VertexOut(nodelink_iface)
+    .FragmentOut(0, Type::VEC4, "fragColor")
+    .UniformBuf(0, "NodeLinkData", "node_link_data", GPU_FREQUENCY_PASS)
+    .PushConstant(Type::MAT4, "ModelViewProjectionMatrix")
+    .SetVertexSource("gpu_shader_2D_nodelink_vert.glsl")
+    .SetFragmentSource("gpu_shader_2D_nodelink_frag.glsl")
+    .SetTypedefSource("GPU_shader_shared.h")
+    .SetDoStaticCompilation(true);
+
+GPU_SHADER_CREATE_INFO(gpu_shader_2D_nodelink_inst)
+    .VertexIn(0, Type::VEC2, "uv")
+    .VertexIn(1, Type::VEC2, "pos")
+    .VertexIn(2, Type::VEC2, "expand")
+    .VertexIn(3, Type::VEC2, "P0")
+    .VertexIn(4, Type::VEC2, "P1")
+    .VertexIn(5, Type::VEC2, "P2")
+    .VertexIn(6, Type::VEC2, "P3")
+    .VertexIn(7, Type::IVEC4, "colid_doarrow")
+    .VertexIn(8, Type::VEC4, "start_color")
+    .VertexIn(9, Type::VEC4, "end_color")
+    .VertexIn(10, Type::IVEC2, "domuted")
+    .VertexIn(11, Type::FLOAT, "dim_factor")
+    .VertexIn(12, Type::FLOAT, "thickness")
+    .VertexIn(13, Type::FLOAT, "dash_factor")
+    .VertexIn(14, Type::FLOAT, "dash_alpha")
+    .VertexOut(nodelink_iface)
+    .FragmentOut(0, Type::VEC4, "fragColor")
+    .UniformBuf(0, "NodeLinkInstanceData", "node_link_data", GPU_FREQUENCY_PASS )
+    .PushConstant(Type::MAT4, "ModelViewProjectionMatrix")
+    .SetVertexSource("gpu_shader_2D_nodelink_vert.glsl")
+    .SetFragmentSource("gpu_shader_2D_nodelink_frag.glsl")
+    .SetTypedefSource("GPU_shader_shared.h")
+    .Define("USE_INSTANCE")
+    .SetDoStaticCompilation(true);

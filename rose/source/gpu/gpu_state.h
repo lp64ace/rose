@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define GPU_WRITE_NONE				0x00000000
 #define GPU_WRITE_RED				0x00000001
 #define GPU_WRITE_GREEN				0x00000002
@@ -64,67 +68,71 @@
 #define GPU_VERTEX_LAST				0x00000000
 #define GPU_VERTEX_FIRST			0x00000001
 
-void GPU_blend ( unsigned int blend );
-void GPU_face_culling ( unsigned int culling );
-void GPU_depth_test ( unsigned int test );
-void GPU_stencil_test ( unsigned int test );
-void GPU_provoking_vertex ( unsigned int vert );
-void GPU_front_facing ( bool invert );
-void GPU_depth_range ( float near , float far );
-void GPU_scissor_test ( bool enable );
-void GPU_line_smooth ( bool enable );
-/**
- * \note By convention, this is set as needed and not reset back to 1.0.
- * This means code that draws lines must always set the line width beforehand,
- * but is not expected to restore it's previous value.
- */
-void GPU_line_width ( float width );
-void GPU_logic_op_xor_set ( bool enable );
-void GPU_point_size ( float size );
-void GPU_polygon_smooth ( bool enable );
-/**
- * Programmable point size:
- * - Shaders set their own point size when enabled
- * - Use GPU_point_size when disabled.
- *
- * TODO: remove and use program point size everywhere.
- */
-void GPU_program_point_size ( bool enable );
-void GPU_scissor ( int x , int y , int width , int height );
-void GPU_scissor_get ( int coords [ 4 ] );
-void GPU_viewport ( int x , int y , int width , int height );
-void GPU_viewport_size_get_f ( float coords [ 4 ] );
-void GPU_viewport_size_get_i ( int coords [ 4 ] );
-void GPU_write_mask ( unsigned int mask );
-void GPU_color_mask ( bool r , bool g , bool b , bool a );
-void GPU_depth_mask ( bool depth );
-bool GPU_depth_mask_get ( void );
-void GPU_shadow_offset ( bool enable );
-void GPU_clip_distances ( int distances_enabled );
-bool GPU_mipmap_enabled ( void );
-void GPU_state_set ( unsigned int write_mask ,
-                     unsigned int blend ,
-                     unsigned int culling_test ,
-                     unsigned int depth_test ,
-                     unsigned int stencil_test ,
-                     unsigned int stencil_op ,
-                     unsigned int provoking_vert );
+        void GPU_blend ( unsigned int blend );
+        void GPU_face_culling ( unsigned int culling );
+        void GPU_depth_test ( unsigned int test );
+        void GPU_stencil_test ( unsigned int test );
+        void GPU_provoking_vertex ( unsigned int vert );
+        void GPU_front_facing ( bool invert );
+        void GPU_depth_range ( float near , float far );
+        void GPU_scissor_test ( bool enable );
+        void GPU_line_smooth ( bool enable );
+        /**
+         * \note By convention, this is set as needed and not reset back to 1.0.
+         * This means code that draws lines must always set the line width beforehand,
+         * but is not expected to restore it's previous value.
+         */
+        void GPU_line_width ( float width );
+        void GPU_logic_op_xor_set ( bool enable );
+        void GPU_point_size ( float size );
+        void GPU_polygon_smooth ( bool enable );
+        /**
+         * Programmable point size:
+         * - Shaders set their own point size when enabled
+         * - Use GPU_point_size when disabled.
+         *
+         * TODO: remove and use program point size everywhere.
+         */
+        void GPU_program_point_size ( bool enable );
+        void GPU_scissor ( int x , int y , int width , int height );
+        void GPU_scissor_get ( int coords [ 4 ] );
+        void GPU_viewport ( int x , int y , int width , int height );
+        void GPU_viewport_size_get_f ( float coords [ 4 ] );
+        void GPU_viewport_size_get_i ( int coords [ 4 ] );
+        void GPU_write_mask ( unsigned int mask );
+        void GPU_color_mask ( bool r , bool g , bool b , bool a );
+        void GPU_depth_mask ( bool depth );
+        bool GPU_depth_mask_get ( void );
+        void GPU_shadow_offset ( bool enable );
+        void GPU_clip_distances ( int distances_enabled );
+        bool GPU_mipmap_enabled ( void );
+        void GPU_state_set ( unsigned int write_mask ,
+                             unsigned int blend ,
+                             unsigned int culling_test ,
+                             unsigned int depth_test ,
+                             unsigned int stencil_test ,
+                             unsigned int stencil_op ,
+                             unsigned int provoking_vert );
 
-void GPU_stencil_reference_set ( unsigned int reference );
-void GPU_stencil_write_mask_set ( unsigned int write_mask );
-void GPU_stencil_compare_mask_set ( unsigned int compare_mask );
+        void GPU_stencil_reference_set ( unsigned int reference );
+        void GPU_stencil_write_mask_set ( unsigned int write_mask );
+        void GPU_stencil_compare_mask_set ( unsigned int compare_mask );
 
-unsigned int GPU_face_culling_get ( void );
-unsigned int GPU_blend_get ( void );
-unsigned int GPU_depth_test_get ( void );
-unsigned int GPU_write_mask_get ( void );
-unsigned int GPU_stencil_mask_get ( void );
-unsigned int GPU_stencil_test_get ( void );
+        unsigned int GPU_face_culling_get ( void );
+        unsigned int GPU_blend_get ( void );
+        unsigned int GPU_depth_test_get ( void );
+        unsigned int GPU_write_mask_get ( void );
+        unsigned int GPU_stencil_mask_get ( void );
+        unsigned int GPU_stencil_test_get ( void );
 
-float GPU_line_width_get ( void );
+        float GPU_line_width_get ( void );
 
-void GPU_flush ( void );
-void GPU_finish ( void );
-void GPU_apply_state ( void );
+        void GPU_flush ( void );
+        void GPU_finish ( void );
+        void GPU_apply_state ( void );
 
-void GPU_memory_barrier ( unsigned int barrier );
+        void GPU_memory_barrier ( unsigned int barrier );
+
+#ifdef __cplusplus
+}
+#endif

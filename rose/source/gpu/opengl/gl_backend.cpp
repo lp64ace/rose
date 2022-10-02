@@ -6,7 +6,9 @@
 
 #include <gl/glew.h>
 #include <stdio.h>
+#include <sstream>
 #include <string>
+#include <cmath>
 
 int get_gl_version ( ) {
 	GLint major , minor;

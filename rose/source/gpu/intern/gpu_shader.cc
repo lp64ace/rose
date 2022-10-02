@@ -10,9 +10,9 @@
 
 #include "gpu_context_private.h"
 
-#include "lib/lib_math_vec.h"
-#include "lib/lib_math_matrix.h"
-#include "lib/lib_math_base.h"
+#include "lib/lib_math.h"
+#include "lib/lib_string_util.h"
+#include "lib/lib_string.h"
 
 // gpu_shader.c
 static bool gpu_shader_srgb_uniform_dirty_get ( );
@@ -160,6 +160,55 @@ GPU_Shader *GPU_shader_create_ex ( const char *vertcode ,
 	}
 
 	return wrap ( shader );
+}
+
+static const char *string_join_array_maybe_alloc ( const char **str_arr , bool *r_is_alloc ) {
+	bool is_alloc = false;
+	if ( str_arr == nullptr ) {
+		*r_is_alloc = false;
+		return nullptr;
+	}
+	/* Skip empty strings (avoid alloc if we can). */
+	while ( str_arr [ 0 ] && str_arr [ 0 ][ 0 ] == '\0' ) {
+		str_arr++;
+	}
+	int i;
+	for ( i = 0; str_arr [ i ]; i++ ) {
+		if ( i != 0 && str_arr [ i ][ 0 ] != '\0' ) {
+			is_alloc = true;
+		}
+	}
+	*r_is_alloc = is_alloc;
+	if ( is_alloc ) {
+		return LIB_string_join_arrayN ( str_arr , i );
+	}
+
+	return str_arr [ 0 ];
+}
+
+struct GPU_Shader *GPU_shader_create_from_arrays_impl (
+	const struct GPU_ShaderCreateFromArray_Params *params , const char *func , int line ) {
+	struct {
+		const char *str;
+		bool is_alloc;
+	} str_dst [ 4 ] = { {nullptr} };
+	const char **str_src [ 4 ] = { params->vert, params->frag, params->geom, params->defs };
+
+	for ( int i = 0; i < ARRAY_SIZE ( str_src ); i++ ) {
+		str_dst [ i ].str = string_join_array_maybe_alloc ( str_src [ i ] , &str_dst [ i ].is_alloc );
+	}
+
+	char name [ 64 ];
+	snprintf ( name , sizeof ( name ) , "%s_%d" , func , line );
+
+	GPU_Shader *sh = GPU_shader_create ( str_dst [ 0 ].str , str_dst [ 1 ].str , str_dst [ 2 ].str , nullptr , str_dst [ 3 ].str , name );
+
+	for ( auto &i : str_dst ) {
+		if ( i.is_alloc ) {
+			MEM_freeN ( ( void * ) i.str );
+		}
+	}
+	return sh;
 }
 
 void GPU_shader_free ( GPU_Shader *shader ) {

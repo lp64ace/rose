@@ -60,7 +60,7 @@ static unsigned int attr_align ( const GPU_VertAttr *a , unsigned int minimum_st
 
 unsigned int vertex_buffer_size ( const GPU_VertFormat *format , unsigned int vertex_len ) {
 #ifdef TRUST_NO_ONE
-	assert ( format->Packed && format->Stride > 0 );
+	assert ( format->Packed );
 #endif
 	return format->Stride * vertex_len;
 }
@@ -212,8 +212,11 @@ void GPU_vertformat_deinterleave ( GPU_VertFormat *format ) {
 }
 
 unsigned int _padding ( unsigned int offset , unsigned int alignment ) {
-	const unsigned int mod = offset % alignment;
-	return ( mod == 0 ) ? 0 : ( alignment - mod );
+	if ( alignment ) {
+		const unsigned int mod = offset % alignment;
+		return ( mod == 0 ) ? 0 : ( alignment - mod );
+	}
+	return offset;
 }
 
 static void gpu_vertex_format_pack_impl ( GPU_VertFormat *format , unsigned int minimum_stride ) {

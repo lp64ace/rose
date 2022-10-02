@@ -7,6 +7,7 @@
 #include "lib_vector.h"
 #include "lib_string_util.h"
 
+#include <sstream>
 #include <string>
 
 class String {

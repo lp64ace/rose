@@ -2,21 +2,31 @@
 
 #include "gpu_info.h"
 
-/* GPU back-ends abstract the differences between different APIs. #GPU_context_create
- * automatically initializes the back-end, and #GPU_context_discard frees it when there
- * are no more contexts. */
-bool GPU_backend_supported ( void );
+#include <stdbool.h>
 
-int GPU_backend_get_type ( void );
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Opaque type hiding #rose::gpu::Context
-typedef struct GPU_Context GPU_Context;
+	/* GPU back-ends abstract the differences between different APIs. #GPU_context_create
+	 * automatically initializes the back-end, and #GPU_context_discard frees it when there
+	 * are no more contexts. */
+	bool GPU_backend_supported ( void );
 
-GPU_Context *GPU_context_create ( void *ghost_window );
+	int GPU_backend_get_type ( void );
 
-// To be called after #GPU_context_active_set(ctx_to_destroy).
-void GPU_context_discard ( GPU_Context * );
+	// Opaque type hiding #rose::gpu::Context
+	typedef struct GPU_Context GPU_Context;
 
-// Can be called with NULL
-void GPU_context_active_set ( GPU_Context * );
-GPU_Context *GPU_context_active_get ( void );
+	GPU_Context *GPU_context_create ( void *ghost_window );
+
+	// To be called after #GPU_context_active_set(ctx_to_destroy).
+	void GPU_context_discard ( GPU_Context * );
+
+	// Can be called with NULL
+	void GPU_context_active_set ( GPU_Context * );
+	GPU_Context *GPU_context_active_get ( void );
+
+#ifdef __cplusplus
+}
+#endif

@@ -161,18 +161,21 @@ struct StageInterfaceInfo {
 	StringRefNull InstanceName; // Name of the instance of the block (used to access). Empty only for geometry shader.
 	Vector<InOut> InOuts; // List of all members of the interface.
 
-	StageInterfaceInfo ( const char *name , const char *instance ) : Name ( name ) , InstanceName ( InstanceName ) { }
+	StageInterfaceInfo ( const char *name , const char *instance ) : Name ( name ) , InstanceName ( instance ) { }
 
 	StageInterfaceInfo &Smooth ( Type type , StringRefNull name ) {
 		this->InOuts.Append ( { GPU_INTERPOLATION_SMOOTH , type , name } );
+		return *( StageInterfaceInfo * ) this;
 	}
 
 	StageInterfaceInfo &Flat ( Type type , StringRefNull name ) {
 		this->InOuts.Append ( { GPU_INTERPOLATION_FLAT , type , name } );
+		return *( StageInterfaceInfo * ) this;
 	}
 
 	StageInterfaceInfo &NoPerspective ( Type type , StringRefNull name ) {
 		this->InOuts.Append ( { GPU_INTERPOLATION_NO_PERSPECTIVE , type , name } );
+		return *( StageInterfaceInfo * ) this;
 	}
 };
 
@@ -368,7 +371,8 @@ struct ShaderCreateInfo {
 	*/
 	Vector<StringRefNull> AdditionalInfos;
 public:
-	ShaderCreateInfo ( const char *name ) : Name ( name ) { }
+	ShaderCreateInfo ( ) = default;
+	ShaderCreateInfo ( const char *name ) : ShaderCreateInfo ( ) { this->Name = name; }
 
 	ShaderCreateInfo &VertexIn ( int slot , Type type , StringRefNull name ) {
 		this->VertexInputs.Append ( { slot , type , name } );
@@ -387,7 +391,7 @@ public:
 	* Your shader needs to account for this fact. Use `#ifdef GPU_ARB_gpu_shader5` and make a code
 	* path that does not rely on #gl_InvocationID.
 	*/
-	ShaderCreateInfo &geometry_layout ( int prim_in ,
+	ShaderCreateInfo &SetGeometryLayout ( int prim_in ,
 					    int prim_out ,
 					    int max_vertices ,
 					    int invocations = -1 ) {
@@ -421,7 +425,7 @@ public:
 		return *( ShaderCreateInfo * ) this;
 	}
 
-	ShaderCreateInfo &fragment_out ( int slot , Type type , StringRefNull name , int blend = GPU_DUAL_BLEND_NONE ) {
+	ShaderCreateInfo &FragmentOut ( int slot , Type type , StringRefNull name , int blend = GPU_DUAL_BLEND_NONE ) {
 		this->FragmentOutputs.Append ( { slot, type, blend, name } );
 		return *( ShaderCreateInfo * ) this;
 	}
@@ -552,7 +556,7 @@ public:
 	// Adding a file using typedef_source will include it before the resource 
 	// and interface definitions.
 
-	ShaderCreateInfo &TypedefSource ( StringRefNull filename ) {
+	ShaderCreateInfo &SetTypedefSource ( StringRefNull filename ) {
 		this->TypedefSources.Append ( filename );
 		return *( ShaderCreateInfo * ) this;
 	}
@@ -619,6 +623,16 @@ public:
 	}
 
 };
+
+#ifndef GPU_SHADER_CREATE_INFO
+/* Helps intellisense / auto-completion. */
+#  define GPU_SHADER_INTERFACE_INFO(_interface, _inst_name) \
+    rose::gpu::StageInterfaceInfo _interface(#_interface, _inst_name); \
+    _interface
+#  define GPU_SHADER_CREATE_INFO(_info) \
+    rose::gpu::ShaderCreateInfo _info(#_info); \
+    _info
+#endif
 
 }
 }

@@ -258,6 +258,8 @@ constexpr StringRef StringRefBase::Trim ( StringRef characters_to_remove ) const
 
 // StringRefNull Inline Methods
 
+constexpr StringRefNull::StringRefNull ( ) : StringRefBase ( "" , 0 ) { }
+
 constexpr StringRefNull::StringRefNull ( const char *str , const size_t size ) : StringRefBase ( str , size ) { }
 
 inline StringRefNull::StringRefNull ( const char *str ) : StringRefBase ( str , strlen ( str ) ) { }
@@ -274,11 +276,11 @@ constexpr const char *StringRefNull::CStr ( ) const {
 
 // StringRef Inline Methods
 
-constexpr StringRef::StringRef ( ) : StringRefBase ( nullptr , 0 ) { }
+constexpr StringRef::StringRef ( ) : StringRefBase ( "" , 0 ) { }
 
 constexpr StringRef::StringRef ( StringRefNull other ) : StringRefBase ( other.Data ( ) , other.Size ( ) ) { }
 
-constexpr StringRef::StringRef ( const char *str ) : StringRefBase ( str , str ? std::char_traits<char>::length ( str ) : 0 ) { }
+constexpr StringRef::StringRef ( const char *str ) : StringRefBase ( str , strlen ( str ) ) { }
 
 constexpr StringRef::StringRef ( const char *str , const size_t length ) : StringRefBase ( str , length ) { }
 
@@ -343,12 +345,12 @@ constexpr bool operator>=( StringRef a , StringRef b ) {
 	return std::string_view ( a ) >= std::string_view ( b );
 }
 
-inline std::ostream &operator<<( std::ostream &stream , StringRef ref ) {
+inline std::ostream &operator<<( std::ostream &stream , const StringRef& ref ) {
 	stream << std::string ( ref );
 	return stream;
 }
 
-inline std::ostream &operator<<( std::ostream &stream , StringRefNull ref ) {
+inline std::ostream &operator<<( std::ostream &stream , const StringRefNull& ref ) {
 	stream << std::string ( ref.Data ( ) , ( size_t ) ref.Size ( ) );
 	return stream;
 }
