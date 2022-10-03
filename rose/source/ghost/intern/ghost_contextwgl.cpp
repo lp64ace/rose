@@ -103,7 +103,7 @@ GHOST_TStatus GHOST_ContextWGL::InitDrawingContext ( ) {
 		::wglMakeCurrent ( prevHDC , prevHGLRC );
 		return GHOST_kFailure;
 	}
-	fprintf ( stdout , "Using GLEW %s\n" , glewGetString ( GLEW_VERSION ) );
+	// fprintf ( stdout , "Using GLEW %s\n" , glewGetString ( GLEW_VERSION ) );
 
 	GHOST_ContextWGL::sSharedCount++;
 

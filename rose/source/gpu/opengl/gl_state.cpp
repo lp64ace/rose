@@ -30,6 +30,11 @@ GLStateManager::GLStateManager ( ) {
 	/* Limits. */
 	glGetFloatv ( GL_ALIASED_LINE_WIDTH_RANGE , this->LineWidthRange );
 
+	State.Blend = GPU_BLEND_ALPHA;
+	State.DepthTest = GPU_DEPTH_LESS;
+	State.WriteMask = GPU_WRITE_COLOR | GPU_WRITE_DEPTH;
+	State.CullingTest = GPU_CULL_BACK;
+
 	/* Force update using default state. */
 	this->Current = ~State;
 	this->CurrentMutable = ~MutableState;
@@ -420,7 +425,7 @@ void GLStateManager::SetBlend ( int value ) {
 			src_rgb = GL_SRC_ALPHA;
 			dst_rgb = GL_ONE_MINUS_SRC_ALPHA;
 			src_alpha = GL_ONE;
-			dst_alpha = GL_ONE_MINUS_SRC_ALPHA;
+			dst_alpha = GL_ZERO;
 		}break;
 		case GPU_BLEND_ALPHA_PREMULT: {
 			src_rgb = GL_ONE;

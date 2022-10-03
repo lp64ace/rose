@@ -257,6 +257,5 @@ void GPU_batch_multi_draw_indirect ( GPU_Batch *gpu_batch , GPU_StorageBuf *indi
 }
 
 void GPU_batch_program_set_imm_shader ( GPU_Batch *batch ) {
-        fprintf ( stderr , "Error %s No-Op\n" , __FUNCTION__ );
-        // GPU_batch_set_shader ( batch , immGetShader ( ) );
+        GPU_batch_set_shader ( batch , immGetShader ( ) );
 }

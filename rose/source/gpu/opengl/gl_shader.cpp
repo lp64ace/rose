@@ -551,7 +551,7 @@ std::string GLShader::ResourcesDeclare ( const ShaderCreateInfo &info ) const {
 	 * are reused for local variables. This is to match other backend behavior which needs accessors
 	 * macros. */
 
-	ss << "\n/* Pass Resources. */\n";
+	ss << "\n// Pass Resources.\n";
 	for ( size_t i = 0; i < info.PassResources.Size ( ); i++ ) {
 		const ShaderCreateInfo::Resource &res = info.PassResources [ i ];
 		print_resource ( ss , res );
@@ -560,7 +560,7 @@ std::string GLShader::ResourcesDeclare ( const ShaderCreateInfo &info ) const {
 		const ShaderCreateInfo::Resource &res = info.PassResources [ i ];
 		print_resource_alias ( ss , res );
 	}
-	ss << "\n/* Batch Resources. */\n";
+	ss << "\n// Batch Resources.\n";
 	for ( size_t i = 0; i < info.BatchResources.Size ( ); i++ ) {
 		const ShaderCreateInfo::Resource &res = info.BatchResources [ i ];
 		print_resource ( ss , res );
@@ -569,7 +569,7 @@ std::string GLShader::ResourcesDeclare ( const ShaderCreateInfo &info ) const {
 		const ShaderCreateInfo::Resource &res = info.BatchResources [ i ];
 		print_resource_alias ( ss , res );
 	}
-	ss << "\n/* Push Constants. */\n";
+	ss << "\n// Push Constants.\n";
 	for ( size_t i = 0; i < info.PushConstants.Size ( ); i++ ) {
 		const ShaderCreateInfo::PushConst &uniform = info.PushConstants [ i ];
 		ss << "uniform " << type_to_string ( uniform.Type ) << " " << uniform.Name;
@@ -578,7 +578,6 @@ std::string GLShader::ResourcesDeclare ( const ShaderCreateInfo &info ) const {
 		}
 		ss << ";\n";
 	}
-	ss << "\n";
 	return ss.str ( );
 }
 
@@ -586,7 +585,7 @@ std::string GLShader::VertexInterfaceDeclare ( const ShaderCreateInfo &info ) co
 	std::stringstream ss;
 	std::string post_main;
 
-	ss << "\n/* Inputs. */\n";
+	ss << "\n// Inputs.\n";
 	for ( const ShaderCreateInfo::VertIn &attr : info.VertexInputs ) {
 		if ( GLContext::ExplicitLocationSupport &&
 		     /* Fix issue with AMDGPU-PRO + workbench_prepass_mesh_vert.glsl being quantized. */
@@ -600,7 +599,7 @@ std::string GLShader::VertexInterfaceDeclare ( const ShaderCreateInfo &info ) co
 	     info.VertexInputs.IsEmpty ( ) ) {
 		ss << "in float gpu_dummy_workaround;\n";
 	}
-	ss << "\n/* Interfaces. */\n";
+	ss << "\n// Interfaces.\n";
 	for ( const StageInterfaceInfo *iface : info.VertexOutInterfaces ) {
 		print_interface ( ss , "out" , *iface );
 	}
@@ -618,7 +617,6 @@ std::string GLShader::VertexInterfaceDeclare ( const ShaderCreateInfo &info ) co
 			post_main += "  gpu_pos = gpu_pos_flat = gl_Position;\n";
 		}
 	}
-	ss << "\n";
 
 	if ( post_main.empty ( ) == false ) {
 		std::string pre_main;
@@ -631,7 +629,7 @@ std::string GLShader::FragmentInterfaceDeclare ( const ShaderCreateInfo &info ) 
 	std::stringstream ss;
 	std::string pre_main;
 
-	ss << "\n/* Interfaces. */\n";
+	ss << "\n// Interfaces.\n";
 	const Vector<StageInterfaceInfo *> &in_interfaces = ( info.GeometrySource.IsEmpty ( ) ) ?
 		info.VertexOutInterfaces : info.GeometryOutInterfaces;
 	for ( const StageInterfaceInfo *iface : in_interfaces ) {
@@ -677,7 +675,7 @@ std::string GLShader::FragmentInterfaceDeclare ( const ShaderCreateInfo &info ) 
 	if ( has_gl_extension ( "GL_ARB_conservative_depth" ) ) {
 		ss << "layout(" << depth_to_string ( info.DepthWrite ) << ") out float gl_FragDepth;\n";
 	}
-	ss << "\n/* Outputs. */\n";
+	ss << "\n// Outputs.\n";
 	for ( const ShaderCreateInfo::FragOut &output : info.FragmentOutputs ) {
 		ss << "layout(location = " << output.Index;
 		switch ( output.Blend ) {
@@ -693,7 +691,6 @@ std::string GLShader::FragmentInterfaceDeclare ( const ShaderCreateInfo &info ) 
 		ss << ") ";
 		ss << "out " << type_to_string ( output.Type ) << " " << output.Name << ";\n";
 	}
-	ss << "\n";
 
 	if ( pre_main.empty ( ) == false ) {
 		std::string post_main;
@@ -714,7 +711,7 @@ static StageInterfaceInfo *find_interface_by_name ( const Vector<StageInterfaceI
 std::string GLShader::GeometryInterfaceDeclare ( const ShaderCreateInfo &info ) const {
 	std::stringstream ss;
 
-	ss << "\n/* Interfaces. */\n";
+	ss << "\n// Interfaces.\n";
 	for ( const StageInterfaceInfo *iface : info.VertexOutInterfaces ) {
 		bool has_matching_output_iface = find_interface_by_name ( info.GeometryOutInterfaces , iface->InstanceName ) != nullptr;
 		const char *suffix = ( has_matching_output_iface ) ? "_in[]" : "[]";
@@ -726,7 +723,6 @@ std::string GLShader::GeometryInterfaceDeclare ( const ShaderCreateInfo &info ) 
 		const char *suffix = ( has_matching_input_iface ) ? "_out" : "";
 		print_interface ( ss , "out" , *iface , suffix );
 	}
-	ss << "\n";
 	return ss.str ( );
 }
 
@@ -740,7 +736,7 @@ std::string GLShader::GeometryLayoutDeclare ( const ShaderCreateInfo &info ) con
 	}
 
 	std::stringstream ss;
-	ss << "\n/* Geometry Layout. */\n";
+	ss << "\n// Geometry Layout.\n";
 	ss << "layout(" << primitive_in_to_string ( info.GeometryLayout.PrimIn );
 	if ( invocations != -1 ) {
 		ss << ", invocations = " << invocations;
@@ -749,13 +745,12 @@ std::string GLShader::GeometryLayoutDeclare ( const ShaderCreateInfo &info ) con
 
 	ss << "layout(" << primitive_out_to_string ( info.GeometryLayout.PrimOut )
 		<< ", max_vertices = " << max_verts << ") out;\n";
-	ss << "\n";
 	return ss.str ( );
 }
 
 std::string GLShader::ComputeLayoutDeclare ( const ShaderCreateInfo &info ) const {
 	std::stringstream ss;
-	ss << "\n/* Compute Layout. */\n";
+	ss << "\n// Compute Layout.\n";
 	ss << "layout(local_size_x = " << info.ComputeLayout.LocalSizeX;
 	if ( info.ComputeLayout.LocalSizeY != -1 ) {
 		ss << ", local_size_y = " << info.ComputeLayout.LocalSizeY;
@@ -764,7 +759,6 @@ std::string GLShader::ComputeLayoutDeclare ( const ShaderCreateInfo &info ) cons
 		ss << ", local_size_z = " << info.ComputeLayout.LocalSizeZ;
 	}
 	ss << ") in;\n";
-	ss << "\n";
 	return ss.str ( );
 }
 
@@ -786,6 +780,21 @@ unsigned int GLShader::CreateShaderStage ( unsigned int gl_stage , MutableSpan<c
 
 	/* Patch the shader code using the first source slot. */
 	sources [ 0 ] = GetPatch ( gl_stage );
+
+#if 1
+	switch ( gl_stage ) {
+		case GL_VERTEX_SHADER: fprintf ( stdout , "// Vertex Shader [%s]\n" , this->GetName ( ) ); break;
+		case GL_GEOMETRY_SHADER: fprintf ( stdout , "// Geometry Shader [%s]\n" , this->GetName ( ) ); break;
+		case GL_FRAGMENT_SHADER: fprintf ( stdout , "// Fragment Shader [%s]\n" , this->GetName ( ) ); break;
+		case GL_COMPUTE_SHADER: fprintf ( stdout , "// Compute Shader [%s]\n" , this->GetName ( ) ); break;
+		default: fprintf ( stdout , "// Unknown Shader Stage [%s]\n" , this->GetName ( ) ); break;
+	}
+
+	for ( auto source : sources ) {
+		fprintf ( stdout , "%s" , source );
+	}
+	fprintf ( stdout , "\n" );
+#endif
 
 	glShaderSource ( shader , sources.Size ( ) , sources.Data ( ) , nullptr );
 	glCompileShader ( shader );
@@ -865,7 +874,6 @@ std::string GLShader::WorkaroundGeometryShaderSourceCreate ( const ShaderCreateI
 		ss << "  gl_Position = gl_in[" << i << "].gl_Position;\n";
 		ss << "  EmitVertex();\n";
 	}
-	ss << "}\n";
 	return ss.str ( );
 }
 

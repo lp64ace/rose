@@ -7,7 +7,7 @@ static uint64_t TimeSinceEpoch ( ) {
 }
 
 GHOST_TimePoint GHOST_System::GetTime ( ) const {
-	return std::chrono::duration<GHOST_TimePoint> ( std::chrono::system_clock::now ( ) - std::chrono::system_clock::from_time_t ( this->mStartTime ) ).count ( );
+	return ( GHOST_TimePoint ) std::chrono::duration<double> ( std::chrono::system_clock::now ( ) - std::chrono::system_clock::from_time_t ( this->mStartTime ) ).count ( );
 }
 
 uint64_t GHOST_System::GetMilliseconds ( ) const {

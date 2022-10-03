@@ -256,6 +256,9 @@ void gpu_shader_create_info_init ( ) {
 
 #include "gpu/infos/gpu_shader_create_info_list.h"
 
+#undef GPU_SHADER_INTERFACE_INFO
+#undef GPU_SHADER_CREATE_INFO
+
 }
 
 void gpu_shader_create_info_exit ( ) {

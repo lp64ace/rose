@@ -39,6 +39,8 @@ struct GPU_Source {
 
 	std::string ProcessedSource;
 
+	void *User = nullptr;
+
 	GPU_Source ( const char *path , const char *file , const char *datatoc , GPUFunctionDictionnary *g_functions ) {
 		this->Fullpath = path;
 		this->Filename = file;
@@ -90,6 +92,10 @@ struct GPU_Source {
 			}
 			CheckNoQuotes ( );
 		}
+	}
+
+	~GPU_Source ( ) {
+		MEM_SAFE_FREE ( this->User );
 	}
 
 	static bool IsInComment ( const StringRef &input , int64_t offset ) {
@@ -149,7 +155,7 @@ struct GPU_Source {
 		std::cout << "^\n";
 	}
 
-#define CHECK(test_value, str, ofs, msg)	if ((test_value) == -1) {PrintError(str, ofs, msg);continue;}
+#define CHECK(test_value, str, ofs, msg)	if ((test_value) == StringRefNull::npos) {PrintError(str, ofs, msg);continue;}
 
 	void CheckNoQuotes ( ) {
 		int64_t pos = -1;
@@ -170,7 +176,7 @@ struct GPU_Source {
 	* TODO(fclem): This could be done during the datatoc step.
 	*/
 	void QuotePreprocess ( ) {
-		if ( Source.FindFirstOf ( '"' ) == -1 ) {
+		if ( Source.FindFirstOf ( '"' ) == StringRefNull::npos ) {
 			return;
 		}
 
@@ -189,7 +195,7 @@ struct GPU_Source {
 
 		while ( true ) {
 			cursor = find_keyword ( input , "enum " , cursor + 1 );
-			if ( cursor == -1 ) {
+			if ( cursor == StringRefNull::npos ) {
 				break;
 			}
 			/* Skip matches like `typedef enum myEnum myType;` */
@@ -229,7 +235,7 @@ struct GPU_Source {
 
 			/* Really poor check. Could be done better. */
 			int64_t token = find_token ( enum_values , '{' );
-			int64_t not_found = ( token == -1 ) ? 0 : -1;
+			int64_t not_found = ( token == StringRefNull::npos ) ? 0 : -1;
 			CHECK ( not_found , input , values_start + token , "Unexpected \'{\' token inside enum values." );
 
 			/* Do not capture the comma after the last value (if present). */
@@ -268,7 +274,7 @@ struct GPU_Source {
 
 		while ( true ) {
 			cursor = find_token ( input , '\'' , cursor + 1 );
-			if ( cursor == -1 ) {
+			if ( cursor == StringRefNull::npos ) {
 				break;
 			}
 			/* Output anything between 2 print statement. */
@@ -335,12 +341,12 @@ struct GPU_Source {
 
 			{
 				pos = Source.Find ( "pragma ROSE_REQUIRE(" , pos + 1 );
-				if ( pos == -1 ) {
+				if ( pos == StringRefNull::npos ) {
 					return 0;
 				}
-				int64_t start = Source.Find ( '(' , pos ) + 1;
-				int64_t end = Source.Find ( ')' , pos );
-				if ( end == -1 ) {
+				size_t start = Source.Find ( '(' , pos ) + 1;
+				size_t end = Source.Find ( ')' , pos );
+				if ( end == StringRefNull::npos ) {
 					PrintError ( Source , start , "Malformed ROSE_REQUIRE: Missing \")\" token" );
 					return 1;
 				}
@@ -431,10 +437,14 @@ int gpu_shader_dependency_get_builtin_bits ( const StringRefNull shader_source_n
 }
 
 GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull path , const StringRefNull file ) {
-	char *source = ( char * ) KER_import_file_c ( path.CStr ( ) , file.CStr ( ) );
-	if ( source ) {
+	char *code = ( char * ) KER_import_file_c ( path.CStr ( ) , file.CStr ( ) );
+	if ( code ) {
+		GPU_Source *source = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , code , g_functions );
+		if ( source ) {
+			source->User = code; // Data to free when source is deleted.
+		}
 		// TODO : free source when no longer needed.
-		return ( *g_sources ) [ file ] = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , source , g_functions );
+		return ( *g_sources ) [ file ] = source;
 	}
 	return nullptr;
 }

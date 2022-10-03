@@ -38,7 +38,7 @@ void GPU_indexbuf_init_ex ( GPU_IndexBufBuilder *builder , int prim_type , unsig
 	builder->RestartIndexValue = RESTART_INDEX;
 #endif
 	builder->UsesRestartIndices = false;
-	builder->Data = ( unsigned int * ) MEM_callocN ( builder->MaxIndexLen * sizeof ( unsigned int ) , "GPU_IndexBuf data" );
+	builder->Data = ( unsigned int * ) MEM_mallocN ( builder->MaxIndexLen * sizeof ( unsigned int ) , "GPU_IndexBuf data" );
 }
 
 void GPU_indexbuf_init ( GPU_IndexBufBuilder *builder , int prim_type , unsigned int prim_len , unsigned int vertex_len ) {

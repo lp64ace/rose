@@ -31,8 +31,7 @@ static unsigned int comp_size ( unsigned int type ) {
 #ifdef TRUST_NO_ONE
 	assert ( LIB_channel_bits ( type ) % 8 == 0 );
 #endif
-	const unsigned int sizes [ ] = { 1, 1, 2, 2, 4, 4, 4 };
-	return sizes [ type ];
+	return LIB_channel_bits ( type ) / 8;
 }
 
 static unsigned int attr_size ( const GPU_VertAttr *a ) {
@@ -320,9 +319,10 @@ void GPU_vertformat_from_shader ( GPU_VertFormat *format , const struct GPU_Shad
 
 	unsigned int attr_len = GPU_shader_get_attribute_len ( gpushader );
 	int location_test = 0 , attrs_added = 0;
-	while ( attrs_added < attr_len ) {
+	while ( attrs_added < attr_len && location_test < GPU_MAX_ATTR ) {
 		char name [ 256 ];
 		Type gpu_type;
+
 		if ( !GPU_shader_get_attribute_info ( gpushader , location_test++ , name , ( int * ) &gpu_type ) ) {
 			continue;
 		}
@@ -334,6 +334,5 @@ void GPU_vertformat_from_shader ( GPU_VertFormat *format , const struct GPU_Shad
 		int comp_len = component_size_get ( gpu_type );
 
 		GPU_vertformat_attr_add ( format , name , comp_type , comp_len , fetch_mode );
-		attrs_added++;
 	}
 }

@@ -245,11 +245,6 @@ void GLBatch::Draw ( int v_first , int v_count , int i_first , int i_count ) {
 
 	GLenum gl_type = prim_to_gl ( this->PrimType );
 
-	printf ( "batch draw %d vertices %d indices using shader %s.\n" ,
-		 v_count ,
-		 i_count ,
-		 GPU_shader_get_name ( this->Shader ) );
-
 	if ( this->Elem ) {
 		const GLIndexBuf *el = this->GetElem ( );
 		GLenum index_type = index_buf_type_to_gl ( el->mIndexType );
@@ -257,11 +252,9 @@ void GLBatch::Draw ( int v_first , int v_count , int i_first , int i_count ) {
 		void *v_first_ofs = el->offset_ptr ( v_first );
 
 		if ( GLContext::BaseInstanceSupport ) {
-			glDrawElementsInstancedBaseVertexBaseInstance (
-				gl_type , v_count , index_type , v_first_ofs , i_count , base_index , i_first );
+			glDrawElementsInstancedBaseVertexBaseInstance ( gl_type , v_count , index_type , v_first_ofs , i_count , base_index , i_first );
 		} else {
-			glDrawElementsInstancedBaseVertex (
-				gl_type , v_count , index_type , v_first_ofs , i_count , base_index );
+			glDrawElementsInstancedBaseVertex ( gl_type , v_count , index_type , v_first_ofs , i_count , base_index );
 		}
 	} else {
 #ifdef __APPLE__

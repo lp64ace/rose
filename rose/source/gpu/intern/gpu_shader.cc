@@ -469,7 +469,7 @@ bool GPU_shader_get_attribute_info ( const GPU_Shader *shader , int attr_locatio
 	ShaderInterface *interface = unwrap ( shader )->mInterface;
 
 	const ShaderInput *attr = interface->AttrGet ( attr_location );
-	if ( !attr ) {
+	if ( !attr || attr->Location == -1 ) {
 		return false;
 	}
 

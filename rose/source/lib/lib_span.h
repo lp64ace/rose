@@ -162,6 +162,14 @@ public:
 		return this->mData + this->mSize;
 	}
 
+	constexpr const _Tp *begin ( ) const {
+		return this->mData;
+	}
+
+	constexpr const _Tp *end ( ) const {
+		return this->mData + this->mSize;
+	}
+
 	constexpr _Tp &operator[]( const size_t index ) const {
 		return this->mData [ index ];
 	}
