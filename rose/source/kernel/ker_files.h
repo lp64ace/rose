@@ -6,11 +6,11 @@
 extern "C" {
 #endif
 
-#define KER_FILES_TEXT				0x00000000
-#define KER_FILES_INI				0x00000001
-#define KER_FILES_SHADERS			0x00000002
-#define KER_FILES_TEXTURES			0x00000003
-#define KER_FILES_MODELS			0x00000004
+	#define KER_FILES_TEXT				0x00000000
+	#define KER_FILES_INI				0x00000001
+	#define KER_FILES_SHADERS			0x00000002
+	#define KER_FILES_TEXTURES			0x00000003
+	#define KER_FILES_MODELS			0x00000004
 
 	// Returns the number of common paths for the specified file type.
 	int KER_get_num_common_paths_to_files ( int file );

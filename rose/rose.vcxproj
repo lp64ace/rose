@@ -118,6 +118,7 @@
     <ClInclude Include="source\lib\lib_types.h" />
     <ClInclude Include="source\lib\lib_utildefines.h" />
     <ClInclude Include="source\lib\lib_vector.h" />
+    <ClInclude Include="source\lib\lib_version.h" />
     <ClInclude Include="source\utf\utfconv.h" />
   </ItemGroup>
   <ItemGroup>

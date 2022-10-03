@@ -78,8 +78,8 @@ static char *glsl_patch_default_get ( ) {
 	STR_CONCAT ( patch , slen , "#define gpu_Array(_type) _type[]\n" );
 
 	/* Derivative sign can change depending on implementation. */
-	STR_CONCAT ( patch , slen , "#define DFDX_SIGN %1.1f\n" , GLContext::DerivativeSigns [ 0 ] );
-	STR_CONCAT ( patch , slen , "#define DFDY_SIGN %1.1f\n" , GLContext::DerivativeSigns [ 1 ] );
+	STR_CONCAT ( patch , slen , "#define DFDX_SIGN %.1f\n" , GLContext::DerivativeSigns [ 0 ] );
+	STR_CONCAT ( patch , slen , "#define DFDY_SIGN %.1f\n" , GLContext::DerivativeSigns [ 1 ] );
 
 	assert ( slen < sizeof ( patch ) );
 	return patch;
@@ -781,7 +781,7 @@ unsigned int GLShader::CreateShaderStage ( unsigned int gl_stage , MutableSpan<c
 	/* Patch the shader code using the first source slot. */
 	sources [ 0 ] = GetPatch ( gl_stage );
 
-#if 1
+#if 0
 	switch ( gl_stage ) {
 		case GL_VERTEX_SHADER: fprintf ( stdout , "// Vertex Shader [%s]\n" , this->GetName ( ) ); break;
 		case GL_GEOMETRY_SHADER: fprintf ( stdout , "// Geometry Shader [%s]\n" , this->GetName ( ) ); break;

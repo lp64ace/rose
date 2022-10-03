@@ -31,11 +31,11 @@
 #endif
 #ifndef LIB_ASSERT_UNIT_V3
 #  define LIB_ASSERT_UNIT_V3(v)
-#  define LIB_ASSERT_UNIT_V3_BD(v)
+#  define LIB_ASSERT_UNIT_V3_DB(v)
 #endif
 #ifndef LIB_ASSERT_UNIT_V2
 #  define LIB_ASSERT_UNIT_V2(v)               
-#  define LIB_ASSERT_UNIT_V2_BD(v)               
+#  define LIB_ASSERT_UNIT_V2_DB(v)               
 #endif  
 
 //******************************* Interpolation *******************************/

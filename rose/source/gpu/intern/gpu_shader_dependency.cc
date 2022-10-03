@@ -440,9 +440,7 @@ GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull path , con
 	char *code = ( char * ) KER_import_file_c ( path.CStr ( ) , file.CStr ( ) );
 	if ( code ) {
 		GPU_Source *source = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , code , g_functions );
-		if ( source ) {
-			source->User = code; // Data to free when source is deleted.
-		}
+		source->User = code; // Data to free when source is deleted.
 		// TODO : free source when no longer needed.
 		return ( *g_sources ) [ file ] = source;
 	}
@@ -452,15 +450,28 @@ GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull path , con
 GPU_Source *gpu_shader_dependency_try_to_locate_source ( const StringRefNull shader_source_name ) {
 	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
 	if ( itr == g_sources->end ( ) ) {
+		int occurances = 0;
+
+		const char *path_to_file = nullptr;
+
 		for ( int i = 0; i < KER_get_num_common_paths_to_files ( KER_FILES_SHADERS ); i++ ) {
-			const char *path = KER_get_common_path_to_files ( KER_FILES_SHADERS , i );
-			if ( KER_file_exists ( path , shader_source_name.CStr ( ) ) ) {
-				GPU_Source *source = gpu_shader_dependency_import_source ( path , shader_source_name );
-				if ( source ) {
-					return source;
-				}
+			const char *common_path = KER_get_common_path_to_files ( KER_FILES_SHADERS , i );
+			if ( KER_file_exists ( common_path , shader_source_name.CStr ( ) ) ) {
+				path_to_file = common_path;
+				occurances++;
 			}
 		}
+
+		LIB_assert_msg ( occurances , "%s failed, shader file '%s' could not be located.\n"
+				 , __func__ , shader_source_name.CStr ( ) );
+		LIB_warn_msg ( occurances <= 1 , "%s failed, shader file '%s' has too many instances.\n"
+			       , __func__ , shader_source_name.CStr ( ) );
+
+		GPU_Source *source = gpu_shader_dependency_import_source ( path_to_file , shader_source_name );
+		if ( source ) {
+			return source;
+		}
+
 		return nullptr;
 	}
 	return itr->second;

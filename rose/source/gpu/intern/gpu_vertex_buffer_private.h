@@ -2,6 +2,8 @@
 
 #include "gpu/gpu_vertex_buffer.h"
 
+#include "lib/lib_error.h"
+
 namespace rose {
 namespace gpu {
 
@@ -42,13 +44,13 @@ public:
 
 	// Size of the data allocated.
 	size_t SizeAllocGet ( ) const {
-		assert ( this->mFormat.Packed );
+		LIB_assert ( this->mFormat.Packed );
 		return mVertexAlloc * this->mFormat.Stride;
 	}
 
 	// Size of the data uploaded to the GPU.
 	size_t SizeUsedGet ( ) const {
-		assert ( this->mFormat.Packed );
+		LIB_assert ( this->mFormat.Packed );
 		return mVertexLen * this->mFormat.Stride;
 	}
 
@@ -57,7 +59,7 @@ public:
 	}
 
 	void ReferenceRemove ( ) {
-		assert ( this->mHandleRefcount > 0 );
+		LIB_assert ( this->mHandleRefcount > 0 );
 		this->mHandleRefcount--;
 		if ( this->mHandleRefcount == 0 ) {
 			delete this;

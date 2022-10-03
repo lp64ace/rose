@@ -342,6 +342,9 @@
     <ClInclude Include="source\kernel\ker_files.h">
       <Filter>source\kernel</Filter>
     </ClInclude>
+    <ClInclude Include="source\lib\lib_version.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ghost\intern\ghost_api.cpp">

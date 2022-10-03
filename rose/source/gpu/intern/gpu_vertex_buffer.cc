@@ -12,7 +12,7 @@ VertBuf::VertBuf ( ) {
 }
 
 VertBuf::~VertBuf ( ) {
-	assert ( this->mFlag == GPU_VERTBUF_INVALID ); // Should already have been cleared.
+	LIB_assert ( this->mFlag == GPU_VERTBUF_INVALID ); // Should already have been cleared.
 }
 
 void VertBuf::Init ( const GPU_VertFormat *format , int usage ) {
@@ -49,7 +49,7 @@ VertBuf *VertBuf::Duplicate ( ) {
 }
 
 void VertBuf::Allocate ( unsigned int len ) {
-	assert ( this->mFormat.Packed );
+	LIB_assert ( this->mFormat.Packed );
 	this->mVertexLen = this->mVertexAlloc = len;
 	this->AcquireData ( );
 	this->mFlag |= GPU_VERTBUF_DATA_DIRTY;
@@ -133,19 +133,19 @@ void GPU_vertbuf_data_resize ( GPU_VertBuf *verts , unsigned int v_len ) {
 
 void GPU_vertbuf_data_len_set ( GPU_VertBuf *verts_ , unsigned int v_len ) {
 	VertBuf *verts = unwrap ( verts_ );
-	assert ( verts->mData != nullptr ); /* Only for dynamic data. */
-	assert ( v_len <= verts->mVertexAlloc );
+	LIB_assert ( verts->mData != nullptr ); /* Only for dynamic data. */
+	LIB_assert ( v_len <= verts->mVertexAlloc );
 	verts->mVertexLen = v_len;
 }
 
 void GPU_vertbuf_attr_set ( GPU_VertBuf *verts_ , unsigned int a_idx , unsigned int v_idx , const void *data ) {
 	VertBuf *verts = unwrap ( verts_ );
-	assert ( verts->GetUsageType ( ) != GPU_USAGE_DEVICE_ONLY );
+	LIB_assert ( verts->GetUsageType ( ) != GPU_USAGE_DEVICE_ONLY );
 	const GPU_VertFormat *format = &verts->mFormat;
 	const GPU_VertAttr *a = &format->Attrs [ a_idx ];
-	assert ( v_idx < verts->mVertexAlloc );
-	assert ( a_idx < format->AttrLen );
-	assert ( verts->mData != nullptr );
+	LIB_assert ( v_idx < verts->mVertexAlloc );
+	LIB_assert ( a_idx < format->AttrLen );
+	LIB_assert ( verts->mData != nullptr );
 	verts->mFlag |= GPU_VERTBUF_DATA_DIRTY;
 	memcpy ( verts->mData + a->Offset + v_idx * format->Stride , data , a->Size );
 }
@@ -153,7 +153,7 @@ void GPU_vertbuf_attr_set ( GPU_VertBuf *verts_ , unsigned int a_idx , unsigned 
 void GPU_vertbuf_attr_fill ( GPU_VertBuf *verts_ , unsigned int a_idx , const void *data ) {
 	VertBuf *verts = unwrap ( verts_ );
 	const GPU_VertFormat *format = &verts->mFormat;
-	assert ( a_idx < format->AttrLen );
+	LIB_assert ( a_idx < format->AttrLen );
 	const GPU_VertAttr *a = &format->Attrs [ a_idx ];
 	const unsigned int stride = a->Size; /* tightly packed input data */
 	verts->mFlag |= GPU_VERTBUF_DATA_DIRTY;
@@ -162,21 +162,21 @@ void GPU_vertbuf_attr_fill ( GPU_VertBuf *verts_ , unsigned int a_idx , const vo
 
 void GPU_vertbuf_vert_set ( GPU_VertBuf *verts_ , unsigned int v_idx , const void *data ) {
 	VertBuf *verts = unwrap ( verts_ );
-	assert ( verts->GetUsageType ( ) != GPU_USAGE_DEVICE_ONLY );
+	LIB_assert ( verts->GetUsageType ( ) != GPU_USAGE_DEVICE_ONLY );
 	const GPU_VertFormat *format = &verts->mFormat;
-	assert ( v_idx < verts->mVertexAlloc );
-	assert ( verts->mData != nullptr );
+	LIB_assert ( v_idx < verts->mVertexAlloc );
+	LIB_assert ( verts->mData != nullptr );
 	verts->mFlag |= GPU_VERTBUF_DATA_DIRTY;
 	memcpy ( verts->mData + v_idx * format->Stride , data , format->Stride );
 }
 
 void GPU_vertbuf_attr_fill_stride ( GPU_VertBuf *verts_ , unsigned int a_idx , unsigned int stride , const void *data ) {
 	VertBuf *verts = unwrap ( verts_ );
-	assert ( verts->GetUsageType ( ) != GPU_USAGE_DEVICE_ONLY );
+	LIB_assert ( verts->GetUsageType ( ) != GPU_USAGE_DEVICE_ONLY );
 	const GPU_VertFormat *format = &verts->mFormat;
 	const GPU_VertAttr *a = &format->Attrs [ a_idx ];
-	assert ( a_idx < format->AttrLen );
-	assert ( verts->mData != nullptr );
+	LIB_assert ( a_idx < format->AttrLen );
+	LIB_assert ( verts->mData != nullptr );
 	verts->mFlag |= GPU_VERTBUF_DATA_DIRTY;
 	const unsigned int vertex_len = verts->mVertexLen;
 
@@ -201,7 +201,7 @@ void *GPU_vertbuf_get_data ( const GPU_VertBuf *verts ) {
 void *GPU_vertbuf_steal_data ( GPU_VertBuf *verts_ ) {
 	VertBuf *verts = unwrap ( verts_ );
 	/* TODO: Assert that the format has no padding. */
-	assert ( verts->mData );
+	LIB_assert ( verts->mData );
 	void *data = verts->mData;
 	verts->mData = nullptr;
 	return data;

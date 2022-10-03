@@ -8,7 +8,7 @@ namespace gpu {
 
 StorageBuf::StorageBuf ( size_t size , const char *name ) {
 	/* Make sure that UBO is padded to size of vec4 */
-	assert ( ( size % 16 ) == 0 );
+        LIB_assert ( ( size % 16 ) == 0 );
 
 	this->mSizeInBytes = size;
 

@@ -322,8 +322,8 @@ static void detect_workarounds ( ) {
 	/* dFdx/dFdy calculation factors, those are dependent on driver. */
 	if ( GPU_type_matches ( GPU_DEVICE_ATI , GPU_OS_ANY , GPU_DRIVER_ANY ) &&
 	     strstr ( version , "3.3.10750" ) ) {
-		GLContext::DerivativeSigns [ 0 ] = 1.0;
-		GLContext::DerivativeSigns [ 1 ] = -1.0;
+		GLContext::DerivativeSigns [ 0 ] = 1.0f;
+		GLContext::DerivativeSigns [ 1 ] = -1.0f;
 	} else if ( GPU_type_matches ( GPU_DEVICE_INTEL , GPU_OS_WIN , GPU_DRIVER_ANY ) ) {
 		if ( strstr ( version , "4.0.0 - Build 10.18.10.3308" ) ||
 		     strstr ( version , "4.0.0 - Build 9.18.10.3186" ) ||
@@ -331,9 +331,12 @@ static void detect_workarounds ( ) {
 		     strstr ( version , "3.1.0 - Build 9.17.10.3347" ) ||
 		     strstr ( version , "3.1.0 - Build 9.17.10.4101" ) ||
 		     strstr ( version , "3.3.0 - Build 8.15.10.2618" ) ) {
-			GLContext::DerivativeSigns [ 0 ] = -1.0;
-			GLContext::DerivativeSigns [ 1 ] = 1.0;
+			GLContext::DerivativeSigns [ 0 ] = -1.0f;
+			GLContext::DerivativeSigns [ 1 ] = 1.0f;
 		}
+	} else {
+		GLContext::DerivativeSigns [ 0 ] = -1.0f;
+		GLContext::DerivativeSigns [ 1 ] = 1.0f;
 	}
 
 	/* Disable TF on macOS. */

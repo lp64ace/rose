@@ -45,7 +45,7 @@ static inline GLenum usage_to_gl ( int type ) {
 		case GPU_USAGE_STATIC:
 		case GPU_USAGE_DEVICE_ONLY: return GL_STATIC_DRAW;
 		default: {
-			assert ( 0 );
+			LIB_assert_unreachable ( );
 			return GL_STATIC_DRAW;
 		}break;
 	}
@@ -62,7 +62,7 @@ static inline GLenum comp_type_to_gl ( unsigned int type ) {
 		case GPU_COMP_F32: return GL_FLOAT;
 		case GPU_COMP_I10: return GL_INT_2_10_10_10_REV;
 		default: {
-			assert ( 0 );
+			LIB_assert_unreachable ( );
 			return GL_FLOAT;
 		}break;
 	}

@@ -79,7 +79,6 @@ int main ( void ) {
 				GPU_matrix_pop ( );
 
 				t1 = t2;
-
 				ghostSwapBuffers ( window );
 			}
 		}
