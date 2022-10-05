@@ -40,6 +40,9 @@
     <Filter Include="source\kernel\intern">
       <UniqueIdentifier>{f5e5a488-030f-4aec-a006-d6cf444bdcf9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\dna">
+      <UniqueIdentifier>{e42ea780-b85e-4bac-b1af-c93b845527e5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\lib\lib_utildefines.h">
@@ -339,10 +342,19 @@
     <ClInclude Include="source\gpu\infos\gpu_shader_create_info_list.h">
       <Filter>source\gpu\infos</Filter>
     </ClInclude>
-    <ClInclude Include="source\kernel\ker_files.h">
+    <ClInclude Include="source\lib\lib_version.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\kernel\rke_anonymous_attribute.h">
       <Filter>source\kernel</Filter>
     </ClInclude>
-    <ClInclude Include="source\lib\lib_version.h">
+    <ClInclude Include="source\kernel\rke_anonymous_attribute_id.h">
+      <Filter>source\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="source\dna\dna_customdata.h">
+      <Filter>source\dna</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_mempool.h">
       <Filter>source\lib</Filter>
     </ClInclude>
   </ItemGroup>
@@ -515,8 +527,11 @@
     <ClCompile Include="source\gpu\intern\gpu_init_exit.cc">
       <Filter>source\gpu\intern</Filter>
     </ClCompile>
-    <ClCompile Include="source\kernel\intern\ker_files.cpp">
+    <ClCompile Include="source\kernel\intern\anonymous_attribute.cpp">
       <Filter>source\kernel\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_mempool.cpp">
+      <Filter>source\lib\intern</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

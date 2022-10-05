@@ -59,7 +59,7 @@ char *LIB_strncpy ( char *__restrict dst , const char *__restrict src , size_t m
  * the size of dst)
  * \retval The number of bytes copied (The only difference from BLI_strncpy).
  */
-size_t BLI_strcpy_rlen ( char *__restrict dst , const char *__restrict src ) ATTR_WARN_UNUSED_RESULT ATTR_NONNULL ( );
+size_t LIB_strcpy_rlen ( char *__restrict dst , const char *__restrict src ) ATTR_WARN_UNUSED_RESULT ATTR_NONNULL ( );
 
 /**
  * Join an array of strings into a newly allocated, null terminated string.

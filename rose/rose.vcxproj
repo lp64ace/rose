@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\dna\dna_customdata.h" />
     <ClInclude Include="source\ghost\ghost_api.h" />
     <ClInclude Include="source\ghost\ghost_icontext.h" />
     <ClInclude Include="source\ghost\ghost_ievent.h" />
@@ -94,7 +95,8 @@
     <ClInclude Include="source\gpu\opengl\gl_uniform_buffer.h" />
     <ClInclude Include="source\gpu\opengl\gl_vertex_array.h" />
     <ClInclude Include="source\gpu\opengl\gl_vertex_buffer.h" />
-    <ClInclude Include="source\kernel\ker_files.h" />
+    <ClInclude Include="source\kernel\rke_anonymous_attribute.h" />
+    <ClInclude Include="source\kernel\rke_anonymous_attribute_id.h" />
     <ClInclude Include="source\lib\lib_alloc.h" />
     <ClInclude Include="source\lib\lib_allocator.h" />
     <ClInclude Include="source\lib\lib_bitmap.h" />
@@ -108,6 +110,7 @@
     <ClInclude Include="source\lib\lib_math_rotation.h" />
     <ClInclude Include="source\lib\lib_math_vec.h" />
     <ClInclude Include="source\lib\lib_math_base.h" />
+    <ClInclude Include="source\lib\lib_mempool.h" />
     <ClInclude Include="source\lib\lib_mem_utils.h" />
     <ClInclude Include="source\lib\lib_span.h" />
     <ClInclude Include="source\lib\lib_compiler.h" />
@@ -169,13 +172,14 @@
     <ClCompile Include="source\gpu\opengl\gl_uniform_buffer.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_vertex_array.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_vertex_buffer.cpp" />
-    <ClCompile Include="source\kernel\intern\ker_files.cpp" />
+    <ClCompile Include="source\kernel\intern\anonymous_attribute.cpp" />
     <ClCompile Include="source\lib\intern\lib_alloc.cpp" />
     <ClCompile Include="source\lib\intern\lib_error.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_matrix.c" />
     <ClCompile Include="source\lib\intern\lib_math_rotation.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_vector.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_vector_inline.cc" />
+    <ClCompile Include="source\lib\intern\lib_mempool.cpp" />
     <ClCompile Include="source\lib\intern\lib_string.cpp" />
     <ClCompile Include="source\lib\intern\lib_string_util.cpp" />
     <ClCompile Include="source\utf\intern\utfconv.cpp" />

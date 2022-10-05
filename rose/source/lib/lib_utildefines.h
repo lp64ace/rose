@@ -40,6 +40,8 @@
 #define STRINGIFY_APPEND(a, b)	"" a #b
 #define STRINGIFY(x)		STRINGIFY_APPEND("", x)
 
+#define POINTER_OFFSET(v, ofs) ((void *)((char *)(v) + (ofs)))
+
  /* -------------------------------------------------------------------- */
  /* \name Equal to Any Element (ELEM) Macro
   * \{ */

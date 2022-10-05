@@ -4,41 +4,37 @@
 #include <stdio.h>
 
 struct MemHead {
-#ifdef _DEBUG
-	char Name [ 64 ];
-#endif
 	size_t Size;
 };
+
+static_assert ( MEM_SIZE_OVERHEAD >= sizeof ( MemHead ) , "MemHead size is too big" );
+#ifdef _DEBUG
+static_assert ( MEM_SIZE_OVERHEAD == sizeof ( MemHead ) , "MemHead size has changed" );
+#endif
 
 #define MEMHEAD_FROM_PTR(ptr)		((ptr)?(((MemHead *)ptr)-1):((MemHead *)ptr))
 #define PTR_FROM_MEMHEAD(memhead)	((memhead)?(((MemHead *)memhead)+1):(memhead))
 
 void *MEM_mallocN ( size_t length , const char *name ) {
-	MemHead *head = ( MemHead * ) malloc ( sizeof ( MemHead ) + length );
+	MemHead *head = ( MemHead * ) malloc ( MEM_SIZE_OVERHEAD + length );
 	if ( !head ) {
 		return nullptr;
 	}
 	head->Size = length;
-#ifdef _DEBUG
-	strcpy_s ( head->Name , sizeof ( head->Name ) , name );
-#endif
 	return PTR_FROM_MEMHEAD ( head );
 }
 
 void *MEM_callocN ( size_t length , const char *name ) {
-	MemHead *head = ( MemHead * ) calloc ( sizeof ( MemHead ) + length , 1 );
+	MemHead *head = ( MemHead * ) calloc ( MEM_SIZE_OVERHEAD + length , 1 );
 	if ( !head ) {
 		return nullptr;
 	}
 	head->Size = length;
-#ifdef _DEBUG
-	strcpy_s ( head->Name , sizeof ( head->Name ) , name );
-#endif
 	return PTR_FROM_MEMHEAD ( head );
 }
 
 void *MEM_reallocN ( void *_memory , size_t length ) {
-	MemHead *head = ( MemHead * ) realloc ( MEMHEAD_FROM_PTR ( _memory ) , length + sizeof ( MemHead ) );
+	MemHead *head = ( MemHead * ) realloc ( MEMHEAD_FROM_PTR ( _memory ) , length + MEM_SIZE_OVERHEAD );
 	if ( !head ) {
 		return nullptr;
 	}
@@ -47,7 +43,7 @@ void *MEM_reallocN ( void *_memory , size_t length ) {
 }
 
 void *MEM_recallocN ( void *_memory , size_t length ) {
-	MemHead *head = ( MemHead * ) realloc ( MEMHEAD_FROM_PTR ( _memory ) , length + sizeof ( MemHead ) );
+	MemHead *head = ( MemHead * ) realloc ( MEMHEAD_FROM_PTR ( _memory ) , length + MEM_SIZE_OVERHEAD );
 	if ( !head ) {
 		return nullptr;
 	}
@@ -57,11 +53,11 @@ void *MEM_recallocN ( void *_memory , size_t length ) {
 }
 
 void *MEM_dupallocN ( void *ptr ) {
-	MemHead *head = ( MemHead * ) malloc ( sizeof ( MemHead ) + MEMHEAD_FROM_PTR ( ptr )->Size );
+	MemHead *head = ( MemHead * ) malloc ( MEM_SIZE_OVERHEAD + MEMHEAD_FROM_PTR ( ptr )->Size );
 	if ( !head ) {
 		return nullptr;
 	}
-	memcpy ( head , MEMHEAD_FROM_PTR ( ptr ) , sizeof ( MemHead ) + MEMHEAD_FROM_PTR ( ptr )->Size );
+	memcpy ( head , MEMHEAD_FROM_PTR ( ptr ) , MEM_SIZE_OVERHEAD + MEMHEAD_FROM_PTR ( ptr )->Size );
 	return PTR_FROM_MEMHEAD ( head );
 }
 

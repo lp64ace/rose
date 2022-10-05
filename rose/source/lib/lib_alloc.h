@@ -2,11 +2,11 @@
 
 #include <string.h>
 
+#define MEM_SIZE_OVERHEAD	sizeof(size_t)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-	// Smart Pointers
 
 	// Allocate memory
 	void *MEM_mallocN ( size_t length , const char *name );

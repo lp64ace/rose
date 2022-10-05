@@ -1,5 +1,13 @@
 #pragma once
 
+#define ENDIAN_ORDER  ('ABCD')
+
+#if ENDIAN_ORDER==0x41424344UL
+#  define __LITTLE_ENDIAN__
+#elif ENDIAN_ORDER==0x44434241UL
+#  define __BIG_ENDIAN__
+#endif
+
 /* hint to make sure function result is actually used */
 #ifdef __GNUC__
 #  define ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
@@ -378,4 +386,9 @@
 /* clang-format on */
 #else
 #  define CHECK_TYPE_ANY(...) (void)0
+#endif
+
+/** ENDIAN_ORDER: indicates what endianness the platform where the file was written had. */
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+#  error Either __BIG_ENDIAN__ or __LITTLE_ENDIAN__ must be defined.
 #endif

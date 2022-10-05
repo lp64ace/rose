@@ -5,8 +5,7 @@
 #include <sstream>
 
 #include "lib/lib_string_ref.h"
-
-#include "kernel/ker_files.h"
+#include "lib/lib_version.h"
 
 #include "gpu_shader_create_info.h"
 #include "gpu_shader_dependency_private.h"
@@ -39,7 +38,7 @@ struct GPU_Source {
 
 	std::string ProcessedSource;
 
-	void *User = nullptr;
+	void *Extra = nullptr;
 
 	GPU_Source ( const char *path , const char *file , const char *datatoc , GPUFunctionDictionnary *g_functions ) {
 		this->Fullpath = path;
@@ -95,7 +94,7 @@ struct GPU_Source {
 	}
 
 	~GPU_Source ( ) {
-		MEM_SAFE_FREE ( this->User );
+		MEM_SAFE_FREE ( this->Extra );
 	}
 
 	static bool IsInComment ( const StringRef &input , int64_t offset ) {
@@ -436,11 +435,74 @@ int gpu_shader_dependency_get_builtin_bits ( const StringRefNull shader_source_n
 	return source->BuiltinsGet ( );
 }
 
-GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull path , const StringRefNull file ) {
-	char *code = ( char * ) KER_import_file_c ( path.CStr ( ) , file.CStr ( ) );
+#if 1 // TODO : Remove
+
+#ifdef _WIN32
+#  include <windows.h>
+#else
+#  include <string>
+#  include <fstream>
+#  include <streambuf>
+#endif
+
+String compine_path_file ( const String &path , const String &file ) {
+	if ( path.EndsWith ( "\\" ) || path.EndsWith ( "/" ) ) {
+		return path + file;
+	} else if ( path.Find ( '\\' ) != String::npos ) {
+		return path + "\\" + file;
+	} else if ( path.Find ( '/' ) != String::npos ) {
+		return path + "/" + file;
+	}
+	return path + "/" + file;
+}
+
+char *import_file ( const String &file ) {
+#ifdef _WIN32
+	HANDLE handle = CreateFileW ( file.WCStr ( ) , GENERIC_READ , FILE_SHARE_READ , NULL , OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL , NULL );
+	if ( handle != INVALID_HANDLE_VALUE ) {
+		LARGE_INTEGER size = { 0 };
+		if ( GetFileSizeEx ( handle , &size ) ) {
+			char *buffer = ( char * ) MEM_mallocN ( ( size_t ) ++size.QuadPart , __FUNCTION__ );
+			DWORD bytesRead = 0;
+			if ( ReadFile ( handle , buffer , ( DWORD ) size.QuadPart , &bytesRead , NULL ) ) {
+				buffer [ bytesRead ] = 0;
+				return buffer;
+			} else {
+				MEM_SAFE_FREE ( buffer );
+			}
+		}
+	}
+#else
+	std::wifstream t ( file.WCStr ( ) );
+	if ( t.is_open ( ) ) {
+		std::wstring str ( ( std::istreambuf_iterator<wchar_t> ( t ) ) , std::istreambuf_iterator<wchar_t> ( ) );
+		unsigned char *buffer = ( unsigned char * ) MEM_mallocN ( str.capacity ( ) , __FUNCTION__ );
+		memcpy ( buffer , str.data ( ) , str.capacity ( ) );
+		return buffer;
+	}
+#endif
+	return nullptr;
+
+}
+
+#endif
+
+GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull file ) {
+	char *code = nullptr;
+
+	StringRefNull path;
+	if ( ( code = import_file ( compine_path_file ( "shaders/" , file.CStr ( ) ) ) ) != nullptr ) {
+		path = "shaders/";
+	}
+#if ROSE_VERSION_DEV
+	if ( ( code = import_file ( compine_path_file ( "../../shaders/" , file.CStr ( ) ) ) ) != nullptr ) {
+		path = "../../shaders/";
+	}
+#endif
+
 	if ( code ) {
 		GPU_Source *source = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , code , g_functions );
-		source->User = code; // Data to free when source is deleted.
+		source->Extra = code; // Data to free when source is deleted.
 		// TODO : free source when no longer needed.
 		return ( *g_sources ) [ file ] = source;
 	}
@@ -450,24 +512,8 @@ GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull path , con
 GPU_Source *gpu_shader_dependency_try_to_locate_source ( const StringRefNull shader_source_name ) {
 	GPUSourceDictionnary::const_iterator itr = g_sources->find ( shader_source_name );
 	if ( itr == g_sources->end ( ) ) {
-		int occurances = 0;
-
-		const char *path_to_file = nullptr;
-
-		for ( int i = 0; i < KER_get_num_common_paths_to_files ( KER_FILES_SHADERS ); i++ ) {
-			const char *common_path = KER_get_common_path_to_files ( KER_FILES_SHADERS , i );
-			if ( KER_file_exists ( common_path , shader_source_name.CStr ( ) ) ) {
-				path_to_file = common_path;
-				occurances++;
-			}
-		}
-
-		LIB_assert_msg ( occurances , "%s failed, shader file '%s' could not be located.\n"
-				 , __func__ , shader_source_name.CStr ( ) );
-		LIB_warn_msg ( occurances <= 1 , "%s failed, shader file '%s' has too many instances.\n"
-			       , __func__ , shader_source_name.CStr ( ) );
-
-		GPU_Source *source = gpu_shader_dependency_import_source ( path_to_file , shader_source_name );
+		// TODO : fix
+		GPU_Source *source = gpu_shader_dependency_import_source ( shader_source_name );
 		if ( source ) {
 			return source;
 		}
