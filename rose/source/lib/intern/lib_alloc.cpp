@@ -33,6 +33,14 @@ void *MEM_callocN ( size_t length , const char *name ) {
 	return PTR_FROM_MEMHEAD ( head );
 }
 
+void *MEM_malloc_arrayN ( size_t element , size_t length , const char *name ) {
+	return MEM_mallocN ( element * length , name );
+}
+
+void *MEM_calloc_arrayN ( size_t element , size_t length , const char *name ) {
+	return MEM_callocN ( element * length , name );
+}
+
 void *MEM_reallocN ( void *_memory , size_t length ) {
 	MemHead *head = ( MemHead * ) realloc ( MEMHEAD_FROM_PTR ( _memory ) , length + MEM_SIZE_OVERHEAD );
 	if ( !head ) {
@@ -47,8 +55,10 @@ void *MEM_recallocN ( void *_memory , size_t length ) {
 	if ( !head ) {
 		return nullptr;
 	}
+	if ( head->Size < length ) {
+		memset ( ( ( unsigned char * ) PTR_FROM_MEMHEAD ( head ) ) + head->Size , 0 , length - head->Size );
+	}
 	head->Size = length;
-	memset ( PTR_FROM_MEMHEAD ( head ) , 0 , length );
 	return PTR_FROM_MEMHEAD ( head );
 }
 
@@ -63,4 +73,8 @@ void *MEM_dupallocN ( void *ptr ) {
 
 void MEM_freeN ( void *ptr ) {
 	return free ( MEMHEAD_FROM_PTR ( ptr ) );
+}
+
+size_t MEM_allocN_len ( void *memory ) {
+	return MEMHEAD_FROM_PTR ( memory )->Size;
 }

@@ -732,9 +732,11 @@ extern "C" {
         /** \name Inline Definitions
          * \{ */
 
+#ifdef ROSE_USE_INLINE
         #include "intern/lib_math_vector_inline.cc"
+#endif
 
-         /** \} */
+        /** \} */
 
 #ifdef __cplusplus
 }

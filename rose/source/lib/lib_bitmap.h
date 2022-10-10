@@ -3,7 +3,7 @@
 #include "lib_alloc.h"
 #include "lib_compiler.h"
 
-typedef unsigned int BLI_bitmap;
+typedef unsigned int LIB_bitmap;
 
 /* WARNING: the bitmap does not keep track of its own size or check
  * for out-of-bounds access */
@@ -18,41 +18,36 @@ typedef unsigned int BLI_bitmap;
 #define _BITMAP_NUM_BLOCKS(_num)		(((_num) + _BITMAP_MASK) >> _BITMAP_POWER)
 
 // Size (in bytes) used to hold '_num' bits.
-#define BLI_BITMAP_SIZE(_num)			((size_t)(_BITMAP_NUM_BLOCKS(_num)) * sizeof(BLI_bitmap))
+#define LIB_BITMAP_SIZE(_num)			((size_t)(_BITMAP_NUM_BLOCKS(_num)) * sizeof(LIB_bitmap))
 
 // Allocate memory for a bitmap with '_num' bits; free with MEM_free().
-#define BLI_BITMAP_NEW(_num, _alloc_string)	((BLI_bitmap *)MEM_callocN(BLI_BITMAP_SIZE(_num), _alloc_string))
+#define LIB_BITMAP_NEW(_num, _alloc_string)	((LIB_bitmap *)MEM_callocN(LIB_BITMAP_SIZE(_num), _alloc_string))
 
 // Allocate a bitmap on the stack.
-#define BLI_BITMAP_NEW_ALLOCA(_num)		((BLI_bitmap *)memset(alloca(BLI_BITMAP_SIZE(_num)), 0, BLI_BITMAP_SIZE(_num)))
+#define LIB_BITMAP_NEW_ALLOCA(_num)		((LIB_bitmap *)memset(alloca(LIB_BITMAP_SIZE(_num)), 0, LIB_BITMAP_SIZE(_num)))
 
-#define BLI_BITMAP_TEST(_bitmap, _index) \
-  (CHECK_TYPE_ANY(_bitmap, BLI_bitmap *, const BLI_bitmap *), \
-   ((_bitmap)[(_index) >> _BITMAP_POWER] & (1u << ((_index)&_BITMAP_MASK))))
+#define LIB_BITMAP_TEST(_bitmap, _index) \
+  ((_bitmap)[(_index) >> _BITMAP_POWER] & (1u << ((_index)&_BITMAP_MASK)))
 
-#define BLI_BITMAP_ENABLE(_bitmap, _index) \
-  (CHECK_TYPE_ANY(_bitmap, BLI_bitmap *, const BLI_bitmap *), \
-   ((_bitmap)[(_index) >> _BITMAP_POWER] |= (1u << ((_index)&_BITMAP_MASK))))
+#define LIB_BITMAP_ENABLE(_bitmap, _index) \
+   ((_bitmap)[(_index) >> _BITMAP_POWER] |= (1u << ((_index)&_BITMAP_MASK)))
 
-#define BLI_BITMAP_DISABLE(_bitmap, _index) \
-  (CHECK_TYPE_ANY(_bitmap, BLI_bitmap *, const BLI_bitmap *), \
-   ((_bitmap)[(_index) >> _BITMAP_POWER] &= ~(1u << ((_index)&_BITMAP_MASK))))
+#define LIB_BITMAP_DISABLE(_bitmap, _index) \
+   ((_bitmap)[(_index) >> _BITMAP_POWER] &= ~(1u << ((_index)&_BITMAP_MASK)))
 
-#define BLI_BITMAP_SET(_bitmap, _index, _set) \
+#define LIB_BITMAP_SET(_bitmap, _index, _set) \
   { \
-    CHECK_TYPE(_bitmap, BLI_bitmap *); \
     if (_set) { \
-      BLI_BITMAP_ENABLE(_bitmap, _index); \
+      LIB_BITMAP_ENABLE(_bitmap, _index); \
     } \
     else { \
-      BLI_BITMAP_DISABLE(_bitmap, _index); \
+      LIB_BITMAP_DISABLE(_bitmap, _index); \
     } \
   } \
   (void)0
 
-#define BLI_BITMAP_RESIZE(_bitmap, _num) \
+#define LIB_BITMAP_RESIZE(_bitmap, _num) \
   { \
-    CHECK_TYPE(_bitmap, BLI_bitmap *); \
-    (_bitmap) = MEM_recallocN(_bitmap, BLI_BITMAP_SIZE(_num)); \
+    (_bitmap) = MEM_recallocN(_bitmap, LIB_BITMAP_SIZE(_num)); \
   } \
   (void)0

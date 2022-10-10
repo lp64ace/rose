@@ -43,6 +43,12 @@
     <Filter Include="source\dna">
       <UniqueIdentifier>{e42ea780-b85e-4bac-b1af-c93b845527e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\mesh">
+      <UniqueIdentifier>{ddb721cd-c12b-4246-a25c-b751b7fe4234}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\mesh\intern">
+      <UniqueIdentifier>{ab98f719-c181-4fd2-a55b-fceff9295b3a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\lib\lib_utildefines.h">
@@ -351,11 +357,38 @@
     <ClInclude Include="source\kernel\rke_anonymous_attribute_id.h">
       <Filter>source\kernel</Filter>
     </ClInclude>
-    <ClInclude Include="source\dna\dna_customdata.h">
+    <ClInclude Include="source\dna\dna_customdata_types.h">
       <Filter>source\dna</Filter>
     </ClInclude>
     <ClInclude Include="source\lib\lib_mempool.h">
       <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\kernel\rke_customdata.h">
+      <Filter>source\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="source\dna\dna_meshdata_types.h">
+      <Filter>source\dna</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_math_color_blend.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\dna\dna_vec_types.h">
+      <Filter>source\dna</Filter>
+    </ClInclude>
+    <ClInclude Include="source\mesh\bmesh_class.h">
+      <Filter>source\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_compiler_typecheck.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\lib\lib_typedef.h">
+      <Filter>source\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="source\mesh\intern\bmesh_inline.h">
+      <Filter>source\mesh\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\mesh\intern\bmesh_iterators.h">
+      <Filter>source\mesh\intern</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -531,6 +564,12 @@
       <Filter>source\kernel\intern</Filter>
     </ClCompile>
     <ClCompile Include="source\lib\intern\lib_mempool.cpp">
+      <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\kernel\intern\customdata.cpp">
+      <Filter>source\kernel\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lib\intern\lib_math_color_blend_inline.cc">
       <Filter>source\lib\intern</Filter>
     </ClCompile>
   </ItemGroup>

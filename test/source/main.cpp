@@ -1,15 +1,5 @@
 #include "ghost/ghost_api.h"
 #include "gpu/gpu.h"
-#include "lib/lib_mempool.h"
-
-int makeword ( const char *str ) {
-	int out = 0;
-	for ( int i = strlen ( str ) - 1; i + 1; i-- ) {
-		out *= 256;
-		out += str [ i ];
-	}
-	return out;
-}
 
 int main ( void ) {
 	GHOST_SystemHandle instance = ghostCreateSystem ( );

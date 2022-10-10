@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\dna\dna_customdata.h" />
+    <ClInclude Include="source\dna\dna_customdata_types.h" />
+    <ClInclude Include="source\dna\dna_meshdata_types.h" />
+    <ClInclude Include="source\dna\dna_vec_types.h" />
     <ClInclude Include="source\ghost\ghost_api.h" />
     <ClInclude Include="source\ghost\ghost_icontext.h" />
     <ClInclude Include="source\ghost\ghost_ievent.h" />
@@ -95,16 +97,19 @@
     <ClInclude Include="source\gpu\opengl\gl_uniform_buffer.h" />
     <ClInclude Include="source\gpu\opengl\gl_vertex_array.h" />
     <ClInclude Include="source\gpu\opengl\gl_vertex_buffer.h" />
+    <ClInclude Include="source\kernel\rke_customdata.h" />
     <ClInclude Include="source\kernel\rke_anonymous_attribute.h" />
     <ClInclude Include="source\kernel\rke_anonymous_attribute_id.h" />
     <ClInclude Include="source\lib\lib_alloc.h" />
     <ClInclude Include="source\lib\lib_allocator.h" />
     <ClInclude Include="source\lib\lib_bitmap.h" />
+    <ClInclude Include="source\lib\lib_compiler_typecheck.h" />
     <ClInclude Include="source\lib\lib_error.h" />
     <ClInclude Include="source\lib\lib_hash.h" />
     <ClInclude Include="source\lib\lib_math.h" />
     <ClInclude Include="source\lib\lib_math_base_safe.h" />
     <ClInclude Include="source\lib\lib_math_bits.h" />
+    <ClInclude Include="source\lib\lib_math_color_blend.h" />
     <ClInclude Include="source\lib\lib_math_geom.h" />
     <ClInclude Include="source\lib\lib_math_matrix.h" />
     <ClInclude Include="source\lib\lib_math_rotation.h" />
@@ -117,11 +122,15 @@
     <ClInclude Include="source\lib\lib_string.h" />
     <ClInclude Include="source\lib\lib_string_ref.h" />
     <ClInclude Include="source\lib\lib_string_util.h" />
+    <ClInclude Include="source\lib\lib_typedef.h" />
     <ClInclude Include="source\lib\lib_typed_buffer.h" />
     <ClInclude Include="source\lib\lib_types.h" />
     <ClInclude Include="source\lib\lib_utildefines.h" />
     <ClInclude Include="source\lib\lib_vector.h" />
     <ClInclude Include="source\lib\lib_version.h" />
+    <ClInclude Include="source\mesh\bmesh_class.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_inline.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_iterators.h" />
     <ClInclude Include="source\utf\utfconv.h" />
   </ItemGroup>
   <ItemGroup>
@@ -173,6 +182,7 @@
     <ClCompile Include="source\gpu\opengl\gl_vertex_array.cpp" />
     <ClCompile Include="source\gpu\opengl\gl_vertex_buffer.cpp" />
     <ClCompile Include="source\kernel\intern\anonymous_attribute.cpp" />
+    <ClCompile Include="source\kernel\intern\customdata.cpp" />
     <ClCompile Include="source\lib\intern\lib_alloc.cpp" />
     <ClCompile Include="source\lib\intern\lib_error.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_matrix.c" />
@@ -182,6 +192,7 @@
     <ClCompile Include="source\lib\intern\lib_mempool.cpp" />
     <ClCompile Include="source\lib\intern\lib_string.cpp" />
     <ClCompile Include="source\lib\intern\lib_string_util.cpp" />
+    <ClCompile Include="source\lib\intern\lib_math_color_blend_inline.cc" />
     <ClCompile Include="source\utf\intern\utfconv.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -276,7 +287,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -326,7 +337,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>
