@@ -31,6 +31,14 @@ extern "C" {
 #  define LIB_assert_msg(epxr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); }
 #endif
 
+#ifdef _DEBUG
+// Same as #LIB_assert_msg but does not throw
+#  define LIB_assert_warn_msg(expr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); }
+#else
+// Same as #LIB_assert_msg but does not throw
+#  define LIB_assert_warn_msg(epxr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); }
+#endif
+
 #define LIB_assert_unreachable()	LIB_error(ROSE_ERROR_UNREACHABLE,__FILE__,__LINE__,__func__,"Unreachable state"); LIB_throw_error(ROSE_ERROR_UNREACHABLE);
 
 #ifdef __cplusplus
