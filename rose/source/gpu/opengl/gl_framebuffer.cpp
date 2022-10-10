@@ -202,7 +202,7 @@ void GLFrameBuffer::Bind ( bool enabled_srgb ) {
 	}
 
 	if ( this->mContext != GLContext::Get ( ) ) {
-		LIB_error_log ( "Trying to use the same frame-buffer in multiple context" );
+		LIB_assert_msg ( 0 , "Trying to use the same frame-buffer in multiple context" );
 		return;
 	}
 

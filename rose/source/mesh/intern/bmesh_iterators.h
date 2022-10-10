@@ -139,7 +139,7 @@ typedef struct BMIter {
 	BMIter__step_cb Step;
 
 	int Count; /* NOTE: only some iterators set this, don't rely on it. */
-	char IterType;
+	byte IterType;
 } BMIter;
 
 /** \} */

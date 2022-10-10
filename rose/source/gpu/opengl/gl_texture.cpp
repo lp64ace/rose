@@ -604,13 +604,13 @@ void GLTexture::CheckFeedbackLoop ( ) {
                         GPUAttachmentType type = this->mFbAttachment [ i ];
                         GPU_Attachment attachment = fb->mAttachments [ type ];
                         if ( attachment.Mip <= this->mMipMax && attachment.Mip >= this->mMipMin ) {
-                                LIB_error_log ( "Feedback loop: Trying to bind a texture (%s) with mip range %d-%d but mip %d is "
-                                                "attached to the active framebuffer (%s)" ,
-                                                this->mName ,
-                                                this->mMipMin ,
-                                                this->mMipMax ,
-                                                attachment.Mip ,
-                                                fb->mName );
+                                LIB_assert_msg ( 0 , "Feedback loop: Trying to bind a texture (%s) with mip range %d-%d but mip %d is "
+                                                 "attached to the active framebuffer (%s)" ,
+                                                 this->mName ,
+                                                 this->mMipMin ,
+                                                 this->mMipMax ,
+                                                 attachment.Mip ,
+                                                 fb->mName );
                         }
                         return;
                 }

@@ -925,7 +925,7 @@ void CustomData_data_multiply ( int type , void *data , float factor ) {
 	if ( typeInfo->mMultiply ) {
 		typeInfo->mMultiply ( data , factor );
 	} else {
-		LIB_warn_msg ( 0 , "%s missing multiplication method for custom data type.\n" , __FUNCTION__ );
+		LIB_assert_msg ( 0 , "%s missing multiplication method for custom data type.\n" , __FUNCTION__ );
 	}
 }
 
@@ -935,7 +935,7 @@ void CustomData_data_add ( int type , void *data1 , const void *data2 ) {
 	if ( typeInfo->mAdd ) {
 		typeInfo->mAdd ( data1 , data2 );
 	} else {
-		LIB_warn_msg ( 0 , "%s missing addition method for custom data type.\n" , __FUNCTION__ );
+		LIB_assert_msg ( 0 , "%s missing addition method for custom data type.\n" , __FUNCTION__ );
 	}
 }
 

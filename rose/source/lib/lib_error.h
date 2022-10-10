@@ -3,29 +3,35 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#define ROSE_ERROR_OK			0x00
+#define ROSE_ERROR_ASSERT		0xf1
+#define ROSE_ERROR_UNREACHABLE		0xf2
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-	void LIB_error_log_no_exception ( const char *fmt , ... );
-	void LIB_error_vlog_no_exception ( const char *fmt , va_list args );
+	void LIB_error ( int error , const char *file , int line , const char *func , const char *fmt , ... );
+	void LIB_werror ( int error , const wchar_t *file , int line , const wchar_t *func , const wchar_t *fmt , ... );
 
-	void LIB_error_log ( const char *fmt , ... );
-	void LIB_error_vlog ( const char *fmt , va_list args );
+	void LIB_verror ( int error , const char *file , int line , const char *func , const char *fmt , va_list args );
+	void LIB_vwerror ( int error , const wchar_t *file , int line , const wchar_t *func , const wchar_t *fmt , va_list args );
 
-	void LIB_assert_msg ( bool expr , const char *fmt , ... );
-	void LIB_assert_vmsg ( bool expr , const char *fmt , va_list args );
-
-	void LIB_warn_msg ( bool expr , const char *fmt , ... );
-	void LIB_warn_vmsg ( bool expr , const char *fmt , va_list args );
+	void LIB_throw_error ( int error );
 
 #ifdef _DEBUG
-#  define LIB_assert(expr)		LIB_assert_msg(expr,"assertion failed '" #expr "' in %s::%d",__FILE__,__LINE__)
+#  define LIB_assert(expr)		if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,"%s",#expr); LIB_throw_error(ROSE_ERROR_ASSERT); }
 #else
 #  define LIB_assert(expr)		(void)0
 #endif
 
-#define LIB_assert_unreachable()	LIB_error_log("Error in %s, this code should be unreachable.\n",__FUNCTION__)
+#ifdef _DEBUG
+#  define LIB_assert_msg(expr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); LIB_throw_error(ROSE_ERROR_ASSERT); }
+#else
+#  define LIB_assert_msg(epxr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); }
+#endif
+
+#define LIB_assert_unreachable()	LIB_error(ROSE_ERROR_UNREACHABLE,__FILE__,__LINE__,__func__,"Unreachable state"); LIB_throw_error(ROSE_ERROR_UNREACHABLE);
 
 #ifdef __cplusplus
 }
