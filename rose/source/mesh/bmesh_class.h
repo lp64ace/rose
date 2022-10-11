@@ -6,6 +6,7 @@
 #include "lib/lib_compiler_typecheck.h"
 #include "lib/lib_error.h"
 #include "lib/lib_typedef.h"
+#include "lib/lib_alloc.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Pro mesh element structures.
@@ -38,6 +39,8 @@ typedef struct BMVert {
 
 	float Coord [ 3 ]; // Vertex coordinates.
 	float Normal [ 3 ]; // Vertex normal.
+
+	struct BMEdge *Edge;
 } BMVert;
 
 // Disk link structure, only uses by edges.
@@ -60,7 +63,7 @@ typedef struct BMEdge {
 	/** Disk Cycle Pointers.
 	* Relative data: Disk1 indicates the next/prev edge around Vert1 and Disk2 does
 	* the same for Vert2. */
-	struct BMDiskLink *DiskLink1 , *DiskLink2;
+	struct BMDiskLink DiskLink1 , DiskLink2;
 } BMEdge;
 
 typedef struct BMLoop {
@@ -290,7 +293,7 @@ enum {
 		(void)0
 
 #define BM_ELEM_CD_GET_BOOL(ele, offset) \
-		(BLI_assert(offset != -1), *((bool *)((char *)(ele)->Head.Data + (offset))))
+		(LIB_assert(offset != -1), *((bool *)((char *)(ele)->Head.Data + (offset))))
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #  define BM_ELEM_CD_GET_VOID_P(ele, offset) \
@@ -391,3 +394,34 @@ enum {
 	*/
 	BM_ELEM_INTERNAL_TAG = ( 1 << 3 ),
 };
+
+/* -------------------------------------------------------------------- */
+/** \name Utility Defines
+* \{ */
+
+#define BM_FACE_FIRST_LOOP(p)	((p)->LoopFirst)
+
+#define BM_DISK_EDGE_NEXT(e, v) \
+  (CHECK_TYPE_INLINE(e, BMEdge *), \
+   CHECK_TYPE_INLINE(v, BMVert *), \
+   LIB_assert(ELEM(v,e->Vert1,e->Vert2)), \
+   (((&e->DiskLink1)[v == e->Vert2]).Next))
+#define BM_DISK_EDGE_PREV(e, v) \
+  (CHECK_TYPE_INLINE(e, BMEdge *), \
+   CHECK_TYPE_INLINE(v, BMVert *), \
+   LIB_assert(ELEM(v,e->Vert1,e->Vert2)), \
+   (((&e->DiskLink1)[v == e->Vert2]).Prev))
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name BMesh Constants
+* \{ */
+
+#define BM_DEFAULT_NGON_STACK_SIZE	32
+#define BM_DEFAULT_ITER_STACK_SIZE	16
+
+#define BM_LOOP_RADIAL_MAX		((int)0x0000ffff)
+#define BM_NGON_MAX			((int)0x000fffff)
+
+/** \} */

@@ -390,6 +390,18 @@
     <ClInclude Include="source\mesh\intern\bmesh_iterators.h">
       <Filter>source\mesh\intern</Filter>
     </ClInclude>
+    <ClInclude Include="source\mesh\intern\bmesh_iterators_inline.h">
+      <Filter>source\mesh\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\mesh\intern\bmesh_private.h">
+      <Filter>source\mesh\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\mesh\intern\bmesh_structure_inline.h">
+      <Filter>source\mesh\intern</Filter>
+    </ClInclude>
+    <ClInclude Include="source\mesh\intern\bmesh_structure.h">
+      <Filter>source\mesh\intern</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ghost\intern\ghost_api.cpp">
@@ -571,6 +583,12 @@
     </ClCompile>
     <ClCompile Include="source\lib\intern\lib_math_color_blend_inline.cc">
       <Filter>source\lib\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\mesh\intern\bmesh_iterators.cpp">
+      <Filter>source\mesh\intern</Filter>
+    </ClCompile>
+    <ClCompile Include="source\mesh\intern\bmesh_structure.cpp">
+      <Filter>source\mesh\intern</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

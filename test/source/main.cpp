@@ -15,21 +15,21 @@ int main ( void ) {
 
 		GPU_Shader *shader = GPU_shader_get_builtin_shader ( GPU_SHADER_DEFAULT_DIFFUSE );
 
-		float t1 = ( float ) ghostGetTime ( instance );
+		float last_upd = ( float ) ghostGetTime ( instance );
 
 		while ( !ghostGetSystemShouldExit ( instance ) ) {
 			ghostProcessEvents ( instance );
 			ghostDispatchEvents ( instance );
 			if ( ghostActivateWindowContext ( window ) ) {
-				float t2 = ghostGetTime ( instance );
-				float dt = t2 - t1;
+				float curr_upd = ghostGetTime ( instance );
+				float dt = curr_upd - last_upd;
 
 				GPU_context_active_set ( context );
 				GPU_clear_color ( 0.075f , 0.075f , 0.075f , 1.0f );
 				GPU_clear_depth ( 1.0f );
 
-				t1 = t2;
 				ghostSwapBuffers ( window );
+				last_upd = curr_upd;
 			}
 		}
 

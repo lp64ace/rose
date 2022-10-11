@@ -143,3 +143,94 @@ typedef struct BMIter {
 } BMIter;
 
 /** \} */
+
+/**
+* \note Use #BM_vert_at_index / #BM_edge_at_index / #BM_face_at_index for mesh arrays.
+*/
+void *BM_iter_at_index ( BMesh *bm , byte itype , void *data , int index ) ATTR_WARN_UNUSED_RESULT;
+
+/**
+* \brief Iterator as Array
+*
+* Sometimes its convenient to get the iterator as an array
+* to avoid multiple calls to #BM_iter_at_index.
+*/
+int BM_iter_as_array ( BMesh *bm , byte itype , void *data , void **array , int len );
+
+/**
+* \brief Iterator as Array
+*
+* Allocates a new array, has the advantage that you don't need to know the size ahead of time.
+*
+* Takes advantage of less common iterator usage to avoid counting twice,
+* which you might end up doing when #BM_iter_as_array is used.
+*
+* Caller needs to free the array.
+*/
+void *BM_iter_as_arrayN ( BMesh *bm ,
+			  byte itype ,
+			  void *data ,
+			  int *r_len ,
+			  void **stack_array ,
+			  int stack_array_size ) ATTR_WARN_UNUSED_RESULT;
+
+int BM_iter_mesh_bitmap_from_filter ( byte itype , BMesh *bm , unsigned int *bitmap , bool ( *test_fn )( BMElem * , void *user_data ) , void *user_data );
+/**
+* Needed when we want to check faces, but return a loop aligned array.
+*/
+int BM_iter_mesh_bitmap_from_filter_tessface ( BMesh *bm , unsigned int *bitmap , bool ( *test_fn )( BMFace * , void *user_data ) , void *user_data );
+
+/**
+* \brief Elem Iter Flag Count
+*
+* Counts how many flagged / unflagged items are found in this element.
+*/
+int BM_iter_elem_count_flag ( char itype , void *data , char hflag , bool value );
+
+/**
+* \brief Elem Iter Tool Flag Count
+*
+* Counts how many flagged / unflagged items are found in this element.
+*/
+int BMO_iter_elem_count_flag ( BMesh *bm , byte itype , void *data , short oflag , bool value );
+
+/**
+* Utility function.
+*/
+int BM_iter_mesh_count ( byte itype , BMesh *bm );
+
+/**
+* \brief Mesh Iter Flag Count
+*
+* Counts how many flagged / unflagged items are found in this mesh.
+*/
+int BM_iter_mesh_count_flag ( byte itype , BMesh *bm , char hflag , bool value );
+
+#define BMITER_CB_DEF(name) \
+  struct BMIter__##name; \
+  void bmiter__##name##_begin(struct BMIter__##name *iter); \
+  void *bmiter__##name##_step(struct BMIter__##name *iter)
+
+BMITER_CB_DEF ( elem_of_mesh );
+BMITER_CB_DEF ( edge_of_vert );
+BMITER_CB_DEF ( face_of_vert );
+BMITER_CB_DEF ( loop_of_vert );
+BMITER_CB_DEF ( loop_of_edge );
+BMITER_CB_DEF ( loop_of_loop );
+BMITER_CB_DEF ( face_of_edge );
+BMITER_CB_DEF ( vert_of_edge );
+BMITER_CB_DEF ( vert_of_face );
+BMITER_CB_DEF ( edge_of_face );
+BMITER_CB_DEF ( loop_of_face );
+
+#undef BMITER_CB_DEF
+
+#include "bmesh_iterators_inline.h"
+
+#define BM_ITER_CHECK_TYPE_DATA(data) \
+  CHECK_TYPE_ANY(data, void *, BMFace *, BMEdge *, BMVert *, BMLoop *, BMElem *)
+
+#define BM_iter_new(iter, bm, itype, data) \
+  (BM_ITER_CHECK_TYPE_DATA(data), BM_iter_new(iter, bm, itype, data))
+#define BM_iter_init(iter, bm, itype, data) \
+  (BM_ITER_CHECK_TYPE_DATA(data), BM_iter_init(iter, bm, itype, data))

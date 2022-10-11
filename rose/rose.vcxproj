@@ -131,6 +131,10 @@
     <ClInclude Include="source\mesh\bmesh_class.h" />
     <ClInclude Include="source\mesh\intern\bmesh_inline.h" />
     <ClInclude Include="source\mesh\intern\bmesh_iterators.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_iterators_inline.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_private.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_structure.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_structure_inline.h" />
     <ClInclude Include="source\utf\utfconv.h" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +197,8 @@
     <ClCompile Include="source\lib\intern\lib_string.cpp" />
     <ClCompile Include="source\lib\intern\lib_string_util.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_color_blend_inline.cc" />
+    <ClCompile Include="source\mesh\intern\bmesh_iterators.cpp" />
+    <ClCompile Include="source\mesh\intern\bmesh_structure.cpp" />
     <ClCompile Include="source\utf\intern\utfconv.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

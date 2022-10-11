@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROSE_ERROR_OK			0x00
 #define ROSE_ERROR_ASSERT		0xf1
@@ -20,15 +21,18 @@ extern "C" {
 	void LIB_throw_error ( int error );
 
 #ifdef _DEBUG
-#  define LIB_assert(expr)		if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,"%s",#expr); LIB_throw_error(ROSE_ERROR_ASSERT); }
+#  define LIB_assert(a) \
+    (void)((!(a)) ? ((LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,"%s",#a), \
+                      LIB_throw_error(ROSE_ERROR_ASSERT), \
+                      NULL)) : NULL)
 #else
 #  define LIB_assert(expr)		(void)0
 #endif
 
 #ifdef _DEBUG
-#  define LIB_assert_msg(expr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); LIB_throw_error(ROSE_ERROR_ASSERT); }
+#  define LIB_assert_msg(expr,fmt,...)	if ( expr ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); LIB_throw_error(ROSE_ERROR_ASSERT); }
 #else
-#  define LIB_assert_msg(epxr,fmt,...)	if ( !!(expr) ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); }
+#  define LIB_assert_msg(epxr,fmt,...)	if ( expr ) { } else { LIB_error(ROSE_ERROR_ASSERT,__FILE__,__LINE__,__func__,fmt,__VA_ARGS__); }
 #endif
 
 #ifdef _DEBUG
