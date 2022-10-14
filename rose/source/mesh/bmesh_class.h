@@ -198,6 +198,8 @@ typedef struct BMesh {
 	int VertTableTot;
 	int EdgeTableTot;
 	int FaceTableTot;
+
+	CustomData VertData , EdgeData , LoopData , FaceData;
 };
 
 /** \} */

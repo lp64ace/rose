@@ -3,6 +3,7 @@
 #include "kernel/rke_anonymous_attribute_id.h"
 
 #include "lib/lib_math.h"
+#include "lib/lib_mempool.h"
 
 #include <string.h>
 #include <limits.h>
@@ -749,6 +750,23 @@ static const LayerTypeInfo LAYERTYPEINFO [ CD_NUMTYPES ] = {
 		layerAdd_mloopcol ,
 		nullptr ,
 	} ,
+	// CD_SHAPE_KEYINDEX
+	{
+		sizeof ( int ) ,
+		"" ,
+		0 ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+		nullptr ,
+	} ,
 	// CD_PROP_INT8
 	{
 		sizeof ( int8_t ) ,
@@ -844,6 +862,7 @@ static const char *LAYERTYPENAMES [ CD_NUMTYPES ] = {
 	"CDMStringProperty" , // CD_PROP_STRING
 	"CDMLoopUV" , // CD_MLOOPUV
 	"CDMloopCol" , // CD_PROP_BYTE_COLOR
+	"CDShapeKeyIndex" , // CD_SHAPE_KEYINDEX
 	"CDPropInt8" , // CD_PROP_INT8
 	"CDPropCol" , // CD_PROP_COLOR
 	"CDPropFloat3" , // CD_PROP_FLOAT3
@@ -1322,6 +1341,26 @@ void *CustomData_get_n ( const struct CustomData *data , int type , int index , 
 	return POINTER_OFFSET ( data->Layers [ layer_index + n ].Data , offset );
 }
 
+void *CustomData_bmesh_get ( const CustomData *data , void *block , const int type ) {
+	/* get the layer index of the first layer of type */
+	int layer_index = CustomData_get_active_layer_index ( data , type );
+	if ( layer_index == -1 ) {
+		return nullptr;
+	}
+
+	return POINTER_OFFSET ( block , data->Layers [ layer_index ].Offset );
+}
+
+void *CustomData_bmesh_get_n ( const CustomData *data , void *block , const int type , const int n ) {
+	/* get the layer index of the first layer of type */
+	int layer_index = CustomData_get_layer_index ( data , type );
+	if ( layer_index == -1 ) {
+		return nullptr;
+	}
+
+	return POINTER_OFFSET ( block , data->Layers [ layer_index + n ].Offset );
+}
+
 void *CustomData_set_layer ( const CustomData *data , const int type , void *ptr ) {
 	/* get the layer index of the first layer of type */
 	int layer_index = CustomData_get_active_layer_index ( data , type );
@@ -1411,6 +1450,267 @@ void *CustomData_add_layer_anonymous ( CustomData *data ,
 	RKE_anonymous_attribute_id_increment_weak ( anonymous_id );
 	layer->AnonymousId = anonymous_id;
 	return layer->Data;
+}
+
+void CustomData_copy_elements ( const int type ,
+				void *src_data_ofs ,
+				void *dst_data_ofs ,
+				const int count ) {
+	const LayerTypeInfo *typeInfo = layerType_getInfo ( type );
+
+	if ( typeInfo->mCopy ) {
+		typeInfo->mCopy ( dst_data_ofs , src_data_ofs , count );
+	} else {
+		memcpy ( dst_data_ofs , src_data_ofs , ( size_t ) count * typeInfo->mSize );
+	}
+}
+
+void CustomData_copy_data_layer ( const CustomData *source ,
+				  CustomData *dest ,
+				  const int src_layer_index ,
+				  const int dst_layer_index ,
+				  const int src_index ,
+				  const int dst_index ,
+				  const int count ) {
+	const LayerTypeInfo *typeInfo;
+
+	const void *src_data = source->Layers [ src_layer_index ].Data;
+	void *dst_data = dest->Layers [ dst_layer_index ].Data;
+
+	typeInfo = layerType_getInfo ( source->Layers [ src_layer_index ].Type );
+
+	const size_t src_offset = ( size_t ) src_index * typeInfo->mSize;
+	const size_t dst_offset = ( size_t ) dst_index * typeInfo->mSize;
+
+	if ( !count || !src_data || !dst_data ) {
+		if ( count && !( src_data == nullptr && dst_data == nullptr ) ) {
+			fprintf ( stderr ,
+				  "null data for %s type (%p --> %p), skipping" ,
+				  layerType_getName ( source->Layers [ src_layer_index ].Type ) ,
+				  ( void * ) src_data ,
+				  ( void * ) dst_data );
+		}
+		return;
+	}
+
+	if ( typeInfo->mCopy ) {
+		typeInfo->mCopy ( POINTER_OFFSET ( dst_data , dst_offset ) ,
+				  POINTER_OFFSET ( src_data , src_offset ) , count );
+	} else {
+		memcpy ( POINTER_OFFSET ( dst_data , dst_offset ) ,
+			 POINTER_OFFSET ( src_data , src_offset ) ,
+			 ( size_t ) count * typeInfo->mSize );
+	}
+}
+
+void CustomData_copy_data_named ( const CustomData *source ,
+				  CustomData *dest ,
+				  const int source_index ,
+				  const int dest_index ,
+				  const int count ) {
+	// copies a layer at a time
+	for ( int src_i = 0; src_i < source->TotLayer; src_i++ ) {
+
+		int dest_i = CustomData_get_named_layer_index (
+			dest , source->Layers [ src_i ].Type , source->Layers [ src_i ].Name );
+
+		// if we found a matching layer, copy the data
+		if ( dest_i != -1 ) {
+			CustomData_copy_data_layer ( source , dest , src_i , dest_i , source_index , dest_index , count );
+		}
+	}
+}
+
+void CustomData_bmesh_free_block ( CustomData *data , void **block ) {
+	if ( *block == nullptr ) {
+		return;
+	}
+
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		if ( !( data->Layers [ i ].Flag & CD_FLAG_NOFREE ) ) {
+			const LayerTypeInfo *typeInfo = layerType_getInfo ( data->Layers [ i ].Type );
+
+			if ( typeInfo->mFree ) {
+				int offset = data->Layers [ i ].Offset;
+				typeInfo->mFree ( POINTER_OFFSET ( *block , offset ) , 1 , typeInfo->mSize );
+			}
+		}
+	}
+
+	if ( data->TotSize ) {
+		LIB_mempool_free ( data->Pool , *block );
+	}
+
+	*block = nullptr;
+}
+
+static void CustomData_bmesh_alloc_block ( CustomData *data , void **block ) {
+	if ( *block ) {
+		CustomData_bmesh_free_block ( data , block );
+	}
+
+	if ( data->TotSize > 0 ) {
+		*block = LIB_mempool_alloc ( data->Pool );
+	} else {
+		*block = nullptr;
+	}
+}
+
+static void CustomData_bmesh_set_default_n ( CustomData *data , void **block , const int n ) {
+	int offset = data->Layers [ n ].Offset;
+	const LayerTypeInfo *typeInfo = layerType_getInfo ( data->Layers [ n ].Type );
+
+	if ( typeInfo->mSetDefaultValue ) {
+		typeInfo->mSetDefaultValue ( POINTER_OFFSET ( *block , offset ) , 1 );
+	} else {
+		memset ( POINTER_OFFSET ( *block , offset ) , 0 , typeInfo->mSize );
+	}
+}
+
+void CustomData_bmesh_set_default ( CustomData *data , void **block ) {
+	if ( *block == nullptr ) {
+		CustomData_bmesh_alloc_block ( data , block );
+	}
+
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		CustomData_bmesh_set_default_n ( data , block , i );
+	}
+}
+
+void CustomData_bmesh_copy_data_exclude_by_type ( const CustomData *source ,
+						  CustomData *dest ,
+						  void *src_block ,
+						  void **dest_block ,
+						  const eCustomDataMask mask_exclude ) {
+	/* Note that having a version of this function without a 'mask_exclude'
+	* would cause too much duplicate code, so add a check instead. */
+	const bool no_mask = ( mask_exclude == 0 );
+
+	if ( *dest_block == nullptr ) {
+		CustomData_bmesh_alloc_block ( dest , dest_block );
+		if ( *dest_block ) {
+			memset ( *dest_block , 0 , dest->TotSize );
+		}
+	}
+
+	// copies a layer at a time
+	int dest_i = 0;
+	for ( int src_i = 0; src_i < source->TotLayer; src_i++ ) {
+
+		/* find the first dest layer with type >= the source type
+		* (this should work because layers are ordered by type)
+		*/
+		while ( dest_i < dest->TotLayer && dest->Layers [ dest_i ].Type < source->Layers [ src_i ].Type ) {
+			CustomData_bmesh_set_default_n ( dest , dest_block , dest_i );
+			dest_i++;
+		}
+
+		// if there are no more dest layers, we're done
+		if ( dest_i >= dest->TotLayer ) {
+			return;
+		}
+
+		// if we found a matching layer, copy the data
+		if ( dest->Layers [ dest_i ].Type == source->Layers [ src_i ].Type &&
+		     strcmp ( dest->Layers [ dest_i ].Name , source->Layers [ src_i ].Name ) == 0 ) {
+			if ( no_mask || ( ( CD_TYPE_AS_MASK ( dest->Layers [ dest_i ].Type ) & mask_exclude ) == 0 ) ) {
+				const void *src_data = POINTER_OFFSET ( src_block , source->Layers [ src_i ].Offset );
+				void *dest_data = POINTER_OFFSET ( *dest_block , dest->Layers [ dest_i ].Offset );
+				const LayerTypeInfo *typeInfo = layerType_getInfo ( source->Layers [ src_i ].Type );
+				if ( typeInfo->mCopy ) {
+					typeInfo->mCopy ( dest_data , src_data , 1 );
+				} else {
+					memcpy ( dest_data , src_data , typeInfo->mSize );
+				}
+			}
+
+			/* if there are multiple source & dest layers of the same type,
+			 * we don't want to copy all source layers to the same dest, so
+			 * increment dest_i
+			 */
+			dest_i++;
+		}
+	}
+
+	while ( dest_i < dest->TotLayer ) {
+		CustomData_bmesh_set_default_n ( dest , dest_block , dest_i );
+		dest_i++;
+	}
+}
+
+void CustomData_bmesh_copy_data ( const CustomData *source ,
+				  CustomData *dest ,
+				  void *src_block ,
+				  void **dest_block ) {
+	CustomData_bmesh_copy_data_exclude_by_type ( source , dest , src_block , dest_block , 0 );
+}
+
+void CustomData_bmesh_free_block_data_exclude_by_type ( CustomData *data ,
+							void *block ,
+							const eCustomDataMask mask_exclude ) {
+	if ( block == nullptr ) {
+		return;
+	}
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		if ( ( CD_TYPE_AS_MASK ( data->Layers [ i ].Type ) & mask_exclude ) == 0 ) {
+			const LayerTypeInfo *typeInfo = layerType_getInfo ( data->Layers [ i ].Type );
+			const size_t offset = data->Layers [ i ].Offset;
+			if ( !( data->Layers [ i ].Flag & CD_FLAG_NOFREE ) ) {
+				if ( typeInfo->mFree ) {
+					typeInfo->mFree ( POINTER_OFFSET ( block , offset ) , 1 , typeInfo->mSize );
+				}
+			}
+			memset ( POINTER_OFFSET ( block , offset ) , 0 , typeInfo->mSize );
+		}
+	}
+}
+
+void CustomData_set_layer_flag ( struct CustomData *data , int type , int flag ) {
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		if ( data->Layers [ i ].Type == type ) {
+			data->Layers [ i ].Flag |= flag;
+		}
+	}
+}
+
+void CustomData_clear_layer_flag ( struct CustomData *data , int type , int flag ) {
+	const int nflag = ~flag;
+
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		if ( data->Layers [ i ].Type == type ) {
+			data->Layers [ i ].Flag &= nflag;
+		}
+	}
+}
+
+void CustomData_bmesh_free_block_data ( CustomData *data , void *block ) {
+	if ( block == nullptr ) {
+		return;
+	}
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		if ( !( data->Layers [ i ].Flag & CD_FLAG_NOFREE ) ) {
+			const LayerTypeInfo *typeInfo = layerType_getInfo ( data->Layers [ i ].Type );
+			if ( typeInfo->mFree ) {
+				const size_t offset = data->Layers [ i ].Offset;
+				typeInfo->mFree ( POINTER_OFFSET ( block , offset ) , 1 , typeInfo->mSize );
+			}
+		}
+	}
+	if ( data->TotSize ) {
+		memset ( block , 0 , data->TotSize );
+	}
+}
+
+bool CustomData_bmesh_has_free ( const CustomData *data ) {
+	for ( int i = 0; i < data->TotLayer; i++ ) {
+		if ( !( data->Layers [ i ].Flag & CD_FLAG_NOFREE ) ) {
+			const LayerTypeInfo *typeInfo = layerType_getInfo ( data->Layers [ i ].Type );
+			if ( typeInfo->mFree ) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 /** \} */

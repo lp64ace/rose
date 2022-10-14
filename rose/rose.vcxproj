@@ -128,11 +128,18 @@
     <ClInclude Include="source\lib\lib_utildefines.h" />
     <ClInclude Include="source\lib\lib_vector.h" />
     <ClInclude Include="source\lib\lib_version.h" />
+    <ClInclude Include="source\mesh\bmesh.h" />
     <ClInclude Include="source\mesh\bmesh_class.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_construct.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_core.h" />
     <ClInclude Include="source\mesh\intern\bmesh_inline.h" />
     <ClInclude Include="source\mesh\intern\bmesh_iterators.h" />
     <ClInclude Include="source\mesh\intern\bmesh_iterators_inline.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_mesh.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_polygon.h" />
     <ClInclude Include="source\mesh\intern\bmesh_private.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_query.h" />
+    <ClInclude Include="source\mesh\intern\bmesh_query_inline.h" />
     <ClInclude Include="source\mesh\intern\bmesh_structure.h" />
     <ClInclude Include="source\mesh\intern\bmesh_structure_inline.h" />
     <ClInclude Include="source\utf\utfconv.h" />
@@ -189,6 +196,8 @@
     <ClCompile Include="source\kernel\intern\customdata.cpp" />
     <ClCompile Include="source\lib\intern\lib_alloc.cpp" />
     <ClCompile Include="source\lib\intern\lib_error.cpp" />
+    <ClCompile Include="source\lib\intern\lib_math_geom.cpp" />
+    <ClCompile Include="source\lib\intern\lib_math_geom_inline.cc" />
     <ClCompile Include="source\lib\intern\lib_math_matrix.c" />
     <ClCompile Include="source\lib\intern\lib_math_rotation.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_vector.cpp" />
@@ -197,7 +206,12 @@
     <ClCompile Include="source\lib\intern\lib_string.cpp" />
     <ClCompile Include="source\lib\intern\lib_string_util.cpp" />
     <ClCompile Include="source\lib\intern\lib_math_color_blend_inline.cc" />
+    <ClCompile Include="source\mesh\intern\bmesh_construct.cpp" />
+    <ClCompile Include="source\mesh\intern\bmesh_core.cpp" />
     <ClCompile Include="source\mesh\intern\bmesh_iterators.cpp" />
+    <ClCompile Include="source\mesh\intern\bmesh_mesh.cpp" />
+    <ClCompile Include="source\mesh\intern\bmesh_polygon.cpp" />
+    <ClCompile Include="source\mesh\intern\bmesh_query.cpp" />
     <ClCompile Include="source\mesh\intern\bmesh_structure.cpp" />
     <ClCompile Include="source\utf\intern\utfconv.cpp" />
   </ItemGroup>

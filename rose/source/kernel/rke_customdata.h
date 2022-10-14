@@ -25,6 +25,13 @@ extern "C" {
 		CD_CONSTRUCT = 5 , // Default construct new layer values. Does nothing for trivial types.
 	} eCDAllocType;
 
+	typedef uint64_t eCustomDataMask;
+
+	#define CD_TYPE_AS_MASK(_type) (eCustomDataMask)((eCustomDataMask)1 << (eCustomDataMask)(_type))
+
+	/* for ORIGINDEX layer type, indicates no original index for this element */
+	#define ORIGINDEX_NONE -1
+
 	/**
 	* Checks if the layer at physical offset \a layer_n (in data->Layers) support math
 	* the below operations.
@@ -46,6 +53,11 @@ extern "C" {
 	* Checks if any of the custom-data layers has interpolation.
 	*/
 	bool CustomData_has_interp ( const struct CustomData *data );
+
+	/**
+	* A non bmesh version would have to check `layer->data`.
+	*/
+	bool CustomData_bmesh_has_free ( const struct CustomData *data );
 
 	/**
 	* Compares if data1 is equal to data2.
@@ -138,6 +150,9 @@ extern "C" {
 	*/
 	void *CustomData_get_n ( const struct CustomData *data , int type , int index , int n );
 
+	void *CustomData_bmesh_get ( const struct CustomData *data , void *block , int type );
+	void *CustomData_bmesh_get_n ( const struct CustomData *data , void *block , int type , int n );
+
 	/**
 	* Copies the data from source to the data element at index in the first (active) layer of type 
 	* no effect if there is no layer of type.
@@ -155,7 +170,6 @@ extern "C" {
 	* returns the value of `ptr` if the layer is found, NULL otherwise.
 	*/
 	void *CustomData_set_layer_n ( const struct CustomData *data , int type , int n , void *ptr );
-
 
 	/**
 	* Adds a data layer of the given type to the #CustomData object, optionally 
@@ -189,6 +203,35 @@ extern "C" {
 					       void *layer ,
 					       int totelem ,
 					       const struct AnonymousAttributeID *anonymous_id );
+
+	void CustomData_bmesh_set_default ( struct CustomData *data , void **block );
+	void CustomData_bmesh_free_block ( struct CustomData *data , void **block );
+
+	/** Copies data from one CustomData object to another
+	* objects need not be compatible, each source layer is copied to the
+	* first dest layer of correct type (if there is none, the layer is skipped). */
+	void CustomData_copy_elements ( int type , void *src_data_ofs , void *dst_data_ofs , int count );
+
+	/** Copies data from one CustomData object to another
+	* objects need not be compatible, each source layer is copied to the
+	* first dest layer of correct type (if there is none, the layer is skipped). */
+	void CustomData_bmesh_copy_data ( const struct CustomData *source , struct CustomData *dest , void *src_block , void **dest_block );
+
+	/** Copies data from one CustomData object to another
+	* objects need not be compatible, each source layer is copied to the
+	* first dest layer of correct type (if there is none, the layer is skipped). */
+	void CustomData_bmesh_copy_data_exclude_by_type ( const struct CustomData *source , struct CustomData *dest , void *src_block , void **dest_block , eCustomDataMask mask_exclude );
+
+	// A selective version of #CustomData_bmesh_free_block_data.
+	void CustomData_bmesh_free_block_data_exclude_by_type ( struct CustomData *data ,
+								void *block ,
+								eCustomDataMask mask_exclude );
+
+	void CustomData_set_layer_flag ( struct CustomData *data , int type , int flag );
+	void CustomData_clear_layer_flag ( struct CustomData *data , int type , int flag );
+
+	// Same as #CustomData_bmesh_free_block but zero the memory rather than freeing.
+	void CustomData_bmesh_free_block_data ( struct CustomData *data , void *block );
 
 #ifdef __cplusplus
 }

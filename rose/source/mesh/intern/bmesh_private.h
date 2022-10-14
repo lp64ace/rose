@@ -2,6 +2,8 @@
 
 #include "mesh/bmesh_class.h"
 
+#include <stdio.h>
+
 int bmesh_radial_length ( const BMLoop *l );
 int bmesh_disk_count_at_most ( const BMVert *v , int count_max );
 int bmesh_disk_count ( const BMVert *v );
@@ -33,3 +35,32 @@ enum {
     ((element)->Head.ApiFlag = 0); \
   } \
   (void)0
+
+#ifdef NDEBUG
+/* No error checking for release,
+* it can take most of the CPU time when running some tools. */
+#  define BM_CHECK_ELEMENT(el) (void)(el)
+#else
+/**
+* Check the element is valid.
+*
+* BMESH_TODO, when this raises an error the output is incredibly confusing.
+* need to have some nice way to print/debug what the heck's going on.
+*/
+int bmesh_elem_check ( void *element , char htype );
+
+#  define BM_CHECK_ELEMENT(el) \
+    { \
+      if (bmesh_elem_check(el, ((BMHeader *)el)->ElemType)) { \
+        printf( \
+            "check_element failure, with code %i on line %i in file\n" \
+            "    \"%s\"\n\n", \
+            bmesh_elem_check(el, ((BMHeader *)el)->ElemType), \
+            __LINE__, \
+            __FILE__); \
+      } \
+    } \
+    ((void)0)
+#endif
+
+#include "bmesh_structure.h"

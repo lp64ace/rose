@@ -55,3 +55,14 @@ ROSE_INLINE void _mesh_elem_flag_merge_ex ( BMHeader *head_a , BMHeader *head_b 
 ROSE_INLINE void _mesh_elem_flag_merge_into ( BMHeader *head , const BMHeader *head_a , const BMHeader *head_b ) {
 	head->ElemFlag = head_a->ElemFlag | head_b->ElemFlag;
 }
+
+#define BM_elem_index_get(ele) _bm_elem_index_get(&(ele)->Head)
+#define BM_elem_index_set(ele, index) _bm_elem_index_set(&(ele)->Head, index)
+
+ROSE_INLINE void _bm_elem_index_set ( BMHeader *head , const int index ) {
+	head->Index = index;
+}
+
+ATTR_WARN_UNUSED_RESULT ROSE_INLINE int _bm_elem_index_get ( const BMHeader *head ) {
+	return head->Index;
+}
