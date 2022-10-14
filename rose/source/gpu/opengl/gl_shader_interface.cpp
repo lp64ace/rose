@@ -203,7 +203,7 @@ GLShaderInterface::GLShaderInterface ( unsigned int program ) {
 		uniform_len -= ubo_uni_len;
 	}
 	/* Bit set to true if uniform comes from a uniform block. */
-	BLI_bitmap *uniforms_from_blocks = BLI_BITMAP_NEW ( active_uniform_len , __func__ );
+	LIB_bitmap *uniforms_from_blocks = LIB_BITMAP_NEW ( active_uniform_len , __func__ );
 	/* Set uniforms from block for exclusion. */
 	GLint *ubo_uni_ids = ( GLint * ) MEM_mallocN ( sizeof ( GLint ) * max_ubo_uni_len , __func__ );
 	for ( int i = 0; i < ubo_len; i++ ) {
@@ -211,7 +211,7 @@ GLShaderInterface::GLShaderInterface ( unsigned int program ) {
 		glGetActiveUniformBlockiv ( program , i , GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS , &ubo_uni_len );
 		glGetActiveUniformBlockiv ( program , i , GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES , ubo_uni_ids );
 		for ( int u = 0; u < ubo_uni_len; u++ ) {
-			BLI_BITMAP_ENABLE ( uniforms_from_blocks , ubo_uni_ids [ u ] );
+			LIB_BITMAP_ENABLE ( uniforms_from_blocks , ubo_uni_ids [ u ] );
 		}
 	}
 	MEM_freeN ( ubo_uni_ids );
@@ -267,7 +267,7 @@ GLShaderInterface::GLShaderInterface ( unsigned int program ) {
 
 	/* Uniforms & samplers & images */
 	for ( int i = 0 , sampler = 0 , image = 0; i < active_uniform_len; i++ ) {
-		if ( BLI_BITMAP_TEST ( uniforms_from_blocks , i ) ) {
+		if ( LIB_BITMAP_TEST ( uniforms_from_blocks , i ) ) {
 			continue;
 		}
 		char *name = this->mNameBuffer + name_buffer_offset;

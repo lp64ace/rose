@@ -1,61 +1,39 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "lib/lib_error.h"
 #include "lib/lib_version.h"
+#include "lib/lib_typedef.h"
 
 #include <stdio.h>
 #include <exception>
 
-void LIB_error_log_no_exception ( const char *fmt , ... ) {
+static byte buffer [ 2048 ];
+
+void LIB_error ( int error , const char *file , int line , const char *func , const char *fmt , ... ) {
 	va_list args;
 	va_start ( args , fmt );
-	LIB_error_vlog_no_exception ( fmt , args );
+	LIB_verror ( error , file , line , func , fmt , args );
 	va_end ( args );
 }
 
-void LIB_error_vlog_no_exception ( const char *fmt , va_list args ) {
-	static char buffer [ 1024 ];
-	vfprintf ( stderr , fmt , args );
-	vsprintf ( buffer , fmt , args );
-}
-
-void LIB_error_log ( const char *fmt , ... ) {
+void LIB_werror ( int error , const wchar_t *file , int line , const wchar_t *func , const wchar_t *fmt , ... ) {
 	va_list args;
 	va_start ( args , fmt );
-	LIB_error_vlog ( fmt , args );
+	LIB_vwerror ( error , file , line , func , fmt , args );
 	va_end ( args );
 }
 
-void LIB_error_vlog ( const char *fmt , va_list args ) {
-	static char buffer [ 1024 ];
-	vfprintf ( stderr , fmt , args );
-	vsprintf ( buffer , fmt , args );
-	throw buffer;
+void LIB_verror ( int error , const char *file , int line , const char *func , const char *fmt , va_list args ) {
+	vsprintf ( ( char *const ) buffer , fmt , args );
+
+	fprintf ( stderr , "Rose %s - error %02x\n %s(%d) - %s\n" , ROSE_VERSION , error , file , line , ( const char * ) buffer );
 }
 
-void LIB_assert_msg ( bool expr , const char *fmt , ... ) {
-	va_list args;
-	va_start ( args , fmt );
-	LIB_assert_vmsg ( expr , fmt , args );
-	va_end ( args );
+void LIB_vwerror ( int error , const wchar_t *file , int line , const wchar_t *func , const wchar_t *fmt , va_list args ) {
+	_vswprintf ( ( wchar_t *const ) buffer , fmt , args );
+
+	fwprintf ( stderr , L"Rose %s - error %02x\n %s(%d) - %s\n" , ROSEAUX_STRW ( ROSE_VERSION ) , error , file , line , ( const wchar_t * ) buffer );
 }
 
-void LIB_assert_vmsg ( bool expr , const char *fmt , va_list args ) {
-	if ( !expr ) {
-		fprintf ( stderr , "ASSERTION **ROSE %s** |" , ROSE_VERSION );
-		LIB_error_vlog ( fmt , args );
-	}
-}
-
-void LIB_warn_msg ( bool expr , const char *fmt , ... ) {
-	va_list args;
-	va_start ( args , fmt );
-	LIB_warn_vmsg ( expr , fmt , args );
-	va_end ( args );
-}
-
-void LIB_warn_vmsg ( bool expr , const char *fmt , va_list args ) {
-	if ( !expr ) {
-		fprintf ( stderr , "WARNING **ROSE %s** |" , ROSE_VERSION );
-		LIB_error_vlog_no_exception ( fmt , args );
-	}
+void LIB_throw_error ( int error ) {
+	throw error;
 }

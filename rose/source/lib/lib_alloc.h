@@ -11,8 +11,14 @@ extern "C" {
 	// Allocate memory
 	void *MEM_mallocN ( size_t length , const char *name );
 
+	// Allocate array memory
+	void *MEM_malloc_arrayN ( size_t element , size_t length , const char *name );
+
 	// Allocate memory and init to zero
 	void *MEM_callocN ( size_t length , const char *name );
+
+	// Allocate array memory and init to zero
+	void *MEM_calloc_arrayN ( size_t element , size_t length , const char *name );
 
 	// Reallocate memory
 	void *MEM_reallocN ( void *memory , size_t length );
@@ -25,6 +31,8 @@ extern "C" {
 
 	// Deallocate memory
 	void MEM_freeN ( void *memory );
+
+	size_t MEM_allocN_len ( void *memory );
 
 #define MEM_SAFE_FREE(mem)		{if(mem){MEM_freeN(mem);(mem)=nullptr;}}
 

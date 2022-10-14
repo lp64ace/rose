@@ -66,7 +66,7 @@
 // reusable ELEM macro
 #define ELEM(...) VA_NARGS_CALL_OVERLOAD(_VA_ELEM, __VA_ARGS__)
 
-/* \} */
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Maximum element.
@@ -80,7 +80,7 @@
 
 #define ROSE_MAX(...) VA_NARGS_CALL_OVERLOAD(_VA_MAX, __VA_ARGS__)
 
-/* \} */
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Minimum element.
@@ -94,7 +94,7 @@
 
 #define ROSE_MIN(...) VA_NARGS_CALL_OVERLOAD(_VA_MIN, __VA_ARGS__)
 
-/* \} */
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Enum operators
@@ -126,7 +126,7 @@
 #  define ENUM_OPERATORS(_type, _max)
 #endif
 
- /* \} */
+ /** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Branch Prediction Macros
@@ -155,7 +155,7 @@
         } \
     }
 
-/* \} */
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Util Macros
@@ -171,4 +171,19 @@
     } \
     (void)0
 
- /* \} */
+/** \} */
+
+#define IN_RANGE(v,a,b)		((a)<(v)&&(v)<(b))
+#define IN_RANGE_INCL(v,a,b)	((a)<=(v)&&(v)<=(b))
+
+/* -------------------------------------------------------------------- */
+/** \name Unused Function/Argument Macros
+ * \{ */
+
+#if defined(__GNUC__) || defined(__clang__)
+#  define UNUSED_FUNCTION(x) __attribute__((__unused__)) UNUSED_##x
+#else
+#  define UNUSED_FUNCTION(x) UNUSED_##x
+#endif
+
+/** \} */

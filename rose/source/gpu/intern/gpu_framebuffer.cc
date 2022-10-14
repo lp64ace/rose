@@ -459,7 +459,7 @@ static GPU_FrameBuffer *gpu_offscreen_fb_get ( GPU_OffScreen *ofs ) {
 	 * regularly. In this case we just empty the list
 	 * and start over. This is most likely never going
 	 * to happen under normal usage. */
-	LIB_error_log ( "Warning: GPUOffscreen used in more than %d GPU_Contexts. This may create performance drop.\n" , MAX_CTX_FB_LEN );
+	LIB_assert_msg ( 0 , "Warning: GPUOffscreen used in more than %d GPU_Contexts. This may create performance drop.\n" , MAX_CTX_FB_LEN );
 
 	for ( auto &framebuffer : ofs->mFramebuffers ) {
 		GPU_framebuffer_free ( framebuffer.Fb );

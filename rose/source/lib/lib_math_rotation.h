@@ -18,11 +18,11 @@ extern "C" {
         /** \name Conversion Defines
          * \{ */
 
-#define RAD2DEG(_rad) ((_rad) * (180.0 / M_PI))
-#define DEG2RAD(_deg) ((_deg) * (M_PI / 180.0))
+        #define RAD2DEG(_rad) ((_rad) * (180.0 / M_PI))
+        #define DEG2RAD(_deg) ((_deg) * (M_PI / 180.0))
 
-#define RAD2DEGF(_rad) ((_rad) * (float)(180.0 / M_PI))
-#define DEG2RADF(_deg) ((_deg) * (float)(M_PI / 180.0))
+        #define RAD2DEGF(_rad) ((_rad) * (float)(180.0 / M_PI))
+        #define DEG2RADF(_deg) ((_deg) * (float)(M_PI / 180.0))
 
          /** \} */
 
@@ -205,7 +205,7 @@ extern "C" {
 
         void print_qt ( const char *str , const float q [ 4 ] );
 
-#define print_qt_id(q) print_qt(STRINGIFY(q), q)
+        #define print_qt_id(q) print_qt(STRINGIFY(q), q)
 
         /** \} */
 
