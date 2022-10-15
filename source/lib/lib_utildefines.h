@@ -187,3 +187,30 @@
 #endif
 
 /** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Static Assert
+ * \{ */
+
+#if defined(__cplusplus)
+ /* C++11 */
+#  define ROSE_STATIC_ASSERT(a, msg) static_assert(a, msg);
+#elif defined(_MSC_VER)
+ /* Visual Studio */
+#  if (_MSC_VER > 1910) && !defined(__clang__)
+#    define ROSE_STATIC_ASSERT(a, msg) static_assert(a, msg);
+#  else
+#    define ROSE_STATIC_ASSERT(a, msg) _STATIC_ASSERT(a);
+#  endif
+#elif defined(__COVERITY__)
+ /* Workaround error with COVERITY. */
+#  define ROSE_STATIC_ASSERT(a, msg)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+ /* C11 */
+#  define ROSE_STATIC_ASSERT(a, msg) _Static_assert(a, msg);
+#else
+ /* Old unsupported compiler */
+#  define ROSE_STATIC_ASSERT(a, msg)
+#endif
+
+/** \} */
