@@ -30,7 +30,7 @@ extern "C" {
 		* otherwise there will always be a strong reference and the attribute can't be removed
 		* automatically. */
 		const struct AnonymousAttributeID *AnonymousId;
-	};
+	} CustomDataLayer;
 
 	typedef struct CustomData {
 		// CustomDataLayers, ordered by type.
@@ -43,7 +43,7 @@ extern "C" {
 		int TotSize;
 		// Memory pool for allocation of blocks.
 		struct LIB_mempool *Pool;
-	};
+	} CustomData;
 
 	// CustomDataLayer::Type
 	enum eCustomDataType {

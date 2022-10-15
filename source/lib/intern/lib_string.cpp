@@ -68,7 +68,7 @@ bool String::StartsWith ( const char *prefix ) const {
 	if ( this->mSize < prefix_size ) {
 		return false;
 	}
-	for ( int64_t i = 0; i < prefix_size; i++ ) {
+	for ( size_t i = 0; i < prefix_size; i++ ) {
 		if ( this->mBuffer [ i ] != prefix [ i ] ) {
 			return false;
 		}
@@ -81,7 +81,7 @@ bool String::StartsWith ( const wchar_t *prefix ) const {
 	if ( this->mSize < prefix_size ) {
 		return false;
 	}
-	for ( int64_t i = 0; i < prefix_size; i++ ) {
+	for ( size_t i = 0; i < prefix_size; i++ ) {
 		if ( this->mBuffer [ i ] != prefix [ i ] ) {
 			return false;
 		}
@@ -93,7 +93,7 @@ bool String::StartsWith ( const String& prefix ) const {
 	if ( this->mSize < prefix.mSize ) {
 		return false;
 	}
-	for ( int64_t i = 0; i < prefix.mSize; i++ ) {
+	for ( size_t i = 0; i < prefix.mSize; i++ ) {
 		if ( this->mBuffer [ i ] != prefix.mBuffer [ i ] ) {
 			return false;
 		}
@@ -114,8 +114,8 @@ bool String::EndsWith ( const char *suffix ) const {
 	if ( this->mSize < suffx_size ) {
 		return false;
 	}
-	const int64_t offset = this->mSize - suffx_size;
-	for ( int64_t i = 0; i < suffx_size; i++ ) {
+	const ptrdiff_t offset = this->mSize - suffx_size;
+	for ( size_t i = 0; i < suffx_size; i++ ) {
 		if ( this->mBuffer [ offset + i ] != ( wchar_t ) suffix [ i ] ) {
 			return false;
 		}
@@ -128,8 +128,8 @@ bool String::EndsWith ( const wchar_t *suffix ) const {
 	if ( this->mSize < suffx_size ) {
 		return false;
 	}
-	const int64_t offset = this->mSize - suffx_size;
-	for ( int64_t i = 0; i < suffx_size; i++ ) {
+	const ptrdiff_t offset = this->mSize - suffx_size;
+	for ( size_t i = 0; i < suffx_size; i++ ) {
 		if ( this->mBuffer [ offset + i ] != suffix [ i ] ) {
 			return false;
 		}
@@ -141,8 +141,8 @@ bool String::EndsWith ( const String &suffix ) const {
 	if ( this->mSize < suffix.mSize ) {
 		return false;
 	}
-	const int64_t offset = this->mSize - suffix.mSize;
-	for ( int64_t i = 0; i < suffix.mSize; i++ ) {
+	const ptrdiff_t offset = this->mSize - suffix.mSize;
+	for ( size_t i = 0; i < suffix.mSize; i++ ) {
 		if ( this->mBuffer [ offset + i ] != suffix.mBuffer [ i ] ) {
 			return false;
 		}

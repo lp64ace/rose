@@ -200,7 +200,7 @@ typedef struct BMesh {
 	int FaceTableTot;
 
 	CustomData VertData , EdgeData , LoopData , FaceData;
-};
+} BMesh;
 
 /** \} */
 

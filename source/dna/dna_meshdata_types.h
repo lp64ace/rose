@@ -80,11 +80,11 @@ typedef struct MLoop {
 typedef struct MLoopUV {
 	float TexCoord [ 2 ];
 	int Flag;
-};
+} MLoopUV;
 
 typedef struct MLoopCol {
 	unsigned char r , g , b , a;
-};
+} MLoopCol;
 
 typedef struct MPropCol {
 	float color [ 4 ];
@@ -92,4 +92,4 @@ typedef struct MPropCol {
 
 typedef struct MStringProperty {
 	char s [ 255 ] , len;
-};
+} MStringProperty;
