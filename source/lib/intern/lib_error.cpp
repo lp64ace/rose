@@ -31,7 +31,7 @@ void LIB_verror ( int error , const char *file , int line , const char *func , c
 void LIB_vwerror ( int error , const wchar_t *file , int line , const wchar_t *func , const wchar_t *fmt , va_list args ) {
 	_vswprintf ( ( wchar_t *const ) buffer , fmt , args );
 
-	fwprintf ( stderr , L"Rose %s - error %02x\n %s(%d) - %s\n" , ROSEAUX_STRW ( ROSE_VERSION ) , error , file , line , ( const wchar_t * ) buffer );
+	fwprintf ( stderr , L"Rose %s - Error %02x\n %s(%d) - %s\n" , ROSEAUX_STRW ( ROSE_VERSION ) , error , file , line , ( const wchar_t * ) buffer );
 }
 
 void LIB_throw_error ( int error ) {
