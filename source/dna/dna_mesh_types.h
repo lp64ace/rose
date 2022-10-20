@@ -1,7 +1,5 @@
 #pragma once
 
-#include "lib/lib_typedef.h"
-
 #include "dna_customdata_types.h"
 #include "dna_meshdata_types.h"
 

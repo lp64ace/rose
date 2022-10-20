@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/lib_utildefines.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,8 +90,6 @@ extern "C" {
 	#define CD_MASK_PROP_FLOAT2 (1ULL << CD_PROP_FLOAT2)
 	#define CD_MASK_PROP_BOOL (1ULL << CD_PROP_BOOL)
 	#define CD_MASK_PROP_INT8 (1ULL << CD_PROP_INT8)
-
-	ROSE_STATIC_ASSERT ( ARRAY_SIZE ( CustomData::TypeMap ) >= CD_NUMTYPES , "Too many CustomData types" );
 
 	typedef struct CustomData_MeshMasks {
 		uint64_t VertMask;

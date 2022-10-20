@@ -15,7 +15,7 @@
 #  define UNLIKELY(x) (x)
 #endif
 
-#define FLT_EPSILON     1e-7f
+#define FLT_EPSILON    1e-7f
 #define FLT_EPSILON2    1e-4f
 
 #ifndef M_PI

@@ -494,11 +494,6 @@ GPU_Source *gpu_shader_dependency_import_source ( const StringRefNull file ) {
 	if ( ( code = import_file ( compine_path_file ( "shaders/" , file.CStr ( ) ) ) ) != nullptr ) {
 		path = "shaders/";
 	}
-#if ROSE_VERSION_DEV
-	if ( ( code = import_file ( compine_path_file ( "../../shaders/" , file.CStr ( ) ) ) ) != nullptr ) {
-		path = "../../shaders/";
-	}
-#endif
 
 	if ( code ) {
 		GPU_Source *source = new GPU_Source ( path.CStr ( ) , file.CStr ( ) , code , g_functions );
