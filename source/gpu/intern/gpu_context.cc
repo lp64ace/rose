@@ -45,7 +45,7 @@ Context *Context::Get ( ) {
 using namespace rose::gpu;
 
 GPU_Context *GPU_context_create ( void *ghost_window ) {
-	if ( ghostActivateWindowContext ( ( GHOST_WindowHandle ) ghost_window ) ) {
+	if ( GHOST_activate_window_context ( ( GHOST_WindowHandle ) ghost_window ) ) {
 		{
 			if ( num_backend_users == 0 ) {
 				// Automatically create backend when first context is created.

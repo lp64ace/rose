@@ -51,6 +51,18 @@ public:
 	* the coordinates of the upper-left corner are (0,0).
 	* \return A GHOST_Rect structure describing the client area of the window. */
 	GHOST_Rect GetClientBounds ( ) const;
+
+	/** The ScreenToClient function converts the screen coordinates of a specified point on the screen to client-area coordinates.
+	* \param p_x The x coordinate we want to convert, if this is NULL it's value is ignored.
+	* \param p_y The y coordinate we want to convert, if this is NULL it's value is ignored.
+	*/
+	void ScreenToClient ( int *p_x , int *p_y ) const;
+
+	/** The ClientToScreen function converts the client-area coordinates of a specified point to screen coordinates.
+	* \param p_x The x coordinate we want to convert, if this is NULL it's value is ignored.
+	* \param p_y The y coordinate we want to convert, if this is NULL it's value is ignored.
+	*/
+	void ClientToScreen ( int *p_x , int *p_y ) const;
 protected:
 	/** Tries to install a rendering context in this window.
 	* \param type: The type of rendering context installed.

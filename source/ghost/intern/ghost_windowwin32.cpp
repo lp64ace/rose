@@ -2,8 +2,6 @@
 
 #include "ghost_contextwgl.h"
 
-#include <utf/utfconv.h>
-
 #include <sstream>
 #include <string>
 #include <cmath>
@@ -17,12 +15,16 @@ GHOST_WindowWin32::GHOST_WindowWin32 ( GHOST_WindowWin32 *parent , const char *t
 	width = ( width == GHOST_kUseDefault ) ? CW_USEDEFAULT : width;
 	height = ( height == GHOST_kUseDefault ) ? CW_USEDEFAULT : height;
 
-	UTF16_ENCODE ( title );
+	size_t len = strlen ( title ) + 1;
+	wchar_t *wtitle = ( wchar_t * ) LocalAlloc ( LMEM_ZEROINIT , len * sizeof ( wchar_t ) );
+	MultiByteToWideChar ( 0 , 0 , title , len , wtitle , len );
+
 	this->mHandle = CreateWindowExW (
-		ExtendedStyle , L"GHOST_WindowClass" , title_16 , Style , left , top , width , height ,
+		ExtendedStyle , L"GHOST_WindowClass" , wtitle , Style , left , top , width , height ,
 		( parent ) ? ( HWND ) parent->GetOSWindow ( ) : HWND_DESKTOP , NULL , GetModuleHandle ( NULL ) , NULL
 	);
-	UTF16_UN_ENCODE ( title );
+
+	LocalFree ( wtitle );
 
 	/* Store a pointer to this class in the window structure. */
 	::SetWindowLongPtr ( this->mHandle , GWLP_USERDATA , ( LONG_PTR ) this );
@@ -87,4 +89,20 @@ GHOST_Rect GHOST_WindowWin32::GetClientBounds ( ) const {
 	RECT rect;
 	GetClientRect ( this->mHandle , &rect );
 	return { rect.left,rect.top,rect.right,rect.bottom };
+}
+
+void GHOST_WindowWin32::ScreenToClient ( int *p_x , int *p_y ) const {
+	POINT pt = { ( p_x ) ? *p_x : 0 , ( p_y ) ? *p_y : 0 };
+	if ( ::ScreenToClient ( this->mHandle , &pt ) ) {
+		if ( p_x ) *p_x = pt.x;
+		if ( p_y ) *p_y = pt.y;
+	}
+}
+
+void GHOST_WindowWin32::ClientToScreen ( int *p_x , int *p_y ) const {
+	POINT pt = { ( p_x ) ? *p_x : 0 , ( p_y ) ? *p_y : 0 };
+	if ( ::ClientToScreen ( this->mHandle , &pt ) ) {
+		if ( p_x ) *p_x = pt.x;
+		if ( p_y ) *p_y = pt.y;
+	}
 }

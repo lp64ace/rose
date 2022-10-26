@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define GHOST_DECLARE_HANDLE(name) typedef struct name##__ { int unused; } *name;
 

@@ -97,4 +97,16 @@ public:
 	* a nonzero value, otherwise the return value is GHOST_tStatus::GHOST_kFailure
 	* indicating failure. */
 	virtual GHOST_TStatus ReleaseDrawingContext ( ) = 0;
+
+	/** The ScreenToClient function converts the screen coordinates of a specified point on the screen to client-area coordinates.
+	* \param p_x The x coordinate we want to convert, if this is NULL it's value is ignored.
+	* \param p_y The y coordinate we want to convert, if this is NULL it's value is ignored.
+	*/
+	virtual void ScreenToClient ( int *p_x , int *p_y ) const = 0;
+
+	/** The ClientToScreen function converts the client-area coordinates of a specified point to screen coordinates.
+	* \param p_x The x coordinate we want to convert, if this is NULL it's value is ignored.
+	* \param p_y The y coordinate we want to convert, if this is NULL it's value is ignored.
+	*/
+	virtual void ClientToScreen ( int *p_x , int *p_y ) const = 0;
 };

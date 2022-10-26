@@ -31,14 +31,14 @@ GHOST_TStatus GHOST_SystemWin32::Init ( ) {
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.lpfnWndProc = GHOST_SystemWin32::WndProc;
-		wc.hInstance = ::GetModuleHandle ( NULL );
-		wc.hIcon = ::LoadIcon ( wc.hInstance , L"APPICON" );
+		wc.hInstance = ::GetModuleHandleW ( NULL );
+		wc.hIcon = ::LoadIconW ( wc.hInstance , L"APPICON" );
 
 		if ( !wc.hIcon ) {
-			::LoadIconW ( NULL , IDI_APPLICATION );
+			wc.hIcon = ::LoadIconW ( NULL , IDI_APPLICATION );
 		}
 
-		wc.hCursor = ::LoadCursor ( NULL , IDC_ARROW );
+		wc.hCursor = ::LoadCursorW ( NULL , IDC_ARROW );
 		wc.hbrBackground = ( HBRUSH ) COLOR_BACKGROUND;
 		wc.lpszMenuName = 0;
 		wc.lpszClassName = L"GHOST_WindowClass";

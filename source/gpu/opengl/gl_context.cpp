@@ -19,8 +19,8 @@ GLContext::GLContext ( void *ghost_window , GLSharedOrphanLists &shared_orphan_l
 
 	this->mGhostWindow = ghost_window;
 	if ( this->mGhostWindow ) {
-		ghostActivateWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow );
-		GHOST_Rect rect = gostGetWindowClientBounds ( ( GHOST_WindowHandle ) this->mGhostWindow );
+		GHOST_activate_window_context ( ( GHOST_WindowHandle ) this->mGhostWindow );
+		GHOST_Rect rect = GHOST_get_window_client_bounds ( ( GHOST_WindowHandle ) this->mGhostWindow );
 		int w = rect.right - rect.left;
 		int h = rect.bottom - rect.top;
 
@@ -63,13 +63,11 @@ GLContext::~GLContext ( ) {
 
 void GLContext::Activate ( ) {
 	if ( this->mGhostWindow ) {
-		ghostActivateWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow );
-
-		GHOST_Rect rect = gostGetWindowClientBounds ( ( GHOST_WindowHandle ) this->mGhostWindow );
+		GHOST_Rect rect = GHOST_get_window_client_bounds ( ( GHOST_WindowHandle ) this->mGhostWindow );
 		int w = rect.right - rect.left;
 		int h = rect.bottom - rect.top;
 
-		if ( ghostActivateWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow ) ) {
+		if ( GHOST_activate_window_context ( ( GHOST_WindowHandle ) this->mGhostWindow ) ) {
 			glViewport ( 0 , 0 , w , h );
 			this->OrphansClear ( );
 		}
@@ -95,7 +93,7 @@ void GLContext::Deactivate ( ) {
 	immDeactivate ( );
 
 	if ( this->mGhostWindow ) {
-		ghostReleaseWindowContext ( ( GHOST_WindowHandle ) this->mGhostWindow );
+		GHOST_release_window_context ( ( GHOST_WindowHandle ) this->mGhostWindow );
 	}
 }
 
