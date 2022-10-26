@@ -5,12 +5,12 @@
 namespace rose {
 namespace kernel {
 
-ObjectID::ObjectID ( ) {
+ID::ID ( ) {
 	this->mSource = NULL;
 	this->mRefcount = 0;
 }
 
-ObjectID::ObjectID ( ObjectID *source ) {
+ID::ID ( ID *source ) {
 	this->mSource = source->GetSource ( );
 	this->mRefcount = 0;
 
@@ -18,7 +18,7 @@ ObjectID::ObjectID ( ObjectID *source ) {
 	this->AddDependency ( this->mSource );
 }
 
-ObjectID::~ObjectID ( ) {
+ID::~ID ( ) {
 	this->RemDependency ( this->mSource );
 	if ( this->mRefcount ) {
 		fprintf ( stderr , "Referenced object was deleted.\n" );
@@ -26,12 +26,12 @@ ObjectID::~ObjectID ( ) {
 	}
 }
 
-void ObjectID::AddDependency ( ObjectID *id ) {
+void ID::AddDependency ( ID *id ) {
 	if ( !id || id == this ) {
 		return;
 	}
 #ifdef SAFE_OBJECT_REFERENCES
-	std::set<ObjectID *>::iterator itr = this->mDependencies.find ( id );
+	std::set<ID *>::iterator itr = this->mDependencies.find ( id );
 	if ( itr == this->mDependencies.end ( ) ) {
 		id->mRefcount++;
 		this->mMutex.lock ( );
@@ -45,13 +45,13 @@ void ObjectID::AddDependency ( ObjectID *id ) {
 #endif
 }
 
-void ObjectID::RemDependency ( ObjectID *id ) {
+void ID::RemDependency ( ID *id ) {
 	if ( !id || id == this ) {
 		return;
 	}
 	if ( id->mRefcount ) {
 #ifdef SAFE_OBJECT_REFERENCES
-		std::set<ObjectID *>::iterator itr = this->mDependencies.find ( id );
+		std::set<ID *>::iterator itr = this->mDependencies.find ( id );
 		if ( itr != this->mDependencies.end ( ) ) {
 			id->mRefcount--;
 			this->mMutex.lock ( );
@@ -66,23 +66,23 @@ void ObjectID::RemDependency ( ObjectID *id ) {
 	}
 }
 
-bool ObjectID::IsReferenced ( ) const {
+bool ID::IsReferenced ( ) const {
 	return this->mRefcount != 0;
 }
 
-int ObjectID::GetRefcount ( ) const {
+int ID::GetRefcount ( ) const {
 	return this->mRefcount;
 }
 
-ObjectID *ObjectID::GetSource ( ) {
+ID *ID::GetSource ( ) {
 	return ( this->mSource ) ? this->mSource : this;
 }
 
-const ObjectID *ObjectID::GetSource ( ) const {
+const ID *ID::GetSource ( ) const {
 	return ( this->mSource ) ? this->mSource : this;
 }
 
-bool ObjectID::IsInstance ( ) const {
+bool ID::IsInstance ( ) const {
 	return this->mSource != NULL;
 }
 
