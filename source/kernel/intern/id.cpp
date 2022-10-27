@@ -1,16 +1,16 @@
-#include "id.h"
+#include "id_private.h"
 
 #include "lib/lib_error.h"
 
 namespace rose {
 namespace kernel {
 
-ID::ID ( ) {
+ObjID::ObjID ( ) {
 	this->mSource = NULL;
 	this->mRefcount = 0;
 }
 
-ID::ID ( ID *source ) {
+ObjID::ObjID ( ObjID *source ) {
 	this->mSource = source->GetSource ( );
 	this->mRefcount = 0;
 
@@ -18,7 +18,7 @@ ID::ID ( ID *source ) {
 	this->AddDependency ( this->mSource );
 }
 
-ID::~ID ( ) {
+ObjID::~ObjID ( ) {
 	this->RemDependency ( this->mSource );
 	if ( this->mRefcount ) {
 		fprintf ( stderr , "Referenced object was deleted.\n" );
@@ -26,12 +26,12 @@ ID::~ID ( ) {
 	}
 }
 
-void ID::AddDependency ( ID *id ) {
+void ObjID::AddDependency ( ObjID *id ) {
 	if ( !id || id == this ) {
 		return;
 	}
 #ifdef SAFE_OBJECT_REFERENCES
-	std::set<ID *>::iterator itr = this->mDependencies.find ( id );
+	std::set<ObjID *>::iterator itr = this->mDependencies.find ( id );
 	if ( itr == this->mDependencies.end ( ) ) {
 		id->mRefcount++;
 		this->mMutex.lock ( );
@@ -45,13 +45,13 @@ void ID::AddDependency ( ID *id ) {
 #endif
 }
 
-void ID::RemDependency ( ID *id ) {
+void ObjID::RemDependency ( ObjID *id ) {
 	if ( !id || id == this ) {
 		return;
 	}
 	if ( id->mRefcount ) {
 #ifdef SAFE_OBJECT_REFERENCES
-		std::set<ID *>::iterator itr = this->mDependencies.find ( id );
+		std::set<ObjID *>::iterator itr = this->mDependencies.find ( id );
 		if ( itr != this->mDependencies.end ( ) ) {
 			id->mRefcount--;
 			this->mMutex.lock ( );
@@ -66,33 +66,56 @@ void ID::RemDependency ( ID *id ) {
 	}
 }
 
-bool ID::IsReferenced ( ) const {
+bool ObjID::IsReferenced ( ) const {
 	return this->mRefcount != 0;
 }
 
-int ID::GetRefcount ( ) const {
+int ObjID::GetRefcount ( ) const {
 	return this->mRefcount;
 }
 
-ID *ID::GetSource ( ) {
+ObjID *ObjID::GetSource ( ) {
 	return ( this->mSource ) ? this->mSource : this;
 }
 
-const ID *ID::GetSource ( ) const {
+const ObjID *ObjID::GetSource ( ) const {
 	return ( this->mSource ) ? this->mSource : this;
 }
 
-ID *ID::GetSourceEx ( ) {
+ObjID *ObjID::GetSourceEx ( ) {
 	return ( this->mSource != this ) ? this->mSource : NULL;
 }
 
-const ID *ID::GetSourceEx ( ) const {
+const ObjID *ObjID::GetSourceEx ( ) const {
 	return ( this->mSource != this ) ? this->mSource : NULL;
 }
 
-bool ID::IsInstance ( ) const {
+bool ObjID::IsInstance ( ) const {
 	return this->mSource != NULL;
 }
 
 }
+}
+
+using namespace rose;
+using namespace rose::kernel;
+
+void ID_add_dependency ( ID *self , ID *dependency ) {
+	unwrap ( self )->AddDependency ( unwrap ( dependency ) );
+}
+
+void ID_rem_dependency ( ID *self , ID *dependency ) {
+	unwrap ( self )->RemDependency ( unwrap ( dependency ) );
+}
+
+int ID_refcount ( const ID *id ) {
+	return unwrap ( id )->GetRefcount ( );
+}
+
+ID *ID_get_source_safe ( ID *id ) {
+	return wrap ( unwrap ( id )->GetSource ( ) );
+}
+
+ID *ID_get_source ( ID *id ) {
+	return wrap ( unwrap ( id )->GetSourceEx ( ) );
 }
