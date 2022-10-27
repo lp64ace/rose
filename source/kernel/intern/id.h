@@ -21,7 +21,7 @@ public:
 	ID ( ID *source );
 
 	// Delete the object's id.
-	~ID ( );
+	virtual ~ID ( );
 
 	/** Mark an object as a dependency of this. Marking \a id as a referenced object and 
 	* therefore an object that can not be deleted.
@@ -39,11 +39,19 @@ public:
 	// Returns the number of object that have referenced this id.
 	int GetRefcount ( ) const;
 
-	// If this object is an instace the source object is returned, otherwise this method returns 'self'.
+	/** If this object is an instace the source object is returned , otherwise this method returns 'self'. 
+	* The difference with #GetSourceEx is that this method never returns NULL. */
 	ID *GetSource ( );
 
-	// If this object is an instace the source object is returned, otherwise this method returns 'self'.
+	/** If this object is an instace the source object is returned , otherwise this method returns 'self'.
+	* The difference with #GetSourceEx is that this method never returns NULL. */
 	const ID *GetSource ( ) const;
+
+	// If this object is an instace the source object is returned, otherwise this method returns 'NULL'.
+	ID *GetSourceEx ( );
+
+	// If this object is an instace the source object is returned, otherwise this method returns 'NULL'.
+	const ID *GetSourceEx ( ) const;
 
 	// Returns \c True if this is an instace.
 	bool IsInstance ( ) const;

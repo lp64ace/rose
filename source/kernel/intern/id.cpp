@@ -82,6 +82,14 @@ const ID *ID::GetSource ( ) const {
 	return ( this->mSource ) ? this->mSource : this;
 }
 
+ID *ID::GetSourceEx ( ) {
+	return ( this->mSource != this ) ? this->mSource : NULL;
+}
+
+const ID *ID::GetSourceEx ( ) const {
+	return ( this->mSource != this ) ? this->mSource : NULL;
+}
+
 bool ID::IsInstance ( ) const {
 	return this->mSource != NULL;
 }
