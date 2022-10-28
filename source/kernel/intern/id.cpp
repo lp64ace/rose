@@ -33,7 +33,7 @@ void ObjID::AddDependency ( ObjID *id ) {
 #ifdef SAFE_OBJECT_REFERENCES
 	std::set<ObjID *>::iterator itr = this->mDependencies.find ( id );
 	if ( itr == this->mDependencies.end ( ) ) {
-		id->mRefcount++;
+		id->AddReference ( );
 		this->mMutex.lock ( );
 		this->mDependencies.insert ( id );
 		this->mMutex.unlock ( );
@@ -41,7 +41,7 @@ void ObjID::AddDependency ( ObjID *id ) {
 		LIB_assert_msg ( 0 , "Object is already referenced." );
 	}
 #else
-	id->mRefcount++;
+	id->AddReference ( );
 #endif
 }
 
@@ -53,7 +53,7 @@ void ObjID::RemDependency ( ObjID *id ) {
 #ifdef SAFE_OBJECT_REFERENCES
 		std::set<ObjID *>::iterator itr = this->mDependencies.find ( id );
 		if ( itr != this->mDependencies.end ( ) ) {
-			id->mRefcount--;
+			id->RemReference ( );
 			this->mMutex.lock ( );
 			this->mDependencies.erase ( itr );
 			this->mMutex.unlock ( );
@@ -61,7 +61,7 @@ void ObjID::RemDependency ( ObjID *id ) {
 			LIB_assert_msg ( 0 , "Non-referenced object cannot be dereferenced." );
 		}
 #else
-		id->mRefcount--;
+		id->RemReference ( );
 #endif
 	}
 }
@@ -92,6 +92,18 @@ const ObjID *ObjID::GetSourceEx ( ) const {
 
 bool ObjID::IsInstance ( ) const {
 	return this->mSource != NULL;
+}
+
+void ObjID::AddReference ( ) {
+	this->mMutex.lock ( );
+	this->mRefcount++;
+	this->mMutex.unlock ( );
+}
+
+void ObjID::RemReference ( ) {
+	this->mMutex.lock ( );
+	this->mRefcount--;
+	this->mMutex.unlock ( );
 }
 
 }

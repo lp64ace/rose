@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	// Opaque type hiding rose::kernel::ID.
+	// Opaque type hiding rose::kernel::ObjID.
 	typedef struct ID ID;
 
 	/** Mark an object as a dependency of this. Marking \a id as a referenced object and

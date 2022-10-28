@@ -58,6 +58,9 @@ public:
 	// Returns \c True if this is an instace.
 	bool IsInstance ( ) const;
 private:
+	void AddReference ( );
+	void RemReference ( );
+private:
 	ObjID *mSource;
 	int mRefcount;
 
