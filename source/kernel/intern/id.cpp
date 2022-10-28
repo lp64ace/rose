@@ -63,6 +63,8 @@ void ObjID::RemDependency ( ObjID *id ) {
 #else
 		id->RemReference ( );
 #endif
+	} else { // Failsafe for Release mode ?
+		LIB_assert_msg ( 0 , "Non-referenced object cannot be dereferenced." );
 	}
 }
 
