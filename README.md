@@ -39,5 +39,5 @@ Before proceeding, ensure that the following prerequisites are met:
 # Authors
 
 Dimitris Bokis
-[@github](http://github.com/lp64ace/)
-[@dmpokisk](http://users.auth.gr/dmpokisk/)
+[github](http://github.com/lp64ace/)
+[website](http://users.auth.gr/dmpokisk/)
