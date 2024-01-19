@@ -290,6 +290,7 @@ function(rose_add_lib
 endfunction()
 
 function(download_dependency_module _name _git _branch)
+	message(STATUS "Fetching content for ${_name}")
     FetchContent_Declare(${_name}
         GIT_REPOSITORY ${_git}
         GIT_TAG ${_branch}
