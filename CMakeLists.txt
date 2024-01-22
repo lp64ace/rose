@@ -115,6 +115,11 @@ if(WIN32)
     set_target_properties(pthreadVCE3 PROPERTIES FOLDER "extern")
     set_target_properties(pthreadVSE3 PROPERTIES FOLDER "extern")
     set_target_properties(pthreadVC3 PROPERTIES FOLDER "extern")
+	
+	# Mute warnings for external projects
+	target_compile_options(pthreadVCE3 PRIVATE /W0)
+	target_compile_options(pthreadVSE3 PRIVATE /W0)
+	target_compile_options(pthreadVC3 PRIVATE /W0)
 endif()
 
 if(UNIX)

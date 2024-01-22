@@ -3,7 +3,7 @@
 
 set(INC
 	# Common Include Directories
-	.
+	PUBLIC .
 	
 	# Internal Include Directories
 	
@@ -14,14 +14,23 @@ set(INC
 
 set(INC_SYS
 	# External Include Directories
-	
+	${PTHREADS_INC}
 )
 
 # -----------------------------------------------------------------------------
 # Declare Source Files
 
 set(SRC
-	creator.c
+	MEM_alloc.h
+	intern/leak_detector.cc
+	intern/linklist.c
+	intern/linklist.h
+	intern/mallocn.c
+	intern/mallocn_guarded_impl.c
+	intern/mallocn_inline.h
+	intern/mallocn_intern.h
+	intern/mallocn_lockfree_impl.c
+	intern/memory_usage.cc
 )
 
 # -----------------------------------------------------------------------------
@@ -29,18 +38,13 @@ set(SRC
 
 set(LIB
 	# Internal Include Directories
-	rf::intern::memalloc
 	
 	# External Include Directories
-	
+	${PTHREADS_LIB}
 )
 
 # -----------------------------------------------------------------------------
 # Declare Executable
 
-add_executable(rf_source_rose ${EXETYPE} ${SRC})
-
-target_link_libraries(rf_source_rose ${LIB})
-
-rose_target_include_dirs(rf_source_rose ${INC})
-rose_source_group(rf_source_rose ${SRC})
+rose_add_lib(rf_intern_memalloc "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::intern::memalloc ALIAS rf_intern_memalloc)
