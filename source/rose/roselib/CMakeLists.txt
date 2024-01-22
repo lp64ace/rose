@@ -1,0 +1,54 @@
+# -----------------------------------------------------------------------------
+# Declare Include Directories
+
+set(INC
+	# Common Include Directories
+	PUBLIC .
+	
+	# Internal Include Directories
+	
+)
+
+# -----------------------------------------------------------------------------
+# Declare System Include Directories
+
+set(INC_SYS
+	# External Include Directories
+	${PTHREADS_INC}
+)
+
+# -----------------------------------------------------------------------------
+# Declare Source Files
+
+set(SRC
+	LIB_assert.h
+	LIB_system.h
+	intern/assert.c
+	intern/system.c
+	intern/system_unix.c
+	intern/system_win32.c
+)
+
+# -----------------------------------------------------------------------------
+# Declare Library Dependencies
+
+set(LIB
+	# Internal Include Directories
+	rf::intern::memalloc
+	
+	# External Include Directories
+	${PTHREADS_LIB}
+)
+
+# -----------------------------------------------------------------------------
+# Operating System Dependencies
+
+if(WIN32)
+	list(APPEND LIB Dbghelp.lib Shlwapi.lib) # Needed for system_win32.c
+endif()
+
+# -----------------------------------------------------------------------------
+# Declare Executable
+
+rose_add_lib(rf_source_roselib "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::source::roselib ALIAS rf_source_roselib)

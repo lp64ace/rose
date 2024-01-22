@@ -438,14 +438,14 @@ static void make_memhead_header(MemHead *memh, size_t length, const char *str) {
 	mem_unlock_thread();
 
 	mem_lock_thread();
-	addlink(membase, (Link *)&memh->prev);
+	addlink(membase, (Link *)(&memh->prev));
 	peak_mem = mem_in_use > peak_mem ? mem_in_use : peak_mem;
 	mem_unlock_thread();
 }
 
 static void rem_memblock(MemHead *memh) {
 	mem_lock_thread();
-	remlink(membase, (Link *)&memh->prev);
+	remlink(membase, (Link *)(&memh->prev));
 	mem_unlock_thread();
 
 	mem_lock_thread();

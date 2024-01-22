@@ -33,8 +33,8 @@ typedef struct ListBase {
  * located in the appropriate module (roselib).
  */
 
-void addlink(struct ListBase *lb, struct Link *vlink);
-void remlink(struct ListBase *lb, struct Link *vlink);
+void addlink(volatile struct ListBase *lb, struct Link *vlink);
+void remlink(volatile struct ListBase *lb, struct Link *vlink);
 
 /* \} */
 

@@ -30,6 +30,7 @@ set(SRC
 set(LIB
 	# Internal Include Directories
 	rf::intern::memalloc
+	rf::source::roselib
 	
 	# External Include Directories
 	

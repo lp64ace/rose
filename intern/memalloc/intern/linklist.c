@@ -6,7 +6,7 @@
 /** \name Functions
  * \{ */
 
-void addlink(struct ListBase *lb, struct Link *vlink) {
+void addlink(volatile struct ListBase *lb, struct Link *vlink) {
 	vlink->prev = lb->last;
 	vlink->next = NULL;
 
@@ -19,7 +19,7 @@ void addlink(struct ListBase *lb, struct Link *vlink) {
 	lb->last = vlink;
 }
 
-void remlink(struct ListBase *lb, struct Link *vlink) {
+void remlink(volatile struct ListBase *lb, struct Link *vlink) {
 	if (vlink->prev) {
 		vlink->prev->next = vlink->next;
 	}
