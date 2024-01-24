@@ -22,8 +22,11 @@ set(INC_SYS
 
 set(SRC
 	LIB_assert.h
+	LIB_compiler_attrs.h
+	LIB_string.h
 	LIB_system.h
 	intern/assert.c
+	intern/string.c
 	intern/system.c
 	intern/system_unix.c
 	intern/system_win32.c

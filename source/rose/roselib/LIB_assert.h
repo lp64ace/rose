@@ -120,6 +120,23 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 
 /* \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Assert Unreachable Code
+ * \{ */
+
+/**
+ * Indicates that this line of code should never be executed. If it is reached, it will abort in
+ * debug builds and print an error in release builds.
+ */
+#define ROSE_assert_unreachable() \
+	{ \
+		_LIB_assert_unreachable_print(__FILE__, __LINE__, __func__); \
+		ROSE_assert_msg(0, "This line of code is marked to be unreachable."); \
+	} \
+	((void)0)
+  
+/* \} */
+
 #ifdef __cplusplus
 }
 #endif

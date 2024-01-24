@@ -1,3 +1,5 @@
+#include "LIB_assert.h"
+#include "LIB_string.h"
 #include "LIB_system.h"
 
 #include "MEM_alloc.h"
@@ -60,9 +62,8 @@ static const char *lib_windows_get_exception_description(const DWORD exceptionco
 			return "EXCEPTION_SINGLE_STEP";
 		case EXCEPTION_STACK_OVERFLOW:
 			return "EXCEPTION_STACK_OVERFLOW";
-		default:
-			return "UNKNOWN EXCEPTION";
 	}
+	return "UNKNOWN EXCEPTION";
 }
 
 static void lib_windows_get_module_name(LPVOID address, PCHAR buffer, size_t size) {
@@ -88,18 +89,19 @@ static void lib_windows_get_module_version(const char *file, char *buffer, size_
 			if (VerQueryValue(verData, "\\", (VOID FAR * FAR *)&lpBuffer, &size)) {
 				if (size) {
 					VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO *)lpBuffer;
-					/* Magic value from
+					/**
+					 * Magic value from
 					 * https://docs.microsoft.com/en-us/windows/win32/api/verrsrc/ns-verrsrc-vs_fixedfileinfo
 					 */
 					if (verInfo->dwSignature == 0xfeef04bd) {
-						snprintf(buffer,
-								 buffersize,
-								 "%d.%d.%d.%d",
-								 (verInfo->dwFileVersionMS >> 16) & 0xffff,
-								 (verInfo->dwFileVersionMS >> 0) & 0xffff,
-								 (verInfo->dwFileVersionLS >> 16) & 0xffff,
-								 (verInfo->dwFileVersionLS >> 0) & 0xffff);
-						buffer[buffersize - 1] = '\0';
+						size_t ret = LIB_snprintf(buffer,
+									 buffersize,
+									 "%d.%d.%d.%d",
+									 (verInfo->dwFileVersionMS >> 16) & 0xffff,
+									 (verInfo->dwFileVersionMS >> 0) & 0xffff,
+									 (verInfo->dwFileVersionLS >> 16) & 0xffff,
+									 (verInfo->dwFileVersionLS >> 0) & 0xffff);
+						ROSE_assert(ret != LIB_NPOS);
 					}
 				}
 			}

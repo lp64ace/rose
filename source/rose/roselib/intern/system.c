@@ -23,11 +23,6 @@ static const char *lib_signal_translate(int signal) {
 	return "Unkown Signal";
 }
  
-static void lib_signal_interup_info(int signal) {
-	fprintf(stderr, "\n\n*** %s(%s) ***\n", __func__, lib_signal_translate(signal));
-	LIB_system_backtrace(stderr);
-}
- 
 static void lib_signal_interup_error(int signal) {
 	fprintf(stderr, "\n\n*** %s(%s) ***\n", __func__, lib_signal_translate(signal));
 	LIB_system_backtrace(stderr);
@@ -38,9 +33,6 @@ void LIB_system_signal_callbacks_init() {
 	signal(SIGFPE, lib_signal_interup_error);
 	signal(SIGILL, lib_signal_interup_error);
 	signal(SIGSEGV, lib_signal_interup_error);
-	
-	signal(SIGINT, lib_signal_interup_info);
-	signal(SIGTERM, lib_signal_interup_info);
 }
 
 /* \} */
