@@ -94,4 +94,16 @@ char *LIB_sprintf_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...);
 /** \name String Editing
  * \{ */
  
+/** This will replace any of occurances of `src` in `str` with `dst`. */
+size_t LIB_str_replace_char(char *str, const char src, const char dst);
+
+/** This will replace any of occurances of `src` in `str` with `dst`. */
+size_t LIB_str_replacen_char(char *str, size_t maxlen, const char src, const char dst);
+
+/**
+ * Replace any occurances of `needle` inside of `haystack` with `alt` and store the output in `buffer`.
+ * \return Returns the length of the `buffer` in bytes not including the null-terminator or LIB_NPOS if an error occured.
+ */
+size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const char *needle, const char *alt);
+ 
 /* \} */

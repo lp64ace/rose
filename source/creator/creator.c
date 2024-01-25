@@ -1,6 +1,7 @@
 #include "MEM_alloc.h"
 
 #include "LIB_assert.h"
+#include "LIB_string.h"
 #include "LIB_system.h"
 
 int main(void) {

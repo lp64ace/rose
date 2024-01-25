@@ -300,4 +300,87 @@ char *LIB_sprintf_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 /** \name String Editing
  * \{ */
  
+size_t LIB_str_replace_char(char *str, const char src, const char dst) {
+	return LIB_str_replacen_char(str, LIB_strlen(str), src, dst);
+}
+
+size_t LIB_str_replacen_char(char *str, size_t maxlen, const char src, const char dst) {
+	size_t i, cnt;
+	
+	for(i = 0, cnt = 0; str[i] != '\0' && i < maxlen; i++) {
+		if(str[i] == src) {
+			str[i] = dst;
+			cnt++;
+		}
+	}
+	
+	return cnt;
+}
+ 
+const char _lib_str_replace_z_algo_util(size_t i, const char *pref, const char *suf, const size_t n, const size_t m) {
+	return (i <= n) ? pref[i] : suf[i - n - 1]; /* `prefix` is "needle" so it will always be null-terminated. */
+}
+ 
+size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const char *needle, const char *alt) {
+	/** Do we or do we not use rolling has here, this is the question... Probably not...! */
+	size_t n = LIB_strlen(haystack), m = LIB_strlen(needle);
+	
+	size_t *z = (size_t *)MEM_mallocN(sizeof(size_t) * (n + m + 1), "StrReplaceLookup");
+	
+#define CONCAT_at(i) _lib_str_replace_z_algo_util(i, needle, haystack, m, n)
+	
+	z[0] = n + m + 1;
+	
+	size_t left = 0, right = 0, k;
+	for(size_t i = 1; i <= n + m; i++) {
+		if(i > right) {
+			left = right = i;
+
+			while(right <= n + m && CONCAT_at(right - left) == CONCAT_at(right)) {
+				right++;
+			}
+			z[i] = (size_t)right - left;
+			right--;
+		} else {
+			k = i - left;
+			
+			if(z[k] < right - i + 1) {
+				z[i] = z[k];
+			} else {
+				left = i;
+				while(right <= n + m && CONCAT_at(right - left) == CONCAT_at(right)) {
+					right++;
+				}
+				z[i] = (size_t)right - left;
+				right--;
+			}
+		}
+	}
+	
+	k = 0;
+	
+	for(size_t i = 0; i < n; i++) {
+		if(k >= maxlen) {
+			MEM_freeN(z);
+			return LIB_NPOS;
+		}
+		
+		if(z[i + m + 1] == m) {
+			for(size_t l = 0; alt[l] != '\0' && k < maxlen; l++) {
+				buffer[k++] = alt[l];
+			}
+			i += m - 1;
+		} else {
+			buffer[k++] = haystack[i];
+		}
+	}
+	
+	buffer[k] = '\0';
+	
+#undef CONCAT_at
+	
+	MEM_freeN(z);
+	return k;
+}
+ 
 /* \} */
