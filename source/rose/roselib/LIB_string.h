@@ -50,9 +50,24 @@ size_t LIB_strnlen(const char *text, const size_t maxlen);
 
 /**
  * This function searches for the specified #needle string within the #haystack string and returns the position (index) of the
- * first occurence. If the #needle is not found, the return value is #LIB_NPOS, which indices the absence of the substring.
+ * first occurence. If the #needle is not found, the return value is #LIB_NPOS, which indicates the absence of the substring.
  */
 size_t LIB_strfind(const char *haystack, const char *needle);
+
+/**
+ * This function searches for the specified #needle string within the #haystack string and returns the position (index) of the
+ * first occurence. If the #needle is not found, the return value is #LIB_NPOS, which indicates the absence of the substring.
+ * 
+ * The function will start the search at #offset.
+ */
+size_t LIB_strfind_ex(const char *haystack, const char *needle, size_t offset);
+/**
+ * This function searches for the specified #needle string within the #haystack string and returns the position (index) of the
+ * last occurence. If the #needle is not found, the return value is #LIB_NPOS, which indicates the absence of the substring.
+ * 
+ * The function will start the search at #offset.
+ */
+size_t LIB_strrfind_ex(const char *haystack, const char *needle, size_t offset);
 
 /* \} */
 

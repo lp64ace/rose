@@ -200,31 +200,46 @@ size_t LIB_strnlen(const char *str, const size_t maxlen) {
  
 #define HashBase 101
 #define HashMod UINT_MAX
- 
-size_t LIB_strfind(const char *haystack, const char *needle) {
-	long long rolling = 0, stable = 0, power = 0;
-	size_t i, j;
-	
-	for(i = 0; needle[i] != '\0'; ++i) {
-		stable = (stable * HashBase + needle[i]) % HashMod;
-		rolling = (rolling * HashBase + haystack[i]) % HashMod;
-		power = (i) ? (power * HashBase) % HashMod : 1;
-		
-		if(haystack[i] == '\0') {
-			return LIB_NPOS;
-		}
+
+static void log(const char *str, size_t indicator) {
+	size_t i;
+	printf("DBG | ");
+	for(i = 0; str[i] != '\0'; i++) {
+		printf("%c", str[i]);
 	}
-	
-	for(j = i; haystack[j - 1] != '\0'; ++j) {
-		if(stable == rolling && memcmp(haystack + j - i, needle, i) == 0) {
-			return (size_t)j - i;
+	printf("\n");
+	printf("DBG | ");
+	for(i = 0; i < indicator && str[i] != '\0'; i++) {
+		printf(" ");
+	}
+	printf("^\n");
+}
+
+static size_t lib_strfind_internal(const char *text, const char *needle, size_t index, ptrdiff_t step) {
+	int64_t rolling = 0, stable = 0, power = 0;
+
+	size_t iter, m = LIB_strlen(needle);
+
+	/* In case we iterate the string backward we also need to hash backwards */
+	for (iter = (step > 0) ? 0 : m - 1; (step > 0) ? needle[iter] != '\0' : iter + 1 > 0; iter += step) {
+		stable = (stable * HashBase + needle[iter]) % HashMod;
+	}
+	for (iter = index; text[iter] && iter != index + step * m; iter += step) {
+		rolling = (rolling * HashBase + text[iter]) % HashMod;
+		power = (power) ? (power * HashBase) % HashMod : 1;
+	}
+
+	for(iter = index + step * m; (step > 0) ? text[iter - 1] != '\0' : iter + 2 > 0; iter += step ) {
+		const char *cp = (step > 0) ? (text + iter - step * m) : (text + iter + 1);
+		if(stable == rolling && memcmp(cp, needle, m) == 0) {
+			return cp - text;
 		}
 		
-		rolling = rolling - power * haystack[j - i];
+		rolling = rolling - power * text[iter - step * m];
 		while(rolling < 0) {
 			rolling = rolling + HashMod;
 		}
-		rolling = (rolling * HashBase + haystack[j]) % HashMod;
+		rolling = (rolling * HashBase + text[iter]) % HashMod;
 	}
 	
 	return LIB_NPOS;
@@ -232,6 +247,21 @@ size_t LIB_strfind(const char *haystack, const char *needle) {
 
 #undef HashBase
 #undef HashMod
+
+size_t LIB_strfind(const char *haystack, const char *needle) {
+	return lib_strfind_internal(haystack, needle, 0, 1);
+}
+
+/** The LIB_str*find_ex function have not been tested enough... use with caution! */
+
+size_t LIB_strfind_ex(const char *haystack, const char *needle, size_t offset) {
+	return lib_strfind_internal(haystack, needle, offset, 1);
+}
+
+size_t LIB_strrfind_ex(const char *haystack, const char *needle, size_t offset) {
+	ROSE_assert_msg(LIB_strnlen(haystack, offset + 1) > offset, "LIB_strlen(text) must be greater or equal to 'length'!");
+	return lib_strfind_internal(haystack, needle, offset, -1);
+}
  
 /* \} */
 
@@ -307,7 +337,7 @@ size_t LIB_str_replace_char(char *str, const char src, const char dst) {
 size_t LIB_str_replacen_char(char *str, size_t maxlen, const char src, const char dst) {
 	size_t i, cnt;
 	
-	for(i = 0, cnt = 0; str[i] != '\0' && i < maxlen; i++) {
+	for(i = 0, cnt = 0; str[i] != '\0' && i < maxlen; ++i) {
 		if(str[i] == src) {
 			str[i] = dst;
 			cnt++;
@@ -332,7 +362,7 @@ size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const 
 	z[0] = n + m + 1;
 	
 	size_t left = 0, right = 0, k;
-	for(size_t i = 1; i <= n + m; i++) {
+	for(size_t i = 1; i <= n + m; ++i) {
 		if(i > right) {
 			left = right = i;
 
@@ -359,14 +389,14 @@ size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const 
 	
 	k = 0;
 	
-	for(size_t i = 0; i < n; i++) {
+	for(size_t i = 0; i < n; ++i) {
 		if(k >= maxlen) {
 			MEM_freeN(z);
 			return LIB_NPOS;
 		}
 		
 		if(z[i + m + 1] == m) {
-			for(size_t l = 0; alt[l] != '\0' && k < maxlen; l++) {
+			for(size_t l = 0; alt[l] != '\0' && k < maxlen; ++l) {
 				buffer[k++] = alt[l];
 			}
 			i += m - 1;
