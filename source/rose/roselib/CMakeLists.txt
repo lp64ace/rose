@@ -25,6 +25,7 @@ set(SRC
 	LIB_compiler_attrs.h
 	LIB_string.h
 	LIB_system.h
+	LIB_utildefines.h
 	intern/assert.c
 	intern/string.c
 	intern/system.c
