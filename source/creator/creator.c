@@ -20,6 +20,10 @@ int main(void) {
 	SetWindowPosition(window, 200, 200);
 	
 	while(IsWindow(window)) {
+		if(ActivateWindowDrawingContext(window)) {
+			SwapWindowDrawingBuffers(window);
+		}
+		
 		if(ProcessEvents(false)) {
 			DispatchEvents();
 		}

@@ -164,6 +164,9 @@ public:
 
 	/** Make the current rendering context an invalid rendering context. */
 	bool Deactivate();
+	
+	/** Excange the front and back buffer of the window. */
+	bool SwapBuffers();
 
 	/* \} */
 private:

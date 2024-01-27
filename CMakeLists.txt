@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 
 # -----------------------------------------------------------------------------
 # Early Initialization
@@ -101,11 +101,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(WIN32)
 	add_compile_definitions(-DWIN32)
 endif()
-
-# -----------------------------------------------------------------------------
-# Libraries
-
-find_package(OpenGL REQUIRED)
 
 # -----------------------------------------------------------------------------
 # Copy clang format files

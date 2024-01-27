@@ -14,6 +14,7 @@ set(INC
 
 set(INC_SYS
 	# External Include Directories
+	${CMAKE_SOURCE_DIR}/extern/glew/include
 	
 )
 
@@ -43,6 +44,7 @@ set(LIB
 	rf::intern::memalloc
 	
 	# External Include Directories
+	glew
 	
 )
 

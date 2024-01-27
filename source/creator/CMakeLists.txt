@@ -40,9 +40,12 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Executable
 
-add_executable(rf_source_rose ${EXETYPE} ${SRC})
+add_executable(rose ${EXETYPE} ${SRC})
 
-target_link_libraries(rf_source_rose ${LIB})
+target_link_libraries(rose ${LIB})
 
-rose_target_include_dirs(rf_source_rose ${INC})
-rose_source_group(rf_source_rose ${SRC})
+rose_target_include_dirs(rose ${INC})
+rose_source_group(rose ${SRC})
+
+# Ugly but overrides the folder set by `rose_source_group`
+set_target_properties(rose PROPERTIES FOLDER "")

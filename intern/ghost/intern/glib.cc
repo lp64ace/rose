@@ -94,3 +94,33 @@ void EventSubscribe(EventCallbackFn fn) {
 void EventUnsubscribe(EventCallbackFn fn) {
 	glib_platform->EventUnsubscribe(fn);
 }
+
+bool ActivateWindowDrawingContext(GWindow *wnd) {
+	ContextInterface *context = reinterpret_cast<WindowInterface *>(wnd)->GetContext();
+	
+	if(context) {
+		return context->Activate();
+	}
+	return false;
+}
+
+bool SwapWindowDrawingBuffers(GWindow *wnd) {
+	ContextInterface *context = reinterpret_cast<WindowInterface *>(wnd)->GetContext();
+	
+	if(context) {
+		return context->SwapBuffers();
+	}
+	return false;
+}
+
+bool ActivateDrawingContext(GContext *context) {
+	return reinterpret_cast<ContextInterface *>(context)->Activate();
+}
+
+bool DeactivateDrawingContext(GContext *context) {
+	return reinterpret_cast<ContextInterface *>(context)->Deactivate();
+}
+
+bool SwapDrawingBuffers(GContext *context) {
+	return reinterpret_cast<ContextInterface *>(context)->SwapBuffers();
+}

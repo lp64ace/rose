@@ -119,6 +119,30 @@ void EventSubscribe(EventCallbackFn fn);
 /** Unsubscribe a new function from receiving event triggers. */
 void EventUnsubscribe(EventCallbackFn fn);
 
+/**
+ * Activates the drawing context associated with the specified window. This function prepares the window for drawing
+ * operations, ensuring that subsequent drawing commands will be directed to the specified window.
+ */
+bool ActivateWindowDrawingContext(GWindow *wnd);
+
+/** Swaps the front and back drawing buffers for the specified window. */
+bool SwapWindowDrawingBuffers(GWindow *wnd);
+
+/**
+ * Activates the specified drawing context for rendering operations. This function prepares the drawing context for receiving
+ * drawing commands, allowing subsequent rendering operations to be directed to the specified context.
+ */
+bool ActivateDrawingContext(GContext *context);
+
+/**
+ * Deactivates the specified drawing context. This function is used to release the drawing context after rendering operations
+ * are complete. It signifies the end of drawing operations on the specified context and may perform necessary cleanup.
+ */
+bool DeactivateDrawingContext(GContext *context);
+
+/** Swaps the front and back buffers of the specified drawing context. */
+bool SwapDrawingBuffers(GContext *context);
+
 #ifdef __cplusplus
 }
 #endif

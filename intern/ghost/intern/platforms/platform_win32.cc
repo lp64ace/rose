@@ -1,4 +1,6 @@
 #include <windowsx.h>
+#include <gl/glew.h>
+#include <gl/wglew.h>
 
 #include <algorithm>
 
@@ -257,17 +259,30 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 	PixelFormatDescriptor.cAuxBuffers = 0;
 	PixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
 	
-	int PixelFormat = ChoosePixelFormat(_hDC, &PixelFormatDescriptor);
-	SetPixelFormat(_hDC, PixelFormat, &PixelFormatDescriptor);
+	int PixelFormat = ::ChoosePixelFormat(_hDC, &PixelFormatDescriptor);
+	::SetPixelFormat(_hDC, PixelFormat, &PixelFormatDescriptor);
 	
-	_hGLRC = wglCreateContext(_hDC);
+	_hGLRC = ::wglCreateContext(_hDC);
 	if(!_hGLRC) {
 		return;
+	}
+	
+	if(::wglMakeCurrent(_hDC, _hGLRC)) {
+		GLenum err = glewInit();
+		if (GLEW_OK != err) {
+			/** Problem: glewInit failed, something is seriously wrong. */
+			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		}
+		fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+		
+		if(glewGetExtension("WGL_EXT_swap_control")) {
+			::wglSwapIntervalEXT(0);
+		}
 	}
 }
 
 WindowsOpenGLContext::~WindowsOpenGLContext() {
-	wglDeleteContext(_hGLRC);
+	::wglDeleteContext(_hGLRC);
 }
 
 bool WindowsOpenGLContext::IsValid() {
@@ -279,14 +294,21 @@ bool WindowsOpenGLContext::IsValid() {
  * \{ */
 
 bool WindowsOpenGLContext::Activate() {
-	if(wglMakeCurrent(_hDC, _hGLRC)) {
+	if(::wglMakeCurrent(_hDC, _hGLRC)) {
 		return true;
 	}
 	return false;
 }
 
 bool WindowsOpenGLContext::Deactivate() {
-	if(wglMakeCurrent(_hDC, NULL)) {
+	if(::wglMakeCurrent(_hDC, NULL)) {
+		return true;
+	}
+	return false;
+}
+
+bool WindowsOpenGLContext::SwapBuffers() {
+	if(::SwapBuffers(_hDC)) {
 		return true;
 	}
 	return false;
@@ -332,9 +354,9 @@ LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 				} else {
 					result = 0;
 					result |= (cursor.x < windowRect.left + padding) ? HTLEFT : 0;
-					result |= (cursor.x > windowRect.right - padding) ? HTRIGHT : 0;
+					result |= (cursor.x >= windowRect.right - padding) ? HTRIGHT : 0;
 					result |= (cursor.y < windowRect.top + padding) ? HTTOP : 0;
-					result |= (cursor.y > windowRect.bottom + padding) ? HTBOTTOM : 0;
+					result |= (cursor.y >= windowRect.bottom + padding) ? HTBOTTOM : 0;
 				}
 			}
 

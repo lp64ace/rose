@@ -18,6 +18,9 @@ public:
 
 	/** Make the current rendering context an invalid rendering context. */
 	virtual bool Deactivate() = 0;
+	
+	/** Excange the front and back buffer of the window. */
+	virtual bool SwapBuffers() = 0;
 
 	/* \} */
 };
