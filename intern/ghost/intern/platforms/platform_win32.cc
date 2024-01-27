@@ -1,6 +1,6 @@
-#include <windowsx.h>
 #include <gl/glew.h>
 #include <gl/wglew.h>
+#include <windowsx.h>
 
 #include <algorithm>
 
@@ -10,14 +10,12 @@
 
 static class WindowsPlatform *glib_windows_platform = nullptr;
 
-LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
 static bool glib_windows_register_window_class_ex(WNDCLASSEXA *wndclass) {
 	memset(wndclass, 0, sizeof(WNDCLASSEXA));
 
 	wndclass->cbSize = sizeof(WNDCLASSEXA);
 	wndclass->style = CS_HREDRAW | CS_VREDRAW;
-	wndclass->lpfnWndProc = WndProc;
+	wndclass->lpfnWndProc = WindowsPlatform::WndProc;
 	wndclass->cbClsExtra = 0;
 	wndclass->cbWndExtra = 0;
 	wndclass->hInstance = ::GetModuleHandle(NULL);
@@ -72,18 +70,18 @@ WindowInterface *WindowsPlatform::InitWindow(WindowInterface *parent, int width,
 
 void WindowsPlatform::CloseWindow(WindowInterface *window) {
 	std::vector<WindowInterface *>::iterator itr = std::find(_Windows.begin(), _Windows.end(), window);
-	if(itr != _Windows.end()) {
+	if (itr != _Windows.end()) {
 		_Windows.erase(itr);
 		MEM_delete<WindowsWindow>(reinterpret_cast<WindowsWindow *>(window));
 	}
-	if(_Windows.empty()) {
+	if (_Windows.empty()) {
 		ClosePlatform();
 	}
 }
 
 bool WindowsPlatform::IsWindow(WindowInterface *window) {
 	std::vector<WindowInterface *>::iterator itr = std::find(_Windows.begin(), _Windows.end(), window);
-	if(itr != _Windows.end()) {
+	if (itr != _Windows.end()) {
 		return true;
 	}
 	return false;
@@ -168,11 +166,11 @@ WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hW
 }
 
 WindowsWindow::~WindowsWindow() {
-	if(reinterpret_cast<WindowsWindow *>(::GetWindowLongPtr(_hWnd, GWLP_USERDATA)) == this) {
+	if (reinterpret_cast<WindowsWindow *>(::GetWindowLongPtr(_hWnd, GWLP_USERDATA)) == this) {
 		::SetWindowLongPtr(_hWnd, GWLP_USERDATA, (LONG_PTR)NULL);
-		
+
 		::DestroyWindow(_hWnd);
-		
+
 		MEM_delete<ContextInterface>(_Context);
 	}
 }
@@ -201,7 +199,7 @@ void WindowsWindow::SetPos(GPosition position) {
 void WindowsWindow::GetWindowRect(GRect *r_rect) const {
 	RECT rect;
 	::GetWindowRect(_hWnd, &rect);
-	
+
 	r_rect->left = rect.left;
 	r_rect->top = rect.top;
 	r_rect->right = rect.right;
@@ -211,7 +209,7 @@ void WindowsWindow::GetWindowRect(GRect *r_rect) const {
 void WindowsWindow::GetClientRect(GRect *r_rect) const {
 	RECT rect;
 	::GetClientRect(_hWnd, &rect);
-	
+
 	r_rect->left = rect.left;
 	r_rect->top = rect.top;
 	r_rect->right = rect.right;
@@ -225,10 +223,10 @@ void WindowsWindow::GetClientRect(GRect *r_rect) const {
  * \{ */
 
 ContextInterface *WindowsWindow::InstallContext(int type) {
-	switch(type) {
+	switch (type) {
 		case GLIB_CONTEXT_OPENGL: {
 			WindowsOpenGLContext *context = MEM_new<WindowsOpenGLContext>("glib::WindowsOpenGLContext", this);
-			if(context) {
+			if (context) {
 				return _Context = context;
 			}
 		} break;
@@ -248,7 +246,7 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 	 */
 	PIXELFORMATDESCRIPTOR PixelFormatDescriptor;
 	memset(&PixelFormatDescriptor, 0, sizeof(PIXELFORMATDESCRIPTOR));
-	
+
 	PixelFormatDescriptor.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	PixelFormatDescriptor.nVersion = 1;
 	PixelFormatDescriptor.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -258,24 +256,24 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 	PixelFormatDescriptor.cStencilBits = 8;
 	PixelFormatDescriptor.cAuxBuffers = 0;
 	PixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
-	
+
 	int PixelFormat = ::ChoosePixelFormat(_hDC, &PixelFormatDescriptor);
 	::SetPixelFormat(_hDC, PixelFormat, &PixelFormatDescriptor);
-	
+
 	_hGLRC = ::wglCreateContext(_hDC);
-	if(!_hGLRC) {
+	if (!_hGLRC) {
 		return;
 	}
-	
-	if(::wglMakeCurrent(_hDC, _hGLRC)) {
+
+	if (::wglMakeCurrent(_hDC, _hGLRC)) {
 		GLenum err = glewInit();
 		if (GLEW_OK != err) {
 			/** Problem: glewInit failed, something is seriously wrong. */
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 		}
 		fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-		
-		if(glewGetExtension("WGL_EXT_swap_control")) {
+
+		if (glewGetExtension("WGL_EXT_swap_control")) {
 			::wglSwapIntervalEXT(0);
 		}
 	}
@@ -294,21 +292,21 @@ bool WindowsOpenGLContext::IsValid() {
  * \{ */
 
 bool WindowsOpenGLContext::Activate() {
-	if(::wglMakeCurrent(_hDC, _hGLRC)) {
+	if (::wglMakeCurrent(_hDC, _hGLRC)) {
 		return true;
 	}
 	return false;
 }
 
 bool WindowsOpenGLContext::Deactivate() {
-	if(::wglMakeCurrent(_hDC, NULL)) {
+	if (::wglMakeCurrent(_hDC, NULL)) {
 		return true;
 	}
 	return false;
 }
 
 bool WindowsOpenGLContext::SwapBuffers() {
-	if(::SwapBuffers(_hDC)) {
+	if (::SwapBuffers(_hDC)) {
 		return true;
 	}
 	return false;
@@ -316,7 +314,21 @@ bool WindowsOpenGLContext::SwapBuffers() {
 
 /* \} */
 
-LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+static int glib_windows_translate_mouse_modifiers(WPARAM wParam) {
+	int ret = 0;
+
+	ret |= (wParam & MK_CONTROL) ? GLIB_MODIFIER_CONTROL : 0;
+	ret |= (wParam & MK_LBUTTON) ? GLIB_MODIFIER_LBTN : 0;
+	ret |= (wParam & MK_MBUTTON) ? GLIB_MODIFIER_MBTN : 0;
+	ret |= (wParam & MK_RBUTTON) ? GLIB_MODIFIER_RBTN : 0;
+	ret |= (wParam & MK_SHIFT) ? GLIB_MODIFIER_SHIFT : 0;
+	ret |= (wParam & MK_XBUTTON1) ? GLIB_MODIFIER_XBTN1 : 0;
+	ret |= (wParam & MK_XBUTTON2) ? GLIB_MODIFIER_XBTN2 : 0;
+
+	return ret;
+}
+
+LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	bool handled = false;
 	LRESULT result = 0;
 
@@ -344,14 +356,15 @@ LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
 				bool horizontal = cursor.x < windowRect.left + padding || cursor.x >= windowRect.right - padding;
 				bool vertical = cursor.y < windowRect.top + padding || cursor.y >= windowRect.bottom - padding;
-				if(horizontal && vertical) {
+				if (horizontal && vertical) {
 					LRESULT left = static_cast<LRESULT>(cursor.x < windowRect.left + padding);
 					LRESULT right = static_cast<LRESULT>(cursor.x >= windowRect.right - padding);
-					
+
 					result = 0;
 					result |= left * ((cursor.y < windowRect.top + padding) ? HTTOPLEFT : HTBOTTOMLEFT);
 					result |= right * ((cursor.y < windowRect.top + padding) ? HTTOPRIGHT : HTBOTTOMRIGHT);
-				} else {
+				}
+				else if (horizontal || vertical) {
 					result = 0;
 					result |= (cursor.x < windowRect.left + padding) ? HTLEFT : 0;
 					result |= (cursor.x >= windowRect.right - padding) ? HTRIGHT : 0;
@@ -359,6 +372,103 @@ LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 					result |= (cursor.y >= windowRect.bottom + padding) ? HTBOTTOM : 0;
 				}
 			}
+
+			handled |= true;
+		} break;
+		case WM_SIZE: {
+			int width = static_cast<int>(LOWORD(lParam));
+			int height = static_cast<int>(HIWORD(lParam));
+
+			glib_windows_platform->PostWindowSizeEvent(reinterpret_cast<WindowInterface *>(wnd), width, height);
+			glib_windows_platform->DispatchEvents();
+
+			handled |= true;
+		} break;
+		case WM_MOVE: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+
+			glib_windows_platform->PostWindowMoveEvent(reinterpret_cast<WindowInterface *>(wnd), x, y);
+			glib_windows_platform->DispatchEvents();
+
+			handled |= true;
+		} break;
+		case WM_MOUSEMOVE: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseMoveEvent(reinterpret_cast<WindowInterface *>(wnd), x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_MOUSEWHEEL: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(LOWORD(wParam));
+			int delta = static_cast<short>(HIWORD(wParam));
+
+			glib_windows_platform->PostMouseWheelEvent(reinterpret_cast<WindowInterface *>(wnd), x, y, modifiers, delta);
+
+			handled |= true;
+		} break;
+		case WM_LBUTTONDOWN: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseButtonEvent(
+				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEDOWN, x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_MBUTTONDOWN: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseButtonEvent(
+				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEDOWN, x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_RBUTTONDOWN: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseButtonEvent(
+				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEDOWN, x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_LBUTTONUP: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseButtonEvent(
+				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEUP, x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_MBUTTONUP: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseButtonEvent(
+				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEUP, x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_RBUTTONUP: {
+			int x = static_cast<int>(LOWORD(lParam));
+			int y = static_cast<int>(HIWORD(lParam));
+			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+
+			glib_windows_platform->PostMouseButtonEvent(
+				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEUP, x, y, modifiers);
 
 			handled |= true;
 		} break;
@@ -383,7 +493,7 @@ int InitPlatform(void) {
 		ClosePlatform();
 		return 0xf01;
 	}
-	
+
 	glib_platform = reinterpret_cast<PlatformInterface *>(glib_windows_platform);
 
 	return 0;

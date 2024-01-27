@@ -41,7 +41,7 @@ public:
 
 	/** If the window is valid the window is destroyed and the associated memory is freed. */
 	void CloseWindow(WindowInterface *window);
-	
+
 	/** This function should return true if the specified window is registered in this platform. */
 	bool IsWindow(WindowInterface *window);
 
@@ -76,13 +76,16 @@ public:
 	bool ProcessEvents(bool wait);
 
 	/* \} */
+public:
+	static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 private:
 	/* -------------------------------------------------------------------- */
 	/** \name Windows Handles
 	 * \{ */
-	 
+
 	WNDCLASSEXA _WndClass;
-	
+
 	/* \} */
 
 	std::vector<WindowInterface *> _Windows;
@@ -143,7 +146,7 @@ private:
 	/* \} */
 
 	ContextInterface *_Context;
-	
+
 	friend class WindowsOpenGLContext;
 };
 
@@ -164,7 +167,7 @@ public:
 
 	/** Make the current rendering context an invalid rendering context. */
 	bool Deactivate();
-	
+
 	/** Excange the front and back buffer of the window. */
 	bool SwapBuffers();
 

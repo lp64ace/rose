@@ -92,7 +92,7 @@ typedef struct EventMouse {
 
 	int modifiers;	// The state of various modifier keys when this event was triggered (see GLIB_MODIFIER_*).
 	int wheel;		// If this is a mouse wheel event the offset of the mouse wheel is stored here.
-} EventMouseMove;
+} EventMouse;
 
 enum {
 	GLIB_KEY_UNKOWN = -1,
