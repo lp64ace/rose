@@ -3,7 +3,7 @@
 
 set(INC
 	# Common Include Directories
-	.
+	PUBLIC .
 	
 	# Internal Include Directories
 	
@@ -21,7 +21,11 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
-	creator.c
+	glib.h
+	intern/platform.h
+	intern/platform.hh
+	intern/platform.cc
+	intern/platforms/platform_win32.hh
 )
 
 # -----------------------------------------------------------------------------
@@ -30,8 +34,6 @@ set(SRC
 set(LIB
 	# Internal Include Directories
 	rf::intern::memalloc
-	rf::intern::ghost
-	rf::source::roselib
 	
 	# External Include Directories
 	
@@ -40,9 +42,9 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Executable
 
-add_executable(rf_source_rose ${EXETYPE} ${SRC})
+if(WIN32)
+	list(APPEND SRC intern/platforms/platform_win32.cc)
+endif()
 
-target_link_libraries(rf_source_rose ${LIB})
-
-rose_target_include_dirs(rf_source_rose ${INC})
-rose_source_group(rf_source_rose ${SRC})
+rose_add_lib(rf_intern_ghost "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::intern::ghost ALIAS rf_intern_ghost)

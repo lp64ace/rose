@@ -96,6 +96,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # -----------------------------------------------------------------------------
+# Extra Compilation Definitions
+
+if(WIN32)
+	add_compile_definitions(-DWIN32)
+endif()
+
+# -----------------------------------------------------------------------------
 # Copy clang format files
 
 configure_file(${CMAKE_SOURCE_DIR}/.clang-format ${CMAKE_BINARY_DIR}/.clang-format COPYONLY)
