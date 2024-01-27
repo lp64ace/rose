@@ -1,3 +1,5 @@
+#include <windowsx.h>
+
 #include <algorithm>
 
 #include "MEM_alloc.h"
@@ -23,7 +25,7 @@ static bool glib_windows_register_window_class_ex(WNDCLASSEXA *wndclass) {
 		wndclass->hIconSm = ::LoadIconA(nullptr, IDI_APPLICATION);
 	}
 	wndclass->hCursor = ::LoadCursorA(0, IDC_ARROW);
-	wndclass->hbrBackground = CreateSolidBrush(0);
+	wndclass->hbrBackground = (HBRUSH)COLOR_BACKGROUND;
 	wndclass->lpszMenuName = 0;
 	wndclass->lpszClassName = glib_application_name;
 
@@ -123,8 +125,7 @@ bool WindowsPlatform::ProcessEvents(bool wait) {
 
 WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hWnd(NULL), _hDC(NULL), _Context(NULL) {
 	DWORD ExtendedStyle = parent ? WS_EX_APPWINDOW : 0;
-	DWORD WindowStyle = parent ? WS_CHILD | WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX :
-								   WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
+	DWORD WindowStyle = parent ? WS_CHILD | WS_POPUP : WS_POPUP;
 	HWND ParentHandle = (parent) ? reinterpret_cast<WindowsWindow *>(parent)->_hWnd : HWND_DESKTOP;
 
 	_hWnd = ::CreateWindowEx(ExtendedStyle,
@@ -295,20 +296,53 @@ bool WindowsOpenGLContext::Deactivate() {
 
 LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	bool handled = false;
-	int result = 0;
-	
+	LRESULT result = 0;
+
 	WindowsWindow *wnd = reinterpret_cast<WindowsWindow *>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
-	
-	switch(message) {
+
+	switch (message) {
 		case WM_DESTROY: {
-			if(wnd) {
+			if (wnd) {
 				glib_windows_platform->CloseWindow(wnd);
 			}
 			handled |= true;
 		} break;
+		case WM_NCHITTEST: {
+			result = DefWindowProcA(hWnd, message, wParam, lParam);
+
+			const int padding = 6;
+
+			if (result == HTCLIENT) {
+				POINT cursor;
+				cursor.x = GET_X_LPARAM(lParam);
+				cursor.y = GET_Y_LPARAM(lParam);
+
+				RECT windowRect;
+				GetWindowRect(hWnd, &windowRect);
+
+				bool horizontal = cursor.x < windowRect.left + padding || cursor.x >= windowRect.right - padding;
+				bool vertical = cursor.y < windowRect.top + padding || cursor.y >= windowRect.bottom - padding;
+				if(horizontal && vertical) {
+					LRESULT left = static_cast<LRESULT>(cursor.x < windowRect.left + padding);
+					LRESULT right = static_cast<LRESULT>(cursor.x >= windowRect.right - padding);
+					
+					result = 0;
+					result |= left * ((cursor.y < windowRect.top + padding) ? HTTOPLEFT : HTBOTTOMLEFT);
+					result |= right * ((cursor.y < windowRect.top + padding) ? HTTOPRIGHT : HTBOTTOMRIGHT);
+				} else {
+					result = 0;
+					result |= (cursor.x < windowRect.left + padding) ? HTLEFT : 0;
+					result |= (cursor.x > windowRect.right - padding) ? HTRIGHT : 0;
+					result |= (cursor.y < windowRect.top + padding) ? HTTOP : 0;
+					result |= (cursor.y > windowRect.bottom + padding) ? HTBOTTOM : 0;
+				}
+			}
+
+			handled |= true;
+		} break;
 	}
-	
-	if(handled) {
+
+	if (handled) {
 		return result;
 	}
 	return DefWindowProcA(hWnd, message, wParam, lParam);

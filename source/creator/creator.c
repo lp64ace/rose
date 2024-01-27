@@ -16,7 +16,8 @@ int main(void) {
 	
 	LIB_system_signal_callbacks_init();
 
-	GWindow *window = InitWindow(NULL, 800, 600);
+	GWindow *window = InitWindow(NULL, 1440, 800);
+	SetWindowPosition(window, 200, 200);
 	
 	while(IsWindow(window)) {
 		if(ProcessEvents(false)) {
