@@ -103,6 +103,11 @@ if(WIN32)
 endif()
 
 # -----------------------------------------------------------------------------
+# Libraries
+
+find_package(OpenGL REQUIRED)
+
+# -----------------------------------------------------------------------------
 # Copy clang format files
 
 configure_file(${CMAKE_SOURCE_DIR}/.clang-format ${CMAKE_BINARY_DIR}/.clang-format COPYONLY)

@@ -22,9 +22,16 @@ set(INC_SYS
 
 set(SRC
 	glib.h
+	glib_types.h
+	intern/context.cc
+	intern/context.hh
+	intern/glib.cc
+	intern/platform.cc
 	intern/platform.h
 	intern/platform.hh
-	intern/platform.cc
+	intern/window.cc
+	intern/window.hh
+	
 	intern/platforms/platform_win32.hh
 )
 
@@ -44,6 +51,7 @@ set(LIB
 
 if(WIN32)
 	list(APPEND SRC intern/platforms/platform_win32.cc)
+	list(APPEND LIB opengl32.lib)
 endif()
 
 rose_add_lib(rf_intern_ghost "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")

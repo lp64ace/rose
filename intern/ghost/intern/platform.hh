@@ -7,6 +7,10 @@
 
 class WindowInterface;
 class ContextInterface;
+class PlatformInterface;
+
+extern const char *glib_application_name;
+extern PlatformInterface *glib_platform;
 
 class PlatformInterface {
 public:
@@ -34,26 +38,8 @@ public:
 	/** If the window is valid the window is destroyed and the associated memory is freed. */
 	virtual void CloseWindow(WindowInterface *window) = 0;
 
-	/* \} */
-
-	/* -------------------------------------------------------------------- */
-	/** \name Context Managing
-	 * \{ */
-
-	/**
-	 * This method will attempt to create and install a context of the specified type for the window.
-	 *
-	 * Windows have a default context when they are created and all windows must have a valid context attached to them, so even
-	 * if a context of the specified type could not be installed then we fallback to the default one, which can be obtained by
-	 * calling #GetContext.
-	 *
-	 * \return Returns the newly installed context or NULL if the context could not be installed (the window will still have a
-	 * valid context).
-	 */
-	virtual ContextInterface *InstallContext(WindowInterface *window, int type) = 0;
-
-	/** This method will return the current context of the window. */
-	virtual ContextInterface *GetContext(WindowInterface *window) = 0;
+	/** This function should return true if the specified window is registered in this platform. */
+	virtual bool IsWindow(WindowInterface *window) = 0;
 
 	/* \} */
 
@@ -88,6 +74,9 @@ public:
 	
 	/** Dispatch all the events that have been processed or posted. */
 	void DispatchEvents();
+	
+	/** Returns the number of events waiting to be dispatched. */
+	size_t NumEvents() const;
 
 	/* \} */
 

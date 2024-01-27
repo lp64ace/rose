@@ -1,6 +1,13 @@
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+#include <vector>
+
+#include "intern/context.hh"
 #include "intern/platform.hh"
+#include "intern/window.hh"
 
 class WindowsPlatform : public PlatformInterface {
 public:
@@ -34,6 +41,9 @@ public:
 
 	/** If the window is valid the window is destroyed and the associated memory is freed. */
 	void CloseWindow(WindowInterface *window);
+	
+	/** This function should return true if the specified window is registered in this platform. */
+	bool IsWindow(WindowInterface *window);
 
 	/* \} */
 
@@ -64,6 +74,105 @@ public:
 
 	/** Process the events that the operating system generated. */
 	bool ProcessEvents(bool wait);
+
+	/* \} */
+private:
+	/* -------------------------------------------------------------------- */
+	/** \name Windows Handles
+	 * \{ */
+	 
+	WNDCLASSEXA _WndClass;
+	
+	/* \} */
+
+	std::vector<WindowInterface *> _Windows;
+
+	bool _IsValid;
+};
+
+class WindowsWindow : public WindowInterface {
+public:
+	WindowsWindow(WindowsWindow *parent, int width, int height);
+	~WindowsWindow();
+
+	/* -------------------------------------------------------------------- */
+	/** \name Size/Pos Managing
+	 * \{ */
+
+	/** Sets the size of the entire window, including borders and decorations. */
+	void SetWindowSize(GSize size);
+	/** Sets the size of the client area of the window, excluding borders and decorations. */
+	void SetClientSize(GSize size);
+	/** Sets the position of the top-left corner of the window. */
+	void SetPos(GPosition position);
+
+	/** Retrieves the rectangular coordinates of the entire window, including borders and decorations. */
+	void GetWindowRect(GRect *r_rect) const;
+	/** Retrieves the rectangular coordinates of the client area of the window, excluding borders and decorations. */
+	void GetClientRect(GRect *r_rect) const;
+
+	/* \} */
+
+	/* -------------------------------------------------------------------- */
+	/** \name Context Managing
+	 * \{ */
+
+	/**
+	 * Attempt to install a new rendering context of the specified type for the window. If this function fails, the rendering
+	 * context for the window will fallback to the old type to prevent having a window with no context (in this case, the
+	 * function will still return NULL). If the new context is installed successfully, the return value is a pointer to the
+	 * specified context.
+	 *
+	 * \param type The type of the rendering context to be installed.
+	 * \return A pointer to the installed context or NULL if installation fails.
+	 */
+	ContextInterface *InstallContext(int type);
+
+	/** Returns the context of the specified window, this should never return NULL. */
+	ContextInterface *GetContext() const;
+
+	/* \} */
+private:
+	/* -------------------------------------------------------------------- */
+	/** \name Window Handles
+	 * \{ */
+
+	HWND _hWnd;
+	HDC _hDC;
+
+	/* \} */
+
+	ContextInterface *_Context;
+	
+	friend class WindowsOpenGLContext;
+};
+
+class WindowsOpenGLContext : public ContextInterface {
+public:
+	WindowsOpenGLContext(WindowsWindow *window);
+	~WindowsOpenGLContext();
+
+	/** Returns true if the context is valid. */
+	bool IsValid();
+
+	/* -------------------------------------------------------------------- */
+	/** \name Context Management
+	 * \{ */
+
+	/** Make this context the active rendering context for this application instance. */
+	bool Activate();
+
+	/** Make the current rendering context an invalid rendering context. */
+	bool Deactivate();
+
+	/* \} */
+private:
+	/* -------------------------------------------------------------------- */
+	/** \name Context Handles
+	 * \{ */
+
+	HDC _hDC;
+	HGLRC _hGLRC;
 
 	/* \} */
 };

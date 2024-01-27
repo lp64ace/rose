@@ -4,6 +4,9 @@
 
 #include <assert.h>
 
+const char *glib_application_name = "Rose";
+PlatformInterface *glib_platform = nullptr;
+
 PlatformInterface::PlatformInterface() {
 }
 
@@ -48,6 +51,10 @@ void PlatformInterface::DispatchEvents() {
 	}
 
 	DisposeEvents();
+}
+
+size_t PlatformInterface::NumEvents() const {
+	return _EvtQueue.size();
 }
 
 /* \} */

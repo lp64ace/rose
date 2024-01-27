@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glib.h"
+#include "glib_types.h"
 
 #ifdef __cplusplus
 extern "C" {

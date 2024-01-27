@@ -3,7 +3,9 @@
 #include "LIB_assert.h"
 #include "LIB_system.h"
 
-#include "intern/platform.h"
+#include "glib.h"
+
+#include <stdio.h>
 
 int main(void) {
 	int result = 0;
@@ -14,8 +16,12 @@ int main(void) {
 	
 	LIB_system_signal_callbacks_init();
 
-	if((result = InitPlatform()) == 0) {
-		ClosePlatform();
+	GWindow *window = InitWindow(NULL, 800, 600);
+	
+	while(IsWindow(window)) {
+		if(ProcessEvents(false)) {
+			DispatchEvents();
+		}
 	}
 
 	return result;
