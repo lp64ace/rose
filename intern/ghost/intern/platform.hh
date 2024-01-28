@@ -93,6 +93,8 @@ protected:
 	void PostKeyEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev, int transition);
 	void PostKeyDownEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev);
 	void PostKeyUpEvent(WindowInterface *wnd, wchar_t v, int key, int scan);
+	
+	void ClearWindowEvents(WindowInterface *wnd);
 
 	/* \} */
 

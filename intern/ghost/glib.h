@@ -18,6 +18,10 @@
  *
  * - So I guess leave it be for the moment, we might deal with this later.
  *
+ * <Upd>
+ *
+ * - I changed the prefixes to GHOST but I can't say i like it too much...!
+ *
  */
  
 #include "glib_types.h"
@@ -37,37 +41,37 @@ extern "C" {
  * \note The window will have a default rendering context installed when it is created but a different one can be specified by
  * using the #InstallContext method.
  */
-GWindow *InitWindow(GWindow *parent, int width, int height);
+GWindow *GHOST_InitWindow(GWindow *parent, int width, int height);
 
 /** This will close the specified window and deallocate any memory associated with it. */
-void CloseWindow(GWindow *window);
+void GHOST_CloseWindow(GWindow *window);
 
 /** Returns true if the specified window is valid. */
-bool IsWindow(GWindow *window);
+bool GHOST_IsWindow(GWindow *window);
 
 /** Retrieves the size of the entire window, including borders and decorations. */
-GSize GetWindowSize(GWindow *window);
+GSize GHOST_GetWindowSize(GWindow *window);
 
 /** Retrieves the size of the client area of the window, excluding borders and decorations. */
-GSize GetClientSize(GWindow *window);
+GSize GHOST_GetClientSize(GWindow *window);
 
 /** Retrieves the position of the top-left corner of the window. */
-GPosition GetWindowPos(GWindow *window);
+GPosition GHOST_GetWindowPos(GWindow *window);
 
 /** Sets the size of the entire window, including borders and decorations. */
-void SetWindowSize(GWindow *window, int x, int y);
+void GHOST_SetWindowSize(GWindow *window, int x, int y);
 
 /** Sets the size of the client area of the window, excluding borders and decorations. */
-void SetClientSize(GWindow *window, int x, int y);
+void GHOST_SetClientSize(GWindow *window, int x, int y);
 
 /** Sets the position of the top-left corner of the window. */
-void SetWindowPosition(GWindow *window, int x, int y);
+void GHOST_SetWindowPos(GWindow *window, int x, int y);
 
 /** Retrieves the rectangular coordinates of the entire window, including borders and decorations. */
-void GetWindowRectangle(GWindow *window, GRect *r_rect);
+void GHOST_GetWindowRect(GWindow *window, GRect *r_rect);
 
 /** Retrieves the rectangular coordinates of the client area of the window, excluding borders and decorations. */
-void GetClientRectangle(GWindow *window, GRect *r_rect);
+void GHOST_GetClientRect(GWindow *window, GRect *r_rect);
 
 /**
  * Attempt to install a new rendering context of the specified type for the window. If this function fails, the rendering
@@ -79,10 +83,10 @@ void GetClientRectangle(GWindow *window, GRect *r_rect);
  * \param type The type of the rendering context to be installed.
  * \return A pointer to the installed context or NULL if installation fails.
  */
-GContext *InstallWindowContext(GWindow *window, int type);
+GContext *GHOST_InstallWindowContext(GWindow *window, int type);
 
 /** Returns the context of the specified window, this should never return NULL. */
-GContext *GetWindowContext(GWindow *window);
+GContext *GHOST_GetWindowContext(GWindow *window);
 
 /**
  * Process any new events triggered by the operating system.
@@ -90,10 +94,10 @@ GContext *GetWindowContext(GWindow *window);
  * \param wait Wether or not we should wait for new events if no events have been currently triggered.
  * \return Returns true in case any new events were triggered.
  */
-bool ProcessEvents(bool wait);
+bool GHOST_ProcessEvents(bool wait);
 
 /** Dispatches the events currently queued to all the subscribers. */
-void DispatchEvents();
+void GHOST_DispatchEvents();
 
 /**
  * Posts a new event for a specific window.
@@ -102,7 +106,7 @@ void DispatchEvents();
  * \param type The type of the event.
  * \param evtdata Optional data associated with the event.
  */
-void PostEvent(GWindow *wnd, int type, void *evtdata);
+void GHOST_PostEvent(GWindow *wnd, int type, void *evtdata);
 
 /**
  * Dispatches a specific event for a window to all the subscribers.
@@ -111,37 +115,37 @@ void PostEvent(GWindow *wnd, int type, void *evtdata);
  * \param type The type of the event.
  * \param evtdata Optional data associated with the event.
  */
-void DispatchEvent(GWindow *wnd, int type, void *evtdata);
+void GHOST_DispatchEvent(GWindow *wnd, int type, void *evtdata);
 
 /** Subscribe a new function to receive event triggers. */
-void EventSubscribe(EventCallbackFn fn);
+void GHOST_EventSubscribe(EventCallbackFn fn);
 
 /** Unsubscribe a new function from receiving event triggers. */
-void EventUnsubscribe(EventCallbackFn fn);
+void GHOST_EventUnsubscribe(EventCallbackFn fn);
 
 /**
  * Activates the drawing context associated with the specified window. This function prepares the window for drawing
  * operations, ensuring that subsequent drawing commands will be directed to the specified window.
  */
-bool ActivateWindowDrawingContext(GWindow *wnd);
+bool GHOST_ActivateWindowDrawingContext(GWindow *wnd);
 
 /** Swaps the front and back drawing buffers for the specified window. */
-bool SwapWindowDrawingBuffers(GWindow *wnd);
+bool GHOST_SwapWindowBuffers(GWindow *wnd);
 
 /**
  * Activates the specified drawing context for rendering operations. This function prepares the drawing context for receiving
  * drawing commands, allowing subsequent rendering operations to be directed to the specified context.
  */
-bool ActivateDrawingContext(GContext *context);
+bool GHOST_ActivateDrawingContext(GContext *context);
 
 /**
  * Deactivates the specified drawing context. This function is used to release the drawing context after rendering operations
  * are complete. It signifies the end of drawing operations on the specified context and may perform necessary cleanup.
  */
-bool DeactivateDrawingContext(GContext *context);
+bool GHOST_DeactivateDrawingContext(GContext *context);
 
 /** Swaps the front and back buffers of the specified drawing context. */
-bool SwapDrawingBuffers(GContext *context);
+bool GHOST_SwapBuffers(GContext *context);
 
 #ifdef __cplusplus
 }

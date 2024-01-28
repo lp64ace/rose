@@ -157,6 +157,21 @@ void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, wchar_t v, int key,
 	PostEvent(wnd, GLIB_EVT_KEYUP, data);
 }
 
+void PlatformInterface::ClearWindowEvents(WindowInterface *window) {
+	std::deque<DefEventEntry *>::iterator iter;
+	for (iter = _EvtQueue.begin(); iter != _EvtQueue.end(); ) {
+		const DefEventEntry *event = *iter;
+		if (event->window == window) {
+			delete event;
+			_EvtQueue.erase(iter);
+			iter = _EvtQueue.begin();
+		}
+		else {
+			++iter;
+		}
+	}
+}
+
 /* \} */
 
 void PlatformInterface::DisposeEvents() {

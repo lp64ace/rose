@@ -72,6 +72,7 @@ void WindowsPlatform::CloseWindow(WindowInterface *window) {
 	std::vector<WindowInterface *>::iterator itr = std::find(_Windows.begin(), _Windows.end(), window);
 	if (itr != _Windows.end()) {
 		_Windows.erase(itr);
+		ClearWindowEvents(window);
 		MEM_delete<WindowsWindow>(reinterpret_cast<WindowsWindow *>(window));
 	}
 	if (_Windows.empty()) {
@@ -124,16 +125,19 @@ bool WindowsPlatform::ProcessEvents(bool wait) {
 /* \} */
 
 WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hWnd(NULL), _hDC(NULL), _Context(NULL) {
-	DWORD ExtendedStyle = parent ? WS_EX_APPWINDOW : 0;
+	DWORD ExtendedStyle = parent ? 0 : WS_EX_APPWINDOW;
 	DWORD WindowStyle = parent ? WS_CHILD | WS_POPUP : WS_POPUP;
 	HWND ParentHandle = (parent) ? reinterpret_cast<WindowsWindow *>(parent)->_hWnd : HWND_DESKTOP;
+
+	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	_hWnd = ::CreateWindowEx(ExtendedStyle,
 							 glib_application_name,
 							 "",
 							 WindowStyle,
-							 CW_USEDEFAULT,
-							 CW_USEDEFAULT,
+							 (ScreenWidth - width) / 2,
+							 (ScreenHeight - height) / 2,
 							 width,
 							 height,
 							 ParentHandle,
@@ -373,6 +377,14 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 				}
 			}
 
+			handled |= true;
+		} break;
+		case WM_GETMINMAXINFO: {
+			LPMINMAXINFO info = (LPMINMAXINFO)lParam;
+			
+			info->ptMinTrackSize.x = 1024;
+			info->ptMinTrackSize.y = (info->ptMinTrackSize.x * 9) >> 4;
+			
 			handled |= true;
 		} break;
 		case WM_SIZE: {
