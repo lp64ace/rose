@@ -22,7 +22,7 @@ enum {
  *
  * \return Refer to the documentation for each event type for specific return values.
  */
-typedef int (*EventCallbackFn)(GWindow *wnd, int evtid, void *evtdt);
+typedef int (*EventCallbackFn)(GWindow *wnd, int evtid, void *evtdt, void *userdt);
 
 typedef struct GPosition {
 	int x;
@@ -61,6 +61,9 @@ enum {
 	GLIB_EVT_KEY,	   // Key event, see KeyEvent
 	GLIB_EVT_KEYDOWN,  // Key Press event, see KeyEvent
 	GLIB_EVT_KEYUP,	   // Key Release event, see KeyEvent
+	
+	GLIB_EVT_DESTROY,
+	GLIB_EVT_CLOSE,
 };
 
 /** When this message is processed the return value should be zero. */

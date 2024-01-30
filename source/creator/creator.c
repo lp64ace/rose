@@ -4,10 +4,14 @@
 #include "LIB_system.h"
 #include "LIB_utildefines.h"
 
-#include "glib.h"
+#include "KER_context.h"
+#include "KER_rose.h"
+#include "KER_idtype.h"
+
+#include "WM_init_exit.h"
 
 int main(void) {
-	int result = 0;
+	Context *C;
 
 	MEM_use_memleak_detection(true);
 	MEM_enable_fail_on_memleak();
@@ -15,16 +19,15 @@ int main(void) {
 
 	LIB_system_signal_callbacks_init();
 	
-	GWindow *window = GHOST_InitWindow(NULL, 1440, 800);
-	while(GHOST_IsWindow(window)) {
-		if(GHOST_ActivateWindowDrawingContext(window)) {
-			GHOST_SwapWindowBuffers(window);
-		}
-		if(GHOST_ProcessEvents(false)) {
-			/** A window destroy event might destroy our window! */
-			GHOST_DispatchEvents();
-		}
-	}
+	KER_rose_globals_init();
+	KER_idtype_init();
+	
+	C = CTX_new();
+	
+	do {
+		WM_init(C);
+		WM_main(C);
+	} while(false);
 
-	return result;
+	return 0;
 }

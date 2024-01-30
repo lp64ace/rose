@@ -4,11 +4,19 @@
 #include "platform.hh"
 #include "window.hh"
 
+void GHOST_Init() {
+	InitPlatform();
+}
+
+void GHOST_Exit() {
+	ClosePlatform();
+}
+
 GWindow *GHOST_InitWindow(GWindow *parent, int width, int height) {
 	if (InitPlatform()) {
 		return NULL;
 	}
-	
+
 	WindowInterface *window = glib_platform->InitWindow(reinterpret_cast<WindowInterface *>(parent), width, height);
 	return reinterpret_cast<GWindow *>(window);
 }
@@ -22,6 +30,21 @@ bool GHOST_IsWindow(GWindow *window) {
 		return glib_platform->IsWindow(reinterpret_cast<WindowInterface *>(window));
 	}
 	return false;
+}
+
+void GHOST_WindowSetUserData(GWindow *window, void *userdata) {
+	reinterpret_cast<WindowInterface *>(window)->SetUserData(userdata);
+}
+
+void *GHOST_WindowGetUserData(const GWindow *window) {
+	return reinterpret_cast<const WindowInterface *>(window)->GetUserData();
+}
+
+GSize GHOST_GetScreenSize() {
+	if (glib_platform) {
+		return glib_platform->GetScreenSize();
+	}
+	return {0, 0};
 }
 
 GSize GHOST_GetWindowSize(GWindow *window) {
@@ -87,8 +110,8 @@ void GHOST_DispatchEvent(GWindow *wnd, int type, void *evtdata) {
 	glib_platform->DispatchEvent(reinterpret_cast<WindowInterface *>(wnd), type, evtdata);
 }
 
-void GHOST_EventSubscribe(EventCallbackFn fn) {
-	glib_platform->EventSubscribe(fn);
+void GHOST_EventSubscribe(EventCallbackFn fn, void *userdata) {
+	glib_platform->EventSubscribe(fn, userdata);
 }
 
 void GHOST_EventUnsubscribe(EventCallbackFn fn) {
@@ -97,8 +120,8 @@ void GHOST_EventUnsubscribe(EventCallbackFn fn) {
 
 bool GHOST_ActivateWindowDrawingContext(GWindow *wnd) {
 	ContextInterface *context = reinterpret_cast<WindowInterface *>(wnd)->GetContext();
-	
-	if(context) {
+
+	if (context) {
 		return context->Activate();
 	}
 	return false;
@@ -106,8 +129,8 @@ bool GHOST_ActivateWindowDrawingContext(GWindow *wnd) {
 
 bool GHOST_SwapWindowBuffers(GWindow *wnd) {
 	ContextInterface *context = reinterpret_cast<WindowInterface *>(wnd)->GetContext();
-	
-	if(context) {
+
+	if (context) {
 		return context->SwapBuffers();
 	}
 	return false;

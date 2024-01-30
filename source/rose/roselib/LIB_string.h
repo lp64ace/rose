@@ -3,6 +3,7 @@
 #include <stdarg.h>
 
 #include "LIB_compiler_attrs.h"
+#include "LIB_utildefines.h"
 
 #define LIB_NPOS ((size_t)-1)
 
@@ -21,6 +22,16 @@ char *LIB_strdupN(const char *text);
  * to by #text. If the null terminator is not encountered in the first #length bytes, it is added to the duplicated string.
  */
 char *LIB_strndupN(const char *text, const size_t length);
+
+/**
+ * Like `strncpy` but ensures dst is always `\0` terminated.
+ *
+ * \param dst: Destination for copy.
+ * \param src: Source string to copy.
+ * \param dst_maxncpy: Maximum number of characters to copy (generally the size of dst).
+ * \retval Returns dst
+ */
+char *LIB_strncpy(char *dst, const char *src, size_t dst_maxncpy);
 
 /* \} */
 

@@ -6,7 +6,7 @@ set(INC
 	PUBLIC .
 	
 	# Internal Include Directories
-	${CMAKE_SOURCE_DIR}/source/rose/makesdna
+	${CMAKE_SOURCE_DIR}/source/rose/roselib
 	
 )
 
@@ -15,52 +15,44 @@ set(INC
 
 set(INC_SYS
 	# External Include Directories
-	${PTHREADS_INC}
-	
+
 )
 
 # -----------------------------------------------------------------------------
 # Declare Source Files
 
 set(SRC
-	LIB_assert.h
-	LIB_compiler_attrs.h
-	LIB_endian.h
-	LIB_listbase.h
-	LIB_spinlock.h
-	LIB_string.h
-	LIB_system.h
-	LIB_utildefines.h
-	LIB_utildefines_variadic.h
-	intern/assert.c
-	intern/listbase.c
-	intern/spinlock.c
-	intern/string.c
-	intern/system.c
-	intern/system_unix.c
-	intern/system_win32.c
+	
 )
+
+
 
 # -----------------------------------------------------------------------------
 # Declare Library Dependencies
 
 set(LIB
 	# Internal Include Directories
-	rf::intern::memalloc
 	
 	# External Include Directories
-	${PTHREADS_LIB}
+
 )
-
-# -----------------------------------------------------------------------------
-# Operating System Dependencies
-
-if(WIN32)
-	list(APPEND LIB Dbghelp.lib Shlwapi.lib) # Needed for system_win32.c
-endif()
 
 # -----------------------------------------------------------------------------
 # Declare Executable
 
-rose_add_lib(rf_source_roselib "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rf::source::roselib ALIAS rf_source_roselib)
+add_library(rf_source_dna INTERFACE)
+
+target_include_directories(rf_source_dna INTERFACE .)
+add_library(rf::source::dna ALIAS rf_source_dna)
+
+# CMake 3.19+ allows one to populate the interface library with
+# source files to show in the IDE, for people on older CMake versions
+# these headers will be visible in the bf_intern_guardedalloc project
+# where they historically have been.
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19")
+	list(APPEND SRC ${DNA_TYPES_HEADERS})
+	list(APPEND SRC ${DNA_DEFAULTS_HEADERS})
+	
+	target_sources(rf_source_dna PRIVATE ${SRC})
+	rose_source_group(rf_source_dna ${SRC})
+endif()

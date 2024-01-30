@@ -18,6 +18,15 @@ public:
 	virtual ~PlatformInterface();
 
 	/* -------------------------------------------------------------------- */
+	/** \name Generic Utils
+	 * \{ */
+
+	/** Returns the size of the main display. */
+	virtual GSize GetScreenSize() const = 0;
+
+	/* \} */
+
+	/* -------------------------------------------------------------------- */
 	/** \name Window Managing
 	 * \{ */
 
@@ -61,7 +70,7 @@ public:
 	 * Subscribe a new function to receive event triggers. It is not guaranteed that a function if two functions `func1` and
 	 * `func2` are registered in oreder that they will receive the events in order.
 	 */
-	void EventSubscribe(EventCallbackFn fn);
+	void EventSubscribe(EventCallbackFn fn, void *userdata);
 
 	/** Unsubscribe a function from receiving event triggers. */
 	void EventUnsubscribe(EventCallbackFn fn);
@@ -71,10 +80,10 @@ public:
 
 	/** This will immidiately send the specified event to all the event subscribers. */
 	void DispatchEvent(WindowInterface *wnd, int type, void *evtdata);
-	
+
 	/** Dispatch all the events that have been processed or posted. */
 	void DispatchEvents();
-	
+
 	/** Returns the number of events waiting to be dispatched. */
 	size_t NumEvents() const;
 
@@ -93,7 +102,8 @@ protected:
 	void PostKeyEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev, int transition);
 	void PostKeyDownEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev);
 	void PostKeyUpEvent(WindowInterface *wnd, wchar_t v, int key, int scan);
-	
+	void PostDestroyEvent(WindowInterface *wnd);
+
 	void ClearWindowEvents(WindowInterface *wnd);
 
 	/* \} */
@@ -102,7 +112,17 @@ private:
 	void DisposeEvents();
 
 private:
-	std::set<EventCallbackFn> _Subscribers;
+	struct EventCallbackEntry {
+		EventCallbackEntry(EventCallbackFn fn, void *userdata);
+		~EventCallbackEntry();
+
+		EventCallbackFn func;
+		void *userdata;
+
+		bool operator<(const EventCallbackEntry &entry) const;
+	};
+
+	std::set<EventCallbackEntry> _Subscribers;
 
 	template<typename Wnd, typename Evt, typename Data> struct EventEntry {
 		EventEntry(Wnd *, Evt, Data *);

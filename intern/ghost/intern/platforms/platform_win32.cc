@@ -55,6 +55,25 @@ bool WindowsPlatform::IsValid() const {
 }
 
 /* -------------------------------------------------------------------- */
+/** \name Generic Utils
+ * \{ */
+
+/** Returns the size of the main display. */
+GSize WindowsPlatform::GetScreenSize() const {
+	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
+	
+	GSize result;
+	
+	result.x = ScreenWidth;
+	result.y = ScreenHeight;
+	
+	return result;
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Window Managing
  * \{ */
 
@@ -73,10 +92,11 @@ void WindowsPlatform::CloseWindow(WindowInterface *window) {
 	if (itr != _Windows.end()) {
 		_Windows.erase(itr);
 		ClearWindowEvents(window);
+
+		/** This event needs to be handled now since the window will not be valid any more after this... */
+		PostDestroyEvent(window);
+
 		MEM_delete<WindowsWindow>(reinterpret_cast<WindowsWindow *>(window));
-	}
-	if (_Windows.empty()) {
-		ClosePlatform();
 	}
 }
 
@@ -174,9 +194,9 @@ WindowsWindow::~WindowsWindow() {
 		::SetWindowLongPtr(_hWnd, GWLP_USERDATA, (LONG_PTR)NULL);
 
 		::DestroyWindow(_hWnd);
-
-		MEM_delete<ContextInterface>(_Context);
 	}
+	
+	MEM_delete<ContextInterface>(_Context);
 }
 
 /* -------------------------------------------------------------------- */
@@ -341,6 +361,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	switch (message) {
 		case WM_DESTROY: {
 			if (wnd) {
+				::SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
 				glib_windows_platform->CloseWindow(wnd);
 			}
 			handled |= true;
@@ -391,8 +412,10 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int width = static_cast<int>(LOWORD(lParam));
 			int height = static_cast<int>(HIWORD(lParam));
 
-			glib_windows_platform->PostWindowSizeEvent(reinterpret_cast<WindowInterface *>(wnd), width, height);
-			glib_windows_platform->DispatchEvents();
+			if (wnd) {
+				glib_windows_platform->PostWindowSizeEvent(reinterpret_cast<WindowInterface *>(wnd), width, height);
+				glib_windows_platform->DispatchEvents();
+			}
 
 			handled |= true;
 		} break;
@@ -400,8 +423,10 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
 
-			glib_windows_platform->PostWindowMoveEvent(reinterpret_cast<WindowInterface *>(wnd), x, y);
-			glib_windows_platform->DispatchEvents();
+			if (wnd) {
+				glib_windows_platform->PostWindowMoveEvent(reinterpret_cast<WindowInterface *>(wnd), x, y);
+				glib_windows_platform->DispatchEvents();
+			}
 
 			handled |= true;
 		} break;
@@ -497,6 +522,10 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
  * \{ */
 
 int InitPlatform(void) {
+	if (glib_windows_platform) {
+		return 0;
+	}
+
 	if ((glib_windows_platform = MEM_new<WindowsPlatform>("glib::WindowPlatform")) == nullptr) {
 		return 0xf00;
 	}

@@ -52,4 +52,16 @@ public:
 	virtual ContextInterface *GetContext() const = 0;
 
 	/* \} */
+public:
+	/* -------------------------------------------------------------------- */
+	/** \name UserData
+	 * \{ */
+
+	void SetUserData(void *userdata);
+	void *GetUserData(void) const;
+
+	/* \} */
+
+private:
+	void *_UserData;
 };

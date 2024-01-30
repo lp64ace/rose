@@ -18,12 +18,12 @@ PlatformInterface::~PlatformInterface() {
 /** \name Event Managing
  * \{ */
 
-void PlatformInterface::EventSubscribe(EventCallbackFn fn) {
-	_Subscribers.insert(fn);
+void PlatformInterface::EventSubscribe(EventCallbackFn fn, void *userdata) {
+	_Subscribers.insert(EventCallbackEntry(fn, userdata));
 }
 
 void PlatformInterface::EventUnsubscribe(EventCallbackFn fn) {
-	_Subscribers.erase(fn);
+	_Subscribers.erase(EventCallbackEntry(fn, NULL));
 }
 
 void PlatformInterface::PostEvent(WindowInterface *wnd, int type, void *evtdata) {
@@ -33,10 +33,11 @@ void PlatformInterface::PostEvent(WindowInterface *wnd, int type, void *evtdata)
 }
 
 void PlatformInterface::DispatchEvent(WindowInterface *wnd, int type, void *evtdata) {
-	std::set<EventCallbackFn>::const_iterator itr;
+	std::set<EventCallbackEntry>::const_iterator itr;
 
 	for (itr = _Subscribers.begin(); itr != _Subscribers.end(); itr++) {
-		(*itr)(reinterpret_cast<GWindow *>(wnd), type, evtdata);
+		const EventCallbackEntry &entry = (*itr);
+		entry.func(reinterpret_cast<GWindow *>(wnd), type, evtdata, entry.userdata);
 	}
 }
 
@@ -157,9 +158,13 @@ void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, wchar_t v, int key,
 	PostEvent(wnd, GLIB_EVT_KEYUP, data);
 }
 
+void PlatformInterface::PostDestroyEvent(WindowInterface *wnd) {
+	DispatchEvent(wnd, GLIB_EVT_DESTROY, NULL);
+}
+
 void PlatformInterface::ClearWindowEvents(WindowInterface *window) {
 	std::deque<DefEventEntry *>::iterator iter;
-	for (iter = _EvtQueue.begin(); iter != _EvtQueue.end(); ) {
+	for (iter = _EvtQueue.begin(); iter != _EvtQueue.end();) {
 		const DefEventEntry *event = *iter;
 		if (event->window == window) {
 			delete event;
@@ -183,6 +188,16 @@ void PlatformInterface::DisposeEvents() {
 		MEM_delete<DefEventEntry>(_EvtQueue.front());
 		_EvtQueue.pop_front();
 	}
+}
+
+PlatformInterface::EventCallbackEntry::EventCallbackEntry(EventCallbackFn fn, void *userdata) : func(fn), userdata(userdata) {
+}
+
+PlatformInterface::EventCallbackEntry::~EventCallbackEntry() {
+}
+
+bool PlatformInterface::EventCallbackEntry::operator<(const EventCallbackEntry &entry) const {
+	return this->func < entry.func;
 }
 
 template<typename Wnd, typename Evt, typename Data>

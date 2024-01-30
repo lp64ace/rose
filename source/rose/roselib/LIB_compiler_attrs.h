@@ -25,3 +25,15 @@
 #endif
 
 /* /} */
+
+/* -------------------------------------------------------------------- */
+/** \name Unsupported Compiler Attributes
+ * \{ */
+
+#if defined(_MSC_VER)
+#  define ROSE_INLINE static __forceinline
+#else
+#  define ROSE_INLINE static inline __attribute__((always_inline)) __attribute__((__unused__))
+#endif
+
+/* /} */

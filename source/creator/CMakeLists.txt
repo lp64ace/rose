@@ -32,6 +32,8 @@ set(LIB
 	rf::intern::memalloc
 	rf::intern::ghost
 	rf::source::roselib
+	rf::source::rosekernel
+	rf::source::windowmanager
 	
 	# External Include Directories
 	

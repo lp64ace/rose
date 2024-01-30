@@ -42,6 +42,15 @@ char *LIB_strndupN(const char *text, const size_t length) {
 	return dst;
 }
 
+char *LIB_strncpy(char *dst, const char *src, size_t dst_maxncpy) {
+	ROSE_assert(dst_maxncpy != 0);
+	size_t srclen = LIB_strnlen(src, dst_maxncpy - 1);
+
+	memcpy(dst, src, srclen);
+	dst[srclen] = '\0';
+	return dst;
+}
+
 /* \} */
 
 /* -------------------------------------------------------------------- */

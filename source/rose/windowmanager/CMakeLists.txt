@@ -6,7 +6,11 @@ set(INC
 	PUBLIC .
 	
 	# Internal Include Directories
+	${CMAKE_SOURCE_DIR}/intern/memalloc
+	${CMAKE_SOURCE_DIR}/intern/ghost
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna
+	${CMAKE_SOURCE_DIR}/source/rose/roselib
+	${CMAKE_SOURCE_DIR}/source/rose/rosekernel
 	
 )
 
@@ -23,22 +27,15 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
-	LIB_assert.h
-	LIB_compiler_attrs.h
-	LIB_endian.h
-	LIB_listbase.h
-	LIB_spinlock.h
-	LIB_string.h
-	LIB_system.h
-	LIB_utildefines.h
-	LIB_utildefines_variadic.h
-	intern/assert.c
-	intern/listbase.c
-	intern/spinlock.c
-	intern/string.c
-	intern/system.c
-	intern/system_unix.c
-	intern/system_win32.c
+	WM_api.h
+	WM_draw.h
+	WM_handlers.h
+	WM_init_exit.h
+	WM_window.h
+	intern/wm.c
+	intern/wm_draw.c
+	intern/wm_handlers.c
+	intern/wm_window.c
 )
 
 # -----------------------------------------------------------------------------
@@ -47,20 +44,16 @@ set(SRC
 set(LIB
 	# Internal Include Directories
 	rf::intern::memalloc
+	rf::intern::ghost
+	rf::source::roselib
+	rf::source::rosekernel
 	
 	# External Include Directories
-	${PTHREADS_LIB}
+	
 )
-
-# -----------------------------------------------------------------------------
-# Operating System Dependencies
-
-if(WIN32)
-	list(APPEND LIB Dbghelp.lib Shlwapi.lib) # Needed for system_win32.c
-endif()
 
 # -----------------------------------------------------------------------------
 # Declare Executable
 
-rose_add_lib(rf_source_roselib "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rf::source::roselib ALIAS rf_source_roselib)
+rose_add_lib(rf_source_windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::source::windowmanager ALIAS rf_source_windowmanager)

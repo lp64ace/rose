@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+void GHOST_Init();
+void GHOST_Exit();
+
 /**
  * This will create a new window with the specified dimensions, you cannot specify the window title since the windows have no
  * border and no title bar.
@@ -48,6 +51,14 @@ void GHOST_CloseWindow(GWindow *window);
 
 /** Returns true if the specified window is valid. */
 bool GHOST_IsWindow(GWindow *window);
+
+/** Updates the user data associated with the specified window. */
+void GHOST_WindowSetUserData(GWindow *window, void *userdata);
+/** Returns the user data associated with the specified window. */
+void *GHOST_WindowGetUserData(const GWindow *window);
+
+/** Returns the dimensions of the screen */
+GSize GHOST_GetScreenSize();
 
 /** Retrieves the size of the entire window, including borders and decorations. */
 GSize GHOST_GetWindowSize(GWindow *window);
@@ -118,7 +129,7 @@ void GHOST_PostEvent(GWindow *wnd, int type, void *evtdata);
 void GHOST_DispatchEvent(GWindow *wnd, int type, void *evtdata);
 
 /** Subscribe a new function to receive event triggers. */
-void GHOST_EventSubscribe(EventCallbackFn fn);
+void GHOST_EventSubscribe(EventCallbackFn fn, void *userdata);
 
 /** Unsubscribe a new function from receiving event triggers. */
 void GHOST_EventUnsubscribe(EventCallbackFn fn);

@@ -22,6 +22,15 @@ public:
 
 public:
 	/* -------------------------------------------------------------------- */
+	/** \name Generic Utils
+	 * \{ */
+
+	/** Returns the size of the main display. */
+	GSize GetScreenSize() const;
+
+	/* \} */
+	
+	/* -------------------------------------------------------------------- */
 	/** \name Window Managing
 	 * \{ */
 

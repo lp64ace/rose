@@ -35,3 +35,11 @@ GPosition WindowInterface::GetPos() const {
 	
 	return position;
 }
+
+void WindowInterface::SetUserData(void *userdata) {
+	_UserData = userdata;
+}
+
+void *WindowInterface::GetUserData(void) const {
+	return _UserData;
+}
