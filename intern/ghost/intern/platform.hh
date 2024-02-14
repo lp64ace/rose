@@ -89,7 +89,7 @@ public:
 
 	/* \} */
 
-protected:
+public:
 	/* -------------------------------------------------------------------- */
 	/** \name Internal Event Posting
 	 * \{ */
@@ -99,9 +99,8 @@ protected:
 	void PostMouseMoveEvent(WindowInterface *wnd, int x, int y, int modifiers);
 	void PostMouseWheelEvent(WindowInterface *wnd, int x, int y, int modifiers, int wheel);
 	void PostMouseButtonEvent(WindowInterface *wnd, int type, int x, int y, int modifiers);
-	void PostKeyEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev, int transition);
-	void PostKeyDownEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev);
-	void PostKeyUpEvent(WindowInterface *wnd, wchar_t v, int key, int scan);
+	void PostKeyDownEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16);
+	void PostKeyUpEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16);
 	void PostDestroyEvent(WindowInterface *wnd);
 
 	void ClearWindowEvents(WindowInterface *wnd);

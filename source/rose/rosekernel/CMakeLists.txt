@@ -54,7 +54,7 @@ set(LIB
 )
 
 # -----------------------------------------------------------------------------
-# Declare Executable
+# Declare Library
 
 rose_add_lib(rf_source_rosekernel "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rf::source::rosekernel ALIAS rf_source_rosekernel)

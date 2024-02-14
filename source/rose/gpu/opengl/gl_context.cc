@@ -1,0 +1,196 @@
+#include "LIB_assert.h"
+#include "LIB_utildefines.h"
+
+#include "glib.h"
+
+#include "gl_backend.hh"
+#include "gl_context.hh"
+
+using namespace rose;
+using namespace rose::gpu;
+
+/* -------------------------------------------------------------------- */
+/** \name Constructor / Destructor
+ * \{ */
+
+GLContext::GLContext(void *window, GLSharedOrphanLists &shared_orphan_list)
+	: shared_orphan_list_(shared_orphan_list) {
+	this->state_manager = MEM_new<GLStateManager>("rose::gpu::GLStateManager");
+	this->window_ = window;
+
+	if (window) {
+		GSize size = GHOST_GetClientSize(reinterpret_cast<GWindow *>(this->window_));
+
+		const int w = size.x;
+		const int h = size.y;
+		
+		front_left = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::FrontLeft", "front_left", this, GL_FRONT_LEFT, 0, w, h);
+		back_left = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::BackLeft", "back_left", this, GL_BACK_LEFT, 0, w, h);
+
+		GLboolean supports_stereo_quad_buffer = GL_FALSE;
+		glGetBooleanv(GL_STEREO, &supports_stereo_quad_buffer);
+		if (supports_stereo_quad_buffer) {
+			front_right = MEM_new<GLFrameBuffer>(
+				"rose::gpu::GLFrameBuffer::FrontRight", "front_right", this, GL_FRONT_RIGHT, 0, w, h);
+			back_right = MEM_new<GLFrameBuffer>(
+				"rose::gpu::GLFrameBuffer::BackRight", "back_right", this, GL_BACK_RIGHT, 0, w, h);
+		}
+	}
+	else {
+		/* For off-screen contexts. Default frame-buffer is NULL. */
+		back_left = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::BackLeft", "back_left", this, GL_NONE, 0, 0, 0);
+	}
+
+	active_fb = back_left;
+	static_cast<GLStateManager *>(state_manager)->active_fb = static_cast<GLFrameBuffer *>(active_fb);
+}
+
+GLContext::~GLContext() {
+	ROSE_assert(orphaned_vertarrays_.is_empty());
+	ROSE_assert(orphaned_framebuffers_.is_empty());
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Activate / Deactivate context
+ * \{ */
+
+void GLContext::activate() {
+	ROSE_assert(active_ == false);
+
+	thread_ = pthread_self();
+	active_ = true;
+
+	/* Clear accumulated orphans. */
+	orphans_clear();
+
+	if (this->window_) {
+		GSize size = GHOST_GetClientSize(reinterpret_cast<GWindow *>(this->window_));
+		
+		const int w = size.x;
+		const int h = size.y;
+
+		if (front_left) {
+			front_left->size_set(w, h);
+		}
+		if (back_left) {
+			back_left->size_set(w, h);
+		}
+		if (front_right) {
+			front_right->size_set(w, h);
+		}
+		if (back_right) {
+			back_right->size_set(w, h);
+		}
+	}
+}
+
+void GLContext::deactivate() {
+	active_ = false;
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Flush / Finish & Sync
+ * \{ */
+
+void GLContext::flush() {
+	glFlush();
+}
+
+void GLContext::finish() {
+	glFinish();
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Safe object deletion
+ *
+ * GPU objects can be freed when the context is not bound.
+ * In this case we delay the deletion until the context is bound again.
+ * \{ */
+
+void GLSharedOrphanLists::orphans_clear() {
+	/* Check if any context is active on this thread! */
+	ROSE_assert(GLContext::get());
+
+	lists_mutex.lock();
+	if (!buffers.is_empty()) {
+		glDeleteBuffers(uint(buffers.size()), buffers.data());
+		buffers.clear();
+	}
+	if (!textures.is_empty()) {
+		glDeleteTextures(uint(textures.size()), textures.data());
+		textures.clear();
+	}
+	lists_mutex.unlock();
+};
+
+void GLContext::orphans_clear() {
+	/* Check if context has been activated by another thread! */
+	ROSE_assert(this->is_active_on_thread());
+
+	lists_mutex_.lock();
+	if (!orphaned_vertarrays_.is_empty()) {
+		glDeleteVertexArrays(uint(orphaned_vertarrays_.size()), orphaned_vertarrays_.data());
+		orphaned_vertarrays_.clear();
+	}
+	if (!orphaned_framebuffers_.is_empty()) {
+		glDeleteFramebuffers(uint(orphaned_framebuffers_.size()), orphaned_framebuffers_.data());
+		orphaned_framebuffers_.clear();
+	}
+	lists_mutex_.unlock();
+
+	shared_orphan_list_.orphans_clear();
+};
+
+void GLContext::orphans_add(Vector<GLuint> &orphan_list, std::mutex &list_mutex, GLuint id) {
+	list_mutex.lock();
+	orphan_list.append(id);
+	list_mutex.unlock();
+}
+
+void GLContext::vao_free(GLuint vao_id) {
+	if (this == GLContext::get()) {
+		glDeleteVertexArrays(1, &vao_id);
+	}
+	else {
+		orphans_add(orphaned_vertarrays_, lists_mutex_, vao_id);
+	}
+}
+
+void GLContext::fbo_free(GLuint fbo_id) {
+	if (this == GLContext::get()) {
+		glDeleteFramebuffers(1, &fbo_id);
+	}
+	else {
+		orphans_add(orphaned_framebuffers_, lists_mutex_, fbo_id);
+	}
+}
+
+void GLContext::buf_free(GLuint buf_id) {
+	/* Any context can free. */
+	if (GLContext::get()) {
+		glDeleteBuffers(1, &buf_id);
+	}
+	else {
+		GLSharedOrphanLists &orphan_list = GLBackend::get()->shared_orphan_list_get();
+		orphans_add(orphan_list.buffers, orphan_list.lists_mutex, buf_id);
+	}
+}
+
+void GLContext::tex_free(GLuint tex_id) {
+	/* Any context can free. */
+	if (GLContext::get()) {
+		glDeleteTextures(1, &tex_id);
+	}
+	else {
+		GLSharedOrphanLists &orphan_list = GLBackend::get()->shared_orphan_list_get();
+		orphans_add(orphan_list.textures, orphan_list.lists_mutex, tex_id);
+	}
+}
+
+/** \} */

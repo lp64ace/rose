@@ -8,7 +8,45 @@
 
 #include "platform_win32.hh"
 
+#ifndef VK_MINUS
+#define VK_MINUS 0xBD
+#endif /* VK_MINUS */
+#ifndef VK_SEMICOLON
+#define VK_SEMICOLON 0xBA
+#endif /* VK_SEMICOLON */
+#ifndef VK_PERIOD
+#define VK_PERIOD 0xBE
+#endif /* VK_PERIOD */
+#ifndef VK_COMMA
+#define VK_COMMA 0xBC
+#endif /* VK_COMMA */
+#ifndef VK_BACK_QUOTE
+#define VK_BACK_QUOTE 0xC0
+#endif /* VK_BACK_QUOTE */
+#ifndef VK_SLASH
+#define VK_SLASH 0xBF
+#endif /* VK_SLASH */
+#ifndef VK_BACK_SLASH
+#define VK_BACK_SLASH 0xDC
+#endif /* VK_BACK_SLASH */
+#ifndef VK_EQUALS
+#define VK_EQUALS 0xBB
+#endif /* VK_EQUALS */
+#ifndef VK_OPEN_BRACKET
+#define VK_OPEN_BRACKET 0xDB
+#endif /* VK_OPEN_BRACKET */
+#ifndef VK_CLOSE_BRACKET
+#define VK_CLOSE_BRACKET 0xDD
+#endif /* VK_CLOSE_BRACKET */
+#ifndef VK_GR_LESS
+#define VK_GR_LESS 0xE2
+#endif /* VK_GR_LESS */
+
 static class WindowsPlatform *glib_windows_platform = nullptr;
+
+/* -------------------------------------------------------------------- */
+/** \name Internal Utils
+ * \{ */
 
 static bool glib_windows_register_window_class_ex(WNDCLASSEXA *wndclass) {
 	memset(wndclass, 0, sizeof(WNDCLASSEXA));
@@ -39,8 +77,48 @@ static void glib_windows_unregister_window_class_ex(WNDCLASSEXA *wndclass) {
 	::UnregisterClassA(glib_application_name, wndclass->hInstance);
 }
 
+static int glib_windows_modifiers_get(void) {
+	int ret;
+
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_LSHIFT)) != 0) ? GLIB_MODIFIER_LSHIFT : 0;
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_RSHIFT)) != 0) ? GLIB_MODIFIER_RSHIFT : 0;
+
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_LMENU)) != 0) ? GLIB_MODIFIER_LALT : 0;
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_RMENU)) != 0) ? GLIB_MODIFIER_RALT : 0;
+
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_LCONTROL)) != 0) ? GLIB_MODIFIER_LCONTROL : 0;
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_RCONTROL)) != 0) ? GLIB_MODIFIER_RCONTROL : 0;
+
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_LWIN)) != 0) ? GLIB_MODIFIER_LOS : 0;
+	ret |= (HIBYTE(::GetAsyncKeyState(VK_RWIN)) != 0) ? GLIB_MODIFIER_ROS : 0;
+
+	return ret;
+}
+
+static bool glib_windows_init_raw_input(HKL *layout) {
+	RAWINPUTDEVICE device;
+	memset(&device, 0, sizeof(RAWINPUTDEVICE));
+
+	/* http://msdn.microsoft.com/en-us/windows/hardware/gg487473.aspx */
+	device.usUsagePage = 0x01;
+	device.usUsage = 0x06;
+
+	if (RegisterRawInputDevices(&device, 1, sizeof(RAWINPUTDEVICE))) {
+		*layout = ::GetKeyboardLayout(0);
+		return true;
+	}
+	return false;
+}
+
+/* \} */
+
 WindowsPlatform::WindowsPlatform() : _IsValid(true) {
 	if (!glib_windows_register_window_class_ex(&_WndClass)) {
+		_IsValid = false;
+		return;
+	}
+
+	if (!glib_windows_init_raw_input(&_KeyboardLayout)) {
 		_IsValid = false;
 		return;
 	}
@@ -62,12 +140,12 @@ bool WindowsPlatform::IsValid() const {
 GSize WindowsPlatform::GetScreenSize() const {
 	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-	
+
 	GSize result;
-	
+
 	result.x = ScreenWidth;
 	result.y = ScreenHeight;
-	
+
 	return result;
 }
 
@@ -154,7 +232,7 @@ WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hW
 
 	_hWnd = ::CreateWindowEx(ExtendedStyle,
 							 glib_application_name,
-							 "",
+							 "Rose",
 							 WindowStyle,
 							 (ScreenWidth - width) / 2,
 							 (ScreenHeight - height) / 2,
@@ -195,7 +273,7 @@ WindowsWindow::~WindowsWindow() {
 
 		::DestroyWindow(_hWnd);
 	}
-	
+
 	MEM_delete<ContextInterface>(_Context);
 }
 
@@ -238,6 +316,31 @@ void WindowsWindow::GetClientRect(GRect *r_rect) const {
 	r_rect->top = rect.top;
 	r_rect->right = rect.right;
 	r_rect->bottom = rect.bottom;
+}
+
+bool WindowsWindow::IsIconic() const {
+	if (::IsIconic(_hWnd)) {
+		return true;
+	}
+	return false;
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Window Utils
+ * \{ */
+
+GPosition WindowsWindow::ScreenToClient(int x, int y) const {
+	POINT pt = {x, y};
+	::ScreenToClient(_hWnd, &pt);
+	return {pt.x, pt.y};
+}
+
+GPosition WindowsWindow::ClientToScreen(int x, int y) const {
+	POINT pt = {x, y};
+	::ClientToScreen(_hWnd, &pt);
+	return {pt.x, pt.y};
 }
 
 /* \} */
@@ -338,18 +441,244 @@ bool WindowsOpenGLContext::SwapBuffers() {
 
 /* \} */
 
-static int glib_windows_translate_mouse_modifiers(WPARAM wParam) {
-	int ret = 0;
+static int ConvertKey(short vKey, short scanCode, short extend) {
+	int key = GLIB_KEY_UNKOWN;
 
-	ret |= (wParam & MK_CONTROL) ? GLIB_MODIFIER_CONTROL : 0;
-	ret |= (wParam & MK_LBUTTON) ? GLIB_MODIFIER_LBTN : 0;
-	ret |= (wParam & MK_MBUTTON) ? GLIB_MODIFIER_MBTN : 0;
-	ret |= (wParam & MK_RBUTTON) ? GLIB_MODIFIER_RBTN : 0;
-	ret |= (wParam & MK_SHIFT) ? GLIB_MODIFIER_SHIFT : 0;
-	ret |= (wParam & MK_XBUTTON1) ? GLIB_MODIFIER_XBTN1 : 0;
-	ret |= (wParam & MK_XBUTTON2) ? GLIB_MODIFIER_XBTN2 : 0;
+	if ((vKey >= '0') && (vKey <= '9')) {
+		key = (vKey - '0' + GLIB_KEY_0);
+	}
+	else if ((vKey >= 'A') && (vKey <= 'Z')) {
+		key = (vKey - 'A' + GLIB_KEY_A);
+	}
+	else if ((vKey >= VK_F1) && (vKey <= VK_F24)) {
+		key = (vKey - VK_F1 + GLIB_KEY_F1);
+	}
+	else {
+		switch (key) {
+			case VK_RETURN: {
+				key = (extend) ? GLIB_KEY_NUMPAD_ENTER : GLIB_KEY_ENTER;
+			} break;
+			case VK_BACK: {
+				key = GLIB_KEY_BACKSPACE;
+			} break;
+			case VK_TAB: {
+				key = GLIB_KEY_TAB;
+			} break;
+			case VK_ESCAPE: {
+				key = GLIB_KEY_ESC;
+			} break;
+			case VK_INSERT:
+			case VK_NUMPAD0: {
+				key = (extend) ? GLIB_KEY_INSERT : GLIB_KEY_NUMPAD_0;
+			} break;
+			case VK_END:
+			case VK_NUMPAD1: {
+				key = (extend) ? GLIB_KEY_END : GLIB_KEY_NUMPAD_1;
+			} break;
+			case VK_DOWN:
+			case VK_NUMPAD2: {
+				key = (extend) ? GLIB_KEY_DOWN : GLIB_KEY_NUMPAD_2;
+			} break;
+			case VK_NEXT:
+			case VK_NUMPAD3: {
+				key = (extend) ? GLIB_KEY_PAGEDOWN : GLIB_KEY_NUMPAD_3;
+			} break;
+			case VK_LEFT:
+			case VK_NUMPAD4: {
+				key = (extend) ? GLIB_KEY_LEFT : GLIB_KEY_NUMPAD_4;
+			} break;
+			case VK_CLEAR:
+			case VK_NUMPAD5: {
+				key = (extend) ? GLIB_KEY_UNKOWN : GLIB_KEY_NUMPAD_5;
+			} break;
+			case VK_RIGHT:
+			case VK_NUMPAD6: {
+				key = (extend) ? GLIB_KEY_RIGHT : GLIB_KEY_NUMPAD_6;
+			} break;
+			case VK_HOME:
+			case VK_NUMPAD7: {
+				key = (extend) ? GLIB_KEY_HOME : GLIB_KEY_NUMPAD_7;
+			} break;
+			case VK_UP:
+			case VK_NUMPAD8: {
+				key = (extend) ? GLIB_KEY_UP : GLIB_KEY_NUMPAD_8;
+			} break;
+			case VK_PRIOR:
+			case VK_NUMPAD9: {
+				key = (extend) ? GLIB_KEY_PAGEUP : GLIB_KEY_NUMPAD_9;
+			} break;
+			case VK_DECIMAL:
+			case VK_DELETE: {
+				key = (extend) ? GLIB_KEY_DELETE : GLIB_KEY_NUMPAD_PERIOD;
+			} break;
 
-	return ret;
+			case VK_SNAPSHOT: {
+				key = GLIB_KEY_PRTSCN;
+			} break;
+			case VK_PAUSE: {
+				key = GLIB_KEY_PAUSE;
+			} break;
+			case VK_MULTIPLY: {
+				key = GLIB_KEY_NUMPAD_ASTERISK;
+			} break;
+			case VK_SUBTRACT: {
+				key = GLIB_KEY_NUMPAD_MINUS;
+			} break;
+			case VK_DIVIDE: {
+				key = GLIB_KEY_NUMPAD_SLASH;
+			} break;
+			case VK_ADD: {
+				key = GLIB_KEY_NUMPAD_PLUS;
+			} break;
+
+			case VK_SEMICOLON: {
+				key = GLIB_KEY_SEMICOLON;
+			} break;
+			case VK_EQUALS: {
+				key = GLIB_KEY_EQUAL;
+			} break;
+			case VK_COMMA: {
+				key = GLIB_KEY_COMMA;
+			} break;
+			case VK_MINUS: {
+				key = GLIB_KEY_MINUS;
+			} break;
+			case VK_PERIOD: {
+				key = GLIB_KEY_PERIOD;
+			} break;
+			case VK_SLASH: {
+				key = GLIB_KEY_SLASH;
+			} break;
+			case VK_BACK_QUOTE: {
+				key = GLIB_KEY_ACCENTGRAVE;
+			} break;
+			case VK_OPEN_BRACKET: {
+				key = GLIB_KEY_LEFT_BRACKET;
+			} break;
+			case VK_BACK_SLASH: {
+				key = GLIB_KEY_BACKSLASH;
+			} break;
+			case VK_CLOSE_BRACKET: {
+				key = GLIB_KEY_RIGHT_BRACKET;
+			} break;
+			case VK_GR_LESS: {
+				key = GLIB_KEY_GRLESS;
+			} break;
+
+			case VK_SHIFT: {
+				if (scanCode == 0x36) {
+					key = GLIB_KEY_RIGHT_SHIFT;
+				}
+				else if (scanCode == 0x2a) {
+					key = GLIB_KEY_LEFT_SHIFT;
+				}
+				else {
+					key = GLIB_KEY_UNKOWN;
+				}
+			} break;
+			case VK_CONTROL: {
+				key = (extend) ? GLIB_KEY_RIGHT_CTRL : GLIB_KEY_LEFT_CTRL;
+			} break;
+			case VK_MENU: {
+				key = (extend) ? GLIB_KEY_RIGHT_ALT : GLIB_KEY_LEFT_ALT;
+			} break;
+			case VK_LWIN: {
+				key = GLIB_KEY_LEFT_OS;
+			} break;
+			case VK_RWIN: {
+				key = GLIB_KEY_RIGHT_OS;
+			} break;
+			case VK_APPS: {
+				key = GLIB_KEY_APP;
+			} break;
+			case VK_NUMLOCK: {
+				key = GLIB_KEY_NUMLOCK;
+			} break;
+			case VK_SCROLL: {
+				key = GLIB_KEY_SCRLOCK;
+			} break;
+			case VK_CAPITAL: {
+				key = GLIB_KEY_CAPSLOCK;
+			} break;
+			case VK_MEDIA_PLAY_PAUSE: {
+				key = GLIB_KEY_MEDIA_PLAY;
+			} break;
+			case VK_MEDIA_STOP: {
+				key = GLIB_KEY_MEDIA_STOP;
+			} break;
+			case VK_MEDIA_PREV_TRACK: {
+				key = GLIB_KEY_MEDIA_FIRST;
+			} break;
+			case VK_MEDIA_NEXT_TRACK: {
+				key = GLIB_KEY_MEDIA_LAST;
+			} break;
+		}
+	}
+
+	return key;
+}
+
+static int HardKey(RAWINPUT *raw, bool *keydown) {
+	int msg = raw->data.keyboard.Message;
+	*keydown = !(raw->data.keyboard.Flags & RI_KEY_BREAK) && msg != WM_KEYUP && msg != WM_SYSKEYUP;
+
+	return ConvertKey(
+		raw->data.keyboard.VKey, raw->data.keyboard.MakeCode, (raw->data.keyboard.Flags & (RI_KEY_E1 | RI_KEY_E0)));
+}
+
+static bool ProcessKeyEvent(WindowsWindow *window, RAWINPUT *raw) {
+	const USHORT vk = raw->data.keyboard.VKey;
+	bool keydown = false;
+
+	int key = HardKey(raw, &keydown);
+	int modifiers = glib_windows_modifiers_get();
+
+	bool repeat = false;
+	bool repeat_modifier = false;
+
+	if (keydown) {
+		if (HIBYTE(::GetKeyState(vk)) != 0) {
+			repeat = true;
+			repeat_modifier = GLIB_KEY_MODIFIER_CHECK(key);
+		}
+	}
+
+	if (!repeat_modifier) {
+		wchar_t utf16[3] = {0};
+		BYTE state[256];
+
+		const BOOL HasState = ::GetKeyboardState((PBYTE)state);
+		const BOOL CtrlPressed = HasState && state[VK_CONTROL] & 0x80;
+		const BOOL AltPressed = HasState && state[VK_MENU] & 0x80;
+
+		/** No text with control key pressed (Alt can be used to insert special characters though!). */
+		if (CtrlPressed && !AltPressed) {
+		}
+		else if (::MapVirtualKeyW(vk, MAPVK_VK_TO_CHAR) != 0) {
+			INT Ret;
+
+			if ((Ret = ::ToUnicodeEx(
+					 vk, raw->data.keyboard.MakeCode, state, utf16, 2, 0, glib_windows_platform->_KeyboardLayout))) {
+				if ((Ret > 0 && Ret < 3)) {
+					utf16[Ret] = 0;
+				}
+				else if (Ret < 0) {
+					utf16[0] = '\0';
+				}
+			}
+		}
+
+		if (keydown) {
+			glib_windows_platform->PostKeyDownEvent(window, key, repeat, modifiers, utf16);
+		}
+		else {
+			glib_windows_platform->PostKeyUpEvent(window, key, repeat, modifiers, utf16);
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -402,10 +731,10 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		} break;
 		case WM_GETMINMAXINFO: {
 			LPMINMAXINFO info = (LPMINMAXINFO)lParam;
-			
-			info->ptMinTrackSize.x = 1024;
+
+			info->ptMinTrackSize.x = 800;
 			info->ptMinTrackSize.y = (info->ptMinTrackSize.x * 9) >> 4;
-			
+
 			handled |= true;
 		} break;
 		case WM_SIZE: {
@@ -433,7 +762,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_MOUSEMOVE: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseMoveEvent(reinterpret_cast<WindowInterface *>(wnd), x, y, modifiers);
 
@@ -442,7 +771,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_MOUSEWHEEL: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(LOWORD(wParam));
+			int modifiers = glib_windows_modifiers_get();
 			int delta = static_cast<short>(HIWORD(wParam));
 
 			glib_windows_platform->PostMouseWheelEvent(reinterpret_cast<WindowInterface *>(wnd), x, y, modifiers, delta);
@@ -452,7 +781,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_LBUTTONDOWN: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(
 				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEDOWN, x, y, modifiers);
@@ -462,7 +791,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_MBUTTONDOWN: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(
 				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEDOWN, x, y, modifiers);
@@ -472,7 +801,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_RBUTTONDOWN: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(
 				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEDOWN, x, y, modifiers);
@@ -482,7 +811,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_LBUTTONUP: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(
 				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEUP, x, y, modifiers);
@@ -492,7 +821,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_MBUTTONUP: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(
 				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEUP, x, y, modifiers);
@@ -502,12 +831,27 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_RBUTTONUP: {
 			int x = static_cast<int>(LOWORD(lParam));
 			int y = static_cast<int>(HIWORD(lParam));
-			int modifiers = glib_windows_translate_mouse_modifiers(wParam);
+			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(
 				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEUP, x, y, modifiers);
 
 			handled |= true;
+		} break;
+		case WM_INPUTLANGCHANGE: {
+			glib_windows_platform->_KeyboardLayout = (HKL)lParam;
+		} break;
+		case WM_INPUT: {
+			RAWINPUT Raw;
+			UINT RawSize = sizeof(RAWINPUT);
+
+			::GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &Raw, &RawSize, sizeof(RAWINPUTHEADER));
+
+			switch (Raw.header.dwType) {
+				case RIM_TYPEKEYBOARD: {
+					handled |= ProcessKeyEvent(wnd, &Raw);
+				} break;
+			}
 		} break;
 	}
 

@@ -41,10 +41,15 @@ void *GHOST_WindowGetUserData(const GWindow *window) {
 }
 
 GSize GHOST_GetScreenSize() {
-	if (glib_platform) {
-		return glib_platform->GetScreenSize();
-	}
-	return {0, 0};
+	return glib_platform->GetScreenSize();
+}
+
+GPosition GHOST_ScreenToClient(GWindow *window, int x, int y) {
+	return reinterpret_cast<const WindowInterface *>(window)->ScreenToClient(x, y);
+}
+
+GPosition GHOST_ClientToScreen(GWindow *window, int x, int y) {
+	return reinterpret_cast<const WindowInterface *>(window)->ClientToScreen(x, y);
 }
 
 GSize GHOST_GetWindowSize(GWindow *window) {
@@ -80,6 +85,10 @@ void GHOST_GetWindowRect(GWindow *window, GRect *r_rect) {
 
 void GHOST_GetClientRect(GWindow *window, GRect *r_rect) {
 	reinterpret_cast<WindowInterface *>(window)->GetClientRect(r_rect);
+}
+
+bool GHOST_IsWindowMinimized(GWindow *window) {
+	return reinterpret_cast<WindowInterface *>(window)->IsIconic();
 }
 
 GContext *GHOST_InstallWindowContext(GWindow *window, int type) {

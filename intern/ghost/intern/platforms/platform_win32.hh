@@ -29,7 +29,7 @@ public:
 	GSize GetScreenSize() const;
 
 	/* \} */
-	
+
 	/* -------------------------------------------------------------------- */
 	/** \name Window Managing
 	 * \{ */
@@ -89,17 +89,20 @@ public:
 	static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
+	std::vector<WindowInterface *> _Windows;
+
+	bool _IsValid;
+
+public:
 	/* -------------------------------------------------------------------- */
 	/** \name Windows Handles
 	 * \{ */
 
 	WNDCLASSEXA _WndClass;
 
+	HKL _KeyboardLayout;
+
 	/* \} */
-
-	std::vector<WindowInterface *> _Windows;
-
-	bool _IsValid;
 };
 
 class WindowsWindow : public WindowInterface {
@@ -122,6 +125,21 @@ public:
 	void GetWindowRect(GRect *r_rect) const;
 	/** Retrieves the rectangular coordinates of the client area of the window, excluding borders and decorations. */
 	void GetClientRect(GRect *r_rect) const;
+
+	/** Returns true if the windw is minimized */
+	bool IsIconic() const;
+
+	/* \} */
+
+	/* -------------------------------------------------------------------- */
+	/** \name Window Utils
+	 * \{ */
+
+	/** Converts the screen coordinates of a specified point on the screen to client-area coordinates. */
+	GPosition ScreenToClient(int x, int y) const;
+
+	/** Converts the client-area coordinates of a specified point to screen coordinates. */
+	GPosition ClientToScreen(int x, int y) const;
 
 	/* \} */
 

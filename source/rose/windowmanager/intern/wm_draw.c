@@ -1,3 +1,5 @@
+#include "MEM_alloc.h"
+
 #include "DNA_windowmanager.h"
 
 #include "KER_context.h"
@@ -10,6 +12,10 @@
 #include "WM_draw.h"
 #include "WM_window.h"
 
+#include "GPU_context.h"
+#include "GPU_framebuffer.h"
+#include "GPU_state.h"
+
 #include "glib.h"
 
 static void wm_window_set_drawable(struct wmWindowManager *wm, struct wmWindow *win, bool activate) {
@@ -19,6 +25,7 @@ static void wm_window_set_drawable(struct wmWindowManager *wm, struct wmWindow *
 	if (activate) {
 		GHOST_ActivateWindowDrawingContext(win->gwin);
 	}
+	GPU_context_active_set(win->gpuctx);
 }
 
 void wm_window_clear_drawable(struct wmWindowManager *wm) {
@@ -49,7 +56,7 @@ void wm_draw_update(struct Context *C) {
 	LISTBASE_FOREACH(wmWindow *, win, &wm->windows) {
 		CTX_wm_window_set(C, win);
 		/** We cannot draw minimized windows and it makes no sesne to draw them anyway. */
-		if (win->width * win->height > 0) {
+		if (!wm_window_minimized(win)) {
 			wm_window_make_drawable(wm, win);
 
 			wm_draw_window(C, win);

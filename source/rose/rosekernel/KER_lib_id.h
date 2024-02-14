@@ -48,6 +48,12 @@ void *KER_libblock_alloc(struct Main *main, short type, const char *name, const 
  */
 void KER_libblock_init_empty(struct ID *id);
 
+/**
+ * Uniqueness is only ensured within the ID's library (nullptr for local ones), libraries act as some kind of namespace for
+ * IDs. \param name: The new name of the given ID, if NULL the current given ID name is used instead.
+ */
+void KER_id_new_name_validate(struct Main *main, struct ID *id, const char *tname);
+
 enum {
 	/**
 	 * Do not try to remove freed ID from given Main (passed Main may be NULL).

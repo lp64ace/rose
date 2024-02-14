@@ -27,13 +27,41 @@
 /* /} */
 
 /* -------------------------------------------------------------------- */
-/** \name Unsupported Compiler Attributes
+/** \name Inline Attributes
  * \{ */
 
 #if defined(_MSC_VER)
 #  define ROSE_INLINE static __forceinline
 #else
 #  define ROSE_INLINE static inline __attribute__((always_inline)) __attribute__((__unused__))
+#endif
+
+#define ROSE_MATH_DO_INLINE 1
+
+/* /} */
+
+/* -------------------------------------------------------------------- */
+/** \name Attr Fallthrough
+ * \{ */
+
+#define ATTR_FALLTHROUGH
+
+/* /} */
+
+/* -------------------------------------------------------------------- */
+/** \name Expression Optimization
+ * \{ */
+
+#ifdef __GNUC__
+#	define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#	define UNLIKELY(x) (x)
+#endif
+
+#ifdef __GNUC__
+#	define LIKELY(x) __builtin_expect(!!(x), 1)
+#else
+#	define LIKELY(x) (x)
 #endif
 
 /* /} */

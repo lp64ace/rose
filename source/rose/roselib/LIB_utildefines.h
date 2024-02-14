@@ -3,15 +3,12 @@
 #include "LIB_compiler_attrs.h"
 #include "LIB_utildefines_variadic.h"
 
-#include <float.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+#include "LIB_sys_types.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Simple Math Macros
  * \{ */
- 
+
 #define IS_EQ(a, b) ((fabs((double)((a) - (b))) >= (double)FLT_EPSILON) ? false : true)
 #define IS_EQF(a, b) ((fabsf((float)((a) - (b))) >= (float)FLT_EPSILON) ? false : true)
 
@@ -22,17 +19,17 @@
 
 #define IN_RANGE(v, lo, hi) (((lo) < (hi)) ? (((lo) < (v) && (v) < (hi))) : (((hi) < (v) && (v) < (lo))))
 #define IN_RANGE_INCL(v, lo, hi) (((lo) < (hi)) ? (((lo) <= (v) && (v) <= (hi))) : (((hi) <= (v) && (v) <= (lo))))
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Array Unpacking Macros
  * \{ */
- 
+
 #define UNPACK2(a) ((a)[0]), ((a)[1])
 #define UNPACK3(a) UNPACK2(a), ((a)[2])
 #define UNPACK4(a) UNPACK3(a), ((a)[3])
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
@@ -47,9 +44,9 @@
 /* -------------------------------------------------------------------- */
 /** \name Pointer Macros
  * \{ */
- 
+
 #define POINTER_OFFSET(ptr, offset) (((const char *)ptr) + (offset))
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
@@ -68,8 +65,8 @@
 
 /* generic strcmp macros */
 #if defined(_MSC_VER)
-#  define strcasecmp _stricmp
-#  define strncasecmp _strnicmp
+#	define strcasecmp _stricmp
+#	define strncasecmp _strnicmp
 #endif
 
 #define STREQ(a, b) (strcmp(a, b) == 0)
@@ -79,20 +76,97 @@
 
 #define STRPREFIX(a, b) (strncmp((a), (b), strlen(b)) == 0)
 
-/** \} */
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Misc Macros
+ * \{ */
+
+#define EXPR_NOP(expr) (void)(0 ? ((void)(expr), 1) : 0)
+
+/** Utility macro that wraps `std::enable_if` to make it a bit easier to use and less verbose in common cases. */
+#define ROSE_ENABLE_IF(condition) typename std::enable_if_t<(condition)> * = nullptr
+
+#if defined(_MSC_VER)
+#	define ROSE_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#elif defined(__has_cpp_attribute)
+#	if __has_cpp_attribute(no_unique_address)
+#		define ROSE_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#	else
+#		define ROSE_NO_UNIQUE_ADDRESS
+#	endif
+#else
+#	define ROSE_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Flag Macros
+ * \{ */
+
+#define SET_FLAG_FROM_TEST(value, test, flag) \
+	{ \
+		if (test) { \
+			(value) |= (flag); \
+		} \
+		else { \
+			(value) &= ~(flag); \
+		} \
+	} \
+	((void)0)
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name C++ Macros
+ * \{ */
+
+#ifdef __cplusplus
+
+/* Useful to port C code using enums to C++ where enums are strongly typed.
+ * To use after the enum declaration. */
+/* If any enumerator `C` is set to say `A|B`, then `C` would be the max enum value. */
+#	define ENUM_OPERATORS(_enum_type, _max_enum_value) \
+		extern "C++" { \
+		inline constexpr _enum_type operator|(_enum_type a, _enum_type b) { \
+			return (_enum_type)(uint64_t(a) | uint64_t(b)); \
+		} \
+		inline constexpr _enum_type operator&(_enum_type a, _enum_type b) { \
+			return (_enum_type)(uint64_t(a) & uint64_t(b)); \
+		} \
+		inline constexpr _enum_type operator~(_enum_type a) { \
+			return (_enum_type)(~uint64_t(a) & (2 * uint64_t(_max_enum_value) - 1)); \
+		} \
+		inline _enum_type &operator|=(_enum_type &a, _enum_type b) { \
+			return a = (_enum_type)(uint64_t(a) | uint64_t(b)); \
+		} \
+		inline _enum_type &operator&=(_enum_type &a, _enum_type b) { \
+			return a = (_enum_type)(uint64_t(a) & uint64_t(b)); \
+		} \
+		inline _enum_type &operator^=(_enum_type &a, _enum_type b) { \
+			return a = (_enum_type)(uint64_t(a) ^ uint64_t(b)); \
+		} \
+		} /* extern "C++" */
+#else
+/** Output nothing. */
+#	define ENUM_OPERATORS(_type, _max)
+#endif
+
+/* \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Unused Function/Argument Macros
  * \{ */
 
 #ifndef __cplusplus
-#  if defined(__GNUC__) || defined(__clang__)
-#    define UNUSED(x) UNUSED_##x __attribute__((__unused__))
-#  elif defined(_MSC_VER)
-#    define UNUSED(x) UNUSED_##x __pragma(warning(suppress : 4100))
-#  else
-#    define UNUSED(x) UNUSED_##x
-#  endif
+#	if defined(__GNUC__) || defined(__clang__)
+#		define UNUSED(x) UNUSED_##x __attribute__((__unused__))
+#	elif defined(_MSC_VER)
+#		define UNUSED(x) UNUSED_##x __pragma(warning(suppress : 4100))
+#	else
+#		define UNUSED(x) UNUSED_##x
+#	endif
 #endif
 
 /**
@@ -100,15 +174,15 @@
  * Use #UNUSED_FUNCTION_WITH_RETURN_TYPE instead in this case.
  */
 #if defined(__GNUC__) || defined(__clang__)
-#  define UNUSED_FUNCTION(x) __attribute__((__unused__)) UNUSED_##x
+#	define UNUSED_FUNCTION(x) __attribute__((__unused__)) UNUSED_##x
 #else
-#  define UNUSED_FUNCTION(x) UNUSED_##x
+#	define UNUSED_FUNCTION(x) UNUSED_##x
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#  define UNUSED_FUNCTION_WITH_RETURN_TYPE(rtype, x) __attribute__((__unused__)) rtype UNUSED_##x
+#	define UNUSED_FUNCTION_WITH_RETURN_TYPE(rtype, x) __attribute__((__unused__)) rtype UNUSED_##x
 #else
-#  define UNUSED_FUNCTION_WITH_RETURN_TYPE(rtype, x) rtype UNUSED_##x
+#	define UNUSED_FUNCTION_WITH_RETURN_TYPE(rtype, x) rtype UNUSED_##x
 #endif
 
 /* clang-format off */
@@ -129,7 +203,7 @@
 #define _VA_UNUSED_VARS_14(a0, b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0) ((void)(a0), _VA_UNUSED_VARS_13(b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0))
 #define _VA_UNUSED_VARS_15(a0, b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0) ((void)(a0), _VA_UNUSED_VARS_14(b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0))
 #define _VA_UNUSED_VARS_16(a0, b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0, p0) ((void)(a0), _VA_UNUSED_VARS_15(b0, c0, d0, e0, f0, g0, h0, i0, j0, k0, l0, m0, n0, o0, p0))
- 
+
 /* clang-format on */
 
 /** Reusable UNUSED_VARS macro */
@@ -137,17 +211,17 @@
 
 /** For debug-only variables */
 #ifndef NDEBUG
-#  define UNUSED_VARS_NDEBUG(...)
+#	define UNUSED_VARS_NDEBUG(...)
 #else
-#  define UNUSED_VARS_NDEBUG UNUSED_VARS
+#	define UNUSED_VARS_NDEBUG UNUSED_VARS
 #endif
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Equal to Any Element (ELEM) Macro
  * \{ */
- 
+
 /* clang-format off */
  
 #define _VA_ELEM_2(v, a0) ((v) == (a0))
@@ -215,10 +289,10 @@
 #define _VA_ELEM_64(v, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a60, a61, a62) _VA_ELEM_63(v, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a60, a61) || _VA_ELEM_2(v, a62)
 
 /* clang-format on */
- 
+
 /** Reusable ELEM macro */
 #define ELEM(...) VA_NARGS_CALL_OVERLOAD(_VA_ELEM_, __VA_ARGS__)
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
@@ -294,10 +368,10 @@
 #define _VA_ROSE_MAX_64(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a60, a61, a62, a63) _VA_ROSE_MAX_2(_VA_ROSE_MAX_63(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a60, a61, a62), a63)
 
 /* clang-format on */
- 
+
 /** Reusable ROSE_MAX macro */
 #define ROSE_MAX(...) VA_NARGS_CALL_OVERLOAD(_VA_ROSE_MAX_, __VA_ARGS__)
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
@@ -376,5 +450,60 @@
 
 /** Reusable ROSE_MIN macro */
 #define ROSE_MIN(...) VA_NARGS_CALL_OVERLOAD(_VA_ROSE_MIN_, __VA_ARGS__)
- 
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Swap & Shift Macros
+ * \{ */
+
+#define SWAP(type, a, b) \
+	{ \
+		type sw_ap = (a); \
+		(a) = (b); \
+		(b) = sw_ap; \
+	} \
+	(void)0
+	
+#define SWAP_TVAL(tval, a, b) \
+	{ \
+		tval = (a); \
+		(a) = (b); \
+		(b) = tval; \
+	} \
+	(void)0
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Clamp Macros
+ * \{ */
+
+#define CLAMP(a, b, c) \
+	{ \
+		if ((a) < (b)) { \
+			(a) = (b); \
+		} \
+		else if ((a) > (c)) { \
+			(a) = (c); \
+		} \
+	} \
+	(void)0
+
+#define CLAMP_MAX(a, c) \
+	{ \
+		if ((a) > (c)) { \
+			(a) = (c); \
+		} \
+	} \
+	(void)0
+
+#define CLAMP_MIN(a, b) \
+	{ \
+		if ((a) < (b)) { \
+			(a) = (b); \
+		} \
+	} \
+	(void)0
+
 /* \} */

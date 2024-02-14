@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+typedef struct GPlatform GPlatform;
 typedef struct GWindow GWindow;
 typedef struct GContext GContext;
 
@@ -58,10 +59,9 @@ enum {
 	GLIB_EVT_MMOUSEUP,	  // Middle Mouse Release event, see EventMouse
 	GLIB_EVT_RMOUSEUP,	  // Right Mouse Release event, see EventMouse
 
-	GLIB_EVT_KEY,	   // Key event, see KeyEvent
 	GLIB_EVT_KEYDOWN,  // Key Press event, see KeyEvent
 	GLIB_EVT_KEYUP,	   // Key Release event, see KeyEvent
-	
+
 	GLIB_EVT_DESTROY,
 	GLIB_EVT_CLOSE,
 };
@@ -79,13 +79,19 @@ typedef struct EventMove {
 } EventMove;
 
 enum {
-	GLIB_MODIFIER_CONTROL = (1 << 0),
-	GLIB_MODIFIER_LBTN = (1 << 1),
-	GLIB_MODIFIER_MBTN = (1 << 2),
-	GLIB_MODIFIER_RBTN = (1 << 3),
-	GLIB_MODIFIER_SHIFT = (1 << 4),
-	GLIB_MODIFIER_XBTN1 = (1 << 5),
-	GLIB_MODIFIER_XBTN2 = (1 << 6),
+	GLIB_MODIFIER_LCONTROL = (1 << 0),
+	GLIB_MODIFIER_RCONTROL = (1 << 1),
+	GLIB_MODIFIER_LBTN = (1 << 2),
+	GLIB_MODIFIER_MBTN = (1 << 3),
+	GLIB_MODIFIER_RBTN = (1 << 4),
+	GLIB_MODIFIER_LSHIFT = (1 << 5),
+	GLIB_MODIFIER_RSHIFT = (1 << 6),
+	GLIB_MODIFIER_LALT = (1 << 7),
+	GLIB_MODIFIER_RALT = (1 << 8),
+	GLIB_MODIFIER_LOS = (1 << 9),
+	GLIB_MODIFIER_ROS = (1 << 10),
+	GLIB_MODIFIER_XBTN1 = (1 << 11),
+	GLIB_MODIFIER_XBTN2 = (1 << 12),
 };
 
 /** When this message is processed the return value should be zero. */
@@ -102,7 +108,7 @@ enum {
 	GLIB_KEY_BACKSPACE,
 	GLIB_KEY_TAB,
 	GLIB_KEY_CLEAR,
-	GLIB_KEY_ENETER = 0x0d,
+	GLIB_KEY_ENTER = 0x0d,
 
 	GLIB_KEY_ESC = 0x1b,
 	GLIB_KEY_SPACE = ' ',
@@ -124,7 +130,7 @@ enum {
 	GLIB_KEY_8 = '8',
 	GLIB_KEY_9 = '9',
 
-	GLIB_KEY_SEMICOLOR = ';',
+	GLIB_KEY_SEMICOLON = ';',
 	GLIB_KEY_EQUAL = '=',
 
 	GLIB_KEY_A = 'A',
@@ -159,6 +165,7 @@ enum {
 	GLIB_KEY_BACKSLASH = 0x5c,
 	GLIB_KEY_ACCENTGRAVE = '`',
 
+#define _GLIB_KEY_MODIFIER_MIN GLIB_KEY_LEFT_SHIFT
 	GLIB_KEY_LEFT_SHIFT = 0x100,
 	GLIB_KEY_RIGHT_SHIFT,
 	GLIB_KEY_LEFT_CTRL,
@@ -167,9 +174,10 @@ enum {
 	GLIB_KEY_RIGHT_ALT,
 	GLIB_KEY_LEFT_OS,
 	GLIB_KEY_RIGHT_OS,
+#define _GLIB_KEY_MODIFIER_MAX GLIB_KEY_RIGHT_OS
 
 	GLIB_KEY_GRLESS,
-	GLIB_KEYAPP,
+	GLIB_KEY_APP,
 
 	GLIB_KEY_CAPSLOCK,
 	GLIB_KEY_NUMLOCK,
@@ -238,22 +246,14 @@ enum {
 	GLIB_KEY_MEDIA_LAST,
 };
 
+#define GLIB_KEY_MODIFIER_CHECK(key) (_GLIB_KEY_MODIFIER_MIN <= (key) && (key) <= _GLIB_KEY_MODIFIER_MAX)
+
 typedef struct EventKey {
-	/** The unicode charachter value of the key. */
-	wchar_t value;
-
-	/**
-	 * The key code of the key that triggered the event, this can be any valid GLIB key code declared above, see GLIB_KEY_*
-	 * definitions.
-	 */
-	int keycode;
-
-	/** The scan code, this value depends on the OEM. */
-	int scancode;
-	/** The previous state, the value is 1 if the key is down before the message is sent, or it is 0 if the key is up. */
-	int previous;
-	/** The transition state, the value is 1 if the key is being released, or it is 0 if the key is being pressed. */
-	int transition;
+	int key;
+	wchar_t utf16[2];
+	
+	int modifiers;
+	bool repeat;
 } EventKey;
 
 /* \} */

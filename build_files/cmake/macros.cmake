@@ -289,6 +289,68 @@ function(rose_add_lib
 	set_property(GLOBAL APPEND PROPERTY ROSE_LINK_LIBS ${name})
 endfunction()
 
+function(data_to_c
+	file_from file_to
+	list_to_add
+)
+	list(APPEND ${list_to_add} ${file_to})
+	set(${list_to_add} ${${list_to_add}} PARENT_SCOPE)
+
+	get_filename_component(_file_to_path ${file_to} PATH)
+
+	set(optional_args "")
+	foreach(f ${ARGN})
+		if(f STREQUAL "STRIP_LEADING_C_COMMENTS")
+			set(optional_args "--options=strip_leading_c_comments")
+		else()
+			message(FATAL_ERROR "Unknown optional argument ${f} to \"data_to_c\"")
+		endif()
+	endforeach()
+
+	add_custom_command(
+		OUTPUT ${file_to}
+		COMMAND ${CMAKE_COMMAND} -E make_directory ${_file_to_path}
+		COMMAND "$<TARGET_FILE:datatoc>" ${file_from} ${file_to} ${optional_args}
+		DEPENDS ${file_from} datatoc
+	)
+
+	set_source_files_properties(${file_to} PROPERTIES GENERATED TRUE)
+endfunction()
+
+function(data_to_c_simple
+	file_from
+	list_to_add
+)
+	# remove ../'s
+	get_filename_component(_file_from ${CMAKE_CURRENT_SOURCE_DIR}/${file_from}   REALPATH)
+	get_filename_component(_file_to   ${CMAKE_CURRENT_BINARY_DIR}/${file_from}.c REALPATH)
+
+	list(APPEND ${list_to_add} ${_file_to})
+	source_group(Generated FILES ${_file_to})
+	list(APPEND ${list_to_add} ${file_from})
+	set(${list_to_add} ${${list_to_add}} PARENT_SCOPE)
+
+	get_filename_component(_file_to_path ${_file_to} PATH)
+
+	set(optional_args "")
+	foreach(f ${ARGN})
+		if(f STREQUAL "STRIP_LEADING_C_COMMENTS")
+			set(optional_args "--options=strip_leading_c_comments")
+		else()
+			message(FATAL_ERROR "Unknown optional argument ${f} to \"data_to_c_simple\"")
+		endif()
+	endforeach()
+
+	add_custom_command(
+		OUTPUT  ${_file_to}
+		COMMAND ${CMAKE_COMMAND} -E make_directory ${_file_to_path}
+		COMMAND "$<TARGET_FILE:datatoc>" ${_file_from} ${_file_to} ${optional_args}
+		DEPENDS ${_file_from} datatoc
+	)
+
+	set_source_files_properties(${_file_to} PROPERTIES GENERATED TRUE)
+endfunction()
+
 function(download_dependency_module _name _git _branch)
 	message(STATUS "Fetching content for ${_name}")
     FetchContent_Declare(${_name}

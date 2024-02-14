@@ -14,16 +14,19 @@
 #include "WM_init_exit.h"
 #include "WM_window.h"
 
+#include "GPU_context.h"
+
 #include "glib.h"
 
 static bool wm_window_position_size_update(struct wmWindow *window);
 
-static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *data, void *userdata) {
+static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *rawdata, void *userdata) {
 	Context *C = (Context *)userdata;
 	wmWindowManager *wm = (wmWindowManager *)CTX_wm_manager(C);
 	wmWindow *window = NULL;
 
 	if (type == GLIB_EVT_CLOSE) {
+		/** This function does not return, so we don't need to worry about return value. */
 		WM_exit(C);
 	}
 
@@ -45,8 +48,9 @@ static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *data, 
 		case GLIB_EVT_MOVE:
 		case GLIB_EVT_SIZE: {
 			if (wm_window_position_size_update(window)) {
-				wm_draw_update(C);
 			}
+
+			wm_draw_update(C);
 			return true;
 		} break;
 	}
@@ -58,6 +62,9 @@ bool wm_window_position_size_update(struct wmWindow *window) {
 	GSize size = GHOST_GetClientSize(window->gwin);
 	GPosition position = GHOST_GetWindowPos(window->gwin);
 
+	if (GHOST_IsWindowMinimized(window->gwin)) {
+		window->width = window->height = 0;
+	}
 	if (size.x != window->width || size.y != window->height || position.x != window->posx || position.y != window->posy) {
 		window->posx = position.x;
 		window->posy = position.y;
@@ -79,15 +86,17 @@ void wm_ghost_exit() {
 
 static void wm_window_beauty_rectangle(struct wmWindow *win, bool dialog) {
 	GSize screen = GHOST_GetScreenSize();
+	screen.x = ROSE_MAX(screen.x, 800);
+	screen.y = ROSE_MAX(screen.y, 600);
 	if (dialog) {
-		win->width = screen.x >> 1;
+		win->width = screen.x / 2;
 	}
 	else {
 		win->width = (screen.x * 2) / 3;
 	}
 	win->height = (win->width * 9) / 16;
-	win->posx = (screen.x - win->width) >> 1;
-	win->posy = (screen.y - win->height) >> 1;
+	win->posx = (screen.x - win->width) / 2;
+	win->posy = (screen.y - win->height) / 2;
 }
 
 static bool wm_window_ghost_window_ensure(struct wmWindowManager *wm, struct wmWindow *win) {
@@ -96,10 +105,35 @@ static bool wm_window_ghost_window_ensure(struct wmWindowManager *wm, struct wmW
 
 		if (win->gwin) {
 			GHOST_WindowSetUserData(win->gwin, win);
-			return true;
+			win->gpuctx = GPU_context_create(win->gwin, NULL);
+			
+			if(win->gpuctx) {
+				return true;
+			}
 		}
 	}
 	return false;
+}
+
+static void wm_window_ghost_window_destroy(struct wmWindowManager *wm , struct wmWindow *win) {
+	if(!win->gwin) {
+		return;
+	}
+	
+	wm_window_clear_drawable(wm);
+	
+	if(win == wm->winactive) {
+		wm->winactive = NULL;
+	}
+	
+	GHOST_ActivateWindowDrawingContext(win->gwin);
+	GPU_context_active_set(win->gpuctx);
+	GPU_context_discard(win->gpuctx);
+	win->gpuctx = NULL;
+	
+	GHOST_WindowSetUserData(win->gwin, NULL);
+	GHOST_CloseWindow(win->gwin);
+	win->gwin = NULL;
 }
 
 struct wmWindow *wm_window_new(struct Main *C, struct wmWindowManager *wm, struct wmWindow *parent) {
@@ -108,6 +142,7 @@ struct wmWindow *wm_window_new(struct Main *C, struct wmWindowManager *wm, struc
 	wm_window_beauty_rectangle(window, (window->parent = parent) != NULL);
 	if (wm_window_ghost_window_ensure(wm, window)) {
 		LIB_addtail(&wm->windows, window);
+		wm->winactive = window;
 		return window;
 	}
 
@@ -128,13 +163,12 @@ void wm_window_close(struct Context *C, struct wmWindowManager *wm, struct wmWin
 }
 
 void wm_window_free(struct Context *C, struct wmWindowManager *wm, struct wmWindow *window) {
-	if (window->gwin) {
-		GHOST_WindowSetUserData(window->gwin, NULL);
-		GHOST_CloseWindow(window->gwin);
-		window->gwin = NULL;
-	}
-
+	wm_window_ghost_window_destroy(wm, window);
+	
 	LIB_remlink(&wm->windows, window);
-
 	MEM_freeN(window);
+}
+
+bool wm_window_minimized(struct wmWindow *window) {
+	return !(window->width * window->height > 0);
 }

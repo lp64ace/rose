@@ -5,6 +5,10 @@
 #include "LIB_compiler_attrs.h"
 #include "LIB_utildefines.h"
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #define LIB_NPOS ((size_t)-1)
 
 /* -------------------------------------------------------------------- */
@@ -32,6 +36,31 @@ char *LIB_strndupN(const char *text, const size_t length);
  * \retval Returns dst
  */
 char *LIB_strncpy(char *dst, const char *src, size_t dst_maxncpy);
+
+/**
+ * Calculate the number of oeprations needed to transform the source string to the destination string.
+ * This function returns an integer since this algorithm thakes O(N*M) which is slow and strings that are more than 1k
+ * charachters should not be used here. \return The number of insertions, deletions that we need to make to the source string
+ * to match the destination string.
+ */
+int LIB_strdiff(const char *source, const char *destination);
+
+enum {
+	/** Ignore the case of the letters in the strings. */
+	LIB_STRDIFF_NOCASE = 1 << 0,
+	/** Ignore whitespace from any of the two strings. */
+	LIB_STRDIFF_NOSPACE = 1 << 1,
+};
+
+/**
+ * Calculate the number of oeprations needed to transform the source string to the destination string.
+ * This function returns an integer since this algorithm thakes O(N*M) which is slow and strings that are more than 1k
+ * charachters should not be used here. \return The number of insertions, deletions that we need to make to the source string
+ * to match the destination string.
+ *
+ * This version allows for extra flags, like ignore the case of the letters or ignore whitespace.
+ */
+int LIB_strdiff_ex(const char *source, const char *destination, int flags);
 
 /* \} */
 
@@ -133,3 +162,7 @@ size_t LIB_str_replacen_char(char *str, size_t maxlen, const char src, const cha
 size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const char *needle, const char *alt);
  
 /* \} */
+
+#if defined(__cplusplus)
+}
+#endif

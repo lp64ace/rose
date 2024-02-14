@@ -119,41 +119,26 @@ void PlatformInterface::PostMouseButtonEvent(WindowInterface *wnd, int type, int
 	PostEvent(wnd, type, data);
 }
 
-void PlatformInterface::PostKeyEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev, int transition) {
-	EventKey *data = MEM_cnew<EventKey>("glib::KeyEvent");
-
-	data->value = v;
-	data->keycode = key;
-
-	data->scancode = scan;
-	data->previous = prev;
-	data->transition = transition;
-
-	PostEvent(wnd, GLIB_EVT_KEY, data);
-}
-
-void PlatformInterface::PostKeyDownEvent(WindowInterface *wnd, wchar_t v, int key, int scan, int prev) {
+void PlatformInterface::PostKeyDownEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16) {
 	EventKey *data = MEM_cnew<EventKey>("glib::KeyDownEvent");
 
-	data->value = v;
-	data->keycode = key;
+	data->key = key;
+	data->repeat = repeat;
+	data->modifiers = modifiers;
 
-	data->scancode = scan;
-	data->previous = prev;
-	data->transition = 0;
+	memcpy(data->utf16, utf16, sizeof(wchar_t[2]));
 
 	PostEvent(wnd, GLIB_EVT_KEYDOWN, data);
 }
 
-void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, wchar_t v, int key, int scan) {
+void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16) {
 	EventKey *data = MEM_cnew<EventKey>("glib::KeyUpEvent");
 
-	data->value = v;
-	data->keycode = key;
-
-	data->scancode = scan;
-	data->previous = 1;
-	data->transition = 1;
+	data->key = key;
+	data->repeat = repeat;
+	data->modifiers = modifiers;
+	
+	memcpy(data->utf16, utf16, sizeof(wchar_t[3]));
 
 	PostEvent(wnd, GLIB_EVT_KEYUP, data);
 }
@@ -167,7 +152,7 @@ void PlatformInterface::ClearWindowEvents(WindowInterface *window) {
 	for (iter = _EvtQueue.begin(); iter != _EvtQueue.end();) {
 		const DefEventEntry *event = *iter;
 		if (event->window == window) {
-			delete event;
+			MEM_delete<DefEventEntry>(event);
 			_EvtQueue.erase(iter);
 			iter = _EvtQueue.begin();
 		}

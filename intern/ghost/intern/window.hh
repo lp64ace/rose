@@ -31,6 +31,21 @@ public:
 	/** Retrieves the rectangular coordinates of the client area of the window, excluding borders and decorations. */
 	virtual void GetClientRect(GRect *r_rect) const = 0;
 
+	/** Returns true if the windw is minimized */
+	virtual bool IsIconic() const = 0;
+
+	/* \} */
+	
+	/* -------------------------------------------------------------------- */
+	/** \name Window Utils
+	 * \{ */
+	 
+	/** Converts the screen coordinates of a specified point on the screen to client-area coordinates. */
+	virtual GPosition ScreenToClient(int x, int y) const = 0;
+	
+	/** Converts the client-area coordinates of a specified point to screen coordinates. */
+	virtual GPosition ClientToScreen(int x, int y) const = 0;
+	 
 	/* \} */
 
 	/* -------------------------------------------------------------------- */

@@ -60,6 +60,11 @@ void *GHOST_WindowGetUserData(const GWindow *window);
 /** Returns the dimensions of the screen */
 GSize GHOST_GetScreenSize();
 
+/** Converts screen coordinates to client coordinates. */
+GPosition GHOST_ScreenToClient(GWindow *window, int x, int y);
+/** Converts client coordinates to screen coordinates. */
+GPosition GHOST_ClientToScreen(GWindow *window, int x, int y);
+
 /** Retrieves the size of the entire window, including borders and decorations. */
 GSize GHOST_GetWindowSize(GWindow *window);
 
@@ -83,6 +88,9 @@ void GHOST_GetWindowRect(GWindow *window, GRect *r_rect);
 
 /** Retrieves the rectangular coordinates of the client area of the window, excluding borders and decorations. */
 void GHOST_GetClientRect(GWindow *window, GRect *r_rect);
+
+/** Returns true if the window is minimized. */
+bool GHOST_IsWindowMinimized(GWindow *window);
 
 /**
  * Attempt to install a new rendering context of the specified type for the window. If this function fails, the rendering

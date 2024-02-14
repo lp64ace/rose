@@ -10,6 +10,7 @@ extern "C" {
 typedef struct wmWindowManager {
 	ID id;
 	
+	struct wmWindow *winactive;
 	struct wmWindow *drawable;
 	
 	ListBase windows;
@@ -24,6 +25,7 @@ typedef struct wmWindow {
 	int height;
 	
 	struct GWindow *gwin;
+	struct GPUContext *gpuctx;
 	
 	struct wmWindow *parent;
 } wmWindow;

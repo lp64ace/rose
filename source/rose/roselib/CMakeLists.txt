@@ -23,17 +23,43 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
+	LIB_allocator.hh
 	LIB_assert.h
 	LIB_compiler_attrs.h
 	LIB_endian.h
+	LIB_hash.hh
+	LIB_index_range.hh
 	LIB_listbase.h
+	LIB_listbase_inline.h
+	LIB_math.h
+	LIB_math_base.h
+	LIB_math_base_safe.h
+	LIB_math_bits.h
+	LIB_math_geom.h
+	LIB_math_inline.h
+	LIB_math_matrix.h
+	LIB_math_rotation.h
+	LIB_math_solvers.h
+	LIB_math_vector.h
+	LIB_memory_utils.h
+	LIB_memory_utils.hh
+	LIB_span.hh
 	LIB_spinlock.h
 	LIB_string.h
+	LIB_struct_equality_utils.hh
 	LIB_system.h
+	LIB_sys_types.h
 	LIB_utildefines.h
 	LIB_utildefines_variadic.h
+	LIB_vector.hh
 	intern/assert.c
 	intern/listbase.c
+	intern/math_base.c
+	intern/math_matrix.c
+	intern/math_rotation.c
+	intern/math_solvers.c
+	intern/math_vector.c
+	intern/memory_utils.c
 	intern/spinlock.c
 	intern/string.c
 	intern/system.c

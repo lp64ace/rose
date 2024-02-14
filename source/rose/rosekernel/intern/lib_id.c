@@ -3,6 +3,7 @@
 #include "DNA_ID.h"
 
 #include "LIB_assert.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "KER_idtype.h"
@@ -71,6 +72,7 @@ void *KER_libblock_alloc(Main *main, short type, const char *name, const int fla
 
 			KER_main_lock(main);
 			LIB_addtail(lb, id);
+			KER_id_new_name_validate(main, id, name);
 			KER_main_unlock(main);
 
 			id->lib = main->lib;
@@ -96,6 +98,24 @@ void KER_libblock_init_empty(struct ID *id) {
 	ROSE_assert_msg(0, "IDType Missing IDTypeInfo");
 }
 
+void KER_id_new_name_validate(struct Main *main, struct ID *id, const char *tname) {
+	char name[ARRAY_SIZE(id->name) - 2];
+	
+	/** If no name given, use name of current ID. */
+	if (tname == NULL) {
+		tname = id->name + 2;
+	}
+	/** Make a copy of given name (tname args can be const). */
+	LIB_strncpy(name, tname, ARRAY_SIZE(name));
+	
+	if (name[0] == '\0') {
+		/** Disallow empty names. */
+		LIB_strncpy(name, KER_idtype_idcode_to_name(GS(id->name)), ARRAY_SIZE(name));
+	}
+	
+	LIB_strncpy(id->name + 2, name, sizeof(id->name) - 2);
+}
+
 void KER_libblock_free_data(ID *id, const bool do_id_user) {
 }
 
@@ -114,7 +134,7 @@ void KER_libblock_free_datablock(ID *id, const int flag) {
 	ROSE_assert_msg(0, "IDType Missing IDTypeInfo");
 }
 
-static int id_free(Main *main, void *idv, int flag, const bool use_flag_from_idtag) {
+static void id_free(Main *main, void *idv, int flag, const bool use_flag_from_idtag) {
 	ID *id = (ID *)idv;
 
 	if (use_flag_from_idtag) {
