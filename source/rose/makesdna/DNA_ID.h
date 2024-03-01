@@ -30,7 +30,7 @@ enum {
 	 * RESET_AFTER_USE
 	 */
 	LIB_TAG_NEW = 1 << 0,
-	
+
 	/**
 	 * ID is not listed/stored in any #Main database.
 	 *

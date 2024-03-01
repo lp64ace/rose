@@ -6,7 +6,7 @@ struct Context {
 	struct {
 		struct Main *main;
 	} data;
-	
+
 	struct {
 		struct wmWindowManager *manager;
 		struct wmWindow *window;
@@ -15,7 +15,7 @@ struct Context {
 
 struct Context *CTX_new() {
 	Context *C = MEM_callocN(sizeof(Context), "kernel::Context");
-	
+
 	return C;
 }
 

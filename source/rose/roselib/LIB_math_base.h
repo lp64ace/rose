@@ -330,32 +330,28 @@ float ceil_power_of_10(float f);
 #	define ROSE_ASSERT_UNIT_V3(v) \
 		{ \
 			const float _test_unit = len_squared_v3(v); \
-			ROSE_assert(!(fabsf(_test_unit - 1.0f) >= ROSE_ASSERT_UNIT_EPSILON) || \
-						!(fabsf(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON)); \
+			ROSE_assert(!(fabsf(_test_unit - 1.0f) >= ROSE_ASSERT_UNIT_EPSILON) || !(fabsf(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON)); \
 		} \
 		(void)0
 
 #	define ROSE_ASSERT_UNIT_V3_DB(v) \
 		{ \
 			const double _test_unit = len_squared_v3_db(v); \
-			ROSE_assert(!(fabs(_test_unit - 1.0) >= ROSE_ASSERT_UNIT_EPSILON_DB) || \
-						!(fabs(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON_DB)); \
+			ROSE_assert(!(fabs(_test_unit - 1.0) >= ROSE_ASSERT_UNIT_EPSILON_DB) || !(fabs(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON_DB)); \
 		} \
 		(void)0
 
 #	define ROSE_ASSERT_UNIT_V2(v) \
 		{ \
 			const float _test_unit = len_squared_v2(v); \
-			ROSE_assert(!(fabsf(_test_unit - 1.0f) >= ROSE_ASSERT_UNIT_EPSILON) || \
-						!(fabsf(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON)); \
+			ROSE_assert(!(fabsf(_test_unit - 1.0f) >= ROSE_ASSERT_UNIT_EPSILON) || !(fabsf(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON)); \
 		} \
 		(void)0
 
 #	define ROSE_ASSERT_UNIT_QUAT(q) \
 		{ \
 			const float _test_unit = dot_qtqt(q, q); \
-			ROSE_assert(!(fabsf(_test_unit - 1.0f) >= ROSE_ASSERT_UNIT_EPSILON * 10) || \
-						!(fabsf(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON * 10)); \
+			ROSE_assert(!(fabsf(_test_unit - 1.0f) >= ROSE_ASSERT_UNIT_EPSILON * 10) || !(fabsf(_test_unit) >= ROSE_ASSERT_UNIT_EPSILON * 10)); \
 		} \
 		(void)0
 

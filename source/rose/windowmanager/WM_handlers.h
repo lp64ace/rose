@@ -17,16 +17,16 @@ typedef struct wmEvent {
 	int localx;
 	int localy;
 	wchar_t utf16[3];
-	
+
 	int modifiers;
-	
+
 	/** Information about the previous event state. */
 	struct {
 		int type;
 		int value;
 		int x;
 		int y;
-		
+
 		int modifiers;
 	} old;
 } wmEvent;
@@ -81,10 +81,10 @@ typedef bool (*EventHandlerPoll)(const struct ARegion *region, const struct wmEv
 
 typedef struct wmEventHandler {
 	struct wmEventHandler *prev, *next;
-	
+
 	int type;
 	int flag;
-	
+
 	EventHandlerPoll poll;
 } wmEventHandler;
 
@@ -94,8 +94,7 @@ enum {
 };
 
 /** #wmEventHandler->flag */
-enum {
-};
+enum {};
 
 #ifdef __cplusplus
 }

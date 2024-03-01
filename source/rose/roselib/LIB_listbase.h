@@ -102,21 +102,16 @@ ROSE_INLINE void LIB_listbase_clear(struct ListBase *listbase);
  * incrementation.
  */
 #define LISTBASE_FOREACH_INDEX(type, var, list, index_var) \
-	for (type var = (((void)(index_var = 0)), (type)((list)->first)); var != NULL; \
-		 var = (type)(((Link *)(var))->next), index_var++)
+	for (type var = (((void)(index_var = 0)), (type)((list)->first)); var != NULL; var = (type)(((Link *)(var))->next), index_var++)
 
 /**
  * A version of #LISTBASE_FOREACH that supports removing the item we're looping over.
  */
 #define LISTBASE_FOREACH_MUTABLE(type, var, list) \
-	for (type var = (type)((list)->first), *var##_iter_next; \
-		 ((var != NULL) ? ((void)(var##_iter_next = (type)(((Link *)(var))->next)), 1) : 0); \
-		 var = var##_iter_next)
+	for (type var = (type)((list)->first), *var##_iter_next; ((var != NULL) ? ((void)(var##_iter_next = (type)(((Link *)(var))->next)), 1) : 0); var = var##_iter_next)
 
 /**
  * A version of #LISTBASE_FOREACH_BACKWARD that supports removing the item we're looping over.
  */
 #define LISTBASE_FOREACH_BACKWARD_MUTABLE(type, var, list) \
-	for (type var = (type)((list)->last), *var##_iter_prev; \
-		 ((var != NULL) ? ((void)(var##_iter_prev = (type)(((Link *)(var))->prev)), 1) : 0); \
-		 var = var##_iter_prev)
+	for (type var = (type)((list)->last), *var##_iter_prev; ((var != NULL) ? ((void)(var##_iter_prev = (type)(((Link *)(var))->prev)), 1) : 0); var = var##_iter_prev)

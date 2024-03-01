@@ -14,6 +14,9 @@ AlignAfterOpenBracket: 'Align'
 DerivePointerAlignment: false
 PointerAlignment: Right
 
+# Line width (don't exceed 100000).
+ColumnLimit: 100000
+
 # Disallow short functions on one line; break them up.
 AllowShortBlocksOnASingleLine: false
 
@@ -35,9 +38,6 @@ AllowShortBlocksOnASingleLine: false
 #
 BinPackArguments: false
 BinPackParameters: false
-
-# Line width (don't exceed 127).
-ColumnLimit: 127
 
 # Cause initializer lists to have one member initialized per line, in the case
 # that all initializers can't fit on a single line.

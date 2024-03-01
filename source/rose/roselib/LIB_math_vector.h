@@ -323,12 +323,10 @@ void interp_v3_v3v3v3(float p[3], const float v1[3], const float v2[3], const fl
  * Weight 3 vectors,
  * 'w' must be unit length but is not a vector, just 4 weights.
  */
-void interp_v3_v3v3v3v3(
-	float p[3], const float v1[3], const float v2[3], const float v3[3], const float v4[3], const float w[4]);
+void interp_v3_v3v3v3v3(float p[3], const float v1[3], const float v2[3], const float v3[3], const float v4[3], const float w[4]);
 void interp_v4_v4v4(float r[4], const float a[4], const float b[4], float t);
 void interp_v4_v4v4v4(float p[4], const float v1[4], const float v2[4], const float v3[4], const float w[3]);
-void interp_v4_v4v4v4v4(
-	float p[4], const float v1[4], const float v2[4], const float v3[4], const float v4[4], const float w[4]);
+void interp_v4_v4v4v4v4(float p[4], const float v1[4], const float v2[4], const float v3[4], const float v4[4], const float w[4]);
 void interp_v3_v3v3v3_uv(float p[3], const float v1[3], const float v2[3], const float v3[3], const float uv[2]);
 
 /**

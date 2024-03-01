@@ -82,15 +82,7 @@ typedef bool (*Newton3D_CorrectionFunc)(void *userdata, const float x[3], float 
  * \param result: Final result.
  * \return true if success
  */
-bool LIB_newton3d_solve(Newton3D_DeltaFunc func_delta,
-						Newton3D_JacobianFunc func_jacobian,
-						Newton3D_CorrectionFunc func_correction,
-						void *userdata,
-						float epsilon,
-						int max_iterations,
-						bool trace,
-						const float x_init[3],
-						float result[3]);
+bool LIB_newton3d_solve(Newton3D_DeltaFunc func_delta, Newton3D_JacobianFunc func_jacobian, Newton3D_CorrectionFunc func_correction, void *userdata, float epsilon, int max_iterations, bool trace, const float x_init[3], float result[3]);
 
 #ifdef ROSE_MATH_GCC_WARN_PRAGMA
 #	pragma GCC diagnostic pop

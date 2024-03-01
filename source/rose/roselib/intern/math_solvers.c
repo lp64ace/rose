@@ -74,8 +74,7 @@ bool LIB_tridiagonal_solve(const float *a, const float *b, const float *c, const
 	return isfinite(x_prev);
 }
 
-bool LIB_tridiagonal_solve_cyclic(
-	const float *a, const float *b, const float *c, const float *d, float *r_x, const int count) {
+bool LIB_tridiagonal_solve_cyclic(const float *a, const float *b, const float *c, const float *d, float *r_x, const int count) {
 	if (count < 1) {
 		return false;
 	}
@@ -136,15 +135,7 @@ bool LIB_tridiagonal_solve_cyclic(
 	return success;
 }
 
-bool LIB_newton3d_solve(Newton3D_DeltaFunc func_delta,
-						Newton3D_JacobianFunc func_jacobian,
-						Newton3D_CorrectionFunc func_correction,
-						void *userdata,
-						float epsilon,
-						int max_iterations,
-						bool trace,
-						const float x_init[3],
-						float result[3]) {
+bool LIB_newton3d_solve(Newton3D_DeltaFunc func_delta, Newton3D_JacobianFunc func_jacobian, Newton3D_CorrectionFunc func_correction, void *userdata, float epsilon, int max_iterations, bool trace, const float x_init[3], float result[3]) {
 	float fdelta[3], fdeltav, next_fdeltav;
 	float jacobian[3][3], step[3], x[3], x_next[3];
 

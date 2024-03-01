@@ -35,17 +35,17 @@ public:
 	virtual bool IsIconic() const = 0;
 
 	/* \} */
-	
+
 	/* -------------------------------------------------------------------- */
 	/** \name Window Utils
 	 * \{ */
-	 
+
 	/** Converts the screen coordinates of a specified point on the screen to client-area coordinates. */
 	virtual GPosition ScreenToClient(int x, int y) const = 0;
-	
+
 	/** Converts the client-area coordinates of a specified point to screen coordinates. */
 	virtual GPosition ClientToScreen(int x, int y) const = 0;
-	 
+
 	/* \} */
 
 	/* -------------------------------------------------------------------- */

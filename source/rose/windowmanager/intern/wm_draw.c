@@ -12,10 +12,6 @@
 #include "WM_draw.h"
 #include "WM_window.h"
 
-#include "GPU_context.h"
-#include "GPU_framebuffer.h"
-#include "GPU_state.h"
-
 #include "glib.h"
 
 static void wm_window_set_drawable(struct wmWindowManager *wm, struct wmWindow *win, bool activate) {
@@ -25,7 +21,7 @@ static void wm_window_set_drawable(struct wmWindowManager *wm, struct wmWindow *
 	if (activate) {
 		GHOST_ActivateWindowDrawingContext(win->gwin);
 	}
-	GPU_context_active_set(win->gpuctx);
+	// GPU_context_active_set(win->gpuctx);
 }
 
 void wm_window_clear_drawable(struct wmWindowManager *wm) {

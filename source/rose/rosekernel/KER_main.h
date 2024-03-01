@@ -21,10 +21,10 @@ struct MainLock;
 typedef struct Main {
 	struct MainLock *lock;
 	struct Library *lib;
-	
+
 	ListBase libraries;
 	ListBase wm;
-	
+
 	bool is_global_main;
 } Main;
 

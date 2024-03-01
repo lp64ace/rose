@@ -4,7 +4,7 @@
 
 /**
  * Some function may be missing due to OS dependencies, see `system_*.c` files for functions that rely on operating system
- * functions like `RLI_system_backtrace()`.
+ * functions like `LIB_system_backtrace()`.
  */
 
 /* -------------------------------------------------------------------- */
@@ -12,17 +12,23 @@
  * \{ */
 
 static const char *lib_signal_translate(int signal) {
-	switch(signal) {
-		case SIGABRT: return "Abort";
-		case SIGFPE: return "Floating-Point Error";
-		case SIGILL: return "Illegal Instruction";
-		case SIGINT: return "CTRL+C";
-		case SIGSEGV: return "Illegal Storage Access";
-		case SIGTERM: return "Termination Request";
+	switch (signal) {
+		case SIGABRT:
+			return "Abort";
+		case SIGFPE:
+			return "Floating-Point Error";
+		case SIGILL:
+			return "Illegal Instruction";
+		case SIGINT:
+			return "CTRL+C";
+		case SIGSEGV:
+			return "Illegal Storage Access";
+		case SIGTERM:
+			return "Termination Request";
 	}
 	return "Unkown Signal";
 }
- 
+
 static void lib_signal_interup_error(int signal) {
 	fprintf(stderr, "\n\n*** %s(%s) ***\n", __func__, lib_signal_translate(signal));
 	LIB_system_backtrace(stderr);

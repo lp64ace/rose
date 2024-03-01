@@ -97,14 +97,14 @@ size_t LIB_strfind(const char *haystack, const char *needle);
 /**
  * This function searches for the specified #needle string within the #haystack string and returns the position (index) of the
  * first occurence. If the #needle is not found, the return value is #LIB_NPOS, which indicates the absence of the substring.
- * 
+ *
  * The function will start the search at #offset.
  */
 size_t LIB_strfind_ex(const char *haystack, const char *needle, size_t offset);
 /**
  * This function searches for the specified #needle string within the #haystack string and returns the position (index) of the
  * last occurence. If the #needle is not found, the return value is #LIB_NPOS, which indicates the absence of the substring.
- * 
+ *
  * The function will start the search at #offset.
  */
 size_t LIB_strrfind_ex(const char *haystack, const char *needle, size_t offset);
@@ -114,7 +114,7 @@ size_t LIB_strrfind_ex(const char *haystack, const char *needle, size_t offset);
 /* -------------------------------------------------------------------- */
 /** \name String Format
  * \{ */
- 
+
 /**
  * A function that is extremely similar to vsnprintf but we can assume that if the return value is not LIB_NPOS the string has
  * been completely written in the #r_buffer and is also NULL terminated.
@@ -124,7 +124,7 @@ size_t LIB_strrfind_ex(const char *haystack, const char *needle, size_t offset);
  * \param ... The arguments for the format string.
  */
 size_t LIB_vsnprintf(char *r_buffer, size_t buflen, ATTR_PRINTF_FORMAT const char *fmt, va_list arg_ptr);
- 
+
 /**
  * A function that is extremely similar to snprintf but we can assume that if the return value is not LIB_NPOS the string has
  * been completely written in the #r_buffer and is also NULL terminated.
@@ -142,13 +142,13 @@ size_t LIB_snprintf(char *r_buffer, size_t buflen, ATTR_PRINTF_FORMAT const char
  * \param ... The arguments for the format string.
  */
 char *LIB_sprintf_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...);
- 
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
 /** \name String Editing
  * \{ */
- 
+
 /** This will replace any of occurances of `src` in `str` with `dst`. */
 size_t LIB_str_replace_char(char *str, const char src, const char dst);
 
@@ -160,7 +160,7 @@ size_t LIB_str_replacen_char(char *str, size_t maxlen, const char src, const cha
  * \return Returns the length of the `buffer` in bytes not including the null-terminator or LIB_NPOS if an error occured.
  */
 size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const char *needle, const char *alt);
- 
+
 /* \} */
 
 #if defined(__cplusplus)

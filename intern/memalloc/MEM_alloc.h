@@ -220,6 +220,8 @@ void MEM_use_guarded_allocator(void);
 }
 #endif
 
+#define MEM_SIZE_OVERHEAD sizeof(size_t)
+
 #ifdef __cplusplus
 
 #	include <new>

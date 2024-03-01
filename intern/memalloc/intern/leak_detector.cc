@@ -27,9 +27,7 @@ public:
 			return;
 		}
 		const size_t mem_in_use = MEM_get_memory_in_use();
-		printf("Error: Not freed memory blocks: " SIZET_FORMAT ", total unfreed memory %f MB\n",
-			   SIZET_ARG(leaked_blocks),
-			   double(mem_in_use) / 1024 / 1024);
+		printf("Error: Not freed memory blocks: " SIZET_FORMAT ", total unfreed memory %f MB\n", SIZET_ARG(leaked_blocks), double(mem_in_use) / 1024 / 1024);
 		MEM_printmemlist();
 
 		if (fail_on_memleak) {

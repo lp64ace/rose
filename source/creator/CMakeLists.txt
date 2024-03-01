@@ -32,7 +32,6 @@ set(LIB
 	rf::intern::memalloc
 	rf::intern::ghost
 	rf::source::roselib
-	rf::source::gpu
 	rf::source::rosekernel
 	rf::source::windowmanager
 	

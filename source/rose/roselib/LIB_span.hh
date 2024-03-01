@@ -34,8 +34,7 @@ public:
 	constexpr Span(const T *start, size_type size) : data_(start), size_(size) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr Span(const U *start, size_type size) : data_(static_cast<const T *>(start)), size_(size) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr Span(const U *start, size_type size) : data_(static_cast<const T *>(start)), size_(size) {
 		ROSE_assert(size >= 0);
 	}
 
@@ -48,8 +47,7 @@ public:
 	template<size_type N> constexpr Span(const std::array<T, N> &array) : Span(array.data(), N) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr Span(Span<U> span) : data_(static_cast<const T *>(span.data())), size_(span.size()) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr Span(Span<U> span) : data_(static_cast<const T *>(span.data())), size_(span.size()) {
 	}
 
 	constexpr Span slice(size_type start, size_type size) const {
@@ -264,8 +262,7 @@ public:
 	template<std::size_t N> constexpr MutableSpan(std::array<T, N> &array) : MutableSpan(array.data(), N) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr MutableSpan(MutableSpan<U> span) : data_(static_cast<T *>(span.data())), size_(span.size()) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr MutableSpan(MutableSpan<U> span) : data_(static_cast<T *>(span.data())), size_(span.size()) {
 	}
 
 	constexpr operator Span<T>() const {

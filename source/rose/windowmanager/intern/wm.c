@@ -39,10 +39,10 @@ IDTypeInfo IDType_ID_WM = {
 	.free_data = window_manager_free_data,
 };
 
-static void wm_init_new(struct Main *main, struct wmWindowManager *wm) {
+static void wm_init_new(struct Context *C, struct wmWindowManager *wm) {
 	struct wmWindow *window;
 
-	if ((window = wm_window_new(main, wm, NULL)) != NULL) {
+	if ((window = wm_window_new(C, wm, NULL)) != NULL) {
 	}
 }
 
@@ -60,13 +60,13 @@ void WM_init(struct Context *C) {
 		CTX_wm_manager_set(C, wm);
 	}
 
-	wm_init_new(main, wm);
+	wm_init_new(C, wm);
 }
 
 void WM_main(struct Context *C) {
 	while (true) {
 		wm_window_events_process(C);
-		
+
 		wm_draw_update(C);
 	}
 }

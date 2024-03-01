@@ -8,7 +8,7 @@
 
 static void library_free_data(struct ID *id) {
 	struct Library *library = (struct Library *)id;
-	
+
 	if (library->runtime.name_map) {
 		ROSE_assert_unreachable();
 	}

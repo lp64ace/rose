@@ -14,8 +14,6 @@
 #include "WM_init_exit.h"
 #include "WM_window.h"
 
-#include "GPU_context.h"
-
 #include "glib.h"
 
 static bool wm_window_position_size_update(struct wmWindow *window);
@@ -105,38 +103,41 @@ static bool wm_window_ghost_window_ensure(struct wmWindowManager *wm, struct wmW
 
 		if (win->gwin) {
 			GHOST_WindowSetUserData(win->gwin, win);
-			win->gpuctx = GPU_context_create(win->gwin, NULL);
-			
-			if(win->gpuctx) {
+			// win->gpuctx = GPU_context_create(win->gwin, NULL);
+
+			if (win->gpuctx) {
 				return true;
 			}
+			return true;
 		}
 	}
 	return false;
 }
 
-static void wm_window_ghost_window_destroy(struct wmWindowManager *wm , struct wmWindow *win) {
-	if(!win->gwin) {
+static void wm_window_ghost_window_destroy(struct wmWindowManager *wm, struct wmWindow *win) {
+	if (!win->gwin) {
 		return;
 	}
-	
+
 	wm_window_clear_drawable(wm);
-	
-	if(win == wm->winactive) {
+
+	if (win == wm->winactive) {
 		wm->winactive = NULL;
 	}
-	
+
 	GHOST_ActivateWindowDrawingContext(win->gwin);
-	GPU_context_active_set(win->gpuctx);
-	GPU_context_discard(win->gpuctx);
-	win->gpuctx = NULL;
-	
+	if (win->gpuctx) {
+		// GPU_context_active_set(win->gpuctx);
+		// GPU_context_discard(win->gpuctx);
+		win->gpuctx = NULL;
+	}
+
 	GHOST_WindowSetUserData(win->gwin, NULL);
 	GHOST_CloseWindow(win->gwin);
 	win->gwin = NULL;
 }
 
-struct wmWindow *wm_window_new(struct Main *C, struct wmWindowManager *wm, struct wmWindow *parent) {
+struct wmWindow *wm_window_new(struct Context *C, struct wmWindowManager *wm, struct wmWindow *parent) {
 	struct wmWindow *window = MEM_callocN(sizeof(struct wmWindow), "Window");
 
 	wm_window_beauty_rectangle(window, (window->parent = parent) != NULL);
@@ -146,7 +147,7 @@ struct wmWindow *wm_window_new(struct Main *C, struct wmWindowManager *wm, struc
 		return window;
 	}
 
-	MEM_freeN(window);
+	wm_window_free(C, wm, window);
 	return NULL;
 }
 
@@ -163,8 +164,19 @@ void wm_window_close(struct Context *C, struct wmWindowManager *wm, struct wmWin
 }
 
 void wm_window_free(struct Context *C, struct wmWindowManager *wm, struct wmWindow *window) {
+	if (C) {
+		if (CTX_wm_window(C) == window) {
+			CTX_wm_window_set(C, NULL);
+		}
+	}
+	if (wm->winactive == window) {
+		wm->winactive = NULL;
+	}
+	/**
+	 * wm->drawable will be handled inside #wm_window_ghost_window_destroy by #wm_window_clear_drawable.
+	 */
 	wm_window_ghost_window_destroy(wm, window);
-	
+
 	LIB_remlink(&wm->windows, window);
 	MEM_freeN(window);
 }

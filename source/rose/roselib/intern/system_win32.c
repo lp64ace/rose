@@ -6,13 +6,13 @@
 
 #ifdef _WIN32
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <windows.h>
+#	include <stdbool.h>
+#	include <stdio.h>
+#	include <windows.h>
 
-#include <dbghelp.h>
-#include <shlwapi.h>
-#include <tlhelp32.h>
+#	include <dbghelp.h>
+#	include <shlwapi.h>
+#	include <tlhelp32.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Stack Backtrace
@@ -94,13 +94,7 @@ static void lib_windows_get_module_version(const char *file, char *buffer, size_
 					 * https://docs.microsoft.com/en-us/windows/win32/api/verrsrc/ns-verrsrc-vs_fixedfileinfo
 					 */
 					if (verInfo->dwSignature == 0xfeef04bd) {
-						size_t ret = LIB_snprintf(buffer,
-									 buffersize,
-									 "%d.%d.%d.%d",
-									 (verInfo->dwFileVersionMS >> 16) & 0xffff,
-									 (verInfo->dwFileVersionMS >> 0) & 0xffff,
-									 (verInfo->dwFileVersionLS >> 16) & 0xffff,
-									 (verInfo->dwFileVersionLS >> 0) & 0xffff);
+						size_t ret = LIB_snprintf(buffer, buffersize, "%d.%d.%d.%d", (verInfo->dwFileVersionMS >> 16) & 0xffff, (verInfo->dwFileVersionMS >> 0) & 0xffff, (verInfo->dwFileVersionLS >> 16) & 0xffff, (verInfo->dwFileVersionLS >> 0) & 0xffff);
 						ROSE_assert(ret != LIB_NPOS);
 					}
 				}
@@ -147,15 +141,7 @@ static bool LIB_windows_system_backtrace_run_trace(FILE *fp, HANDLE hThread, PCO
 	frame.AddrStack.Mode = AddrModeFlat;
 
 	while (true) {
-		if (StackWalk64(IMAGE_FILE_MACHINE_AMD64,
-						GetCurrentProcess(),
-						hThread,
-						&frame,
-						context,
-						NULL,
-						SymFunctionTableAccess64,
-						SymGetModuleBase64,
-						0)) {
+		if (StackWalk64(IMAGE_FILE_MACHINE_AMD64, GetCurrentProcess(), hThread, &frame, context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, 0)) {
 			if (frame.AddrPC.Offset) {
 				char module[MAX_PATH];
 
@@ -236,13 +222,7 @@ static void lib_windows_system_backtrace_modules(FILE *fp) {
 			IMAGEHLP_MODULE64 m64;
 			m64.SizeOfStruct = sizeof(m64);
 			if (SymGetModuleInfo64(GetCurrentProcess(), (DWORD64)me32.modBaseAddr, &m64)) {
-				fprintf(fp,
-						"0x%p %-20s %s %s %s\n",
-						me32.modBaseAddr,
-						version,
-						me32.szModule,
-						m64.LoadedPdbName,
-						m64.PdbUnmatched ? "[unmatched]" : "");
+				fprintf(fp, "0x%p %-20s %s %s %s\n", me32.modBaseAddr, version, me32.szModule, m64.LoadedPdbName, m64.PdbUnmatched ? "[unmatched]" : "");
 			}
 			else {
 				fprintf(fp, "0x%p %-20s %s\n", me32.modBaseAddr, version, me32.szModule);
@@ -327,15 +307,9 @@ static void lib_load_symbols() {
 				if (GetFileAttributesExA(pdb_file, GetFileExInfoStandard, &file_data)) {
 					SymUnloadModule64(GetCurrentProcess(), (DWORD64)mod);
 
-					DWORD64 module_base = SymLoadModule(
-						GetCurrentProcess(), NULL, pdb_file, NULL, (DWORD64)mod, (DWORD)file_data.nFileSizeLow);
+					DWORD64 module_base = SymLoadModule(GetCurrentProcess(), NULL, pdb_file, NULL, (DWORD64)mod, (DWORD)file_data.nFileSizeLow);
 					if (module_base == 0) {
-						fprintf(stderr,
-								"Error loading symbols %s\n\terror:0x%.8x\n\tsize = %d\n\tbase=0x%p\n",
-								pdb_file,
-								GetLastError(),
-								file_data.nFileSizeLow,
-								(LPVOID)mod);
+						fprintf(stderr, "Error loading symbols %s\n\terror:0x%.8x\n\tsize = %d\n\tbase=0x%p\n", pdb_file, GetLastError(), file_data.nFileSizeLow, (LPVOID)mod);
 					}
 				}
 			}

@@ -54,34 +54,34 @@ char *LIB_strncpy(char *dst, const char *src, size_t dst_maxncpy) {
 
 int LIB_strdiff(const char *source, const char *destination) {
 	size_t n = LIB_strlen(source), m = LIB_strlen(destination), i, j;
-	
+
 	ROSE_assert(n < 1024 && m < 1024);
 
 	int *dp = MEM_malloc_arrayN((n + 1) * (m + 1), sizeof(int), "StringDiff");
 	int aux;
 
-#define AT(i, j) ((j) * (n + 1) + (i))
+#define _AT(i, j) ((j) * (n + 1) + (i))
 
 	for (i = n; i + 1 != 0; --i) {
-		dp[AT(i, m)] = (int)(n - i);
+		dp[_AT(i, m)] = (int)(n - i);
 	}
 	for (j = m; j + 1 != 0; --j) {
-		dp[AT(n, j)] = (int)(m - j);
+		dp[_AT(n, j)] = (int)(m - j);
 	}
-	dp[AT(n, m)] = 0;
+	dp[_AT(n, m)] = 0;
 
 	for (i = n - 1; i + 1 != 0; --i) {
 		for (j = m - 1; j + 1 != 0; --j) {
-			dp[AT(i, j)] = ROSE_MIN(dp[AT(i + 1, j)] + 1, dp[AT(i, j + 1)] + 1);
+			dp[_AT(i, j)] = ROSE_MIN(dp[_AT(i + 1, j)] + 1, dp[_AT(i, j + 1)] + 1);
 			if (source[i] == destination[j]) {
-				dp[AT(i, j)] = ROSE_MIN(dp[AT(i + 1, j + 1)], dp[AT(i, j)]);
+				dp[_AT(i, j)] = ROSE_MIN(dp[_AT(i + 1, j + 1)], dp[_AT(i, j)]);
 			}
 		}
 	}
 
-	aux = dp[AT(0, 0)];
+	aux = dp[_AT(0, 0)];
 
-#undef AT
+#undef _AT
 
 	MEM_freeN(dp);
 	return aux;
@@ -89,21 +89,21 @@ int LIB_strdiff(const char *source, const char *destination) {
 
 int LIB_strdiff_ex(const char *source, const char *destination, int flags) {
 	size_t n = LIB_strlen(source), m = LIB_strlen(destination), i, j;
-	
+
 	ROSE_assert(n < 1024 && m < 1024);
 
 	int *dp = MEM_malloc_arrayN((n + 1) * (m + 1), sizeof(int), "StringDiff");
 	int aux;
 
-#define AT(i, j) ((j) * (n + 1) + (i))
+#define _AT(i, j) ((j) * (n + 1) + (i))
 
 	for (i = n; i + 1 != 0; --i) {
-		dp[AT(i, m)] = (int)(n - i);
+		dp[_AT(i, m)] = (int)(n - i);
 	}
 	for (j = m; j + 1 != 0; --j) {
-		dp[AT(n, j)] = (int)(m - j);
+		dp[_AT(n, j)] = (int)(m - j);
 	}
-	dp[AT(n, m)] = 0;
+	dp[_AT(n, m)] = 0;
 
 	for (i = n - 1; i + 1 != 0; --i) {
 		for (j = m - 1; j + 1 != 0; --j) {
@@ -111,25 +111,25 @@ int LIB_strdiff_ex(const char *source, const char *destination, int flags) {
 
 			/** Ignoring in case it is a space charachter. */
 			if ((flags & LIB_STRDIFF_NOSPACE) != 0 && (isspace(a) || isspace(b))) {
-				dp[AT(i, j)] = ROSE_MIN(dp[AT(i + 1, j)] + isspace(b), dp[AT(i, j + 1)]  + isspace(a));
+				dp[_AT(i, j)] = ROSE_MIN(dp[_AT(i + 1, j)] + isspace(b), dp[_AT(i, j + 1)] + isspace(a));
 			}
 			else {
-				dp[AT(i, j)] = ROSE_MIN(dp[AT(i + 1, j)] + 1, dp[AT(i, j + 1)] + 1);
+				dp[_AT(i, j)] = ROSE_MIN(dp[_AT(i + 1, j)] + 1, dp[_AT(i, j + 1)] + 1);
 			}
-			
+
 			/** Comparing the two cahrachters. */
 			if ((flags & LIB_STRDIFF_NOCASE) != 0 && (toupper(a) == toupper(b))) {
-				dp[AT(i, j)] = ROSE_MIN(dp[AT(i + 1, j + 1)], dp[AT(i, j)]);
+				dp[_AT(i, j)] = ROSE_MIN(dp[_AT(i + 1, j + 1)], dp[_AT(i, j)]);
 			}
 			else if (a == b) {
-				dp[AT(i, j)] = ROSE_MIN(dp[AT(i + 1, j + 1)], dp[AT(i, j)]);
+				dp[_AT(i, j)] = ROSE_MIN(dp[_AT(i + 1, j + 1)], dp[_AT(i, j)]);
 			}
 		}
 	}
 
-	aux = dp[AT(0, 0)];
+	aux = dp[_AT(0, 0)];
 
-#undef AT
+#undef _AT
 
 	MEM_freeN(dp);
 	return aux;

@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
 
 	fprintf(fpout, "const int datatoc_%s_size = %d;\n", argv[1], int(leading_newlines + size));
 	fprintf(fpout, "const char datatoc_%s[] = {\n\t", argv[1]);
-	
+
 	int items = 0;
 
 	if (leading_newlines) {

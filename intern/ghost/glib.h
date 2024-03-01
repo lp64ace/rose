@@ -23,7 +23,7 @@
  * - I changed the prefixes to GHOST but I can't say i like it too much...!
  *
  */
- 
+
 #include "glib_types.h"
 
 #ifdef __cplusplus

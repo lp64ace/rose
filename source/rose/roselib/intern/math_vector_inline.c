@@ -2,6 +2,7 @@
 #define __MATH_VECTOR_INLINE_C__
 
 #include "LIB_math_base.h"
+#include "LIB_math_vector.h"
 
 /********************************** Init *************************************/
 

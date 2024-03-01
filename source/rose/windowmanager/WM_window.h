@@ -11,7 +11,7 @@ struct wmWindow;
 void wm_ghost_init(struct Context *C);
 void wm_ghost_exit();
 
-struct wmWindow *wm_window_new(struct Main *C, struct wmWindowManager *wm, struct wmWindow *parent);
+struct wmWindow *wm_window_new(struct Context *C, struct wmWindowManager *wm, struct wmWindow *parent);
 
 void wm_window_events_process(const struct Context *C);
 

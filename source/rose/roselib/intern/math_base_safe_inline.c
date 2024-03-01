@@ -28,7 +28,7 @@ MINLINE float safe_logf(float a, float base) {
 }
 
 MINLINE float safe_sqrtf(float a) {
-	return sqrtf(MAX2(a, 0.0f));
+	return sqrtf(ROSE_MAX(a, 0.0f));
 }
 
 MINLINE float safe_inverse_sqrtf(float a) {

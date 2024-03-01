@@ -104,11 +104,7 @@ void *MEM_guarded_mallocN(size_t length, const char *str) {
 		}
 		return (++memh);
 	}
-	fprintf(stderr,
-			"Malloc returns NULL for length = " SIZET_FORMAT " in %s, total " SIZET_FORMAT "\n",
-			SIZET_ARG(length),
-			str,
-			SIZET_ARG(mem_in_use));
+	fprintf(stderr, "Malloc returns NULL for length = " SIZET_FORMAT " in %s, total " SIZET_FORMAT "\n", SIZET_ARG(length), str, SIZET_ARG(mem_in_use));
 	return NULL;
 }
 
@@ -161,11 +157,7 @@ void *MEM_guarded_mallocN_aligned(size_t length, size_t align, const char *str) 
 #endif
 		return PTR_FROM_MEMHEAD(memh);
 	}
-	fprintf(stderr,
-			"Malloc returns NULL for length = " SIZET_FORMAT " in %s, total " SIZET_FORMAT "\n",
-			SIZET_ARG(length),
-			str,
-			SIZET_ARG(memory_usage_current()));
+	fprintf(stderr, "Malloc returns NULL for length = " SIZET_FORMAT " in %s, total " SIZET_FORMAT "\n", SIZET_ARG(length), str, SIZET_ARG(memory_usage_current()));
 	return NULL;
 }
 
@@ -181,11 +173,7 @@ void *MEM_guarded_callocN(size_t length, const char *str) {
 
 		return (++memh);
 	}
-	fprintf(stderr,
-			"Malloc returns NULL for length = " SIZET_FORMAT " in %s, total " SIZET_FORMAT "\n",
-			SIZET_ARG(length),
-			str,
-			SIZET_ARG(mem_in_use));
+	fprintf(stderr, "Malloc returns NULL for length = " SIZET_FORMAT " in %s, total " SIZET_FORMAT "\n", SIZET_ARG(length), str, SIZET_ARG(mem_in_use));
 	return NULL;
 }
 
@@ -392,7 +380,7 @@ size_t MEM_guarded_get_memory_in_use(void) {
 	mem_lock_thread();
 	const size_t mem_in_use_fetched = mem_in_use;
 	mem_unlock_thread();
-	
+
 	return mem_in_use_fetched;
 }
 
@@ -400,7 +388,7 @@ size_t MEM_guarded_get_memory_blocks_in_use(void) {
 	mem_lock_thread();
 	const size_t totblock_fetched = totblock;
 	mem_unlock_thread();
-	
+
 	return totblock_fetched;
 }
 

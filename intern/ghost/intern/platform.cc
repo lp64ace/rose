@@ -137,7 +137,7 @@ void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, int key, bool repea
 	data->key = key;
 	data->repeat = repeat;
 	data->modifiers = modifiers;
-	
+
 	memcpy(data->utf16, utf16, sizeof(wchar_t[3]));
 
 	PostEvent(wnd, GLIB_EVT_KEYUP, data);
@@ -185,9 +185,7 @@ bool PlatformInterface::EventCallbackEntry::operator<(const EventCallbackEntry &
 	return this->func < entry.func;
 }
 
-template<typename Wnd, typename Evt, typename Data>
-PlatformInterface::EventEntry<Wnd, Evt, Data>::EventEntry(Wnd *window, Evt type, Data *data)
-	: window(window), type(type), data(data) {
+template<typename Wnd, typename Evt, typename Data> PlatformInterface::EventEntry<Wnd, Evt, Data>::EventEntry(Wnd *window, Evt type, Data *data) : window(window), type(type), data(data) {
 }
 
 template<typename Wnd, typename Evt, typename Data> PlatformInterface::EventEntry<Wnd, Evt, Data>::~EventEntry() {

@@ -89,75 +89,21 @@ void mul_m4_m4_post(float R[4][4], const float B[4][4]);
 
 void _va_mul_m3_series_3(float r[3][3], const float m1[3][3], const float m2[3][3]);
 void _va_mul_m3_series_4(float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3]);
-void _va_mul_m3_series_5(
-	float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3], const float m4[3][3]);
-void _va_mul_m3_series_6(float r[3][3],
-						 const float m1[3][3],
-						 const float m2[3][3],
-						 const float m3[3][3],
-						 const float m4[3][3],
-						 const float m5[3][3]);
-void _va_mul_m3_series_7(float r[3][3],
-						 const float m1[3][3],
-						 const float m2[3][3],
-						 const float m3[3][3],
-						 const float m4[3][3],
-						 const float m5[3][3],
-						 const float m6[3][3]);
-void _va_mul_m3_series_8(float r[3][3],
-						 const float m1[3][3],
-						 const float m2[3][3],
-						 const float m3[3][3],
-						 const float m4[3][3],
-						 const float m5[3][3],
-						 const float m6[3][3],
-						 const float m7[3][3]);
-void _va_mul_m3_series_9(float r[3][3],
-						 const float m1[3][3],
-						 const float m2[3][3],
-						 const float m3[3][3],
-						 const float m4[3][3],
-						 const float m5[3][3],
-						 const float m6[3][3],
-						 const float m7[3][3],
-						 const float m8[3][3]);
+void _va_mul_m3_series_5(float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3], const float m4[3][3]);
+void _va_mul_m3_series_6(float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3], const float m4[3][3], const float m5[3][3]);
+void _va_mul_m3_series_7(float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3], const float m4[3][3], const float m5[3][3], const float m6[3][3]);
+void _va_mul_m3_series_8(float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3], const float m4[3][3], const float m5[3][3], const float m6[3][3], const float m7[3][3]);
+void _va_mul_m3_series_9(float r[3][3], const float m1[3][3], const float m2[3][3], const float m3[3][3], const float m4[3][3], const float m5[3][3], const float m6[3][3], const float m7[3][3], const float m8[3][3]);
 
 /* Implement #mul_m4_series macro. */
 
 void _va_mul_m4_series_3(float r[4][4], const float m1[4][4], const float m2[4][4]);
 void _va_mul_m4_series_4(float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4]);
-void _va_mul_m4_series_5(
-	float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4], const float m4[4][4]);
-void _va_mul_m4_series_6(float r[4][4],
-						 const float m1[4][4],
-						 const float m2[4][4],
-						 const float m3[4][4],
-						 const float m4[4][4],
-						 const float m5[4][4]);
-void _va_mul_m4_series_7(float r[4][4],
-						 const float m1[4][4],
-						 const float m2[4][4],
-						 const float m3[4][4],
-						 const float m4[4][4],
-						 const float m5[4][4],
-						 const float m6[4][4]);
-void _va_mul_m4_series_8(float r[4][4],
-						 const float m1[4][4],
-						 const float m2[4][4],
-						 const float m3[4][4],
-						 const float m4[4][4],
-						 const float m5[4][4],
-						 const float m6[4][4],
-						 const float m7[4][4]);
-void _va_mul_m4_series_9(float r[4][4],
-						 const float m1[4][4],
-						 const float m2[4][4],
-						 const float m3[4][4],
-						 const float m4[4][4],
-						 const float m5[4][4],
-						 const float m6[4][4],
-						 const float m7[4][4],
-						 const float m8[4][4]);
+void _va_mul_m4_series_5(float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4], const float m4[4][4]);
+void _va_mul_m4_series_6(float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4], const float m4[4][4], const float m5[4][4]);
+void _va_mul_m4_series_7(float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4], const float m4[4][4], const float m5[4][4], const float m6[4][4]);
+void _va_mul_m4_series_8(float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4], const float m4[4][4], const float m5[4][4], const float m6[4][4], const float m7[4][4]);
+void _va_mul_m4_series_9(float r[4][4], const float m1[4][4], const float m2[4][4], const float m3[4][4], const float m4[4][4], const float m5[4][4], const float m6[4][4], const float m7[4][4], const float m8[4][4]);
 
 #define mul_m3_series(...) VA_NARGS_CALL_OVERLOAD(_va_mul_m3_series_, __VA_ARGS__)
 #define mul_m4_series(...) VA_NARGS_CALL_OVERLOAD(_va_mul_m4_series_, __VA_ARGS__)
@@ -584,8 +530,7 @@ void LIB_space_transform_invert(const struct SpaceTransform *data, float co[3]);
 void LIB_space_transform_apply_normal(const struct SpaceTransform *data, float no[3]);
 void LIB_space_transform_invert_normal(const struct SpaceTransform *data, float no[3]);
 
-#define ROSE_SPACE_TRANSFORM_SETUP(data, local, target) \
-	LIB_space_transform_from_matrices((data), (local)->object_to_world, (target)->object_to_world)
+#define ROSE_SPACE_TRANSFORM_SETUP(data, local, target) LIB_space_transform_from_matrices((data), (local)->object_to_world, (target)->object_to_world)
 
 /** \} */
 

@@ -9,37 +9,37 @@
 #include "platform_win32.hh"
 
 #ifndef VK_MINUS
-#define VK_MINUS 0xBD
+#	define VK_MINUS 0xBD
 #endif /* VK_MINUS */
 #ifndef VK_SEMICOLON
-#define VK_SEMICOLON 0xBA
+#	define VK_SEMICOLON 0xBA
 #endif /* VK_SEMICOLON */
 #ifndef VK_PERIOD
-#define VK_PERIOD 0xBE
+#	define VK_PERIOD 0xBE
 #endif /* VK_PERIOD */
 #ifndef VK_COMMA
-#define VK_COMMA 0xBC
+#	define VK_COMMA 0xBC
 #endif /* VK_COMMA */
 #ifndef VK_BACK_QUOTE
-#define VK_BACK_QUOTE 0xC0
+#	define VK_BACK_QUOTE 0xC0
 #endif /* VK_BACK_QUOTE */
 #ifndef VK_SLASH
-#define VK_SLASH 0xBF
+#	define VK_SLASH 0xBF
 #endif /* VK_SLASH */
 #ifndef VK_BACK_SLASH
-#define VK_BACK_SLASH 0xDC
+#	define VK_BACK_SLASH 0xDC
 #endif /* VK_BACK_SLASH */
 #ifndef VK_EQUALS
-#define VK_EQUALS 0xBB
+#	define VK_EQUALS 0xBB
 #endif /* VK_EQUALS */
 #ifndef VK_OPEN_BRACKET
-#define VK_OPEN_BRACKET 0xDB
+#	define VK_OPEN_BRACKET 0xDB
 #endif /* VK_OPEN_BRACKET */
 #ifndef VK_CLOSE_BRACKET
-#define VK_CLOSE_BRACKET 0xDD
+#	define VK_CLOSE_BRACKET 0xDD
 #endif /* VK_CLOSE_BRACKET */
 #ifndef VK_GR_LESS
-#define VK_GR_LESS 0xE2
+#	define VK_GR_LESS 0xE2
 #endif /* VK_GR_LESS */
 
 static class WindowsPlatform *glib_windows_platform = nullptr;
@@ -230,18 +230,7 @@ WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hW
 	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 	int ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	_hWnd = ::CreateWindowEx(ExtendedStyle,
-							 glib_application_name,
-							 "Rose",
-							 WindowStyle,
-							 (ScreenWidth - width) / 2,
-							 (ScreenHeight - height) / 2,
-							 width,
-							 height,
-							 ParentHandle,
-							 0,
-							 ::GetModuleHandle(0),
-							 0);
+	_hWnd = ::CreateWindowEx(ExtendedStyle, glib_application_name, "Rose", WindowStyle, (ScreenWidth - width) / 2, (ScreenHeight - height) / 2, width, height, ParentHandle, 0, ::GetModuleHandle(0), 0);
 
 	if (_hWnd == NULL) {
 		return;
@@ -367,6 +356,9 @@ ContextInterface *WindowsWindow::GetContext() const {
 
 /* \} */
 
+static HGLRC s_SharedHGLRC = nullptr;
+static int s_SharedCount = 0;
+
 WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window->_hDC) {
 	/**
 	 * Each type I copy paste this thing I feel more and more guilty about having this hardcoded in my code.
@@ -392,6 +384,14 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 		return;
 	}
 
+	if (s_SharedHGLRC == nullptr) {
+		s_SharedHGLRC = _hGLRC;
+	}
+	else if (::wglShareLists(s_SharedHGLRC, _hGLRC)) {
+	}
+	
+	s_SharedCount++;
+
 	if (::wglMakeCurrent(_hDC, _hGLRC)) {
 		GLenum err = glewInit();
 		if (GLEW_OK != err) {
@@ -407,7 +407,20 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 }
 
 WindowsOpenGLContext::~WindowsOpenGLContext() {
-	::wglDeleteContext(_hGLRC);
+	if (_hGLRC != nullptr) {
+		if (_hGLRC == ::wglGetCurrentContext())
+			::wglMakeCurrent(nullptr, nullptr);
+	
+		if (_hGLRC != s_SharedHGLRC || s_SharedCount == 1) {
+			s_SharedCount--;
+	
+			if (s_SharedCount == 0) {
+				s_SharedHGLRC = nullptr;
+			}
+	
+			::wglDeleteContext(_hGLRC);
+		}
+	}
 }
 
 bool WindowsOpenGLContext::IsValid() {
@@ -622,8 +635,7 @@ static int HardKey(RAWINPUT *raw, bool *keydown) {
 	int msg = raw->data.keyboard.Message;
 	*keydown = !(raw->data.keyboard.Flags & RI_KEY_BREAK) && msg != WM_KEYUP && msg != WM_SYSKEYUP;
 
-	return ConvertKey(
-		raw->data.keyboard.VKey, raw->data.keyboard.MakeCode, (raw->data.keyboard.Flags & (RI_KEY_E1 | RI_KEY_E0)));
+	return ConvertKey(raw->data.keyboard.VKey, raw->data.keyboard.MakeCode, (raw->data.keyboard.Flags & (RI_KEY_E1 | RI_KEY_E0)));
 }
 
 static bool ProcessKeyEvent(WindowsWindow *window, RAWINPUT *raw) {
@@ -657,8 +669,7 @@ static bool ProcessKeyEvent(WindowsWindow *window, RAWINPUT *raw) {
 		else if (::MapVirtualKeyW(vk, MAPVK_VK_TO_CHAR) != 0) {
 			INT Ret;
 
-			if ((Ret = ::ToUnicodeEx(
-					 vk, raw->data.keyboard.MakeCode, state, utf16, 2, 0, glib_windows_platform->_KeyboardLayout))) {
+			if ((Ret = ::ToUnicodeEx(vk, raw->data.keyboard.MakeCode, state, utf16, 2, 0, glib_windows_platform->_KeyboardLayout))) {
 				if ((Ret > 0 && Ret < 3)) {
 					utf16[Ret] = 0;
 				}
@@ -783,8 +794,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int y = static_cast<int>(HIWORD(lParam));
 			int modifiers = glib_windows_modifiers_get();
 
-			glib_windows_platform->PostMouseButtonEvent(
-				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEDOWN, x, y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEDOWN, x, y, modifiers);
 
 			handled |= true;
 		} break;
@@ -793,8 +803,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int y = static_cast<int>(HIWORD(lParam));
 			int modifiers = glib_windows_modifiers_get();
 
-			glib_windows_platform->PostMouseButtonEvent(
-				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEDOWN, x, y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEDOWN, x, y, modifiers);
 
 			handled |= true;
 		} break;
@@ -803,8 +812,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int y = static_cast<int>(HIWORD(lParam));
 			int modifiers = glib_windows_modifiers_get();
 
-			glib_windows_platform->PostMouseButtonEvent(
-				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEDOWN, x, y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEDOWN, x, y, modifiers);
 
 			handled |= true;
 		} break;
@@ -813,8 +821,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int y = static_cast<int>(HIWORD(lParam));
 			int modifiers = glib_windows_modifiers_get();
 
-			glib_windows_platform->PostMouseButtonEvent(
-				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEUP, x, y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEUP, x, y, modifiers);
 
 			handled |= true;
 		} break;
@@ -823,8 +830,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int y = static_cast<int>(HIWORD(lParam));
 			int modifiers = glib_windows_modifiers_get();
 
-			glib_windows_platform->PostMouseButtonEvent(
-				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEUP, x, y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEUP, x, y, modifiers);
 
 			handled |= true;
 		} break;
@@ -833,8 +839,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int y = static_cast<int>(HIWORD(lParam));
 			int modifiers = glib_windows_modifiers_get();
 
-			glib_windows_platform->PostMouseButtonEvent(
-				reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEUP, x, y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEUP, x, y, modifiers);
 
 			handled |= true;
 		} break;

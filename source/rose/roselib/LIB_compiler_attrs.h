@@ -2,14 +2,14 @@
 
 #ifdef _MSC_VER
 
-#include <sal.h>
+#	include <sal.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Microsoft C/C++ Compiler
  * \{ */
 
 /** Indicates that the parameter is a null-terminated format string for use in a printf expression. */
-#define ATTR_PRINTF_FORMAT _In_z_ _Printf_format_string_
+#	define ATTR_PRINTF_FORMAT _In_z_ _Printf_format_string_
 
 /* /} */
 
@@ -31,9 +31,17 @@
  * \{ */
 
 #if defined(_MSC_VER)
-#  define ROSE_INLINE static __forceinline
+#	define ROSE_INLINE static __forceinline
 #else
-#  define ROSE_INLINE static inline __attribute__((always_inline)) __attribute__((__unused__))
+#	define ROSE_INLINE static inline __attribute__((always_inline)) __attribute__((__unused__))
+#endif
+
+#if defined(_MSC_VER)
+#	define ROSE_NOINLINE __declspec(noinline)
+#elif defined(__GNUC__)
+#	define ROSE_NOINLINE __attribute__((noinline))
+#else
+#	define ROSE_NOINLINE
 #endif
 
 #define ROSE_MATH_DO_INLINE 1

@@ -24,13 +24,13 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 /** \name Print Position
  * \{ */
 
-#  if defined(__GNUC__)
-#    define _ROSE_ASSERT_PRINT_POS(a) _LIB_assert_print_pos(__FILE__, __LINE__, __func__, #    a)
-#  elif defined(_MSC_VER)
-#    define _ROSE_ASSERT_PRINT_POS(a) _LIB_assert_print_pos(__FILE__, __LINE__, __func__, #    a)
-#  else
-#    define _ROSE_ASSERT_PRINT_POS(a) _LIB_assert_print_pos(__FILE__, __LINE__, "<?>", #    a)
-#  endif
+#	if defined(__GNUC__)
+#		define _ROSE_ASSERT_PRINT_POS(a) _LIB_assert_print_pos(__FILE__, __LINE__, __func__, #a)
+#	elif defined(_MSC_VER)
+#		define _ROSE_ASSERT_PRINT_POS(a) _LIB_assert_print_pos(__FILE__, __LINE__, __func__, #a)
+#	else
+#		define _ROSE_ASSERT_PRINT_POS(a) _LIB_assert_print_pos(__FILE__, __LINE__, "<?>", #a)
+#	endif
 
 /* \} */
 
@@ -38,11 +38,11 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 /** \name Assert Abort
  * \{ */
 
-#  ifdef WITH_ASSERT_ABORT
-#    define _ROSE_ASSERT_ABORT _LIB_assert_abort
-#  else
-#    define _ROSE_ASSERT_ABORT() (void)0
-#  endif
+#	ifdef WITH_ASSERT_ABORT
+#		define _ROSE_ASSERT_ABORT _LIB_assert_abort
+#	else
+#		define _ROSE_ASSERT_ABORT() (void)0
+#	endif
 
 /* \} */
 
@@ -50,8 +50,7 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 /** \name Assert
  * \{ */
 
-#define ROSE_assert(a) \
-	(void)((!(a)) ? ((_LIB_assert_backtrace(), _ROSE_ASSERT_PRINT_POS(a), _ROSE_ASSERT_ABORT(), NULL)) : NULL)
+#	define ROSE_assert(a) (void)((!(a)) ? ((_LIB_assert_backtrace(), _ROSE_ASSERT_PRINT_POS(a), _ROSE_ASSERT_ABORT(), NULL)) : NULL)
 
 /* \} */
 
@@ -59,23 +58,17 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 /** \name Assert With Message
  * \{ */
 
-#define ROSE_assert_msg(a, msg) \
-	(void)((!(a)) ? ((_LIB_assert_backtrace(), \
-					  _ROSE_ASSERT_PRINT_POS(a), \
-					  _LIB_assert_print_extra(msg), \
-					  _ROSE_ASSERT_ABORT(), \
-					  NULL)) : \
-					  NULL)
+#	define ROSE_assert_msg(a, msg) (void)((!(a)) ? ((_LIB_assert_backtrace(), _ROSE_ASSERT_PRINT_POS(a), _LIB_assert_print_extra(msg), _ROSE_ASSERT_ABORT(), NULL)) : NULL)
 
 /* \} */
 
 #else
-	
+
 /* -------------------------------------------------------------------- */
 /** \name Assert
  * \{ */
 
-#  define ROSE_assert(a) ((void)0)
+#	define ROSE_assert(a) ((void)0)
 
 /* \} */
 
@@ -83,7 +76,7 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 /** \name Assert With Message
  * \{ */
 
-#  define ROSE_assert_msg(a, msg) ((void)0)
+#	define ROSE_assert_msg(a, msg) ((void)0)
 
 /* \} */
 
@@ -115,8 +108,7 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 /** \name Static Assert Align
  * \{ */
 
-#define ROSE_STATIC_ASSERT_ALIGN(st, align) \
-	ROSE_STATIC_ASSERT((sizeof(st) % (align) == 0), "Structure must be strictly aligned")
+#define ROSE_STATIC_ASSERT_ALIGN(st, align) ROSE_STATIC_ASSERT((sizeof(st) % (align) == 0), "Structure must be strictly aligned")
 
 /* \} */
 
@@ -134,7 +126,7 @@ void _LIB_assert_unreachable_print(const char *file, int line, const char *funct
 		ROSE_assert_msg(0, "This line of code is marked to be unreachable."); \
 	} \
 	((void)0)
-  
+
 /* \} */
 
 #ifdef __cplusplus

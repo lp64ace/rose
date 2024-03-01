@@ -88,32 +88,27 @@ public:
 		this->resize(size, value);
 	}
 
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(Span<U> values, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(Span<U> values, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		const size_type size = values.size();
 		this->reserve(size);
 		uninitialized_convert_n<U, T>(values.data(), size, begin_);
 		this->increase_size_by_unchecked(size);
 	}
 
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	explicit Vector(MutableSpan<U> values, Allocator allocator = {}) : Vector(values.as_span(), allocator) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> explicit Vector(MutableSpan<U> values, Allocator allocator = {}) : Vector(values.as_span(), allocator) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(const std::initializer_list<U> &values) : Vector(Span<U>(values)) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(const std::initializer_list<U> &values) : Vector(Span<U>(values)) {
 	}
 
 	Vector(const std::initializer_list<T> &values) : Vector(Span<T>(values)) {
 	}
 
-	template<typename U, size_t N, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(const std::array<U, N> &values) : Vector(Span(values)) {
+	template<typename U, size_t N, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(const std::array<U, N> &values) : Vector(Span(values)) {
 	}
 	/* This constructor should not be called with e.g. Vector(3, 10), because that is
 	 * expected to produce the vector (10, 10, 10). */
-	template<typename InputIt, ROSE_ENABLE_IF((!std::is_convertible_v<InputIt, int>))>
-	Vector(InputIt first, InputIt last, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
+	template<typename InputIt, ROSE_ENABLE_IF((!std::is_convertible_v<InputIt, int>))> Vector(InputIt first, InputIt last, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		for (InputIt current = first; current != last; ++current) {
 			this->append(*current);
 		}
@@ -122,13 +117,10 @@ public:
 	Vector(const Vector &other) : Vector(other.as_span(), other.allocator_) {
 	}
 
-	template<size_type OtherInlineBufferCapacity>
-	Vector(const Vector<T, OtherInlineBufferCapacity, Allocator> &other) : Vector(other.as_span(), other.allocator_) {
+	template<size_type OtherInlineBufferCapacity> Vector(const Vector<T, OtherInlineBufferCapacity, Allocator> &other) : Vector(other.as_span(), other.allocator_) {
 	}
 
-	template<int64_t OtherInlineBufferCapacity>
-	Vector(Vector<T, OtherInlineBufferCapacity, Allocator> &&other) noexcept(is_nothrow_move_constructible())
-		: Vector(NoExceptConstructor(), other.allocator_) {
+	template<int64_t OtherInlineBufferCapacity> Vector(Vector<T, OtherInlineBufferCapacity, Allocator> &&other) noexcept(is_nothrow_move_constructible()) : Vector(NoExceptConstructor(), other.allocator_) {
 		const int64_t size = other.size();
 
 		if (other.is_inline()) {

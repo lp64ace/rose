@@ -181,8 +181,7 @@ float dist_to_line_v3(const float p[3], const float l1[3], const float l2[3]);
  *           x - also outside
  * \endcode
  */
-float dist_signed_squared_to_corner_v3v3v3(
-	const float p[3], const float v1[3], const float v2[3], const float v3[3], const float axis_ref[3]);
+float dist_signed_squared_to_corner_v3v3v3(const float p[3], const float v1[3], const float v2[3], const float v3[3], const float axis_ref[3]);
 /**
  * Compute the squared distance of a point to a line (defined as ray).
  * \param ray_origin: A point on the line.
@@ -196,41 +195,27 @@ float dist_squared_to_ray_v3_normalized(const float ray_origin[3], const float r
  * (or to ray_origin if the ray and the segment are parallel).
  * \param r_depth: the distance of r_point projection on ray to the ray_origin.
  */
-float dist_squared_ray_to_seg_v3(const float ray_origin[3],
-								 const float ray_direction[3],
-								 const float v0[3],
-								 const float v1[3],
-								 float r_point[3],
-								 float *r_depth);
+float dist_squared_ray_to_seg_v3(const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], float r_point[3], float *r_depth);
 
 /**
  * Returns the coordinates of the nearest vertex and the farthest vertex from a plane (or normal).
  */
-void aabb_get_near_far_from_plane(
-	const float plane_no[3], const float bbmin[3], const float bbmax[3], float bb_near[3], float bb_afar[3]);
+void aabb_get_near_far_from_plane(const float plane_no[3], const float bbmin[3], const float bbmax[3], float bb_near[3], float bb_afar[3]);
 
 struct DistRayAABB_Precalc {
 	float ray_origin[3];
 	float ray_direction[3];
 	float ray_inv_dir[3];
 };
-void dist_squared_ray_to_aabb_v3_precalc(struct DistRayAABB_Precalc *neasrest_precalc,
-										 const float ray_origin[3],
-										 const float ray_direction[3]);
+void dist_squared_ray_to_aabb_v3_precalc(struct DistRayAABB_Precalc *neasrest_precalc, const float ray_origin[3], const float ray_direction[3]);
 /**
  * Returns the distance from a ray to a bound-box (projected on ray)
  */
-float dist_squared_ray_to_aabb_v3(
-	const struct DistRayAABB_Precalc *data, const float bb_min[3], const float bb_max[3], float r_point[3], float *r_depth);
+float dist_squared_ray_to_aabb_v3(const struct DistRayAABB_Precalc *data, const float bb_min[3], const float bb_max[3], float r_point[3], float *r_depth);
 /**
  * Use when there is no advantage to pre-calculation.
  */
-float dist_squared_ray_to_aabb_v3_simple(const float ray_origin[3],
-										 const float ray_direction[3],
-										 const float bb_min[3],
-										 const float bb_max[3],
-										 float r_point[3],
-										 float *r_depth);
+float dist_squared_ray_to_aabb_v3_simple(const float ray_origin[3], const float ray_direction[3], const float bb_min[3], const float bb_max[3], float r_point[3], float *r_depth);
 
 struct DistProjectedAABBPrecalc {
 	float ray_origin[3];
@@ -243,19 +228,12 @@ struct DistProjectedAABBPrecalc {
  * \param projmat: Projection Matrix (usually perspective
  * matrix multiplied by object matrix).
  */
-void dist_squared_to_projected_aabb_precalc(struct DistProjectedAABBPrecalc *precalc,
-											const float projmat[4][4],
-											const float winsize[2],
-											const float mval[2]);
+void dist_squared_to_projected_aabb_precalc(struct DistProjectedAABBPrecalc *precalc, const float projmat[4][4], const float winsize[2], const float mval[2]);
 /**
  * Returns the distance from a 2D coordinate to a bound-box (projected).
  */
-float dist_squared_to_projected_aabb(struct DistProjectedAABBPrecalc *data,
-									 const float bbmin[3],
-									 const float bbmax[3],
-									 bool r_axis_closest[3]);
-float dist_squared_to_projected_aabb_simple(
-	const float projmat[4][4], const float winsize[2], const float mval[2], const float bbmin[3], const float bbmax[3]);
+float dist_squared_to_projected_aabb(struct DistProjectedAABBPrecalc *data, const float bbmin[3], const float bbmax[3], bool r_axis_closest[3]);
+float dist_squared_to_projected_aabb_simple(const float projmat[4][4], const float winsize[2], const float mval[2], const float bbmin[3], const float bbmax[3]);
 
 /** Returns the distance between two 2D line segments. */
 float dist_seg_seg_v2(const float a1[3], const float a2[3], const float b1[3], const float b2[3]);
@@ -283,14 +261,7 @@ float closest_to_line_segment_v2(float r_close[2], const float p[2], const float
  *
  * \return Squared distance between both segments.
  */
-float closest_seg_seg_v2(float r_closest_a[2],
-						 float r_closest_b[2],
-						 float *r_lambda_a,
-						 float *r_lambda_b,
-						 const float a1[2],
-						 const float a2[2],
-						 const float b1[2],
-						 const float b2[2]);
+float closest_seg_seg_v2(float r_closest_a[2], float r_closest_b[2], float *r_lambda_a, float *r_lambda_b, const float a1[2], const float a2[2], const float b1[2], const float b2[2]);
 
 /**
  * Point closest to v1 on line v2-v3 in 3D.
@@ -317,8 +288,7 @@ void closest_to_plane3_v3(float r_close[3], const float plane[3], const float pt
  */
 void closest_on_tri_to_point_v3(float r[3], const float p[3], const float v1[3], const float v2[3], const float v3[3]);
 
-float ray_point_factor_v3_ex(
-	const float p[3], const float ray_origin[3], const float ray_direction[3], float epsilon, float fallback);
+float ray_point_factor_v3_ex(const float p[3], const float ray_origin[3], const float ray_direction[3], float epsilon, float fallback);
 float ray_point_factor_v3(const float p[3], const float ray_origin[3], const float ray_direction[3]);
 
 /**
@@ -385,8 +355,7 @@ int isect_seg_seg_v2_int(const int v1[2], const int v2[2], const int v3[2], cons
  * -  1: intersection.
  * -  0: no intersection.
  */
-int isect_seg_seg_v2_point_ex(
-	const float v0[2], const float v1[2], const float v2[2], const float v3[2], float endpoint_bias, float vi[2]);
+int isect_seg_seg_v2_point_ex(const float v0[2], const float v1[2], const float v2[2], const float v3[2], float endpoint_bias, float vi[2]);
 int isect_seg_seg_v2_point(const float v0[2], const float v1[2], const float v2[2], const float v3[2], float vi[2]);
 bool isect_seg_seg_v2_simple(const float v1[2], const float v2[2], const float v3[2], const float v4[2]);
 /**
@@ -401,8 +370,7 @@ bool isect_seg_seg_v2_simple(const float v1[2], const float v2[2], const float v
  * - ISECT_LINE_LINE_NONE: no intersection.
  * Also returns lambda and mu in r_lambda and r_mu.
  */
-int isect_seg_seg_v2_lambda_mu_db(
-	const double v1[2], const double v2[2], const double v3[2], const double v4[2], double *r_lambda, double *r_mu);
+int isect_seg_seg_v2_lambda_mu_db(const double v1[2], const double v2[2], const double v3[2], const double v4[2], double *r_lambda, double *r_mu);
 /**
  * \param l1, l2: Coordinates (point of line).
  * \param sp, r: Coordinate and radius (sphere).
@@ -429,35 +397,21 @@ int isect_line_line_v2_point(const float v0[2], const float v1[2], const float v
  * 1 - lines are coplanar, i1 is set to intersection
  * 2 - i1 and i2 are the nearest points on line 1 (v1, v2) and line 2 (v3, v4) respectively
  */
-int isect_line_line_epsilon_v3(
-	const float v1[3], const float v2[3], const float v3[3], const float v4[3], float i1[3], float i2[3], float epsilon);
-int isect_line_line_v3(
-	const float v1[3], const float v2[3], const float v3[3], const float v4[3], float r_i1[3], float r_i2[3]);
+int isect_line_line_epsilon_v3(const float v1[3], const float v2[3], const float v3[3], const float v4[3], float i1[3], float i2[3], float epsilon);
+int isect_line_line_v3(const float v1[3], const float v2[3], const float v3[3], const float v4[3], float r_i1[3], float r_i2[3]);
 /**
  * Intersection point strictly between the two lines
  * \return false when no intersection is found.
  */
-bool isect_line_line_strict_v3(
-	const float v1[3], const float v2[3], const float v3[3], const float v4[3], float vi[3], float *r_lambda);
+bool isect_line_line_strict_v3(const float v1[3], const float v2[3], const float v3[3], const float v4[3], float vi[3], float *r_lambda);
 /**
  * Check if two rays are not parallel and returns a factor that indicates
  * the distance from \a ray_origin_b to the closest point on ray-a to ray-b.
  *
  * \note Neither directions need to be normalized.
  */
-bool isect_ray_ray_epsilon_v3(const float ray_origin_a[3],
-							  const float ray_direction_a[3],
-							  const float ray_origin_b[3],
-							  const float ray_direction_b[3],
-							  float epsilon,
-							  float *r_lambda_a,
-							  float *r_lambda_b);
-bool isect_ray_ray_v3(const float ray_origin_a[3],
-					  const float ray_direction_a[3],
-					  const float ray_origin_b[3],
-					  const float ray_direction_b[3],
-					  float *r_lambda_a,
-					  float *r_lambda_b);
+bool isect_ray_ray_epsilon_v3(const float ray_origin_a[3], const float ray_direction_a[3], const float ray_origin_b[3], const float ray_direction_b[3], float epsilon, float *r_lambda_a, float *r_lambda_b);
+bool isect_ray_ray_v3(const float ray_origin_a[3], const float ray_direction_a[3], const float ray_origin_b[3], const float ray_direction_b[3], float *r_lambda_a, float *r_lambda_b);
 
 /**
  * if clip is nonzero, will only return true if lambda is >= 0.0
@@ -465,8 +419,7 @@ bool isect_ray_ray_v3(const float ray_origin_a[3],
  *
  * \note #line_plane_factor_v3() shares logic.
  */
-bool isect_ray_plane_v3(
-	const float ray_origin[3], const float ray_direction[3], const float plane[4], float *r_lambda, bool clip);
+bool isect_ray_plane_v3(const float ray_origin[3], const float ray_direction[3], const float plane[4], float *r_lambda, bool clip);
 
 /**
  * Check if a point is behind all planes.
@@ -489,8 +442,7 @@ bool isect_point_planes_v3_negated(const float (*planes)[4], int totplane, const
  *
  * \note #line_plane_factor_v3() shares logic.
  */
-bool isect_line_plane_v3(
-	float r_isect_co[3], const float l1[3], const float l2[3], const float plane_co[3], const float plane_no[3]);
+bool isect_line_plane_v3(float r_isect_co[3], const float l1[3], const float l2[3], const float plane_co[3], const float plane_no[3]);
 
 /**
  * Intersect three planes, return the point where all 3 meet.
@@ -526,12 +478,7 @@ bool isect_plane_plane_v3(const float plane_a[4], const float plane_b[4], float 
  *
  * \note This function could be optimized by some spatial structure.
  */
-bool isect_planes_v3_fn(const float planes[][4],
-						int planes_len,
-						float eps_coplanar,
-						float eps_isect,
-						void (*callback_fn)(const float co[3], int i, int j, int k, void *user_data),
-						void *user_data);
+bool isect_planes_v3_fn(const float planes[][4], int planes_len, float eps_coplanar, float eps_isect, void (*callback_fn)(const float co[3], int i, int j, int k, void *user_data), void *user_data);
 
 /* line/ray triangle */
 
@@ -539,54 +486,20 @@ bool isect_planes_v3_fn(const float planes[][4],
  * Test if the line starting at p1 ending at p2 intersects the triangle v0..v2
  * return non zero if it does.
  */
-bool isect_line_segment_tri_v3(const float p1[3],
-							   const float p2[3],
-							   const float v0[3],
-							   const float v1[3],
-							   const float v2[3],
-							   float *r_lambda,
-							   float r_uv[2]);
+bool isect_line_segment_tri_v3(const float p1[3], const float p2[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float r_uv[2]);
 /**
  * Like #isect_line_segment_tri_v3, but allows epsilon tolerance around triangle.
  */
-bool isect_line_segment_tri_epsilon_v3(const float p1[3],
-									   const float p2[3],
-									   const float v0[3],
-									   const float v1[3],
-									   const float v2[3],
-									   float *r_lambda,
-									   float r_uv[2],
-									   float epsilon);
-bool isect_axial_line_segment_tri_v3(
-	int axis, const float p1[3], const float p2[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda);
+bool isect_line_segment_tri_epsilon_v3(const float p1[3], const float p2[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float r_uv[2], float epsilon);
+bool isect_axial_line_segment_tri_v3(int axis, const float p1[3], const float p2[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda);
 
 /**
  * Test if the ray starting at p1 going in d direction intersects the triangle v0..v2
  * return non zero if it does.
  */
-bool isect_ray_tri_v3(const float ray_origin[3],
-					  const float ray_direction[3],
-					  const float v0[3],
-					  const float v1[3],
-					  const float v2[3],
-					  float *r_lambda,
-					  float r_uv[2]);
-bool isect_ray_tri_threshold_v3(const float ray_origin[3],
-								const float ray_direction[3],
-								const float v0[3],
-								const float v1[3],
-								const float v2[3],
-								float *r_lambda,
-								float r_uv[2],
-								float threshold);
-bool isect_ray_tri_epsilon_v3(const float ray_origin[3],
-							  const float ray_direction[3],
-							  const float v0[3],
-							  const float v1[3],
-							  const float v2[3],
-							  float *r_lambda,
-							  float r_uv[2],
-							  float epsilon);
+bool isect_ray_tri_v3(const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float r_uv[2]);
+bool isect_ray_tri_threshold_v3(const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float r_uv[2], float threshold);
+bool isect_ray_tri_epsilon_v3(const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float r_uv[2], float epsilon);
 /**
  * Intersect two triangles.
  *
@@ -597,19 +510,10 @@ bool isect_ray_tri_epsilon_v3(const float ray_origin[3],
  * \note If it exists, \a r_i1 will be a point on the edge of the 1st triangle.
  * \note intersections between coplanar triangles are currently undetected.
  */
-bool isect_tri_tri_v3_ex(
-	const float tri_a[3][3], const float tri_b[3][3], float r_i1[3], float r_i2[3], int *r_tri_a_edge_isect_count);
-bool isect_tri_tri_v3(const float t_a0[3],
-					  const float t_a1[3],
-					  const float t_a2[3],
-					  const float t_b0[3],
-					  const float t_b1[3],
-					  const float t_b2[3],
-					  float r_i1[3],
-					  float r_i2[3]);
+bool isect_tri_tri_v3_ex(const float tri_a[3][3], const float tri_b[3][3], float r_i1[3], float r_i2[3], int *r_tri_a_edge_isect_count);
+bool isect_tri_tri_v3(const float t_a0[3], const float t_a1[3], const float t_a2[3], const float t_b0[3], const float t_b1[3], const float t_b2[3], float r_i1[3], float r_i2[3]);
 
-bool isect_tri_tri_v2(
-	const float p1[2], const float q1[2], const float r1[2], const float p2[2], const float q2[2], const float r2[2]);
+bool isect_tri_tri_v2(const float p1[2], const float q1[2], const float r1[2], const float p2[2], const float q2[2], const float r2[2]);
 
 /**
  * Water-tight ray-cast (requires pre-calculation).
@@ -623,33 +527,15 @@ struct IsectRayPrecalc {
 };
 
 void isect_ray_tri_watertight_v3_precalc(struct IsectRayPrecalc *isect_precalc, const float ray_direction[3]);
-bool isect_ray_tri_watertight_v3(const float ray_origin[3],
-								 const struct IsectRayPrecalc *isect_precalc,
-								 const float v0[3],
-								 const float v1[3],
-								 const float v2[3],
-								 float *r_dist,
-								 float r_uv[2]);
+bool isect_ray_tri_watertight_v3(const float ray_origin[3], const struct IsectRayPrecalc *isect_precalc, const float v0[3], const float v1[3], const float v2[3], float *r_dist, float r_uv[2]);
 /**
  * Slower version which calculates #IsectRayPrecalc each time.
  */
-bool isect_ray_tri_watertight_v3_simple(const float ray_origin[3],
-										const float ray_direction[3],
-										const float v0[3],
-										const float v1[3],
-										const float v2[3],
-										float *r_lambda,
-										float r_uv[2]);
+bool isect_ray_tri_watertight_v3_simple(const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float r_uv[2]);
 
-bool isect_ray_seg_v2(const float ray_origin[2],
-					  const float ray_direction[2],
-					  const float v0[2],
-					  const float v1[2],
-					  float *r_lambda,
-					  float *r_u);
+bool isect_ray_seg_v2(const float ray_origin[2], const float ray_direction[2], const float v0[2], const float v1[2], float *r_lambda, float *r_u);
 
-bool isect_ray_line_v3(
-	const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], float *r_lambda);
+bool isect_ray_line_v3(const float ray_origin[3], const float ray_direction[3], const float v0[3], const float v1[3], float *r_lambda);
 
 /* Point in polygon. */
 
@@ -705,8 +591,7 @@ bool isect_ray_aabb_v3(const struct IsectRayAABB_Precalc *data, const float bb_m
  * \note \a direction should be normalized
  * if you intend to use the \a tmin or \a tmax distance results!
  */
-bool isect_ray_aabb_v3_simple(
-	const float orig[3], const float dir[3], const float bb_min[3], const float bb_max[3], float *tmin, float *tmax);
+bool isect_ray_aabb_v3_simple(const float orig[3], const float dir[3], const float bb_min[3], const float bb_max[3], float *tmin, float *tmax);
 
 /* other */
 #define ISECT_AABB_PLANE_BEHIND_ANY 0
@@ -723,18 +608,10 @@ bool isect_ray_aabb_v3_simple(
  */
 int isect_aabb_planes_v3(const float (*planes)[4], int totplane, const float bbmin[3], const float bbmax[3]);
 
-bool isect_sweeping_sphere_tri_v3(const float p1[3],
-								  const float p2[3],
-								  float radius,
-								  const float v0[3],
-								  const float v1[3],
-								  const float v2[3],
-								  float *r_lambda,
-								  float ipoint[3]);
+bool isect_sweeping_sphere_tri_v3(const float p1[3], const float p2[3], float radius, const float v0[3], const float v1[3], const float v2[3], float *r_lambda, float ipoint[3]);
 
 bool clip_segment_v3_plane(const float p1[3], const float p2[3], const float plane[4], float r_p1[3], float r_p2[3]);
-bool clip_segment_v3_plane_n(
-	const float p1[3], const float p2[3], const float plane_array[][4], int plane_num, float r_p1[3], float r_p2[3]);
+bool clip_segment_v3_plane_n(const float p1[3], const float p2[3], const float plane_array[][4], int plane_num, float r_p1[3], float r_p2[3]);
 
 bool point_in_slice_seg(float p[3], float l1[3], float l2[3]);
 
@@ -745,14 +622,12 @@ bool point_in_slice_seg(float p[3], float l1[3], float l2[3]);
  * \{ */
 
 void interp_weights_tri_v3(float w[3], const float v1[3], const float v2[3], const float v3[3], const float co[3]);
-void interp_weights_quad_v3(
-	float w[4], const float v1[3], const float v2[3], const float v3[3], const float v4[3], const float co[3]);
+void interp_weights_quad_v3(float w[4], const float v1[3], const float v2[3], const float v3[3], const float v4[3], const float co[3]);
 void interp_weights_poly_v3(float w[], float v[][3], int n, const float co[3]);
 void interp_weights_poly_v2(float w[], float v[][2], int n, const float co[2]);
 
 /** `(x1, v1)(t1=0)------(x2, v2)(t2=1), 0<t<1 --> (x, v)(t)`. */
-void interp_cubic_v3(
-	float x[3], float v[3], const float x1[3], const float v1[3], const float x2[3], const float v2[3], float t);
+void interp_cubic_v3(float x[3], float v[3], const float x1[3], const float v1[3], const float x2[3], const float v2[3], float t);
 
 /**
  * Given an array with some invalid values this function interpolates valid values
@@ -765,24 +640,12 @@ int interp_sparse_array(float *array, int list_size, float skipval);
  * calculate the location of a point in relation to the second triangle.
  * Useful for finding relative positions with geometry.
  */
-void transform_point_by_tri_v3(float pt_tar[3],
-							   float const pt_src[3],
-							   const float tri_tar_p1[3],
-							   const float tri_tar_p2[3],
-							   const float tri_tar_p3[3],
-							   const float tri_src_p1[3],
-							   const float tri_src_p2[3],
-							   const float tri_src_p3[3]);
+void transform_point_by_tri_v3(float pt_tar[3], float const pt_src[3], const float tri_tar_p1[3], const float tri_tar_p2[3], const float tri_tar_p3[3], const float tri_src_p1[3], const float tri_src_p2[3], const float tri_src_p3[3]);
 /**
  * Simply re-interpolates,
  * assumes p_src is between \a l_src_p1-l_src_p2
  */
-void transform_point_by_seg_v3(float p_dst[3],
-							   const float p_src[3],
-							   const float l_dst_p1[3],
-							   const float l_dst_p2[3],
-							   const float l_src_p1[3],
-							   const float l_src_p2[3]);
+void transform_point_by_seg_v3(float p_dst[3], const float p_src[3], const float l_dst_p1[3], const float l_dst_p2[3], const float l_src_p1[3], const float l_src_p2[3]);
 
 /**
  * \note Using #cross_tri_v2 means locations outside the triangle are correctly weighted.
@@ -807,8 +670,7 @@ void barycentric_weights_v2_persp(const float v1[4], const float v2[4], const fl
  * NOTE: untested for values outside the quad's bounds
  * this is #interp_weights_poly_v2 expanded for quads only
  */
-void barycentric_weights_v2_quad(
-	const float v1[2], const float v2[2], const float v3[2], const float v4[2], const float co[2], float w[4]);
+void barycentric_weights_v2_quad(const float v1[2], const float v2[2], const float v3[2], const float v4[2], const float co[2], float w[4]);
 
 /**
  * \return false for degenerated triangles.
@@ -839,18 +701,11 @@ void resolve_tri_uv_v3(float r_uv[2], const float st[3], const float st0[3], con
 /**
  * Bilinear reverse.
  */
-void resolve_quad_uv_v2(
-	float r_uv[2], const float st[2], const float st0[2], const float st1[2], const float st2[2], const float st3[2]);
+void resolve_quad_uv_v2(float r_uv[2], const float st[2], const float st0[2], const float st1[2], const float st2[2], const float st3[2]);
 /**
  * Bilinear reverse with derivatives.
  */
-void resolve_quad_uv_v2_deriv(float r_uv[2],
-							  float r_deriv[2][2],
-							  const float st[2],
-							  const float st0[2],
-							  const float st1[2],
-							  const float st2[2],
-							  const float st3[2]);
+void resolve_quad_uv_v2_deriv(float r_uv[2], float r_deriv[2][2], const float st[2], const float st0[2], const float st1[2], const float st2[2], const float st3[2]);
 /**
  * A version of resolve_quad_uv_v2 that only calculates the 'u'.
  */
@@ -876,8 +731,7 @@ void polarview_m4(float mat[4][4], float dist, float azimuth, float incidence, f
  * Matches `glFrustum` result.
  */
 void perspective_m4(float mat[4][4], float left, float right, float bottom, float top, float nearClip, float farClip);
-void perspective_m4_fov(
-	float mat[4][4], float angle_left, float angle_right, float angle_up, float angle_down, float nearClip, float farClip);
+void perspective_m4_fov(float mat[4][4], float angle_left, float angle_right, float angle_up, float angle_down, float nearClip, float farClip);
 /**
  * Matches `glOrtho` result.
  */
@@ -894,13 +748,10 @@ void window_translate_m4(float winmat[4][4], float perspmat[4][4], float x, floa
  *
  * plane parameters can be NULL if you do not need them.
  */
-void planes_from_projmat(
-	const float mat[4][4], float left[4], float right[4], float bottom[4], float top[4], float near[4], float far[4]);
+void planes_from_projmat(const float mat[4][4], float left[4], float right[4], float bottom[4], float top[4], float near[4], float far[4]);
 
-void projmat_dimensions(
-	const float winmat[4][4], float *r_left, float *r_right, float *r_bottom, float *r_top, float *r_near, float *r_far);
-void projmat_dimensions_db(
-	const float winmat[4][4], double *r_left, double *r_right, double *r_bottom, double *r_top, double *r_near, double *r_far);
+void projmat_dimensions(const float winmat[4][4], float *r_left, float *r_right, float *r_bottom, float *r_top, float *r_near, float *r_far);
+void projmat_dimensions_db(const float winmat[4][4], double *r_left, double *r_right, double *r_bottom, double *r_top, double *r_near, double *r_far);
 
 /**
  * Creates a projection matrix for a small region of the viewport.
@@ -910,8 +761,7 @@ void projmat_dimensions_db(
  * \param x_min, x_max, y_min, y_max: Coordinates of the subregion.
  * \return r_projmat: Resulting Projection Matrix.
  */
-void projmat_from_subregion(
-	const float projmat[4][4], const int win_size[2], int x_min, int x_max, int y_min, int y_max, float r_projmat[4][4]);
+void projmat_from_subregion(const float projmat[4][4], const int win_size[2], int x_min, int x_max, int y_min, int y_max, float r_projmat[4][4]);
 
 int box_clip_bounds_m4(float boundbox[2][3], const float bounds[4], float winmat[4][4]);
 void box_minmax_bounds_m4(float min[3], float max[3], float boundbox[2][3], float mat[4][4]);
@@ -933,25 +783,15 @@ void map_to_plane_axis_angle_v2_v3v3fl(float r_co[2], const float co[3], const f
 /** \name Normals
  * \{ */
 
-void accumulate_vertex_normals_tri_v3(
-	float n1[3], float n2[3], float n3[3], const float f_no[3], const float co1[3], const float co2[3], const float co3[3]);
+void accumulate_vertex_normals_tri_v3(float n1[3], float n2[3], float n3[3], const float f_no[3], const float co1[3], const float co2[3], const float co3[3]);
 
-void accumulate_vertex_normals_v3(float n1[3],
-								  float n2[3],
-								  float n3[3],
-								  float n4[3],
-								  const float f_no[3],
-								  const float co1[3],
-								  const float co2[3],
-								  const float co3[3],
-								  const float co4[3]);
+void accumulate_vertex_normals_v3(float n1[3], float n2[3], float n3[3], float n4[3], const float f_no[3], const float co1[3], const float co2[3], const float co3[3], const float co4[3]);
 
 /**
  * Add weighted face normal component into normals of the face vertices.
  * Caller must pass pre-allocated vdiffs of nverts length.
  */
-void accumulate_vertex_normals_poly_v3(
-	float **vertnos, const float polyno[3], const float **vertcos, float vdiffs[][3], int nverts);
+void accumulate_vertex_normals_poly_v3(float **vertnos, const float polyno[3], const float **vertcos, float vdiffs[][3], int nverts);
 
 /** \} */
 
@@ -959,14 +799,7 @@ void accumulate_vertex_normals_poly_v3(
 /** \name Tangents
  * \{ */
 
-void tangent_from_uv_v3(const float uv1[2],
-						const float uv2[2],
-						const float uv3[2],
-						const float co1[3],
-						const float co2[3],
-						const float co3[3],
-						const float n[3],
-						float r_tang[3]);
+void tangent_from_uv_v3(const float uv1[2], const float uv2[2], const float uv3[2], const float co1[3], const float co2[3], const float co3[3], const float n[3], float r_tang[3]);
 
 /** \} */
 
@@ -993,15 +826,7 @@ void tangent_from_uv_v3(const float uv1[2],
  *
  * pointers may be NULL if not needed
  */
-void vcloud_estimate_transform_v3(int list_size,
-								  const float (*pos)[3],
-								  const float *weight,
-								  const float (*rpos)[3],
-								  const float *rweight,
-								  float lloc[3],
-								  float rloc[3],
-								  float lrot[3][3],
-								  float lscale[3][3]);
+void vcloud_estimate_transform_v3(int list_size, const float (*pos)[3], const float *weight, const float (*rpos)[3], const float *rweight, float lloc[3], float rloc[3], float lrot[3][3], float lscale[3][3]);
 
 /** \} */
 
@@ -1110,8 +935,7 @@ float cubic_tangent_factor_circle_v3(const float tan_l[3], const float tan_r[3])
  *
  * From "Dart Throwing on Surfaces", EGSR 2009. Section 7, Geodesic Dart Throwing.
  */
-float geodesic_distance_propagate_across_triangle(
-	const float v0[3], const float v1[3], const float v2[3], float dist1, float dist2);
+float geodesic_distance_propagate_across_triangle(const float v0[3], const float v1[3], const float v2[3], float dist1, float dist2);
 
 /** \} */
 

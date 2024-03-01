@@ -45,7 +45,17 @@
 /** \name Pointer Macros
  * \{ */
 
-#define POINTER_OFFSET(ptr, offset) (((const char *)ptr) + (offset))
+#if defined(__GNUC__) || defined(__clang__)
+#	define POINTER_OFFSET(ptr, offset) (typeof(ptr))(((char *)ptr) + (offset))
+#else
+#	define POINTER_OFFSET(ptr, offset) (void *)(((char *)ptr) + (offset))
+#endif
+
+#define POINTER_FROM_INT(i) ((void *)(intptr_t)(i))
+#define POINTER_AS_INT(i) ((void)0, ((int)(intptr_t)(i)))
+
+#define POINTER_FROM_UINT(i) ((void *)(uintptr_t)(i))
+#define POINTER_AS_UINT(i) ((void)0, ((unsigned int)(uintptr_t)(i)))
 
 /* \} */
 
@@ -81,6 +91,8 @@
 /* -------------------------------------------------------------------- */
 /** \name Misc Macros
  * \{ */
+
+#define AT __FILE__ ":" STRINGIFY(__LINE__)
 
 #define EXPR_NOP(expr) (void)(0 ? ((void)(expr), 1) : 0)
 
@@ -464,7 +476,7 @@
 		(b) = sw_ap; \
 	} \
 	(void)0
-	
+
 #define SWAP_TVAL(tval, a, b) \
 	{ \
 		tval = (a); \

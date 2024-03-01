@@ -186,38 +186,83 @@ MINLINE unsigned int log2_ceil_u(unsigned int x) {
 #define _round_db_impl(arg, ty) \
 	{ return (ty)floor(arg + 0.5); }
 
-MINLINE signed char round_fl_to_char(float a){_round_fl_impl(a, signed char)} MINLINE
-	unsigned char round_fl_to_uchar(float a){_round_fl_impl(a, unsigned char)} MINLINE
-	short round_fl_to_short(float a){_round_fl_impl(a, short)} MINLINE
-	unsigned short round_fl_to_ushort(float a){_round_fl_impl(a, unsigned short)} MINLINE
-	int round_fl_to_int(float a){_round_fl_impl(a, int)} MINLINE
-	unsigned int round_fl_to_uint(float a){_round_fl_impl(a, unsigned int)}
+MINLINE signed char round_fl_to_char(float a) {
+	_round_fl_impl(a, signed char);
+}
+MINLINE unsigned char round_fl_to_uchar(float a) {
+	_round_fl_impl(a, unsigned char);
+}
+MINLINE short round_fl_to_short(float a) {
+	_round_fl_impl(a, short);
+}
+MINLINE unsigned short round_fl_to_ushort(float a) {
+	_round_fl_impl(a, unsigned short);
+}
+MINLINE int round_fl_to_int(float a) {
+	_round_fl_impl(a, int);
+}
+MINLINE unsigned int round_fl_to_uint(float a) {
+	_round_fl_impl(a, unsigned int);
+}
 
-MINLINE signed char round_db_to_char(double a){_round_db_impl(a, signed char)} MINLINE
-	unsigned char round_db_to_uchar(double a){_round_db_impl(a, unsigned char)} MINLINE
-	short round_db_to_short(double a){_round_db_impl(a, short)} MINLINE
-	unsigned short round_db_to_ushort(double a){_round_db_impl(a, unsigned short)} MINLINE
-	int round_db_to_int(double a){_round_db_impl(a, int)} MINLINE unsigned int round_db_to_uint(double a) {
-	_round_db_impl(a, unsigned int)
+MINLINE signed char round_db_to_char(double a) {
+	_round_db_impl(a, signed char);
+}
+MINLINE unsigned char round_db_to_uchar(double a) {
+	_round_db_impl(a, unsigned char);
+}
+MINLINE short round_db_to_short(double a) {
+	_round_db_impl(a, short);
+}
+MINLINE unsigned short round_db_to_ushort(double a) {
+	_round_db_impl(a, unsigned short);
+}
+MINLINE int round_db_to_int(double a) {
+	_round_db_impl(a, int);
+}
+MINLINE unsigned int round_db_to_uint(double a) {
+	_round_db_impl(a, unsigned int);
 }
 
 #undef _round_fl_impl
 #undef _round_db_impl
 
-MINLINE signed char round_fl_to_char_clamp(float a){_round_clamp_fl_impl(a, signed char, SCHAR_MIN, SCHAR_MAX)} MINLINE
-	unsigned char round_fl_to_uchar_clamp(float a){_round_clamp_fl_impl(a, unsigned char, 0, UCHAR_MAX)} MINLINE
-	short round_fl_to_short_clamp(float a){_round_clamp_fl_impl(a, short, SHRT_MIN, SHRT_MAX)} MINLINE
-	unsigned short round_fl_to_ushort_clamp(float a){_round_clamp_fl_impl(a, unsigned short, 0, USHRT_MAX)} MINLINE
-	int round_fl_to_int_clamp(float a){_round_clamp_fl_impl(a, int, INT_MIN, INT_MAX)} MINLINE
-	unsigned int round_fl_to_uint_clamp(float a){_round_clamp_fl_impl(a, unsigned int, 0, UINT_MAX)}
+MINLINE signed char round_fl_to_char_clamp(float a) {
+	_round_clamp_fl_impl(a, signed char, SCHAR_MIN, SCHAR_MAX);
+}
+MINLINE unsigned char round_fl_to_uchar_clamp(float a) {
+	_round_clamp_fl_impl(a, unsigned char, 0, UCHAR_MAX);
+}
+MINLINE short round_fl_to_short_clamp(float a) {
+	_round_clamp_fl_impl(a, short, SHRT_MIN, SHRT_MAX);
+}
+MINLINE unsigned short round_fl_to_ushort_clamp(float a) {
+	_round_clamp_fl_impl(a, unsigned short, 0, USHRT_MAX);
+}
+MINLINE int round_fl_to_int_clamp(float a) {
+	_round_clamp_fl_impl(a, int, INT_MIN, INT_MAX);
+}
+MINLINE unsigned int round_fl_to_uint_clamp(float a) {
+	_round_clamp_fl_impl(a, unsigned int, 0, UINT_MAX);
+}
 
-MINLINE signed char round_db_to_char_clamp(double a){_round_clamp_db_impl(a, signed char, SCHAR_MIN, SCHAR_MAX)} MINLINE
-	unsigned char round_db_to_uchar_clamp(double a){_round_clamp_db_impl(a, unsigned char, 0, UCHAR_MAX)} MINLINE
-	short round_db_to_short_clamp(double a){_round_clamp_db_impl(a, short, SHRT_MIN, SHRT_MAX)} MINLINE
-	unsigned short round_db_to_ushort_clamp(double a){_round_clamp_db_impl(a, unsigned short, 0, USHRT_MAX)} MINLINE
-	int round_db_to_int_clamp(double a){_round_clamp_db_impl(a, int, INT_MIN, INT_MAX)} MINLINE
-	unsigned int round_db_to_uint_clamp(double a) {
-	_round_clamp_db_impl(a, unsigned int, 0, UINT_MAX)
+MINLINE signed char round_db_to_char_clamp(double a) {
+	_round_clamp_db_impl(a, signed char, SCHAR_MIN, SCHAR_MAX);
+}
+MINLINE unsigned char round_db_to_uchar_clamp(double a) {
+	_round_clamp_db_impl(a, unsigned char, 0, UCHAR_MAX);
+}
+MINLINE short round_db_to_short_clamp(double a) {
+	_round_clamp_db_impl(a, short, SHRT_MIN, SHRT_MAX);
+}
+MINLINE unsigned short round_db_to_ushort_clamp(double a) {
+	_round_clamp_db_impl(a, unsigned short, 0, USHRT_MAX);
+}
+MINLINE int round_db_to_int_clamp(double a) {
+	_round_clamp_db_impl(a, int, INT_MIN, INT_MAX);
+}
+MINLINE unsigned int round_db_to_uint_clamp(double a) {
+	_round_clamp_db_impl(a, unsigned int, 0, UINT_MAX);
 }
 
 #undef _round_clamp_fl_impl
