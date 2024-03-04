@@ -21,16 +21,16 @@ TEST(GHash, Creation) {
 TEST(GHash, Insertions) {
 	GHash *container = LIB_ghash_ptr_new("rose::test::GHash");
 	
-	for(int i = 1; i < 10; i++) {
+	for(int i = 1; i < 1024; i++) {
 		void *key = POINTER_FROM_UINT(i);
-		void *val = POINTER_FROM_UINT(10 - i);
+		void *val = POINTER_FROM_UINT(1024 - i);
 		
 		LIB_ghash_insert(container, key, val);
 	}
 	
-	for(int i = 1; i < 10; i++) {
+	for(int i = 1; i < 1024; i++) {
 		void *key = POINTER_FROM_UINT(i);
-		void *val = POINTER_FROM_UINT(10 - i);
+		void *val = POINTER_FROM_UINT(1024 - i);
 		
 		EXPECT_EQ(val, LIB_ghash_lookup(container, key));
 	}
@@ -41,16 +41,16 @@ TEST(GHash, Insertions) {
 TEST(GHash, Deletions) {
 	GHash *container = LIB_ghash_ptr_new("rose::test::GHash");
 
-	for(int i = 1; i < 10; i++) {
+	for(int i = 1; i < 1024; i++) {
 		void *key = POINTER_FROM_UINT(i);
-		void *val = POINTER_FROM_UINT(10 - i);
+		void *val = POINTER_FROM_UINT(1024 - i);
 		
 		LIB_ghash_insert(container, key, val);
 	}
 	
-	for(int i = 1; i < 10; i++) {
+	for(int i = 1; i < 1024; i++) {
 		void *key = POINTER_FROM_UINT(i);
-		void *val = POINTER_FROM_UINT(10 - i);
+		void *val = POINTER_FROM_UINT(1024 - i);
 		
 		EXPECT_EQ(val, LIB_ghash_popkey(container, key, NULL));
 	}

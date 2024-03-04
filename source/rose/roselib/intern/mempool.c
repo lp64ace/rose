@@ -58,7 +58,7 @@ typedef struct LIB_mempool {
 #define CHUNK_DATA(chunk) (void *)((chunk) + 1)
 
 #define NODE_STEP_NEXT(node) ((void *)((char *)(node) + esize))
-#define NODE_STEP_PREV(node) ((void *)((char *)(node)-esize))
+#define NODE_STEP_PREV(node) ((void *)((char *)(node) - esize))
 
 #define CHUNK_OVERHEAD (uint)(MEM_SIZE_OVERHEAD + sizeof(LIB_mempool_chunk))
 
@@ -70,7 +70,9 @@ static size_t power_of_2_max_z(size_t x) {
 	x = x | (x >> 4);
 	x = x | (x >> 8);
 	x = x | (x >> 16);
-	x = x | (x >> 32);
+	if(sizeof(size_t) > sizeof(int)) {
+		x = x | (x >> 32);
+	}
 	return x + 1;
 }
 #endif
@@ -132,7 +134,7 @@ static LIB_freenode *mempool_chunk_add(LIB_mempool *pool, LIB_mempool_chunk *chu
 	}
 
 	curnode = NODE_STEP_PREV(curnode);
-
+	
 	curnode->next = NULL;
 
 	pool->totalloc += pool->pchunk;
@@ -287,7 +289,8 @@ void LIB_mempool_free(LIB_mempool *pool, void *ptr) {
 			LIB_freenode *next = curnode->next = NODE_STEP_NEXT(curnode);
 			curnode = next;
 		}
-
+		
+		curnode = NODE_STEP_PREV(curnode);
 		curnode->next = NULL; /* terminate the list */
 	}
 }

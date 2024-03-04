@@ -489,4 +489,9 @@ function(rose_add_test_executable name sources includes includes_sys library_dep
 	target_link_libraries(${name}_test ${library_deps})
 	
 	add_test(NAME ${name} COMMAND $<TARGET_FILE:${name}_test>)
+	
+	# if enabled, set the FOLDER property for the projects
+	if(IDE_GROUP_PROJECTS_IN_FOLDERS)
+		set_target_properties(${name}_test PROPERTIES FOLDER "tests")
+	endif()
 endfunction()
