@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include <algorithm>
+#include <random>
 #include <vector>
 
 #include "testing.h"
@@ -46,25 +48,27 @@ TEST(MemPool, Deallocations) {
 
 TEST(MemPool, Master) {
 	const size_t elem = sizeof(void *) * 4;
-	
+
 	LIB_mempool *allocator = LIB_mempool_create(elem, 64, 64, ROSE_MEMPOOL_NOP);
-	
+
 	std::vector<void *> list;
-	
-	for(size_t i = 0; i < 65535; i++) {
+
+	for (size_t i = 0; i < 65535; i++) {
 		void *ptr = LIB_mempool_alloc(allocator);
-		
+
 		list.push_back(ptr);
 	}
-	
-	for(size_t i = 0; i < 65535; i++) {
+
+	std::shuffle(list.begin(), list.end(), std::default_random_engine(rand()));
+
+	for (size_t i = 0; i < 65535; i++) {
 		void *ptr = list[i];
-		
+
 		LIB_mempool_free(allocator, ptr);
 	}
-	
+
 	list.clear();
-	
+
 	LIB_mempool_destroy(allocator);
 }
 
