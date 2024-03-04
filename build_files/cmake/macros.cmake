@@ -360,3 +360,133 @@ function(download_dependency_module _name _git _branch)
     )
     FetchContent_MakeAvailable(${_name})
 endfunction()
+
+# Support per-target CMake flags
+# Read from: CMAKE_C_FLAGS_**** (made upper case) when set.
+#
+# 'name' should always match the target name,
+# use this macro before add_library or add_executable.
+#
+# Optionally takes an arg passed to set(), eg PARENT_SCOPE.
+macro(add_cc_flags_custom_test name)
+	string(TOUPPER ${name} _name_upper)
+	if(DEFINED CMAKE_C_FLAGS_${_name_upper})
+		message(
+			STATUS
+			"Using custom CFLAGS: "
+			"CMAKE_C_FLAGS_${_name_upper} in \"${CMAKE_CURRENT_SOURCE_DIR}\""
+		)
+		string(APPEND CMAKE_C_FLAGS " ${CMAKE_C_FLAGS_${_name_upper}}" ${ARGV1})
+	endif()
+	if(DEFINED CMAKE_CXX_FLAGS_${_name_upper})
+		message(
+			STATUS
+			"Using custom CXXFLAGS: "
+			"CMAKE_CXX_FLAGS_${_name_upper} in \"${CMAKE_CURRENT_SOURCE_DIR}\""
+		)
+		string(APPEND CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS_${_name_upper}}" ${ARGV1})
+	endif()
+	unset(_name_upper)
+endmacro()
+
+macro(remove_c_flag _flag)
+	foreach(f ${ARGV})
+		string(REGEX REPLACE ${f} "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+		string(REGEX REPLACE ${f} "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+		string(REGEX REPLACE ${f} "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+		string(REGEX REPLACE ${f} "" CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}")
+		string(REGEX REPLACE ${f} "" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+	endforeach()
+	unset(f)
+endmacro()
+
+macro(remove_cxx_flag _flag)
+	foreach(f ${ARGV})
+		string(REGEX REPLACE ${f} "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+		string(REGEX REPLACE ${f} "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+		string(REGEX REPLACE ${f} "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+		string(REGEX REPLACE ${f} "" CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}")
+		string(REGEX REPLACE ${f} "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+	endforeach()
+	unset(f)
+endmacro()
+
+macro(remove_cc_flag _flag)
+  remove_c_flag(${ARGV})
+  remove_cxx_flag(${ARGV})
+endmacro()
+
+macro(add_c_flag flag)
+  string(APPEND CMAKE_C_FLAGS " ${flag}")
+  string(APPEND CMAKE_CXX_FLAGS " ${flag}")
+endmacro()
+
+macro(add_cxx_flag flag)
+
+	string(APPEND CMAKE_CXX_FLAGS " ${flag}")
+endmacro()
+
+macro(remove_strict_flags)
+	if(CMAKE_COMPILER_IS_GNUCC)
+		remove_cc_flag(
+			"-Wstrict-prototypes"
+			"-Wsuggest-attribute=format"
+			"-Wmissing-prototypes"
+			"-Wmissing-declarations"
+			"-Wmissing-format-attribute"
+			"-Wunused-local-typedefs"
+			"-Wunused-macros"
+			"-Wunused-parameter"
+			"-Wwrite-strings"
+			"-Wredundant-decls"
+			"-Wundef"
+			"-Wshadow"
+			"-Wdouble-promotion"
+			"-Wold-style-definition"
+			"-Werror=[^ ]+"
+			"-Werror"
+		)
+
+		# negate flags implied by '-Wall'
+		add_c_flag("${C_REMOVE_STRICT_FLAGS}")
+		add_cxx_flag("${CXX_REMOVE_STRICT_FLAGS}")
+	endif()
+
+	if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+		remove_cc_flag(
+			"-Wunused-parameter"
+			"-Wunused-variable"
+			"-Werror=[^ ]+"
+			"-Werror"
+		)
+
+		# negate flags implied by '-Wall'
+		add_c_flag("${C_REMOVE_STRICT_FLAGS}")
+		add_cxx_flag("${CXX_REMOVE_STRICT_FLAGS}")
+	endif()
+
+	if(MSVC)
+		remove_cc_flag(
+			# Restore warn C4100 (unreferenced formal parameter) back to w4.
+			"/w34100"
+			# Restore warn C4189 (unused variable) back to w4.
+			"/w34189"
+		)
+	endif()
+endmacro()
+
+function(rose_add_test_executable name sources includes includes_sys library_deps)
+	add_cc_flags_custom_test(${name} PARENT_SCOPE)
+	
+	remove_strict_flags()
+
+	add_executable(${name}_test ${sources})
+	
+	rose_target_include_dirs(${name}_test includes)
+	rose_target_include_dirs_sys(${name}_test includes_sys)
+	
+	target_link_libraries(${name}_test rf::tests::testing)
+	target_link_libraries(${name}_test ${library_deps})
+	
+	add_test(NAME ${name} COMMAND $<TARGET_FILE:${name}_test>)
+endfunction()

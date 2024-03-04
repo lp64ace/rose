@@ -87,7 +87,7 @@ ROSE_INLINE size_t mempool_maxchunks(const size_t elem_num, const size_t pchunk)
 }
 
 static LIB_mempool_chunk *mempool_chunk_alloc(LIB_mempool *pool) {
-	return MEM_mallocN(sizeof(LIB_mempool_chunk) + sizeof(pool->csize), "rose::MemPool::chunk");
+	return MEM_mallocN(sizeof(LIB_mempool_chunk) + pool->csize, "rose::MemPool::chunk");
 }
 
 static LIB_freenode *mempool_chunk_add(LIB_mempool *pool, LIB_mempool_chunk *chunk, LIB_freenode *last) {

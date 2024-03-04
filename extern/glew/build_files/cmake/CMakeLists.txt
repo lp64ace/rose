@@ -81,7 +81,7 @@ set (GLEW_PUBLIC_HEADERS_FILES
 set (GLEW_SRC_FILES ${GLEW_DIR}/src/glew.c)
 
 if (WIN32)
-  list (APPEND GLEW_SRC_FILES ${GLEW_DIR}/build/glew.rc)
+  list (APPEND GLEW_SRC_FILES ${GLEW_DIR}/build_files/glew.rc)
 endif ()
 
 add_library (glew SHARED ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})

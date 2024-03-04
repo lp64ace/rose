@@ -33,6 +33,8 @@ include(build_files/cmake/macros.cmake)
 
 project(rose)
 
+enable_testing()
+
 # -----------------------------------------------------------------------------
 # Redirect Output Files
 
@@ -143,4 +145,5 @@ endif()
 
 add_subdirectory(extern)
 add_subdirectory(intern)
+add_subdirectory(tests)
 add_subdirectory(source)

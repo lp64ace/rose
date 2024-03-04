@@ -293,4 +293,4 @@ struct SequenceComparison {
 
 template<typename T, size_t InlineBufferCapacity, typename Allocator> struct DefaultEquality<Vector<T, InlineBufferCapacity, Allocator>> : public SequenceComparison {};
 
-}  // namespace blender
+}  // namespace rose

@@ -111,7 +111,27 @@ if(WIN32)
 endif()
 
 # -----------------------------------------------------------------------------
-# Declare Executable
+# Declare Library
 
 rose_add_lib(rf_source_roselib "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rf::source::roselib ALIAS rf_source_roselib)
+
+# -----------------------------------------------------------------------------
+# Module Testing
+
+set(TEST_SRC
+	tests/lib_ghash_test.cc
+	tests/lib_mempool_test.cc
+	
+)
+
+set(TEST_INC
+	
+)
+
+set(TEST_LIB
+	rf::source::roselib
+	
+)
+
+rose_add_test_executable(roselib "${TEST_SRC}" "${INC};${TEST_INC}" "${INC_SYS}" "${LIB};${TEST_LIB}")

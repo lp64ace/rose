@@ -1081,9 +1081,9 @@ private:
 };
 
 /**
- * Same as a normal Map, but does not use Blender's guarded allocator. This is useful when
+ * Same as a normal Map, but does not use Rose's guarded allocator. This is useful when
  * allocating memory with static storage duration.
  */
 template<typename Key, typename Value, size_type InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key) + sizeof(Value)), typename ProbingStrategy = DefaultProbingStrategy, typename Hash = DefaultHash<Key>, typename IsEqual = DefaultEquality<Key>, typename Slot = typename DefaultMapSlot<Key, Value>::type> using RawMap = Map<Key, Value, InlineBufferCapacity, ProbingStrategy, Hash, IsEqual, Slot, RawAllocator>;
 
-}  // namespace blender
+}  // namespace rose

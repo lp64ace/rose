@@ -310,7 +310,7 @@ void sub_eul_euleul(float r_eul[3], float a[3], float b[3], short order);
  * order matters - types are saved to file. */
 
 typedef enum eEulerRotationOrders {
-	EULER_ORDER_DEFAULT = 1, /* blender classic = XYZ */
+	EULER_ORDER_DEFAULT = 1, /* classic = XYZ */
 	EULER_ORDER_XYZ = 1,
 	EULER_ORDER_XZY,
 	EULER_ORDER_YXZ,
