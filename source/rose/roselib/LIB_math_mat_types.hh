@@ -269,8 +269,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		const MatBase &a = *this;
 		/* This is the reference implementation.
 		 * Might be overloaded with vectorized / optimized code. */
-		/* TODO(fclem): It should be possible to return non-square matrices when multiplying against
-		 * MatBase<T, NumRow, OtherNumRow>. */
+		/* TODO(fclem): It should be possible to return non-square matrices when multiplying against MatBase<T, NumRow, OtherNumRow>. */
 		MatBase<T, NumRow, NumRow> result{};
 		unroll<NumRow>([&](auto j) {
 			unroll<NumRow>([&](auto i) {
@@ -710,9 +709,8 @@ using double4x2 = MatBase<double, 4, 2>;
 using double4x3 = MatBase<double, 4, 3>;
 using double4x4 = MatBase<double, 4, 4>;
 
-/* Specialization for SSE optimization. */
-template<> float4x4 float4x4::operator*(const float4x4 &b) const;
-template<> float3x3 float3x3::operator*(const float3x3 &b) const;
+float4x4 float4x4::operator*(const float4x4 &b) const;
+float3x3 float3x3::operator*(const float3x3 &b) const;
 
 extern template float2x2 float2x2::operator*(const float2x2 &b) const;
 extern template double2x2 double2x2::operator*(const double2x2 &b) const;

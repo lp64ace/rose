@@ -10,6 +10,9 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "GPU_context.h"
+#include "GPU_framebuffer.h"
+
 #include "WM_draw.h"
 #include "WM_init_exit.h"
 #include "WM_window.h"
@@ -99,16 +102,23 @@ static void wm_window_beauty_rectangle(struct wmWindow *win, bool dialog) {
 
 static bool wm_window_ghost_window_ensure(struct wmWindowManager *wm, struct wmWindow *win) {
 	if (!win->gwin) {
-		win->gwin = GHOST_InitWindow((win->parent) ? win->parent->gwin : NULL, win->width, win->height);
-
-		if (win->gwin) {
+		if ((win->gwin = GHOST_InitWindow((win->parent) ? win->parent->gwin : NULL, win->width, win->height))) {
+			/* Link the wmWindow with the GWindow for message handling. */
 			GHOST_WindowSetUserData(win->gwin, win);
-			// win->gpuctx = GPU_context_create(win->gwin, NULL);
+			
+			/* Initialize window graphics context here. */
+			if((win->gpuctx = GPU_context_create(win->gwin, NULL))) {
+				wm_window_make_drawable(wm, win);
+				
+				GPU_clear_color(0.55f, 0.55f, 0.55f, 1.0f);
+				
+				wm_window_swap_buffers(win);
 
-			if (win->gpuctx) {
+				/* Clear double buffer to avoids flickering of new windows on certain drivers. (See #97600) */
+				GPU_clear_color(0.55f, 0.55f, 0.55f, 1.0f);
+				
 				return true;
 			}
-			return true;
 		}
 	}
 	return false;
@@ -127,8 +137,8 @@ static void wm_window_ghost_window_destroy(struct wmWindowManager *wm, struct wm
 
 	GHOST_ActivateWindowDrawingContext(win->gwin);
 	if (win->gpuctx) {
-		// GPU_context_active_set(win->gpuctx);
-		// GPU_context_discard(win->gpuctx);
+		GPU_context_active_set(win->gpuctx);
+		GPU_context_discard(win->gpuctx);
 		win->gpuctx = NULL;
 	}
 

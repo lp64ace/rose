@@ -510,3 +510,32 @@ size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const 
 }
 
 /* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Misc String Utils
+ * \{ */
+
+size_t LIB_string_len_array(const char *strings[], size_t strings_num) {
+	size_t total_len = 0;
+	for (size_t i = 0; i < strings_num; i++) {
+		total_len += LIB_strlen(strings[i]);
+	}
+	return total_len;
+}
+
+char *LIB_string_join_arrayN(const char *strings[], size_t strings_num) {
+	const size_t result_size = LIB_string_len_array(strings, strings_num) + 1;
+	char *result = MEM_callocN(result_size, __func__);
+	char *c = result;
+	for (size_t i = 0; i < strings_num; i++) {
+		const size_t string_len = LIB_strlen(strings[i]);
+		memcpy(c, strings[i], string_len);
+		c += string_len;
+	}
+	/* Only needed when `strings_num == 0`. */
+	*c = '\0';
+	ROSE_assert(result + result_size == c + 1);
+	return result;
+}
+
+/* \} */

@@ -26,6 +26,7 @@ set(SRC
 	LIB_allocator.hh
 	LIB_array.hh
 	LIB_assert.h
+	LIB_bitmap.h
 	LIB_compiler_attrs.h
 	LIB_endian.h
 	LIB_ghash.h
@@ -73,20 +74,17 @@ set(SRC
 	intern/hash_mm2a.c
 	intern/listbase.c
 	intern/math_base.c
-	intern/math_base_inline.c
-	intern/math_base_safe_inline.c
-	intern/math_bits_inline.c
-	intern/math_geom_inline.c
+	intern/math_geom.c
 	intern/math_matrix.c
+	intern/math_matrix.cc
 	intern/math_rotation.c
 	intern/math_solvers.c
 	intern/math_vector.c
-	intern/math_vector_inline.c
 	intern/memory_utils.c
 	intern/mempool.c
 	intern/spinlock.c
 	intern/string.c
-	intern/string_ref.hh
+	intern/string_ref.cc
 	intern/system.c
 	intern/system_unix.c
 	intern/system_win32.c
@@ -121,6 +119,8 @@ add_library(rf::source::roselib ALIAS rf_source_roselib)
 
 set(TEST_SRC
 	tests/lib_ghash_test.cc
+	tests/lib_math_mat_types_test.cc
+	tests/lib_math_vec_types_test.cc
 	tests/lib_mempool_test.cc
 	
 )

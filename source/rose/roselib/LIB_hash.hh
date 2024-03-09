@@ -5,6 +5,9 @@
 #include <string>
 #include <utility>
 
+#include "LIB_string_ref.hh"
+
+#include "LIB_hash.h"
 #include "LIB_utildefines.h"
 
 namespace rose {
@@ -61,6 +64,42 @@ template<> struct DefaultHash<double> {
 template<> struct DefaultHash<bool> {
 	uint64_t operator()(bool value) const {
 		return uint64_t((value != false) * 1298191);
+	}
+};
+
+ROSE_INLINE uint64_t hash_string(StringRef str) {
+	uint64_t hash = 5381;
+	for (char c : str) {
+		hash = hash * 33 + c;
+	}
+	return hash;
+}
+
+template<> struct DefaultHash<std::string> {
+	/**
+	 * Take a #StringRef as parameter to support heterogeneous lookups in hash table implementations
+	 * when std::string is used as key.
+	 */
+	uint64_t operator()(StringRef value) const {
+		return hash_string(value);
+	}
+};
+
+template<> struct DefaultHash<StringRef> {
+	uint64_t operator()(StringRef value) const {
+		return hash_string(value);
+	}
+};
+
+template<> struct DefaultHash<StringRefNull> {
+	uint64_t operator()(StringRef value) const {
+		return hash_string(value);
+	}
+};
+
+template<> struct DefaultHash<std::string_view> {
+	uint64_t operator()(StringRef value) const {
+		return hash_string(value);
 	}
 };
 

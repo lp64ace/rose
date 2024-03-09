@@ -160,6 +160,9 @@ public:
 
 	/** Returns the context of the specified window, this should never return NULL. */
 	ContextInterface *GetContext() const;
+	
+	/** Return the type of the currently active drawing context. */
+	int GetContextType() const;
 
 	/* \} */
 private:
@@ -173,6 +176,7 @@ private:
 	/* \} */
 
 	ContextInterface *_Context;
+	int _ContextType;
 
 	friend class WindowsOpenGLContext;
 };

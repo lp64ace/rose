@@ -46,7 +46,7 @@ template<
 	 * allocation. This is useful when you expect to have many small maps. However, keep in mind
 	 * that (unlike vector) initializing a map has a O(n) cost in the number of slots.
 	 */
-	size_type InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key) + sizeof(Value)),
+	size_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key) + sizeof(Value)),
 	/**
 	 * The strategy used to deal with collisions. They are defined in BLI_probing_strategies.hh.
 	 */
@@ -395,12 +395,12 @@ public:
 	}
 	template<typename ForwardKey> const Value &lookup_as(const ForwardKey &key) const {
 		const Value *ptr = this->lookup_ptr_as(key);
-		BLI_assert(ptr != nullptr);
+		ROSE_assert(ptr != nullptr);
 		return *ptr;
 	}
 	template<typename ForwardKey> Value &lookup_as(const ForwardKey &key) {
 		Value *ptr = this->lookup_ptr_as(key);
-		BLI_assert(ptr != nullptr);
+		ROSE_assert(ptr != nullptr);
 		return *ptr;
 	}
 
@@ -550,8 +550,8 @@ public:
 		}
 
 		friend bool operator!=(const BaseIterator &a, const BaseIterator &b) {
-			BLI_assert(a.slots_ == b.slots_);
-			BLI_assert(a.total_slots_ == b.total_slots_);
+			ROSE_assert(a.slots_ == b.slots_);
+			ROSE_assert(a.total_slots_ == b.total_slots_);
 			return a.current_slot_ != b.current_slot_;
 		}
 
@@ -709,7 +709,7 @@ public:
 	 */
 	void remove(const BaseIterator &iterator) {
 		Slot &slot = iterator.current_slot();
-		BLI_assert(slot.is_occupied());
+		ROSE_assert(slot.is_occupied());
 		slot.remove();
 		removed_slots_++;
 	}
@@ -853,11 +853,11 @@ public:
 	}
 
 private:
-	BLI_NOINLINE void realloc_and_reinsert(size_type min_usable_slots) {
+	ROSE_NOINLINE void realloc_and_reinsert(size_type min_usable_slots) {
 		size_type total_slots, usable_slots;
 		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots, &usable_slots);
-		BLI_assert(total_slots >= 1);
-		const usize_type new_slot_mask = usize_type(total_slots) - 1;
+		ROSE_assert(total_slots >= 1);
+		const uint64_t new_slot_mask = uint64_t(total_slots) - 1;
 
 		/**
 		 * Optimize the case when the map was empty beforehand. We can avoid some copies here.
@@ -899,8 +899,8 @@ private:
 		slot_mask_ = new_slot_mask;
 	}
 
-	void add_after_grow(Slot &old_slot, SlotArray &new_slots, usize_type new_slot_mask) {
-		usize_type hash = old_slot.get_hash(Hash());
+	void add_after_grow(Slot &old_slot, SlotArray &new_slots, uint64_t new_slot_mask) {
+		uint64_t hash = old_slot.get_hash(Hash());
 		SLOT_PROBING_BEGIN(ProbingStrategy, hash, new_slot_mask, slot_index) {
 			Slot &slot = new_slots[slot_index];
 			if (slot.is_empty()) {
@@ -917,15 +917,15 @@ private:
 		new (this) Map(NoExceptConstructor(), allocator);
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> void add_new__impl(ForwardKey &&key, usize_type hash, ForwardValue &&...value) {
-		BLI_assert(!this->contains_as(key));
+	template<typename ForwardKey, typename... ForwardValue> void add_new__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+		ROSE_assert(!this->contains_as(key));
 
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
 			if (slot.is_empty()) {
 				slot.occupy(std::forward<ForwardKey>(key), hash, std::forward<ForwardValue>(value)...);
-				BLI_assert(hash_(*slot.key()) == hash);
+				ROSE_assert(hash_(*slot.key()) == hash);
 				occupied_and_removed_slots_++;
 				return;
 			}
@@ -933,13 +933,13 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> bool add__impl(ForwardKey &&key, usize_type hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue> bool add__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
 			if (slot.is_empty()) {
 				slot.occupy(std::forward<ForwardKey>(key), hash, std::forward<ForwardValue>(value)...);
-				BLI_assert(hash_(*slot.key()) == hash);
+				ROSE_assert(hash_(*slot.key()) == hash);
 				occupied_and_removed_slots_++;
 				return true;
 			}
@@ -950,7 +950,7 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF> auto add_or_modify__impl(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value, usize_type hash) -> decltype(create_value(nullptr)) {
+	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF> auto add_or_modify__impl(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value, uint64_t hash) -> decltype(create_value(nullptr)) {
 		using CreateReturnT = decltype(create_value(nullptr));
 		using ModifyReturnT = decltype(modify_value(nullptr));
 		BLI_STATIC_ASSERT((std::is_same_v<CreateReturnT, ModifyReturnT>), "Both callbacks should return the same type.");
@@ -981,13 +981,13 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename CreateValueF> Value &lookup_or_add_cb__impl(ForwardKey &&key, const CreateValueF &create_value, usize_type hash) {
+	template<typename ForwardKey, typename CreateValueF> Value &lookup_or_add_cb__impl(ForwardKey &&key, const CreateValueF &create_value, uint64_t hash) {
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
 			if (slot.is_empty()) {
 				slot.occupy(std::forward<ForwardKey>(key), hash, create_value());
-				BLI_assert(hash_(*slot.key()) == hash);
+				ROSE_assert(hash_(*slot.key()) == hash);
 				occupied_and_removed_slots_++;
 				return *slot.value();
 			}
@@ -998,13 +998,13 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> Value &lookup_or_add__impl(ForwardKey &&key, usize_type hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue> Value &lookup_or_add__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
 			if (slot.is_empty()) {
 				slot.occupy(std::forward<ForwardKey>(key), hash, std::forward<ForwardValue>(value)...);
-				BLI_assert(hash_(*slot.key()) == hash);
+				ROSE_assert(hash_(*slot.key()) == hash);
 				occupied_and_removed_slots_++;
 				return *slot.value();
 			}
@@ -1015,7 +1015,7 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> bool add_overwrite__impl(ForwardKey &&key, usize_type hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue> bool add_overwrite__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		auto create_func = [&](Value *ptr) {
 			new (static_cast<void *>(ptr)) Value(std::forward<ForwardValue>(value)...);
 			return true;
@@ -1027,8 +1027,8 @@ private:
 		return this->add_or_modify__impl(std::forward<ForwardKey>(key), create_func, modify_func, hash);
 	}
 
-	template<typename ForwardKey> const Slot &lookup_slot(const ForwardKey &key, const usize_type hash) const {
-		BLI_assert(this->contains_as(key));
+	template<typename ForwardKey> const Slot &lookup_slot(const ForwardKey &key, const uint64_t hash) const {
+		ROSE_assert(this->contains_as(key));
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
 			if (slot.contains(key, is_equal_, hash)) {
 				return slot;
@@ -1037,11 +1037,11 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey> Slot &lookup_slot(const ForwardKey &key, const usize_type hash) {
+	template<typename ForwardKey> Slot &lookup_slot(const ForwardKey &key, const uint64_t hash) {
 		return const_cast<Slot &>(const_cast<const Map *>(this)->lookup_slot(key, hash));
 	}
 
-	template<typename ForwardKey> const Slot *lookup_slot_ptr(const ForwardKey &key, const usize_type hash) const {
+	template<typename ForwardKey> const Slot *lookup_slot_ptr(const ForwardKey &key, const uint64_t hash) const {
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
 			if (slot.contains(key, is_equal_, hash)) {
 				return &slot;
@@ -1053,11 +1053,11 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey> Slot *lookup_slot_ptr(const ForwardKey &key, const usize_type hash) {
+	template<typename ForwardKey> Slot *lookup_slot_ptr(const ForwardKey &key, const uint64_t hash) {
 		return const_cast<Slot *>(const_cast<const Map *>(this)->lookup_slot_ptr(key, hash));
 	}
 
-	template<typename ForwardKey> size_type count_collisions__impl(const ForwardKey &key, usize_type hash) const {
+	template<typename ForwardKey> size_type count_collisions__impl(const ForwardKey &key, uint64_t hash) const {
 		size_type collisions = 0;
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
@@ -1075,15 +1075,9 @@ private:
 	void ensure_can_add() {
 		if (occupied_and_removed_slots_ >= usable_slots_) {
 			this->realloc_and_reinsert(this->size() + 1);
-			BLI_assert(occupied_and_removed_slots_ < usable_slots_);
+			ROSE_assert(occupied_and_removed_slots_ < usable_slots_);
 		}
 	}
 };
-
-/**
- * Same as a normal Map, but does not use Rose's guarded allocator. This is useful when
- * allocating memory with static storage duration.
- */
-template<typename Key, typename Value, size_type InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key) + sizeof(Value)), typename ProbingStrategy = DefaultProbingStrategy, typename Hash = DefaultHash<Key>, typename IsEqual = DefaultEquality<Key>, typename Slot = typename DefaultMapSlot<Key, Value>::type> using RawMap = Map<Key, Value, InlineBufferCapacity, ProbingStrategy, Hash, IsEqual, Slot, RawAllocator>;
 
 }  // namespace rose

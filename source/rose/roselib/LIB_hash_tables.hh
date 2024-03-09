@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "LIB_math.h"
+
 #include "LIB_allocator.hh"
 #include "LIB_memory_utils.hh"
 #include "LIB_utildefines.h"
@@ -82,7 +84,7 @@ public:
 	}
 
 	void compute_total_and_usable_slots(size_t min_total_slots, size_t min_usable_slots, size_t *r_total_slots, size_t *r_usable_slots) const {
-		ROSE_assert(is_power_of_2_i(int(min_total_slots)));
+		ROSE_assert(is_power_of_2_i((int)min_total_slots));
 
 		size_t total_slots = this->compute_total_slots(min_usable_slots, numerator_, denominator_);
 		total_slots = std::max(total_slots, min_total_slots);

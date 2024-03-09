@@ -328,7 +328,6 @@ public:
 		ROSE_assert(begin_ + amount <= capacity_end_);
 		uninitialized_copy_n(start, amount, end_);
 		end_ += amount;
-		UPDATE_VECTOR_SIZE(this);
 	}
 	template<typename InputIt> void extend(InputIt first, InputIt last) {
 		this->insert(this->end(), first, last);

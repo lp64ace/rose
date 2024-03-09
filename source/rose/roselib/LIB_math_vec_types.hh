@@ -5,33 +5,26 @@
 #include <iostream>
 #include <type_traits>
 
+#include "LIB_assert.h"
 #include "LIB_utildefines.h"
 
 namespace rose {
 
 // clang-format off
 template<typename T>
-using as_uint_type = std::conditional_t<sizeof ( T ) == sizeof ( uint8_t ) , uint8_t ,
-	std::conditional_t<sizeof ( T ) == sizeof ( uint16_t ) , uint16_t ,
-	std::conditional_t<sizeof ( T ) == sizeof ( uint32_t ) , uint32_t ,
-	std::conditional_t<sizeof ( T ) == sizeof ( uint64_t ) , uint64_t , void>>>>;
+using as_uint_type = std::conditional_t<sizeof(T) == sizeof(uint8_t), uint8_t,
+	std::conditional_t<sizeof(T) == sizeof(uint16_t), uint16_t,
+	std::conditional_t<sizeof(T) == sizeof(uint32_t), uint32_t,
+	std::conditional_t<sizeof(T) == sizeof(uint64_t), uint64_t, void>>>>;
 // clang-format on
 
-template<typename T, int Size> struct vec_struct_base {
-	std::array<T, Size> values;
-};
+template<typename T, int Size> struct vec_struct_base { std::array<T, Size> values; };
 
-template<typename T> struct vec_struct_base<T, 2> {
-	T x, y;
-};
+template<typename T> struct vec_struct_base<T, 2> { T x, y; };
 
-template<typename T> struct vec_struct_base<T, 3> {
-	T x, y, z;
-};
+template<typename T> struct vec_struct_base<T, 3> { T x, y, z; };
 
-template<typename T> struct vec_struct_base<T, 4> {
-	T x, y, z, w;
-};
+template<typename T> struct vec_struct_base<T, 4> { T x, y, z, w; };
 
 template<class Fn, size_t... I> void unroll_impl(Fn fn, std::index_sequence<I...>) {
 	(fn(I), ...);
@@ -139,6 +132,32 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 			(*this)[i] = T(other[i]);
 		}
 	}
+	
+	// Swizzling
+	
+	template<ROSE_ENABLE_IF_VEC(Size, >= 2)> VecBase<T, 2> xy() const {
+		return *reinterpret_cast<const VecBase<T, 2> *>(this);
+	}
+
+	template<ROSE_ENABLE_IF_VEC(Size, >= 3)> VecBase<T, 2> yz() const {
+		return *reinterpret_cast<const VecBase<T, 2> *>(&((*this)[1]));
+	}
+
+	template<ROSE_ENABLE_IF_VEC(Size, >= 4)> VecBase<T, 2> zw() const {
+		return *reinterpret_cast<const VecBase<T, 2> *>(&((*this)[2]));
+	}
+
+	template<ROSE_ENABLE_IF_VEC(Size, >= 3)> VecBase<T, 3> xyz() const {
+		return *reinterpret_cast<const VecBase<T, 3> *>(this);
+	}
+
+	template<ROSE_ENABLE_IF_VEC(Size, >= 4)> VecBase<T, 3> yzw() const {
+		return *reinterpret_cast<const VecBase<T, 3> *>(&((*this)[1]));
+	}
+
+	template<ROSE_ENABLE_IF_VEC(Size, >= 4)> VecBase<T, 4> xyzw() const {
+		return *reinterpret_cast<const VecBase<T, 4> *>(this);
+	}
 
 #undef ROSE_ENABLE_IF_VEC
 
@@ -227,13 +246,13 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 
 	friend VecBase operator-(const VecBase &a, const T &b) {
 		VecBase result;
-		unroll<Size>([&](auto i) { (*this)[i] = a[i] - b; });
+		unroll<Size>([&](auto i) { result[i] = a[i] - b; });
 		return result;
 	}
 
 	friend VecBase operator-(const T &a, const VecBase &b) {
 		VecBase result;
-		unroll<Size>([&](auto i) { (*this)[i] = a - b[i]; });
+		unroll<Size>([&](auto i) { result[i] = a - b[i]; });
 		return result;
 	}
 

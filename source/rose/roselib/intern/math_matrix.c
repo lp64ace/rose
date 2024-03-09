@@ -1969,6 +1969,23 @@ void mat4_decompose(float loc[3], float quat[4], float size[3], const float wmat
 	mat3_normalized_to_quat_fast(quat, rot);
 }
 
+void mat3_polar_decompose(const float mat3[3][3], float r_U[3][3], float r_P[3][3]) {
+	/* From svd decomposition (M = WSV*), we have:
+	 *     U = WV*
+	 *     P = VSV*
+	 */
+	float W[3][3], S[3][3], V[3][3], Vt[3][3];
+	float sval[3];
+
+	LIB_svd_m3(mat3, W, sval, V);
+
+	size_to_mat3(S, sval);
+
+	transpose_m3_m3(Vt, V);
+	mul_m3_m3m3(r_U, W, Vt);
+	mul_m3_series(r_P, V, S, Vt);
+}
+
 void scale_m3_fl(float R[3][3], float scale) {
 	R[0][0] = R[1][1] = R[2][2] = scale;
 	R[0][1] = R[0][2] = 0.0;
@@ -2099,8 +2116,6 @@ void blend_m4_m4m4(float out[4][4], const float dst[4][4], const float src[4][4]
 	loc_quat_size_to_mat4(out, floc, fquat, fsize);
 }
 
-/* for builds without Eigen */
-#ifndef MATH_STANDALONE
 void interp_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3], const float t) {
 	/* 'Rotation' component ('U' part of polar decomposition,
 	 * the closest orthogonal matrix to M3 rot/scale
@@ -2163,7 +2178,6 @@ void interp_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4], con
 	copy_m4_m3(R, R3);
 	copy_v3_v3(R[3], loc);
 }
-#endif /* MATH_STANDALONE */
 
 bool is_negative_m3(const float mat[3][3]) {
 	return determinant_m3_array(mat) < 0.0f;

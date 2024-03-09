@@ -65,6 +65,9 @@ public:
 
 	/** Returns the context of the specified window, this should never return NULL. */
 	virtual ContextInterface *GetContext() const = 0;
+	
+	/** Return the type of the currently active drawing context. */
+	virtual int GetContextType() const = 0;
 
 	/* \} */
 public:

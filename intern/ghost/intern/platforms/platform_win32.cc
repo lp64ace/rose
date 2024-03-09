@@ -222,7 +222,7 @@ bool WindowsPlatform::ProcessEvents(bool wait) {
 
 /* \} */
 
-WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hWnd(NULL), _hDC(NULL), _Context(NULL) {
+WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hWnd(NULL), _hDC(NULL), _Context(NULL), _ContextType(GLIB_CONTEXT_NONE) {
 	DWORD ExtendedStyle = parent ? 0 : WS_EX_APPWINDOW;
 	DWORD WindowStyle = parent ? WS_CHILD | WS_POPUP : WS_POPUP;
 	HWND ParentHandle = (parent) ? reinterpret_cast<WindowsWindow *>(parent)->_hWnd : HWND_DESKTOP;
@@ -339,19 +339,29 @@ GPosition WindowsWindow::ClientToScreen(int x, int y) const {
  * \{ */
 
 ContextInterface *WindowsWindow::InstallContext(int type) {
+	if(type == _ContextType && _Context != NULL) {
+		return _Context;
+	}
+	
 	switch (type) {
 		case GLIB_CONTEXT_OPENGL: {
 			WindowsOpenGLContext *context = MEM_new<WindowsOpenGLContext>("glib::WindowsOpenGLContext", this);
 			if (context) {
+				_ContextType = GLIB_CONTEXT_OPENGL;
 				return _Context = context;
 			}
 		} break;
 	}
+	
 	return NULL;
 }
 
 ContextInterface *WindowsWindow::GetContext() const {
 	return _Context;
+}
+
+int WindowsWindow::GetContextType() const {
+	return (_Context) ? _ContextType : GLIB_CONTEXT_NONE;
 }
 
 /* \} */

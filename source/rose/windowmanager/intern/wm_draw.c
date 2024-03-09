@@ -9,6 +9,9 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "GPU_context.h"
+#include "GPU_framebuffer.h"
+
 #include "WM_draw.h"
 #include "WM_window.h"
 
@@ -21,7 +24,7 @@ static void wm_window_set_drawable(struct wmWindowManager *wm, struct wmWindow *
 	if (activate) {
 		GHOST_ActivateWindowDrawingContext(win->gwin);
 	}
-	// GPU_context_active_set(win->gpuctx);
+	GPU_context_active_set(win->gpuctx);
 }
 
 void wm_window_clear_drawable(struct wmWindowManager *wm) {
@@ -43,6 +46,7 @@ void wm_window_swap_buffers(struct wmWindow *win) {
 }
 
 static void wm_draw_window(struct Context *C, struct wmWindow *win) {
+	GPU_clear_color(0.55f, 0.55f, 0.55f, 1.0f);
 }
 
 void wm_draw_update(struct Context *C) {

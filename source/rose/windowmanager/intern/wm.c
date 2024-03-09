@@ -16,6 +16,8 @@
 #include "WM_init_exit.h"
 #include "WM_window.h"
 
+#include "GPU_init_exit.h"
+
 static void window_manager_free_data(struct ID *id) {
 	wmWindowManager *wm = (wmWindowManager *)id;
 	wmWindow *win;

@@ -329,6 +329,8 @@ void MEM_guarded_freeN(void *vmemh) {
 	}
 	else {
 		fprintf(stderr, "Error in header\n");
+
+		abort();
 	}
 
 	totblock = totblock - (size_t)-1;

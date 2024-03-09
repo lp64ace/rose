@@ -45,7 +45,7 @@ char *LIB_strncpy(char *dst, const char *src, size_t dst_maxncpy);
  */
 int LIB_strdiff(const char *source, const char *destination);
 
-enum {
+enum StringDiffFlags {
 	/** Ignore the case of the letters in the strings. */
 	LIB_STRDIFF_NOCASE = 1 << 0,
 	/** Ignore whitespace from any of the two strings. */
@@ -160,6 +160,14 @@ size_t LIB_str_replacen_char(char *str, size_t maxlen, const char src, const cha
  * \return Returns the length of the `buffer` in bytes not including the null-terminator or LIB_NPOS if an error occured.
  */
 size_t LIB_str_replace(char *buffer, size_t maxlen, const char *haystack, const char *needle, const char *alt);
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Misc String Utils
+ * \{ */
+
+char *LIB_string_join_arrayN(const char *strings[], size_t strings_num);
 
 /* \} */
 

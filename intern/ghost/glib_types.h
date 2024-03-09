@@ -9,6 +9,7 @@ typedef struct GWindow GWindow;
 typedef struct GContext GContext;
 
 enum {
+	GLIB_CONTEXT_NONE,
 	GLIB_CONTEXT_DIRECTX,  // Denotes a Direct3D rendering context.
 	GLIB_CONTEXT_OPENGL,   // Denotes an OpenGL rendering context.
 	GLIB_CONTEXT_VULKAN,   // Denotes a Vulkan rendering context.

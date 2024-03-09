@@ -5,10 +5,10 @@
 #include <string_view>
 
 #include "LIB_span.hh"
-#include "LIB_utildefines.h"
 
 /** Only required for #LIB_NPOS, to keep a consistency accross string utils. */
 #include "LIB_string.h"
+#include "LIB_utildefines.h"
 
 namespace rose {
 
@@ -32,7 +32,6 @@ public:
 	constexpr size_t size() const;
 	constexpr bool is_empty() const;
 	constexpr const char *data() const;
-	constexpr operator Span<char>() const;
 
 	operator std::string() const;
 	constexpr operator std::string_view() const;
@@ -133,10 +132,6 @@ constexpr bool StringRefBase::is_empty() const {
  */
 constexpr const char *StringRefBase::data() const {
 	return data_;
-}
-
-constexpr StringRefBase::operator Span<char>() const {
-	return Span<char>(data_, size_);
 }
 
 /**

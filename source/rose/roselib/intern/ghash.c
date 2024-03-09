@@ -189,7 +189,7 @@ static void ghash_buckets_resize(GHash *cont, const uint nbuckets) {
 				/* No need to recompute hashes in this case, since our mask is just smaller,
 				 * all items in old bucket 'i' will go in same new bucket (i & new_mask)! */
 				const uint bucket_index = ghash_bucket_index(cont, i);
-				BLI_assert(!buckets_old[i] || (bucket_index == ghash_bucket_index(cont, ghash_entryhash(cont, buckets_old[i]))));
+				ROSE_assert(!buckets_old[i] || (bucket_index == ghash_bucket_index(cont, ghash_entryhash(cont, buckets_old[i]))));
 				Entry *e;
 				for (e = buckets_old[i]; e && e->next; e = e->next) {
 					/* pass */
