@@ -1,4 +1,4 @@
-#pragma BLENDER_REQUIRE(gpu_shader_common_math_utils.glsl)
+#pragma ROSE_REQUIRE(gpu_shader_common_math_utils.glsl)
 
 void math_add(float a, float b, float c, out float result) {
 	result = a + b;

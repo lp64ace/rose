@@ -1484,7 +1484,7 @@ void quat_to_compatible_eul(float eul[3], const float oldrot[3], const float qua
  *      "Euler Angle Conversion"
  *      by Ken Shoemake <shoemake@graphics.cis.upenn.edu>
  *      in "Graphics Gems IV", Academic Press, 1994
- * for use in Blender
+ * for use in Rose
  */
 
 /* Type for rotation order info - see wiki for derivation details */
@@ -1814,7 +1814,7 @@ void sub_eul_euleul(float r_eul[3], float a[3], float b[3], const short order) {
  * SPDX-License-Identifier: Zlib
  * Copyright 2006-2007 University of Dublin, Trinity College, All Rights Reserved.
  *
- * Changes for Blender:
+ * Changes for Rose:
  * - renaming, style changes and optimization's
  * - added support for scaling
  */

@@ -739,14 +739,14 @@ struct GPUSource {
 			GPUSource *dependency_source = nullptr;
 
 			{
-				pos = source.find("pragma BLENDER_REQUIRE(", pos + 1);
+				pos = source.find("pragma ROSE_REQUIRE(", pos + 1);
 				if (pos == -1) {
 					return 0;
 				}
 				int64_t start = source.find('(', pos) + 1;
 				int64_t end = source.find(')', pos);
 				if (end == -1) {
-					print_error(source, start, "Malformed BLENDER_REQUIRE: Missing \")\" token");
+					print_error(source, start, "Malformed ROSE_REQUIRE: Missing \")\" token");
 					return 1;
 				}
 				StringRef dependency_name = source.substr(start, end - start);

@@ -27,8 +27,8 @@ public:
 		return hash_;
 	}
 
-	int64_t linear_steps() const {
-		return std::numeric_limits<int64_t>::max();
+	size_t linear_steps() const {
+		return std::numeric_limits<size_t>::max();
 	}
 };
 
@@ -62,7 +62,7 @@ public:
 		return current_hash_;
 	}
 
-	int64_t linear_steps() const {
+	size_t linear_steps() const {
 		return 1;
 	}
 };
@@ -98,7 +98,7 @@ public:
 		return hash_;
 	}
 
-	int64_t linear_steps() const {
+	size_t linear_steps() const {
 		return LinearSteps;
 	}
 };
@@ -108,7 +108,7 @@ public:
  * method. This way more bits are taken into account earlier. After a couple of collisions (that
  * should happen rarely), it will fallback to a sequence that hits every slot.
  */
-template<uint64_t LinearSteps = 2, bool PreShuffle = false> class ShuffleProbingStrategy {
+template<size_t LinearSteps = 2, bool PreShuffle = false> class ShuffleProbingStrategy {
 private:
 	uint64_t hash_;
 	uint64_t perturb_;
@@ -134,7 +134,7 @@ public:
 		return hash_;
 	}
 
-	int64_t linear_steps() const {
+	size_t linear_steps() const {
 		return LinearSteps;
 	}
 };

@@ -424,12 +424,6 @@ bool gpu_shader_create_info_compile(const char *name_starts_with_filter) {
 	int skipped = 0;
 	int total = 0;
 
-	fprintf(stdout, "\n");
-	fprintf(stdout, "[GPU] Compiling Shaders\n");
-	fprintf(stdout, "\n");
-	
-	int pad = 42;
-
 	for (ShaderCreateInfo *info : g_create_infos->values()) {
 		info->finalize();
 		if (info->do_static_compilation_) {
@@ -442,23 +436,13 @@ bool gpu_shader_create_info_compile(const char *name_starts_with_filter) {
 				continue;
 			}
 
-			fprintf(stdout, "    %s ", info->name_.c_str());
-
 			total++;
 			GPUShader *shader = GPU_shader_create_from_info(reinterpret_cast<const GPUShaderCreateInfo *>(info));
 
-			for(int i = info->name_.size(); i < pad; i++) {
-				fprintf(stdout, ".");
-			}
-
 			if (shader == nullptr) {
-				fprintf(stdout, " %8s\n", "Failed");
-
 				std::cerr << "Compilation " << info->name_.c_str() << " Failed\n";
 			}
 			else {
-				fprintf(stdout, " %8s\n", "Passed");
-
 				success++;
 
 #ifndef NDEBUG
@@ -506,7 +490,6 @@ bool gpu_shader_create_info_compile(const char *name_starts_with_filter) {
 		}
 	}
 	
-	printf("\n");
 	printf("Shader Test compilation result: %d / %d passed", success, total);
 	if (skipped_filter > 0) {
 		printf(" (skipped %d when filtering)", skipped_filter);

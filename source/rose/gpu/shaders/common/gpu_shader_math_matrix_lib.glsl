@@ -1,6 +1,6 @@
 
-#pragma BLENDER_REQUIRE(gpu_shader_math_vector_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_math_rotation_lib.glsl)
+#pragma ROSE_REQUIRE(gpu_shader_math_vector_lib.glsl)
+#pragma ROSE_REQUIRE(gpu_shader_math_rotation_lib.glsl)
 
 /* WORKAROUND: to guard against double include in EEVEE. */
 #ifndef GPU_SHADER_MATH_MATRIX_LIB_GLSL

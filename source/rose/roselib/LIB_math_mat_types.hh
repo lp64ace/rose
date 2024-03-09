@@ -152,7 +152,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		return reinterpret_cast<col_type *>(this)[index];
 	}
 
-	/** Access helpers. Using Blender coordinate system. */
+	/** Access helpers. Using Rose coordinate system. */
 
 	vec3_type &x_axis() {
 		ROSE_STATIC_ASSERT(NumCol >= 1, "Wrong Matrix dimension");
