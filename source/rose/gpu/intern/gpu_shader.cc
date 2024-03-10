@@ -263,20 +263,16 @@ void GPU_shader_bind(GPUShader *gpu_shader) {
 	if (ctx->shader != shader) {
 		ctx->shader = shader;
 		shader->bind();
-#if 0
 		GPU_matrix_bind(gpu_shader);
-#endif
 		Shader::set_srgb_uniform(gpu_shader);
 	}
 	else {
 		if (Shader::srgb_uniform_dirty_get()) {
 			Shader::set_srgb_uniform(gpu_shader);
 		}
-#if 0
 		if (GPU_matrix_dirty_get()) {
 			GPU_matrix_bind(gpu_shader);
 		}
-#endif
 	}
 }
 

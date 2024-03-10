@@ -14,6 +14,12 @@ using namespace rose::gpu;
  * \{ */
 
 GLContext::GLContext(void *window, GLSharedOrphanLists &shared_orphan_list) : shared_orphan_list_(shared_orphan_list) {
+	float data[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+	glGenBuffers(1, &default_attr_vbo_);
+	glBindBuffer(GL_ARRAY_BUFFER, default_attr_vbo_);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	this->state_manager = MEM_new<GLStateManager>("rose::gpu::GLStateManager");
 	this->window_ = window;
 
@@ -45,6 +51,12 @@ GLContext::GLContext(void *window, GLSharedOrphanLists &shared_orphan_list) : sh
 GLContext::~GLContext() {
 	ROSE_assert(orphaned_vertarrays_.is_empty());
 	ROSE_assert(orphaned_framebuffers_.is_empty());
+	/* Delete VAO's so the batch can be reused in another context. */
+	for (GLVaoCache *cache : vao_caches_) {
+		cache->clear();
+	}
+
+	glDeleteBuffers(1, &default_attr_vbo_);
 }
 
 /* \} */
@@ -190,4 +202,26 @@ void GLContext::tex_free(GLuint tex_id) {
 	}
 }
 
-/** \} */
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Linked object deletion
+ *
+ * These objects contain data that are stored per context. We
+ * need to do some cleanup if they are used across context or if context
+ * is discarded.
+ * \{ */
+
+void GLContext::vao_cache_register(GLVaoCache *cache) {
+	lists_mutex_.lock();
+	vao_caches_.add(cache);
+	lists_mutex_.unlock();
+}
+
+void GLContext::vao_cache_unregister(GLVaoCache *cache) {
+	lists_mutex_.lock();
+	vao_caches_.remove(cache);
+	lists_mutex_.unlock();
+}
+
+/* \} */

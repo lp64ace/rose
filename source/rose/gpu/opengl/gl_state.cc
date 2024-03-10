@@ -50,6 +50,8 @@ void GLStateManager::apply_state() {
 		this->texture_bind_apply();
 		this->image_bind_apply();
 	}
+
+	active_fb->apply_state();
 };
 
 void GLStateManager::force_state() {

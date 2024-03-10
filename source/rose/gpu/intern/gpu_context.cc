@@ -6,6 +6,7 @@
 
 #include "gpu_backend.hh"
 #include "gpu_context_private.hh"
+#include "gpu_matrix_private.h"
 #include "gpu_private.h"
 
 #ifdef WITH_OPENGL_BACKEND
@@ -35,9 +36,13 @@ namespace rose::gpu {
 Context::Context() {
 	thread_ = pthread_self();
 	active_ = false;
+	
+	matrix_state = GPU_matrix_state_create();
 }
 
 Context::~Context() {
+	GPU_matrix_state_discard(matrix_state);
+	
 	MEM_delete<StateManager>(state_manager);
 	MEM_delete<FrameBuffer>(front_left);
 	MEM_delete<FrameBuffer>(back_left);

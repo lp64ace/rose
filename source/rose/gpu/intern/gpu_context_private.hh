@@ -9,6 +9,8 @@
 
 #include <pthread.h>
 
+struct GPUMatrixState;
+
 namespace rose::gpu {
 
 class Shader;
@@ -18,6 +20,8 @@ public:
 	FrameBuffer *active_fb = nullptr;
 	Shader *shader = nullptr;
 	StateManager *state_manager = nullptr;
+	
+	GPUMatrixState *matrix_state = nullptr;
 
 	/**
 	 * All 4 window frame-buffers.

@@ -21,6 +21,10 @@ static const char *builtin_shader_create_info_name(BuiltinShader shader) {
 			return "gpu_shader_2D_widget_base_inst";
 		case GPU_SHADER_2D_WIDGET_SHADOW:
 			return "gpu_shader_2D_widget_shadow";
+
+		case GPU_SHADER_TEST:
+			return "gpu_shader_test";
+
 		default:
 			ROSE_assert_unreachable();
 			return "";

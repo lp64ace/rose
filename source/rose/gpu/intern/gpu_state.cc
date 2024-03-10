@@ -140,20 +140,17 @@ void GPU_program_point_size(bool enable) {
 }
 
 void GPU_scissor_test(bool enable) {
-	ROSE_assert_unreachable();
-	// Context::get()->active_fb->scissor_test_set(enable);
+	Context::get()->active_fb->scissor_test_set(enable);
 }
 
 void GPU_scissor(int x, int y, int width, int height) {
 	int scissor_rect[4] = {x, y, width, height};
-	ROSE_assert_unreachable();
-	// Context::get()->active_fb->scissor_set(scissor_rect);
+	Context::get()->active_fb->scissor_set(scissor_rect);
 }
 
 void GPU_viewport(int x, int y, int width, int height) {
 	int viewport_rect[4] = {x, y, width, height};
-	ROSE_assert_unreachable();
-	// Context::get()->active_fb->viewport_set(viewport_rect);
+	Context::get()->active_fb->viewport_set(viewport_rect);
 }
 
 void GPU_stencil_reference_set(uint reference) {

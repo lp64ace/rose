@@ -195,6 +195,10 @@ set(GLSL_SRC
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
 	shaders/gpu_shader_text_frag.glsl
 	shaders/gpu_shader_text_vert.glsl
+
+	shaders/gpu_shader_test_frag.glsl
+	shaders/gpu_shader_test_vert.glsl
+
 	shaders/common/gpu_shader_common_color_ramp.glsl
 	shaders/common/gpu_shader_common_color_utils.glsl
 	shaders/common/gpu_shader_common_curves.glsl
@@ -252,6 +256,8 @@ set(SRC_SHADER_CREATE_INFOS
 	infos/gpu_shader_2D_widget_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh
+	
+	infos/gpu_shader_test_info.hh
 )
 
 set(SHADER_CREATE_INFOS_CONTENT

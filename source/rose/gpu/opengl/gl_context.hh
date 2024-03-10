@@ -1,9 +1,11 @@
 #pragma once
 
+#include "LIB_set.hh"
 #include "LIB_vector.hh"
 
 #include "intern/gpu_context_private.hh"
 
+#include "gl_batch.hh"
 #include "gl_state.hh"
 
 #include <mutex>
@@ -67,7 +69,18 @@ public:
 	static bool generate_mipmap_workaround;
 	static float derivative_signs[2];
 
+	/** VBO for missing vertex attrib binding. Avoid undefined behavior on some implementation. */
+	GLuint default_attr_vbo_;
+
+	/** Used for debugging purpose. Bitflags of all bound slots. */
+	uint16_t bound_ubo_slots;
+
 private:
+	/**
+	 * #GPUBatch & #GPUFramebuffer have references to the context they are from, in the case the
+	 * context is destroyed, we need to remove any reference to it.
+	 */
+	Set<GLVaoCache *> vao_caches_;
 	/** Mutex for below structures. */
 	std::mutex lists_mutex_;
 	/** VertexArrays and FrameBuffers are not shared across context. */
@@ -99,6 +112,9 @@ public:
 
 	static void buf_free(GLuint buf_id);
 	static void tex_free(GLuint tex_id);
+
+	void vao_cache_register(GLVaoCache *cache);
+	void vao_cache_unregister(GLVaoCache *cache);
 
 private:
 	static void orphans_add(Vector<GLuint> &orphan_list, std::mutex &list_mutex, GLuint id);

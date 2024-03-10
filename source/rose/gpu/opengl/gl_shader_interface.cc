@@ -510,7 +510,7 @@ GLShaderInterface::GLShaderInterface(GLuint program, const shader::ShaderCreateI
 GLShaderInterface::~GLShaderInterface() {
 	for (auto *ref : refs_) {
 		if (ref != nullptr) {
-			// ref->remove(this);
+			ref->remove(this);
 		}
 	}
 }

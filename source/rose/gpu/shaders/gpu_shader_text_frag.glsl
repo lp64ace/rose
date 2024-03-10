@@ -1,3 +1,4 @@
+
 #pragma ROSE_REQUIRE(gpu_shader_colorspace_lib.glsl)
 
 //#define GPU_NEAREST

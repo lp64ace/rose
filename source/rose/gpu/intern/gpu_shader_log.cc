@@ -120,7 +120,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 				}
 				if (src_line_index >= log_item.cursor.row - DEBUG_CONTEXT_LINES) {
 					fprintf(stderr, "%5d | ", src_line_index);
-					fprintf(stderr, "%.s", src_line, (src_line_end + 1) - src_line);
+					fprintf(stderr, "%.*s", (src_line_end + 1) - src_line, src_line);
 				}
 				/* Continue to next line. */
 				src_line = src_line_end + 1;
@@ -134,7 +134,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 				else {
 					fprintf(stderr, line_prefix);
 				}
-				fprintf(stderr, "%.s", src_line, (src_line_end + 1) - src_line);
+				fprintf(stderr, "%.*s", (src_line_end + 1) - src_line, src_line);
 				/* Print char offset. */
 				fprintf(stderr, line_prefix);
 				if (log_item.cursor.column != -1) {
@@ -153,7 +153,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 						break;
 					}
 					fprintf(stderr, "%5d | ", src_line_index);
-					fprintf(stderr, "%.s", src_line, (src_line_end + 1) - src_line);
+					fprintf(stderr, "%.*s", (src_line_end + 1) - src_line, src_line);
 					/* Continue to next line. */
 					src_line = src_line_end + 1;
 					src_line_index++;
@@ -195,7 +195,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 		}
 		/* Print the error itself. */
 		fprintf(stderr, "%s", info_col);
-		fprintf(stderr, "%.s", log_line, (line_end + 1) - log_line);
+		fprintf(stderr, "%.*s", (line_end + 1) - log_line, log_line);
 		fprintf(stderr, "%s", reset_col);
 		/* Continue to next line. */
 		log_line = line_end + 1;

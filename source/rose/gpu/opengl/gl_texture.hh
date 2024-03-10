@@ -6,6 +6,8 @@
 
 #include "intern/gpu_texture_private.hh"
 
+#include <gl/glew.h>
+
 namespace rose {
 namespace gpu {
 

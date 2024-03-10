@@ -47,6 +47,7 @@ void wm_window_swap_buffers(struct wmWindow *win) {
 
 static void wm_draw_window(struct Context *C, struct wmWindow *win) {
 	GPU_clear_color(0.55f, 0.55f, 0.55f, 1.0f);
+	GPU_clear_depth(1.0f);
 }
 
 void wm_draw_update(struct Context *C) {

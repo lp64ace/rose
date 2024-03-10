@@ -478,6 +478,7 @@ void GLBackend::capabilities_init() {
 	glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &GLContext::max_cubemap_size);
 	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &GLContext::max_ubo_binds);
 	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &GLContext::max_ubo_size);
+	glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &gpu_get_info_i(GPU_INFO_MAX_STORAGE_BUFFER_SIZE));
 	if (gpu_get_info_i(GPU_INFO_SHADER_STORAGE_BUFFER_OBJECTS_SUPPORT)) {
 		GLint max_ssbo_binds;
 		GLContext::max_ssbo_binds = 999999;
