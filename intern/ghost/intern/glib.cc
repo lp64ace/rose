@@ -12,6 +12,13 @@ void GHOST_Exit() {
 	ClosePlatform();
 }
 
+float GHOST_GetTime32() {
+	return (glib_platform) ? (float)glib_platform->GetTime() : 0.0f;
+}
+double GHOST_GetTime64() {
+	return (glib_platform) ? (double)glib_platform->GetTime() : 0.0f;
+}
+
 GWindow *GHOST_InitWindow(GWindow *parent, int width, int height) {
 	if (InitPlatform()) {
 		return NULL;

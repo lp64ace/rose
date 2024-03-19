@@ -6,6 +6,10 @@
 #include "KER_idtype.h"
 #include "KER_library.h"
 
+/* -------------------------------------------------------------------- */
+/** \name ID Type Implementation
+ * \{ */
+
 static void library_free_data(struct ID *id) {
 	struct Library *library = (struct Library *)id;
 
@@ -27,3 +31,5 @@ IDTypeInfo IDType_ID_LI = {
 	.copy_data = NULL,
 	.free_data = library_free_data,
 };
+
+/* \} */

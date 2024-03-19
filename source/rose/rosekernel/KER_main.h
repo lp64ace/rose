@@ -7,6 +7,8 @@
 #include "LIB_spinlock.h"
 #include "LIB_utildefines.h"
 
+#include "KER_namemap.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,8 +23,12 @@ struct MainLock;
 typedef struct Main {
 	struct MainLock *lock;
 	struct Library *lib;
+	
+	NameMap *name_map;
 
 	ListBase libraries;
+	ListBase screens;
+	ListBase workspaces;
 	ListBase wm;
 
 	bool is_global_main;

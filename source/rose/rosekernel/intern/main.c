@@ -13,6 +13,8 @@ struct Main *KER_main_new(void) {
 	main->lock = MEM_mallocN(sizeof(SpinLock), "MainLock");
 	LIB_spin_init((SpinLock *)main->lock);
 
+	main->name_map = KER_namemap_new(INDEX_ID_MAX);
+
 	return main;
 }
 
@@ -37,6 +39,8 @@ void KER_main_free(struct Main *main) {
 		LIB_listbase_clear(lb);
 	}
 
+	KER_namemap_free(main->name_map);
+
 	MEM_freeN(main->lock);
 	MEM_freeN(main);
 }
@@ -53,6 +57,10 @@ struct ListBase *which_libbase(struct Main *main, short type) {
 	switch (type) {
 		case ID_LI:
 			return &(main->libraries);
+		case ID_SCR:
+			return &(main->screens);
+		case ID_WS:
+			return &(main->workspaces);
 		case ID_WM:
 			return &(main->wm);
 	}
@@ -61,6 +69,8 @@ struct ListBase *which_libbase(struct Main *main, short type) {
 
 int set_listbasepointers(struct Main *main, struct ListBase *lb[]) {
 	lb[INDEX_ID_LI] = &(main->libraries);
+	lb[INDEX_ID_SCR] = &(main->screens);
+	lb[INDEX_ID_WS] = &(main->workspaces);
 	lb[INDEX_ID_WM] = &(main->wm);
 
 	lb[INDEX_ID_NULL] = NULL;

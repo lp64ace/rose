@@ -36,6 +36,12 @@ Before proceeding, ensure that the following prerequisites are met:
 	
 	Note: It is strongly recommended to use Visual Studio, as it is the only platform currently available for testing the library.
 	
+# Screenshots
+
+A screenshot of the application running with a single editor (VIEW3D) and the default global editor (TOPBAR).
+
+![](ext/screenshot.png)
+	
 # Authors
 
 Dimitris Bokis

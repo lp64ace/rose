@@ -1,6 +1,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "MEM_alloc.h"
+
 void LIB_addhead(struct ListBase *listbase, void *vlink) {
 	Link *link = (Link *)vlink;
 
@@ -137,4 +139,27 @@ void *LIB_rfindptr(const struct ListBase *listbase, void *ptr, const size_t offs
 	}
 
 	return NULL;
+}
+
+void LIB_freelistN(struct ListBase *listbase) {
+	Link *link, *next;
+	
+	for(link = listbase->first; link; link = next) {
+		next = link->next;
+		
+		MEM_freeN(link);
+	}
+}
+
+struct LinkData *LIB_genericNodeN(void *data) {
+	LinkData *link;
+	
+	if(data == NULL) {
+		return NULL;
+	}
+	
+	link = MEM_callocN(sizeof(LinkData), "LinkData");
+	link->data = data;
+	
+	return link;
 }

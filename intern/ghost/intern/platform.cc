@@ -8,11 +8,24 @@ const char *glib_application_name = "Rose";
 PlatformInterface *glib_platform = nullptr;
 
 PlatformInterface::PlatformInterface() {
+	_TimeBegin = std::chrono::high_resolution_clock::now();
 }
 
 PlatformInterface::~PlatformInterface() {
 	DisposeEvents();
 }
+
+/* -------------------------------------------------------------------- */
+/** \name Time Utils
+ * \{ */
+
+double PlatformInterface::GetTime() const {
+	const auto now = std::chrono::high_resolution_clock::now();
+	
+	return std::chrono::duration<double>(now - _TimeBegin).count();
+}
+
+/* \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Event Managing

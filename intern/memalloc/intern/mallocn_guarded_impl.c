@@ -368,7 +368,7 @@ void MEM_guarded_printmemlist(void) {
 
 	membl = (membase->first) ? MEMGET(membase->first) : NULL;
 	while (membl) {
-		printf("\t[name = %s, length = " SIZET_FORMAT ", pointer = %p],\n", membl->name, membl->length, membl);
+		printf("\t[name = %s, length = " SIZET_FORMAT ", pointer = %p],\n", membl->name, membl->length, membl + 1);
 
 		membl = (membl->next) ? MEMGET(membl->next) : NULL;
 	}

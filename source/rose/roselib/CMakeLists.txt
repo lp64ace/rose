@@ -35,6 +35,7 @@ set(SRC
 	LIB_hash_mm2a.h
 	LIB_hash_tables.hh
 	LIB_index_range.hh
+	LIB_linklist.h
 	LIB_listbase.h
 	LIB_listbase_inline.h
 	LIB_map.hh
@@ -55,12 +56,14 @@ set(SRC
 	LIB_memory_utils.hh
 	LIB_mempool.h
 	LIB_probing_strategies.hh
+	LIB_rect.h
 	LIB_set.hh
 	LIB_set_slots.hh
 	LIB_span.hh
 	LIB_spinlock.h
 	LIB_string.h
 	LIB_string_ref.hh
+	LIB_string_utils.h
 	LIB_struct_equality_utils.hh
 	LIB_system.h
 	LIB_sys_types.h
@@ -69,9 +72,11 @@ set(SRC
 	LIB_utility_mixins.hh
 	LIB_vector.hh
 	intern/assert.c
+	intern/bitmap.c
 	intern/ghash.c
 	intern/ghash_utils.c
 	intern/hash_mm2a.c
+	intern/linklist.c
 	intern/listbase.c
 	intern/math_base.c
 	intern/math_geom.c
@@ -82,9 +87,11 @@ set(SRC
 	intern/math_vector.c
 	intern/memory_utils.c
 	intern/mempool.c
+	intern/rct.c
 	intern/spinlock.c
 	intern/string.c
 	intern/string_ref.cc
+	intern/string_utils.c
 	intern/system.c
 	intern/system_unix.c
 	intern/system_win32.c

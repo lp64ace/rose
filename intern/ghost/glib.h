@@ -33,6 +33,9 @@ extern "C" {
 void GHOST_Init();
 void GHOST_Exit();
 
+float GHOST_GetTime32();
+double GHOST_GetTime64();
+
 /**
  * This will create a new window with the specified dimensions, you cannot specify the window title since the windows have no
  * border and no title bar.

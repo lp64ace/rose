@@ -48,11 +48,11 @@ template<
 	 */
 	size_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key) + sizeof(Value)),
 	/**
-	 * The strategy used to deal with collisions. They are defined in BLI_probing_strategies.hh.
+	 * The strategy used to deal with collisions. They are defined in LIB_probing_strategies.hh.
 	 */
 	typename ProbingStrategy = DefaultProbingStrategy,
 	/**
-	 * The hash function used to hash the keys. There is a default for many types. See BLI_hash.hh
+	 * The hash function used to hash the keys. There is a default for many types. See LIB_hash.hh
 	 * for examples on how to define a custom hash function.
 	 */
 	typename Hash = DefaultHash<Key>,
@@ -65,7 +65,7 @@ template<
 	 * This is what will actually be stored in the hash table array. At a minimum a slot has to be
 	 * able to hold a key, a value and information about whether the slot is empty, occupied or
 	 * removed. Using a non-standard slot type can improve performance or reduce the memory
-	 * footprint for some types. Slot types are defined in BLI_map_slots.hh
+	 * footprint for some types. Slot types are defined in LIB_map_slots.hh
 	 */
 	typename Slot = typename DefaultMapSlot<Key, Value>::type,
 	/**
@@ -953,7 +953,7 @@ private:
 	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF> auto add_or_modify__impl(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value, uint64_t hash) -> decltype(create_value(nullptr)) {
 		using CreateReturnT = decltype(create_value(nullptr));
 		using ModifyReturnT = decltype(modify_value(nullptr));
-		BLI_STATIC_ASSERT((std::is_same_v<CreateReturnT, ModifyReturnT>), "Both callbacks should return the same type.");
+		ROSE_STATIC_ASSERT((std::is_same_v<CreateReturnT, ModifyReturnT>), "Both callbacks should return the same type.");
 
 		this->ensure_can_add();
 

@@ -12,6 +12,12 @@ typedef struct ListBase {
 	struct Link *first, *last;
 } ListBase;
 
+typedef struct LinkData {
+	struct LinkData *prev, *next;
+	
+	void *data;
+} LinkData;
+
 #ifdef __cplusplus
 }
 #endif

@@ -9,6 +9,8 @@ struct GPUShader;
 typedef enum BuiltinShader {
 	/** Glyph drawing shader used by the "Rose Load Font" module. */
 	GPU_SHADER_TEXT,
+	/** Draw a texture with a uniform color multiplied. */
+	GPU_SHADER_2D_IMAGE_RECT_COLOR,
 	/** Merge viewport overlay texture with the render output. */
 	GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE,
 	GPU_SHADER_2D_IMAGE_OVERLAYS_STEREO_MERGE,

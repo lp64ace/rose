@@ -1,5 +1,6 @@
 #include "LIB_utildefines.h"
 
+#include "GPU_batch_presets.h"
 #include "GPU_init_exit.h"
 
 #include "intern/gpu_private.h"
@@ -23,9 +24,13 @@ void GPU_init() {
 
 	gpu_shader_dependency_init();
 	gpu_shader_create_info_init();
+
+	gpu_batch_presets_init();
 }
 
 void GPU_exit() {
+	gpu_batch_presets_exit();
+
 	gpu_shader_dependency_exit();
 	gpu_shader_create_info_exit();
 

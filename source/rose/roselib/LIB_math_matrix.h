@@ -480,18 +480,18 @@ bool equals_m4m4(const float mat1[4][4], const float mat2[4][4]);
  * (where conversion can be represented by a matrix multiplication).
  *
  * A #SpaceTransform is initialized using:
- * - #BLI_SPACE_TRANSFORM_SETUP(&data,  ob1, ob2)
+ * - #ROSE_SPACE_TRANSFORM_SETUP(&data,  ob1, ob2)
  *
  * After that the following calls can be used:
  * - Converts a coordinate in ob1 space to the corresponding ob2 space:
- *   #BLI_space_transform_apply(&data, co);
+ *   #LIB_space_transform_apply(&data, co);
  * - Converts a coordinate in ob2 space to the corresponding ob1 space:
- *   #BLI_space_transform_invert(&data, co);
+ *   #LIB_space_transform_invert(&data, co);
  *
- * Same concept as #BLI_space_transform_apply and #BLI_space_transform_invert,
+ * Same concept as #LIB_space_transform_apply and #LIB_space_transform_invert,
  * but no is normalized after conversion (and not translated at all!):
- * - #BLI_space_transform_apply_normal(&data, no);
- * - #BLI_space_transform_invert_normal(&data, no);
+ * - #LIB_space_transform_apply_normal(&data, no);
+ * - #LIB_space_transform_invert_normal(&data, no);
  */
 typedef struct SpaceTransform {
 	float local2target[4][4];

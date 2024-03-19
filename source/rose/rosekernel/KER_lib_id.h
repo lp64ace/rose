@@ -48,9 +48,22 @@ void *KER_libblock_alloc(struct Main *main, short type, const char *name, const 
  */
 void KER_libblock_init_empty(struct ID *id);
 
+void *KER_id_new(struct Main *main, short type, const char *name);
+
+void KER_libblock_runtime_reset_remapping_status(struct ID *id);
+
+void id_us_ensure_real(struct ID *id);
+void id_us_clear_real(struct ID *id);
+
+void id_us_plus_no_lib(struct ID *id);
+void id_us_plus(struct ID *id);
+void id_us_min(struct ID *id);
+
+void id_fake_user_set(struct ID *id);
+
 /**
- * Uniqueness is only ensured within the ID's library (nullptr for local ones), libraries act as some kind of namespace for
- * IDs. \param name: The new name of the given ID, if NULL the current given ID name is used instead.
+ * Uniqueness is only ensured within the ID's library (nullptr for local ones), libraries act as some kind of namespace for IDs. 
+ * \param tname The new name of the given ID, if NULL the current given ID type name is used instead.
  */
 void KER_id_new_name_validate(struct Main *main, struct ID *id, const char *tname);
 
@@ -67,8 +80,8 @@ enum {
 };
 
 /**
- * Complete ID freeing, extended version for corner cases. Can override default (and safe!) freeing process, to gain some speed
- * up.
+ * Complete ID freeing, extended version for corner cases. Can override default (and safe!) freeing process, 
+ * to gain some speed up.
  *
  * At that point, given id is assumed to not be used by any other data-block already (might not be actually true, in case e.g.
  * several inter-related IDs get freed together...). However, they might still be using (referencing) other IDs, this code
@@ -80,6 +93,11 @@ enum {
  * \param use_flag_from_idtag: Use freeing info flags from given data-block, even if some ones are passed in \a flag parameter.
  */
 void KER_id_free_ex(struct Main *main, void *idv, int flag, bool use_flag_from_idtag);
+
+/**
+ * The default and safe complete ID freeing for data-blocks that exist within a #Main database and for data-blocks that do not.
+ */
+void KER_id_free(struct Main *main, void *idv);
 
 #ifdef __cplusplus
 }

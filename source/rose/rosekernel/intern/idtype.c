@@ -17,6 +17,8 @@ void KER_idtype_init(void) {
 	(void)0
 
 	INIT_TYPE(ID_LI);
+	INIT_TYPE(ID_SCR);
+	INIT_TYPE(ID_WS);
 	INIT_TYPE(ID_WM);
 
 #undef INIT_TYPE
@@ -79,6 +81,8 @@ uint64_t KER_idtype_idcode_to_idfilter(short idcode) {
 
 	switch ((ID_Type)idcode) {
 		CASE_IDFILTER(LI);
+		CASE_IDFILTER(SCR);
+		CASE_IDFILTER(WS);
 		CASE_IDFILTER(WM);
 	}
 
@@ -98,6 +102,8 @@ short KER_idtype_idcode_from_idfilter(uint64_t idfilter) {
 
 	switch (idfilter) {
 		CASE_IDFILTER(LI);
+		CASE_IDFILTER(SCR);
+		CASE_IDFILTER(WS);
 		CASE_IDFILTER(WM);
 	}
 
@@ -115,6 +121,8 @@ int KER_idtype_idcode_to_index(short idcode) {
 
 	switch ((ID_Type)idcode) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(SCR);
+		CASE_IDINDEX(WS);
 		CASE_IDINDEX(WM);
 	}
 
@@ -135,6 +143,8 @@ short KER_idtype_idcode_from_index(int index) {
 
 	switch (index) {
 		CASE_IDCODE(LI);
+		CASE_IDCODE(SCR);
+		CASE_IDCODE(WS);
 		CASE_IDCODE(WM);
 	}
 

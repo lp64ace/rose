@@ -117,7 +117,7 @@ set(SRC
 	intern/gpu_vertex_buffer_private.hh
 	intern/gpu_vertex_format.cc
 	intern/gpu_vertex_format_private.h
-	intern/gpu_viewport.c
+	intern/gpu_viewport.cc
 )
 
 set(OPENGL_SRC
@@ -184,6 +184,7 @@ set(LIB
 # Builtin Shaders
 
 set(GLSL_SRC
+	shaders/gpu_shader_2D_image_rect_vert.glsl
 	shaders/gpu_shader_2D_image_vert.glsl
 	shaders/gpu_shader_2D_vert.glsl
 	shaders/gpu_shader_2D_widget_base_frag.glsl
@@ -191,6 +192,7 @@ set(GLSL_SRC
 	shaders/gpu_shader_2D_widget_shadow_frag.glsl
 	shaders/gpu_shader_2D_widget_shadow_vert.glsl
 	shaders/gpu_shader_colorspace_lib.glsl
+	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
 	shaders/gpu_shader_text_frag.glsl
@@ -253,6 +255,7 @@ set(SRC_SHADER_CREATE_INFOS
 	infos/gpu_interface_info.hh
 	infos/gpu_shader_2D_image_overlays_merge_info.hh
 	infos/gpu_shader_2D_image_overlays_stereo_merge_info.hh
+	infos/gpu_shader_2D_image_rect_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh

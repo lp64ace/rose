@@ -28,17 +28,27 @@ set(SRC
 	KER_context.h
 	KER_global.h
 	KER_lib_id.h
+	KER_lib_query.h
+	KER_lib_remap.h
 	KER_library.h
 	KER_idtype.h
 	KER_main.h
+	KER_namemap.h
 	KER_rose.h
+	KER_screen.h
+	KER_workspace.h
 	intern/context.c
 	intern/global.c
 	intern/lib_id.c
+	intern/lib_query.c
+	intern/lib_remap.cc
 	intern/library.c
 	intern/idtype.c
 	intern/main.c
+	intern/namemap.cc
 	intern/rose.c
+	intern/screen.c
+	intern/workspace.c
 )
 
 # -----------------------------------------------------------------------------

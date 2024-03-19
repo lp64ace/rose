@@ -77,12 +77,20 @@ void *LIB_findptr(const struct ListBase *listbase, void *ptr, const size_t offse
  */
 void *LIB_rfindptr(const struct ListBase *listbase, void *ptr, const size_t offset);
 
+/**
+ * Remove every item from the listbase and free its memory using #MEM_freeN.
+ */
+void LIB_freelistN(struct ListBase *listbase);
+
 /** Returns true if the listbase is empty, prefer this over counting elements. */
 ROSE_INLINE bool LIB_listbase_is_empty(const struct ListBase *listbase);
 /** Returns true if the listbase has a single item, prefer this over counting elements. */
 ROSE_INLINE bool LIB_listbase_is_single(const struct ListBase *listbase);
 /** Removes all the items from this listbase. */
 ROSE_INLINE void LIB_listbase_clear(struct ListBase *listbase);
+
+/** Create a generic list node containing link to provided data. */
+struct LinkData *LIB_genericNodeN(void *data);
 
 #ifdef __cplusplus
 }

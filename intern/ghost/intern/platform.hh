@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <set>
+#include <chrono>
 
 #include "platform.h"
 
@@ -16,6 +17,14 @@ class PlatformInterface {
 public:
 	PlatformInterface();
 	virtual ~PlatformInterface();
+
+	/* -------------------------------------------------------------------- */
+	/** \name Time Utils
+	 * \{ */
+
+	double GetTime() const;
+
+	/* \} */
 
 	/* -------------------------------------------------------------------- */
 	/** \name Generic Utils
@@ -136,4 +145,6 @@ private:
 
 	std::deque<DefEventEntry *> _EvtQueue;
 	std::deque<DefEventEntry *> _EvtHandled;
+	
+	std::chrono::high_resolution_clock::time_point _TimeBegin;
 };

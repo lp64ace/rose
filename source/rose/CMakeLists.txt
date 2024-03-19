@@ -2,6 +2,7 @@
 # Add Sub-Directories
 
 add_subdirectory(datatoc)
+add_subdirectory(editors)
 add_subdirectory(gpu)
 add_subdirectory(makesdna)
 add_subdirectory(roselib)

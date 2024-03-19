@@ -11,6 +11,8 @@ typedef void (*IDTypeInitDataFunction)(struct ID *id);
 typedef void (*IDTypeCopyDataFunction)(struct Main *main, struct ID *id_dst, const struct ID *id_src, int flag);
 typedef void (*IDTypeFreeDataFunction)(struct ID *id);
 
+typedef void (*IDTypeForeachIDFunction)(struct ID *id, struct LibraryForeachIDData *data);
+
 typedef struct IDTypeInfo {
 	/** Unique identifier of this type, either as a short or an array of two chars, see DNA_ID_enums.h's ID_XX enums. */
 	short id_code;
@@ -40,6 +42,11 @@ typedef struct IDTypeInfo {
 
 	/** Free the data of the data-block (NOT the ID itself). May be NULL if there is nothing to do. */
 	IDTypeFreeDataFunction free_data;
+	
+	/**
+	 * Called by `KER_library_foreach_ID_link()` to apply a callback over all other ID usages of given data-block.
+	 */
+	IDTypeForeachIDFunction foreach_id;
 } IDTypeInfo;
 
 /* -------------------------------------------------------------------- */
@@ -47,6 +54,8 @@ typedef struct IDTypeInfo {
  * \{ */
 
 extern IDTypeInfo IDType_ID_LI;
+extern IDTypeInfo IDType_ID_SCR;
+extern IDTypeInfo IDType_ID_WS;
 extern IDTypeInfo IDType_ID_WM;
 
 /** Empty shell mostly, but needed for read code. */

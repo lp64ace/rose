@@ -31,8 +31,15 @@ set(LIB
 	# Internal Include Directories
 	rf::intern::memalloc
 	rf::intern::ghost
-	rf::source::roselib
+	rf::source::editors::interface
+	rf::source::editors::screen
+	rf::source::editors::space_api
+	rf::source::editors::space_statusbar
+	rf::source::editors::space_topbar
+	rf::source::editors::space_view3d
+	rf::source::gpu
 	rf::source::rosekernel
+	rf::source::roselib
 	rf::source::windowmanager
 	
 	# External Include Directories

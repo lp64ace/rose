@@ -5,6 +5,8 @@
 
 #include "LIB_sys_types.h"
 
+#include <string.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Simple Math Macros
  * \{ */
@@ -517,5 +519,13 @@
 		} \
 	} \
 	(void)0
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Memory Utils
+ * \{ */
+
+#define MEMZERO(memblock) memset(&(memblock), 0, sizeof(memblock))
 
 /* \} */

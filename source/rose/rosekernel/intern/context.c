@@ -10,6 +10,11 @@ struct Context {
 	struct {
 		struct wmWindowManager *manager;
 		struct wmWindow *window;
+		struct WorkSpace *workspace;
+		struct Screen *screen;
+		struct ScrArea *area;
+		struct ARegion *region;
+		struct ARegion *menu;
 	} wm;
 };
 
@@ -39,6 +44,26 @@ struct wmWindow *CTX_wm_window(struct Context *C) {
 	return C->wm.window;
 }
 
+struct WorkSpace *CTX_wm_workspace(const Context *C) {
+	return C->wm.workspace;
+}
+
+struct Screen *CTX_wm_screen(const Context *C) {
+	return C->wm.screen;
+}
+
+struct ScrArea *CTX_wm_area(const Context *C) {
+	return C->wm.area;
+}
+
+struct ARegion *CTX_wm_region(const Context *C) {
+	return C->wm.region;
+}
+
+struct ARegion *CTX_wm_menu(const Context *C) {
+	return C->wm.menu;
+}
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
@@ -55,6 +80,22 @@ void CTX_wm_manager_set(struct Context *C, struct wmWindowManager *wm) {
 
 void CTX_wm_window_set(struct Context *C, struct wmWindow *win) {
 	C->wm.window = win;
+}
+
+void CTX_wm_screen_set(struct Context *C, struct Screen *screen) {
+	C->wm.screen = screen;
+}
+
+void CTX_wm_area_set(struct Context *C, struct ScrArea *area) {
+	C->wm.area = area;
+}
+
+void CTX_wm_region_set(struct Context *C, struct ARegion *region) {
+	C->wm.region = region;
+}
+
+void CTX_wm_menu_set(struct Context *C, struct ARegion *menu) {
+	C->wm.menu = menu;
 }
 
 /* \} */

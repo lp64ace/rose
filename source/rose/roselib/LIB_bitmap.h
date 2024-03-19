@@ -61,6 +61,8 @@ typedef unsigned int LIB_bitmap;
 
 /* clang-format on */
 
+size_t LIB_bitmap_find_first_unset(const LIB_bitmap *bitmap, size_t bits);
+
 #ifdef __cplusplus
 }
 #endif
