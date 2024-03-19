@@ -32,6 +32,10 @@ public:
 
 	/** Returns the size of the main display. */
 	virtual GSize GetScreenSize() const = 0;
+	/** Returns the cursor position relative to the window specified. */
+	virtual GPosition GetCursorPosition(WindowInterface *window) const = 0;
+	/** Returns the window under the cursor location. */
+	virtual WindowInterface *GetWindowUnderCursor(int x, int y) const = 0;
 
 	/* \} */
 

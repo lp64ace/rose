@@ -18,6 +18,7 @@
 
 #include "WM_api.h"
 #include "WM_draw.h"
+#include "WM_event_system.h"
 #include "WM_init_exit.h"
 #include "WM_window.h"
 
@@ -85,6 +86,8 @@ void WM_init(struct Context *C) {
 void WM_main(struct Context *C) {
 	while (true) {
 		wm_window_events_process(C);
+
+		wm_event_do_handlers(C);
 
 		wm_draw_update(C);
 	}

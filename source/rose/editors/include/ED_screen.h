@@ -39,6 +39,20 @@ void ED_region_do_draw(const struct Context *C, struct ARegion *region);
 
 void ED_region_update_rect(struct ARegion *region);
 
+/**
+ * \note This may return true for multiple overlapping regions.
+ * If it matters, check overlapped regions first (#ARegion.overlap).
+ */
+bool ED_region_contains_xy(const struct ARegion *region, const int event_xy[2]);
+/**
+ * Similar to #BKE_area_find_region_xy() but when \a event_xy intersects an overlapping region,
+ * this returns the region that is visually under the cursor. E.g. when over the
+ * transparent part of the region, it returns the region underneath.
+ *
+ * The overlapping region is determined using the #ED_region_contains_xy() query.
+ */
+struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int regiontype, const int event_xy[2]);
+
 bool ED_region_is_overlap(int spacetype, int regiontype);
 
 /* \} */

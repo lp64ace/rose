@@ -41,6 +41,8 @@ typedef struct SpaceTopBar {
 	int spacetype;
 	int flag;
 	/* End 'SpaceLink' header. */
+
+	int drag[2];
 } SpaceTopBar;
 
 /** \} */

@@ -31,13 +31,16 @@ set(INC_SYS
 set(SRC
 	WM_api.h
 	WM_draw.h
+	WM_event_system.h
 	WM_handlers.h
 	WM_init_exit.h
 	WM_subwindow.h
+	WM_types.h
 	WM_window.h
 	intern/wm.c
 	intern/wm_draw.c
-	intern/wm_handlers.c
+	intern/wm_event_query.c
+	intern/wm_event_system.c
 	intern/wm_subwindow.c
 	intern/wm_window.c
 )

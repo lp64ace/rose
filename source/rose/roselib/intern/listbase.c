@@ -3,6 +3,20 @@
 
 #include "MEM_alloc.h"
 
+bool LIB_listbase_contains(struct ListBase *listbase, void *vlink) {
+	if (vlink == NULL) {
+		return false;
+	}
+
+	LISTBASE_FOREACH(Link *, link, listbase) {
+		if (vlink == link) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void LIB_addhead(struct ListBase *listbase, void *vlink) {
 	Link *link = (Link *)vlink;
 
@@ -31,6 +45,72 @@ void LIB_addtail(struct ListBase *listbase, void *vlink) {
 		listbase->last = link;
 	}
 	listbase->first = link;
+}
+
+void LIB_insertlinkbefore(struct ListBase *listbase, void *vnextlink, void *vnewlink) {
+	Link *nextlink = vnextlink;
+	Link *newlink = vnewlink;
+
+	if (newlink == NULL) {
+		return;
+	}
+
+	if (listbase->first == NULL) {
+		listbase->first = listbase->last = newlink;
+		return;
+	}
+
+	if (nextlink == NULL) {
+		newlink->prev = listbase->last;
+		newlink->next = NULL;
+		((Link *)listbase->last)->next = newlink;
+		listbase->last = newlink;
+		return;
+	}
+
+	if (listbase->first == nextlink) {
+		listbase->first = newlink;
+	}
+
+	newlink->next = nextlink;
+	newlink->prev = nextlink->prev;
+	if (newlink->prev) {
+		newlink->prev->next = newlink;
+	}
+}
+
+void LIB_insertlinkafter(struct ListBase *listbase, void *vprevlink, void *vnewlink) {
+	Link *prevlink = vprevlink;
+	Link *newlink = vnewlink;
+
+	if (newlink == NULL) {
+		return;
+	}
+
+	if (listbase->first == NULL) {
+		listbase->first = newlink;
+		listbase->last = newlink;
+		return;
+	}
+
+	if (prevlink == NULL) {
+		newlink->prev = NULL;
+		newlink->next = (Link *)(listbase->first);
+		newlink->next->prev = newlink;
+		listbase->first = newlink;
+		return;
+	}
+
+	if (listbase->last == prevlink) {
+		listbase->last = newlink;
+	}
+
+	newlink->next = prevlink->next;
+	newlink->prev = prevlink;
+	prevlink->next = newlink;
+	if (newlink->next) {
+		newlink->next->prev = newlink;
+	}
 }
 
 void *LIB_pophead(struct ListBase *listbase) {
@@ -143,23 +223,23 @@ void *LIB_rfindptr(const struct ListBase *listbase, void *ptr, const size_t offs
 
 void LIB_freelistN(struct ListBase *listbase) {
 	Link *link, *next;
-	
-	for(link = listbase->first; link; link = next) {
+
+	for (link = listbase->first; link; link = next) {
 		next = link->next;
-		
+
 		MEM_freeN(link);
 	}
 }
 
 struct LinkData *LIB_genericNodeN(void *data) {
 	LinkData *link;
-	
-	if(data == NULL) {
+
+	if (data == NULL) {
 		return NULL;
 	}
-	
+
 	link = MEM_callocN(sizeof(LinkData), "LinkData");
 	link->data = data;
-	
+
 	return link;
 }

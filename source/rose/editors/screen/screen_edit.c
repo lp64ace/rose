@@ -155,6 +155,7 @@ void ED_screen_refresh(struct wmWindowManager *wm, struct wmWindow *win) {
 	}
 	
 	screen->winid = win->winid;
+	screen->flags &= ~SCREEN_REFRESH;
 }
 
 void ED_screen_exit(struct Context *C, struct wmWindow *window, struct Screen *screen) {
@@ -199,7 +200,8 @@ struct Screen *screen_add(struct Main *main, const char *name, const struct rcti
 
 	/* dummy type, no spacedata */
 	screen_addarea(screen, sv1, sv2, sv3, sv4, SPACE_EMPTY);
-
+	screen->flags |= SCREEN_REFRESH;
+	
 	return screen;
 }
 

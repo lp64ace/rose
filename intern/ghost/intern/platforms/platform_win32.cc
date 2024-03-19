@@ -149,6 +149,33 @@ GSize WindowsPlatform::GetScreenSize() const {
 	return result;
 }
 
+GPosition WindowsPlatform::GetCursorPosition(WindowInterface *window) const {
+	POINT pt;
+	if (::GetCursorPos(&pt) && window != NULL) {
+		::ScreenToClient(reinterpret_cast<WindowsWindow *>(window)->AsHandle(), &pt);
+	}
+	return {pt.x, pt.y};
+}
+
+WindowInterface *WindowsPlatform::GetWindowUnderCursor(int x, int y) const {
+	POINT point;
+	if (!GetCursorPos(&point)) {
+		return NULL;
+	}
+
+	HWND win = ::WindowFromPoint(point);
+	if (win == NULL) {
+		return NULL;
+	}
+
+	WindowsWindow *wnd = reinterpret_cast<WindowsWindow *>(::GetWindowLongPtr(win, GWLP_USERDATA));
+	/** Other windows are allowed to have userdata... */
+	if (std::find(_Windows.begin(), _Windows.end(), wnd) != _Windows.end()) {
+		return wnd;
+	}
+	return NULL;
+}
+
 /* \} */
 
 /* -------------------------------------------------------------------- */
@@ -224,7 +251,19 @@ bool WindowsPlatform::ProcessEvents(bool wait) {
 
 WindowsWindow::WindowsWindow(WindowsWindow *parent, int width, int height) : _hWnd(NULL), _hDC(NULL), _Context(NULL), _ContextType(GLIB_CONTEXT_NONE) {
 	DWORD ExtendedStyle = parent ? 0 : WS_EX_APPWINDOW;
+#if 1
+	/**
+	 * If it works it will look magnificent, but due to the window moving inside a handler we have issues with maintaining
+	 * consistency accross mouse position in events so for now we fallback to the default windows behaviour where the movement
+	 * of the window is handled by #DefWindowProc.
+	 *
+	 * p.s. I tried to make it work for like 4h now but I can't seem to be competent right now... Maybe I will give it a try
+	 * again another day, that way I get to keep my setup intact :)
+	 */
 	DWORD WindowStyle = parent ? WS_CHILD | WS_POPUP : WS_POPUP;
+#else
+	DWORD WindowStyle = parent ? WS_CHILD | WS_OVERLAPPEDWINDOW : WS_OVERLAPPEDWINDOW;
+#endif
 	HWND ParentHandle = (parent) ? reinterpret_cast<WindowsWindow *>(parent)->_hWnd : HWND_DESKTOP;
 
 	int ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
@@ -339,10 +378,10 @@ GPosition WindowsWindow::ClientToScreen(int x, int y) const {
  * \{ */
 
 ContextInterface *WindowsWindow::InstallContext(int type) {
-	if(type == _ContextType && _Context != NULL) {
+	if (type == _ContextType && _Context != NULL) {
 		return _Context;
 	}
-	
+
 	switch (type) {
 		case GLIB_CONTEXT_OPENGL: {
 			WindowsOpenGLContext *context = MEM_new<WindowsOpenGLContext>("glib::WindowsOpenGLContext", this);
@@ -352,7 +391,7 @@ ContextInterface *WindowsWindow::InstallContext(int type) {
 			}
 		} break;
 	}
-	
+
 	return NULL;
 }
 
@@ -362,6 +401,16 @@ ContextInterface *WindowsWindow::GetContext() const {
 
 int WindowsWindow::GetContextType() const {
 	return (_Context) ? _ContextType : GLIB_CONTEXT_NONE;
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Local
+ * \{ */
+
+HWND WindowsWindow::AsHandle() const {
+	return _hWnd;
 }
 
 /* \} */
@@ -399,7 +448,7 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 	}
 	else if (::wglShareLists(s_SharedHGLRC, _hGLRC)) {
 	}
-	
+
 	s_SharedCount++;
 
 	if (::wglMakeCurrent(_hDC, _hGLRC)) {
@@ -419,14 +468,14 @@ WindowsOpenGLContext::~WindowsOpenGLContext() {
 	if (_hGLRC != nullptr) {
 		if (_hGLRC == ::wglGetCurrentContext())
 			::wglMakeCurrent(nullptr, nullptr);
-	
+
 		if (_hGLRC != s_SharedHGLRC || s_SharedCount == 1) {
 			s_SharedCount--;
-	
+
 			if (s_SharedCount == 0) {
 				s_SharedHGLRC = nullptr;
 			}
-	
+
 			::wglDeleteContext(_hGLRC);
 		}
 	}
@@ -720,14 +769,24 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 			const int padding = 6;
 
+			POINT cursor;
+			cursor.x = GET_X_LPARAM(lParam);
+			cursor.y = GET_Y_LPARAM(lParam);
+			
+			RECT windowRect;
+			GetWindowRect(hWnd, &windowRect);
+			
+			GRect caption = wnd->_CaptionRect;
+
 			if (result == HTCLIENT) {
-				POINT cursor;
-				cursor.x = GET_X_LPARAM(lParam);
-				cursor.y = GET_Y_LPARAM(lParam);
-
-				RECT windowRect;
-				GetWindowRect(hWnd, &windowRect);
-
+				if(windowRect.left + caption.left <= cursor.x && cursor.y <= windowRect.left + caption.right) {
+					if(windowRect.top + caption.top <= cursor.y && cursor.y <= windowRect.top + caption.bottom) {
+						result = HTCAPTION;
+					}
+				}
+			}
+			
+			if (result == HTCLIENT) {
 				bool horizontal = cursor.x < windowRect.left + padding || cursor.x >= windowRect.right - padding;
 				bool vertical = cursor.y < windowRect.top + padding || cursor.y >= windowRect.bottom - padding;
 				if (horizontal && vertical) {
@@ -785,6 +844,15 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseMoveEvent(reinterpret_cast<WindowInterface *>(wnd), x, y, modifiers);
+
+			TRACKMOUSEEVENT trackinfo;
+
+			trackinfo.cbSize = sizeof(TRACKMOUSEEVENT);
+			trackinfo.dwFlags = TME_LEAVE;
+			trackinfo.hwndTrack = hWnd;
+			trackinfo.dwHoverTime = HOVER_DEFAULT;
+
+			::TrackMouseEvent(&trackinfo);
 
 			handled |= true;
 		} break;
@@ -849,6 +917,16 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			int modifiers = glib_windows_modifiers_get();
 
 			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEUP, x, y, modifiers);
+
+			handled |= true;
+		} break;
+		case WM_MOUSELEAVE: {
+			GPosition pos = glib_windows_platform->GetCursorPosition(reinterpret_cast<WindowInterface *>(wnd));
+			int modifiers = glib_windows_modifiers_get();
+
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_LMOUSEUP, pos.x, pos.y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_MMOUSEUP, pos.x, pos.y, modifiers);
+			glib_windows_platform->PostMouseButtonEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RMOUSEUP, pos.x, pos.y, modifiers);
 
 			handled |= true;
 		} break;

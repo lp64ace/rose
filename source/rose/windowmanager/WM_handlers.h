@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "LIB_sys_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,47 +11,36 @@ typedef struct wmEvent {
 
 	int type;
 	int value;
-	int x;
-	int y;
-	int localx;
-	int localy;
-	wchar_t utf16[3];
+	int flag;
+	int xy[2];
+	int global[2];
+	int local[2];
+	wchar_t utf16[2];
 
 	int modifiers;
+	
+	int custom;
+	int customdata_free;
+	/**
+	 * The #wmEvent::type implies the following #wmEvent::customdata.
+	 * 
+	 * - #EVT_DROP: used #ListBase of #wmDrag (also #wmEvent::custom == #EVT_DATA_DRAGDROP).
+	 */
+	void *customdata;
 
 	/** Information about the previous event state. */
 	struct {
 		int type;
 		int value;
-		int x;
-		int y;
-
+		int xy[2];
+		int global[2];
 		int modifiers;
+
+		int press_type;
+		int press_modifiers;
+		int press_xy[2];
 	} old;
 } wmEvent;
-
-/** #wmEvent->type */
-enum {
-	EVENT_NONE = 0x0000,
-
-#define _EVT_MOUSE_MIN LEFTMOUSE
-
-	LEFTMOUSE,
-	MIDDLEMOUSE,
-	RIGHTMOUSE,
-	MOUSEMOVE,
-	BUTTON4MOUSE,
-	BUTTON5MOUSE,
-	BUTTON6MOUSE,
-	BUTTON7MOUSE,
-
-	WHEELUPMOUSE,
-	WHEELDOWNMOUSE,
-
-	INBETWEEN_MOUSEMOVE,
-
-#define _EVT_MOUSE_MAX INBETWEEN_MOUSEMOVE
-};
 
 /** #wmEvent->value */
 enum {
@@ -67,6 +55,11 @@ enum {
 	 * some operators such as box selection should use this location instead of #wmEvent.xy.
 	 */
 	KM_CLICK_DRAG = 5,
+};
+
+/** #wmEvent->flag */
+enum {
+	WM_EVENT_IS_REPEAT = (1 << 1),
 };
 
 /** #wmEvent->modifiers */
@@ -94,7 +87,29 @@ enum {
 };
 
 /** #wmEventHandler->flag */
-enum {};
+enum {
+	WM_HANDLER_DO_FREE = 1 << 0,
+	WM_HANDLER_BLOCKING = 1 << 1,
+	WM_HANDLER_ACCEPT_DBL_CLICK = 1 << 2,
+};
+
+typedef struct wmEventHandler_UI {
+	wmEventHandler head;
+
+	wmUIHandlerFunc handle_fn;		 /* callback receiving events */
+	wmUIHandlerRemoveFunc remove_fn; /* callback when handler is removed */
+	void *user_data;				 /* user data pointer */
+
+	/** Store context for this handler for derived/modal handlers. */
+	struct {
+		ScrArea *area;
+		ARegion *region;
+		ARegion *menu;
+	} context;
+} wmEventHandler_UI;
+
+#define WM_UI_HANDLER_CONTINUE 0
+#define WM_UI_HANDLER_BREAK 1
 
 #ifdef __cplusplus
 }

@@ -47,8 +47,22 @@ void *GHOST_WindowGetUserData(const GWindow *window) {
 	return reinterpret_cast<const WindowInterface *>(window)->GetUserData();
 }
 
+GWindow *GHOST_GetWindowUnderCursor(int x, int y) {
+	WindowInterface *window = glib_platform->GetWindowUnderCursor(x, y);
+	
+	return reinterpret_cast<GWindow *>(window);
+}
+
+void GHOST_SetWindowCaptionRect(GWindow *window, int xmin, int xmax, int ymin, int ymax) {
+	reinterpret_cast<WindowInterface *>(window)->SetWindowCaptionRect(xmin, xmax, ymin, ymax);
+}
+
 GSize GHOST_GetScreenSize() {
 	return glib_platform->GetScreenSize();
+}
+
+GPosition GHOST_GetCursorPosition(GWindow *window) {
+	return glib_platform->GetCursorPosition(reinterpret_cast<WindowInterface *>(window));
 }
 
 GPosition GHOST_ScreenToClient(GWindow *window, int x, int y) {

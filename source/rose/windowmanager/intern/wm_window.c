@@ -22,13 +22,18 @@
 
 #include "WM_api.h"
 #include "WM_draw.h"
+#include "WM_handlers.h"
+#include "WM_event_system.h"
 #include "WM_init_exit.h"
+#include "WM_types.h"
 #include "WM_window.h"
 
 #include "ED_screen.h"
 
 #include "glib.h"
 
+static bool wm_window_position_update(struct wmWindow *window);
+static bool wm_window_size_update(struct wmWindow *window);
 static bool wm_window_position_size_update(struct wmWindow *window);
 
 static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *rawdata, void *userdata) {
@@ -48,6 +53,8 @@ static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *rawdat
 		return false;
 	}
 
+	double t = GHOST_GetTime64();
+
 	switch (type) {
 		case GLIB_EVT_DESTROY: {
 			wm_window_close(C, wm, window);
@@ -58,33 +65,89 @@ static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *rawdat
 		} break;
 		case GLIB_EVT_MOVE:
 		case GLIB_EVT_SIZE: {
-			if (wm_window_position_size_update(window)) {
+			wm_window_position_update(window);
+			if (wm_window_size_update(window)) {
 				ED_screen_refresh(wm, window);
 			}
 
 			wm_draw_update(C);
 			return true;
 		} break;
+		default: {
+			wm_event_add_ghostevent(wm, window, type, rawdata, (uint64_t)(t * 1000.0));
+		} break;
 	}
 
 	return false;
 }
 
-bool wm_window_position_size_update(struct wmWindow *window) {
-	GSize size = GHOST_GetClientSize(window->gwin);
-	GPosition position = GHOST_GetWindowPos(window->gwin);
+/* -------------------------------------------------------------------- */
+/** \name Events
+ * \{ */
 
-	if (GHOST_IsWindowMinimized(window->gwin)) {
-		window->width = window->height = 0;
-	}
-	if (size.x != window->width || size.y != window->height || position.x != window->posx || position.y != window->posy) {
+void wm_cursor_position_from_ghost_client_coords(struct wmWindow *win, int *x, int *y) {
+	*y = (win->height - 1) - *y;
+}
+
+void wm_cursor_position_to_ghost_client_coords(struct wmWindow *win, int *x, int *y) {
+	*y = win->height - *y - 1;
+}
+
+void wm_cursor_position_from_ghost_screen_coords(struct wmWindow *win, int *x, int *y) {
+	GPosition pos;
+	
+	pos = GHOST_ScreenToClient(win->gwin, *x, *y);
+	wm_cursor_position_from_ghost_client_coords(win, &pos.x, &pos.y);
+	
+	*x = pos.x;
+	*y = pos.y;
+}
+
+void wm_cursor_position_to_ghost_screen_coords(struct wmWindow *win, int *x, int *y) {
+	GPosition pos;
+	
+	wm_cursor_position_to_ghost_client_coords(win, x, y);
+	pos = GHOST_ClientToScreen(win->gwin, *x, *y);
+	
+	*x = pos.x;
+	*y = pos.y;
+}
+
+void wm_cursor_position_get(struct wmWindow *win, int *x, int *y) {
+	GPosition pos = GHOST_GetCursorPosition(win->gwin, *x, *y);
+	
+	wm_cursor_position_from_ghost_client_coords(win, &pos.x, &pos.y);
+	
+	*x = pos.x;
+	*x = pos.x;
+}
+ 
+/* \} */
+
+static bool wm_window_position_update(struct wmWindow *window) {
+	GPosition position = GHOST_GetWindowPos(window->gwin);
+	
+	if (position.x != window->posx || position.y != window->posy) {
 		window->posx = position.x;
 		window->posy = position.y;
+		return true;
+	}
+	return false;
+}
+
+static bool wm_window_size_update(struct wmWindow *window) {
+	GSize size = GHOST_GetClientSize(window->gwin);
+	
+	if (size.x != window->width || size.y != window->height) {
 		window->width = size.x;
 		window->height = size.y;
 		return true;
 	}
 	return false;
+}
+
+static bool wm_window_position_size_update(struct wmWindow *window) {
+	return wm_window_position_update(window) || wm_window_size_update(window);
 }
 
 void wm_ghost_init(struct Context *C) {
@@ -94,6 +157,21 @@ void wm_ghost_init(struct Context *C) {
 
 void wm_ghost_exit() {
 	GHOST_Exit();
+}
+
+static void wm_window_update_eventstate(struct wmWindow *win) {
+	int xy[2];
+	wm_cursor_position_get(win, &xy[0], &xy[1]);
+	copy_v2_v2_int(win->eventstate->xy, xy);
+}
+
+static void wm_window_ensure_eventstate(struct wmWindow *win) {
+	if(win->eventstate) {
+		return;
+	}
+	
+	win->eventstate = MEM_callocN(sizeof(wmEvent), "wmWindow::eventstate");
+	wm_window_update_eventstate(win);
 }
 
 static void wm_window_beauty_rectangle(struct wmWindow *win, bool dialog) {
@@ -120,6 +198,8 @@ static bool wm_window_ghost_window_ensure(struct wmWindowManager *wm, struct wmW
 			/* Initialize window graphics context here. */
 			if ((win->gpuctx = GPU_context_create(win->gwin, NULL))) {
 				wm_window_make_drawable(wm, win);
+				
+				wm_window_ensure_eventstate(win);
 
 				GPU_clear_color(0.55f, 0.55f, 0.55f, 1.0f);
 
@@ -217,6 +297,16 @@ void wm_window_free(struct Context *C, struct wmWindowManager *wm, struct wmWind
 	if (wm->winactive == window) {
 		wm->winactive = NULL;
 	}
+	
+	if (window->eventstate) {
+		MEM_freeN(window->eventstate);
+	}
+	if (window->event_last_handled) {
+		MEM_freeN(window->event_last_handled);
+	}
+	
+	wm_event_free_all(window);
+	
 	/**
 	 * wm->drawable will be handled inside #wm_window_ghost_window_destroy by #wm_window_clear_drawable.
 	 */
@@ -294,7 +384,8 @@ struct wmWindow *WM_window_open(struct Context *C, struct wmWindow *parent, bool
 			wm_window_ensure_workspace(C, win);
 		}
 	}
-	
+
+	wm_window_position_size_update(win);
 	ED_screen_refresh(wm, win);
 
 	return win;
@@ -303,14 +394,37 @@ struct wmWindow *WM_window_open(struct Context *C, struct wmWindow *parent, bool
 /* \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Window Queries
+ * \{ */
+
+struct wmWindow *WM_window_find_under_cursor(struct wmWindow *win, const int event_xy[2], int r_xy[2]) {
+	int temp_xy[2];
+	copy_v2_v2_int(temp_xy, event_xy);
+	wm_cursor_position_to_ghost_screen_coords(win, &temp_xy[0], &temp_xy[1]);
+	
+	void *gwin = GHOST_GetWindowUnderCursor(temp_xy[0], temp_xy[1]);
+	
+	if(!gwin) {
+		return NULL;
+	}
+	
+	wmWindow *win_other = (wmWindow *)GHOST_WindowGetUserData(gwin);
+	wm_cursor_position_from_ghost_screen_coords(win_other, &temp_xy[0], &temp_xy[1]);
+	copy_v2_v2_int(r_xy, temp_xy);
+	return win_other;
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Window Size
  * \{ */
 
-int WM_window_pixels_x(struct wmWindow *win) {
+int WM_window_pixels_x(const struct wmWindow *win) {
 	return win->width;
 }
 
-int WM_window_pixels_y(struct wmWindow *win) {
+int WM_window_pixels_y(const struct wmWindow *win) {
 	return win->height;
 }
 
@@ -330,6 +444,7 @@ void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) 
 		
 		switch (area->global->align) {
 			case GLOBAL_AREA_ALIGN_TOP: {
+				WM_window_caption_rect_set(win, r_rct->xmin, r_rct->xmax, r_rct->ymax - height, r_rct->ymax);
 				r_rct->ymax -= height;
 			} break;
 			case GLOBAL_AREA_ALIGN_BOTTOM: {
@@ -342,6 +457,13 @@ void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) 
 	}
 	
 	ROSE_assert(LIB_rcti_is_valid(r_rct));
+}
+
+void WM_window_caption_rect_set(struct wmWindow *win, int xmin, int xmax, int ymin, int ymax) {
+	wm_cursor_position_to_ghost_client_coords(win, &xmin, &ymin);
+	wm_cursor_position_to_ghost_client_coords(win, &xmax, &ymax);
+	
+	GHOST_SetWindowCaptionRect(win->gwin, xmin, ymin, ymax, ymin);
 }
 
 /* \} */

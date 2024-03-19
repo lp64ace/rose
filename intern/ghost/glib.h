@@ -59,9 +59,15 @@ bool GHOST_IsWindow(GWindow *window);
 void GHOST_WindowSetUserData(GWindow *window, void *userdata);
 /** Returns the user data associated with the specified window. */
 void *GHOST_WindowGetUserData(const GWindow *window);
+/** Returns the wndow under the cursor. */
+GWindow *GHOST_GetWindowUnderCursor(int x, int y);
+
+void GHOST_SetWindowCaptionRect(GWindow *window, int xmin, int xmax, int ymin, int ymax);
 
 /** Returns the dimensions of the screen */
 GSize GHOST_GetScreenSize();
+/** Returns the cursor position relative to the window specified. */
+GPosition GHOST_GetCursorPosition(GWindow *window);
 
 /** Converts screen coordinates to client coordinates. */
 GPosition GHOST_ScreenToClient(GWindow *window, int x, int y);

@@ -6,14 +6,23 @@
 
 #include "LIB_assert.h"
 #include "LIB_listbase.h"
+#include "LIB_math.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "MEM_alloc.h"
 
+#include "WM_api.h"
+#include "WM_handlers.h"
+#include "WM_types.h"
+#include "WM_window.h"
+
 #include "UI_interface.h"
 
+#include "KER_context.h"
 #include "KER_screen.h"
+
+#include <stdio.h>
 
 static SpaceLink *topbar_create(const struct ScrArea *area) {
 	ARegion *region;
@@ -51,14 +60,14 @@ static SpaceLink *topbar_duplicate(const struct SpaceLink *sl) {
 	return (SpaceLink *)topbar;
 }
 
-static void topbar_main_region_init(struct wmWindowManager *wm, struct ARegion *region) {
-}
-
 static void topbar_header_region_init(struct wmWindowManager *wm, struct ARegion *region) {
 	if (RGN_ALIGN_ENUM_FROM_MASK(region->alignment) == RGN_ALIGN_RIGHT) {
 		region->flag |= RGN_FLAG_DYNAMIC_SIZE;
 	}
 	ED_region_header_init(region);
+}
+
+static void topbar_main_region_init(struct wmWindowManager *wm, struct ARegion *region) {
 }
 
 void ED_spacetype_topbar() {

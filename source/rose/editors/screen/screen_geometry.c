@@ -57,6 +57,7 @@ ScrEdge *screen_geom_edge_add_ex(ScrAreaMap *area_map, ScrVert *v1, ScrVert *v2)
 	e->v2 = v2;
 	
 	LIB_addtail(&area_map->edgebase, e);
+	return e;
 }
 
 ScrEdge *screen_geom_edge_add(Screen *screen, ScrVert *v1, ScrVert *v2) {
@@ -111,7 +112,7 @@ static void screen_geom_select_connected_edge(const wmWindow *win, ScrEdge *edge
 	}
 }
 
-static bool screen_geom_vertices_scale_pass(const wmWindow *win, const Screen *screen, const rcti *screen_rect) {
+static bool screen_geom_vertices_scale_pass(const wmWindow *win, Screen *screen, const rcti *screen_rect) {
 	const int screen_size_x = LIB_rcti_size_x(screen_rect);
 	const int screen_size_y = LIB_rcti_size_y(screen_rect);
 	bool needs_another_pass = false;
@@ -177,6 +178,8 @@ static bool screen_geom_vertices_scale_pass(const wmWindow *win, const Screen *s
 				}
 			}
 		}
+		
+		screen->flags |= SCREEN_REFRESH;
 	}
 
 	return needs_another_pass;

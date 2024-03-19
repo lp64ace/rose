@@ -529,6 +529,30 @@ void ED_region_update_rect(struct ARegion *region) {
 	region_update_rect(region);
 }
 
+bool ED_region_contains_xy(const struct ARegion *region, const int event_xy[2]) {
+	/* Only use the margin when inside the region. */
+	if (LIB_rcti_isect_pt_v(&region->winrct, event_xy)) {
+		return true;
+	}
+	return false;
+}
+
+struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int regiontype, const int event_xy[2]) {
+	if (!area) {
+		return NULL;
+	}
+
+	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		if (ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
+			if (ED_region_contains_xy(region, event_xy)) {
+				return region;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 bool ED_region_is_overlap(int spacetype, int regiontype) {
 	/** For now overlapping regions are not allowed! */
 	return false;

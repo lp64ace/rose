@@ -248,32 +248,14 @@ void wm_draw_region_blend(ARegion *region, int view, bool blend) {
 	}
 }
 
-static const char *spacetype_as_string(int spacetype) {
-	switch (spacetype) {
-		case SPACE_EMPTY:
-			return "Empty";
-		case SPACE_TOPBAR:
-			return "TopBar";
-		case SPACE_VIEW3D:
-			return "View3D";
-	}
-	return "Unkown";
-}
-
-static const char *regiontype_as_string(int regiontype) {
-	switch (regiontype) {
-		case RGN_TYPE_HEADER:
-			return "Header";
-		case RGN_TYPE_WINDOW:
-			return "Window";
-	}
-	return "Unkown";
-}
-
 static void wm_draw_window_offscreen(struct Context *C, struct wmWindow *win, bool stereo) {
 	struct Main *main = CTX_data_main(C);
 	struct wmWindowManager *wm = CTX_wm_manager(C);
 	struct Screen *screen = WM_window_get_active_screen(win);
+	
+	if(screen->flags & SCREEN_REFRESH) {
+		ED_screen_refresh(wm, win);
+	}
 
 	/** Draw global & screen areas first, menus should be drawn on top of them. */
 	ED_screen_areas_iter(win, screen, area) {
@@ -370,8 +352,7 @@ void wm_window_swap_buffers(struct wmWindow *win) {
 }
 
 static void wm_draw_window(struct Context *C, struct wmWindow *win) {
-	GPU_clear_color(0.55f, 0.55f, 0.55f, 1.0f);
-	GPU_clear_depth(1.0f);
+	struct wmWindowManager *wm = CTX_wm_manager(C);
 
 	wm_draw_window_offscreen(C, win, false);
 	wm_draw_window_onscreen(C, win, -1);

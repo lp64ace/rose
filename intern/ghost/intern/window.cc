@@ -1,5 +1,12 @@
 #include "window.hh"
 
+void WindowInterface::SetWindowCaptionRect(int xmin, int xmax, int ymin, int ymax) {
+	_CaptionRect.left = xmin;
+	_CaptionRect.right = xmax;
+	_CaptionRect.top = ymin;
+	_CaptionRect.bottom = ymax;
+}
+
 GSize WindowInterface::GetWindowSize() const {
 	GRect rect;
 	GSize size;

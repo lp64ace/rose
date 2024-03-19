@@ -27,6 +27,10 @@ public:
 
 	/** Returns the size of the main display. */
 	GSize GetScreenSize() const;
+	/** Returns the cursor position relative to the window specified. */
+	GPosition GetCursorPosition(WindowInterface *window) const;
+	/** Returns the window under the cursor location. */
+	WindowInterface *GetWindowUnderCursor(int x, int y) const;
 
 	/* \} */
 
@@ -160,11 +164,14 @@ public:
 
 	/** Returns the context of the specified window, this should never return NULL. */
 	ContextInterface *GetContext() const;
-	
+
 	/** Return the type of the currently active drawing context. */
 	int GetContextType() const;
 
 	/* \} */
+public:
+	HWND AsHandle() const;
+
 private:
 	/* -------------------------------------------------------------------- */
 	/** \name Window Handles

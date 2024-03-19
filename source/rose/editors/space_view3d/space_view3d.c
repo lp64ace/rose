@@ -49,7 +49,7 @@ static void view3d_main_region_init(struct wmWindowManager *wm, struct ARegion *
 }
 
 static void view3d_main_region_draw(const struct Context *C, struct ARegion *region) {
-	GPU_clear_color(0.35f, 0.35f, 0.35f, 1.0f);
+	GPU_clear_color(0.25f, 0.25f, 0.25f, 1.0f);
 }
 
 void ED_spacetype_view3d() {

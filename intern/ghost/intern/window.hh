@@ -6,11 +6,14 @@ class ContextInterface;
 
 class WindowInterface {
 public:
+	WindowInterface() = default;
 	virtual ~WindowInterface() = default;
 
 	/* -------------------------------------------------------------------- */
 	/** \name Size/Pos Managing
 	 * \{ */
+	 
+	void SetWindowCaptionRect(int xmin, int xmax, int ymin, int ymax);
 
 	/** Retrieves the size of the entire window, including borders and decorations. */
 	virtual GSize GetWindowSize() const;
@@ -82,4 +85,7 @@ public:
 
 private:
 	void *_UserData;
+	
+public:
+	GRect _CaptionRect;
 };

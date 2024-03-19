@@ -11,10 +11,15 @@
 extern "C" {
 #endif
 
+bool LIB_listbase_contains(struct ListBase *listbase, void *vlink);
+
 /** Insert a new link at the front of a listbase. */
 void LIB_addhead(struct ListBase *listbase, void *vlink);
 /** Insert a new link at the end of a listbase. */
 void LIB_addtail(struct ListBase *listbase, void *vlink);
+
+void LIB_insertlinkbefore(struct ListBase *listbase, void *vnextlink, void *vnewlink);
+void LIB_insertlinkafter(struct ListBase *listbase, void *vprevlink, void *vnewlink);
 
 /** Removes the first element of the listbase and return it. */
 void *LIB_pophead(struct ListBase *listbase);
