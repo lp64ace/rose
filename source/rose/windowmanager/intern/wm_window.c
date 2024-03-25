@@ -85,15 +85,15 @@ static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *rawdat
 /** \name Events
  * \{ */
 
-void wm_cursor_position_from_ghost_client_coords(struct wmWindow *win, int *x, int *y) {
+void wm_cursor_position_from_ghost_client_coords(const struct wmWindow *win, int *x, int *y) {
 	*y = (win->height - 1) - *y;
 }
 
-void wm_cursor_position_to_ghost_client_coords(struct wmWindow *win, int *x, int *y) {
+void wm_cursor_position_to_ghost_client_coords(const struct wmWindow *win, int *x, int *y) {
 	*y = win->height - *y - 1;
 }
 
-void wm_cursor_position_from_ghost_screen_coords(struct wmWindow *win, int *x, int *y) {
+void wm_cursor_position_from_ghost_screen_coords(const struct wmWindow *win, int *x, int *y) {
 	GPosition pos;
 	
 	pos = GHOST_ScreenToClient(win->gwin, *x, *y);
@@ -103,7 +103,7 @@ void wm_cursor_position_from_ghost_screen_coords(struct wmWindow *win, int *x, i
 	*y = pos.y;
 }
 
-void wm_cursor_position_to_ghost_screen_coords(struct wmWindow *win, int *x, int *y) {
+void wm_cursor_position_to_ghost_screen_coords(const struct wmWindow *win, int *x, int *y) {
 	GPosition pos;
 	
 	wm_cursor_position_to_ghost_client_coords(win, x, y);
@@ -451,6 +451,7 @@ void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) 
 		
 		switch (area->global->align) {
 			case GLOBAL_AREA_ALIGN_TOP: {
+				/** HACK: to set the topbar as the caption for the window. */
 				wm_window_caption_rect_set(win, r_rct->xmin, r_rct->xmax, r_rct->ymax - height, r_rct->ymax);
 				r_rct->ymax -= height;
 			} break;

@@ -20,10 +20,10 @@ void wm_window_free(struct Context *C, struct wmWindowManager *wm, struct wmWind
 
 bool wm_window_minimized(struct wmWindow *window);
 
-void wm_cursor_position_from_ghost_client_coords(struct wmWindow *win, int *x, int *y);
-void wm_cursor_position_to_ghost_client_coords(struct wmWindow *win, int *x, int *y);
-void wm_cursor_position_from_ghost_screen_coords(struct wmWindow *win, int *x, int *y);
-void wm_cursor_position_to_ghost_screen_coords(struct wmWindow *win, int *x, int *y);
+void wm_cursor_position_from_ghost_client_coords(const struct wmWindow *win, int *x, int *y);
+void wm_cursor_position_to_ghost_client_coords(const struct wmWindow *win, int *x, int *y);
+void wm_cursor_position_from_ghost_screen_coords(const struct wmWindow *win, int *x, int *y);
+void wm_cursor_position_to_ghost_screen_coords(const struct wmWindow *win, int *x, int *y);
 void wm_cursor_position_get(struct wmWindow *win, int *x, int *y);
 
 #ifdef __cplusplus

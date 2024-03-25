@@ -5,6 +5,7 @@
 
 #include "gl_backend.hh"
 #include "gl_context.hh"
+#include "gl_immediate.hh"
 
 using namespace rose;
 using namespace rose::gpu;
@@ -21,6 +22,7 @@ GLContext::GLContext(void *window, GLSharedOrphanLists &shared_orphan_list) : sh
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	this->state_manager = MEM_new<GLStateManager>("rose::gpu::GLStateManager");
+	this->imm = MEM_new<GLImmediate>("rose::gpu::GLImmediate");
 	this->window_ = window;
 
 	if (window) {
@@ -93,9 +95,12 @@ void GLContext::activate() {
 			back_right->size_set(w, h);
 		}
 	}
+
+	immActivate();
 }
 
 void GLContext::deactivate() {
+	immDeactivate();
 	active_ = false;
 }
 

@@ -14,6 +14,7 @@ struct GPUMatrixState;
 namespace rose::gpu {
 
 class Shader;
+class Immediate;
 
 class Context {
 public:
@@ -22,6 +23,7 @@ public:
 	StateManager *state_manager = nullptr;
 	
 	GPUMatrixState *matrix_state = nullptr;
+	Immediate *imm = nullptr;
 
 	/**
 	 * All 4 window frame-buffers.

@@ -14,6 +14,7 @@
 #include "MEM_alloc.h"
 
 #include "UI_interface.h"
+#include "UI_view2d.h"
 
 #include "KER_screen.h"
 
@@ -46,6 +47,7 @@ static SpaceLink *view3d_duplicate(const struct SpaceLink *sl) {
 }
 
 static void view3d_main_region_init(struct wmWindowManager *wm, struct ARegion *region) {
+	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_STANDARD, region->winx, region->winy);
 }
 
 static void view3d_main_region_draw(const struct Context *C, struct ARegion *region) {

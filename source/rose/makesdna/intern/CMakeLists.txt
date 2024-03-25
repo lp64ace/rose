@@ -75,8 +75,6 @@ endif()
 find_program(CLANG_EXECUTABLE_PATH clang)
 
 if(CLANG_EXECUTABLE_PATH)
-    message(STATUS "Found Clang: ${CLANG_EXECUTABLE_PATH}")
-	
 	set(CLANG_EXECUTABLE_PATH "${CLANG_EXECUTABLE_PATH}/clang.exe")
 else()
 	message(STATUS "You may want to try to install clang manually or you can install the clang extensions through Visual Studio!")

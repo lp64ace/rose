@@ -7,6 +7,7 @@
 #include "gpu_backend.hh"
 #include "gpu_context_private.hh"
 #include "gpu_matrix_private.h"
+#include "gpu_immediate_private.hh"
 #include "gpu_private.h"
 
 #ifdef WITH_OPENGL_BACKEND
@@ -48,6 +49,8 @@ Context::~Context() {
 	MEM_delete<FrameBuffer>(back_left);
 	MEM_delete<FrameBuffer>(front_right);
 	MEM_delete<FrameBuffer>(back_right);
+	
+	MEM_delete<Immediate>(imm);
 }
 
 bool Context::is_active_on_thread() {
