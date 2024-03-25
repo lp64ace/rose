@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DNA_vec_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,8 +40,8 @@ enum {
 	ROUNDBOX_TRIA_MAX, /* don't use */
 };
 
-GPUBatch *ui_batch_roundbox_widget_get();
-GPUBatch *ui_batch_roundbox_shadow_get();
+struct GPUBatch *ui_batch_roundbox_widget_get();
+struct GPUBatch *ui_batch_roundbox_shadow_get();
 
 #ifdef __cplusplus
 }

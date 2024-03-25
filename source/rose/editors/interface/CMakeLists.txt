@@ -30,6 +30,8 @@ set(SRC
 	interface.c
 	interface_draw.c
 	interface_intern.h
+	view2d.c
+	view2d_intern.h
 )
 
 # -----------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 #pragma once
 
-#define ENDIAN_WORD 'Rose'
+#define __ENDIAN_WORD__ 'Rose'
 
-#if ENDIAN_WORD == 0x526F7365
+#if __ENDIAN_WORD__ == 0x526F7365
 #	define BIG_ENDIAN
-#elif ENDIAN_WORD == 0x65736F52
+#elif __ENDIAN_WORD__ == 0x65736F52
 #	define LITTLE_ENDIAN
 #else
 #	define UNKOWN_ENDIAN

@@ -25,6 +25,8 @@ enum {
 	UI_CNR_ALL = UI_CNR_TOP_LEFT | UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT | UI_CNR_BOTTOM_LEFT,
 };
 
+#define UI_HEADER_OFFSET (0.4f * UI_UNIT_X)
+
 /* \} */
 
 /* -------------------------------------------------------------------- */

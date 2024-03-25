@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DNA_defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

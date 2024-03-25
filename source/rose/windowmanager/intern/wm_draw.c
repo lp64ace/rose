@@ -352,7 +352,7 @@ void wm_window_swap_buffers(struct wmWindow *win) {
 }
 
 static void wm_draw_window(struct Context *C, struct wmWindow *win) {
-	struct wmWindowManager *wm = CTX_wm_manager(C);
+	GPU_depth_test(GPU_DEPTH_NONE);
 
 	wm_draw_window_offscreen(C, win, false);
 	wm_draw_window_onscreen(C, win, -1);

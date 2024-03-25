@@ -51,8 +51,6 @@ int WM_window_pixels_y(const struct wmWindow *win);
 void WM_window_rect_calc(const struct wmWindow *win, struct rcti *r_rect);
 void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct);
 
-void WM_window_caption_rect_set(struct wmWindow *win, int xmin, int xmax, int ymin, int ymax);
-
 /* \} */
 
 /* -------------------------------------------------------------------- */

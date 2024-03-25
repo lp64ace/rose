@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LIB_endian.h"
+#include "DNA_defines.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,8 +10,6 @@ extern "C" {
 #	define MAKE_ID2(c, d) ((c) << 8 | (d))
 #elif defined(LITTLE_ENDIAN)
 #	define MAKE_ID2(c, d) ((d) << 8 | (c))
-#else
-#	error "Cannot make ID type, endian missing."
 #endif
 
 typedef enum {

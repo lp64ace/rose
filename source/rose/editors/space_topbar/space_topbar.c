@@ -18,6 +18,7 @@
 #include "WM_window.h"
 
 #include "UI_interface.h"
+#include "UI_view2d.h"
 
 #include "KER_context.h"
 #include "KER_screen.h"
@@ -68,6 +69,11 @@ static void topbar_header_region_init(struct wmWindowManager *wm, struct ARegion
 }
 
 static void topbar_main_region_init(struct wmWindowManager *wm, struct ARegion *region) {
+	/** force delayed UI_view2d_region_reinit call */
+	if (ELEM(RGN_ALIGN_ENUM_FROM_MASK(region->alignment), RGN_ALIGN_RIGHT)) {
+		region->flag |= RGN_FLAG_DYNAMIC_SIZE;
+	}
+	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_HEADER, region->winx, region->winy);
 }
 
 void ED_spacetype_topbar() {

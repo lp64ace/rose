@@ -60,7 +60,7 @@ IDTypeInfo IDType_ID_WM = {
 static void wm_init_new(struct Context *C, struct wmWindowManager *wm) {
 	struct wmWindow *window;
 
-	if ((window = WM_window_open(C, wm, NULL)) != NULL) {
+	if ((window = WM_window_open(C, NULL, false)) != NULL) {
 	}
 }
 
@@ -94,7 +94,6 @@ void WM_main(struct Context *C) {
 }
 
 void WM_exit(struct Context *C) {
-
 	wm_ghost_exit();
 
 	CTX_free(C);

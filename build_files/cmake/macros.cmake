@@ -352,12 +352,13 @@ function(data_to_c_simple
 endfunction()
 
 function(download_dependency_module _name _git _branch)
-	message(STATUS "Fetching content for ${_name}")
     FetchContent_Declare(${_name}
+		FETCHCONTENT_UPDATES_DISCONNECTED ON
         GIT_REPOSITORY ${_git}
         GIT_TAG ${_branch}
         SOURCE_DIR "${CMAKE_BINARY_DIR}/extern/${_name}"
     )
+	message(STATUS "Installing ${_name}")
     FetchContent_MakeAvailable(${_name})
 endfunction()
 

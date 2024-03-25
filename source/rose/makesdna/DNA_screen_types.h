@@ -12,7 +12,9 @@ extern "C" {
 #define AREAMINX 29
 #define HEADER_PADDING_Y 6
 #define WIDGET_UNIT 20
-#define HEADERY 20
+#define HEADERY 24
+#define PIXELSIZE 1
+#define UI_SCALE_FAC 1
 
 /**
  * TODO: Doing this is quite ugly :)
@@ -39,6 +41,8 @@ typedef struct Screen {
 	int flags;
 } Screen;
 
+DNA_ACTION_DEFINE(Screen, DNA_ACTION_STORE);
+
 /** #Screen->flag */
 enum {
 	SCREEN_REFRESH = 1 << 0,
@@ -50,6 +54,8 @@ typedef struct ScrAreaMap {
 	ListBase areabase;
 } ScrAreaMap;
 
+DNA_ACTION_DEFINE(ScrAreaMap, DNA_ACTION_RUNTIME);
+
 typedef struct ScrVert {
 	struct ScrVert *prev, *next, *newv;
 
@@ -57,6 +63,8 @@ typedef struct ScrVert {
 
 	int flag;
 } ScrVert;
+
+DNA_ACTION_DEFINE(ScrVert, DNA_ACTION_STORE);
 
 typedef struct ScrEdge {
 	struct ScrEdge *prev, *next;
@@ -66,6 +74,8 @@ typedef struct ScrEdge {
 	int border;
 	int flag;
 } ScrEdge;
+
+DNA_ACTION_DEFINE(ScrEdge, DNA_ACTION_STORE);
 
 typedef struct ScrGlobalAreaData {
 	/**
@@ -81,6 +91,8 @@ typedef struct ScrGlobalAreaData {
 	int align;
 	int flag;
 } ScrGlobalAreaData;
+
+DNA_ACTION_DEFINE(ScrGlobalAreaData, DNA_ACTION_RUNTIME);
 
 /** #ScrGlobalAreaData->align */
 enum {
@@ -117,6 +129,8 @@ typedef struct ScrArea {
 	ListBase regionbase;
 	ListBase handlers;
 } ScrArea;
+
+DNA_ACTION_DEFINE(ScrArea, DNA_ACTION_STORE);
 
 /** #ScrArea->flag */
 enum {
@@ -164,6 +178,8 @@ typedef struct ARegion {
 
 	ARegion_Runtime runtime;
 } ARegion;
+
+DNA_ACTION_DEFINE(ARegion, DNA_ACTION_STORE);
 
 /** #ARegion->alignment */
 enum {

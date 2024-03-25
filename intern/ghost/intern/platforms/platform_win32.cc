@@ -767,7 +767,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_NCHITTEST: {
 			result = DefWindowProcA(hWnd, message, wParam, lParam);
 
-			const int padding = 6;
+			const int rad = 6;
 
 			POINT cursor;
 			cursor.x = GET_X_LPARAM(lParam);
@@ -777,32 +777,31 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			GetWindowRect(hWnd, &windowRect);
 			
 			GRect caption = wnd->_CaptionRect;
+			
+			if (result == HTCLIENT) {
+				bool horizontal = cursor.x < windowRect.left + rad || cursor.x >= windowRect.right - rad;
+				bool vertical = cursor.y < windowRect.top + rad || cursor.y >= windowRect.bottom - rad;
+				if (horizontal && vertical) {
+					LRESULT left = static_cast<LRESULT>(cursor.x < windowRect.left + rad);
+					LRESULT right = static_cast<LRESULT>(cursor.x >= windowRect.right - rad);
 
+					result = 0;
+					result |= left * ((cursor.y < windowRect.top + rad) ? HTTOPLEFT : HTBOTTOMLEFT);
+					result |= right * ((cursor.y < windowRect.top + rad) ? HTTOPRIGHT : HTBOTTOMRIGHT);
+				}
+				else if (horizontal || vertical) {
+					result = 0;
+					result |= (cursor.x < windowRect.left + rad) ? HTLEFT : 0;
+					result |= (cursor.x >= windowRect.right - rad) ? HTRIGHT : 0;
+					result |= (cursor.y < windowRect.top + rad) ? HTTOP : 0;
+					result |= (cursor.y >= windowRect.bottom + rad) ? HTBOTTOM : 0;
+				}
+			}
 			if (result == HTCLIENT) {
 				if(windowRect.left + caption.left <= cursor.x && cursor.y <= windowRect.left + caption.right) {
 					if(windowRect.top + caption.top <= cursor.y && cursor.y <= windowRect.top + caption.bottom) {
 						result = HTCAPTION;
 					}
-				}
-			}
-			
-			if (result == HTCLIENT) {
-				bool horizontal = cursor.x < windowRect.left + padding || cursor.x >= windowRect.right - padding;
-				bool vertical = cursor.y < windowRect.top + padding || cursor.y >= windowRect.bottom - padding;
-				if (horizontal && vertical) {
-					LRESULT left = static_cast<LRESULT>(cursor.x < windowRect.left + padding);
-					LRESULT right = static_cast<LRESULT>(cursor.x >= windowRect.right - padding);
-
-					result = 0;
-					result |= left * ((cursor.y < windowRect.top + padding) ? HTTOPLEFT : HTBOTTOMLEFT);
-					result |= right * ((cursor.y < windowRect.top + padding) ? HTTOPRIGHT : HTBOTTOMRIGHT);
-				}
-				else if (horizontal || vertical) {
-					result = 0;
-					result |= (cursor.x < windowRect.left + padding) ? HTLEFT : 0;
-					result |= (cursor.x >= windowRect.right - padding) ? HTRIGHT : 0;
-					result |= (cursor.y < windowRect.top + padding) ? HTTOP : 0;
-					result |= (cursor.y >= windowRect.bottom + padding) ? HTBOTTOM : 0;
 				}
 			}
 

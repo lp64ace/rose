@@ -432,6 +432,13 @@ void WM_window_rect_calc(const struct wmWindow *win, rcti *r_rct) {
 	LIB_rcti_init(r_rct, 0, WM_window_pixels_x(win), 0, WM_window_pixels_y(win));
 }
 
+static void wm_window_caption_rect_set(const struct wmWindow *win, int xmin, int xmax, int ymin, int ymax) {
+	wm_cursor_position_to_ghost_client_coords(win, &xmin, &ymin);
+	wm_cursor_position_to_ghost_client_coords(win, &xmax, &ymax);
+	
+	GHOST_SetWindowCaptionRect(win->gwin, xmin, ymin, ymax, ymin);
+}
+
 void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) {
 	WM_window_rect_calc(win, r_rct);
 	
@@ -444,7 +451,7 @@ void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) 
 		
 		switch (area->global->align) {
 			case GLOBAL_AREA_ALIGN_TOP: {
-				WM_window_caption_rect_set(win, r_rct->xmin, r_rct->xmax, r_rct->ymax - height, r_rct->ymax);
+				wm_window_caption_rect_set(win, r_rct->xmin, r_rct->xmax, r_rct->ymax - height, r_rct->ymax);
 				r_rct->ymax -= height;
 			} break;
 			case GLOBAL_AREA_ALIGN_BOTTOM: {
@@ -457,13 +464,6 @@ void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) 
 	}
 	
 	ROSE_assert(LIB_rcti_is_valid(r_rct));
-}
-
-void WM_window_caption_rect_set(struct wmWindow *win, int xmin, int xmax, int ymin, int ymax) {
-	wm_cursor_position_to_ghost_client_coords(win, &xmin, &ymin);
-	wm_cursor_position_to_ghost_client_coords(win, &xmax, &ymax);
-	
-	GHOST_SetWindowCaptionRect(win->gwin, xmin, ymin, ymax, ymin);
 }
 
 /* \} */
@@ -493,8 +493,11 @@ static bool screen_is_used_by_other_window(const wmWindow *win, const Screen *sc
 }
 
 void WM_window_set_active_workspace(struct wmWindow *win, struct WorkSpace *workspace_new) {
-	/** For now we haven't implemented workspace switching */
-	ROSE_assert(WM_window_get_active_workspace(win) == workspace_new || WM_window_get_active_workspace(win) == NULL);
+	struct WorkSpace *workspace = WM_window_get_active_workspace(win);
+	
+	if(workspace != workspace_new) {
+		/** TODO: Ensure that the new workspace can be used! */
+	}
 
 	KER_workspace_active_set(win->workspace_hook, workspace_new);
 }

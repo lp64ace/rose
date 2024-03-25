@@ -1,5 +1,6 @@
 #include "ED_screen.h"
 #include "UI_interface.h"
+#include "UI_view2d.h"
 
 #include "MEM_alloc.h"
 
@@ -506,6 +507,7 @@ void ED_area_exit(struct Context *C, struct ScrArea *area) {
  * \{ */
 
 void ED_region_header_init(struct ARegion *region) {
+	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_HEADER, region->winx, region->winy);
 }
 
 void ED_region_header_draw(const struct Context *C, struct ARegion *region) {
@@ -565,7 +567,7 @@ bool ED_region_is_overlap(int spacetype, int regiontype) {
  * \{ */
 
 int ED_area_headersize() {
-	return WIDGET_UNIT + HEADER_PADDING_Y;
+	return HEADERY + HEADER_PADDING_Y;
 }
 
 int ED_area_footersize() {

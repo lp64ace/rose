@@ -12,7 +12,7 @@ void wm_window_make_drawable(struct wmWindowManager *wm, struct wmWindow *win);
 void wm_window_swap_buffers(struct wmWindow *win);
 
 typedef struct wmDrawBuffer {
-	struct GPUOffscreen *offscreen;
+	struct GPUOffScreen *offscreen;
 	struct GPUViewport *viewport;
 	
 	bool stereo;

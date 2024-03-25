@@ -35,6 +35,6 @@ set(LIB
 )
 
 # -----------------------------------------------------------------------------
-# Declare Library
+# Declare Executable
 
 add_executable(datatoc ${SRC})
