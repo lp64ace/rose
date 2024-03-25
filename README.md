@@ -18,6 +18,7 @@ Before proceeding, ensure that the following prerequisites are met:
 
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
+- **CLang:** CLang is required to build this!
 
 ### Building Rose
 
