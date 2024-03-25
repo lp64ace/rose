@@ -436,7 +436,7 @@ static void wm_window_caption_rect_set(const struct wmWindow *win, int xmin, int
 	wm_cursor_position_to_ghost_client_coords(win, &xmin, &ymin);
 	wm_cursor_position_to_ghost_client_coords(win, &xmax, &ymax);
 	
-	GHOST_SetWindowCaptionRect(win->gwin, xmin, ymin, ymax, ymin);
+	GHOST_SetWindowCaptionRect(win->gwin, xmin, xmax, ymax, ymin);
 }
 
 void WM_window_screen_rect_calc(const struct wmWindow *win, struct rcti *r_rct) {
