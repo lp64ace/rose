@@ -78,14 +78,21 @@ static void topbar_main_region_init(struct wmWindowManager *wm, struct ARegion *
 	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_HEADER, region->winx, region->winy);
 }
 
-static void topbar_main_region_draw(struct Context *C, struct ARegion *region) {
-	ED_region_header_draw(C, region);
+static void topbar_window_title_draw(const struct Context *C, struct ARegion *region) {
+	int height = region->winy;
+	const char *title_text = "Rose";
 	
 	int fontid = RFT_default();
 	RFT_color3f(fontid, 1.0f, 1.0f, 1.0f);
+	RFT_size(fontid, (float)(height >> 1));
+	RFT_position(fontid, 8, 8, 0);
 	
-	RFT_default_size(region->winy - 14.0f);
-	RFT_draw_default(4.0f, 8.0f, 0.0f, "Rose", -1);
+	RFT_draw(fontid, title_text, ARRAY_SIZE(title_text));
+}
+
+static void topbar_main_region_draw(const struct Context *C, struct ARegion *region) {
+	ED_region_header_draw(C, region);
+	topbar_window_title_draw(C, region);
 }
 
 void ED_spacetype_topbar() {

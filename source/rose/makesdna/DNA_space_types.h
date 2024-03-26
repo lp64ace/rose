@@ -63,6 +63,8 @@ typedef struct SpaceView3D {
 	int spacetype;
 	int flag;
 	/* End 'SpaceLink' header. */
+	
+	float last_draw_time;
 } SpaceView3D;
 
 DNA_ACTION_DEFINE(SpaceView3D, DNA_ACTION_STORE);

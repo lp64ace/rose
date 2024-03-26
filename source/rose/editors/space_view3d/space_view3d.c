@@ -6,7 +6,9 @@
 
 #include "LIB_assert.h"
 #include "LIB_listbase.h"
+#include "LIB_rect.h"
 #include "LIB_string.h"
+#include "LIB_time.h"
 #include "LIB_utildefines.h"
 
 #include "GPU_framebuffer.h"
@@ -16,6 +18,9 @@
 #include "UI_interface.h"
 #include "UI_view2d.h"
 
+#include "RFT_api.h"
+
+#include "KER_context.h"
 #include "KER_screen.h"
 
 #include <stdio.h>
@@ -26,6 +31,7 @@ static SpaceLink *view3d_create(const struct ScrArea *area) {
 
 	view3d = MEM_callocN(sizeof(SpaceView3D), "View3D::Link");
 	view3d->spacetype = SPACE_VIEW3D;
+	view3d->last_draw_time = _check_seconds_timer_float();
 
 	region = MEM_callocN(sizeof(ARegion), "View3D::main");
 	LIB_addtail(&view3d->regionbase, region);
@@ -50,8 +56,42 @@ static void view3d_main_region_init(struct wmWindowManager *wm, struct ARegion *
 	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_STANDARD, region->winx, region->winy);
 }
 
+static int view3d_main_region_overlay_font_init(struct ARegion *region) {
+	int fontid = RFT_default();
+
+	RFT_color3f(fontid, 1, 1, 1);
+	RFT_size(fontid, 11);
+	
+	return fontid;
+}
+
+/** Draw overlay text to the top right corner of the main region */
+static void view3d_main_region_draw_overlay_text(struct ARegion *region, const char *text) {
+	const int fontid = view3d_main_region_overlay_font_init(region), pad = 4;
+	rcti boundbox;
+
+	RFT_boundbox(fontid, text, -1, &boundbox);
+	RFT_position(fontid, region->winx - (LIB_rcti_size_x(&boundbox) + pad), region->winy - (LIB_rcti_size_y(&boundbox) + pad), 0);
+	RFT_draw(fontid, text, -1);
+}
+
+static void view3d_main_region_draw_overlay(struct ARegion *region, struct SpaceView3D *view3d) {
+	float now = _check_seconds_timer_float();
+	char *text = LIB_sprintf_allocN("%.1f", (1.0f / (now - view3d->last_draw_time)));
+	if (text) {
+		view3d_main_region_draw_overlay_text(region, text);
+		MEM_freeN(text);
+	}
+	view3d->last_draw_time = now;
+}
+
 static void view3d_main_region_draw(const struct Context *C, struct ARegion *region) {
 	GPU_clear_color(0.25f, 0.25f, 0.25f, 1.0f);
+
+	struct ScrArea *area = CTX_wm_area(C);
+	struct SpaceView3D *view3d = (struct SpaceView3D *)area->spacedata.first;
+
+	view3d_main_region_draw_overlay(region, view3d);
 }
 
 void ED_spacetype_view3d() {

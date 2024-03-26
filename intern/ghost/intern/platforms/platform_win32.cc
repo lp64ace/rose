@@ -797,7 +797,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 				}
 			}
 			if (result == HTCLIENT) {
-				if (windowRect.left + caption.left <= cursor.x && cursor.y <= windowRect.left + caption.right) {
+				if (windowRect.left + caption.left <= cursor.x && cursor.x <= windowRect.left + caption.right) {
 					if (windowRect.top + caption.top <= cursor.y && cursor.y <= windowRect.top + caption.bottom) {
 						result = HTCAPTION;
 					}

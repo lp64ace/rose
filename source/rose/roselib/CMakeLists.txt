@@ -7,6 +7,7 @@ set(INC
 	
 	# Internal Include Directories
 	${CMAKE_SOURCE_DIR}/extern/wcwidth
+	${CMAKE_SOURCE_DIR}/intern/ghost
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna
 	
 )
@@ -71,6 +72,7 @@ set(SRC
 	LIB_struct_equality_utils.hh
 	LIB_system.h
 	LIB_threads.h
+	LIB_time.h
 	LIB_sys_types.h
 	LIB_utildefines.h
 	LIB_utildefines_variadic.h
@@ -104,6 +106,7 @@ set(SRC
 	intern/system_unix.c
 	intern/system_win32.c
 	intern/threads.c
+	intern/time.c
 )
 
 # -----------------------------------------------------------------------------
