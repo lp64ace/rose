@@ -793,7 +793,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 					result |= (cursor.x < windowRect.left + rad) ? HTLEFT : 0;
 					result |= (cursor.x >= windowRect.right - rad) ? HTRIGHT : 0;
 					result |= (cursor.y < windowRect.top + rad) ? HTTOP : 0;
-					result |= (cursor.y >= windowRect.bottom + rad) ? HTBOTTOM : 0;
+					result |= (cursor.y >= windowRect.bottom - rad) ? HTBOTTOM : 0;
 				}
 			}
 			if (result == HTCLIENT) {

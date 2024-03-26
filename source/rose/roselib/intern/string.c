@@ -334,20 +334,6 @@ int LIB_strncasecmp(const char *s1, const char *s2, size_t length) {
 #define HashBase 101
 #define HashMod UINT_MAX
 
-static void log(const char *str, size_t indicator) {
-	size_t i;
-	printf("DBG | ");
-	for (i = 0; str[i] != '\0'; i++) {
-		printf("%c", str[i]);
-	}
-	printf("\n");
-	printf("DBG | ");
-	for (i = 0; i < indicator && str[i] != '\0'; i++) {
-		printf(" ");
-	}
-	printf("^\n");
-}
-
 static size_t lib_strfind_internal(const char *text, const char *needle, size_t index, ptrdiff_t step) {
 	int64_t rolling = 0, stable = 0, power = 0;
 

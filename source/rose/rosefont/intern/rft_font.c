@@ -1162,6 +1162,16 @@ void rft_font_exit() {
 	rft_batch_draw_exit();
 }
 
+void RFT_cache_clear() {
+	for (int i = 0; i < ROSE_MAX_FONT; i++) {
+		FontRFT *font = global_font[i];
+		if (font) {
+			rft_glyph_cache_clear(font);
+		}
+	}
+	rft_batch_draw_exit();
+}
+
 void RFT_cache_flush_set_fn(void (*cache_flush_fn)(void)) {
 	rft_draw_cache_flush = cache_flush_fn;
 }

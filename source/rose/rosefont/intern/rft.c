@@ -119,15 +119,6 @@ void RFT_reset_fonts() {
 	}
 }
 
-void RFT_cache_clear() {
-	for (int i = 0; i < ROSE_MAX_FONT; i++) {
-		FontRFT *font = global_font[i];
-		if (font) {
-			rft_glyph_cache_clear(font);
-		}
-	}
-}
-
 bool rft_font_id_is_valid(int fontid) {
 	return rft_get(fontid) != NULL;
 }

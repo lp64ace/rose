@@ -12,6 +12,7 @@ set(INC
 	# Internal Include Directories
 	${CMAKE_SOURCE_DIR}/intern/memalloc
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna
+	${CMAKE_SOURCE_DIR}/source/rose/rosefont
 	${CMAKE_SOURCE_DIR}/source/rose/roselib
 	
 	# External Include Directores

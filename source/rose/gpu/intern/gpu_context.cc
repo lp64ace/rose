@@ -18,6 +18,8 @@
 #include <mutex>
 #include <vector>
 
+#include "RFT_api.h"
+
 using namespace rose::gpu;
 
 static thread_local Context *active_ctx = nullptr;
@@ -93,8 +95,9 @@ void GPU_context_discard(GPUContext *ctx_) {
 		num_backend_users--;
 		ROSE_assert(num_backend_users >= 0);
 		if (num_backend_users == 0) {
+			RFT_cache_clear();
 			GPU_exit();
-
+			
 			/* Discard backend when last context is discarded. */
 			gpu_backend_discard();
 		}

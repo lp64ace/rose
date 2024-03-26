@@ -674,8 +674,6 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, const int type,
 				MEMZERO(evt.utf8);
 			}
 
-			printf("IN: %s\n", evt.utf8);
-
 			switch (evt.type) {
 				case EVT_LEFTSHIFTKEY:
 				case EVT_RIGHTSHIFTKEY: {

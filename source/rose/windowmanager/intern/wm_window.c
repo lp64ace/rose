@@ -28,6 +28,8 @@
 #include "WM_types.h"
 #include "WM_window.h"
 
+#include "RFT_api.h"
+
 #include "ED_screen.h"
 
 #include "glib.h"

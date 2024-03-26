@@ -22,6 +22,8 @@
 #include "WM_init_exit.h"
 #include "WM_window.h"
 
+#include "RFT_api.h"
+
 #include "GPU_init_exit.h"
 
 static void window_manager_free_data(struct ID *id) {
@@ -97,7 +99,7 @@ void WM_main(struct Context *C) {
 
 void WM_exit(struct Context *C) {
 	RFT_exit();
-	
+
 	wm_ghost_exit();
 
 	CTX_free(C);

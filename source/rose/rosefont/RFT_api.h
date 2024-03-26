@@ -14,6 +14,8 @@ extern "C" {
 
 bool RFT_init(void);
 void RFT_exit(void);
+/** When the last GPU context is destoryed we need to invalidate the full cache! */
+void RFT_cache_clear(void);
 
 int RFT_load(const char *filepath);
 int RFT_load_mem(const char *name, const void *mem, size_t mem_size);
