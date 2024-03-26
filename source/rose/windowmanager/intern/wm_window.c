@@ -65,6 +65,12 @@ static int wm_ghost_handle_event(struct GWindow *gwindow, int type, void *rawdat
 			}
 			return true;
 		} break;
+		/** Resize doesn't return to main so draw the window manualy. */
+		case GLIB_EVT_RESIZETIMER: {
+			wm_draw_update(C);
+
+			return true;
+		} break;
 		case GLIB_EVT_MOVE:
 		case GLIB_EVT_SIZE: {
 			wm_window_position_update(window);

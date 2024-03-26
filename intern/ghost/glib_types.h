@@ -50,6 +50,10 @@ typedef struct GRect {
  * \{ */
 
 enum {
+	GLIB_EVT_NONE,
+
+	GLIB_EVT_RESIZETIMER,
+
 	GLIB_EVT_SIZE,	// Window Resize event, see EventSize
 	GLIB_EVT_MOVE,	// Window Move event, see EventMove
 

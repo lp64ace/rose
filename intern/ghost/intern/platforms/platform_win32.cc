@@ -8,6 +8,8 @@
 
 #include "platform_win32.hh"
 
+#define RESIZE_TIMER (WM_USER+1)
+
 #ifndef VK_MINUS
 #	define VK_MINUS 0xBD
 #endif /* VK_MINUS */
@@ -457,10 +459,6 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 			/** Problem: glewInit failed, something is seriously wrong. */
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 		}
-
-		if (glewGetExtension("WGL_EXT_swap_control")) {
-			::wglSwapIntervalEXT(0);
-		}
 	}
 }
 
@@ -498,6 +496,13 @@ bool WindowsOpenGLContext::Activate() {
 
 bool WindowsOpenGLContext::Deactivate() {
 	if (::wglMakeCurrent(_hDC, NULL)) {
+		return true;
+	}
+	return false;
+}
+
+bool WindowsOpenGLContext::SwapInterval(int interval) {
+	if (::wglSwapIntervalEXT(interval)) {
 		return true;
 	}
 	return false;
@@ -813,6 +818,15 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			info->ptMinTrackSize.y = (info->ptMinTrackSize.x * 9) >> 4;
 
 			handled |= true;
+		} break;
+		case WM_ENTERSIZEMOVE: {
+			SetTimer(hWnd, RESIZE_TIMER, 0, NULL);
+		} break;
+		case WM_EXITSIZEMOVE: {
+			KillTimer(hWnd, RESIZE_TIMER);
+		} break; 
+		case WM_TIMER: {
+			glib_windows_platform->DispatchEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RESIZETIMER, NULL);
 		} break;
 		case WM_SIZE: {
 			int width = static_cast<int>(LOWORD(lParam));

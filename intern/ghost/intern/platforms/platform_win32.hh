@@ -206,6 +206,9 @@ public:
 	/** Make the current rendering context an invalid rendering context. */
 	bool Deactivate();
 
+	/** Set the swap interval of this context */
+	bool SwapInterval(int interval);
+
 	/** Excange the front and back buffer of the window. */
 	bool SwapBuffers();
 
