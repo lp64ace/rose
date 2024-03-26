@@ -112,8 +112,8 @@ public:
 	void PostMouseMoveEvent(WindowInterface *wnd, int x, int y, int modifiers);
 	void PostMouseWheelEvent(WindowInterface *wnd, int x, int y, int modifiers, int wheel);
 	void PostMouseButtonEvent(WindowInterface *wnd, int type, int x, int y, int modifiers);
-	void PostKeyDownEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16);
-	void PostKeyUpEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16);
+	void PostKeyDownEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const char *utf8);
+	void PostKeyUpEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const char *utf8);
 	void PostDestroyEvent(WindowInterface *wnd);
 
 	void ClearWindowEvents(WindowInterface *wnd);

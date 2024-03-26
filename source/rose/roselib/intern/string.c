@@ -288,6 +288,46 @@ size_t LIB_strnlen(const char *str, const size_t maxlen) {
 /* \} */
 
 /* -------------------------------------------------------------------- */
+/** \name String Compare
+ * \{ */
+
+int LIB_strcasecmp(const char *s1, const char *s2) {
+	size_t i;
+	for (i = 0;; i++) {
+		const char c1 = (char)tolower(s1[i]), c2 = (char)tolower(s2[i]);
+		if (c1 < c2) {
+			return -1;
+		}
+		else if (c2 < c1) {
+			return +1;
+		}
+		else if (c1 == 0) {
+			break;
+		}
+	}
+	return 0;
+}
+
+int LIB_strncasecmp(const char *s1, const char *s2, size_t length) {
+	size_t i;
+	for (i = 0; i < length; i++) {
+		const char c1 = (char)tolower(s1[i]), c2 = (char)tolower(s2[i]);
+		if (c1 < c2) {
+			return -1;
+		}
+		else if (c2 < c1) {
+			return +1;
+		}
+		else if (c1 == 0) {
+			break;
+		}
+	}
+	return 0;
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
 /** \name String Search
  * \{ */
 

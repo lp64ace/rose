@@ -10,6 +10,7 @@ set(INC
 	${CMAKE_SOURCE_DIR}/source/rose/editors/include
 	${CMAKE_SOURCE_DIR}/source/rose/gpu
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna
+	${CMAKE_SOURCE_DIR}/source/rose/rosefont
 	${CMAKE_SOURCE_DIR}/source/rose/roselib
 	${CMAKE_SOURCE_DIR}/source/rose/rosekernel
 	${CMAKE_SOURCE_DIR}/source/rose/windowmanager
@@ -36,6 +37,7 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rf::source::editors::util
+	rf::source::rosefont
 	
 	# External Library Dependencies
 	

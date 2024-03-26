@@ -110,7 +110,7 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/.clang-format ${CMAKE_BINARY_DIR}/.clang-format COPYONLY)
 
 # -----------------------------------------------------------------------------
-# Download External Libraries
+# Download pthread
 
 if(WIN32)
     # Download pthread-win32 from GitHub
@@ -120,10 +120,12 @@ if(WIN32)
     set(PTHREADS_INC ${CMAKE_BINARY_DIR}/extern/pthread)
     set(PTHREADS_LIB pthreadVCE3 pthreadVSE3 pthreadVC3)
 
-    # Set target properties for organization
-    set_target_properties(pthreadVCE3 PROPERTIES FOLDER "extern")
-    set_target_properties(pthreadVSE3 PROPERTIES FOLDER "extern")
-    set_target_properties(pthreadVC3 PROPERTIES FOLDER "extern")
+	if(IDE_GROUP_PROJECTS_IN_FOLDERS)
+		# Set target properties for organization
+		set_target_properties(pthreadVCE3 PROPERTIES FOLDER "extern")
+		set_target_properties(pthreadVSE3 PROPERTIES FOLDER "extern")
+		set_target_properties(pthreadVC3 PROPERTIES FOLDER "extern")
+	endif()
 	
 	# Mute warnings for external projects
 	target_compile_options(pthreadVCE3 PRIVATE /W0)
@@ -139,6 +141,28 @@ if(UNIX)
   set(PTHREADS_INC ${CMAKE_THREAD_LIBS_INIT})
   set(PTHREADS_LIB ${CMAKE_THREAD_LIBS_INIT})
 endif()
+
+# -----------------------------------------------------------------------------
+# Download Freetype
+
+# Download freetype from GitHub
+download_dependency_module(freetype https://github.com/freetype/freetype master)
+
+# Set freetype include and libraries
+set(PTHREADS_INC ${CMAKE_BINARY_DIR}/extern/pthread)
+set(PTHREADS_LIB pthreadVCE3 pthreadVSE3 pthreadVC3)
+
+if(IDE_GROUP_PROJECTS_IN_FOLDERS)
+	# Set target properties for organization
+	set_target_properties(freetype PROPERTIES FOLDER "extern")
+endif()
+
+# Mute warnings for external projects
+target_compile_options(freetype PRIVATE /W0)
+
+# Set pthread include and libraries
+set(FREETYPE_INC ${CMAKE_BINARY_DIR}/extern/freetype/include)
+set(FREETYPE_LIB freetype)
 
 # -----------------------------------------------------------------------------
 # Add Subdirectories

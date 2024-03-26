@@ -38,6 +38,7 @@ set(LIB
 	rf::source::editors::space_topbar
 	rf::source::editors::space_view3d
 	rf::source::gpu
+	rf::source::rosefont
 	rf::source::rosekernel
 	rf::source::roselib
 	rf::source::windowmanager

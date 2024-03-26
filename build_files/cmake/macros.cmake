@@ -352,8 +352,9 @@ function(data_to_c_simple
 endfunction()
 
 function(download_dependency_module _name _git _branch)
+	set(FETCHCONTENT_UPDATES_DISCONNECTED 1 CACHE BOOL "Disable fetching updates" FORCE)
+
     FetchContent_Declare(${_name}
-		FETCHCONTENT_UPDATES_DISCONNECTED ON
         GIT_REPOSITORY ${_git}
         GIT_TAG ${_branch}
         SOURCE_DIR "${CMAKE_BINARY_DIR}/extern/${_name}"

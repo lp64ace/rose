@@ -664,15 +664,17 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, const int type,
 				break;
 			}
 
-			memcpy(evt.utf16, customdata->utf16, sizeof(evt.utf16));
+			memcpy(evt.utf8, customdata->utf8, sizeof(evt.utf8));
 			if (customdata->repeat) {
 				evt.flag |= WM_EVENT_IS_REPEAT;
 			}
 			evt.value = (type == GLIB_EVT_KEYDOWN) ? KM_PRESS : KM_RELEASE;
 
 			if (type == GLIB_EVT_KEYUP) {
-				MEMZERO(evt.utf16);
+				MEMZERO(evt.utf8);
 			}
+
+			printf("IN: %s\n", evt.utf8);
 
 			switch (evt.type) {
 				case EVT_LEFTSHIFTKEY:
@@ -759,11 +761,11 @@ wmEventHandler_UI *WM_event_add_ui_handler(const Context *C, ListBase *handlers,
 
 struct wmEventHandler_UI *WM_event_ensure_ui_handler(const struct Context *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, int flag) {
 	wmEventHandler_UI *handler = wm_ui_handler_find(handlers, handle_fn, remove_fn, user_data);
-	
-	if(handler == NULL) {
+
+	if (handler == NULL) {
 		handler = WM_event_add_ui_handler(C, handlers, handle_fn, remove_fn, user_data, flag);
 	}
-	
+
 	if (C) {
 		handler->context.area = CTX_wm_area(C);
 		handler->context.region = CTX_wm_region(C);
@@ -774,7 +776,7 @@ struct wmEventHandler_UI *WM_event_ensure_ui_handler(const struct Context *C, Li
 		handler->context.region = NULL;
 		handler->context.menu = NULL;
 	}
-	
+
 	return handler;
 }
 

@@ -85,6 +85,17 @@ size_t LIB_strnlen(const char *text, const size_t maxlen);
 /* \} */
 
 /* -------------------------------------------------------------------- */
+/** \name String Compare
+ * \{ */
+
+/** Same as #strcmp but ignores charachter case. */ 
+int LIB_strcasecmp(const char *s1, const char *s2);
+/** Same as #strncmp but ignores charachter case. */ 
+int LIB_strncasecmp(const char *s1, const char *s2, size_t length);
+ 
+/* \} */
+
+/* -------------------------------------------------------------------- */
 /** \name String Search
  * \{ */
 

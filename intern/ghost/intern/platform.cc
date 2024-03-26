@@ -132,26 +132,26 @@ void PlatformInterface::PostMouseButtonEvent(WindowInterface *wnd, int type, int
 	PostEvent(wnd, type, data);
 }
 
-void PlatformInterface::PostKeyDownEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16) {
+void PlatformInterface::PostKeyDownEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const char *utf8) {
 	EventKey *data = MEM_cnew<EventKey>("glib::KeyDownEvent");
 
 	data->key = key;
 	data->repeat = repeat;
 	data->modifiers = modifiers;
 
-	memcpy(data->utf16, utf16, sizeof(wchar_t[2]));
+	memcpy(data->utf8, utf8, sizeof(data->utf8));
 
 	PostEvent(wnd, GLIB_EVT_KEYDOWN, data);
 }
 
-void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const wchar_t *utf16) {
+void PlatformInterface::PostKeyUpEvent(WindowInterface *wnd, int key, bool repeat, int modifiers, const char *utf8) {
 	EventKey *data = MEM_cnew<EventKey>("glib::KeyUpEvent");
 
 	data->key = key;
 	data->repeat = repeat;
 	data->modifiers = modifiers;
 
-	memcpy(data->utf16, utf16, sizeof(wchar_t[3]));
+	memcpy(data->utf8, utf8, sizeof(data->utf8));
 
 	PostEvent(wnd, GLIB_EVT_KEYUP, data);
 }

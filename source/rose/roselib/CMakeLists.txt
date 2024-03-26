@@ -6,6 +6,7 @@ set(INC
 	PUBLIC .
 	
 	# Internal Include Directories
+	${CMAKE_SOURCE_DIR}/extern/wcwidth
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna
 	
 )
@@ -29,6 +30,7 @@ set(SRC
 	LIB_bitmap.h
 	LIB_compiler_attrs.h
 	LIB_endian.h
+	LIB_fileops.h
 	LIB_ghash.h
 	LIB_hash.h
 	LIB_hash.hh
@@ -62,10 +64,13 @@ set(SRC
 	LIB_span.hh
 	LIB_spinlock.h
 	LIB_string.h
+	LIB_string_cursor_utf8.h
 	LIB_string_ref.hh
 	LIB_string_utils.h
+	LIB_string_utf8.h
 	LIB_struct_equality_utils.hh
 	LIB_system.h
+	LIB_threads.h
 	LIB_sys_types.h
 	LIB_utildefines.h
 	LIB_utildefines_variadic.h
@@ -73,6 +78,7 @@ set(SRC
 	LIB_vector.hh
 	intern/assert.c
 	intern/bitmap.c
+	intern/fileops.c
 	intern/ghash.c
 	intern/ghash_utils.c
 	intern/hash_mm2a.c
@@ -90,11 +96,14 @@ set(SRC
 	intern/rct.c
 	intern/spinlock.c
 	intern/string.c
+	intern/string_cursor_utf8.c
 	intern/string_ref.cc
+	intern/string_utf8.c
 	intern/string_utils.c
 	intern/system.c
 	intern/system_unix.c
 	intern/system_win32.c
+	intern/threads.c
 )
 
 # -----------------------------------------------------------------------------
@@ -102,6 +111,7 @@ set(SRC
 
 set(LIB
 	# Internal Include Directories
+	rf::extern::wcwidth
 	rf::intern::memalloc
 	
 	# External Include Directories

@@ -23,6 +23,8 @@
 #include "KER_context.h"
 #include "KER_screen.h"
 
+#include "RFT_api.h"
+
 #include <stdio.h>
 
 static SpaceLink *topbar_create(const struct ScrArea *area) {
@@ -76,6 +78,16 @@ static void topbar_main_region_init(struct wmWindowManager *wm, struct ARegion *
 	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_HEADER, region->winx, region->winy);
 }
 
+static void topbar_main_region_draw(struct Context *C, struct ARegion *region) {
+	ED_region_header_draw(C, region);
+	
+	int fontid = RFT_default();
+	RFT_color3f(fontid, 1.0f, 1.0f, 1.0f);
+	
+	RFT_default_size(region->winy - 14.0f);
+	RFT_draw_default(4.0f, 8.0f, 0.0f, "Rose", -1);
+}
+
 void ED_spacetype_topbar() {
 	SpaceType *st = MEM_callocN(sizeof(SpaceType), "rose::spacetype::TopBar");
 
@@ -92,7 +104,7 @@ void ED_spacetype_topbar() {
 	art = MEM_callocN(sizeof(ARegionType), "rose::regiontype::TopBar::MainRegion");
 	art->regionid = RGN_TYPE_WINDOW;
 	art->init = topbar_main_region_init;
-	art->draw = ED_region_header_draw;
+	art->draw = topbar_main_region_draw;
 	art->prefsizex = UI_UNIT_X * 8;
 
 	LIB_addhead(&st->regiontypes, art);

@@ -251,7 +251,7 @@ enum {
 
 typedef struct EventKey {
 	int key;
-	wchar_t utf16[2];
+	char utf8[4];
 
 	int modifiers;
 	bool repeat;

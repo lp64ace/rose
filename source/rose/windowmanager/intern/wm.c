@@ -79,6 +79,8 @@ void WM_init(struct Context *C) {
 	}
 
 	ED_spacetypes_init();
+	
+	RFT_init();
 
 	wm_init_new(C, wm);
 }
@@ -94,6 +96,8 @@ void WM_main(struct Context *C) {
 }
 
 void WM_exit(struct Context *C) {
+	RFT_exit();
+	
 	wm_ghost_exit();
 
 	CTX_free(C);

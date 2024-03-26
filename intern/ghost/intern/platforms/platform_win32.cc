@@ -714,7 +714,8 @@ static bool ProcessKeyEvent(WindowsWindow *window, RAWINPUT *raw) {
 	}
 
 	if (!repeat_modifier) {
-		wchar_t utf16[3] = {0};
+		wchar_t utf16[2] = {0};
+		char utf8[4] = {0};
 		BYTE state[256];
 
 		const BOOL HasState = ::GetKeyboardState((PBYTE)state);
@@ -728,20 +729,18 @@ static bool ProcessKeyEvent(WindowsWindow *window, RAWINPUT *raw) {
 			INT Ret;
 
 			if ((Ret = ::ToUnicodeEx(vk, raw->data.keyboard.MakeCode, state, utf16, 2, 0, glib_windows_platform->_KeyboardLayout))) {
-				if ((Ret > 0 && Ret < 3)) {
-					utf16[Ret] = 0;
-				}
-				else if (Ret < 0) {
-					utf16[0] = '\0';
+				Ret = ::WideCharToMultiByte(CP_UTF8, 0, utf16, Ret, utf8, sizeof(utf8), NULL, NULL);
+				if (0 <= Ret && Ret < sizeof(utf8) / sizeof(utf8[0])) {
+					utf8[Ret] = '\0';
 				}
 			}
 		}
 
 		if (keydown) {
-			glib_windows_platform->PostKeyDownEvent(window, key, repeat, modifiers, utf16);
+			glib_windows_platform->PostKeyDownEvent(window, key, repeat, modifiers, utf8);
 		}
 		else {
-			glib_windows_platform->PostKeyUpEvent(window, key, repeat, modifiers, utf16);
+			glib_windows_platform->PostKeyUpEvent(window, key, repeat, modifiers, utf8);
 		}
 
 		return true;
@@ -772,12 +771,12 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			POINT cursor;
 			cursor.x = GET_X_LPARAM(lParam);
 			cursor.y = GET_Y_LPARAM(lParam);
-			
+
 			RECT windowRect;
 			GetWindowRect(hWnd, &windowRect);
-			
+
 			GRect caption = wnd->_CaptionRect;
-			
+
 			if (result == HTCLIENT) {
 				bool horizontal = cursor.x < windowRect.left + rad || cursor.x >= windowRect.right - rad;
 				bool vertical = cursor.y < windowRect.top + rad || cursor.y >= windowRect.bottom - rad;
@@ -798,8 +797,8 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 				}
 			}
 			if (result == HTCLIENT) {
-				if(windowRect.left + caption.left <= cursor.x && cursor.y <= windowRect.left + caption.right) {
-					if(windowRect.top + caption.top <= cursor.y && cursor.y <= windowRect.top + caption.bottom) {
+				if (windowRect.left + caption.left <= cursor.x && cursor.y <= windowRect.left + caption.right) {
+					if (windowRect.top + caption.top <= cursor.y && cursor.y <= windowRect.top + caption.bottom) {
 						result = HTCAPTION;
 					}
 				}

@@ -15,7 +15,7 @@ typedef struct wmEvent {
 	int xy[2];
 	int global[2];
 	int local[2];
-	wchar_t utf16[2];
+	char utf8[4];
 
 	int modifiers;
 	
