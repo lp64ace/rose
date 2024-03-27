@@ -105,6 +105,8 @@ public:
 	WNDCLASSEXA _WndClass;
 
 	HKL _KeyboardLayout;
+	
+	BOOL _HasSwapIntervalSupport;
 
 	/* \} */
 };
@@ -172,6 +174,8 @@ public:
 public:
 	HWND AsHandle() const;
 
+	int _ContextResizeSwapIntervalHack;
+
 private:
 	/* -------------------------------------------------------------------- */
 	/** \name Window Handles
@@ -206,8 +210,11 @@ public:
 	/** Make the current rendering context an invalid rendering context. */
 	bool Deactivate();
 
+	/** Returns the swap interval of the context. */
+	int GetSwapInterval();
+
 	/** Set the swap interval of this context */
-	bool SwapInterval(int interval);
+	bool SetSwapInterval(int interval);
 
 	/** Excange the front and back buffer of the window. */
 	bool SwapBuffers();

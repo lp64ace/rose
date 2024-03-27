@@ -59,7 +59,7 @@ static void view3d_main_region_init(struct wmWindowManager *wm, struct ARegion *
 static int view3d_main_region_overlay_font_init(struct ARegion *region) {
 	int fontid = RFT_default();
 
-	RFT_color3f(fontid, 1, 1, 1);
+	RFT_color3f(fontid, 1.75f, 0.75f, 0.5f);
 	RFT_size(fontid, 11);
 	
 	return fontid;
@@ -77,7 +77,7 @@ static void view3d_main_region_draw_overlay_text(struct ARegion *region, const c
 
 static void view3d_main_region_draw_overlay(struct ARegion *region, struct SpaceView3D *view3d) {
 	float now = _check_seconds_timer_float();
-	char *text = LIB_sprintf_allocN("%.1f", (1.0f / (now - view3d->last_draw_time)));
+	char *text = LIB_sprintf_allocN("FPS %.1f", (1.0f / (now - view3d->last_draw_time)));
 	if (text) {
 		view3d_main_region_draw_overlay_text(region, text);
 		MEM_freeN(text);

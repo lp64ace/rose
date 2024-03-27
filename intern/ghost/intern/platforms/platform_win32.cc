@@ -8,7 +8,7 @@
 
 #include "platform_win32.hh"
 
-#define RESIZE_TIMER (WM_USER+1)
+#define RESIZE_TIMER (WM_USER + 1)
 
 #ifndef VK_MINUS
 #	define VK_MINUS 0xBD
@@ -77,6 +77,12 @@ static bool glib_windows_register_window_class_ex(WNDCLASSEXA *wndclass) {
 
 static void glib_windows_unregister_window_class_ex(WNDCLASSEXA *wndclass) {
 	::UnregisterClassA(glib_application_name, wndclass->hInstance);
+}
+
+static void glib_windows_detech_capabilities(WindowsPlatform *platform) {
+	platform->_HasSwapIntervalSupport = strstr(::wglGetExtensionsStringEXT(), "WGL_EXT_swap_control") != NULL;
+	printf("%d\n", platform->_HasSwapIntervalSupport);
+	printf("%s\n", ::wglGetExtensionsStringEXT());
 }
 
 static int glib_windows_modifiers_get(void) {
@@ -459,6 +465,8 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 			/** Problem: glewInit failed, something is seriously wrong. */
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 		}
+
+		::wglSwapIntervalEXT(0);
 	}
 }
 
@@ -501,9 +509,18 @@ bool WindowsOpenGLContext::Deactivate() {
 	return false;
 }
 
-bool WindowsOpenGLContext::SwapInterval(int interval) {
-	if (::wglSwapIntervalEXT(interval)) {
-		return true;
+int WindowsOpenGLContext::GetSwapInterval() {
+	if (glib_windows_platform->_HasSwapIntervalSupport) {
+		return ::wglGetSwapIntervalEXT();
+	}
+	return 0;
+}
+
+bool WindowsOpenGLContext::SetSwapInterval(int interval) {
+	if (glib_windows_platform->_HasSwapIntervalSupport) {
+		if (::wglSwapIntervalEXT(interval)) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -821,10 +838,20 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		} break;
 		case WM_ENTERSIZEMOVE: {
 			SetTimer(hWnd, RESIZE_TIMER, 0, NULL);
+
+			ContextInterface *context = wnd->GetContext();
+			if (context) { /** This should never be NULL! */
+				wnd->_ContextResizeSwapIntervalHack = context->GetSwapInterval();
+				context->SetSwapInterval(1);
+			}
 		} break;
 		case WM_EXITSIZEMOVE: {
+			ContextInterface *context = wnd->GetContext();
+			if (context) {
+				context->SetSwapInterval(wnd->_ContextResizeSwapIntervalHack);
+			}
 			KillTimer(hWnd, RESIZE_TIMER);
-		} break; 
+		} break;
 		case WM_TIMER: {
 			glib_windows_platform->DispatchEvent(reinterpret_cast<WindowInterface *>(wnd), GLIB_EVT_RESIZETIMER, NULL);
 		} break;
