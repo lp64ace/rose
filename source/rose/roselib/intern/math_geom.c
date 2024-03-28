@@ -1,3 +1,5 @@
+#include "MEM_alloc.h"
+
 #include "LIB_math_base.h"
 #include "LIB_math_geom.h"
 

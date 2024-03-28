@@ -22,6 +22,8 @@ struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const str
 
 void ED_area_update_region_sizes(struct wmWindowManager *wm, struct wmWindow *win, struct ScrArea *area);
 
+void ED_area_tag_redraw(struct ScrArea *area);
+
 void ED_area_init(struct wmWindowManager *wm, struct wmWindow *win, struct ScrArea *area);
 void ED_area_exit(struct Context *C, struct ScrArea *area);
 
@@ -38,6 +40,7 @@ void ED_region_header_draw(const struct Context *C, struct ARegion *region);
 void ED_region_do_draw(const struct Context *C, struct ARegion *region);
 
 void ED_region_update_rect(struct ARegion *region);
+void ED_region_tag_redraw(struct ARegion *region);
 
 /**
  * \note This may return true for multiple overlapping regions.

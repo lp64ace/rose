@@ -14,6 +14,8 @@
 #include "KER_main.h"
 #include "KER_workspace.h"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name ID Data-Block Management
  * \{ */
@@ -185,6 +187,7 @@ struct WorkSpaceLayout *KER_workspace_layout_find(const struct WorkSpace *worksp
 	}
 
 	printf("%s: Couldn't find layout in the '%s' workspace with screen '%s'.", __func__, workspace->id.name + 2, screen->id.name + 2);
+	return NULL;
 }
 
 struct WorkSpaceLayout *KER_workspace_layout_find_global(const struct Main *main, const struct Screen *screen, struct WorkSpace **r_workspace) {

@@ -364,6 +364,11 @@ static void region_rect_recursive(ScrArea *area, ARegion *region, rcti *remainde
 	ROSE_assert(LIB_rcti_is_valid(&region->winrct));
 
 	region_rect_recursive(area, region->next, remainder, overlap_remainder, quad);
+
+	/* Tag for redraw if size changes. */
+	if (region->winx != prev_winx || region->winy != prev_winy) {
+		ED_region_tag_redraw(region);
+	}
 }
 
 /* \} */
@@ -400,6 +405,9 @@ struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const str
 }
 
 void ED_area_update_region_sizes(struct wmWindowManager *wm, struct wmWindow *win, struct ScrArea *area) {
+	if (!(area->flag & AREA_FLAG_REGION_SIZE_UPDATE)) {
+		return;
+	}
 	Screen *screen = WM_window_get_active_screen(win);
 
 	rcti window_rect;
@@ -410,6 +418,16 @@ void ED_area_update_region_sizes(struct wmWindowManager *wm, struct wmWindow *wi
 	rcti rect = area->totrct;
 	rcti overlap_rect = rect;
 	region_rect_recursive(area, area->regionbase.first, &rect, &overlap_rect, 0);
+
+	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
+}
+
+void ED_area_tag_redraw(struct ScrArea *area) {
+	if (area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			ED_region_tag_redraw(region);
+		}
+	}
 }
 
 static void area_init_type_fallback(struct ScrArea *area, int space_type) {
@@ -470,6 +488,7 @@ void ED_area_init(struct wmWindowManager *wm, struct wmWindow *win, struct ScrAr
 	rcti overlap_rect = rect;
 
 	region_rect_recursive(area, area->regionbase.first, &rect, &overlap_rect, 0);
+	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
 
 	if (area->type->init) {
 		area->type->init(wm, area);
@@ -519,16 +538,28 @@ void ED_region_do_draw(const struct Context *C, struct ARegion *region) {
 	ScrArea *area = CTX_wm_area(C);
 	ARegionType *at = region->type;
 
-	wmPartialViewport(&region->winrct, &region->winrct, &region->winrct);
+	region->draw |= RGN_DRAWING;
+
+	wmPartialViewport(&region->drwrct, &region->winrct, &region->drwrct);
 	wmOrtho2_region_pixelspace(region);
 
 	if (at->draw) {
 		at->draw(C, region);
 	}
+
+	LIB_rcti_init(&region->drwrct, 0, 0, 0, 0);
 }
 
 void ED_region_update_rect(struct ARegion *region) {
 	region_update_rect(region);
+}
+
+void ED_region_tag_redraw(struct ARegion *region) {
+	if (region && !(region->draw & RGN_DRAWING)) {
+		region->draw &= ~RGN_DRAW_PARTIAL;
+		region->draw |= RGN_DRAW;
+		LIB_rcti_init(&region->drwrct, 0, 0, 0, 0);
+	}
 }
 
 bool ED_region_contains_xy(const struct ARegion *region, const int event_xy[2]) {

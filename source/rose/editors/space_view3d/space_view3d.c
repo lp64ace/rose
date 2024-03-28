@@ -7,6 +7,7 @@
 #include "LIB_assert.h"
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
+#include "LIB_math.h"
 #include "LIB_string.h"
 #include "LIB_time.h"
 #include "LIB_utildefines.h"
@@ -31,7 +32,7 @@ static SpaceLink *view3d_create(const struct ScrArea *area) {
 
 	view3d = MEM_callocN(sizeof(SpaceView3D), "View3D::Link");
 	view3d->spacetype = SPACE_VIEW3D;
-	view3d->last_draw_time = _check_seconds_timer_float();
+	view3d->last_drw_time = _check_seconds_timer_float();
 
 	region = MEM_callocN(sizeof(ARegion), "View3D::main");
 	LIB_addtail(&view3d->regionbase, region);
@@ -56,7 +57,7 @@ static void view3d_main_region_init(struct wmWindowManager *wm, struct ARegion *
 	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_STANDARD, region->winx, region->winy);
 }
 
-static int view3d_main_region_overlay_font_init(struct ARegion *region) {
+ROSE_INLINE int view3d_main_region_overlay_font_init(struct ARegion *region) {
 	int fontid = RFT_default();
 
 	RFT_color3f(fontid, 1.75f, 0.75f, 0.5f);
@@ -66,7 +67,7 @@ static int view3d_main_region_overlay_font_init(struct ARegion *region) {
 }
 
 /** Draw overlay text to the top right corner of the main region */
-static void view3d_main_region_draw_overlay_text(struct ARegion *region, const char *text) {
+ROSE_INLINE void view3d_main_region_draw_overlay_text(struct ARegion *region, const char *text) {
 	const int fontid = view3d_main_region_overlay_font_init(region), pad = 4;
 	rcti boundbox;
 
@@ -75,14 +76,16 @@ static void view3d_main_region_draw_overlay_text(struct ARegion *region, const c
 	RFT_draw(fontid, text, -1);
 }
 
-static void view3d_main_region_draw_overlay(struct ARegion *region, struct SpaceView3D *view3d) {
-	float now = _check_seconds_timer_float();
-	char *text = LIB_sprintf_allocN("FPS %.1f", (1.0f / (now - view3d->last_draw_time)));
+ROSE_INLINE void view3d_main_region_draw_overlay(struct ARegion *region, struct SpaceView3D *view3d) {
+	const float now = _check_seconds_timer_float();
+	const float dt = now - view3d->last_drw_time;
+
+	char *text = LIB_sprintf_allocN("%.1f", (1.0f / dt));
 	if (text) {
 		view3d_main_region_draw_overlay_text(region, text);
 		MEM_freeN(text);
 	}
-	view3d->last_draw_time = now;
+	view3d->last_drw_time = now;
 }
 
 static void view3d_main_region_draw(const struct Context *C, struct ARegion *region) {

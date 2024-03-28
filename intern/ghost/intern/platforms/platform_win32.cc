@@ -79,12 +79,6 @@ static void glib_windows_unregister_window_class_ex(WNDCLASSEXA *wndclass) {
 	::UnregisterClassA(glib_application_name, wndclass->hInstance);
 }
 
-static void glib_windows_detech_capabilities(WindowsPlatform *platform) {
-	platform->_HasSwapIntervalSupport = strstr(::wglGetExtensionsStringEXT(), "WGL_EXT_swap_control") != NULL;
-	printf("%d\n", platform->_HasSwapIntervalSupport);
-	printf("%s\n", ::wglGetExtensionsStringEXT());
-}
-
 static int glib_windows_modifiers_get(void) {
 	int ret;
 
@@ -465,9 +459,15 @@ WindowsOpenGLContext::WindowsOpenGLContext(WindowsWindow *window) : _hDC(window-
 			/** Problem: glewInit failed, something is seriously wrong. */
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 		}
-
-		::wglSwapIntervalEXT(0);
 	}
+
+	/** First time creating OpenGL context. */
+	if (s_SharedHGLRC == _hGLRC) {
+		/** Detect Capabilities */
+		glib_windows_platform->_HasSwapIntervalSupport = strstr(::wglGetExtensionsStringEXT(), "WGL_EXT_swap_control") != NULL;
+	}
+
+	SetSwapInterval(0);
 }
 
 WindowsOpenGLContext::~WindowsOpenGLContext() {
@@ -847,7 +847,7 @@ LRESULT WindowsPlatform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		} break;
 		case WM_EXITSIZEMOVE: {
 			ContextInterface *context = wnd->GetContext();
-			if (context) {
+			if (context) { /** This should never be NULL! */
 				context->SetSwapInterval(wnd->_ContextResizeSwapIntervalHack);
 			}
 			KillTimer(hWnd, RESIZE_TIMER);

@@ -252,18 +252,23 @@ static void wm_draw_window_offscreen(struct Context *C, struct wmWindow *win, bo
 	struct Main *main = CTX_data_main(C);
 	struct wmWindowManager *wm = CTX_wm_manager(C);
 	struct Screen *screen = WM_window_get_active_screen(win);
-	
-	if(screen->flags & SCREEN_REFRESH) {
+
+	if (screen->flags & SCREEN_REFRESH) {
 		ED_screen_refresh(wm, win);
 	}
 
 	/** Draw global & screen areas first, menus should be drawn on top of them. */
 	ED_screen_areas_iter(win, screen, area) {
 		CTX_wm_area_set(C, area);
-		
+
 		ED_area_update_region_sizes(wm, win, area);
 
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			/** Until timers are added we add this little hack to always redraw View3D areas. */
+			if (!region->draw && !(area->spacetype == SPACE_VIEW3D)) {
+				continue;
+			}
+
 			CTX_wm_region_set(C, region);
 
 			wm_draw_region_buffer_create(region, false, false);
@@ -273,6 +278,7 @@ static void wm_draw_window_offscreen(struct Context *C, struct wmWindow *win, bo
 
 			wm_draw_region_unbind(region);
 
+			region->draw = false;
 			CTX_wm_region_set(C, NULL);
 		}
 
@@ -281,6 +287,10 @@ static void wm_draw_window_offscreen(struct Context *C, struct wmWindow *win, bo
 
 	/** Draw menus into their own frame-buffer. */
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
+		if (!region->draw) {
+			continue;
+		}
+
 		CTX_wm_menu_set(C, region);
 		{
 			wm_draw_region_buffer_create(region, false, false);
@@ -290,6 +300,7 @@ static void wm_draw_window_offscreen(struct Context *C, struct wmWindow *win, bo
 
 			wm_draw_region_unbind(region);
 		}
+		region->draw = false;
 		CTX_wm_menu_set(C, NULL);
 	}
 }

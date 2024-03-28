@@ -157,9 +157,8 @@ typedef struct ARegion {
 
 	int alignment;
 	int flag;
+	int draw;
 	int regiontype;
-
-	char pad[4];
 
 	/**
 	 * Current split size in unscaled pixels (if zero it uses regiontype).
@@ -223,6 +222,16 @@ enum {
 	/** Size has been clamped (floating regions only). */
 	RGN_FLAG_SIZE_CLAMP_X = (1 << 5),
 	RGN_FLAG_SIZE_CLAMP_Y = (1 << 6),
+};
+
+/** #ARegion->draw */
+enum {
+	/** Region must be fully redrawn. */
+	RGN_DRAW = (1 << 0),
+	/** Redraw only part of region. */
+	RGN_DRAW_PARTIAL = (1 << 1),
+	/** Set while region is being drawn. */
+	RGN_DRAWING = (1 << 2),
 };
 
 /** #ARegion->type */

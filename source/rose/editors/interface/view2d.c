@@ -24,6 +24,8 @@
 #include "interface_intern.h"
 #include "view2d_intern.h"
 
+#include "GPU_matrix.h"
+
 static void ui_view2d_curRect_validate_resize(View2D *v2d, bool resize);
 
 ROSE_INLINE int clamp_float_to_int(const float f) {
