@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 
 # -----------------------------------------------------------------------------
+# Extra Options
+
+option(USE_SYSTEM_LLVM "This option forces rose to use the system LLVM!" ON)
+
+# -----------------------------------------------------------------------------
 # Early Initialization
 
 # NOTE: We don't allow in-source builds. This causes no end of troubles because

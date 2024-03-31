@@ -41,5 +41,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(rf_tests_testing "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rf::tests::testing ALIAS rf_tests_testing)
+rose_add_lib(testing "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::tests::testing ALIAS testing)

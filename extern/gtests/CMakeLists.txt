@@ -71,5 +71,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(rf_extern_gtests "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rf::extern::gtests ALIAS rf_extern_gtests)
+rose_add_lib(gtests "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::extern::gtests ALIAS gtests)

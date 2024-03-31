@@ -19,8 +19,6 @@ typedef struct SpaceLink {
 	int flag;
 } SpaceLink;
 
-DNA_ACTION_DEFINE(SpaceLink, DNA_ACTION_STORE);
-
 enum {
 	/**
 	 * The space is not a regular one opened through the editor menu (for example)
@@ -47,8 +45,6 @@ typedef struct SpaceTopBar {
 	int drag[2];
 } SpaceTopBar;
 
-DNA_ACTION_DEFINE(SpaceTopBar, DNA_ACTION_STORE);
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -67,8 +63,6 @@ typedef struct SpaceView3D {
 	float last_drw_time;
 } SpaceView3D;
 
-DNA_ACTION_DEFINE(SpaceView3D, DNA_ACTION_STORE);
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -84,8 +78,6 @@ typedef struct SpaceStatusBar {
 	int flag;
 	/* End 'SpaceLink' header. */
 } SpaceStatusBar;
-
-DNA_ACTION_DEFINE(SpaceStatusBar, DNA_ACTION_STORE);
 
 /** \} */
 

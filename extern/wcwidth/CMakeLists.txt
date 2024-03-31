@@ -38,5 +38,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(rf_extern_wcwidth "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rf::extern::wcwidth ALIAS rf_extern_wcwidth)
+rose_add_lib(wcwidth "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::extern::wcwidth ALIAS wcwidth)

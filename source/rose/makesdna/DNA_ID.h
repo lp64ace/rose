@@ -36,14 +36,12 @@ typedef struct ID {
 
 	struct Library *lib;
 
-	char name[66];
+	char name[MAX_NAME + 2];
 
 	char pad[2];
 
 	ID_Runtime runtime;
 } ID;
-
-DNA_ACTION_DEFINE(ID, DNA_ACTION_STORE);
 
 /** #ID->tag */
 enum {
@@ -135,8 +133,6 @@ typedef struct Library {
 
 	struct Library_Runtime runtime;
 } Library;
-
-DNA_ACTION_DEFINE(Library, DNA_ACTION_STORE);
 
 #define FILTER_ID_LI (1ULL << 0)
 #define FILTER_ID_SCR (1ULL << 1)
