@@ -18,7 +18,20 @@ Before proceeding, ensure that the following prerequisites are met:
 
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
-- **CLang:** CLang is required to build this!
+- **LLVM:** The [LLVM](https://github.com/llvm/llvm-project) is required
+
+### Setup Dependencies
+
+1. You are gonna have to insall LLVM and build it:
+
+	```bash
+	git clone --depth 1 https://github.com/llvm/llvm-project
+	mkdir llvm-bin & cd llvm-bin
+	cmake -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -G "Visual Studio 16 2019" -A x64 -Thost=x64 ../llvm-project/llvm
+	cmake --build . --target ALL_BUILD --config Release
+	```
+	
+	Note that this process takes a long time but you only need to do it once!
 
 ### Building Rose
 
