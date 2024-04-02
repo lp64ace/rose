@@ -12,6 +12,10 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Signals.h"
 
+#include "DNA_sdna_types.h"
+
+#include "dna_utils.h"
+
 #include <iostream>
 
 using namespace clang;
@@ -19,8 +23,189 @@ using namespace clang::ast_matchers;
 using namespace clang::tooling;
 using namespace llvm;
 
-#include "DNA_sdna_types.h"
+namespace {
+class TypedefDeclCallback : public MatchFinder::MatchCallback {
+public:
+	TypedefDeclCallback(SDNA *DNA, ExecutionContext &Context) : Context(Context), DNA(DNA) {
+	}
+
+	void run(const MatchFinder::MatchResult &Result) override {
+		if (auto *TD = Result.Nodes.getNodeAs<clang::TypedefDecl>("typedef")) {
+			ASTContext &CTX = TD->getASTContext();
+
+			QualType Qual = TD->getUnderlyingType();
+			auto *RD = Qual->getAsRecordDecl();
+
+			if (RD) {
+				if (!RD->getBeginLoc().isValid()) {
+					/** Clang builtin types are annoying. */
+					return;
+				}
+
+				DNAStruct *Struct = DNA_struct_new(DNA, Qual.getAsString().c_str());
+
+				Struct->size = CTX.getTypeInfo(Qual).Width / 8;
+
+				for (auto *FD : RD->fields()) {
+					QualType FieldQual = FD->getType();
+					size_t size = CTX.getTypeInfo(FieldQual).Width / 8;
+					size_t align = CTX.getTypeInfo(FieldQual).Align / 8;
+					size_t offset = CTX.getFieldOffset(FD);
+
+					DNAField *Field = DNA_field_new(Struct, FD->getNameAsString().c_str());
+
+					Field->size = size;
+					Field->align = align;
+					Field->offset = offset;
+
+					/** Conventional so that single items can be multiplied. */
+					Field->array = 1;
+
+					if (FieldQual->isPointerType()) {
+						Field->flags |= DNA_FIELD_IS_POINTER;
+					}
+					if (FieldQual->isFunctionPointerType()) {
+						Field->flags |= DNA_FIELD_IS_FUNCTION;
+					}
+
+					if (FieldQual->isPointerType() || FieldQual->isFunctionPointerType()) {
+						/** This should be treated as a pointer. */
+						QualType PointeeQual = FieldQual->getPointeeType();
+						std::string tp = PointeeQual.getAsString();
+						strncpy(Field->type, tp.c_str(), sizeof(Field->type));
+					}
+					else if (FieldQual->isArrayType()) {
+						/** This should be treated as an array. */
+
+						/** Find the simplest element type of arrays. */
+						const clang::ArrayType *AT = FieldQual->getAsArrayTypeUnsafe();
+						while (AT->getElementType()->isArrayType()) {
+							AT = AT->getElementType()->getAsArrayTypeUnsafe();
+						}
+						QualType ArrayElementQual = AT->getElementType();
+						size_t elem_size = CTX.getTypeInfo(ArrayElementQual).Width / 8;
+
+						Field->array = size / elem_size;
+
+						if (ArrayElementQual->isPointerType()) {
+							Field->flags |= DNA_FIELD_IS_POINTER;
+
+							QualType PointeeQual = ArrayElementQual->getPointeeType();
+							std::string tp = PointeeQual.getAsString();
+							strncpy(Field->type, tp.c_str(), sizeof(Field->type));
+						}
+						else {
+							std::string tp = ArrayElementQual.getAsString();
+							strncpy(Field->type, tp.c_str(), sizeof(Field->type));
+						}
+					}
+					else {
+						/** Treat as a normal buffer of bytes. */
+						std::string tp = FieldQual.getAsString();
+						strncpy(Field->type, tp.c_str(), sizeof(Field->type));
+					}
+				}
+			}
+		}
+	}
+
+private:
+	ExecutionContext &Context;
+	SDNA *DNA;
+};
+}  // end anonymous namespace
+
+// Set up the command line options
+static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
+static cl::OptionCategory ToolTemplateCategory("rose-dna options");
+
+static cl::opt<std::string> DNAOutput("dna", cl::desc(R"(Specify the output file for rose DNA.)"), cl::init("clang-rose.dna"), cl::cat(ToolTemplateCategory));
+
+/** Does not include the null terminator */
+void WriteWordOut(std::vector<unsigned char> &Buffer, const std::string &Word) {
+	unsigned char *raw = (unsigned char *)Word.c_str();
+	for (unsigned char *itr = raw; itr != raw + Word.size(); itr++) {
+		Buffer.push_back(*itr);
+	}
+}
+
+/** Does include the null terminator */
+void WriteStringOut(std::vector<unsigned char> &Buffer, const std::string &Word) {
+	unsigned char *raw = (unsigned char *)Word.c_str();
+	for (unsigned char *itr = raw; itr != raw + Word.size(); itr++) {
+		Buffer.push_back(*itr);
+	}
+	Buffer.push_back((unsigned char)'\0');
+}
+
+void WriteIntOut(std::vector<unsigned char> &Buffer, int value) {
+	unsigned char *raw = (unsigned char *)&value;
+	for (unsigned char *itr = raw; itr != raw + sizeof(value); itr++) {
+		Buffer.push_back(*itr);
+	}
+}
 
 int main(int argc, const char **argv) {
-	return 0;
+	llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
+
+	auto Executor = clang::tooling::createExecutorFromCommandLineArgs(argc, argv, ToolTemplateCategory);
+
+	if (!Executor) {
+		llvm::errs() << llvm::toString(Executor.takeError()) << "\n";
+		return 1;
+	}
+
+	SDNA DNA;
+	memset(&DNA, 0, sizeof(SDNA));
+
+	ast_matchers::MatchFinder Finder;
+	TypedefDeclCallback Callback(&DNA, *Executor->get()->getExecutionContext());
+	Finder.addMatcher(typedefDecl().bind("typedef"), &Callback);
+
+	auto Err = Executor->get()->execute(newFrontendActionFactory(&Finder));
+	if (Err) {
+		llvm::errs() << llvm::toString(std::move(Err)) << "\n";
+	}
+
+	std::vector<unsigned char> _BufferOut;
+	/** Can be read as int32, to recognize the endianess. */
+	WriteWordOut(_BufferOut, "SDNA");
+
+	WriteIntOut(_BufferOut, DNA.types_len);
+	for (DNAStruct *Struct = DNA.types; Struct != DNA.types + DNA.types_len; ++Struct) {
+		WriteStringOut(_BufferOut, Struct->name);
+		WriteIntOut(_BufferOut, Struct->size);
+
+		WriteIntOut(_BufferOut, Struct->fields_len);
+		for (DNAField *Field = Struct->fields; Field != Struct->fields + Struct->fields_len; ++Field) {
+			WriteStringOut(_BufferOut, Field->name);
+			WriteStringOut(_BufferOut, Field->type);
+			WriteIntOut(_BufferOut, Field->offset);
+			WriteIntOut(_BufferOut, Field->size);
+			WriteIntOut(_BufferOut, Field->align);
+			WriteIntOut(_BufferOut, Field->array);
+			WriteIntOut(_BufferOut, Field->flags);
+		}
+	}
+
+	std::string DNAFile = DNAOutput.getValue();
+
+	int ExitStatus = 0;
+#if defined(WIN32) && WIN32
+	FILE *out = fopen(DNAFile.c_str(), "wb");
+#else
+	FILE *out = fopen(DNAFile.c_str(), "w");
+#endif
+	if (out) {
+		if (fwrite(_BufferOut.data(), 1, _BufferOut.size(), out) != _BufferOut.size()) {
+			std::cout << "Failed to write in output DNA file." << std::endl;
+			ExitStatus = -2;
+		}
+		fclose(out);
+	}
+	else {
+		std::cout << "Failed to open output DNA file." << std::endl;
+		ExitStatus = -1;
+	}
+	return ExitStatus;
 }

@@ -36,7 +36,7 @@ typedef struct DNAStruct {
 	int size;
 	
 	int fields_len;
-	struct DNAField fields[];
+	struct DNAField *fields;
 } DNAStruct;
 
 typedef struct SDNA {
@@ -46,7 +46,7 @@ typedef struct SDNA {
 	int data_alloc;
 	
 	int types_len;
-	struct DNAStruct types[];
+	struct DNAStruct *types;
 } SDNA;
 
 #ifdef __cplusplus
