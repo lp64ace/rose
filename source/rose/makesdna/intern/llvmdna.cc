@@ -48,14 +48,14 @@ public:
 				DNAStruct *Struct = DNA_struct_new(DNA, Qual.getAsString().c_str());
 
 				/** Bit fields are not allowed inside DNA. */
-				assert(CTX.getTypeInfo(Qual).Width % 8 == 0);
+				ROSE_assert(CTX.getTypeInfo(Qual).Width % 8 == 0);
 				Struct->size = CTX.getTypeInfo(Qual).Width / 8;
 
 				for (auto *FD : RD->fields()) {
 					QualType FieldQual = FD->getType();
 					/** Bit fields are not allowed inside DNA. */
-					assert(CTX.getTypeInfo(FieldQual).Width % 8 == 0);
-					assert(CTX.getTypeInfo(FieldQual).Align % 8 == 0);
+					ROSE_assert(CTX.getTypeInfo(FieldQual).Width % 8 == 0);
+					ROSE_assert(CTX.getTypeInfo(FieldQual).Align % 8 == 0);
 					size_t size = CTX.getTypeInfo(FieldQual).Width / 8;
 					size_t align = CTX.getTypeInfo(FieldQual).Align / 8;
 					size_t offset = CTX.getFieldOffset(FD);
