@@ -14,6 +14,9 @@
 
 #include "DNA_sdna_types.h"
 
+#include "LIB_assert.h"
+#include "LIB_utildefines.h"
+
 #include "dna_utils.h"
 
 #include <iostream>
@@ -44,10 +47,15 @@ public:
 
 				DNAStruct *Struct = DNA_struct_new(DNA, Qual.getAsString().c_str());
 
+				/** Bit fields are not allowed inside DNA. */
+				assert(CTX.getTypeInfo(Qual).Width % 8 == 0);
 				Struct->size = CTX.getTypeInfo(Qual).Width / 8;
 
 				for (auto *FD : RD->fields()) {
 					QualType FieldQual = FD->getType();
+					/** Bit fields are not allowed inside DNA. */
+					assert(CTX.getTypeInfo(FieldQual).Width % 8 == 0);
+					assert(CTX.getTypeInfo(FieldQual).Align % 8 == 0);
 					size_t size = CTX.getTypeInfo(FieldQual).Width / 8;
 					size_t align = CTX.getTypeInfo(FieldQual).Align / 8;
 					size_t offset = CTX.getFieldOffset(FD);
@@ -167,41 +175,21 @@ int main(int argc, const char **argv) {
 		llvm::errs() << llvm::toString(std::move(Err)) << "\n";
 	}
 
-	std::vector<unsigned char> _BufferOut;
-	/** Can be read as int32, to recognize the endianess. */
-	WriteWordOut(_BufferOut, "SDNA");
-
-	WriteIntOut(_BufferOut, DNA.types_len);
-	for (DNAStruct *Struct = DNA.types; Struct != DNA.types + DNA.types_len; ++Struct) {
-		WriteStringOut(_BufferOut, Struct->name);
-		WriteIntOut(_BufferOut, Struct->size);
-
-		WriteIntOut(_BufferOut, Struct->fields_len);
-		for (DNAField *Field = Struct->fields; Field != Struct->fields + Struct->fields_len; ++Field) {
-			WriteStringOut(_BufferOut, Field->name);
-			WriteStringOut(_BufferOut, Field->type);
-			WriteIntOut(_BufferOut, Field->offset);
-			WriteIntOut(_BufferOut, Field->size);
-			WriteIntOut(_BufferOut, Field->align);
-			WriteIntOut(_BufferOut, Field->array);
-			WriteIntOut(_BufferOut, Field->flags);
-		}
-	}
-
 	std::string DNAFile = DNAOutput.getValue();
 
 	int ExitStatus = 0;
 #if defined(WIN32) && WIN32
-	FILE *out = fopen(DNAFile.c_str(), "wb");
+	FILE *fout = fopen(DNAFile.c_str(), "wb");
 #else
-	FILE *out = fopen(DNAFile.c_str(), "w");
+	FILE *fout = fopen(DNAFile.c_str(), "w");
 #endif
-	if (out) {
-		if (fwrite(_BufferOut.data(), 1, _BufferOut.size(), out) != _BufferOut.size()) {
-			std::cout << "Failed to write in output DNA file." << std::endl;
+	if (fout) {
+		DNA_sdna_compile(&DNA);
+		if (fwrite(DNA.data, DNA.data_len, 1, fout) != 1) {
+			std::cout << "Failed to write output DNA file." << std::endl;
 			ExitStatus = -2;
 		}
-		fclose(out);
+		fclose(fout);
 	}
 	else {
 		std::cout << "Failed to open output DNA file." << std::endl;
