@@ -443,6 +443,21 @@ char *LIB_sprintf_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 	return buffer;
 }
 
+char *LIB_vsprintf_bufferN(char *r_buffer, size_t buflen, ATTR_PRINTF_FORMAT const char *fmt, va_list arg_ptr) {
+	size_t ret = 0, allocated = buflen;
+	
+	char *buffer = r_buffer;
+	
+	do {
+		/** We are gonna continue, space did not suffice, reallocate! */
+		if((ret = _lib_vsnprintf(buffer, allocated, fmt, arg_ptr)) == LIB_NPOS) {
+			buffer = MEM_reallocN((buffer == r_buffer) ? NULL : buffer, allocated = allocated * 2);
+		}
+	} while(ret == LIB_NPOS);
+	
+	return buffer;
+}
+
 /* \} */
 
 /* -------------------------------------------------------------------- */

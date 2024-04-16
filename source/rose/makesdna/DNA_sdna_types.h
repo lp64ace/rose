@@ -4,6 +4,16 @@
 extern "C" {
 #endif
 
+/**
+ * NOTE! This stores structure information about the current version of the application.
+ * These structure need to be immutable accross all versions and architectures this program 
+ * is built on.
+ *
+ * This means that size_t and ptrdiff_t types are not allowed, defines that may change with 
+ * time are also not allowed, so we do not use #MAX_NAME here we use 64 instead, and we 
+ * introduce the limitation that no structure name can exceed the 64 charachters.
+ */
+
 typedef struct DNAField {
 	char name[64];
 	/**

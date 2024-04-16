@@ -6,6 +6,7 @@
 #include "LIB_utildefines.h"
 
 #include "KER_context.h"
+#include "KER_cpp_types.h"
 #include "KER_idtype.h"
 #include "KER_rose.h"
 
@@ -23,6 +24,7 @@ int main(void) {
 
 	LIB_system_signal_callbacks_init();
 
+	KER_cpp_types_init();
 	KER_rose_globals_init();
 	KER_idtype_init();
 

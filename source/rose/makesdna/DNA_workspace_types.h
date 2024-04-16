@@ -12,7 +12,7 @@ typedef struct WorkSpaceLayout {
 
 	struct Screen *screen;
 
-	char name[64];
+	char name[MAX_NAME];
 } WorkSpaceLayout;
 
 /**

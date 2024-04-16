@@ -2,6 +2,8 @@
 
 #include "LIB_math_base.h"
 #include "LIB_math_bits.h"
+#include "LIB_math_color.h"
+#include "LIB_math_color_blend.h"
 #include "LIB_math_geom.h"
 #include "LIB_math_inline.h"
 #include "LIB_math_rotation.h"

@@ -25,7 +25,10 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
+	KER_anonymous_attribute_id.hh
 	KER_context.h
+	KER_cpp_types.h
+	KER_customdata.h
 	KER_global.h
 	KER_lib_id.h
 	KER_lib_query.h
@@ -37,7 +40,10 @@ set(SRC
 	KER_rose.h
 	KER_screen.h
 	KER_workspace.h
+	intern/anonymous_attribute_id.cc
 	intern/context.c
+	intern/cpp_types.cc
+	intern/customdata.cc
 	intern/global.c
 	intern/lib_id.c
 	intern/lib_query.c

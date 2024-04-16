@@ -29,32 +29,28 @@ size_t LIB_string_split_name_number(const char *in, const char delim, char *r_na
 	return name_len;
 }
 
-static bool uniquename_duplicate_check(ListBase *listbase, void *link, size_t offset, size_t maxncpy) {
-	char *name = POINTER_OFFSET(link, offset);
-	LISTBASE_FOREACH(Link *, iter, listbase) {
-		if ((link != iter) && STREQLEN(name, POINTER_OFFSET(link, offset), maxncpy)) {
+typedef struct UniqueNameCheckData {
+	struct ListBase *listbase;
+	void *vlink;
+	size_t offset;
+} UniqueNameCheckData;
+
+static bool uniquename_duplicate_check(UniqueNameCheckData *arg, size_t maxncpy) {
+	char *name = POINTER_OFFSET(arg->vlink, arg->offset);
+	LISTBASE_FOREACH(Link *, iter, arg->listbase) {
+		if ((arg->vlink != iter) && STREQLEN(name, POINTER_OFFSET(arg->vlink, arg->offset), maxncpy)) {
 			return true;
 		}
 	}
 	return false;
 }
 
-bool LIB_uniquename_ensure(ListBase *list, void *link, const char *defname, char delim, size_t offset, size_t maxncpy) {
-	ROSE_assert(maxncpy > 1);
-
-	if (link == NULL) {
-		return false;
-	}
-
-	bool changed = false;
-
-	char *name = POINTER_OFFSET(link, offset);
-	if (name[0] == '\0') {
+void LIB_uniquename_cb(UniquenameCheckCallback unique_check, void *arg, const char *defname, char delim, char *name, size_t maxncpy) {
+	if(name[0] == '\0') {
 		LIB_strncpy(name, defname, maxncpy);
-		changed |= true;
 	}
 
-	if (uniquename_duplicate_check(list, link, offset, maxncpy)) {
+	if(unique_check(arg, name)) {
 		char numstr[32];
 		char *tempname = alloca(maxncpy);
 		char *left = alloca(maxncpy);
@@ -72,12 +68,27 @@ bool LIB_uniquename_ensure(ListBase *list, void *link, const char *defname, char
 				ROSE_assert(length < maxncpy);
 				LIB_strncpy(tempname + length, numstr, maxncpy - length);
 			}
-			changed |= true;
-		} while (uniquename_duplicate_check(list, link, offset, maxncpy));
+		} while (unique_check(arg, name));
+	}
+}
 
-		LIB_strncpy(name, tempname, maxncpy);
-		changed |= true;
+void LIB_uniquename_ensure(ListBase *list, void *link, const char *defname, char delim, size_t offset, size_t maxncpy) {
+	ROSE_assert(maxncpy > 1);
+
+	if (link == NULL) {
+		return;
 	}
 
-	return changed;
+	char *name = POINTER_OFFSET(link, offset);
+	if (name[0] == '\0') {
+		LIB_strncpy(name, defname, maxncpy);
+	}
+
+	UniqueNameCheckData data = {
+		.listbase = list,
+		.vlink = link,
+		.offset = offset,
+	};
+
+	LIB_uniquename_cb(uniquename_duplicate_check, &data, defname, delim, name, maxncpy);
 }

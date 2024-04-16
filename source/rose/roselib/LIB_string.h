@@ -154,6 +154,16 @@ size_t LIB_snprintf(char *r_buffer, size_t buflen, ATTR_PRINTF_FORMAT const char
  */
 char *LIB_sprintf_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...);
 
+/**
+ * Like #LIB_snprintf this function will format the string according to the printf standard and store the result in the 
+ * specified buffer or a newly allocated string if the buffer did not suffice.
+ * \param r_buffer The buffer we want to use.
+ * \param buflen The size of the buffer in elements.
+ * \param fmt The printf format string.
+ * \param ... The arguments for the format string.
+ */
+char *LIB_vsprintf_bufferN(char *r_buffer, size_t buflen, ATTR_PRINTF_FORMAT const char *fmt, va_list arg_ptr);
+
 /* \} */
 
 /* -------------------------------------------------------------------- */

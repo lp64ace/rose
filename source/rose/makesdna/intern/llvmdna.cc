@@ -27,6 +27,7 @@ using namespace clang::tooling;
 using namespace llvm;
 
 namespace {
+	
 class TypedefDeclCallback : public MatchFinder::MatchCallback {
 public:
 	TypedefDeclCallback(SDNA *DNA, ExecutionContext &Context) : Context(Context), DNA(DNA) {
@@ -121,6 +122,7 @@ private:
 	ExecutionContext &Context;
 	SDNA *DNA;
 };
+
 }  // end anonymous namespace
 
 // Set up the command line options
@@ -128,30 +130,6 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 static cl::OptionCategory ToolTemplateCategory("rose-dna options");
 
 static cl::opt<std::string> DNAOutput("dna", cl::desc(R"(Specify the output file for rose DNA.)"), cl::init("clang-rose.dna"), cl::cat(ToolTemplateCategory));
-
-/** Does not include the null terminator */
-void WriteWordOut(std::vector<unsigned char> &Buffer, const std::string &Word) {
-	unsigned char *raw = (unsigned char *)Word.c_str();
-	for (unsigned char *itr = raw; itr != raw + Word.size(); itr++) {
-		Buffer.push_back(*itr);
-	}
-}
-
-/** Does include the null terminator */
-void WriteStringOut(std::vector<unsigned char> &Buffer, const std::string &Word) {
-	unsigned char *raw = (unsigned char *)Word.c_str();
-	for (unsigned char *itr = raw; itr != raw + Word.size(); itr++) {
-		Buffer.push_back(*itr);
-	}
-	Buffer.push_back((unsigned char)'\0');
-}
-
-void WriteIntOut(std::vector<unsigned char> &Buffer, int value) {
-	unsigned char *raw = (unsigned char *)&value;
-	for (unsigned char *itr = raw; itr != raw + sizeof(value); itr++) {
-		Buffer.push_back(*itr);
-	}
-}
 
 int main(int argc, const char **argv) {
 	llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
@@ -178,7 +156,7 @@ int main(int argc, const char **argv) {
 	std::string DNAFile = DNAOutput.getValue();
 
 	int ExitStatus = 0;
-#if defined(WIN32) && WIN32
+#ifdef WIN32
 	FILE *fout = fopen(DNAFile.c_str(), "wb");
 #else
 	FILE *fout = fopen(DNAFile.c_str(), "w");

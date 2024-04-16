@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+typedef bool (*UniquenameCheckCallback)(void *arg, const char *name);
+
 /* -------------------------------------------------------------------- */
 /** \name Name Utils
  * \{ */
@@ -23,6 +25,19 @@ extern "C" {
  */
 size_t LIB_string_split_name_number(const char *in, const char delim, char *r_name, size_t *r_num);
 
+/** 
+ * Ensures name is unique (according to criteria specified by the caller in unique_check callback).
+ * incrementing its numeric suffix as necessary.
+ * 
+ * \param unique_check Return true if name is not unique.
+ * \param arg Additional arg to unique_check
+ * \param defname The default name to use if the name is empty.
+ * \param delim The deminiter to add for the suffix in the name.
+ * \param offset The offset of the name within the block structure.
+ * \param maxncpy The maximum length of the name to copy.
+ */
+void LIB_uniquename_cb(UniquenameCheckCallback unique_check, void *arg, const char *defname, char delim, char *name, size_t maxncpy);
+
 /**
  * Ensures that the specified block has a unique name in the containing list, incrementing its numeric suffix if neded.
  *
@@ -35,7 +50,7 @@ size_t LIB_string_split_name_number(const char *in, const char delim, char *r_na
  *
  * \return Returns true if any changes had to be made to the name.
  */
-bool LIB_uniquename_ensure(ListBase *list, void *link, const char *defname, char delim, size_t offset, size_t maxncpy);
+void LIB_uniquename_ensure(ListBase *list, void *link, const char *defname, char delim, size_t offset, size_t maxncpy);
 
 /* \} */
 

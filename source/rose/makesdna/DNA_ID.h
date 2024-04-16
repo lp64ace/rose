@@ -117,7 +117,7 @@ typedef struct Library {
 	ID id;
 
 	/** Path name used for reading, can be relative and edited in the outliner. */
-	char filepath[1024];
+	char filepath[MAX_PATH];
 
 	/**
 	 * Run-time only, absolute file-path (set on read).
@@ -127,7 +127,7 @@ typedef struct Library {
 	 * Use #KER_library_filepath_set() rather than setting `filepath`
 	 * directly and it will be kept in sync - campbell
 	 */
-	char filepath_abs[1024];
+	char filepath_abs[MAX_PATH];
 
 	struct Library *parent;
 

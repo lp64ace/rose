@@ -1,0 +1,22 @@
+#pragma once
+
+#if defined(__ARM_NEON) && defined(WITH_SSE2NEON)
+/* SSE/SSE2 emulation on ARM Neon. Match SSE precision. */
+#	if !defined(SSE2NEON_PRECISE_MINMAX)
+#		define SSE2NEON_PRECISE_MINMAX 1
+#	endif
+#	if !defined(SSE2NEON_PRECISE_DIV)
+#		define SSE2NEON_PRECISE_DIV 1
+#	endif
+#	if !defined(SSE2NEON_PRECISE_SQRT)
+#		define SSE2NEON_PRECISE_SQRT 1
+#	endif
+#	include <sse2neon.h>
+#	define ROSE_HAVE_SSE2 1
+#elif defined(__SSE2__)
+/* Native SSE2 on Intel/AMD. */
+#	include <emmintrin.h>
+#	define ROSE_HAVE_SSE2 1
+#else
+#	define ROSE_HAVE_SSE2 0
+#endif
