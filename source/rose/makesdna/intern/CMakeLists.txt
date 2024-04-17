@@ -1,69 +1,3 @@
-# -----------------------------------------------------------------------------
-# Declare Include Directories
-
-set(INC
-	# Common Include Directories
-	PUBLIC ..
-	
-	# Internal Include Directories
-	${CMAKE_SOURCE_DIR}/intern/memalloc
-	
-)
-
-# -----------------------------------------------------------------------------
-# Declare System Include Directories
-
-set(INC_SYS
-	# External Include Directories
-
-)
-
-# -----------------------------------------------------------------------------
-# Declare Source Files
-
-set(SRC
-	${DNA_TYPES_HEADERS}
-	${DNA_DEFAULTS_HEADERS}
-	
-	dna_utils.c
-	dna_utils.h
-)
-
-# -----------------------------------------------------------------------------
-# Declare Library Dependencies
-
-set(LIB
-	# Internal Include Directories
-	rf::intern::memalloc
-	
-	# External Include Directories
-
-)
-
-# -----------------------------------------------------------------------------
-# Misc
-
-set(dna_header_include_file "${CMAKE_CURRENT_BINARY_DIR}/dna_includes_all.h")
-set(dna_header_string_file "${CMAKE_CURRENT_BINARY_DIR}/dna_includes_as_strings.h")
-
-set(DNA_INCLUDE_TEXT "/* Do not edit manually, changes will be overwritten. */\n")
-set(DNA_FILE_LIST "/* Do not edit manually, changes will be overwritten. */\n")
-foreach(header ${DNA_TYPES_HEADERS})
-  get_filename_component(dna_header_file ${header} NAME)
-  string(APPEND DNA_INCLUDE_TEXT "#include \"${header}\"\n")
-  string(APPEND DNA_FILE_LIST "\t\"${dna_header_file}\",\n")
-endforeach()
-
-file(GENERATE OUTPUT ${dna_header_include_file} CONTENT "${DNA_INCLUDE_TEXT}")
-file(GENERATE OUTPUT ${dna_header_string_file} CONTENT "${DNA_FILE_LIST}")
-
-# -----------------------------------------------------------------------------
-# Declare DNA Interface Library
-
-rose_add_lib(rf_source_dna "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rf::source::dna ALIAS rf_source_dna)
-
-
 # ----------------------------------------------------------------------------- #
 # ---                               EXECUTABLE                              --- #
 # ----------------------------------------------------------------------------- #
@@ -171,3 +105,91 @@ set_target_properties(clang-tablegen-targets PROPERTIES FOLDER ${EXTERNAL_PROJEC
 set_target_properties(intrinsics_gen PROPERTIES FOLDER ${EXTERNAL_PROJECTS_FILTER}/llvm)
 set_target_properties(omp_gen PROPERTIES FOLDER ${EXTERNAL_PROJECTS_FILTER}/llvm)
 set_target_properties(RISCVTargetParserTableGen PROPERTIES FOLDER ${EXTERNAL_PROJECTS_FILTER}/llvm)
+
+# Output dna.c
+add_custom_command(
+	OUTPUT
+		${CMAKE_CURRENT_BINARY_DIR}/dna.c
+		${CMAKE_CURRENT_BINARY_DIR}/dna_offsets.h
+	COMMAND
+		"$<TARGET_FILE:makesdna>"
+			# Output file
+			"--dna=${CMAKE_CURRENT_BINARY_DIR}/dna.c"
+			"--dna-offsets=${CMAKE_CURRENT_BINARY_DIR}/dna_offsets.h"
+			# Input files
+			${DNA_TYPES_HEADERS}
+	DEPENDS
+		makesdna
+		${DNA_TYPES_HEADERS}
+)
+
+# -----------------------------------------------------------------------------
+# Declare Include Directories
+
+set(INC
+	# Common Include Directories
+	PUBLIC ..
+	
+	# Internal Include Directories
+	${CMAKE_SOURCE_DIR}/intern/memalloc
+	${CMAKE_SOURCE_DIR}/source/rose/makesdna
+	${CMAKE_SOURCE_DIR}/source/rose/roselib
+	
+	${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# -----------------------------------------------------------------------------
+# Declare System Include Directories
+
+set(INC_SYS
+	# External Include Directories
+
+)
+
+# -----------------------------------------------------------------------------
+# Declare Source Files
+
+set(SRC
+	${DNA_TYPES_HEADERS}
+	${DNA_DEFAULTS_HEADERS}
+	
+	dna_utils.c
+	dna_utils.h
+	
+	${CMAKE_CURRENT_BINARY_DIR}/dna.c
+	${CMAKE_CURRENT_BINARY_DIR}/dna_offsets.h
+)
+
+# -----------------------------------------------------------------------------
+# Declare Library Dependencies
+
+set(LIB
+	# Internal Include Directories
+	rf::intern::memalloc
+	
+	# External Include Directories
+
+)
+
+# -----------------------------------------------------------------------------
+# Misc
+
+set(dna_header_include_file "${CMAKE_CURRENT_BINARY_DIR}/dna_includes_all.h")
+set(dna_header_string_file "${CMAKE_CURRENT_BINARY_DIR}/dna_includes_as_strings.h")
+
+set(DNA_INCLUDE_TEXT "/* Do not edit manually, changes will be overwritten. */\n")
+set(DNA_FILE_LIST "/* Do not edit manually, changes will be overwritten. */\n")
+foreach(header ${DNA_TYPES_HEADERS})
+  get_filename_component(dna_header_file ${header} NAME)
+  string(APPEND DNA_INCLUDE_TEXT "#include \"${header}\"\n")
+  string(APPEND DNA_FILE_LIST "\t\"${dna_header_file}\",\n")
+endforeach()
+
+file(GENERATE OUTPUT ${dna_header_include_file} CONTENT "${DNA_INCLUDE_TEXT}")
+file(GENERATE OUTPUT ${dna_header_string_file} CONTENT "${DNA_FILE_LIST}")
+
+# -----------------------------------------------------------------------------
+# Declare DNA Library
+
+rose_add_lib(rf_source_dna "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rf::source::dna ALIAS rf_source_dna)

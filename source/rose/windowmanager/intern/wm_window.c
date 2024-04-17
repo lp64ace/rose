@@ -368,6 +368,7 @@ static void wm_window_ensure_workspace(struct Context *C, struct wmWindow *windo
 		}
 	}
 
+	/** No suitable workspace was found, try to install a new one! */
 	if (sel_workspace == NULL) {
 		sel_workspace = KER_workspace_new(main, "WorkSpace");
 		sel_layout = ED_workspace_layout_add(main, sel_workspace, window, "Layout");

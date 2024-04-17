@@ -273,7 +273,7 @@ void *MEM_guarded_recallocN_id(void *vmemh, size_t length, const char *str) {
 		MEM_guarded_freeN(vmemh);
 	}
 	else {
-		newp = MEM_guarded_mallocN(length, str);
+		newp = MEM_guarded_callocN(length, str);
 	}
 
 	return newp;

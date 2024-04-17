@@ -21,6 +21,8 @@ LIB_mempool *LIB_mempool_create(size_t esize, size_t elem_num, size_t chunk, int
 void *LIB_mempool_alloc(LIB_mempool *pool);
 void *LIB_mempool_calloc(LIB_mempool *pool);
 
+void* LIB_mempool_findelem(LIB_mempool* pool, size_t index);
+
 void LIB_mempool_free(LIB_mempool *pool, void *ptr);
 
 void LIB_mempool_clear_ex(LIB_mempool *pool, size_t reserve);

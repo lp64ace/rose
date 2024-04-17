@@ -8,8 +8,8 @@ set(INC
 	# Internal Include Directories
 	${CMAKE_SOURCE_DIR}/intern/memalloc
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna
-	${CMAKE_SOURCE_DIR}/source/rose/roselib
 	${CMAKE_SOURCE_DIR}/source/rose/rosekernel
+	${CMAKE_SOURCE_DIR}/source/rose/roselib
 	
 )
 
@@ -18,6 +18,7 @@ set(INC
 
 set(INC_SYS
 	# External Include Directories
+	${PTHREADS_INC}
 	
 )
 
@@ -25,6 +26,27 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
+	RM_class.h
+	RM_include.h
+	intern/rmesh_construct.c
+	intern/rmesh_core.c
+	intern/rmesh_query.c
+	intern/rmesh_structure.c
+	intern/rmesh_iterators.cc
+	intern/rmesh_mesh.cc
+	intern/rmesh_presets.cc
+	intern/rmesh_construct.h
+	intern/rmesh_core.h
+	intern/rmesh_inline.h
+	intern/rmesh_iterators.h
+	intern/rmesh_iterators_inline.h
+	intern/rmesh_mesh.h
+	intern/rmesh_presets.h
+	intern/rmesh_private.h
+	intern/rmesh_query.h
+	intern/rmesh_query_inline.h
+	intern/rmesh_structure.h
+	intern/rmesh_structure_inline.h
 )
 
 # -----------------------------------------------------------------------------

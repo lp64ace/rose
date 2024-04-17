@@ -249,6 +249,25 @@ void *LIB_mempool_calloc(LIB_mempool *pool) {
 	return retval;
 }
 
+void* LIB_mempool_findelem(LIB_mempool* pool, size_t index) {
+	ROSE_assert(pool->flag & ROSE_MEMPOOL_ALLOW_ITER != 0);
+
+	if (index < pool->totused) {
+		LIB_mempool_iter itr;
+
+		void* elem;
+
+		LIB_mempool_iternew(pool, &itr);
+		for (elem = LIB_mempool_iterstep(&itr); index--; elem = LIB_mempool_iterstep(&itr)) {
+			/* pass */
+		}
+
+		return elem;
+	}
+
+	return NULL;
+}
+
 void LIB_mempool_free(LIB_mempool *pool, void *ptr) {
 	LIB_freenode *newhead = ptr;
 

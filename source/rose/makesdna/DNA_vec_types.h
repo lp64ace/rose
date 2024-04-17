@@ -2,6 +2,10 @@
 
 #include "DNA_defines.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* types */
 
 /** vector of two shorts. */
@@ -83,3 +87,7 @@ typedef struct DualQuat {
 	float scale[4][4];
 	float scale_weight;
 } DualQuat;
+
+#ifdef __cplusplus
+}
+#endif

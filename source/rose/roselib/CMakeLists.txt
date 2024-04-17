@@ -25,7 +25,9 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
+	LIB_alloca.h
 	LIB_allocator.hh
+	LIB_array.h
 	LIB_array.hh
 	LIB_assert.h
 	LIB_binary_search.hh
@@ -82,6 +84,7 @@ set(SRC
 	LIB_set.hh
 	LIB_set_slots.hh
 	LIB_simd.h
+	LIB_sort_utils.h
 	LIB_span.hh
 	LIB_spinlock.h
 	LIB_stack.hh
@@ -127,6 +130,7 @@ set(SRC
 	intern/memory_utils.c
 	intern/mempool.c
 	intern/rct.c
+	intern/sort_utils.c
 	intern/spinlock.c
 	intern/string.c
 	intern/string_cursor_utf8.c

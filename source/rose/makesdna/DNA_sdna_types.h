@@ -44,6 +44,7 @@ typedef struct DNAStruct {
 	char name[64];
 	
 	int size;
+	int align;
 	
 	int fields_len;
 	struct DNAField *fields;

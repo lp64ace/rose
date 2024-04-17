@@ -38,7 +38,7 @@ typedef struct ID {
 
 	char name[MAX_NAME + 2];
 
-	char pad[2];
+	char _pad[2];
 
 	ID_Runtime runtime;
 } ID;

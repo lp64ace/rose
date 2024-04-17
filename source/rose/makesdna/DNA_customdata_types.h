@@ -2,6 +2,8 @@
 
 #include "DNA_defines.h"
 
+#include <stdint.h>
+
 /** Workaround to forward-declare C++ type in C header. */
 #ifdef __cplusplus
 namespace rose::kernel {

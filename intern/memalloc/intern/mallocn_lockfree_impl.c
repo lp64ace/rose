@@ -241,7 +241,7 @@ void *MEM_lockfree_recallocN_id(void *vmemh, size_t length, const char *str) {
 		MEM_lockfree_freeN(vmemh);
 	}
 	else {
-		newp = MEM_lockfree_mallocN(length, str);
+		newp = MEM_lockfree_callocN(length, str);
 	}
 
 	return newp;
