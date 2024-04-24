@@ -56,9 +56,29 @@ typedef struct SDNA {
 	int data_len;
 	int data_alloc;
 	
+	int flags;
+	
 	int types_len;
 	struct DNAStruct *types;
 } SDNA;
+
+/** #SDNA->flags */
+enum {
+	SDNA_ENDIAN_SWAP = (1 << 0),
+};
+
+typedef struct RHead {
+	/** The type of data that follows. */
+	int code;
+	/** The length of the data that follows. */
+	int length;
+	/** The address of the data when the file was written. */
+	const void *address;
+	/** The index of the structure type in SDNA->types. */
+	int struct_nr;
+	/** The number of different structures stored. */
+	int nr;
+} RHead;
 
 #ifdef __cplusplus
 }

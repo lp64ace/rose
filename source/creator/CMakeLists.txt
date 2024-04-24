@@ -37,8 +37,11 @@ set(LIB
 	rf::source::editors::space_statusbar
 	rf::source::editors::space_topbar
 	rf::source::editors::space_view3d
+	rf::source::dna
 	rf::source::gpu
 	rf::source::rosefont
+	rf::source::roseloader
+	rf::source::rosemesh
 	rf::source::rosekernel
 	rf::source::roselib
 	rf::source::windowmanager

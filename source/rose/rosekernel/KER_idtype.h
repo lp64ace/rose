@@ -13,6 +13,8 @@ typedef void (*IDTypeFreeDataFunction)(struct ID *id);
 
 typedef void (*IDTypeForeachIDFunction)(struct ID *id, struct LibraryForeachIDData *data);
 
+typedef void (*IDTypeRoseWriteFunction)(struct RoseWriter *, struct ID *, const void *id_address);
+
 typedef struct IDTypeInfo {
 	/** Unique identifier of this type, either as a short or an array of two chars, see DNA_ID_enums.h's ID_XX enums. */
 	short id_code;
@@ -47,6 +49,11 @@ typedef struct IDTypeInfo {
 	 * Called by `KER_library_foreach_ID_link()` to apply a callback over all other ID usages of given data-block.
 	 */
 	IDTypeForeachIDFunction foreach_id;
+	
+	/**
+	 * Write all structs that should be saved in a file.
+	 */
+	IDTypeRoseWriteFunction rose_write;
 } IDTypeInfo;
 
 /* -------------------------------------------------------------------- */

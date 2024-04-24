@@ -43,6 +43,12 @@ FILE *LIB_fopen(const char *filepath, const char *mode) {
     return fopen(filepath, mode);
 }
 
+void LIB_fclose(FILE *stream) {
+	if(stream) {
+		fclose(stream);
+	}
+}
+
 int64_t LIB_ftell(FILE *stream) {
 #if defined(_WIN32) || defined(WIN32)
     return _ftelli64(stream);

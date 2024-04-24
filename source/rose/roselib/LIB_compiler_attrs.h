@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdlib.h>
-
 #ifdef _MSC_VER
 
 #	include <sal.h>

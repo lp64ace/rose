@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "DNA_windowmanager_types.h"
+#include "DNA_genfile.h"
 
 #include "KER_context.h"
 #include "KER_global.h"
@@ -43,6 +44,9 @@ static void window_manager_foreach_id(ID *id, LibraryForeachIDData *data) {
 	}
 }
 
+static void window_manager_rose_write(struct RoseWriter* rw, struct ID* id, const void* id_address) {
+}
+
 IDTypeInfo IDType_ID_WM = {
 	.id_code = ID_WM,
 	.id_filter = FILTER_ID_WM,
@@ -57,6 +61,8 @@ IDTypeInfo IDType_ID_WM = {
 	.free_data = window_manager_free_data,
 
 	.foreach_id = window_manager_foreach_id,
+
+	.rose_write = window_manager_rose_write,
 };
 
 static void wm_init_new(struct Context *C, struct wmWindowManager *wm) {
@@ -108,6 +114,8 @@ void WM_exit(struct Context *C) {
 
 	/** Windows and Screens require these to delete, delete them after main! */
 	KER_spacetypes_free();
+
+	DNA_sdna_current_free();
 
 	exit(0);
 }

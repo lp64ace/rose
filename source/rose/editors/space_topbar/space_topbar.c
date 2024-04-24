@@ -79,13 +79,13 @@ static void topbar_main_region_init(struct wmWindowManager *wm, struct ARegion *
 }
 
 static void topbar_window_title_draw(const struct Context *C, struct ARegion *region) {
-	int height = region->winy;
+	int height = (5 * region->winy / 6) >> 1;
 	const char *title_text = "Rose";
 	
 	int fontid = RFT_default();
 	RFT_color3f(fontid, 1.0f, 1.0f, 1.0f);
-	RFT_size(fontid, (float)(height >> 1));
-	RFT_position(fontid, 8, 8, 0);
+	RFT_size(fontid, (float)height);
+	RFT_position(fontid, 8, height, 0);
 	
 	RFT_draw(fontid, title_text, ARRAY_SIZE(title_text));
 }

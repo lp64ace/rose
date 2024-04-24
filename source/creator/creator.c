@@ -10,6 +10,8 @@
 #include "KER_idtype.h"
 #include "KER_rose.h"
 
+#include "DNA_genfile.h"
+
 #include "WM_init_exit.h"
 
 #include <stdio.h>
@@ -23,6 +25,8 @@ int main(void) {
 	MEM_init_memleak_detection();
 
 	LIB_system_signal_callbacks_init();
+	
+	DNA_sdna_current_init();
 
 	KER_cpp_types_init();
 	KER_rose_globals_init();

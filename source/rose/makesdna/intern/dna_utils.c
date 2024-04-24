@@ -4,13 +4,13 @@
 
 #include <string.h>
 
-struct SDNA *SDNA_alloc(void) {
+struct SDNA *DNA_sdna_alloc(void) {
 	struct SDNA *sdna = MEM_callocN(sizeof(SDNA), "SDNA");
 	
 	return sdna;
 }
 
-void SDNA_free(struct SDNA *sdna) {
+void DNA_sdna_free(struct SDNA *sdna) {
 	if(sdna->data_alloc) {
 		MEM_SAFE_FREE(sdna->data);
 	}
@@ -69,13 +69,18 @@ void DNA_sdna_compile(struct SDNA *sdna) {
 	sdna->data_alloc = 256;
 	sdna->data_len = 0;
 	sdna->data = MEM_mallocN(sdna->data_alloc, "SDNA::data");
+	
+	sdna->flags = 0;
 
 	int word = 'SDNA';
 	sdna_write(sdna, &word, sizeof(word));
 
-	sdna_write(sdna, &sdna->types, sizeof(sdna->types));
+	sdna_write(sdna, &sdna->types_len, sizeof(sdna->types_len));
 	for (DNAStruct *type = sdna->types; type != sdna->types + sdna->types_len; type++) {
 		sdna_write(sdna, &type->name, strlen(type->name) + 1);
+		
+		sdna_write(sdna, &type->size, sizeof(type->size));
+		sdna_write(sdna, &type->align, sizeof(type->align));
 		
 		sdna_write(sdna, &type->fields_len, sizeof(type->fields_len));
 		for (DNAField *field = type->fields; field != type->fields + type->fields_len; field++) {

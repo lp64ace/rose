@@ -1,10 +1,12 @@
 #pragma once
 
 #include "LIB_compiler_attrs.h"
+#include "LIB_endian.h"
 #include "LIB_utildefines_variadic.h"
 
 #include "LIB_sys_types.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 /* -------------------------------------------------------------------- */
@@ -527,84 +529,84 @@
  * \{ */
 
 #define INIT_MINMAX(min, max) \
-  { \
-    (min)[0] = (min)[1] = (min)[2] = 1.0e30f; \
-    (max)[0] = (max)[1] = (max)[2] = -1.0e30f; \
-  } \
-  (void)0
+	{ \
+		(min)[0] = (min)[1] = (min)[2] = 1.0e30f; \
+		(max)[0] = (max)[1] = (max)[2] = -1.0e30f; \
+	} \
+	(void)0
 #define INIT_MINMAX2(min, max) \
-  { \
-    (min)[0] = (min)[1] = 1.0e30f; \
-    (max)[0] = (max)[1] = -1.0e30f; \
-  } \
-  (void)0
+	{ \
+		(min)[0] = (min)[1] = 1.0e30f; \
+		(max)[0] = (max)[1] = -1.0e30f; \
+	} \
+	(void)0
 
 #define DO_MIN(vec, min) \
-  { \
-    if ((min)[0] > (vec)[0]) { \
-      (min)[0] = (vec)[0]; \
-    } \
-    if ((min)[1] > (vec)[1]) { \
-      (min)[1] = (vec)[1]; \
-    } \
-    if ((min)[2] > (vec)[2]) { \
-      (min)[2] = (vec)[2]; \
-    } \
-  } \
-  (void)0
+	{ \
+		if ((min)[0] > (vec)[0]) { \
+			(min)[0] = (vec)[0]; \
+		} \
+		if ((min)[1] > (vec)[1]) { \
+			(min)[1] = (vec)[1]; \
+		} \
+		if ((min)[2] > (vec)[2]) { \
+			(min)[2] = (vec)[2]; \
+		} \
+	} \
+	(void)0
 
 #define DO_MAX(vec, max) \
-  { \
-    if ((max)[0] < (vec)[0]) { \
-      (max)[0] = (vec)[0]; \
-    } \
-    if ((max)[1] < (vec)[1]) { \
-      (max)[1] = (vec)[1]; \
-    } \
-    if ((max)[2] < (vec)[2]) { \
-      (max)[2] = (vec)[2]; \
-    } \
-  } \
-  (void)0
+	{ \
+		if ((max)[0] < (vec)[0]) { \
+			(max)[0] = (vec)[0]; \
+		} \
+		if ((max)[1] < (vec)[1]) { \
+			(max)[1] = (vec)[1]; \
+		} \
+		if ((max)[2] < (vec)[2]) { \
+			(max)[2] = (vec)[2]; \
+		} \
+	} \
+	(void)0
 
 #define DO_MINMAX(vec, min, max) \
-  { \
-    if ((min)[0] > (vec)[0]) { \
-      (min)[0] = (vec)[0]; \
-    } \
-    if ((min)[1] > (vec)[1]) { \
-      (min)[1] = (vec)[1]; \
-    } \
-    if ((min)[2] > (vec)[2]) { \
-      (min)[2] = (vec)[2]; \
-    } \
-    if ((max)[0] < (vec)[0]) { \
-      (max)[0] = (vec)[0]; \
-    } \
-    if ((max)[1] < (vec)[1]) { \
-      (max)[1] = (vec)[1]; \
-    } \
-    if ((max)[2] < (vec)[2]) { \
-      (max)[2] = (vec)[2]; \
-    } \
-  } \
-  (void)0
+	{ \
+		if ((min)[0] > (vec)[0]) { \
+			(min)[0] = (vec)[0]; \
+		} \
+		if ((min)[1] > (vec)[1]) { \
+			(min)[1] = (vec)[1]; \
+		} \
+		if ((min)[2] > (vec)[2]) { \
+			(min)[2] = (vec)[2]; \
+		} \
+		if ((max)[0] < (vec)[0]) { \
+			(max)[0] = (vec)[0]; \
+		} \
+		if ((max)[1] < (vec)[1]) { \
+			(max)[1] = (vec)[1]; \
+		} \
+		if ((max)[2] < (vec)[2]) { \
+			(max)[2] = (vec)[2]; \
+		} \
+	} \
+	(void)0
 #define DO_MINMAX2(vec, min, max) \
-  { \
-    if ((min)[0] > (vec)[0]) { \
-      (min)[0] = (vec)[0]; \
-    } \
-    if ((min)[1] > (vec)[1]) { \
-      (min)[1] = (vec)[1]; \
-    } \
-    if ((max)[0] < (vec)[0]) { \
-      (max)[0] = (vec)[0]; \
-    } \
-    if ((max)[1] < (vec)[1]) { \
-      (max)[1] = (vec)[1]; \
-    } \
-  } \
-  (void)0
+	{ \
+		if ((min)[0] > (vec)[0]) { \
+			(min)[0] = (vec)[0]; \
+		} \
+		if ((min)[1] > (vec)[1]) { \
+			(min)[1] = (vec)[1]; \
+		} \
+		if ((max)[0] < (vec)[0]) { \
+			(max)[0] = (vec)[0]; \
+		} \
+		if ((max)[1] < (vec)[1]) { \
+			(max)[1] = (vec)[1]; \
+		} \
+	} \
+	(void)0
 
 /* \} */
 
@@ -613,5 +615,24 @@
  * \{ */
 
 #define MEMZERO(memblock) memset(&(memblock), 0, sizeof(memblock))
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Memory Utils
+ * \{ */
+
+/**
+ * IDs like these will be written in file, that means that they will be shared across multiple
+ * computer architectures, thus we need to handle both LITTLE and BIG endian architectures and
+ * have a common word.
+ */
+#if defined(BIG_ENDIAN)
+#	define MAKEID4(a, b, c, d) ((int)(a) << 24 | (int)(b) << 16 | (int)(c) << 8 | (d))
+#elif defined(LITTLE_ENDIAN)
+#	define MAKEID4(a, b, c, d) ((int)(d) << 24 | (int)(c) << 16 | (int)(b) << 8 | (a))
+#else
+#	error "Cannot make endian agnostic word, Invalid endian detection method!"
+#endif
 
 /* \} */

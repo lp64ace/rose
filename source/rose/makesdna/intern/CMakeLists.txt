@@ -79,7 +79,7 @@ set(LIB
 set(LLVM_LINK_COMPONENTS support)
 
 add_llvm_executable(makesdna
-	${SRC}
+	${SRC} PARTIAL_SOURCES_INTENDED
 )
 target_link_libraries(makesdna
 	PUBLIC
@@ -106,6 +106,8 @@ set_target_properties(intrinsics_gen PROPERTIES FOLDER ${EXTERNAL_PROJECTS_FILTE
 set_target_properties(omp_gen PROPERTIES FOLDER ${EXTERNAL_PROJECTS_FILTER}/llvm)
 set_target_properties(RISCVTargetParserTableGen PROPERTIES FOLDER ${EXTERNAL_PROJECTS_FILTER}/llvm)
 
+
+
 # Output dna.c
 add_custom_command(
 	OUTPUT
@@ -128,6 +130,7 @@ add_custom_command(
 
 set(INC
 	# Common Include Directories
+	PUBLIC .
 	PUBLIC ..
 	
 	# Internal Include Directories
@@ -155,6 +158,8 @@ set(SRC
 	
 	dna_utils.c
 	dna_utils.h
+	dna_genfile.c
+	dna_genfile.h
 	
 	${CMAKE_CURRENT_BINARY_DIR}/dna.c
 	${CMAKE_CURRENT_BINARY_DIR}/dna_offsets.h
