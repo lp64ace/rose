@@ -76,6 +76,8 @@ bool RawWriteWrap::write(const void* buf, size_t buf_len) {
 
 /* \} */
 
+using DefaultWriteWrap = RawWriteWrap;
+
 /* -------------------------------------------------------------------- */
 /** \name Write Data Type & Functions
  * \{ */
@@ -271,11 +273,16 @@ static bool write_file_handle(struct Main* main, struct WriteWrap* ww) {
 	wd = writedata_new(ww);
 	RoseWriter writer = { wd };
 
-	LIB_snprintf(buf, ARRAY_SIZE(buf), "ROSE%c.3d", ((sizeof(void*) == 8) ? 'X' : 'x'), ROSE_VERSION);
+	LIB_snprintf(buf, ARRAY_SIZE(buf), "ROSE%c.3s", ((sizeof(void*) == 8) ? 'X' : 'x'), ROSE_VERSION);
 
 	/** First we write the version of the application. */
 	writedata_do_write(wd, buf, 9);
+	
+	/** Then we write the SDNA data so that we know information about structures. */
+	const struct SDNA* sdna = wd->sdna;
+	writedata(wd, RLO_CODE_DNA1, sdna->data_len, sdna->data);
 
+	/** Then we write information about the data blocks in the #Main database. */
 	do {
 		ListBase* lbarray[INDEX_ID_MAX];
 		int a = set_listbasepointers(main, lbarray);
@@ -341,7 +348,7 @@ static bool rlo_write_file_impl(struct Main* main, const char* filepath, int fla
 }
 
 bool RLO_write_file(struct Main* main, const char* filepath, int flags) {
-	RawWriteWrap wrap;
+	DefaultWriteWrap wrap;
 
 	return rlo_write_file_impl(main, filepath, flags, &wrap);
 }
