@@ -84,7 +84,7 @@ public:
 			Struct->align = CTX.getTypeAlign(Qual) / 8;
 
 			for (auto *FD : RD->fields()) {
-				QualType FieldQual = FD->getType();
+				QualType FieldQual = FD->getType().getCanonicalType();
 				/** Bit fields are not allowed inside DNA. */
 				ROSE_assert(CTX.getTypeInfo(FieldQual).Width % 8 == 0);
 				ROSE_assert(CTX.getTypeInfo(FieldQual).Align % 8 == 0);

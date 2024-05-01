@@ -21,7 +21,8 @@ typedef struct DNAField {
 	 * in the case where the elements are pointers, this is the pointee type 
 	 * and the "pointer" is stored as a flag #DNA_FIELD_IS_POINTER.
 	 *
-	 * Use with caution this might not exist in SDNA.
+	 * Use with caution this might not exist in SDNA and also sometimes may 
+	 * contain qualifiers like 'const' or 'struct'.
 	 */
 	char type[64];
 	

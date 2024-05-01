@@ -1,21 +1,24 @@
 #include "MEM_alloc.h"
 
+#include "LIB_assert.h"
+#include "LIB_string.h"
+
 #include "dna_utils.h"
 
 #include <string.h>
 
-struct SDNA *DNA_sdna_alloc(void) {
-	struct SDNA *sdna = MEM_callocN(sizeof(SDNA), "SDNA");
-	
+struct SDNA* DNA_sdna_alloc(void) {
+	struct SDNA* sdna = MEM_callocN(sizeof(SDNA), "SDNA");
+
 	return sdna;
 }
 
-void DNA_sdna_free(struct SDNA *sdna) {
-	if(sdna->data_alloc) {
+void DNA_sdna_free(struct SDNA* sdna) {
+	if (sdna->data_alloc) {
 		MEM_SAFE_FREE(sdna->data);
 	}
-	for(struct DNAStruct *s = sdna->types; s != sdna->types + sdna->types_len; s++) {
-		for(struct DNAStruct *f = s->fields; f != s->fields + s->fields_len; f++) {
+	for (struct DNAStruct* s = sdna->types; s != sdna->types + sdna->types_len; s++) {
+		for (struct DNAStruct* f = s->fields; f != s->fields + s->fields_len; f++) {
 			/** Nothing to do here. */
 		}
 		MEM_SAFE_FREE(s->fields);
@@ -24,7 +27,7 @@ void DNA_sdna_free(struct SDNA *sdna) {
 	MEM_freeN(sdna);
 }
 
-struct DNAField *DNA_field_new(struct DNAStruct *parent, const char *name) {
+struct DNAField* DNA_field_new(struct DNAStruct* parent, const char* name) {
 	size_t alloc = sizeof(DNAField) * (size_t)(parent->fields_len + 1);
 	parent->fields = MEM_recallocN_id(parent->fields, alloc, "DNAStruct::DNAField");
 
@@ -33,7 +36,7 @@ struct DNAField *DNA_field_new(struct DNAStruct *parent, const char *name) {
 	return field;
 }
 
-struct DNAStruct *DNA_struct_new(struct SDNA *parent, const char *name) {
+struct DNAStruct* DNA_struct_new(struct SDNA* parent, const char* name) {
 	size_t alloc = sizeof(DNAStruct) * (size_t)(parent->types_len + 1);
 	parent->types = MEM_recallocN_id(parent->types, alloc, "DNAStruct");
 
@@ -42,7 +45,7 @@ struct DNAStruct *DNA_struct_new(struct SDNA *parent, const char *name) {
 	return type;
 }
 
-static void sdna_write(struct SDNA *sdna, const void *buffer, size_t length) {
+static void sdna_write(struct SDNA* sdna, const void* buffer, size_t length) {
 	while (sdna->data_len + length >= sdna->data_alloc) {
 		sdna->data_alloc += 256;
 		sdna->data = MEM_recallocN_id(sdna->data, sdna->data_alloc, "SDNA::data");
@@ -53,7 +56,7 @@ static void sdna_write(struct SDNA *sdna, const void *buffer, size_t length) {
 }
 
 bool DNA_sdna_has_type(struct SDNA* sdna, const char* name) {
-	for(struct DNAStruct *type = sdna->types; type != sdna->types + sdna->types_len; type++) {
+	for (struct DNAStruct* type = sdna->types; type != sdna->types + sdna->types_len; type++) {
 		if (strcmp(type->name, name) == 0) {
 			return true;
 		}
@@ -61,7 +64,7 @@ bool DNA_sdna_has_type(struct SDNA* sdna, const char* name) {
 	return false;
 }
 
-void DNA_sdna_compile(struct SDNA *sdna) {
+void DNA_sdna_compile(struct SDNA* sdna) {
 	if (sdna->data && sdna->data_alloc) {
 		MEM_freeN(sdna->data);
 	}
@@ -69,21 +72,21 @@ void DNA_sdna_compile(struct SDNA *sdna) {
 	sdna->data_alloc = 256;
 	sdna->data_len = 0;
 	sdna->data = MEM_mallocN(sdna->data_alloc, "SDNA::data");
-	
+
 	sdna->flags = 0;
 
 	int word = 'SDNA';
 	sdna_write(sdna, &word, sizeof(word));
 
 	sdna_write(sdna, &sdna->types_len, sizeof(sdna->types_len));
-	for (DNAStruct *type = sdna->types; type != sdna->types + sdna->types_len; type++) {
+	for (DNAStruct* type = sdna->types; type != sdna->types + sdna->types_len; type++) {
 		sdna_write(sdna, &type->name, strlen(type->name) + 1);
-		
+
 		sdna_write(sdna, &type->size, sizeof(type->size));
 		sdna_write(sdna, &type->align, sizeof(type->align));
-		
+
 		sdna_write(sdna, &type->fields_len, sizeof(type->fields_len));
-		for (DNAField *field = type->fields; field != type->fields + type->fields_len; field++) {
+		for (DNAField* field = type->fields; field != type->fields + type->fields_len; field++) {
 			sdna_write(sdna, &field->name, strlen(field->name) + 1);
 			sdna_write(sdna, &field->type, strlen(field->type) + 1);
 
@@ -95,4 +98,36 @@ void DNA_sdna_compile(struct SDNA *sdna) {
 			sdna_write(sdna, &field->flags, sizeof(field->flags));
 		}
 	}
+}
+
+static bool dna_sdna_field_type_has_prefix(const char* field) {
+	for (const char* itr = field; *itr != '\0'; itr++) {
+		if (*itr == ' ') {
+			return true;
+		}
+	}
+	return false;
+}
+
+static const char* dna_sdna_field_type_strip_prefix_if_any(const char* field) {
+	for (const char* itr = field; *itr != '\0'; itr++) {
+		if (*itr == ' ') {
+			field = itr + 1;
+		}
+	}
+	return field;
+}
+
+struct DNAStruct* DNA_sdna_find_field_as_struct(struct SDNA* sdna, struct DNAField* field) {
+	return DNA_sdna_find_field_type_as_struct(sdna, field->type);
+}
+
+struct DNAStruct* DNA_sdna_find_field_type_as_struct(struct SDNA* sdna, const char* field) {
+	const char* decl = dna_sdna_field_type_strip_prefix_if_any(field);
+	for (struct DNAStruct* type = sdna->types; type != sdna->types + sdna->types_len; type++) {
+		if (STREQ(type->name, decl)) {
+			return type;
+		}
+	}
+	return NULL;
 }

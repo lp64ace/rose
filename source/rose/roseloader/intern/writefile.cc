@@ -6,6 +6,7 @@
 #include "dna_utils.h"
 
 #include "RLO_rose_defs.h"
+#include "RLO_writefile.h"
 
 #include "LIB_assert.h"
 #include "LIB_fileops.h"
@@ -339,7 +340,6 @@ static bool rlo_write_file_impl(struct Main* main, const char* filepath, int fla
 	}
 
 	if (ww->close() == false) {
-		ROSE_assert_unreachable();
 		fprintf(stderr, "Cannot close file %s reason: %s", filepath, strerror(errno));
 		return false;
 	}
@@ -351,6 +351,47 @@ bool RLO_write_file(struct Main* main, const char* filepath, int flags) {
 	DefaultWriteWrap wrap;
 
 	return rlo_write_file_impl(main, filepath, flags, &wrap);
+}
+
+/* \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Write Utils
+ * \{ */
+
+void RLO_write_id_struct(RoseWriter* writer, int struct_id, const void* id_address, const ID* id) {
+	writestruct_at_address_nr(writer->wd, GS(id->name), struct_id, 1, id_address, id);
+}
+
+void RLO_write_raw(RoseWriter* writer, size_t size_in_bytes, const void* data_ptr) {
+	writedata(writer->wd, RLO_CODE_DATA, size_in_bytes, data_ptr);
+}
+
+void RLO_write_int8_array(RoseWriter* writer, size_t num, const int8_t* data_ptr) {
+	RLO_write_raw(writer, sizeof(int8_t) * num, data_ptr);
+}
+void RLO_write_int32_array(RoseWriter* writer, size_t num, const int32_t* data_ptr) {
+	RLO_write_raw(writer, sizeof(int32_t) * num, data_ptr);
+}
+void RLO_write_uint32_array(RoseWriter* writer, size_t num, const uint32_t* data_ptr) {
+	RLO_write_raw(writer, sizeof(uint32_t) * num, data_ptr);
+}
+void RLO_write_float_array(RoseWriter* writer, size_t num, const float* data_ptr) {
+	RLO_write_raw(writer, sizeof(float) * num, data_ptr);
+}
+void RLO_write_double_array(RoseWriter* writer, size_t num, const double* data_ptr) {
+	RLO_write_raw(writer, sizeof(double) * num, data_ptr);
+}
+void RLO_write_float3_array(RoseWriter* writer, size_t num, const float* data_ptr) {
+	RLO_write_raw(writer, sizeof(float[3]) * num, data_ptr);
+}
+void RLO_write_pointer_array(RoseWriter* writer, size_t num, const void* data_ptr) {
+	RLO_write_raw(writer, sizeof(void *) * num, data_ptr);
+}
+void RLO_write_string(RoseWriter* writer, const char* data_ptr) {
+	if (data_ptr != NULL) {
+		RLO_write_raw(writer, LIB_strlen(data_ptr) + 1, data_ptr);
+	}
 }
 
 /* \} */

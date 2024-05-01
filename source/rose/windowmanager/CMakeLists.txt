@@ -14,6 +14,7 @@ set(INC
 	${CMAKE_SOURCE_DIR}/source/rose/makesdna/intern
 	${CMAKE_SOURCE_DIR}/source/rose/rosefont
 	${CMAKE_SOURCE_DIR}/source/rose/rosekernel
+	${CMAKE_SOURCE_DIR}/source/rose/roseloader
 	${CMAKE_SOURCE_DIR}/source/rose/roselib
 	
 )

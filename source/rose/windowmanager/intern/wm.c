@@ -23,6 +23,8 @@
 #include "WM_init_exit.h"
 #include "WM_window.h"
 
+#include "RLO_writefile.h"
+
 #include "RFT_api.h"
 
 #include "GPU_init_exit.h"
@@ -69,6 +71,7 @@ static void wm_init_new(struct Context *C, struct wmWindowManager *wm) {
 	struct wmWindow *window;
 
 	if ((window = WM_window_open(C, NULL, false)) != NULL) {
+		RLO_write_file(G_MAIN, "default.rose", 0);
 	}
 }
 

@@ -44,6 +44,7 @@ set(LIB
 	rf::source::rosemesh
 	rf::source::rosekernel
 	rf::source::roselib
+	rf::source::roseloader
 	rf::source::windowmanager
 	
 	# External Include Directories

@@ -20,6 +20,11 @@ bool DNA_sdna_has_type(struct SDNA* sdna, const char* name);
 
 void DNA_sdna_compile(struct SDNA *sdna);
 
+/** Find the `DNAStruct *` information of a field, if it exists. */
+struct DNAStruct* DNA_sdna_find_field_as_struct(struct SDNA* sdna, struct DNAField* field);
+/** To be called like `DNA_sdna_find_field_type_as_struct(sdna, field->type);` */
+struct DNAStruct* DNA_sdna_find_field_type_as_struct(struct SDNA* sdna, const char *field);
+
 #ifdef __cplusplus
 }
 #endif
