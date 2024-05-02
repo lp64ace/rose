@@ -318,7 +318,7 @@ static bool write_file_handle(struct Main* main, struct WriteWrap* ww) {
 		}
 
 		id_buffer_free(id_buffer);
-	} while (main);
+	} while (false);
 
 	return true;
 }
