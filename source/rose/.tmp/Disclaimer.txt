@@ -1,0 +1,7 @@
+No need to worry too much about this section, as we're not currently building a compiler to compile 
+our source code. This part is primarily for interpretation purposes at this stage.
+
+That said, we can avoid the common advice to "just write an interpreter" by taking advantage of a 
+feature available on Windows systems: the ability to define functions directly from binary data. 
+By compiling simple code into assembly, we can then convert it into runtime-executable functions. 
+This approach allows us to integrate extensions efficiently without the need for a full compiler.
