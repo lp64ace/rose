@@ -58,7 +58,13 @@ ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
 		if ((ELEM(p[0], '\n') && ELEM(p[1], '\r')) || (ELEM(p[0], '\r') && ELEM(p[1], '\n'))) {
 			p[0] = ' ';
 			p[1] = '\n';
+			continue;
 		}
+		if ((ELEM(p[0], '\t'))) {
+			p[0] = ' ';
+			continue;
+		}
+
 	}
 	return content;
 }
@@ -162,12 +168,12 @@ void RT_file_free(RCCFile *file) {
 
 void RT_source_error(const RCCFile *file, const RCCSLoc *location, const char *fmt, ...) {
 	const char *input = file ? RT_file_content(file) : NULL;
-	const char *begin = location->p;
+	const char *begin = (location->p) ? location->p : "unkown source";
 	while (input < begin && begin[-1] != '\n') {
 		begin--;
 	}
 
-	const char *end = location->p;
+	const char *end = (location->p) ? location->p : "unkown source";
 	while (*end != '\0' && *end != '\n') {
 		end++;
 	}

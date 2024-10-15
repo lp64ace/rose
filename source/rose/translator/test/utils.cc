@@ -188,10 +188,10 @@ TEST(Utils, Parser) {
 						RT_type_function_finalize(C, expected);
 					}
 				}
-				EXPECT_TRUE(RT_type_same(RT_node_obj(node)->type, expected));
-				EXPECT_TRUE(RT_token_match(RT_node_obj(node)->identifier, RT_token_new_name(C, "main")));
+				EXPECT_TRUE(RT_type_same(RT_node_object(node)->type, expected));
+				EXPECT_TRUE(RT_token_match(RT_node_object(node)->identifier, RT_token_new_name(C, "main")));
 				{
-					const RCCNode *stmt = RT_node_block_first(RT_node_obj(node)->body);
+					const RCCNode *stmt = RT_node_block_first(RT_node_object(node)->body);
 					{
 						EXPECT_EQ(stmt->kind, NODE_UNARY);
 						EXPECT_EQ(stmt->type, UNARY_RETURN);
@@ -248,7 +248,7 @@ TEST(Utils, ParserTypedef) {
 						RT_type_struct_finalize(something);
 					}
 				}
-				EXPECT_TRUE(RT_type_same(RT_node_obj(node)->type, something));
+				EXPECT_TRUE(RT_type_same(RT_node_object(node)->type, something));
 				node = node->next;
 			}
 			RCCType *different = NULL;
@@ -267,7 +267,7 @@ TEST(Utils, ParserTypedef) {
 						RT_type_struct_finalize(different);
 					}
 				}
-				EXPECT_TRUE(RT_type_same(RT_node_obj(node)->type, different));
+				EXPECT_TRUE(RT_type_same(RT_node_object(node)->type, different));
 				node = node->next;
 			}
 			EXPECT_EQ(node, nullptr);

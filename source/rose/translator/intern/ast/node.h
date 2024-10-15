@@ -113,7 +113,7 @@ const struct RCCScope *RT_node_block_scope(const struct RCCNode *node);
 /** \name Object Nodes
  * \{ */
 
-const struct RCCObject *RT_node_obj(const struct RCCNode *node);
+const struct RCCObject *RT_node_object(const struct RCCNode *node);
 
 /** \} */
 

@@ -1129,7 +1129,7 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 
 			const RCCType *now = field->type;
 			if (now->kind == TP_ARRAY) {
-				if (!ELEM(now->tp_array.boundary, ARRAY_VLA, ARRAY_VLA_STATIC)) {
+				if (ELEM(now->tp_array.boundary, ARRAY_VLA, ARRAY_VLA_STATIC)) {
 					ERROR(P, field->identifier, "vla arrays are not allowed within a struct");
 					return NULL;
 				}

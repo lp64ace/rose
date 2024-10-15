@@ -44,7 +44,7 @@ RCCNode *RT_node_new_function(RCContext *C, const RCCObject *object) {
 /** \name Object Node Utils
  * \{ */
 
-const struct RCCObject *RT_node_obj(const struct RCCNode *node) {
+const struct RCCObject *RT_node_object(const struct RCCNode *node) {
 	ROSE_assert(node->kind == NODE_OBJECT);
 
 	return ((const struct RCCNodeObject *)node)->object;
