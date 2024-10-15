@@ -1,0 +1,43 @@
+# -----------------------------------------------------------------------------
+# Define Include Directories
+
+set(INC
+	# Internal Include Directories
+	PUBLIC .
+	
+	# External Include Directories
+	
+)
+
+# -----------------------------------------------------------------------------
+# Define System Include Directories
+
+set(INC_SYS
+	# External System Include Directories
+
+)
+
+# -----------------------------------------------------------------------------
+# Define Source Files
+
+set(SRC
+	test_main.cc
+)
+
+# -----------------------------------------------------------------------------
+# Define Library Dependencies
+
+set(LIB
+	# Internal Library Dependencies
+	rose::intern::guardedalloc
+	
+	# External Library Dependencies
+	PUBLIC rose::extern::gtest
+	
+)
+
+# -----------------------------------------------------------------------------
+# Declare Library
+
+rose_add_lib(testing "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::intern::testing ALIAS testing)
