@@ -97,7 +97,7 @@ ROSE_INLINE bool fmake(const char *path) {
 	}
 
 	fprintf(handle, "/* Do not edit manually, changes will be overwritten. */\n");
-	
+
 	fclose(handle);
 	return true;
 }
