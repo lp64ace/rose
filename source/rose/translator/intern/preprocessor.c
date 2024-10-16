@@ -154,11 +154,11 @@ ROSE_INLINE RCCMacro *macro_find(RCCPreprocessor *P, RCCToken *token) {
 	return LIB_ghash_lookup(P->defines, RT_token_as_string(token));
 }
 
-bool RT_macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken);
+ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken);
 
-void RT_macro_append(RCCPreprocessor *P, ListBase *tokens, RCCToken *source) {
-	for(RCCToken *itr = source; itr; itr = itr->next) {
-		if (!RT_macro_expand(P, tokens, &itr, itr)) {
+ROSE_STATIC void paste_normal(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro) {
+	for(RCCToken *itr = (RCCToken *)macro->body.first; itr; itr = itr->next) {
+		if (!macro_expand(P, tokens, &itr, itr)) {
 			RCCToken *now = RT_token_duplicate(P->context, itr);
 		
 			LIB_addtail(tokens, now);
@@ -166,20 +166,40 @@ void RT_macro_append(RCCPreprocessor *P, ListBase *tokens, RCCToken *source) {
 	}
 }
 
-/** real-rest, real-token, preprocessor-rest, preprocessor-token */
-bool RT_macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken) {
+ROSE_STATIC void paste_fnlike(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro, RCCToken *params[64]) {
+	for (RCCToken *token = (RCCToken *)macro->body.first; token; token = token->next) {
+		size_t index = 0;
+		LISTBASE_FOREACH_INDEX(RCCMacroParameter *, parameter, &macro->parameters, index) {
+			if (RT_token_match(parameter->token, token)) {
+				break;
+			}
+		}
+
+		if (params[index]) {
+			LIB_addtail(tokens, RT_token_duplicate(P->context, params[index]));
+		}
+		else if (is(token, "__VA_ARG__")) {
+			while (params[index]) {
+				// This will also paste the preserved commas from the macro params, see #macro_expand.
+				LIB_addtail(tokens, RT_token_duplicate(P->context, params[index++]));
+			}
+		}
+		else if (!macro_expand(P, tokens, &token, token)) {
+			LIB_addtail(tokens, RT_token_duplicate(P->context, token));
+		}
+	}
+}
+
+ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken) {
 	RCCMacro *macro = macro_find(P, ptoken);
 	if(!macro) {
 		return false;
 	}
 	if(macro->user) {
-		// This macro is already beeing expanded, ignore this!
-		return false;
+		return false; // This macro is already beeing expanded, ignore this!
 	}
-	
 	if((macro->kind == MACRO_FNLIKE) && !is(ptoken->next, "(")) {
-		// We have a function-like macro but it is not followed by an argument list, treat it as an identifier.
-		return false;
+		return false; // We have a function-like macro but it is not followed by an argument list!
 	}
 	
 	ptoken = ptoken->next;
@@ -187,20 +207,15 @@ bool RT_macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCC
 	macro->user = true;
 	
 	if(macro->kind == MACRO_NORMAL) {
-		RT_macro_append(P, tokens, (RCCToken *)macro->body.first);
+		paste_normal(P, tokens, macro);
 
 		*prest = ptoken;
 	}
-	else {
-		if(!skip(P, &ptoken, ptoken, "(")) {
-			ROSE_assert_unreachable();
-		}
-		
+	else if (skip(P, &ptoken, ptoken, "(")) {
 		RCCToken *params[64] = { NULL };
 		
-		size_t total;
-		for (total = 0; !consume(&ptoken, ptoken, ")"); total++) {
-			// Extra parameters get to keep the comma, so that we can copy it when parsing `__VA_ARG__`
+		for (size_t total = 0; !consume(&ptoken, ptoken, ")"); total++) {
+			// Extra parameters get to keep the comma, see #paste_fnlike.
 			if (0 < total && total <= LIB_listbase_count(&macro->parameters)) {
 				if(!skip(P, &ptoken, ptoken, ",")) {
 					break;
@@ -210,35 +225,10 @@ bool RT_macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCC
 			params[total] = ptoken;
 			ptoken = ptoken->next;
 		}
-		*prest = ptoken;
 		
-		size_t nedeed = LIB_listbase_count(&macro->parameters);
-
-		if (total < nedeed) {
-			ERROR(P, ptoken, "too few arguments in function like macro");
-		}
-		else {
-			for (RCCToken *token = (RCCToken *)macro->body.first; token; token = token->next) {
-				size_t index = 0;
-				LISTBASE_FOREACH_INDEX(RCCMacroParameter *, parameter, &macro->parameters, index) {
-					if (RT_token_match(parameter->token, token)) {
-						break;
-					}
-				}
-
-				if (index < nedeed) {
-					LIB_addtail(tokens, RT_token_duplicate(P->context, params[index]));
-				}
-				else if (is(token, "__VA_ARG__")) {
-					while (index < total) {
-						LIB_addtail(tokens, RT_token_duplicate(P->context, params[index++]));
-					}
-				}
-				else if (!RT_macro_expand(P, tokens, &token, token)) {
-					LIB_addtail(tokens, RT_token_duplicate(P->context, token));
-				}
-			}
-		}
+		paste_fnlike(P, tokens, macro, params);
+		
+		*prest = ptoken;
 	}
 	
 	macro->user = false;
@@ -249,6 +239,41 @@ ROSE_INLINE void macro_undef(RCCPreprocessor *P, RCCToken *token) {
 	ROSE_assert(RT_token_is_identifier(token));
 	
 	LIB_ghash_remove(P->defines, RT_token_as_string(token), NULL, NULL);
+}
+
+ROSE_INLINE RCCMacro *macro_new(RCCPreprocessor *P, int kind, RCCToken *identifier) {
+	RCCMacro *macro = RT_context_calloc(P->context, sizeof(RCCMacro));
+
+	macro->kind = kind;
+	macro->token = identifier;
+	
+	// NOTE if we define something again, with the same name, the previous one is overriden!
+	LIB_ghash_insert(P->defines, (void *)RT_token_as_string(macro->token), macro);
+	return macro;
+}
+
+ROSE_INLINE void macro_do_fnlike(RCCPreprocessor *P, RCCMacro *macro, RCCToken **rest, RCCToken *token) {
+	for (int index = 0; !consume(&token, token, ")"); index++) {
+		if (index > 0) {
+			if (!skip(P, &token, token, ",")) {
+				break;
+			}
+		}
+
+		if (!is(token, "...")) {
+			LIB_addtail(&macro->parameters, make_param(P->context, token));
+		}
+		else if(!is(token->next, ")")) {
+			ERROR(P, token, "ellipsis are only allowed as the last parameter");
+		}
+		token = token->next;
+	}
+	
+	*rest = copy_line(P->context, &macro->body, token);
+}
+
+ROSE_INLINE void macro_do_normal(RCCPreprocessor *P, RCCMacro *macro, RCCToken **rest, RCCToken *token) {
+	*rest = copy_line(P->context, &macro->body, token);
 }
 
 ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *token) {
@@ -262,48 +287,17 @@ ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *toke
 	token = token->next;
 	
 	// Function like macro
-	if(token->has_leading_space == false && is(token, "(")) {
-		RCCMacro *macro = RT_context_calloc(P->context, sizeof(RCCMacro));
-
-		macro->kind = MACRO_FNLIKE;
-		macro->token = identifier;
-
-		if (!skip(P, &token, token, "(")) {
-			ROSE_assert_unreachable();
-		}
-
-		for (int index = 0; !consume(&token, token, ")"); index++) {
-			if (index > 0) {
-				if (!skip(P, &token, token, ",")) {
-					break;
-				}
-			}
-
-			if (!is(token, "...")) {
-				LIB_addtail(&macro->parameters, make_param(P->context, token));
-			}
-			token = token->next;
-		}
-
-		*rest = copy_line(P->context, &macro->body, token);
-
-		// NOTE if we define something again, with the same name, the previous one is overriden!
-		LIB_ghash_insert(P->defines, (void *)RT_token_as_string(identifier), macro);
+	if(token->has_leading_space == false && consume(&token, token, "(")) {
+		RCCMacro *macro = macro_new(P, MACRO_FNLIKE, identifier);
+		macro_do_fnlike(P, macro, rest, token);
 	}
 	else {
-		RCCMacro *macro = RT_context_calloc(P->context, sizeof(RCCMacro));
-		
-		macro->kind = MACRO_NORMAL;
-		macro->token = identifier;
-
-		*rest = copy_line(P->context, &macro->body, token);
-		
-		// NOTE if we define something again, with the same name, the previous one is overriden!
-		LIB_ghash_insert(P->defines, (void *)RT_token_as_string(identifier), macro);
+		RCCMacro *macro = macro_new(P, MACRO_NORMAL, identifier);
+		macro_do_normal(P, macro, rest, token);
 	}
 }
 
-RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *token) {
+ROSE_STATIC RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *token) {
 	while (token->kind != TOK_EOF) {
 		if (directive(token)) {
 			if (is(token->next, "if") || is(token->next, "ifdef") || is(token->next, "ifndef")) {
@@ -318,7 +312,8 @@ RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *token) {
 	}
 	return token;
 }
-RCCToken *skip_conditional(RCCPreprocessor *P, RCCToken *token) {
+
+ROSE_STATIC RCCToken *skip_conditional(RCCPreprocessor *P, RCCToken *token) {
 	while (token->kind != TOK_EOF) {
 		if (directive(token)) {
 			if (is(token->next, "if") || is(token->next, "ifdef") || is(token->next, "ifndef")) {
@@ -347,7 +342,7 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 	LIB_listbase_clear(tokens);
 
 	while(itr && itr->kind != TOK_EOF) {
-		if (RT_macro_expand(preprocessor, tokens, &itr, itr)) {
+		if (macro_expand(preprocessor, tokens, &itr, itr)) {
 			continue;
 		}
 
