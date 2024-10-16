@@ -33,14 +33,14 @@ ROSE_INLINE int to_hexadecimal(int c) {
 ROSE_INLINE int translate_escaped_sequence(const char **rest, const char *p) {
 	if ('0' <= p[0] && p[0] <= '7') {
 		int ret = 0;
-		for (p; ret < 64 && ('0' <= *p && *p <= '7'); *rest = ++p) {
+		for (; ret < 64 && ('0' <= *p && *p <= '7'); *rest = ++p) {
 			ret = ret * 8 + ((*rest)[0] - '0');
 		}
 		return ret;
 	}
 	if (ELEM(p[0], 'x', 'X')) {
 		int ret = 0;
-		for (p; ('0' <= *p && *p <= '9') && ('a' <= tolower(*p) && tolower(*p) <= 'f'); *rest = ++p) {
+		for (; ('0' <= *p && *p <= '9') && ('a' <= tolower(*p) && tolower(*p) <= 'f'); *rest = ++p) {
 			ret = ret * 16 + to_hexadecimal(*p);
 		}
 		return ret;

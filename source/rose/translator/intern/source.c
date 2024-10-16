@@ -60,7 +60,7 @@ ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
 			p[1] = '\n';
 			continue;
 		}
-		if ((ELEM(p[0], '\t'))) {
+		if (ELEM(p[0], '\t')) {
 			p[0] = ' ';
 			continue;
 		}
