@@ -7,6 +7,7 @@
 #include "RT_source.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 
 const char *header_typedef[] = {
 #include "DNA_strings_all.h"
@@ -15,99 +16,45 @@ const char *header_typedef[] = {
 const char *source = NULL;
 const char *binary = NULL;
 
-ROSE_INLINE void help(int i, char **argv) {
-	if (i) {
-		fprintf(stderr, "Error near '%s'!\n\n", argv[i]);
-	}
-	else {
-		fprintf(stderr, "Invalid argument list!\n\n");
-	}
-	fprintf(stderr, "Usage:\n\n");
-	fprintf(stderr, "\t%s\n", argv[0]);
-	fprintf(stderr, "\t\t--src <directory>\n");
-	fprintf(stderr, "\t\t--bin <directory>\n");
+ROSE_INLINE void help(const char *program_name) {
+	fprintf(stderr, "Invalid argument list!\n\n");
+	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "\t%s --src <directory> --bin <directory>\n", program_name);
 }
 
-ROSE_INLINE int arg(int argc, char **argv) {
-	for(int i = 1; i < argc; i++) {
-		if(STREQ(argv[i], "--src") && i + 1 < argc) {
+ROSE_INLINE bool init(int argc, char **argv) {
+	for (int i = 1; i < argc; i++) {
+		if (STREQ(argv[i], "--src") && i + 1 < argc) {
 			source = argv[++i];
 			continue;
 		}
-		if(STREQ(argv[i], "--bin") && i + 1 < argc) {
+		if (STREQ(argv[i], "--bin") && i + 1 < argc) {
 			binary = argv[++i];
 			continue;
 		}
-		else {
-			help(i, argv);
-			return 0xf1;
-		}
+		return false; // Invalid argument
 	}
-	
-	if(!source) {
-		help(0, argv);
-		return 0xf2;
-	}
-	if(!binary) {
-		help(0, argv);
-		return 0xf3;
-	}
-	return 0;
+	return source && binary; // Return true only if both arguments are provided
 }
 
-ROSE_INLINE size_t fsize(FILE *file) {
-	long size;
-	fseek(file, 0, SEEK_END);
-	size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	return (size_t)size;
-}
-
-ROSE_INLINE char *fload(const char *path) {
-	FILE *handle = fopen(path, "rb");
-	if(!handle) {
-		fprintf(stderr, "Failed to open file '%s' for reading.\n", path);
-		return NULL;
-	}
-	size_t size = fsize(handle);
-	
-	char *buffer = (char *)MEM_callocN(fsize(handle) + 1, "file::buffer");
-	if(!buffer) {
-		fprintf(stderr, "Failed to allocate enough space to read file.\n");
-		MEM_freeN(buffer);
-		fclose(handle);
-		return NULL;
-	}
-	if(!fread(buffer, size, 1, handle)) {
-		fprintf(stderr, "Failed to read file.\n");
-		MEM_freeN(buffer);
-		fclose(handle);
-		return NULL;
-	}
-	
-	fclose(handle);
-	return buffer;
-}
-
-ROSE_INLINE bool fmake(const char *path) {
-	FILE *handle = fopen(path, "w");
-	if(!handle) {
-		printf("Failed to open file '%s' for writing.\n", path);
+ROSE_INLINE bool build(const char *filepath) {
+	FILE *file = fopen(filepath, "w");
+	if (!file) {
+		fprintf(stderr, "Failed to open file '%s' for writing.\n", filepath);
 		return false;
 	}
 
-	fprintf(handle, "/* Do not edit manually, changes will be overwritten. */\n");
+	// Write a warning header into the generated file
+	fprintf(file, "/* Auto-generated file. Do not edit manually. */\n");
 
-	fclose(handle);
+	fclose(file);
 	return true;
 }
 
 int main(int argc, char **argv) {
-	int status = 0;
-	
-	if((status = arg(argc, argv))) {
-		/** Handle invalid or missing arguments error status here! */
-		return status;
+	if(!init(argc, argv)) {
+		help(argv[0]);
+		return -1;
 	}
 	
 	char path[1024];
@@ -117,36 +64,29 @@ int main(int argc, char **argv) {
 		LIB_strcat(path, ARRAY_SIZE(path), "/");
 		LIB_strcat(path, ARRAY_SIZE(path), header_typedef[index]);
 		
-		char *buffer = fload(path);
-		if(!buffer) {
-			return 0xe1;
+		RCCFileCache *cache = RT_fcache_read(path);
+		RCCFile *file = RT_file_new(header_typedef[index], cache);
+		RCCParser *parser = RT_parser_new(file);
+		
+		if(!RT_parser_do(parser)) {
+			printf("Compilation failed for %s!\n", header_typedef[index]);
+			return -1;
 		}
 		
-		RCCFileCache *cache = RT_fcache_new(path, buffer, LIB_strlen(buffer));
-		RCCFile *file = RT_file_new(header_typedef[index], cache);
-		{
-			RCCParser *parser = RT_parser_new(file);
-			
-			if(!RT_parser_do(parser)) {
-				printf("Compilation failed for %s!\n", header_typedef[index]);
-				return 0xe2;
-			}
-		}
+		RT_parser_free(parser);
 		RT_file_free(file);
 		RT_fcache_free(cache);
-		
-		MEM_freeN(buffer);
 	}
 	
 	LIB_strcpy(path, ARRAY_SIZE(path), binary);
 	LIB_strcat(path, ARRAY_SIZE(path), "/");
 	LIB_strcat(path, ARRAY_SIZE(path), "dna.c");
 	
-	if(!fmake(path)) {
-		return 0xe3;
+	if(!build(path)) {
+		return -1;
 	}
 	
-	return status;
+	return 0;
 }
 
 /*
