@@ -380,8 +380,6 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 		break;
 	}
 	LIB_addtail(&parser->tokens, RT_token_new_eof(parser->context));
-	
-	RCC_preprocessor_do(parser->context, parser->file, &parser->tokens);
 }
 
 RCCParser *RT_parser_new(const RCCFile *file) {
@@ -2008,6 +2006,8 @@ ROSE_INLINE bool funcvars(RCCParser *P, RCCObject *func) {
 }
 
 bool RT_parser_do(RCCParser *P) {
+	RT_pp_do(P->context, P->file, &P->tokens);
+	
 	RCCToken *token = (RCCToken *)P->tokens.first;
 	while (token->kind != TOK_EOF && P->state->errors < 0xff) {
 		DeclInfo info;

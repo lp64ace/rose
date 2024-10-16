@@ -334,7 +334,7 @@ RCCToken *skip_conditional(RCCPreprocessor *P, RCCToken *token) {
 	return token;
 }
 
-void RCC_preprocessor_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
+void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 	RCCPreprocessor *preprocessor = MEM_mallocN(sizeof(RCCPreprocessor), "RCCPreprocessor");
 	
 	preprocessor->context = context;

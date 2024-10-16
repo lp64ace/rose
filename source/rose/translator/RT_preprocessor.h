@@ -13,7 +13,7 @@ struct RCContext;
 /** \name Util Methods
  * \{ */
 
-void RCC_preprocessor_do(struct RCContext *, const struct RCCFile *file, ListBase *tokens);
+void RT_pp_do(struct RCContext *, const struct RCCFile *file, ListBase *tokens);
 
 /** \} */
 
