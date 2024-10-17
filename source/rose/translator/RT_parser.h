@@ -26,6 +26,13 @@ typedef struct DeclInfo {
 	long long align;
 } DeclInfo;
 
+typedef struct RCConfiguration {
+	const struct RCCType *tp_size;
+	const struct RCCType *tp_enum;
+
+	unsigned long long align;
+} RCConfiguration;
+
 typedef struct RCCParser {
 	const struct RCCFile *file;
 
@@ -37,11 +44,7 @@ typedef struct RCCParser {
 	struct RCContext *context;
 	struct RCCState *state;
 	
-	// Options for parsing/compilation, leave NULL for default!
-	const struct RCCType *tp_size;
-	const struct RCCType *tp_enum;
-
-	unsigned long long align;
+	RCConfiguration configuration;
 	
 	ListBase nodes;
 } RCCParser;
