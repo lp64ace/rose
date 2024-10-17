@@ -176,7 +176,7 @@ ROSE_INLINE void *RT_scope_var(struct RCCScope *scope, const struct RCCToken *na
  * \{ */
 
 
- size_t parse_punctuator(const char *p) {
+ROSE_INLINE size_t parse_punctuator(const char *p) {
 	static const char *match[] = {
 		"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=", "-=", "*=", "/=", "++", "--", 
 		"%=", "&=", "|=", "^=", "&&", "||", "<<", ">>", "##",
@@ -1311,6 +1311,7 @@ const RCCNode *RT_parser_bitor(RCCParser *P, RCCToken **rest, RCCToken *token);
 const RCCNode *RT_parser_logand(RCCParser *P, RCCToken **rest, RCCToken *token);
 const RCCNode *RT_parser_logor(RCCParser *P, RCCToken **rest, RCCToken *token);
 const RCCNode *RT_parser_expr(RCCParser *P, RCCToken **rest, RCCToken *token);
+const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token);
 
 const RCCNode *RT_parser_assign(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	const RCCNode *node = RT_parser_conditional(P, &token, token);
@@ -1868,8 +1869,6 @@ const RCCNode *RT_parser_typedef(RCCParser *P, RCCToken **rest, RCCToken *token,
 	*rest = token;
 	return node;
 }
-
-const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token);
 
 RCCNode *RT_parser_compound(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	if (!skip(P, &token, token, "{")) {
