@@ -37,6 +37,9 @@ set(SRC
 	
 	makedna.c
 	
+	genfile.c
+	genfile.h
+	
 	${DNA_HEADER_INC_FILE}
 	${DNA_HEADER_STR_FILE}
 )
