@@ -14,6 +14,18 @@ struct RCCToken;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
+ * 
+ * These data structures are critical to the functionality and integrity of the DNA module. 
+ * Any modifications to them—whether it’s altering fields, changing types, or adjusting structure 
+ * layouts—can have a significant impact on the module's behavior and performance.
+ * 
+ * It's essential to carefully understand how these structures are serialized (written to files) 
+ * and deserialized (read from files) because incorrect changes may cause issues with data 
+ * compatibility, corruption, or versioning. Be mindful of any dependencies in the file I/O logic 
+ * and how different components rely on this data.
+ * 
+ * If updates are necessary, ensure proper testing, version control, and backward compatibility 
+ * strategies are followed.
  * \{ */
 
 typedef struct RCCField {
@@ -22,12 +34,13 @@ typedef struct RCCField {
 	const struct RCCToken *identifier;
 	const struct RCCType *type;
 
-	long long alignment;
+	int alignment;
+	
 	struct RCCTypeBitfiledProperties properties;
 } RCCField;
 
 typedef struct RCCTypeStruct {
-	unsigned int is_complete : 1;
+	bool is_complete;
 
 	const struct RCCToken *identifier;
 
@@ -48,8 +61,8 @@ struct RCCType *RT_type_new_struct(struct RCContext *, const struct RCCToken *id
 /** \name Util Methods
  * \{ */
 
-bool RT_type_struct_add_field(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, long long alignment);
-bool RT_type_struct_add_bitfield(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, long long alignment, long long width);
+bool RT_type_struct_add_field(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment);
+bool RT_type_struct_add_bitfield(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment, int width);
 
 void RT_type_struct_finalize(struct RCCType *type);
 

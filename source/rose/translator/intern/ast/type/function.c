@@ -18,7 +18,7 @@ ROSE_INLINE bool same_function_type(const RCCType *a, const RCCType *b) {
 		const RCCTypeParameter *iter1 = (const RCCTypeParameter *)f1->parameters.first;
 		const RCCTypeParameter *iter2 = (const RCCTypeParameter *)f2->parameters.first;
 		while (iter1 && iter2) {
-			if (!RT_token_match(iter1->name, iter2->name)) {
+			if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 				return false;
 			}
 			if (!RT_type_same(iter1->type, iter2->type)) {
@@ -73,7 +73,7 @@ ROSE_INLINE const RCCType *composite_function_type(RCContext *C, const RCCType *
 	const RCCTypeParameter *iter1 = (const RCCTypeParameter *)f1->parameters.first;
 	const RCCTypeParameter *iter2 = (const RCCTypeParameter *)f2->parameters.first;
 	while (iter1 && iter2) {
-		if (!RT_token_match(iter1->name, iter2->name)) {
+		if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 			return false;
 		}
 		const RCCType *unqualified1 = RT_type_unqualified(iter1->adjusted);
@@ -82,12 +82,12 @@ ROSE_INLINE const RCCType *composite_function_type(RCContext *C, const RCCType *
 		const RCCType *type = RT_type_composite(C, unqualified1, unqualified2);
 		ROSE_assert(type != NULL);
 
-		if (!RT_token_match(iter1->name, iter2->name)) {
+		if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 			/** If the names do not much just add unnamed parameter. */
 			RT_type_function_add_parameter(C, composite, type);
 		}
 		else {
-			RT_type_function_add_named_parameter(C, composite, type, iter1->name);
+			RT_type_function_add_named_parameter(C, composite, type, iter1->identifier);
 		}
 		iter1 = iter1->next;
 		iter2 = iter2->next;
@@ -152,12 +152,12 @@ ROSE_INLINE const RCCType *adjust_function_parameter(RCContext *C, const RCCType
 	return adjusted;
 }
 
-void RT_type_function_add_named_parameter(RCContext *C, RCCType *t, const RCCType *type, const RCCToken *name) {
+void RT_type_function_add_named_parameter(RCContext *C, RCCType *t, const RCCType *type, const RCCToken *identifier) {
 	ROSE_assert(t->kind == TP_FUNC);
 	RCCTypeFunction *f = &t->tp_function;
 	RCCTypeParameter *param = RT_context_calloc(C, sizeof(RCCTypeParameter));
 
-	param->name = name;
+	param->identifier = identifier;
 	param->type = type;
 	param->adjusted = adjust_function_parameter(C, type);
 
@@ -166,7 +166,7 @@ void RT_type_function_add_named_parameter(RCContext *C, RCCType *t, const RCCTyp
 		/**
 		 * Only one ellispis is allowed and it has to be the last argument of a function!
 		 * This is an assert and not a compiler error because we do not have a token as to where to post the error,
-		 * since `name` may be NULL.
+		 * since `identifier` may be NULL.
 		 */
 		ROSE_assert_unreachable();
 	}

@@ -176,7 +176,7 @@ ROSE_INLINE void *RT_scope_var(struct RCCScope *scope, const struct RCCToken *na
  * \{ */
 
 
- size_t parse_punctuator(const char *p) {
+ROSE_INLINE size_t parse_punctuator(const char *p) {
 	static const char *match[] = {
 		"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=", "-=", "*=", "/=", "++", "--", 
 		"%=", "&=", "|=", "^=", "&&", "||", "<<", ">>", "##",
@@ -382,24 +382,30 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 	LIB_addtail(&parser->tokens, RT_token_new_eof(parser->context));
 }
 
+ROSE_INLINE void configure(RCCParser *P) {
+	RCConfiguration *config = &P->configuration;
+	
+	if(sizeof(void *) == 2) {
+		config->tp_size = Tp_UShort;
+	}
+	if(sizeof(void *) == 4) {
+		config->tp_size = Tp_UInt;
+	}
+	if(sizeof(void *) == 8) {
+		config->tp_size = Tp_ULLong;
+	}
+	config->tp_enum = Tp_Int;
+	config->align = 0;
+}
+
 RCCParser *RT_parser_new(const RCCFile *file) {
 	RCCParser *parser = MEM_callocN(sizeof(RCCParser), "RCCParser");
 	parser->context = RT_context_new();
-	
-	RT_state_init(parser);
-
 	parser->file = file;
 	
-	if(sizeof(void *) == 2) {
-		parser->tp_size = Tp_UShort;
-	}
-	if(sizeof(void *) == 4) {
-		parser->tp_size = Tp_UInt;
-	}
-	if(sizeof(void *) == 8) {
-		parser->tp_size = Tp_ULLong;
-	}
-	parser->tp_enum = Tp_Int;
+	RT_state_init(parser);
+	
+	configure(parser);
 	
 	parse_tokenize(parser);
 	return parser;
@@ -423,14 +429,14 @@ void RT_parser_free(struct RCCParser *parser) {
 /** \name Util Methods
  * \{ */
 
-ROSE_INLINE unsigned long long align(RCCParser *P, unsigned long long alignment, unsigned long long size) {
+ROSE_INLINE unsigned long long align(RCConfiguration *config, unsigned long long alignment, unsigned long long size) {
 	if (alignment) {
 		/** Use the provided alignment. */
 		return (size + alignment - 1) - (size + alignment - 1) % alignment;
 	}
-	if (P->align) {
+	if (config->align) {
 		/** Use the default parser alignment. */
-		return (size + P->align - 1) - (size + P->align - 1) % P->align;
+		return (size + config->align - 1) - (size + config->align - 1) % config->align;
 	}
 	return size;
 }
@@ -441,7 +447,10 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 		return (unsigned long long)type->tp_basic.rank;
 	}
 	if(type->kind == TP_PTR) {
-		return RT_parser_size(P, P->tp_size);
+		return RT_parser_size(P, P->configuration.tp_size);
+	}
+	if(type->kind == TP_ENUM) {
+		return RT_parser_size(P, P->configuration.tp_size);
 	}
 	if(type->kind == TP_ARRAY) {
 		if(ELEM(type->tp_array.boundary, ARRAY_VLA || ARRAY_VLA_STATIC)) {
@@ -452,7 +461,7 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 	if(type->kind == TP_STRUCT) {
 		unsigned long long size = 0;
 		unsigned long long bitfield = 0;
-		unsigned long long alignment = 1;
+		unsigned long long alignment = 0;
 		
 		const RCCTypeStruct *s = &type->tp_struct;
 		LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
@@ -462,14 +471,14 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 				unsigned long long field_alignment = field->alignment;
 				
 				if(bitfield + field_bitsize > field_size * 8) {
-					size = align(P, field_alignment, size);
+					size = align(&P->configuration, field_alignment, size);
 					bitfield = 0;
 				}
 				
 				bitfield += field_bitsize;
 				
 				if((field->next && !RT_field_is_bitfield(field->next)) || bitfield == field_size * 8) {
-					size = align(P, field_alignment, size);
+					size = align(&P->configuration, field_alignment, size);
 					size += field_size;
 					bitfield = 0;
 				}
@@ -483,12 +492,12 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 					alignment = field_alignment;
 				}
 				
-				size = align(P, field_alignment, size);
+				size = align(&P->configuration, field_alignment, size);
 				size += field_size;
 			}
 		}
 		
-		size = align(P, alignment, size);
+		size = align(&P->configuration, alignment, size);
 		
 		return size;
 	}
@@ -664,7 +673,7 @@ const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token
 						ERROR(P, token, "expected a constant expression");
 						return NULL;
 					}
-					info->align = RT_node_evaluate_integer(expr);
+					info->align = (int)RT_node_evaluate_integer(expr);
 				}
 			}
 			if(!skip(P, &token, token, ")")) {
@@ -1024,7 +1033,7 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return NULL;
 	}
 	
-	RCCType *type = RT_type_new_enum(P->context, tag, P->tp_enum);
+	RCCType *type = RT_type_new_enum(P->context, tag, P->configuration.tp_enum);
 	
 	for(int index = 0; !consume_end(&token, token); index++) {
 		if(index > 0) {
@@ -1139,7 +1148,7 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 					ERROR(P, token, "expected a constant expression");
 					return NULL;
 				}
-				long long width = RT_node_evaluate_integer(expr);
+				int width = (int)RT_node_evaluate_integer(expr);
 				if (!RT_type_struct_add_bitfield(P->context, type, field->identifier, field->type, info.align, width)) {
 					ERROR(P, token, "invalid struct field");
 					return NULL;
@@ -1311,6 +1320,7 @@ const RCCNode *RT_parser_bitor(RCCParser *P, RCCToken **rest, RCCToken *token);
 const RCCNode *RT_parser_logand(RCCParser *P, RCCToken **rest, RCCToken *token);
 const RCCNode *RT_parser_logor(RCCParser *P, RCCToken **rest, RCCToken *token);
 const RCCNode *RT_parser_expr(RCCParser *P, RCCToken **rest, RCCToken *token);
+const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token);
 
 const RCCNode *RT_parser_assign(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	const RCCNode *node = RT_parser_conditional(P, &token, token);
@@ -1869,8 +1879,6 @@ const RCCNode *RT_parser_typedef(RCCParser *P, RCCToken **rest, RCCToken *token,
 	return node;
 }
 
-const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token);
-
 RCCNode *RT_parser_compound(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	if (!skip(P, &token, token, "{")) {
 		return NULL;
@@ -1990,14 +1998,14 @@ ROSE_INLINE bool funcvars(RCCParser *P, RCCObject *func) {
 
 	const RCCTypeFunction *type = &func->type->tp_function;
 	LISTBASE_FOREACH(const RCCTypeParameter *, param, &type->parameters) {
-		if (!param->name) {
+		if (!param->identifier) {
 			ERROR(P, func->identifier, "parameter name omitted");
 			return false;
 		}
 
-		RCCObject *var = RT_object_new_variable(P->context, param->type, param->name);
+		RCCObject *var = RT_object_new_variable(P->context, param->type, param->identifier);
 
-		if (!RT_scope_new_var(P->state->scope, param->name, var)) {
+		if (!RT_scope_new_var(P->state->scope, param->identifier, var)) {
 			return false;
 		}
 	}

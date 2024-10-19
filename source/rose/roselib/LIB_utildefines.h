@@ -210,7 +210,7 @@ void memswap(void *m1, void *m2, size_t n);
 /** \name Endianess
  * \{ */
 
-#if (!defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)) || (defined(__LITTLE_ENDIAN__) && defined(__BIG_ENDIAN__))
+#if (!defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__))
 #	error "We don't know what architecture this is!"
 #endif
 
