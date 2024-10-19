@@ -18,9 +18,44 @@ extern "C" {
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
+ * 
+ * These data structures are critical to the functionality and integrity of the DNA module. 
+ * Any modifications to them—whether it’s altering fields, changing types, or adjusting structure 
+ * layouts—can have a significant impact on the module's behavior and performance.
+ * 
+ * It's essential to carefully understand how these structures are serialized (written to files) 
+ * and deserialized (read from files) because incorrect changes may cause issues with data 
+ * compatibility, corruption, or versioning. Be mindful of any dependencies in the file I/O logic 
+ * and how different components rely on this data.
+ * 
+ * If updates are necessary, ensure proper testing, version control, and backward compatibility 
+ * strategies are followed.
  * \{ */
 
-typedef enum eTypeKind {
+typedef struct RCCType {
+	int kind;
+
+	/** This flag is very similar to the std::is_trivial<Tp> template. */
+	bool is_basic;
+
+	union {
+		const struct RCCType *tp_base;
+		struct RCCTypeArray tp_array;
+		struct RCCTypeBasic tp_basic;
+		struct RCCTypeEnum tp_enum;
+		struct RCCTypeFunction tp_function;
+		struct RCCTypeQualified tp_qualified;
+		struct RCCTypeStruct tp_struct;
+		// struct RCCTypeUnion tp_union;
+	};
+
+	bool (*same)(const struct RCCType *, const struct RCCType *);
+	bool (*compatible)(const struct RCCType *, const struct RCCType *);
+
+	const struct RCCType *(*composite)(struct RCContext *, const struct RCCType *, const struct RCCType *);
+} RCCType;
+
+enum {
 	TP_VOID,
 	TP_BOOL,
 	TP_CHAR,
@@ -40,30 +75,7 @@ typedef enum eTypeKind {
 	TP_QUALIFIED,
 	TP_VARIADIC,
 	TP_ELLIPSIS,
-} eTypeKind;
-
-typedef struct RCCType {
-	eTypeKind kind;
-
-	/** This flag is very similar to the std::is_trivial<Tp> template. */
-	unsigned int is_basic : 1;
-
-	union {
-		const struct RCCType *tp_base;
-		struct RCCTypeArray tp_array;
-		struct RCCTypeBasic tp_basic;
-		struct RCCTypeEnum tp_enum;
-		struct RCCTypeFunction tp_function;
-		struct RCCTypeQualified tp_qualified;
-		struct RCCTypeStruct tp_struct;
-		// struct RCCTypeUnion tp_union;
-	};
-
-	bool (*same)(const struct RCCType *, const struct RCCType *);
-	bool (*compatible)(const struct RCCType *, const struct RCCType *);
-
-	const struct RCCType *(*composite)(struct RCContext *, const struct RCCType *, const struct RCCType *);
-} RCCType;
+};
 
 /** \} */
 

@@ -176,16 +176,21 @@ ROSE_STATIC void paste_fnlike(RCCPreprocessor *P, ListBase *tokens, RCCMacro *ma
 		}
 
 		if (params[index]) {
-			LIB_addtail(tokens, RT_token_duplicate(P->context, params[index]));
+			RCCToken *now = RT_token_duplicate(P->context, params[index]);
+			
+			LIB_addtail(tokens, now);
 		}
 		else if (is(token, "__VA_ARG__")) {
 			while (params[index]) {
+				RCCToken *now = RT_token_duplicate(P->context, params[index++]);
 				// This will also paste the preserved commas from the macro params, see #macro_expand.
-				LIB_addtail(tokens, RT_token_duplicate(P->context, params[index++]));
+				LIB_addtail(tokens, now);
 			}
 		}
 		else if (!macro_expand(P, tokens, &token, token)) {
-			LIB_addtail(tokens, RT_token_duplicate(P->context, token));
+			RCCToken *now = RT_token_duplicate(P->context, token);
+			
+			LIB_addtail(tokens, now);
 		}
 	}
 }
@@ -260,11 +265,14 @@ ROSE_INLINE void macro_do_fnlike(RCCPreprocessor *P, RCCMacro *macro, RCCToken *
 			}
 		}
 
-		if (!is(token, "...")) {
+		if (RT_token_is_identifier(token)) {
 			LIB_addtail(&macro->parameters, make_param(P->context, token));
 		}
-		else if(!is(token->next, ")")) {
-			ERROR(P, token, "ellipsis are only allowed as the last parameter");
+		else if(is(token, "...") && is(token->next, ")")) {
+			// not stored!
+		}
+		else {
+			ERROR(P, token, "expected an identifier");
 		}
 		token = token->next;
 	}
@@ -286,7 +294,6 @@ ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *toke
 	
 	token = token->next;
 	
-	// Function like macro
 	if(token->has_leading_space == false && consume(&token, token, "(")) {
 		RCCMacro *macro = macro_new(P, MACRO_FNLIKE, identifier);
 		macro_do_fnlike(P, macro, rest, token);

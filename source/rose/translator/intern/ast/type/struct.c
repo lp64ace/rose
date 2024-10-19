@@ -140,7 +140,7 @@ RCCType *RT_type_new_struct(RCContext *C, const RCCToken *identifier) {
 /** \name Util Methods
  * \{ */
 
-bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, long long alignment) {
+bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, int alignment) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
 	LISTBASE_FOREACH(RCCField *, field, &s->tp_struct.fields) {
@@ -153,7 +153,7 @@ bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, con
 
 	field->identifier = tag;
 	field->type = type;
-	field->alignment = alignment;
+	field->alignment = (int)alignment;
 
 	field->properties.is_bitfield = false;
 	field->properties.width = 0;
@@ -162,7 +162,7 @@ bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, con
 	return true;
 }
 
-bool RT_type_struct_add_bitfield(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, long long alignment, long long width) {
+bool RT_type_struct_add_bitfield(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, int alignment, int width) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
 	LISTBASE_FOREACH(RCCField *, field, &s->tp_struct.fields) {

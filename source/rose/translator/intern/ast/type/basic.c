@@ -13,13 +13,13 @@ ROSE_INLINE bool same_basic_types(const struct RCCType *a, const struct RCCType 
 ROSE_INLINE bool compatible_basic_types(const struct RCCType *a, const struct RCCType *b);
 ROSE_INLINE const struct RCCType *composite_basic_types(struct RCContext *c, const struct RCCType *a, const struct RCCType *b);
 
-#define MAKE_BASIC_TYPE(kind_, rank_, unsigned_)                                                            \
+#define MAKE_BASIC_TYPE(kind_, type_, unsigned_)                                                            \
 	&(RCCType) {                                                                                            \
 		.kind = kind_, .is_basic = 1,                                                                       \
 		.tp_basic =                                                                                         \
 			{                                                                                               \
 				.is_unsigned = unsigned_,                                                                   \
-				.rank = rank_,                                                                              \
+				.rank = (unsigned int)sizeof(type_),                                                        \
 			},                                                                                              \
 		.same = same_basic_types, .compatible = compatible_basic_types, .composite = composite_basic_types, \
 	}
@@ -37,21 +37,21 @@ RCCType *Tp_Void = &(RCCType){
 	.composite = composite_basic_types,
 };
 
-RCCType *Tp_Bool = MAKE_BASIC_TYPE(TP_BOOL, 1u, false);
-RCCType *Tp_Char = MAKE_BASIC_TYPE(TP_CHAR, 1u, false);
-RCCType *Tp_UChar = MAKE_BASIC_TYPE(TP_CHAR, 1u, true);
-RCCType *Tp_Short = MAKE_BASIC_TYPE(TP_SHORT, 2u, false);
-RCCType *Tp_UShort = MAKE_BASIC_TYPE(TP_SHORT, 2u, true);
-RCCType *Tp_Int = MAKE_BASIC_TYPE(TP_INT, 4u, false);
-RCCType *Tp_UInt = MAKE_BASIC_TYPE(TP_INT, 4u, true);
-RCCType *Tp_Long = MAKE_BASIC_TYPE(TP_LONG, 4u, false);
-RCCType *Tp_ULong = MAKE_BASIC_TYPE(TP_LONG, 4u, true);
-RCCType *Tp_LLong = MAKE_BASIC_TYPE(TP_LLONG, 8u, false);
-RCCType *Tp_ULLong = MAKE_BASIC_TYPE(TP_LLONG, 8u, true);
+RCCType *Tp_Bool = MAKE_BASIC_TYPE(TP_BOOL, bool, false);
+RCCType *Tp_Char = MAKE_BASIC_TYPE(TP_CHAR, char, false);
+RCCType *Tp_UChar = MAKE_BASIC_TYPE(TP_CHAR, unsigned char, true);
+RCCType *Tp_Short = MAKE_BASIC_TYPE(TP_SHORT, short, false);
+RCCType *Tp_UShort = MAKE_BASIC_TYPE(TP_SHORT, unsigned short, true);
+RCCType *Tp_Int = MAKE_BASIC_TYPE(TP_INT, int, false);
+RCCType *Tp_UInt = MAKE_BASIC_TYPE(TP_INT, unsigned int, true);
+RCCType *Tp_Long = MAKE_BASIC_TYPE(TP_LONG, long, false);
+RCCType *Tp_ULong = MAKE_BASIC_TYPE(TP_LONG, unsigned long, true);
+RCCType *Tp_LLong = MAKE_BASIC_TYPE(TP_LLONG, long long, false);
+RCCType *Tp_ULLong = MAKE_BASIC_TYPE(TP_LLONG, unsigned long long, true);
 
-RCCType *Tp_Float = MAKE_BASIC_TYPE(TP_FLOAT, 4u, false);
-RCCType *Tp_Double = MAKE_BASIC_TYPE(TP_DOUBLE, 8u, false);
-RCCType *Tp_LDouble = MAKE_BASIC_TYPE(TP_LDOUBLE, 16u, false);
+RCCType *Tp_Float = MAKE_BASIC_TYPE(TP_FLOAT, float, false);
+RCCType *Tp_Double = MAKE_BASIC_TYPE(TP_DOUBLE, double, false);
+RCCType *Tp_LDouble = MAKE_BASIC_TYPE(TP_LDOUBLE, long double, false);
 
 RCCType *Tp_Variadic = &(RCCType){
 	.kind = TP_VARIADIC,

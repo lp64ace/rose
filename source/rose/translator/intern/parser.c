@@ -461,7 +461,7 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 	if(type->kind == TP_STRUCT) {
 		unsigned long long size = 0;
 		unsigned long long bitfield = 0;
-		unsigned long long alignment = 1;
+		unsigned long long alignment = 0;
 		
 		const RCCTypeStruct *s = &type->tp_struct;
 		LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
@@ -673,7 +673,7 @@ const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token
 						ERROR(P, token, "expected a constant expression");
 						return NULL;
 					}
-					info->align = RT_node_evaluate_integer(expr);
+					info->align = (int)RT_node_evaluate_integer(expr);
 				}
 			}
 			if(!skip(P, &token, token, ")")) {
@@ -1148,7 +1148,7 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 					ERROR(P, token, "expected a constant expression");
 					return NULL;
 				}
-				long long width = RT_node_evaluate_integer(expr);
+				int width = (int)RT_node_evaluate_integer(expr);
 				if (!RT_type_struct_add_bitfield(P->context, type, field->identifier, field->type, info.align, width)) {
 					ERROR(P, token, "invalid struct field");
 					return NULL;
@@ -1998,14 +1998,14 @@ ROSE_INLINE bool funcvars(RCCParser *P, RCCObject *func) {
 
 	const RCCTypeFunction *type = &func->type->tp_function;
 	LISTBASE_FOREACH(const RCCTypeParameter *, param, &type->parameters) {
-		if (!param->name) {
+		if (!param->identifier) {
 			ERROR(P, func->identifier, "parameter name omitted");
 			return false;
 		}
 
-		RCCObject *var = RT_object_new_variable(P->context, param->type, param->name);
+		RCCObject *var = RT_object_new_variable(P->context, param->type, param->identifier);
 
-		if (!RT_scope_new_var(P->state->scope, param->name, var)) {
+		if (!RT_scope_new_var(P->state->scope, param->identifier, var)) {
 			return false;
 		}
 	}

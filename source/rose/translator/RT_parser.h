@@ -18,19 +18,19 @@ extern "C" {
 typedef struct RCCState RCCState;
 
 typedef struct DeclInfo {
-	unsigned char is_typedef : 1;
-	unsigned char is_static : 1;
-	unsigned char is_extern : 1;
-	unsigned char is_inline : 1;
+	bool is_typedef;
+	bool is_static;
+	bool is_extern;
+	bool is_inline;
 	
-	long long align;
+	int align;
 } DeclInfo;
 
 typedef struct RCConfiguration {
 	const struct RCCType *tp_size;
 	const struct RCCType *tp_enum;
 
-	unsigned long long align;
+	int align;
 } RCConfiguration;
 
 typedef struct RCCParser {
