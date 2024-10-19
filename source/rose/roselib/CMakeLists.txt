@@ -23,6 +23,7 @@ set(INC_SYS
 
 set(SRC
 	LIB_assert.h
+	LIB_endian_switch.h
 	LIB_ghash.h
 	LIB_hash_mm2a.h
 	LIB_listbase.h
@@ -39,6 +40,7 @@ set(SRC
 	algorithm/rabin_karp.h
 	
 	intern/assert.c
+	intern/endian_switch.c
 	intern/ghash.c
 	intern/ghash_utils.c
 	intern/hash_mm2a.c
@@ -92,6 +94,7 @@ set(INC_SYS
 # Define Source Files (Test)
 
 set(TEST
+	test/endian.cc
 	test/ghash.cc
 	test/listbase.cc
 	test/math_bit.cc
