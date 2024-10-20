@@ -140,6 +140,17 @@ RCCType *RT_type_new_struct(RCContext *C, const RCCToken *identifier) {
 /** \name Util Methods
  * \{ */
 
+const RCCField *RT_type_struct_field_first(const RCCType *s) {
+	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == true);
+
+	return (const RCCField *)s->tp_struct.fields.first;
+}
+const RCCField *RT_type_struct_field_last(const RCCType *s) {
+	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == true);
+
+	return (const RCCField *)s->tp_struct.fields.last;
+}
+
 bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, int alignment) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
