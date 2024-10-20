@@ -50,8 +50,7 @@ ROSE_INLINE bool sdna_write(struct SDNA *sdna, void **rest, void *ptr, const voi
 	}
 	return false;
 }
-
-ROSE_INLINE bool sdna_read(struct SDNA *sdna, const void **rest, const void *ptr, void *mem, size_t length, bool fix) {
+ROSE_INLINE bool sdna_read(const struct SDNA *sdna, const void **rest, const void *ptr, void *mem, size_t length, bool fix) {
 	ptrdiff_t offset = ((const char *)ptr) - ((const char *)sdna->data);
 	if(POINTER_OFFSET(sdna->data, offset + length) <= POINTER_OFFSET(sdna->data, sdna->length)) {
 		memcpy(mem, POINTER_OFFSET(sdna->data, offset), length);
@@ -64,20 +63,6 @@ ROSE_INLINE bool sdna_read(struct SDNA *sdna, const void **rest, const void *ptr
 	return false;
 }
 
-ROSE_INLINE bool sdna_read_type_array(struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeArray *array) {
-	bool status = true;
-	status &= DNA_sdna_read_type(sdna, &ptr, ptr, &array->element_type);
-	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &array->boundary);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_constant);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_restricted);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_volatile);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_atomic);
-	status &= DNA_sdna_read_ull(sdna, &ptr, ptr, &array->length);
-	if(status) {
-		*rest = ptr;
-	}
-	return status;
-}
 ROSE_INLINE bool sdna_write_type_array(struct SDNA *sdna, void **rest, void *ptr, const RCCTypeArray *array) {
 	bool status = true;
 	status &= DNA_sdna_write_type(sdna, &ptr, ptr, array->element_type);
@@ -92,16 +77,21 @@ ROSE_INLINE bool sdna_write_type_array(struct SDNA *sdna, void **rest, void *ptr
 	}
 	return status;
 }
-
-ROSE_INLINE bool sdna_read_type_basic(struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeBasic *basic) {
+ROSE_INLINE bool sdna_read_type_array(const struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeArray *array) {
 	bool status = true;
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &basic->is_unsigned);
-	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &basic->rank);
+	status &= DNA_sdna_read_type(sdna, &ptr, ptr, &array->element_type);
+	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &array->boundary);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_constant);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_restricted);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_volatile);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &array->qualification.is_atomic);
+	status &= DNA_sdna_read_ull(sdna, &ptr, ptr, &array->length);
 	if(status) {
 		*rest = ptr;
 	}
 	return status;
 }
+
 ROSE_INLINE bool sdna_write_type_basic(struct SDNA *sdna, void **rest, void *ptr, const RCCTypeBasic *basic) {
 	bool status = true;
 	status &= DNA_sdna_write_bool(sdna, &ptr, ptr, basic->is_unsigned);
@@ -111,26 +101,23 @@ ROSE_INLINE bool sdna_write_type_basic(struct SDNA *sdna, void **rest, void *ptr
 	}
 	return status;
 }
-
-ROSE_INLINE bool sdna_read_type_ptr(struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **base) {
-	return DNA_sdna_read_type(sdna, rest, ptr, base);
-}
-ROSE_INLINE bool sdna_write_type_ptr(struct SDNA *sdna, void **rest, void *ptr, const RCCType *base) {
-	return DNA_sdna_write_type(sdna, rest, ptr, base);
-}
-
-ROSE_INLINE bool sdna_read_type_qual(struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeQualified *qual) {
+ROSE_INLINE bool sdna_read_type_basic(const struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeBasic *basic) {
 	bool status = true;
-	status &= DNA_sdna_read_type(sdna, &ptr, ptr, &qual->base);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_constant);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_restricted);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_volatile);
-	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_atomic);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &basic->is_unsigned);
+	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &basic->rank);
 	if(status) {
 		*rest = ptr;
 	}
 	return status;
 }
+
+ROSE_INLINE bool sdna_write_type_ptr(struct SDNA *sdna, void **rest, void *ptr, const RCCType *base) {
+	return DNA_sdna_write_type(sdna, rest, ptr, base);
+}
+ROSE_INLINE bool sdna_read_type_ptr(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **base) {
+	return DNA_sdna_read_type(sdna, rest, ptr, base);
+}
+
 ROSE_INLINE bool sdna_write_type_qual(struct SDNA *sdna, void **rest, void *ptr, const RCCTypeQualified *qual) {
 	bool status = true;
 	status &= DNA_sdna_write_type(sdna, &ptr, ptr, qual->base);
@@ -143,8 +130,39 @@ ROSE_INLINE bool sdna_write_type_qual(struct SDNA *sdna, void **rest, void *ptr,
 	}
 	return status;
 }
+ROSE_INLINE bool sdna_read_type_qual(const struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeQualified *qual) {
+	bool status = true;
+	status &= DNA_sdna_read_type(sdna, &ptr, ptr, &qual->base);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_constant);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_restricted);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_volatile);
+	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_atomic);
+	if(status) {
+		*rest = ptr;
+	}
+	return status;
+}
 
-ROSE_INLINE bool sdna_read_type_struct(struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeStruct *strct) {
+ROSE_INLINE bool sdna_write_type_struct(struct SDNA *sdna, void **rest, void *ptr, const RCCTypeStruct *strct) {
+	bool status = true;
+	
+	int length = (int)LIB_listbase_count(&strct->fields);
+	status &= DNA_sdna_write_token(sdna, &ptr, ptr, strct->identifier);
+	status &= DNA_sdna_write_bool(sdna, &ptr, ptr, strct->is_complete);
+	status &= DNA_sdna_write_i32(sdna, &ptr, ptr, length);
+	LISTBASE_FOREACH(const RCCField *, field, &strct->fields) {
+		status &= DNA_sdna_write_token(sdna, &ptr, ptr, field->identifier);
+		status &= DNA_sdna_write_type(sdna, &ptr, ptr, field->type);
+		status &= DNA_sdna_write_i32(sdna, &ptr, ptr, field->alignment);
+		status &= DNA_sdna_write_bool(sdna, &ptr, ptr, field->properties.is_bitfield);
+		status &= DNA_sdna_write_i32(sdna, &ptr, ptr, field->properties.width);
+	}
+	if(status) {
+		*rest = ptr;
+	}
+	return status;
+}
+ROSE_INLINE bool sdna_read_type_struct(const struct SDNA *sdna, const void **rest, const void *ptr, RCCTypeStruct *strct) {
 	bool status = true;
 	
 	int length;
@@ -159,25 +177,8 @@ ROSE_INLINE bool sdna_read_type_struct(struct SDNA *sdna, const void **rest, con
 		status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &field->alignment);
 		status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &field->properties.is_bitfield);
 		status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &field->properties.width);
-	}
-	if(status) {
-		*rest = ptr;
-	}
-	return status;
-}
-ROSE_INLINE bool sdna_write_type_struct(struct SDNA *sdna, void **rest, void *ptr, const RCCTypeStruct *strct) {
-	bool status = true;
-	
-	int length = (int)LIB_listbase_count(&strct->fields);
-	status &= DNA_sdna_write_token(sdna, &ptr, ptr, strct->identifier);
-	status &= DNA_sdna_write_bool(sdna, &ptr, ptr, strct->is_complete);
-	status &= DNA_sdna_write_i32(sdna, &ptr, ptr, length);
-	LISTBASE_FOREACH(const RCCField *, field, &strct->fields) {
-		status &= DNA_sdna_write_token(sdna, &ptr, ptr, field->identifier);
-		status &= DNA_sdna_write_type(sdna, &ptr, ptr, field->type);
-		status &= DNA_sdna_write_i32(sdna, &ptr, ptr, field->alignment);
-		status &= DNA_sdna_write_bool(sdna, &ptr, ptr, field->properties.is_bitfield);
-		status &= DNA_sdna_write_i32(sdna, &ptr, ptr, field->properties.width);
+
+		LIB_addtail(&strct->fields, field);
 	}
 	if(status) {
 		*rest = ptr;
@@ -351,33 +352,33 @@ bool DNA_sdna_write_token(struct SDNA *sdna, void **rest, void *ptr, const RCCTo
 /** \name Read DNA
  * \{ */
 
-bool DNA_sdna_read_word(struct SDNA *sdna, const void **rest, const void *ptr, int word) {
+bool DNA_sdna_read_word(const struct SDNA *sdna, const void **rest, const void *ptr, int word) {
 	int read;
 	if (sdna_read(sdna, rest, ptr, &read, 4, false)) {
 		return read == word;
 	}
 	return false;
 }
-bool DNA_sdna_read_i16(struct SDNA *sdna, const void **rest, const void *ptr, int16_t *word) {
+bool DNA_sdna_read_i16(const struct SDNA *sdna, const void **rest, const void *ptr, int16_t *word) {
 	return sdna_read(sdna, rest, ptr, word, sizeof(*word), true);
 }
-bool DNA_sdna_read_i32(struct SDNA *sdna, const void **rest, const void *ptr, int32_t *word) {
+bool DNA_sdna_read_i32(const struct SDNA *sdna, const void **rest, const void *ptr, int32_t *word) {
 	return sdna_read(sdna, rest, ptr, word, sizeof(*word), true);
 }
-bool DNA_sdna_read_i64(struct SDNA *sdna, const void **rest, const void *ptr, int64_t *word) {
+bool DNA_sdna_read_i64(const struct SDNA *sdna, const void **rest, const void *ptr, int64_t *word) {
 	return sdna_read(sdna, rest, ptr, word, sizeof(*word), true);
 }
-bool DNA_sdna_read_u16(struct SDNA *sdna, const void **rest, const void *ptr, uint16_t *word) {
+bool DNA_sdna_read_u16(const struct SDNA *sdna, const void **rest, const void *ptr, uint16_t *word) {
 	return sdna_read(sdna, rest, ptr, word, sizeof(*word), true);
 }
-bool DNA_sdna_read_u32(struct SDNA *sdna, const void **rest, const void *ptr, uint32_t *word) {
+bool DNA_sdna_read_u32(const struct SDNA *sdna, const void **rest, const void *ptr, uint32_t *word) {
 	return sdna_read(sdna, rest, ptr, word, sizeof(*word), true);
 }
-bool DNA_sdna_read_u64(struct SDNA *sdna, const void **rest, const void *ptr, uint64_t *word) {
+bool DNA_sdna_read_u64(const struct SDNA *sdna, const void **rest, const void *ptr, uint64_t *word) {
 	return sdna_read(sdna, rest, ptr, word, sizeof(*word), true);
 }
 
-bool DNA_sdna_read_ull(struct SDNA *sdna, const void **rest, const void *ptr, unsigned long long *word) {
+bool DNA_sdna_read_ull(const struct SDNA *sdna, const void **rest, const void *ptr, unsigned long long *word) {
 	uint64_t u64;
 	if (DNA_sdna_read_u64(sdna, rest, ptr, &u64)) {
 		*word = (unsigned long long)u64;
@@ -385,7 +386,7 @@ bool DNA_sdna_read_ull(struct SDNA *sdna, const void **rest, const void *ptr, un
 	}
 	return false;
 }
-bool DNA_sdna_read_bool(struct SDNA *sdna, const void **rest, const void *ptr, bool *word) {
+bool DNA_sdna_read_bool(const struct SDNA *sdna, const void **rest, const void *ptr, bool *word) {
 	int32_t value = 0;
 	if(DNA_sdna_read_i32(sdna, rest, ptr, &value)) {
 		*word = (value) ? true : false;
@@ -393,7 +394,7 @@ bool DNA_sdna_read_bool(struct SDNA *sdna, const void **rest, const void *ptr, b
 	}
 	return false;
 }
-bool DNA_sdna_read_str(struct SDNA *sdna, const void **rest, const void *ptr, char *word) {
+bool DNA_sdna_read_str(const struct SDNA *sdna, const void **rest, const void *ptr, char *word) {
 	size_t length = LIB_strnlen(ptr, 65);
 	if(length <= 64) {
 		return sdna_read(sdna, rest, ptr, word, length + 1, false);
@@ -401,7 +402,7 @@ bool DNA_sdna_read_str(struct SDNA *sdna, const void **rest, const void *ptr, ch
 	return false;
 }
 
-bool DNA_sdna_read_type(struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **tp) {
+bool DNA_sdna_read_type(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **tp) {
 	bool status = true;
 
 	uint64_t addr = (uint64_t)NULL;
@@ -445,7 +446,7 @@ bool DNA_sdna_read_type(struct SDNA *sdna, const void **rest, const void *ptr, c
 	}
 	return status;
 }
-bool DNA_sdna_read_token(struct SDNA *sdna, const void **rest, const void *ptr, const RCCToken **tok) {
+bool DNA_sdna_read_token(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCToken **tok) {
 	bool status = true;
 
 	{
@@ -466,7 +467,7 @@ bool DNA_sdna_read_token(struct SDNA *sdna, const void **rest, const void *ptr, 
 /** \name Util Methods
  * \{ */
 
-bool DNA_sdna_needs_endian_swap(struct SDNA *sdna) {
+bool DNA_sdna_needs_endian_swap(const struct SDNA *sdna) {
 	const void *ptr = sdna->data;
 	if (!DNA_sdna_read_word(sdna, &ptr, ptr, MAKE_ID4('S', 'D', 'N', 'A'))) {
 		ROSE_assert_msg(0, "Invalid SDNA data!");
@@ -486,7 +487,7 @@ bool DNA_sdna_needs_endian_swap(struct SDNA *sdna) {
 #endif
 }
 
-bool DNA_sdna_check(struct SDNA *sdna) {
+bool DNA_sdna_check(const struct SDNA *sdna) {
 	SDNA *ndna = DNA_sdna_new_memory(sdna->data, sdna->length);
 
 	const void *ptr = POINTER_OFFSET(ndna->data, 8);

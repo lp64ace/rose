@@ -70,6 +70,7 @@ rose_target_include_dirs(makedna "${INC}")
 add_custom_command(
 	OUTPUT
 		${CMAKE_CURRENT_BINARY_DIR}/dna.c
+		${CMAKE_CURRENT_BINARY_DIR}/verify.c
 	COMMAND
 		"$<TARGET_FILE:makedna>"
 			"--src" "${CMAKE_SOURCE_DIR}/source/rose/makedna"
@@ -108,6 +109,7 @@ set(SRC
 	${DNA_DEFAULT_HEADERS}
 	
 	${CMAKE_CURRENT_BINARY_DIR}/dna.c
+	${CMAKE_CURRENT_BINARY_DIR}/verify.c
 	
 	${DNA_HEADER_INC_FILE}
 	${DNA_HEADER_STR_FILE}
@@ -118,6 +120,7 @@ set(SRC
 
 set(LIB
 	# Internal Library Dependencies
+	rose::source::roselib
 	
 	# External Library Dependencies
 )

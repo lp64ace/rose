@@ -61,6 +61,9 @@ struct RCCType *RT_type_new_struct(struct RCContext *, const struct RCCToken *id
 /** \name Util Methods
  * \{ */
 
+const struct RCCField *RT_type_struct_field_first(const struct RCCType *);
+const struct RCCField *RT_type_struct_field_last(const struct RCCType *);
+
 bool RT_type_struct_add_field(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment);
 bool RT_type_struct_add_bitfield(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment, int width);
 

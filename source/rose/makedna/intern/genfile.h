@@ -68,20 +68,20 @@ bool DNA_sdna_write_token(struct SDNA *sdna, void **rest, void *ptr, const RCCTo
 /** \name Read DNA
  * \{ */
 
-bool DNA_sdna_read_word(struct SDNA *sdna, const void **rest, const void *ptr, int word);
-bool DNA_sdna_read_i16(struct SDNA *sdna, const void **rest, const void *ptr, int16_t *word);
-bool DNA_sdna_read_i32(struct SDNA *sdna, const void **rest, const void *ptr, int32_t *word);
-bool DNA_sdna_read_i64(struct SDNA *sdna, const void **rest, const void *ptr, int64_t *word);
-bool DNA_sdna_read_u16(struct SDNA *sdna, const void **rest, const void *ptr, uint16_t *word);
-bool DNA_sdna_read_u32(struct SDNA *sdna, const void **rest, const void *ptr, uint32_t *word);
-bool DNA_sdna_read_u64(struct SDNA *sdna, const void **rest, const void *ptr, uint64_t *word);
+bool DNA_sdna_read_word(const struct SDNA *sdna, const void **rest, const void *ptr, int word);
+bool DNA_sdna_read_i16(const struct SDNA *sdna, const void **rest, const void *ptr, int16_t *word);
+bool DNA_sdna_read_i32(const struct SDNA *sdna, const void **rest, const void *ptr, int32_t *word);
+bool DNA_sdna_read_i64(const struct SDNA *sdna, const void **rest, const void *ptr, int64_t *word);
+bool DNA_sdna_read_u16(const struct SDNA *sdna, const void **rest, const void *ptr, uint16_t *word);
+bool DNA_sdna_read_u32(const struct SDNA *sdna, const void **rest, const void *ptr, uint32_t *word);
+bool DNA_sdna_read_u64(const struct SDNA *sdna, const void **rest, const void *ptr, uint64_t *word);
 
-bool DNA_sdna_read_ull(struct SDNA *sdna, const void **rest, const void *ptr, unsigned long long *word);
-bool DNA_sdna_read_bool(struct SDNA *sdna, const void **rest, const void *ptr, bool *word);
-bool DNA_sdna_read_str(struct SDNA *sdna, const void **rest, const void *ptr, char *word);
+bool DNA_sdna_read_ull(const struct SDNA *sdna, const void **rest, const void *ptr, unsigned long long *word);
+bool DNA_sdna_read_bool(const struct SDNA *sdna, const void **rest, const void *ptr, bool *word);
+bool DNA_sdna_read_str(const struct SDNA *sdna, const void **rest, const void *ptr, char *word);
 
-bool DNA_sdna_read_type(struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **tp);
-bool DNA_sdna_read_token(struct SDNA *sdna, const void **rest, const void *ptr, const RCCToken **tok);
+bool DNA_sdna_read_type(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **tp);
+bool DNA_sdna_read_token(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCToken **tok);
 
 /** \} */
 
@@ -90,8 +90,8 @@ bool DNA_sdna_read_token(struct SDNA *sdna, const void **rest, const void *ptr, 
  * \{ */
 
 /** Returns true when the endianess of the specified `sdna` is different than the current. */
-bool DNA_sdna_needs_endian_swap(struct SDNA *sdna);
-bool DNA_sdna_check(struct SDNA *sdna);
+bool DNA_sdna_needs_endian_swap(const struct SDNA *sdna);
+bool DNA_sdna_check(const struct SDNA *sdna);
 
 /** \} */
 
