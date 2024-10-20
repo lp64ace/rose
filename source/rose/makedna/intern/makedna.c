@@ -30,8 +30,6 @@ const char *header_typedef[] = {
 const char *source = NULL;
 const char *binary = NULL;
 
-GSet *written;
-
 ROSE_INLINE void help(const char *program_name) {
 	fprintf(stderr, "Invalid argument list!\n\n");
 	fprintf(stderr, "Usage:\n");
@@ -53,7 +51,7 @@ ROSE_INLINE bool init(int argc, char **argv) {
 	return source && binary; // Return true only if both arguments are provided
 }
 
-ROSE_INLINE bool build(const char *filepath, SDNA *sdna) {
+ROSE_INLINE bool build_dna_c(const char *filepath, SDNA *sdna) {
 	FILE *file = fopen(filepath, "w");
 	if (!file) {
 		fprintf(stderr, "Failed to open file '%s' for writing.\n", filepath);
@@ -77,6 +75,61 @@ ROSE_INLINE bool build(const char *filepath, SDNA *sdna) {
 	fprintf(file, "\n};\n");
 	fprintf(file, "extern const int DNAlen;\n");
 	fprintf(file, "const int DNAlen = sizeof(DNAstr);\n");
+
+	fclose(file);
+	return true;
+}
+
+ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
+	FILE *file = fopen(filepath, "w");
+	if (!file) {
+		fprintf(stderr, "Failed to open file '%s' for writing.\n", filepath);
+		return false;
+	}
+	
+	// Write a warning header into the generated file
+	fprintf(file, "/* Auto-generated file. Do not edit manually. */\n");
+	fprintf(file, "\n");
+	fprintf(file, "#include \"DNA_include_all.h\"\n");
+	fprintf(file, "\n");
+	fprintf(file, "#include \"LIB_utildefines.h\"\n");
+
+	RCCParser *parser = RT_parser_new(NULL);
+	{
+		SDNA *ndna = DNA_sdna_new_memory(sdna->data, sdna->length);
+
+		const void *ptr = POINTER_OFFSET(ndna->data, 8);
+		while (ptr < POINTER_OFFSET(ndna->data, ndna->length)) {
+			const RCCToken *token;
+			if (!DNA_sdna_read_token(ndna, &ptr, ptr, &token)) {
+				RT_parser_free(parser);
+				return false;
+			}
+			const RCCType *type;
+			if (!DNA_sdna_read_type(ndna, &ptr, ptr, &type)) {
+				RT_parser_free(parser);
+				return false;
+			}
+
+			if (type->kind != TP_STRUCT) {
+				continue;
+			}
+
+			fprintf(file, "\n");
+			fprintf(file, "ROSE_STATIC_ASSERT(");
+			fprintf(file, "sizeof(%s) == %llu, ", RT_token_as_string(token), RT_parser_size(parser, type));
+			fprintf(file, "\"DNA type size verify\");\n");
+
+			for (const RCCField *field = RT_type_struct_field_first(type); field; field = field->next) {
+				fprintf(file, "ROSE_STATIC_ASSERT(");
+				fprintf(file, "offsetof(%s, %s) == %llu, ", RT_token_as_string(token), RT_token_as_string(field->identifier), RT_parser_offsetof(parser, type, field));
+				fprintf(file, "\"DNA field offset verify\");\n");
+			}
+		}
+
+		DNA_sdna_free(ndna);
+	}
+	RT_parser_free(parser);
 
 	fclose(file);
 	return true;
@@ -125,12 +178,21 @@ int main(int argc, char **argv) {
 	}
 
 	ROSE_assert(DNA_sdna_check(sdna));
-	
+
+	LIB_strcpy(path, ARRAY_SIZE(path), binary);
+	LIB_strcat(path, ARRAY_SIZE(path), "/");
+	LIB_strcat(path, ARRAY_SIZE(path), "verify.c");
+
+	if (!build_verify_c(path, sdna)) {
+		DNA_sdna_free(sdna);
+		return -1;
+	}
+
 	LIB_strcpy(path, ARRAY_SIZE(path), binary);
 	LIB_strcat(path, ARRAY_SIZE(path), "/");
 	LIB_strcat(path, ARRAY_SIZE(path), "dna.c");
 	
-	if(!build(path, sdna)) {
+	if(!build_dna_c(path, sdna)) {
 		DNA_sdna_free(sdna);
 		return -1;
 	}
