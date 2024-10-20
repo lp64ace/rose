@@ -177,6 +177,8 @@ ROSE_INLINE bool sdna_read_type_struct(const struct SDNA *sdna, const void **res
 		status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &field->alignment);
 		status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &field->properties.is_bitfield);
 		status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &field->properties.width);
+
+		LIB_addtail(&strct->fields, field);
 	}
 	if(status) {
 		*rest = ptr;
