@@ -119,6 +119,14 @@ long double RT_token_as_ldouble(const RCCToken *tok);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Util Methods
+ * \{ */
+
+const char *RT_token_working_directory(const RCCToken *tok);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

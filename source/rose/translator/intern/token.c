@@ -535,3 +535,16 @@ long double RT_token_as_ldouble(const RCCToken *tok) {
 }
 
 /** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Util Methods
+ * \{ */
+
+const char *RT_token_working_directory(const RCCToken *tok) {
+	if(tok->file) {
+		return RT_file_path(tok->file);
+	}
+	return "";
+}
+
+/** \} */
