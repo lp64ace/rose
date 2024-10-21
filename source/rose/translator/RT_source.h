@@ -34,7 +34,10 @@ typedef struct RCCSLoc {
 /** \name File Cache
  * \{ */
 
+RCCFileCache *RT_fcache_new_ex(struct RCContext *, const char *path, const char *content, size_t length);
 RCCFileCache *RT_fcache_new(const char *path, const char *content, size_t length);
+
+RCCFileCache *RT_fcache_read_ex(struct RCContext *, const char *path);
 RCCFileCache *RT_fcache_read(const char *path);
 
 void RT_fcache_free(RCCFileCache *cache);
@@ -45,6 +48,7 @@ void RT_fcache_free(RCCFileCache *cache);
 /** \name Main Functions
  * \{ */
 
+RCCFile *RT_file_new_ex(struct RCContext *, const char *name, const RCCFileCache *cache);
 RCCFile *RT_file_new(const char *name, const RCCFileCache *cache);
 
 const char *RT_file_name(const RCCFile *file);

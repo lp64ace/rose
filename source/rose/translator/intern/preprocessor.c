@@ -304,6 +304,45 @@ ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *toke
 	}
 }
 
+ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
+	if(local) {
+		RCCToken *fname = token;
+		
+		char path[512] = { '\0' };
+		
+		LIB_strcat(path, ARRAY_SIZE(path), RT_token_working_directory(token));
+		LIB_strcat(path, ARRAY_SIZE(path), RT_token_string(fname));
+		
+		RCCFileCache *cache = RT_fcache_read_ex(P->context, path);
+		RCCFile *file = RT_file_new_ex(P->context, NULL, cache);
+		
+		ListBase ntokens;
+		LIB_listbase_clear(&ntokens);
+		RT_parser_tokenize(P->context, &ntokens, file);
+		
+		token = next_line(token->next);
+		
+		RCCToken *ntoken;
+		while(ntoken = LIB_pophead(&ntokens)) {
+			token->prev->next = ntoken;
+			ntoken->prev = token->prev;
+			ntoken->next = token;
+			token->prev = ntoken;
+		}
+	}
+	else {
+		if(!skip(P, &token, token, "<")) {
+			return;
+		}
+		
+		ROSE_assert_unreachable();
+		
+		if(!skip(P, &token, token, ">")) {
+			return;
+		}
+	}
+}
+
 ROSE_STATIC RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *token) {
 	while (token->kind != TOK_EOF) {
 		if (directive(token)) {
@@ -366,6 +405,16 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 			break;
 		}
 		
+		if(is(itr, "include") && ELEM(itr->next->kind, TOK_STRING)) {
+			include_do(preprocessor, itr->next, true);
+			itr = next_line(itr->next);
+			continue;
+		}
+		if(is(itr, "include") && is(itr->next, "<")) {
+			include_do(preprocessor, itr->next, false);
+			itr = next_line(itr->next);
+			continue;
+		}
 		if(is(itr, "define")) {
 			macro_dodef(preprocessor, &itr, itr->next);
 			continue;
