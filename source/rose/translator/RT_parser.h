@@ -113,6 +113,8 @@ const struct RCCNode *RT_parser_stmt(struct RCCParser *P, struct RCCToken **rest
 unsigned long long RT_parser_size(struct RCCParser *P, const struct RCCType *type);
 unsigned long long RT_parser_offsetof(struct RCCParser *P, const struct RCCType *type, const struct RCCField *field);
 
+void RT_parser_tokenize(struct RCContext *C, struct ListBase *lb, const struct RCCFile *file);
+
 /** \} */
 
 #ifdef __cplusplus
