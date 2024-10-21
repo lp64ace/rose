@@ -14,13 +14,6 @@ extern "C" {
 typedef struct RCCFileCache RCCFileCache;
 typedef struct RCCFile RCCFile;
 
-enum {
-	FILE_NONE,
-	FILE_C,
-	FILE_ASM,
-	FILE_OBJ,
-};
-
 typedef struct RCCSLoc {
 	const char *p;
 
