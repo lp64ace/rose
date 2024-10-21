@@ -110,6 +110,7 @@ const struct RCCNode *RT_parser_logor(struct RCCParser *P, struct RCCToken **res
 const struct RCCNode *RT_parser_expr(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
 const struct RCCNode *RT_parser_stmt(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
 
+unsigned long long RT_parser_alignof(struct RCCParser *P, const struct RCCType *type);
 unsigned long long RT_parser_size(struct RCCParser *P, const struct RCCType *type);
 unsigned long long RT_parser_offsetof(struct RCCParser *P, const struct RCCType *type, const struct RCCField *field);
 

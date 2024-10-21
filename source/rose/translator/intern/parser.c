@@ -441,7 +441,7 @@ ROSE_INLINE unsigned long long align(RCConfiguration *config, unsigned long long
 	return size;
 }
 
-unsigned long long RT_parser_align(RCCParser *P, const RCCType *type) {
+unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
 	if (type->is_basic) {
 		// Basic types: just return their rank as size.
 		return (unsigned long long)type->tp_basic.rank;
@@ -463,10 +463,10 @@ unsigned long long RT_parser_align(RCCParser *P, const RCCType *type) {
 			unsigned long long field_alignment = field->alignment;
 
 			if (field_alignment == 0) {
-				field_alignment = RT_parser_align(P, field->type);
+				field_alignment = RT_parser_alignof(P, field->type);
 			}
 
-			alignment = ROSE_MAX(alignment, field->alignment);
+			alignment = ROSE_MAX(alignment, field_alignment);
 		}
 
 		return alignment;
@@ -503,7 +503,7 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 			unsigned long long field_alignment = field->alignment;
 
 			if (field_alignment == 0) {
-				field_alignment = RT_parser_align(P, field->type);
+				field_alignment = RT_parser_alignof(P, field->type);
 			}
 
 			if (field->properties.is_bitfield) {
