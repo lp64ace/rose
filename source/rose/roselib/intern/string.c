@@ -51,6 +51,13 @@ char *LIB_strcpy(char *dst, size_t dst_maxncpy, const char *src) {
 	dst[len] = '\0';
 	return dst;
 }
+size_t LIB_strcpy_rlen(char *dst, size_t dst_maxncpy, const char *src) {
+	size_t len = LIB_strnlen(src, dst_maxncpy - 1);
+
+	memcpy(dst, src, len);
+	dst[len] = '\0';
+	return len;
+}
 
 char *LIB_strncpy(char *dst, size_t dst_maxncpy, const char *src, size_t length) {
 	size_t len = LIB_strnlen(src, ROSE_MIN(length, dst_maxncpy - 1));
