@@ -14,7 +14,6 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
-	${PTHREADS_INCLUDE_DIRS}
 	
 )
 
@@ -22,24 +21,13 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	KER_global.h
-	KER_idprop.h
-	KER_idtype.h
-	KER_lib_id.h
-	KER_lib_query.h
-	KER_lib_remap.h
-	KER_library.h
-	KER_main.h
-	KER_rose.h
-
-	intern/idprop.c
-	intern/idtype.c
-	intern/lib_id.c
-	intern/lib_query.c
-	intern/lib_remap.c
-	intern/library.c
-	intern/main.c
-	intern/rose.c
+	WM_api.h
+	WM_draw.h
+	WM_window.h
+	
+	intern/wm.c
+	intern/wm_draw.c
+	intern/wm_window.c
 )
 
 # -----------------------------------------------------------------------------
@@ -48,8 +36,8 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	PUBLIC rose::source::roselib
-	PUBLIC rose::source::dna
+	rose::source::roselib
+	rose::source::rosekernel
 	
 	# External Library Dependencies
 	
@@ -58,5 +46,16 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(rosekernel "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::rosekernel ALIAS rosekernel)
+rose_add_lib(windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::source::windowmanager ALIAS windowmanager)
+
+# -----------------------------------------------------------------------------
+# Define Include Directories (Test)
+
+set(INC
+	# Internal Include Directories
+	PUBLIC .
+	
+	# External Include Directories
+	
+)

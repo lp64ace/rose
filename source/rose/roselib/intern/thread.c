@@ -3,6 +3,10 @@
 #include "LIB_thread.h"
 #include "LIB_utildefines.h"
 
+#if defined(_MSC_VER)
+#	include <windows.h>
+#endif
+
 /* -------------------------------------------------------------------- */
 /** \name Mutex Lock
  * \{ */
