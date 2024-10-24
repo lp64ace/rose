@@ -157,7 +157,7 @@ ROSE_INLINE RCCMacro *macro_find(RCCPreprocessor *P, RCCToken *token) {
 ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken);
 
 ROSE_STATIC void paste_normal(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro) {
-	for(RCCToken *itr = (RCCToken *)macro->body.first; itr; itr = itr->next) {
+	for(RCCToken *itr = (RCCToken *)macro->body.first; itr->kind != TOK_EOF; itr = itr->next) {
 		if (!macro_expand(P, tokens, &itr, itr)) {
 			RCCToken *now = RT_token_duplicate(P->context, itr);
 		
@@ -167,7 +167,7 @@ ROSE_STATIC void paste_normal(RCCPreprocessor *P, ListBase *tokens, RCCMacro *ma
 }
 
 ROSE_STATIC void paste_fnlike(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro, RCCToken *params[64]) {
-	for (RCCToken *token = (RCCToken *)macro->body.first; token; token = token->next) {
+	for (RCCToken *token = (RCCToken *)macro->body.first; token->kind != TOK_EOF; token = token->next) {
 		size_t index = 0;
 		LISTBASE_FOREACH_INDEX(RCCMacroParameter *, parameter, &macro->parameters, index) {
 			if (RT_token_match(parameter->token, token)) {
