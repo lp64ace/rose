@@ -161,6 +161,15 @@ long long RT_node_evaluate_integer(const RCCNode *expr) {
 				case BINARY_OR: {
 					MANAGE_BINARY(long long, lhs, rhs, ||);
 				} break;
+				case BINARY_BITAND: {
+					return RT_node_evaluate_integer(lhs) & RT_node_evaluate_integer(rhs);
+				} break;
+				case BINARY_BITOR: {
+					return RT_node_evaluate_integer(lhs) | RT_node_evaluate_integer(rhs);
+				} break;
+				case BINARY_BITXOR: {
+					return RT_node_evaluate_integer(lhs) ^ RT_node_evaluate_integer(rhs);
+				} break;
 				case BINARY_LSHIFT: {
 					return RT_node_evaluate_integer(lhs) << RT_node_evaluate_integer(rhs);
 				} break;
