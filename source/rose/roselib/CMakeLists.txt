@@ -15,6 +15,7 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
+	${PTHREADS_INCLUDE_DIRS}
 	
 )
 
@@ -23,6 +24,7 @@ set(INC_SYS
 
 set(SRC
 	LIB_assert.h
+	LIB_bitmap.h
 	LIB_endian_switch.h
 	LIB_ghash.h
 	LIB_hash_mm2a.h
@@ -30,7 +32,9 @@ set(SRC
 	LIB_math_bit.h
 	LIB_memarena.h
 	LIB_mempool.h
+	LIB_path_utils.h
 	LIB_string.h
+	LIB_string_utils.h
 	LIB_sys_types.h
 	LIB_thread.h
 	LIB_utildefines.h
@@ -40,6 +44,7 @@ set(SRC
 	algorithm/rabin_karp.h
 	
 	intern/assert.c
+	intern/bitmap.c
 	intern/endian_switch.c
 	intern/ghash.c
 	intern/ghash_utils.c
@@ -48,7 +53,9 @@ set(SRC
 	intern/math_bit.c
 	intern/memarena.c
 	intern/mempool.c
+	intern/path_utils.c
 	intern/string.c
+	intern/string_utils.c
 	intern/thread.c
 	intern/utildefines.c
 )

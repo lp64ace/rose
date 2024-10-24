@@ -167,6 +167,10 @@ int main(int argc, char **argv) {
 			if(ELEM(node->kind, NODE_OBJECT) && ELEM(node->type, OBJ_TYPEDEF)) {
 				const RCCObject *object = RT_node_object(node);
 
+				if (object->type->kind != TP_STRUCT) {
+					continue;
+				}
+
 				status |= (!DNA_sdna_write_token(sdna, &ptr, ptr, object->identifier)) ? 0xe0 : 0x00;
 				status |= (!DNA_sdna_write_type(sdna, &ptr, ptr, object->type)) ? 0xe0 : 0x00;
 			}

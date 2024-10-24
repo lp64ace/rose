@@ -3,6 +3,7 @@
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
+#include "RT_context.h"
 #include "RT_source.h"
 
 #include <stdarg.h>
@@ -47,12 +48,7 @@ typedef struct RCCFile {
  */
 
 ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
-	/** Always include a new line at the end of the source code! */
 	const char *end = POINTER_OFFSET(content, *length);
-	if (end - LIB_strnext(content, end, content, '\n') > 1) {
-		content = MEM_reallocN(content, (*length) + 8);
-		((char *)content)[(*length)++] = '\n';
-	}
 	((char *)content)[(*length)] = '\0';
 	for (char *p = (char *)content; *p; p++) {
 		if ((ELEM(p[0], '\n') && ELEM(p[1], '\r')) || (ELEM(p[0], '\r') && ELEM(p[1], '\n'))) {
@@ -69,6 +65,40 @@ ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
 	return content;
 }
 
+ROSE_INLINE char *strndup_ex(RCContext *C, const char *str, size_t length) {
+	if(C) {
+		char *dup = RT_context_malloc(C, length + 1);
+		memcpy(dup, str, length);
+		dup[length] = '\0';
+		return dup;
+	}
+	return LIB_strndupN(str, length);
+}
+
+ROSE_INLINE char *strdup_ex(RCContext *C, const char *str) {
+	return strndup_ex(C, str, LIB_strlen(str));
+}
+
+RCCFileCache *RT_fcache_new_ex(RCContext *C, const char *path, const char *content, size_t length) {
+	RCCFileCache *cache = RT_context_calloc(C, sizeof(RCCFileCache));
+
+	const size_t plength = LIB_strlen(path);
+
+	const char *last = path, *now = NULL;
+	if ((now = LIB_strprev(path, path + plength, path + plength - 1, '\\')) > last) {
+		last = now + 1;
+	}
+	if ((now = LIB_strprev(path, path + plength, path + plength - 1, '/')) > last) {
+		last = now + 1;
+	}
+	cache->filename = strdup_ex(C, last);
+	cache->filepath = strndup_ex(C, path, last - path);
+
+	cache->content = fcache_content_molest(strndup_ex(C, content, length), &length);
+	cache->length = length;
+
+	return cache;
+}
 RCCFileCache *RT_fcache_new(const char *path, const char *content, size_t length) {
 	RCCFileCache *cache = MEM_callocN(sizeof(RCCFileCache), "RCCFileCache");
 
@@ -81,15 +111,42 @@ RCCFileCache *RT_fcache_new(const char *path, const char *content, size_t length
 	if ((now = LIB_strprev(path, path + plength, path + plength - 1, '/')) > last) {
 		last = now + 1;
 	}
-	cache->filename = LIB_strdupN(last);
-	cache->filepath = LIB_strdupN(path);
+	cache->filename = strdup_ex(NULL, last);
+	cache->filepath = strndup_ex(NULL, path, last - path);
 
-	cache->content = fcache_content_molest(LIB_strndupN(content, length), &length);
+	cache->content = fcache_content_molest(strndup_ex(NULL, content, length), &length);
 	cache->length = length;
 
 	return cache;
 }
 
+RCCFileCache *RT_fcache_read_ex(RCContext *C, const char *path) {
+	RCCFileCache *cache = NULL;
+
+	FILE *file = fopen(path, "rb");
+	if (file) {
+		/**
+		 * I know this is will return an integer (4 bytes) and not a size_t,
+		 * we expect source files that are less than 4GB anyway!
+		 */
+		fseek(file, 0, SEEK_END);
+		size_t length = (size_t)ftell(file);
+		fseek(file, 0, SEEK_SET);
+
+		void *content = RT_context_malloc(C, length + 1);
+		if (content) {
+			size_t actual;
+			if ((actual = fread(content, 1, length, file)) != length) {
+				fprintf(stderr, "WARNING: Invalid amount of charachters read while opening file '%s'.\n", path);
+			}
+			cache = RT_fcache_new_ex(C, path, content, actual);
+		}
+
+		fclose(file);
+	}
+
+	return cache;
+}
 RCCFileCache *RT_fcache_read(const char *path) {
 	RCCFileCache *cache = NULL;
 
@@ -131,6 +188,17 @@ void RT_fcache_free(RCCFileCache *cache) {
 /** \name Main Functions
  * \{ */
 
+RCCFile *RT_file_new_ex(RCContext *C, const char *name, const RCCFileCache *cache) {
+	RCCFile *file = RT_context_calloc(C, sizeof(RCCFile));
+	file->cache = cache;
+	if (name && *name != '\0') {
+		LIB_strcpy(file->name, ARRAY_SIZE(file->name), name);
+	}
+	else {
+		LIB_strcpy(file->name, ARRAY_SIZE(file->name), cache->filename);
+	}
+	return file;
+}
 RCCFile *RT_file_new(const char *name, const RCCFileCache *cache) {
 	RCCFile *file = MEM_callocN(sizeof(RCCFile), "RCCFile");
 	file->cache = cache;
@@ -150,10 +218,10 @@ const char *RT_file_fname(const RCCFile *file) {
 	return (file->cache) ? file->cache->filepath : file->name;
 }
 const char *RT_file_path(const RCCFile *file) {
-	return (file->cache) ? file->cache->filepath : NULL;
+	return (file->cache) ? file->cache->filepath : "";
 }
 const char *RT_file_content(const RCCFile *file) {
-	return (file->cache) ? file->cache->content : NULL;
+	return (file->cache) ? file->cache->content : "";
 }
 
 void RT_file_free(RCCFile *file) {

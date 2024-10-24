@@ -322,6 +322,7 @@ bool DNA_sdna_write_type(struct SDNA *sdna, void **rest, void *ptr, const RCCTyp
 					status &= sdna_write_type_struct(sdna, &ptr, ptr, &tp->tp_struct);
 				} break;
 				default: {
+					ROSE_assert_unreachable();
 					status &= false;
 				} break;
 			}

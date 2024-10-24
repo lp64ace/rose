@@ -42,6 +42,7 @@ char *LIB_strndupN(const char *text, const size_t length);
  * \return Returns \p dst.
  */
 char *LIB_strcpy(char *dst, size_t dst_maxncpy, const char *src);
+size_t LIB_strcpy_rlen(char *dst, size_t dst_maxncpy, const char *src);
 /**
  * Copies a source string to a destination string and ensures that it is null terminated.
  *

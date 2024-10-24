@@ -69,6 +69,19 @@ enum eIDPropertyType {
 	IDP_GROUP = 8,
 };
 
+/** Used by some IDP utils, keep values in sync with type enum above. */
+enum {
+	IDP_TYPE_FILTER_STRING = 1 << IDP_STRING,
+	IDP_TYPE_FILTER_INT = 1 << IDP_INT,
+	IDP_TYPE_FILTER_FLOAT = 1 << IDP_FLOAT,
+	IDP_TYPE_FILTER_ARRAY = 1 << IDP_ARRAY,
+	IDP_TYPE_FILTER_GROUP = 1 << IDP_GROUP,
+	IDP_TYPE_FILTER_ID = 1 << IDP_ID,
+	IDP_TYPE_FILTER_DOUBLE = 1 << IDP_DOUBLE,
+	IDP_TYPE_FILTER_IDPARRAY = 1 << IDP_IDPARRAY,
+	IDP_TYPE_FILTER_BOOLEAN = 1 << IDP_BOOLEAN,
+};
+
 #define IDP_NUMTYPES 9
 
 /** \} */
@@ -140,6 +153,10 @@ void IDP_Reset(IDProperty *property, const IDProperty *reference);
 #	define IDP_IDPArray(property) ((IDProperty *)(property)->data.pointer)
 #	define IDP_Id(property) ((ID *)(property)->data.pointer)
 #endif
+
+typedef void (*LibraryIDPropertyCallback)(struct IDProperty *, void *user_data);
+
+void IDP_foreach_property(struct IDProperty *property, int type_filter, LibraryIDPropertyCallback callback, void *user_data);
 
 /** \} */
 

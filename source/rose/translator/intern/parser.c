@@ -217,7 +217,7 @@ ROSE_INLINE size_t parse_keyword(const char *p) {
 	return 0;
 }
 
-ROSE_INLINE void parse_token(RCCParser *parser, RCCToken *token, bool *bol, bool *hsl) {
+ROSE_INLINE void parse_token(ListBase *lb, RCCToken *token, bool *bol, bool *hsl) {
 	ROSE_assert(bol && hsl);
 	token->beginning_of_line = *bol;
 	token->has_leading_space = *hsl;
@@ -225,16 +225,16 @@ ROSE_INLINE void parse_token(RCCParser *parser, RCCToken *token, bool *bol, bool
 		*bol = false;
 		*hsl = false;
 	}
-	LIB_addtail(&parser->tokens, token);
+	LIB_addtail(lb, token);
 }
 
-ROSE_INLINE void parse_tokenize(RCCParser *parser) {
-	if (!parser->file) {
+void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
+	if (!file) {
 		return;
 	}
 
 	RCCSLoc location = {
-		.p = RT_file_content(parser->file),
+		.p = RT_file_content(file),
 		.line = 1,
 		.column = 0,
 	};
@@ -255,7 +255,7 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 		if (STREQLEN(location.p, "/*", 2)) {
 			const char *p = strstr(location.p + 2, "*/") + 2;
 			if (p == (const char *)2) {
-				RT_source_error(parser->file, &location, "unclosed block comment");
+				RT_source_error(file, &location, "unclosed block comment");
 				break;
 			}
 			while (++location.p < p) {
@@ -292,14 +292,14 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 					break;
 				}
 			}
-			RCCToken *tok = RT_token_new_number(parser->context, parser->file, &location, end - location.p);
+			RCCToken *tok = RT_token_new_number(context, file, &location, end - location.p);
 			if (!tok) {
-				RT_source_error(parser->file, &location, "invalid number literal");
+				RT_source_error(file, &location, "invalid number literal");
 				break;
 			}
 			location.p = end;
 
-			parse_token(parser, tok, &beginning_of_line, &has_leading_space);
+			parse_token(lb, tok, &beginning_of_line, &has_leading_space);
 			continue;
 		}
 		if (ELEM(location.p[0], '\"') || (ELEM(location.p[0], 'L') && ELEM(location.p[1], '\"'))) {
@@ -310,17 +310,17 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 				}
 			}
 			if (!*end) {
-				RT_source_error(parser->file, &location, "unclosed string literal");
+				RT_source_error(file, &location, "unclosed string literal");
 				break;
 			}
-			RCCToken *tok = RT_token_new_string(parser->context, parser->file, &location, end - location.p + 1);
+			RCCToken *tok = RT_token_new_string(context, file, &location, end - location.p + 1);
 			if (!tok) {
-				RT_source_error(parser->file, &location, "invalid string literal");
+				RT_source_error(file, &location, "invalid string literal");
 				break;
 			}
 			location.p = end + 1;
 
-			parse_token(parser, tok, &beginning_of_line, &has_leading_space);
+			parse_token(lb, tok, &beginning_of_line, &has_leading_space);
 			continue;
 		}
 		if (ELEM(location.p[0], '\'') || (ELEM(location.p[0], 'u', 'U', 'L') && ELEM(location.p[1], '\''))) {
@@ -331,28 +331,28 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 				}
 			}
 			if (!*end) {
-				RT_source_error(parser->file, &location, "unclosed charachter literal");
+				RT_source_error(file, &location, "unclosed charachter literal");
 			}
-			RCCToken *tok = RT_token_new_number(parser->context, parser->file, &location, end - location.p + 1);
+			RCCToken *tok = RT_token_new_number(context, file, &location, end - location.p + 1);
 			if (!tok) {
-				RT_source_error(parser->file, &location, "invalid charachter literal");
+				RT_source_error(file, &location, "invalid charachter literal");
 				break;
 			}
 			location.p = end + 1;
 
-			parse_token(parser, tok, &beginning_of_line, &has_leading_space);
+			parse_token(lb, tok, &beginning_of_line, &has_leading_space);
 			continue;
 		}
 		
 		size_t length;
 
 		if ((length = parse_keyword(location.p))) {
-			RCCToken *tok = RT_token_new_keyword(parser->context, parser->file, &location, length);
+			RCCToken *tok = RT_token_new_keyword(context, file, &location, length);
 			if (!tok) {
-				RT_source_error(parser->file, &location, "invalid keyword token");
+				RT_source_error(file, &location, "invalid keyword token");
 				break;
 			}
-			parse_token(parser, tok, &beginning_of_line, &has_leading_space);
+			parse_token(lb, tok, &beginning_of_line, &has_leading_space);
 			location.p += length;
 
 			has_leading_space = false;
@@ -360,30 +360,29 @@ ROSE_INLINE void parse_tokenize(RCCParser *parser) {
 			continue;
 		}
 		if ((length = parse_identifier(location.p))) {
-			RCCToken *tok = RT_token_new_identifier(parser->context, parser->file, &location, length);
+			RCCToken *tok = RT_token_new_identifier(context, file, &location, length);
 			if (!tok) {
-				RT_source_error(parser->file, &location, "invalid identifier token");
+				RT_source_error(file, &location, "invalid identifier token");
 				break;
 			}
-			parse_token(parser, tok, &beginning_of_line, &has_leading_space);
+			parse_token(lb, tok, &beginning_of_line, &has_leading_space);
 			location.p += length;
 			continue;
 		}
 		if ((length = parse_punctuator(location.p))) {
-			RCCToken *tok = RT_token_new_punctuator(parser->context, parser->file, &location, length);
+			RCCToken *tok = RT_token_new_punctuator(context, file, &location, length);
 			if (!tok) {
-				RT_source_error(parser->file, &location, "invalid punctuator token");
+				RT_source_error(file, &location, "invalid punctuator token");
 				break;
 			}
-			parse_token(parser, tok, &beginning_of_line, &has_leading_space);
+			parse_token(lb, tok, &beginning_of_line, &has_leading_space);
 			location.p += length;
 			continue;
 		}
 		
-		RT_source_error(parser->file, &location, "unkown token");
+		RT_source_error(file, &location, "unkown token");
 		break;
 	}
-	LIB_addtail(&parser->tokens, RT_token_new_eof(parser->context));
 }
 
 ROSE_INLINE void configure(RCCParser *P) {
@@ -411,7 +410,9 @@ RCCParser *RT_parser_new(const RCCFile *file) {
 	
 	configure(parser);
 	
-	parse_tokenize(parser);
+	RT_parser_tokenize(parser->context, &parser->tokens, file);
+	LIB_addtail(&parser->tokens, RT_token_new_eof(parser->context));
+	
 	return parser;
 }
 
@@ -440,14 +441,50 @@ ROSE_INLINE unsigned long long align(RCConfiguration *config, unsigned long long
 	return size;
 }
 
+unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
+	if (type->is_basic) {
+		// Basic types: just return their rank as size.
+		return (unsigned long long)type->tp_basic.rank;
+	}
+	if (type->kind == TP_PTR) {
+		return RT_parser_size(P, P->configuration.tp_size);
+	}
+	if (type->kind == TP_ENUM) {
+		return RT_parser_size(P, type->tp_enum.underlying_type);
+	}
+	if (type->kind == TP_ARRAY) {
+		return RT_parser_alignof(P, RT_type_array_element(type));
+	}
+	if (type->kind == TP_STRUCT) {
+		unsigned long long alignment = 0;
+
+		const RCCTypeStruct *s = &type->tp_struct;
+		LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+			unsigned long long field_alignment = field->alignment;
+
+			if (field_alignment == 0) {
+				field_alignment = RT_parser_alignof(P, field->type);
+			}
+
+			alignment = ROSE_MAX(alignment, field_alignment);
+		}
+
+		return alignment;
+	}
+	ROSE_assert_unreachable();
+	return 0;
+}
+
 unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 	if (type->is_basic) {
 		// Basic types: just return their rank as size.
 		return (unsigned long long)type->tp_basic.rank;
 	}
-	if (type->kind == TP_PTR || type->kind == TP_ENUM) {
-		// Pointers and enums share the size defined by tp_size.
+	if (type->kind == TP_PTR) {
 		return RT_parser_size(P, P->configuration.tp_size);
+	}
+	if (type->kind == TP_ENUM) {
+		return RT_parser_size(P, type->tp_enum.underlying_type);
 	}
 	if (type->kind == TP_ARRAY) {
 		if (ELEM(type->tp_array.boundary, ARRAY_VLA, ARRAY_VLA_STATIC)) {
@@ -464,21 +501,16 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 
 		const RCCTypeStruct *s = &type->tp_struct;
 		LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+			unsigned long long field_size = RT_parser_size(P, field->type);
+			unsigned long long field_alignment = field->alignment;
+
+			if (field_alignment == 0) {
+				field_alignment = RT_parser_alignof(P, field->type);
+			}
+
 			if (field->properties.is_bitfield) {
 				// Handle bitfield logic.
 				unsigned long long field_bitsize = field->properties.width;
-				unsigned long long field_size = RT_parser_size(P, field->type);
-				unsigned long long field_alignment = field->alignment;
-
-				if (field_alignment == 0 && field->type->is_basic) {
-					field_alignment = RT_parser_size(P, field->type);
-				}
-
-				// Align the size if the current bitfield exceeds its size limit.
-				if (bitfield + field_bitsize > field_size * 8) {
-					size = align(&P->configuration, field_alignment, size);
-					bitfield = 0;  // Reset bitfield counter after alignment.
-				}
 
 				bitfield += field_bitsize;
 
@@ -491,24 +523,12 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 				ROSE_assert_msg(bitfield < field_size * 8, "Misalignment case for bitfield.");
 			}
 			else {
-				// Handle non-bitfield fields.
-				unsigned long long field_size = RT_parser_size(P, field->type);
-				unsigned long long field_alignment = field->alignment;
-
-				// If alignment is missing, compute it for arrays and pointers.
-				if (field_alignment == 0 && ELEM(field->type->kind, TP_ARRAY, TP_PTR)) {
-					field_alignment = RT_parser_size(P, P->configuration.tp_size);
-				}
-				if (field_alignment == 0 && field->type->is_basic) {
-					field_alignment = RT_parser_size(P, field->type);
-				}
-
 				// Track the maximum alignment needed for the struct.
 				if (field_alignment > alignment) {
 					alignment = field_alignment;
 				}
 
-				// Align the current size to the field's alignment.
+				// Align the current offset to the field's alignment.
 				size = align(&P->configuration, field_alignment, size);
 				size += field_size;
 			}
@@ -520,31 +540,29 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 		return size;
 	}
 	// If the type is unrecognized, return 0.
+	ROSE_assert_unreachable();
 	return 0;
 }
 
 unsigned long long RT_parser_offsetof(RCCParser *P, const RCCType *type, const RCCField *query) {
+	ROSE_assert(type->kind == TP_STRUCT);
+
 	unsigned long long offset = 0;
 	unsigned long long bitfield = 0;
 	unsigned long long alignment = 0;
 
 	const RCCTypeStruct *s = &type->tp_struct;
 	LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+		unsigned long long field_size = RT_parser_size(P, field->type);
+		unsigned long long field_alignment = field->alignment;
+
+		if (field_alignment == 0) {
+			field_alignment = RT_parser_alignof(P, field->type);
+		}
+
 		if (field->properties.is_bitfield) {
 			// Handle bitfield logic.
 			unsigned long long field_bitsize = field->properties.width;
-			unsigned long long field_size = RT_parser_size(P, field->type);
-			unsigned long long field_alignment = field->alignment;
-
-			if (field_alignment == 0 && field->type->is_basic) {
-				field_alignment = RT_parser_size(P, field->type);
-			}
-
-			// Align the size if the current bitfield exceeds its size limit.
-			if (bitfield + field_bitsize > field_size * 8) {
-				offset = align(&P->configuration, field_alignment, offset);
-				bitfield = 0;  // Reset bitfield counter after alignment.
-			}
 
 			bitfield += field_bitsize;
 
@@ -555,29 +573,21 @@ unsigned long long RT_parser_offsetof(RCCParser *P, const RCCType *type, const R
 				bitfield = 0;
 			}
 			ROSE_assert_msg(bitfield < field_size * 8, "Misalignment case for bitfield.");
+			if (field == query) {
+				ROSE_assert_msg(0, "Cannot take the offset of a bitfield.");
+				return 0;
+			}
 		}
 		else {
-			// Handle non-bitfield fields.
-			unsigned long long field_size = RT_parser_size(P, field->type);
-			unsigned long long field_alignment = field->alignment;
-
-			// If alignment is missing, compute it for arrays and pointers.
-			if (field_alignment == 0 && ELEM(field->type->kind, TP_ARRAY, TP_PTR)) {
-				field_alignment = RT_parser_size(P, P->configuration.tp_size);
-			}
-			if (field_alignment == 0 && field->type->is_basic) {
-				field_alignment = RT_parser_size(P, field->type);
-			}
-
 			// Track the maximum alignment needed for the struct.
 			if (field_alignment > alignment) {
 				alignment = field_alignment;
 			}
 
-			// Align the current size to the field's alignment.
+			// Align the current offset to the field's alignment.
 			offset = align(&P->configuration, field_alignment, offset);
 			if (field == query) {
-				break;
+				return offset;
 			}
 			offset += field_size;
 		}
@@ -1154,7 +1164,9 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 			return NULL;
 		}
 	}
-	RT_scope_new_tag(P->state->scope, tag, (void *)type);
+	if (tag) {
+		RT_scope_new_tag(P->state->scope, tag, (void *)type);
+	}
 	
 	*rest = token;
 	return type;

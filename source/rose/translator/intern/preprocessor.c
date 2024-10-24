@@ -157,7 +157,7 @@ ROSE_INLINE RCCMacro *macro_find(RCCPreprocessor *P, RCCToken *token) {
 ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken);
 
 ROSE_STATIC void paste_normal(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro) {
-	for(RCCToken *itr = (RCCToken *)macro->body.first; itr; itr = itr->next) {
+	for(RCCToken *itr = (RCCToken *)macro->body.first; itr->kind != TOK_EOF; itr = itr->next) {
 		if (!macro_expand(P, tokens, &itr, itr)) {
 			RCCToken *now = RT_token_duplicate(P->context, itr);
 		
@@ -167,7 +167,7 @@ ROSE_STATIC void paste_normal(RCCPreprocessor *P, ListBase *tokens, RCCMacro *ma
 }
 
 ROSE_STATIC void paste_fnlike(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro, RCCToken *params[64]) {
-	for (RCCToken *token = (RCCToken *)macro->body.first; token; token = token->next) {
+	for (RCCToken *token = (RCCToken *)macro->body.first; token->kind != TOK_EOF; token = token->next) {
 		size_t index = 0;
 		LISTBASE_FOREACH_INDEX(RCCMacroParameter *, parameter, &macro->parameters, index) {
 			if (RT_token_match(parameter->token, token)) {
@@ -304,6 +304,45 @@ ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *toke
 	}
 }
 
+ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
+	if(local) {
+		RCCToken *fname = token;
+		
+		char path[512] = { '\0' };
+		
+		LIB_strcat(path, ARRAY_SIZE(path), RT_token_working_directory(token));
+		LIB_strcat(path, ARRAY_SIZE(path), RT_token_string(fname));
+		
+		RCCFileCache *cache = RT_fcache_read_ex(P->context, path);
+		RCCFile *file = RT_file_new_ex(P->context, NULL, cache);
+		
+		ListBase ntokens;
+		LIB_listbase_clear(&ntokens);
+		RT_parser_tokenize(P->context, &ntokens, file);
+		
+		token = next_line(token->next);
+		
+		RCCToken *ntoken;
+		while((ntoken = LIB_pophead(&ntokens))) {
+			token->prev->next = ntoken;
+			ntoken->prev = token->prev;
+			ntoken->next = token;
+			token->prev = ntoken;
+		}
+	}
+	else {
+		if(!skip(P, &token, token, "<")) {
+			return;
+		}
+		
+		ROSE_assert_unreachable();
+		
+		if(!skip(P, &token, token, ">")) {
+			return;
+		}
+	}
+}
+
 ROSE_STATIC RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *token) {
 	while (token->kind != TOK_EOF) {
 		if (directive(token)) {
@@ -366,6 +405,16 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 			break;
 		}
 		
+		if(is(itr, "include") && ELEM(itr->next->kind, TOK_STRING)) {
+			include_do(preprocessor, itr->next, true);
+			itr = next_line(itr->next);
+			continue;
+		}
+		if(is(itr, "include") && is(itr->next, "<")) {
+			include_do(preprocessor, itr->next, false);
+			itr = next_line(itr->next);
+			continue;
+		}
 		if(is(itr, "define")) {
 			macro_dodef(preprocessor, &itr, itr->next);
 			continue;

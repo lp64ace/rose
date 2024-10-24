@@ -243,7 +243,7 @@ IDProperty *IDP_New(int type, const void *data, size_t length, const char *name,
 		case IDP_ID: {
 			property = MEM_callocN(sizeof(IDProperty), "IDProperty(ID)");
 			property->data.pointer = (ID *)data;
-			id_us_increment(IDP_Id(property));
+			id_us_add(IDP_Id(property));
 		} break;
 		case IDP_IDPARRAY: {
 			ROSE_assert(data == NULL);
@@ -282,7 +282,7 @@ void IDP_FreePropertyContent_ex(IDProperty *property, bool do_user) {
 		case IDP_ID: {
 			if (do_user) {
 				/** Will delete the ID if there are no more users! */
-				id_us_decrement(IDP_Id(property));
+				id_us_rem(IDP_Id(property));
 			}
 		} break;
 	}
@@ -315,6 +315,31 @@ void IDP_Reset(IDProperty *property, const IDProperty *reference) {
 		if (reference) {
 			IDP_MergeGroup(property, reference, true);
 		}
+	}
+}
+
+void IDP_foreach_property(IDProperty *property, int type_filter, LibraryIDPropertyCallback callback, void *user_data) {
+	if (!property) {
+		return;
+	}
+	
+	if (type_filter == 0 || (1 << property->type) & type_filter) {
+		callback(property, user_data);
+	}
+	
+	/* Recursive call into container types of ID properties. */
+	switch (property->type) {
+		case IDP_GROUP: {
+			LISTBASE_FOREACH (IDProperty *, loop, &property->data.group) {
+				IDP_foreach_property(loop, type_filter, callback, user_data);
+			}
+		} break;
+		case IDP_IDPARRAY: {
+			IDProperty *loop = (IDProperty *)(IDP_Array(property));
+			for (int i = 0; i < property->length; i++) {
+				IDP_foreach_property(&loop[i], type_filter, callback, user_data);
+			}
+		} break;
 	}
 }
 
@@ -493,7 +518,7 @@ IDProperty *IDP_DuplicateID(const IDProperty *prop, const int flag) {
 	newp->data.pointer = prop->data.pointer;
 
 	if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
-		id_us_increment(IDP_Id(newp));
+		id_us_add(IDP_Id(newp));
 	}
 
 	return newp;
@@ -503,13 +528,13 @@ void IDP_AssignID(IDProperty *property, ID *id, int flag) {
 	ROSE_assert(property->type == IDP_ID);
 
 	if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0 && IDP_Id(property) != NULL) {
-		id_us_decrement(IDP_Id(property));
+		id_us_rem(IDP_Id(property));
 	}
 
 	property->data.pointer = id;
 
 	if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
-		id_us_increment(IDP_Id(property));
+		id_us_add(IDP_Id(property));
 	}
 }
 
