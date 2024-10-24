@@ -323,7 +323,7 @@ ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
 		token = next_line(token->next);
 		
 		RCCToken *ntoken;
-		while(ntoken = LIB_pophead(&ntokens)) {
+		while((ntoken = LIB_pophead(&ntokens))) {
 			token->prev->next = ntoken;
 			ntoken->prev = token->prev;
 			ntoken->next = token;
