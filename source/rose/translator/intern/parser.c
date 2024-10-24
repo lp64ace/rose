@@ -453,7 +453,7 @@ unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
 		return RT_parser_size(P, type->tp_enum.underlying_type);
 	}
 	if (type->kind == TP_ARRAY) {
-		return RT_parser_size(P, P->configuration.tp_size);
+		return RT_parser_alignof(P, RT_type_array_element(type));
 	}
 	if (type->kind == TP_STRUCT) {
 		unsigned long long alignment = 0;
@@ -471,6 +471,8 @@ unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
 
 		return alignment;
 	}
+	ROSE_assert_unreachable();
+	return 0;
 }
 
 unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
@@ -526,7 +528,7 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 					alignment = field_alignment;
 				}
 
-				// Align the current size to the field's alignment.
+				// Align the current offset to the field's alignment.
 				size = align(&P->configuration, field_alignment, size);
 				size += field_size;
 			}
@@ -538,31 +540,29 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 		return size;
 	}
 	// If the type is unrecognized, return 0.
+	ROSE_assert_unreachable();
 	return 0;
 }
 
 unsigned long long RT_parser_offsetof(RCCParser *P, const RCCType *type, const RCCField *query) {
+	ROSE_assert(type->kind == TP_STRUCT);
+
 	unsigned long long offset = 0;
 	unsigned long long bitfield = 0;
 	unsigned long long alignment = 0;
 
 	const RCCTypeStruct *s = &type->tp_struct;
 	LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+		unsigned long long field_size = RT_parser_size(P, field->type);
+		unsigned long long field_alignment = field->alignment;
+
+		if (field_alignment == 0) {
+			field_alignment = RT_parser_alignof(P, field->type);
+		}
+
 		if (field->properties.is_bitfield) {
 			// Handle bitfield logic.
 			unsigned long long field_bitsize = field->properties.width;
-			unsigned long long field_size = RT_parser_size(P, field->type);
-			unsigned long long field_alignment = field->alignment;
-
-			if (field_alignment == 0 && field->type->is_basic) {
-				field_alignment = RT_parser_size(P, field->type);
-			}
-
-			// Align the size if the current bitfield exceeds its size limit.
-			if (bitfield + field_bitsize > field_size * 8) {
-				offset = align(&P->configuration, field_alignment, offset);
-				bitfield = 0;  // Reset bitfield counter after alignment.
-			}
 
 			bitfield += field_bitsize;
 
@@ -573,29 +573,21 @@ unsigned long long RT_parser_offsetof(RCCParser *P, const RCCType *type, const R
 				bitfield = 0;
 			}
 			ROSE_assert_msg(bitfield < field_size * 8, "Misalignment case for bitfield.");
+			if (field == query) {
+				ROSE_assert_msg(0, "Cannot take the offset of a bitfield.");
+				return 0;
+			}
 		}
 		else {
-			// Handle non-bitfield fields.
-			unsigned long long field_size = RT_parser_size(P, field->type);
-			unsigned long long field_alignment = field->alignment;
-
-			// If alignment is missing, compute it for arrays and pointers.
-			if (field_alignment == 0 && ELEM(field->type->kind, TP_ARRAY, TP_PTR)) {
-				field_alignment = RT_parser_size(P, P->configuration.tp_size);
-			}
-			if (field_alignment == 0 && field->type->is_basic) {
-				field_alignment = RT_parser_size(P, field->type);
-			}
-
 			// Track the maximum alignment needed for the struct.
 			if (field_alignment > alignment) {
 				alignment = field_alignment;
 			}
 
-			// Align the current size to the field's alignment.
+			// Align the current offset to the field's alignment.
 			offset = align(&P->configuration, field_alignment, offset);
 			if (field == query) {
-				break;
+				return offset;
 			}
 			offset += field_size;
 		}
@@ -1172,7 +1164,9 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 			return NULL;
 		}
 	}
-	RT_scope_new_tag(P->state->scope, tag, (void *)type);
+	if (tag) {
+		RT_scope_new_tag(P->state->scope, tag, (void *)type);
+	}
 	
 	*rest = token;
 	return type;
