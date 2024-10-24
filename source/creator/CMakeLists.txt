@@ -36,6 +36,7 @@ set(LIB
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::translator
+	rose::source::windowmanager
 	
 	# External Library Dependencies
 	${PTHREADS_LIBRARIES}
