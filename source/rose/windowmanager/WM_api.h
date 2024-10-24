@@ -3,6 +3,8 @@
 
 #include "DNA_windowmanager_types.h"
 
+#include "LIB_sys_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
