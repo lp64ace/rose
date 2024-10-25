@@ -4,13 +4,18 @@
 
 #include "WM_api.h"
 
+#include <glib.h>
 #include <stdlib.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Init & Exit Methods
  * \{ */
 
+static struct WTKPlatform *g_platform = NULL;
+
 void WM_init() {
+	g_platform = WTK_platform_init();
+	
 	KER_idtype_init();
 	
 	Main *main = KER_main_new();
@@ -25,6 +30,8 @@ void WM_main() {
 
 void WM_exit() {
 	KER_rose_globals_clear();
+	
+	WTK_platform_exit(g_platform);
 
 	exit(0);
 }
