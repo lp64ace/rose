@@ -10,7 +10,8 @@ extern "C" {
 
 typedef struct WindowManager {
 	ID id;
-
+	
+	/** A list of all #wmWindow links that are allocated. */
 	ListBase windows;
 } WindowManager;
 

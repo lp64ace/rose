@@ -28,8 +28,20 @@ if(WIN32)
 	include(cmake/platform_win32.cmake)
 endif()
 
-if(UNIX)
-	include(cmake/platform_unix.cmake)
+if(UNIX AND NOT APPLE)
+	include(cmake/platform_linux.cmake)
+endif()
+
+include(CMakeDependentOption)
+
+cmake_dependent_option(ROSE_BUILD_WIN32 "Build support for Win32" ON "WIN32" OFF)
+cmake_dependent_option(ROSE_BUILD_X11 "Build support for X11" ON "UNIX;NOT APPLE" OFF)
+
+if(ROSE_BUILD_WIN32)
+	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including Win32 support")
+endif()
+if(ROSE_BUILD_X11)
+	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including X11 support")
 endif()
 
 # -----------------------------------------------------------------------------

@@ -36,6 +36,7 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::intern::ghost
 	rose::source::roselib
 	rose::source::rosekernel
 	
@@ -48,14 +49,3 @@ set(LIB
 
 rose_add_lib(windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::windowmanager ALIAS windowmanager)
-
-# -----------------------------------------------------------------------------
-# Define Include Directories (Test)
-
-set(INC
-	# Internal Include Directories
-	PUBLIC .
-	
-	# External Include Directories
-	
-)
