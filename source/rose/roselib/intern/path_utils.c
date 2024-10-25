@@ -6,7 +6,7 @@
 #include <limits.h>
 
 /**
- * Althrough there is a big diversity between UNIX and WINDOWS operating systems. 
+ * Althrough there is a big diversity between LINUX and WINDOWS operating systems. 
  * Adding this to an operating system specific library/module would mean that 
  * I would have to link it to a platform or system object.
  * 
@@ -19,7 +19,7 @@
 #	define PATH_MAX MAX_PATH
 #endif
 
-#ifdef UNIX
+#ifdef LINUX
 #	include <limits.h>
 #	include <stdlib.h>
 #	include <unistd.h>
@@ -131,7 +131,7 @@ size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[],
 #ifdef WIN32
 	/**
 	 * Special case `//` for relative paths, don't use separator #SEP 
-	 * as this has a special meaning on both WIN32 & UNIX.
+	 * as this has a special meaning on both WIN32 & LINUX.
 	 *
 	 * Without this check joining `"//", "path"`. results in `"//\path"`.
 	 */
