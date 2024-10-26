@@ -8,6 +8,7 @@ struct WindowManagerBase;
 
 struct PlatformBase {
 	virtual bool init() = 0;
+	virtual bool poll() = 0;
 	
 	struct DisplayManagerBase *display_mngr_ = NULL;
 	struct WindowManagerBase *window_mngr_ = NULL;
