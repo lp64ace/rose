@@ -18,6 +18,17 @@ Before proceeding, ensure that the following prerequisites are met:
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
 - **Χ11** On Linux systems, X11 is required in order to have GUI.
+- **Mesa** On Linux systems, Mesa is required in order to have GUI.
+
+## Linux
+
+1. Install dependencies:
+
+	```bash
+	sudo apt-get update
+	sudo apt-get install -y libx11-dev
+	sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
+	```
 
 ## Building Rose
 
