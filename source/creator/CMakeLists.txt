@@ -50,3 +50,11 @@ add_executable(rose "${SRC}")
 
 rose_target_link_libraries(rose "${LIB}")
 rose_target_include_dirs(rose "${INC}")
+
+if(GLEW_BINARIES)
+	add_custom_command(TARGET rose POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${GLEW_BINARIES}
+            $<TARGET_FILE_DIR:rose>/glew32.dll
+	)
+endif()
