@@ -18,13 +18,12 @@ Before proceeding, ensure that the following prerequisites are met:
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
 
-## Linux
+## (Linux) Installation Instructions
 
-- **Χ11** On Linux systems, X11 is required in order to have GUI.
-- **GLEW** On Linux systems, GLEW is required in order to have GUI.
-- **Mesa** On Linux systems, Mesa is required in order to have GUI.
+Before building the project, ensure that the following development libraries are installed on your Linux system.
+This project requires **X11**, **GLEW**, and **MESA** development tools.
 
-1. Install dependencies:
+1. Install the required dependencies:
 
 	```bash
 	sudo apt-get update
