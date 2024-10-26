@@ -1,98 +1,99 @@
 #include "MEM_guardedalloc.h"
 
+#include "win32_display.hh"
 #include "win32_platform.hh"
+#include "win32_window.hh"
 
 namespace ghost {
 
-bool Win32DisplayManagerBase::init() {
-	return true;
-}
+bool WTK_platform_win32_init_wndclass(WNDCLASSEXA *wndclass) {
+	memset(wndclass, 0, sizeof(WNDCLASSEXA));
 
-int Win32DisplayManagerBase::GetNumDisplays(void) const {
-	return (int)::GetSystemMetrics(SM_CMONITORS);
-}
-int Win32DisplayManagerBase::GetNumDisplaySettings(int display) const {
-	DISPLAY_DEVICE device;
-	device.cb = sizeof(DISPLAY_DEVICE);
-	if(!::EnumDisplayDevices(nullptr, (DWORD)display, &device, 0)) {
-		return 0;
-	}
-	
-	int count = 0;
-	
-	DEVMODE mode;
-	while(::EnumDisplaySettings(device.DeviceName, (DWORD)count, &mode)) {
-		count++;
-	}
-	return count;
-}
-bool Win32DisplayManagerBase::GetDisplaySetting(int display, int setting, WTKDisplaySetting *info) {
-	DISPLAY_DEVICE device;
-	device.cb = sizeof(DISPLAY_DEVICE);
-	if(!::EnumDisplayDevices(nullptr, (DWORD)display, &device, 0)) {
-		return false;
-	}
-	
-	DEVMODE mode;
-	if(!::EnumDisplaySettings(device.DeviceName, (DWORD)setting, &mode)) {
-		return false;
-	}
-	
-	info->xpixels = mode.dmPelsWidth;
-	info->ypixels = mode.dmPelsHeight;
-	info->bpp = mode.dmBitsPerPel;
-	info->framerate = mode.dmDisplayFrequency;
-	return true;
-}
+	wndclass->cbSize = sizeof(WNDCLASSEXA);
+	wndclass->style = CS_HREDRAW | CS_VREDRAW;
+	wndclass->lpfnWndProc = Win32Platform::WndProc;
+	wndclass->cbClsExtra = 0;
+	wndclass->cbWndExtra = 0;
+	wndclass->hInstance = ::GetModuleHandle(NULL);
+	wndclass->hIcon = ::LoadIconA(NULL, IDI_APPLICATION);
 
-bool Win32DisplayManagerBase::GetCurrentDisplaySetting(int display, WTKDisplaySetting *info) {
-	return GetDisplaySetting(display, ENUM_CURRENT_SETTINGS, info);
-}
-bool Win32DisplayManagerBase::SetCurrentDisplaySetting(int display, WTKDisplaySetting *info) {
-	DISPLAY_DEVICE device;
-	device.cb = sizeof(DISPLAY_DEVICE);
-	if(!::EnumDisplayDevices(nullptr, (DWORD)display, &device, 0)) {
+	if (wndclass->hIcon) {
+		wndclass->hIconSm = ::LoadIconA(NULL, IDI_APPLICATION);
+	}
+	wndclass->hCursor = ::LoadCursorA(0, IDC_ARROW);
+	wndclass->hbrBackground = (HBRUSH)COLOR_BACKGROUND;
+	wndclass->lpszMenuName = 0;
+	wndclass->lpszClassName = Win32Platform::WndClassName;
+
+	if (::RegisterClassExA(wndclass) == 0) {
 		return false;
 	}
-	
-	int setting = 0;
-	
-	DEVMODE mode;
-	while(::EnumDisplaySettings(device.DeviceName, (DWORD)setting++, &mode)) {
-		if(mode.dmPelsWidth != info->xpixels && mode.dmPelsHeight != info->ypixels) {
-			/** Resolution did not match, look for a different mode. */
-			continue;
-		}
-		if(mode.dmBitsPerPel != info->bpp) {
-			continue;
-		}
-		if(mode.dmDisplayFrequency != info->framerate) {
-			/** Frequency did not match, look for a different mode. */
-			continue;
-		}
-		
-		LONG status = ::ChangeDisplaySettings(&mode, CDS_FULLSCREEN);
-		if(status == DISP_CHANGE_SUCCESSFUL) {
-			/** Failed to change, look for a different mode. */
-			return true;
-		}
-	}
-	
-	return false;
+	return true;
 }
 
 bool Win32Platform::init() {
-	this->display_mngr_ = MEM_new<Win32DisplayManagerBase>("Win32DisplayManagerBase");
+	if (!WTK_platform_win32_init_wndclass(&this->wndclass_)) {
+		return false;
+	}
+
+	this->display_mngr_ = MEM_new<Win32DisplayManager>("Win32DisplayManager");
 	if(!this->display_mngr_->init()) {
-		MEM_delete<Win32DisplayManagerBase>(reinterpret_cast<Win32DisplayManagerBase *>(this->display_mngr_));
 		return false;
 	}
 	
+	this->window_mngr_ = MEM_new<Win32WindowManager>("Win32WindowManager");
+	if(!this->window_mngr_->init()) {
+		return false;
+	}
+	
+	return true;
+}
+
+bool Win32Platform::poll() {
+	MSG msg;
+
+	do {
+		if (!::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE)) {
+			break;
+		}
+
+		/** Process all the events waiting for us. */
+		while (::PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE) != 0) {
+			/* #TranslateMessage doesn't alter the message, and doesn't change our raw keyboard data.
+			 * Needed for #MapVirtualKey or if we ever need to get chars from wm_ime_char or similar. */
+			::TranslateMessage(&msg);
+			::DispatchMessageW(&msg);
+		}
+	} while (false);
+
 	return true;
 }
 
 Win32Platform::~Win32Platform() {
-	MEM_delete<Win32DisplayManagerBase>(reinterpret_cast<Win32DisplayManagerBase *>(this->display_mngr_));
+	MEM_delete<Win32WindowManager>(reinterpret_cast<Win32WindowManager *>(this->window_mngr_));
+	MEM_delete<Win32DisplayManager>(reinterpret_cast<Win32DisplayManager *>(this->display_mngr_));
+}
+
+const char *Win32Platform::WndClassName = "RoseWndClass";
+
+LRESULT Win32Platform::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	LRESULT result = 0;
+
+	Win32Window *window = reinterpret_cast<Win32Window *>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
+	if (!window) {
+		return DefWindowProcA(hWnd, message, wParam, lParam);
+	}
+
+	switch (message) {
+		case WM_DESTROY: {
+			window->exit();
+		} break;
+		default: {
+			result = DefWindowProcA(hWnd, message, wParam, lParam);
+		} break;
+	}
+
+	return result;
 }
 
 } // namespace ghost
