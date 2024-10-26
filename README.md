@@ -1,6 +1,8 @@
 # Rose
 
 Cross-platform library that enables easy customizability of the application during both runtime and develop-time.
+It's the fact that there are limits that make life interesting, wouldn't it be boring to be able to do ANYTHING, 
+it would definately be scary!
 
 ## Quick Information
 
