@@ -27,16 +27,26 @@ set(SRC
 	intern/display.hh
 	intern/platform.cc
 	intern/platform.hh
+	intern/window.cc
+	intern/window.hh
 )
 
 set(SRC_WIN32
+	intern/win32/win32_display.cc
+	intern/win32/win32_display.hh
 	intern/win32/win32_platform.cc
 	intern/win32/win32_platform.hh
+	intern/win32/win32_window.cc
+	intern/win32/win32_window.hh
 )
 
 set(SRC_X11
+	intern/x11/x11_display.cc
+	intern/x11/x11_display.hh
 	intern/x11/x11_platform.cc
 	intern/x11/x11_platform.hh
+	intern/x11/x11_window.cc
+	intern/x11/x11_window.hh
 )
 
 # -----------------------------------------------------------------------------
