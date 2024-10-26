@@ -11,7 +11,6 @@ void WTK_window_manager_free(WTKWindowManager *vmanager) {
 	TinyWindow::windowManager *manager = reinterpret_cast<TinyWindow::windowManager *>(vmanager);
 	if(manager) {
 		manager->ShutDown();
-		delete manager;
 	}
 }
 void WTK_window_manager_poll(WTKWindowManager *vmanager) {
@@ -40,5 +39,4 @@ void WTK_window_free(WTKWindowManager *vmanager, WTKWindow *vwindow) {
 	TinyWindow::windowManager *manager = reinterpret_cast<TinyWindow::windowManager *>(vmanager);
 	TinyWindow::tWindow *window = reinterpret_cast<TinyWindow::tWindow *>(vwindow);
 	manager->RemoveWindow(window);
-	delete window;
 }

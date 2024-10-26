@@ -54,4 +54,5 @@ set(PTHREADS_LIBRARIES ${LIBDIR}/pthreads/lib/pthreadVC3.lib)
 include_directories(SYSTEM "${PTHREADS_INCLUDE_DIRS}")
 
 set(GLEW_INCLUDE_DIRS ${LIBDIR}/glew/include)
-set(GLEW_LIBRARIES ${LIBDIR}/glew/lib/glew32s.lib)
+set(GLEW_LIBRARIES ${LIBDIR}/glew/lib/glew32.lib)
+set(GLEW_BINARIES ${LIBDIR}/glew/bin/glew32.dll)

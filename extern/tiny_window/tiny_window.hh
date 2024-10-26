@@ -23,12 +23,11 @@
 #		include <Windows.h>
 #	endif
 #	if !defined(TW_USE_VULKAN)
-#		include <gl/glew.h>
-#		include <gl/wglew.h>
+#		include <GL/glew.h>
+#		include <GL/wglew.h>
 #		ifdef USE_DINPUT
 #			include <dinput.h>
 #		endif	// USE_DINPUT
-
 #		include <Dbt.h>
 #		include <Xinput.h>
 #	else
@@ -46,8 +45,8 @@
 #		define GLX_GLXEXT_PROTOTYPES 1
 #	endif
 #	if !defined(TW_USE_VULKAN)
+#		include <GL/glew.h>
 #		include <GL/glx.h>
-
 #	else
 #		include <vulkan.h>
 #	endif
@@ -1587,6 +1586,16 @@ public:
 		screenResolution.y = HeightOfScreen(
 			XScreenOfDisplay(currentDisplay,
 				DefaultScreen(currentDisplay)));*/
+
+		unsigned long mask = 0;
+		
+		mask |= KeyPressMask | KeyReleaseMask;
+		mask |= ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
+		mask |= PointerMotionMask | EnterWindowMask | LeaveWindowMask;
+		mask |= StructureNotifyMask | PropertyChangeMask | FocusChangeMask;
+		mask |= ExposureMask;
+
+		XSelectInput(currentDisplay, XDefaultRootWindow(currentDisplay), StructureNotifyMask);
 #endif
 	}
 
@@ -1689,7 +1698,7 @@ public:
 
 #elif defined(TW_LINUX)
 		// if there are any events to process
-		if (XEventsQueued(currentDisplay, QueuedAfterReading)) {
+		while (XEventsQueued(currentDisplay, QueuedAfterReading)) {
 			XNextEvent(currentDisplay, &currentEvent);
 			Linux_ProcessEvents(currentEvent);
 		}
@@ -3222,6 +3231,13 @@ private:
 		}
 
 		wglMakeCurrent(window->deviceContextHandle, window->glRenderingContextHandle);
+		
+		GLenum err = glewInit();
+		if (GLEW_OK != err) {
+			/* Problem: glewInit failed, something is seriously wrong. */
+			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		}
+		fprintf(stdout, "[OpenGL] Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
 		window->contextCreated = (window->glRenderingContextHandle != nullptr);
 
@@ -3454,13 +3470,16 @@ private:
 		if (!window->windowHandle) {
 			return TinyWindow::error_t::linuxCannotCreateWindow;
 		}
-
+		
+		window->currentDisplay = currentDisplay;
+		
+		window->InitializeAtoms();
+		
 		XMapWindow(currentDisplay, window->windowHandle);
 		XStoreName(currentDisplay, window->windowHandle, window->settings.name);
 
-		XSetWMProtocols(currentDisplay, window->windowHandle, &window->AtomClose, true);
+		XSetWMProtocols(currentDisplay, window->windowHandle, &window->AtomClose, 1);
 
-		window->currentDisplay = currentDisplay;
 		InitializeGL(window);
 
 		return TinyWindow::error_t::success;
@@ -3480,7 +3499,7 @@ private:
 
 	void Linux_ProcessEvents(XEvent currentEvent) {
 		tWindow *window = GetWindowByEvent(currentEvent);
-
+		
 		switch (currentEvent.type) {
 			case Expose: {
 				break;
@@ -3781,7 +3800,7 @@ private:
 				const char *atomName = XGetAtomName(currentDisplay, currentEvent.xclient.message_type);
 				if (atomName != nullptr) {
 				}
-
+				
 				if ((Atom)currentEvent.xclient.data.l[0] == window->AtomClose) {
 					window->shouldClose = true;
 					if (destroyedEvent != nullptr) {
@@ -4236,6 +4255,13 @@ private:
 
 		if (window->context) {
 			glXMakeCurrent(currentDisplay, window->windowHandle, window->context);
+			
+			GLenum err = glewInit();
+			if (GLEW_OK != err) {
+				/* Problem: glewInit failed, something is seriously wrong. */
+				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+			}
+			fprintf(stdout, "[OpenGL] Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
 			glXDestroyContext(currentDisplay, dummyContext);
 
@@ -4246,7 +4272,6 @@ private:
 			window->position.y = attributes.y;
 
 			window->contextCreated = true;
-			window->InitializeAtoms();
 
 			return TinyWindow::error_t::success;
 		}
