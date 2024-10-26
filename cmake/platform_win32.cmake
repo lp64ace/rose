@@ -52,3 +52,6 @@ set(PTHREADS_LIBRARIES ${LIBDIR}/pthreads/lib/pthreadVC3.lib)
 
 # Used in many places so include globally!
 include_directories(SYSTEM "${PTHREADS_INCLUDE_DIRS}")
+
+set(GLEW_INCLUDE_DIRS ${LIBDIR}/glew/include)
+set(GLEW_LIBRARIES ${LIBDIR}/glew/lib/glew32s.lib)

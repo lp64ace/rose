@@ -35,8 +35,8 @@ set(SRC
 
 set(LIB
 	# Internal Library Dependencies
+	rose::extern::tiny_window
 	rose::intern::guardedalloc
-	rose::intern::ghost
 	rose::source::roselib
 	rose::source::rosekernel
 	

@@ -31,7 +31,6 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::ghost
 	
 	rose::source::dna
 	rose::source::roselib
