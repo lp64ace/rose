@@ -16,12 +16,12 @@ Before proceeding, ensure that the following prerequisites are met:
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
 
-## Linux
+## (Linux) Installation Instructions
 
-Linux have some extra prerequisites that I do not know how to add in `cmake/lib/linux_x86_64`, 
-so the following commandsa are required in order to install X11, GLEW and MESA development tools.
+Before building the project, ensure that the following development libraries are installed on your Linux system.
+This project requires **X11**, **GLEW**, and **MESA** development tools.
 
-1. Install dependencies:
+1. Install the required dependencies:
 
 	```bash
 	sudo apt-get update
