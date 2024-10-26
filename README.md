@@ -18,9 +18,8 @@ Before proceeding, ensure that the following prerequisites are met:
 
 ## Linux
 
-- **Χ11** On Linux systems, X11 is required in order to have GUI.
-- **GLEW** On Linux systems, GLEW is required in order to have GUI.
-- **Mesa** On Linux systems, Mesa is required in order to have GUI.
+Linux have some extra prerequisites that I do not know how to add in `cmake/lib/linux_x86_64`, 
+so the following commandsa are required in order to install X11, GLEW and MESA development tools.
 
 1. Install dependencies:
 
