@@ -14,6 +14,7 @@ set(INC
 
 set(INC_SYS
 	# External Include Directories
+	${GLEW_INCLUDE_DIRS}
 
 )
 
@@ -35,6 +36,7 @@ find_package(OpenGL REQUIRED)
 set(LIB
 	# Internal Include Directories
 	${OPENGL_LIBRARIES}
+	${GLEW_LIBRARIES}
 	
 	# External Include Directories
 	
@@ -43,10 +45,6 @@ set(LIB
 if(ROSE_BUILD_X11)
 	list(APPEND INC ${X11_INCLUDE_DIR})
 	list(APPEND LIB ${X11_LIBRARIES})
-endif()
-if(ROSE_BUILD_WIN32)
-	list(APPEND INC ${GLEW_INCLUDE_DIRS})
-	list(APPEND LIB ${GLEW_LIBRARIES})
 endif()
 
 # -----------------------------------------------------------------------------
