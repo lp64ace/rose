@@ -20,3 +20,9 @@ find_package(X11 REQUIRED)
 if (NOT X11_FOUND)
     message(FATAL_ERROR "X11 not found. Install it using `sudo apt-get install libx11-dev`")
 endif()
+
+find_package(GLEW REQUIRED)
+
+if (NOT GLEW_FOUND)
+    message(FATAL_ERROR "GLEW not found. Install it using `sudo apt-get install libglew-dev`")
+endif()
