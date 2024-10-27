@@ -2547,7 +2547,7 @@ private:
 	}
 
 	// initialize the given window using Win32
-	void Windows_InitializeWindow(tWindow *window, UINT style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | CS_DROPSHADOW, int clearScreenExtra = 0, int windowExtra = 0, HINSTANCE winInstance = GetModuleHandle(nullptr), HICON icon = LoadIcon(nullptr, IDI_APPLICATION), HCURSOR cursor = LoadCursor(nullptr, IDC_ARROW), HBRUSH brush = (HBRUSH)GetStockObject(WHITE_BRUSH)) {
+	void Windows_InitializeWindow(tWindow *window, UINT style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW, int clearScreenExtra = 0, int windowExtra = 0, HINSTANCE winInstance = GetModuleHandle(nullptr), HICON icon = LoadIcon(nullptr, IDI_APPLICATION), HCURSOR cursor = LoadCursor(nullptr, IDC_ARROW), HBRUSH brush = (HBRUSH)GetStockObject(WHITE_BRUSH)) {
 		window->instanceHandle = winInstance;
 		window->windowClass.style = style;
 		window->windowClass.lpfnWndProc = windowManager::WindowProcedure;
