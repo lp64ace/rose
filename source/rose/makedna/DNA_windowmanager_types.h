@@ -16,6 +16,7 @@ typedef struct wmWindow {
 	 * this handle does not belong to us but is the linking part between TinyWindow and WindowManager.
 	 */
 	void *handle;
+	void *context;
 	
 	struct wmWindow *parent;
 	
