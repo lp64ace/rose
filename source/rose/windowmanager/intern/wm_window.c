@@ -14,6 +14,9 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 		window->handle = WTK_create_window(wm->handle, name, width, height);
 		window->parent = parent;
 		
+		/** Windows have the habbit of setting the swap interval to one by default. */
+		WTK_window_set_swap_interval(wm->handle, window->handle, 0);
+
 		LIB_addtail(&wm->windows, window);
 	}
 	return window;
@@ -45,6 +48,10 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 	 * that would call this function again!
 	 */
 	LIB_remlink(&wm->windows, window);
+	
+	if(wm->windrawable == window) {
+		wm->windrawable = NULL;
+	}
 	
 	if(window->handle) {
 		WTK_window_free(wm->handle, window->handle);

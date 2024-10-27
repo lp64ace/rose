@@ -5,6 +5,7 @@
 #include "KER_main.h"
 
 #include "WM_api.h"
+#include "WM_draw.h"
 #include "WM_window.h"
 
 #include "LIB_listbase.h"
@@ -12,6 +13,30 @@
 
 #include <tiny_window.h>
 #include <stdio.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Window Updates
+ * \{ */
+
+ROSE_INLINE bool wm_window_update_pos(wmWindow *window, int x, int y) {
+	if (window->posx != x || window->posy != y) {
+		window->posx = x;
+		window->posy = y;
+		return true;
+	}
+	return false;
+}
+
+ROSE_INLINE bool wm_window_update_size(wmWindow *window, int x, int y) {
+	if (window->sizex != x || window->sizey != y) {
+		window->sizex = x;
+		window->sizey = y;
+		return true;
+	}
+	return false;
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Handle Window Events
@@ -47,6 +72,32 @@ ROSE_INLINE void wm_handle_window_event(struct WTKWindowManager *manager, struct
 	}
 }
 
+ROSE_INLINE void wm_handle_move_event(struct WTKWindowManager *manager, struct WTKWindow *handle, int event, int x, int y, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	switch (event) {
+		case EVT_RESIZE: {
+			if (wm_window_update_size(window, x, y)) {
+				/** Resize events block the main loop so we need to manually draw the window. */
+				WM_do_draw(C);
+			}
+		} break;
+		case EVT_MOVED: {
+			if (wm_window_update_pos(window, x, y)) {
+				/** Move events block the main loop so we need to manually draw the window. */
+				WM_do_draw(C);
+			}
+		} break;
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -62,6 +113,8 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	wm->handle = WTK_window_manager_new();
 	
 	WTK_window_manager_window_callback(wm->handle, EVT_DESTROY, wm_handle_window_event, C);
+	WTK_window_manager_resize_callback(wm->handle, wm_handle_move_event, C);
+	WTK_window_manager_move_callback(wm->handle, wm_handle_move_event, C);
 	
 	CTX_data_main_set(C, main);
 	CTX_wm_manager_set(C, wm);
@@ -88,6 +141,8 @@ void WM_main(struct rContext *C) {
 	while(true) {
 		/** Handle all pending operating system events. */
 		WTK_window_manager_poll(wm->handle);
+		
+		WM_do_draw(C);
 	}
 }
 

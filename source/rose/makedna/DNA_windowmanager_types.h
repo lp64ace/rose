@@ -28,6 +28,8 @@ typedef struct wmWindow {
 typedef struct WindowManager {
 	ID id;
 	
+	struct wmWindow *windrawable;
+	
 	/**
 	 * This is the handle of the backend system that we are using, 
 	 * this handle does not belong to us but is the linking part between TinyWindow and WindowManager.

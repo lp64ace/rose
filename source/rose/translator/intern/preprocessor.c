@@ -30,7 +30,7 @@ typedef struct RCCConditionalInclude {
 } RCCConditionalInclude;
 
 ROSE_INLINE void push_conditional(RCContext *C, RCCConditionalInclude **conditional, RCCToken *token, bool included) {
-	RCCConditionalInclude *nconditional = RT_context_malloc(C, sizeof(RCCConditionalInclude));
+	RCCConditionalInclude *nconditional = RT_context_calloc(C, sizeof(RCCConditionalInclude));
 	{
 		nconditional->parent = *conditional;
 		nconditional->kind = IN_THEN;

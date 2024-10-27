@@ -45,11 +45,17 @@ enum {
 	EVT_DESTROY = 1,
 	EVT_MINIMIZED,
 	EVT_MAXIMIZED,
+	EVT_RESIZE,
+	EVT_MOVED,
 };
 
 typedef void (*WTKWindowCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, void *userdata);
+typedef void (*WTKResizeCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, int x, int y, void *userdata);
+typedef void (*WTKMoveCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, int x, int y, void *userdata);
 
 void WTK_window_manager_window_callback(struct WTKWindowManager *manager, int event, WTKWindowCallbackFn fn, void *userdata);
+void WTK_window_manager_resize_callback(struct WTKWindowManager *manager, WTKResizeCallbackFn fn, void *userdata);
+void WTK_window_manager_move_callback(struct WTKWindowManager *manager, WTKMoveCallbackFn fn, void *userdata);
 
 /**
  * \brief Create a new window with the specified title and dimensions.
@@ -77,8 +83,18 @@ struct WTKWindow *WTK_create_window(struct WTKWindowManager *, const char *title
  */
 void WTK_window_free(struct WTKWindowManager *, struct WTKWindow *window);
 
+/** Set the swap interval of the drawing buffer. */
+void WTK_window_set_swap_interval(struct WTKWindowManager *, struct WTKWindow *window, int interval);
+
 /** Check if the window should close. */
 bool WTK_window_should_close(struct WTKWindow *window);
+/** Swap the font and back buffer of a window. */
+void WTK_window_swap_buffers(struct WTKWindow *window);
+/** Make the drawing context of the window current. */
+void WTK_window_make_context_current(struct WTKWindow *window);
+
+void WTK_window_pos(struct WTKWindow *window, int *r_posx, int *r_posy);
+void WTK_window_size(struct WTKWindow *window, int *r_sizex, int *r_sizey);
 
 #ifdef __cplusplus
 }
