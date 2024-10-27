@@ -1,5 +1,5 @@
-#ifndef WTK_API_H
-#define WTK_API_H
+#ifndef TINY_WINDOW_H
+#define TINY_WINDOW_H
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -41,6 +41,16 @@ void WTK_window_manager_free(struct WTKWindowManager *);
  */
 void WTK_window_manager_poll(struct WTKWindowManager *);
 
+enum {
+	EVT_DESTROY = 1,
+	EVT_MINIMIZED,
+	EVT_MAXIMIZED,
+};
+
+typedef void (*WTKWindowCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, void *userdata);
+
+void WTK_window_manager_window_callback(struct WTKWindowManager *manager, int event, WTKWindowCallbackFn fn, void *userdata);
+
 /**
  * \brief Create a new window with the specified title and dimensions.
  *
@@ -74,4 +84,4 @@ bool WTK_window_should_close(struct WTKWindow *window);
 }
 #endif
 
-#endif // WTK_API_H
+#endif // TINY_WINDOW_H
