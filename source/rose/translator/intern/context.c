@@ -2,7 +2,8 @@
 
 #include "RT_context.h"
 
-#define MEMARENA_ALLOCATION_BLOCK 1024 * 16
+/** We use this to allocated space for source files, support up to 16MB source files. */
+#define MEMARENA_ALLOCATION_BLOCK 1024 * 1024 * 16
 
 /* -------------------------------------------------------------------- */
 /** \name Create Methods

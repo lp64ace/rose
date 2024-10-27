@@ -274,7 +274,7 @@ enum class state_t {
 struct windowSetting_t {
 	friend class windowManager;
 
-	windowSetting_t(const char *name = nullptr, void *userData = nullptr, vec2_t<unsigned int> resolution = vec2_t<unsigned int>(defaultWindowWidth, defaultWindowHeight), int versionMajor = 4, int versionMinor = 2, unsigned int colorBits = 8, unsigned int depthBits = 24, unsigned int stencilBits = 8, unsigned int accumBits = 8, state_t currentState = state_t::normal, profile_t profile = profile_t::compatibility) {
+	windowSetting_t(const char *name = nullptr, void *userData = nullptr, vec2_t<unsigned int> resolution = vec2_t<unsigned int>(defaultWindowWidth, defaultWindowHeight), int versionMajor = 3, int versionMinor = 3, unsigned int colorBits = 8, unsigned int depthBits = 24, unsigned int stencilBits = 8, unsigned int accumBits = 8, state_t currentState = state_t::normal, profile_t profile = profile_t::compatibility) {
 		this->name = name;
 		this->resolution = resolution;
 		this->colorBits = colorBits;
@@ -1595,7 +1595,7 @@ public:
 		mask |= StructureNotifyMask | PropertyChangeMask | FocusChangeMask;
 		mask |= ExposureMask;
 
-		XSelectInput(currentDisplay, XDefaultRootWindow(currentDisplay), StructureNotifyMask);
+		XSelectInput(currentDisplay, XDefaultRootWindow(currentDisplay), mask);
 #endif
 	}
 
@@ -2610,7 +2610,25 @@ private:
 	void InitializePixelFormat(tWindow *window) {
 		unsigned int count = WGL_NUMBER_PIXEL_FORMATS_ARB;
 		int format = 0;
-		int attribs[] = {WGL_SUPPORT_OPENGL_ARB, 1, WGL_DRAW_TO_WINDOW_ARB, 1, WGL_DOUBLE_BUFFER_ARB, 1, WGL_RED_BITS_ARB, window->settings.colorBits, WGL_GREEN_BITS_ARB, window->settings.colorBits, WGL_BLUE_BITS_ARB, window->settings.colorBits, WGL_ALPHA_BITS_ARB, window->settings.colorBits, WGL_DEPTH_BITS_ARB, window->settings.depthBits, WGL_STENCIL_BITS_ARB, window->settings.stencilBits, WGL_ACCUM_RED_BITS_ARB, window->settings.accumBits, WGL_ACCUM_GREEN_BITS_ARB, window->settings.accumBits, WGL_ACCUM_BLUE_BITS_ARB, window->settings.accumBits, WGL_ACCUM_ALPHA_BITS_ARB, window->settings.accumBits, WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB, WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB};
+		int attribs[] = {
+			WGL_SUPPORT_OPENGL_ARB, 1,
+			WGL_DRAW_TO_WINDOW_ARB, 1,
+			WGL_DOUBLE_BUFFER_ARB, 1,
+			WGL_RED_BITS_ARB, window->settings.colorBits,
+			WGL_GREEN_BITS_ARB, window->settings.colorBits,
+			WGL_BLUE_BITS_ARB, window->settings.colorBits,
+			WGL_ALPHA_BITS_ARB, window->settings.colorBits,
+			WGL_DEPTH_BITS_ARB, window->settings.depthBits,
+			WGL_STENCIL_BITS_ARB, window->settings.stencilBits,
+			WGL_ACCUM_RED_BITS_ARB, window->settings.accumBits,
+			WGL_ACCUM_GREEN_BITS_ARB, window->settings.accumBits,
+			WGL_ACCUM_BLUE_BITS_ARB, window->settings.accumBits,
+			WGL_ACCUM_ALPHA_BITS_ARB, window->settings.accumBits,
+			WGL_ACCELERATION_ARB,
+			WGL_FULL_ACCELERATION_ARB,
+			WGL_PIXEL_TYPE_ARB,
+			WGL_TYPE_RGBA_ARB
+		};
 
 		std::vector<int> attribList;
 		attribList.assign(attribs, attribs + std::size(attribs));
@@ -3203,14 +3221,13 @@ private:
 		InitializePixelFormat(window);
 		if (wglCreateContextAttribsARB) {
 			int attribs[] {
-				WGL_CONTEXT_MAJOR_VERSION_ARB, window->settings.versionMajor, WGL_CONTEXT_MINOR_VERSION_ARB, window->settings.versionMinor, WGL_CONTEXT_PROFILE_MASK_ARB, window->settings.profile,
-#	if defined(_DEBUG)
-					WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
-#	endif
-					0
+				WGL_CONTEXT_MAJOR_VERSION_ARB, window->settings.versionMajor,
+				WGL_CONTEXT_MINOR_VERSION_ARB, window->settings.versionMinor,
+				WGL_CONTEXT_PROFILE_MASK_ARB, window->settings.profile,
+				0
 			};
 
-			window->glRenderingContextHandle = wglCreateContextAttribsARB(window->deviceContextHandle, nullptr, attribs);
+			window->glRenderingContextHandle = wglCreateContextAttribsARB(window->deviceContextHandle, nullptr, nullptr);
 
 			if (window->glRenderingContextHandle == nullptr) {
 				switch (GetLastError()) {
@@ -3221,10 +3238,13 @@ private:
 					case ERROR_INVALID_PROFILE_ARB: {
 						return TinyWindow::error_t::invalidProfile;
 					}
+
+					default: {
+						return TinyWindow::error_t::invalidContext;
+					}
 				}
 			}
 		}
-
 		else {
 			// use the old fashion method if the extensions aren't loading
 			window->glRenderingContextHandle = wglCreateContext(window->deviceContextHandle);
@@ -3499,6 +3519,10 @@ private:
 
 	void Linux_ProcessEvents(XEvent currentEvent) {
 		tWindow *window = GetWindowByEvent(currentEvent);
+		
+		if(!window) {
+			return;
+		}
 		
 		switch (currentEvent.type) {
 			case Expose: {

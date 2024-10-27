@@ -22,6 +22,7 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
+	KER_context.h
 	KER_global.h
 	KER_idprop.h
 	KER_idtype.h
@@ -32,6 +33,7 @@ set(SRC
 	KER_main.h
 	KER_rose.h
 
+	intern/context.c
 	intern/idprop.c
 	intern/idtype.c
 	intern/lib_id.c

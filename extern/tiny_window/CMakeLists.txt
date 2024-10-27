@@ -22,10 +22,10 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
+	tiny_window.h
 	tiny_window.hh
 	
-	wtk_api.cc
-	wtk_api.h
+	intern/api.cc
 )
 
 # -----------------------------------------------------------------------------

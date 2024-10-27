@@ -136,6 +136,12 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 }
 
 int main(int argc, char **argv) {
+#ifndef NDEBUG
+	MEM_init_memleak_detection();
+	MEM_enable_fail_on_memleak();
+	MEM_use_guarded_allocator();
+#endif
+
 	int status = 0;
 
 	if(!init(argc, argv)) {

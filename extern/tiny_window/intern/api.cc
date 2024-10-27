@@ -1,5 +1,4 @@
-#include "wtk_api.h"
-
+#include "tiny_window.h"
 #include "tiny_window.hh"
 
 WTKWindowManager *WTK_window_manager_new(void) {
@@ -18,14 +17,36 @@ void WTK_window_manager_poll(WTKWindowManager *vmanager) {
 	manager->PollForEvents();
 }
 
+void WTK_window_manager_window_callback(WTKWindowManager *vmanager, int event, WTKWindowCallbackFn fn, void *userdata) {
+	TinyWindow::windowManager *manager = reinterpret_cast<TinyWindow::windowManager *>(vmanager);
+	if (manager) {
+		switch (event) {
+			case EVT_DESTROY: {
+				manager->destroyedEvent = [=](TinyWindow::tWindow *window) -> void {
+					fn(vmanager, reinterpret_cast<WTKWindow *>(window), EVT_DESTROY, userdata);
+				};
+			} break;
+			case EVT_MINIMIZED: {
+				manager->minimizedEvent = [=](TinyWindow::tWindow *window) -> void {
+					fn(vmanager, reinterpret_cast<WTKWindow *>(window), EVT_MINIMIZED, userdata);
+				};
+			} break;
+			case EVT_MAXIMIZED: {
+				manager->maximizedEvent = [=](TinyWindow::tWindow *window) -> void {
+					fn(vmanager, reinterpret_cast<WTKWindow *>(window), EVT_MAXIMIZED, userdata);
+				};
+			} break;
+		}
+	}
+}
+
 WTKWindow *WTK_create_window(WTKWindowManager *vmanager, const char *title, int width, int height) {
 	TinyWindow::windowManager *manager = reinterpret_cast<TinyWindow::windowManager *>(vmanager);
-	TinyWindow::windowSetting_t settings;
+	TinyWindow::windowSetting_t settings = {};
 	settings.name = title;
 	settings.resolution = TinyWindow::vec2_t<unsigned int>(width, height);
 	settings.SetProfile(TinyWindow::profile_t::core);
 	settings.currentState = TinyWindow::state_t::normal;
-	settings.enableSRGB = true;
 	
 	return reinterpret_cast<WTKWindow *>(manager->AddWindow(settings));
 }

@@ -2,6 +2,8 @@
 #	include "MEM_guardedalloc.h"
 #endif
 
+#include "KER_context.h"
+
 #include "WM_api.h"
 
 int main(void) {
@@ -10,11 +12,13 @@ int main(void) {
 	MEM_enable_fail_on_memleak();
 	MEM_use_guarded_allocator();
 #endif
+
+	struct rContext *C = CTX_new();
 	
-	WM_init();
+	WM_init(C);
 	do {
-		WM_main();
-	} while(true);
+		WM_main(C);
+	} while(false);
 	
 	return 0;
 }
