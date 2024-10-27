@@ -239,6 +239,9 @@ void DNA_sdna_free(SDNA *sdna) {
 	if(sdna->types) {
 		LIB_ghash_free(sdna->types, NULL, NULL);
 	}
+	if (sdna->visit) {
+		LIB_ghash_free(sdna->visit, NULL, NULL);
+	}
 	if(sdna->context) {
 		RT_context_free(sdna->context);
 	}
