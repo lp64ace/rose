@@ -75,7 +75,8 @@ void LIB_memory_arena_destroy(MemArena *arena) {
 void *LIB_memory_arena_malloc(MemArena *arena, size_t size) {
 	void *ptr = NULL;
 	
-	if(size >= arena->cursize) {
+	ROSE_assert(size < arena->bufsize);
+	if(size > arena->cursize) {
 		arena->cursize = arena->bufsize;
 		
 		MemBuf *nbuf = MEM_mallocN(arena->cursize, arena->name);

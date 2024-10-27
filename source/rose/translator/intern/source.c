@@ -60,7 +60,6 @@ ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
 			p[0] = ' ';
 			continue;
 		}
-
 	}
 	return content;
 }
@@ -133,13 +132,14 @@ RCCFileCache *RT_fcache_read_ex(RCContext *C, const char *path) {
 		size_t length = (size_t)ftell(file);
 		fseek(file, 0, SEEK_SET);
 
-		void *content = RT_context_malloc(C, length + 1);
+		void *content = MEM_mallocN(length + 1, "RCCFileCache::content");
 		if (content) {
 			size_t actual;
 			if ((actual = fread(content, 1, length, file)) != length) {
 				fprintf(stderr, "WARNING: Invalid amount of charachters read while opening file '%s'.\n", path);
 			}
 			cache = RT_fcache_new_ex(C, path, content, actual);
+			MEM_freeN(content);
 		}
 
 		fclose(file);
@@ -167,6 +167,7 @@ RCCFileCache *RT_fcache_read(const char *path) {
 				fprintf(stderr, "WARNING: Invalid amount of charachters read while opening file '%s'.\n", path);
 			}
 			cache = RT_fcache_new(path, content, actual);
+			MEM_freeN(content);
 		}
 
 		fclose(file);
