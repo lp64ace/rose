@@ -10,24 +10,10 @@ set(INC
 )
 
 # -----------------------------------------------------------------------------
-# Define System Include Directories
-
-set(INC_SYS
-	# External System Include Directories
-	
-)
-
-# -----------------------------------------------------------------------------
 # Define Source Files
 
 set(SRC
-	WM_api.h
-	WM_draw.h
-	WM_window.h
-	
-	intern/wm.c
-	intern/wm_draw.c
-	intern/wm_window.c
+	datatoc.c
 )
 
 # -----------------------------------------------------------------------------
@@ -35,18 +21,18 @@ set(SRC
 
 set(LIB
 	# Internal Library Dependencies
-	rose::extern::tiny_window
 	rose::intern::guardedalloc
 	rose::source::roselib
-	rose::source::rosekernel
-	rose::source::gpu
 	
 	# External Library Dependencies
 	
 )
 
 # -----------------------------------------------------------------------------
-# Declare Library
+# Declare Executable
 
-rose_add_lib(windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::windowmanager ALIAS windowmanager)
+add_executable(datatoc ${SRC})
+add_executable(rose::source::datatoc ALIAS datatoc)
+
+rose_target_link_libraries(datatoc "${LIB}")
+rose_target_include_dirs(datatoc "${INC}")

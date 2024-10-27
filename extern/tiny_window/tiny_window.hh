@@ -41,16 +41,16 @@
 
 #if defined(__linux__)
 #	define TW_LINUX
-#	ifndef GLX_GLXEXT_PROTOTYPES
-#		define GLX_GLXEXT_PROTOTYPES 1
-#	endif
 #	if !defined(TW_USE_VULKAN)
 #		include <GL/glew.h>
+#		include <GL/gl.h>
 #		include <GL/glx.h>
+#		include <GL/glxext.h>
 #	else
 #		include <vulkan.h>
 #	endif
 #	include <X11/X.h>
+#	include <X11/Xlib.h>
 #	include <X11/XKBlib.h>
 #	include <X11/Xatom.h>
 #	include <X11/keysym.h>
@@ -1586,16 +1586,6 @@ public:
 		screenResolution.y = HeightOfScreen(
 			XScreenOfDisplay(currentDisplay,
 				DefaultScreen(currentDisplay)));*/
-
-		unsigned long mask = 0;
-		
-		mask |= KeyPressMask | KeyReleaseMask;
-		mask |= ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
-		mask |= PointerMotionMask | EnterWindowMask | LeaveWindowMask;
-		mask |= StructureNotifyMask | PropertyChangeMask | FocusChangeMask;
-		mask |= ExposureMask;
-
-		XSelectInput(currentDisplay, XDefaultRootWindow(currentDisplay), mask);
 #endif
 	}
 
@@ -2547,7 +2537,7 @@ private:
 	}
 
 	// initialize the given window using Win32
-	void Windows_InitializeWindow(tWindow *window, UINT style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | CS_DROPSHADOW, int clearScreenExtra = 0, int windowExtra = 0, HINSTANCE winInstance = GetModuleHandle(nullptr), HICON icon = LoadIcon(nullptr, IDI_APPLICATION), HCURSOR cursor = LoadCursor(nullptr, IDC_ARROW), HBRUSH brush = (HBRUSH)GetStockObject(WHITE_BRUSH)) {
+	void Windows_InitializeWindow(tWindow *window, UINT style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW, int clearScreenExtra = 0, int windowExtra = 0, HINSTANCE winInstance = GetModuleHandle(nullptr), HICON icon = LoadIcon(nullptr, IDI_APPLICATION), HCURSOR cursor = LoadCursor(nullptr, IDC_ARROW), HBRUSH brush = (HBRUSH)GetStockObject(WHITE_BRUSH)) {
 		window->instanceHandle = winInstance;
 		window->windowClass.style = style;
 		window->windowClass.lpfnWndProc = windowManager::WindowProcedure;
@@ -3466,7 +3456,33 @@ private:
 	}
 
 	std::error_code Linux_InitializeWindow(tWindow *window) {
-		window->attributes = new int[]{GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE, window->settings.depthBits, None};
+		/**
+		window->attributes = new int[]{
+			GLX_RGBA,
+			GLX_DOUBLEBUFFER,
+			GLX_RED_SIZE, window->settings.colorBits,
+			GLX_GREEN_SIZE, window->settings.colorBits,
+			GLX_BLUE_SIZE, window->settings.colorBits,
+			GLX_ALPHA_SIZE, window->settings.colorBits,
+			GLX_DEPTH_SIZE, window->settings.depthBits,
+			None
+		};
+		*/
+		
+		int i = 0;
+		int attribs[64];
+		
+		attribs[i++] = GLX_RGBA;
+		attribs[i++] = GLX_DOUBLEBUFFER;
+		attribs[i++] = GLX_RED_SIZE;
+		attribs[i++] = 1;
+		attribs[i++] = GLX_GREEN_SIZE;
+		attribs[i++] = 1;
+		attribs[i++] = GLX_BLUE_SIZE;
+		attribs[i++] = 1;
+		attribs[i++] = GLX_DEPTH_SIZE;
+		attribs[i++] = 1;
+		attribs[i++] = None;
 
 		window->linuxDecorators = 1;
 		window->currentStyle |= window->linuxClose | window->linuxMaximize | window->linuxMinimize | window->linuxMove;
@@ -3474,14 +3490,14 @@ private:
 		if (!currentDisplay) {
 			return TinyWindow::error_t::linuxCannotConnectXServer;
 		}
-
-		// window->visualInfo = glXGetVisualFromFBConfig(currentDisplay, GetBestFrameBufferConfig(window));
-		window->visualInfo = glXChooseVisual(currentDisplay, 0, window->attributes);
+		
+		int screen = XDefaultScreen(currentDisplay);
+		window->visualInfo = glXChooseVisual(currentDisplay, screen, attribs);
 
 		if (!window->visualInfo) {
 			return TinyWindow::error_t::linuxInvalidVisualinfo;
 		}
-
+		
 		window->setAttributes.colormap = XCreateColormap(currentDisplay, DefaultRootWindow(currentDisplay), window->visualInfo->visual, AllocNone);
 		window->setAttributes.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | MotionNotify | ButtonPressMask | ButtonReleaseMask | FocusIn | FocusOut | Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask | PointerMotionMask | FocusChangeMask | VisibilityChangeMask | PropertyChangeMask | SubstructureNotifyMask;
 
@@ -3499,6 +3515,16 @@ private:
 		XStoreName(currentDisplay, window->windowHandle, window->settings.name);
 
 		XSetWMProtocols(currentDisplay, window->windowHandle, &window->AtomClose, 1);
+		
+		unsigned long mask = 0;
+		
+		mask |= KeyPressMask | KeyReleaseMask;
+		mask |= ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
+		mask |= PointerMotionMask | EnterWindowMask | LeaveWindowMask;
+		mask |= PropertyChangeMask | FocusChangeMask;
+		mask |= ExposureMask;
+
+		XSelectInput(currentDisplay, window->windowHandle, mask);
 
 		InitializeGL(window);
 
@@ -3841,8 +3867,7 @@ private:
 			}
 
 			default: {
-				return;
-			}
+			} break;
 		}
 	}
 
@@ -4256,7 +4281,6 @@ private:
 	}
 
 	std::error_code Linux_InitGL(tWindow *window) {
-
 		// create a dummy context and use the extenstions from that to make a new context
 		GLXContext dummyContext = glXCreateContext(currentDisplay, window->visualInfo, 0, true);
 
