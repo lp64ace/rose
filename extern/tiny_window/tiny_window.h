@@ -45,17 +45,18 @@ enum {
 	EVT_DESTROY = 1,
 	EVT_MINIMIZED,
 	EVT_MAXIMIZED,
+	
 	EVT_RESIZE,
 	EVT_MOVED,
 };
 
-typedef void (*WTKWindowCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, void *userdata);
-typedef void (*WTKResizeCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, int x, int y, void *userdata);
-typedef void (*WTKMoveCallbackFn)(struct WTKWindowManager *manager, struct WTKWindow *window, int event, int x, int y, void *userdata);
+typedef void (*WTKWindowCallbackFn)(struct WTKWindowManager *, struct WTKWindow *, int event, void *userdata);
+typedef void (*WTKResizeCallbackFn)(struct WTKWindowManager *, struct WTKWindow *, int event, int x, int y, void *userdata);
+typedef void (*WTKMoveCallbackFn)(struct WTKWindowManager *, struct WTKWindow *, int event, int x, int y, void *userdata);
 
-void WTK_window_manager_window_callback(struct WTKWindowManager *manager, int event, WTKWindowCallbackFn fn, void *userdata);
-void WTK_window_manager_resize_callback(struct WTKWindowManager *manager, WTKResizeCallbackFn fn, void *userdata);
-void WTK_window_manager_move_callback(struct WTKWindowManager *manager, WTKMoveCallbackFn fn, void *userdata);
+void WTK_window_manager_window_callback(struct WTKWindowManager *, int event, WTKWindowCallbackFn fn, void *userdata);
+void WTK_window_manager_resize_callback(struct WTKWindowManager *, WTKResizeCallbackFn fn, void *userdata);
+void WTK_window_manager_move_callback(struct WTKWindowManager *, WTKMoveCallbackFn fn, void *userdata);
 
 /**
  * \brief Create a new window with the specified title and dimensions.
@@ -81,20 +82,76 @@ struct WTKWindow *WTK_create_window(struct WTKWindowManager *, const char *title
  * \param manager A pointer to the \ref WTKWindowManager managing the window.
  * \param window A pointer to the \ref WTKWindow to be freed.
  */
-void WTK_window_free(struct WTKWindowManager *, struct WTKWindow *window);
+void WTK_window_free(struct WTKWindowManager *, struct WTKWindow *);
 
-/** Set the swap interval of the drawing buffer. */
-void WTK_window_set_swap_interval(struct WTKWindowManager *, struct WTKWindow *window, int interval);
+/**
+ * \brief Set the swap interval of the drawing buffer.
+ *
+ * This function sets the swap interval for a window's drawing buffer, determining
+ * the rate at which the buffer is swapped. A swap interval of 1, for example, synchronizes
+ * the buffer swap with the monitor's vertical refresh rate, minimizing screen tearing.
+ *
+ * \param manager A pointer to the \ref WTKWindowManager managing the window.
+ * \param window A pointer to the \ref WTKWindow for which the swap interval will be set.
+ * \param interval An integer specifying the swap interval.
+ */
+void WTK_window_set_swap_interval(struct WTKWindowManager *, struct WTKWindow *, int interval);
 
-/** Check if the window should close. */
-bool WTK_window_should_close(struct WTKWindow *window);
-/** Swap the font and back buffer of a window. */
-void WTK_window_swap_buffers(struct WTKWindow *window);
-/** Make the drawing context of the window current. */
-void WTK_window_make_context_current(struct WTKWindow *window);
+/**
+ * \brief Check if the window should close.
+ *
+ * This function checks if a given window has been marked for closure, returning a boolean 
+ * value indicating whether it should be closed. Useful for determining when to exit the 
+ * main application loop.
+ *
+ * \param window A pointer to the \ref WTKWindow to be checked.
+ * \return True if the window should close; otherwise, false.
+ */
+bool WTK_window_should_close(struct WTKWindow *);
+/**
+ * \brief Swap the front and back buffers of a window.
+ *
+ * This function swaps the front and back buffers of the specified window, effectively 
+ * displaying the current drawing buffer on the screen. Typically used in rendering 
+ * loops to present a new frame to the display.
+ *
+ * \param window A pointer to the \ref WTKWindow whose buffers are to be swapped.
+ */
+void WTK_window_swap_buffers(struct WTKWindow *);
+/**
+ * \brief Make the drawing context of the window current.
+ *
+ * This function sets the drawing context of the specified window as the current one, so that
+ * subsequent rendering commands are directed to this window. This is necessary in setups
+ * where multiple windows or rendering contexts are used.
+ *
+ * \param window A pointer to the \ref WTKWindow for which the context is to be made current.
+ */
+void WTK_window_make_context_current(struct WTKWindow *);
 
-void WTK_window_pos(struct WTKWindow *window, int *r_posx, int *r_posy);
-void WTK_window_size(struct WTKWindow *window, int *r_sizex, int *r_sizey);
+/**
+ * \brief Get the current position of the window.
+ *
+ * This function retrieves the current screen position of the specified window, storing
+ * the x and y coordinates in the provided pointers. The position is relative to the top-left
+ * corner of the screen.
+ *
+ * \param window A pointer to the \ref WTKWindow whose position is to be retrieved.
+ * \param r_posx A pointer to an integer where the x-coordinate will be stored.
+ * \param r_posy A pointer to an integer where the y-coordinate will be stored.
+ */
+void WTK_window_pos(struct WTKWindow *, int *r_posx, int *r_posy);
+/**
+ * \brief Get the current size of the window.
+ *
+ * This function retrieves the current width and height of the specified window, storing
+ * the values in the provided pointers. This is useful for handling window resizing.
+ *
+ * \param window A pointer to the \ref WTKWindow whose size is to be retrieved.
+ * \param r_sizex A pointer to an integer where the width will be stored.
+ * \param r_sizey A pointer to an integer where the height will be stored.
+ */
+void WTK_window_size(struct WTKWindow *, int *r_sizex, int *r_sizey);
 
 #ifdef __cplusplus
 }
