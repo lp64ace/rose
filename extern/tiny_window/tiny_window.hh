@@ -4179,7 +4179,20 @@ private:
 	}
 
 	GLXFBConfig GetBestFrameBufferConfig(tWindow *window) {
-		const int visualAttributes[] = {GLX_X_RENDERABLE, true, GLX_RENDER_TYPE, GLX_RGBA_BIT, GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT, GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR, GLX_RED_SIZE, window->settings.colorBits, GLX_GREEN_SIZE, window->settings.colorBits, GLX_BLUE_SIZE, window->settings.colorBits, GLX_ALPHA_SIZE, window->settings.colorBits, GLX_DEPTH_SIZE, window->settings.depthBits, GLX_STENCIL_SIZE, window->settings.stencilBits, GLX_DOUBLEBUFFER, true, None};
+		const int visualAttributes[] = {
+			GLX_X_RENDERABLE, true,
+			GLX_RENDER_TYPE, GLX_RGBA_BIT,
+			GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+			GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+			GLX_RED_SIZE, window->settings.colorBits,
+			GLX_GREEN_SIZE, window->settings.colorBits,
+			GLX_BLUE_SIZE, window->settings.colorBits,
+			GLX_ALPHA_SIZE, window->settings.colorBits,
+			GLX_DEPTH_SIZE, window->settings.depthBits,
+			GLX_STENCIL_SIZE, window->settings.stencilBits,
+			GLX_DOUBLEBUFFER, true,
+			None
+		};
 
 		int frameBufferCount;
 		unsigned int bestBufferConfig;	//, bestNumSamples = 0;
@@ -4259,12 +4272,9 @@ private:
 		int (*oldHandler)(Display *, XErrorEvent *) = XSetErrorHandler(&X11ErrorHandler);
 
 		int contextAttribs[] = {
-			GLX_CONTEXT_MAJOR_VERSION_ARB,
-			window->settings.versionMajor,
-			GLX_CONTEXT_MINOR_VERSION_ARB,
-			window->settings.versionMinor,
-			GLX_CONTEXT_PROFILE_MASK_ARB,
-			window->settings.profile,
+			GLX_CONTEXT_MAJOR_VERSION_ARB, window->settings.versionMajor,
+			GLX_CONTEXT_MINOR_VERSION_ARB, window->settings.versionMinor,
+			GLX_CONTEXT_PROFILE_MASK_ARB, window->settings.profile,
 			GLX_CONTEXT_FLAGS_ARB,
 			GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
 		};
