@@ -1,5 +1,7 @@
 #include "WM_draw.h"
 
+#include "GPU_context.h"
+
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -12,6 +14,7 @@ ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, boo
 	if(activate) {
 		WTK_window_make_context_current(window->handle);
 	}
+	GPU_context_active_set(window->context);
 }
 
 ROSE_INLINE void wm_window_clear_drawable(WindowManager *wm) {

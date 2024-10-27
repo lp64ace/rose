@@ -39,6 +39,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::gpu
 	
 	# External Library Dependencies
 	

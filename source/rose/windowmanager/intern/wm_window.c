@@ -2,6 +2,8 @@
 
 #include "WM_window.h"
 
+#include "GPU_context.h"
+
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -14,6 +16,8 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 		window->handle = WTK_create_window(wm->handle, name, width, height);
 		window->parent = parent;
 		
+		window->context = GPU_context_new();
+		
 		/** Windows have the habbit of setting the swap interval to one by default. */
 		WTK_window_set_swap_interval(wm->handle, window->handle, 0);
 
@@ -25,6 +29,7 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 wmWindow *WM_window_open(struct rContext *C, wmWindow *parent, const char *name, int width, int height) {
 	wmWindow *window = wm_window_new(C, parent, name, width, height);
 	if(window) {
+		/** We should load the default scene and everything here! */
 	}
 	return window;
 }
@@ -49,9 +54,13 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 	 */
 	LIB_remlink(&wm->windows, window);
 	
-	if(wm->windrawable == window) {
-		wm->windrawable = NULL;
+	WTK_window_make_context_current(window->handle);
+	if(window->context) {
+		GPU_context_active_set(window->context);
+		GPU_context_free(window->context);
+		window->context = NULL;
 	}
+	wm->windrawable = NULL;
 	
 	if(window->handle) {
 		WTK_window_free(wm->handle, window->handle);
