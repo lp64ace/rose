@@ -9,9 +9,11 @@
 extern "C" {
 #endif
 
-void WM_init();
-void WM_main();
-void WM_exit();
+struct rContext;
+
+void WM_init(struct rContext *C);
+void WM_main(struct rContext *C);
+void WM_exit(struct rContext *C);
 
 #ifdef __cplusplus
 }
