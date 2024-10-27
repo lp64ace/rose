@@ -3456,7 +3456,6 @@ private:
 	}
 
 	std::error_code Linux_InitializeWindow(tWindow *window) {
-		/**
 		window->attributes = new int[]{
 			GLX_RGBA,
 			GLX_DOUBLEBUFFER,
@@ -3467,22 +3466,6 @@ private:
 			GLX_DEPTH_SIZE, window->settings.depthBits,
 			None
 		};
-		*/
-		
-		int i = 0;
-		int attribs[64];
-		
-		attribs[i++] = GLX_RGBA;
-		attribs[i++] = GLX_DOUBLEBUFFER;
-		attribs[i++] = GLX_RED_SIZE;
-		attribs[i++] = 1;
-		attribs[i++] = GLX_GREEN_SIZE;
-		attribs[i++] = 1;
-		attribs[i++] = GLX_BLUE_SIZE;
-		attribs[i++] = 1;
-		attribs[i++] = GLX_DEPTH_SIZE;
-		attribs[i++] = 1;
-		attribs[i++] = None;
 
 		window->linuxDecorators = 1;
 		window->currentStyle |= window->linuxClose | window->linuxMaximize | window->linuxMinimize | window->linuxMove;
@@ -3492,7 +3475,7 @@ private:
 		}
 		
 		int screen = XDefaultScreen(currentDisplay);
-		window->visualInfo = glXChooseVisual(currentDisplay, screen, attribs);
+		window->visualInfo = glXChooseVisual(currentDisplay, screen, window->attributes);
 
 		if (!window->visualInfo) {
 			return TinyWindow::error_t::linuxInvalidVisualinfo;
