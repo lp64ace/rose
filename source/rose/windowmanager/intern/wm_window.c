@@ -20,6 +20,8 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 		
 		/** Windows have the habbit of setting the swap interval to one by default. */
 		WTK_window_set_swap_interval(wm->handle, window->handle, 0);
+		WTK_window_pos(window->handle, &window->posx, &window->posy);
+		WTK_window_size(window->handle, &window->sizex, &window->sizey);
 
 		LIB_addtail(&wm->windows, window);
 	}
