@@ -543,9 +543,7 @@ static GPUFrameBuffer *gpu_offscreen_fb_get(GPUOffScreen *ofs) {
 	 * and start over. This is most likely never going
 	 * to happen under normal usage. */
 	ROSE_assert(0);
-	printf(
-		"Warning: GPUOffscreen used in more than 3 GPUContext. "
-		"This may create performance drop.\n");
+	printf("[Offscreen] Warning: offscreen used in more than 3 gpu-contexts. This may create performance drop.\n");
 
 	for (auto &framebuffer : ofs->framebuffers) {
 		GPU_framebuffer_free(framebuffer.fb);
@@ -575,12 +573,12 @@ GPUOffScreen *GPU_offscreen_create(int width, int height, bool depth, TextureFor
 	}
 
 	if ((depth && !ofs->depth) || !ofs->color) {
-		const char error[] = "GPUTexture: Texture allocation failed.";
+		const char error[] = "[Texture] Allocation failed.";
 		if (err_out) {
 			LIB_strcpy(err_out, 256, error);
 		}
 		else {
-			fprintf(stderr, "%s", error);
+			fprintf(stderr, "%s\n", error);
 		}
 		GPU_offscreen_free(ofs);
 		return nullptr;
