@@ -7,6 +7,10 @@
 extern "C" {
 #endif
 
+/* -------------------------------------------------------------------- */
+/** \name Endian Switch
+ * \{ */
+
 /* clang-format off */
 
 ROSE_INLINE void LIB_endian_switch_int16(short *val) {
@@ -62,6 +66,8 @@ ROSE_INLINE void LIB_endian_switch_rank(void *vmem, size_t rank) {
 }
 
 /* clang-format on */
+
+/** \} */
 
 #ifdef __cplusplus
 }

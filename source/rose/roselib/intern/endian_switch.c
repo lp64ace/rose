@@ -1,6 +1,10 @@
 #include "LIB_endian_switch.h"
 #include "LIB_utildefines.h"
 
+/* -------------------------------------------------------------------- */
+/** \name Array Endian Switch
+ * \{ */
+
 void LIB_endian_switch_int16_array(short *val, const int size) {
     if (size > 0) {
         int i = size;
@@ -72,3 +76,5 @@ void LIB_endian_switch_double_array(double *val, const int size) {
         }
     }
 }
+
+/** \} */
