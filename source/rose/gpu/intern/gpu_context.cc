@@ -1,209 +1,177 @@
-#include "MEM_guardedalloc.h"
-
 #include "LIB_assert.h"
-#include "LIB_thread.h"
 #include "LIB_utildefines.h"
 
-#include "gpu_context_private.h"
+#include "GPU_context.h"
+#include "GPU_init_exit.h"
+
+#include "gpu_backend.hh"
+#include "gpu_context_private.hh"
+#include "gpu_matrix_private.h"
+#include "gpu_immediate_private.hh"
+#include "gpu_private.h"
+
+#include "opengl/gl_backend.hh"
+#include "opengl/gl_context.hh"
 
 #include <mutex>
 #include <vector>
 
-static std::vector<GLuint> orphaned_buffer_ids;
-static std::vector<GLuint> orphaned_texture_ids;
+using namespace rose::gpu;
 
-static std::mutex orphaned_mutex;
+static thread_local Context *active_ctx = nullptr;
 
-struct GPUContext {
-	GLuint default_vertex_array;
+static std::mutex backend_users_mutex;
+static int num_backend_users = 0;
+
+static void gpu_backend_create();
+static void gpu_backend_discard();
+
+/* -------------------------------------------------------------------- */
+/** \name gpu::Context Methods
+ * \{ */
+
+namespace rose::gpu {
+
+Context::Context() {
+	thread_ = pthread_self();
+	active_ = false;
 	
-	std::vector<GLuint> orphaned_vertex_array_ids;
-	std::vector<GLuint> orphaned_frame_buffer_ids;
-	std::mutex orphaned_mutex;
-	
-	struct GPUFrameBuffer *fbo_active = nullptr;
-};
-
-static thread_local GPUContext *ctx_active = nullptr;
-
-ROSE_INLINE void orphan_add(GPUContext *ctx, std::vector<GLuint> *list, GLuint id) {
-	std::mutex *mutex = (ctx) ? &ctx->orphaned_mutex : &orphaned_mutex;
-	
-	mutex->lock();
-	list->emplace_back(id);
-	mutex->unlock();
+	matrix_state = GPU_matrix_state_create();
 }
 
-ROSE_INLINE void orphan_clear(GPUContext *ctx) {
-	/** Need at least an active context. */
-	ROSE_assert(ctx);
+Context::~Context() {
+	GPU_matrix_state_discard(matrix_state);
 	
-	ctx->orphaned_mutex.lock();
-	if(!ctx->orphaned_vertex_array_ids.empty()) {
-		GLsizei len = static_cast<GLsizei>(ctx->orphaned_vertex_array_ids.size());
-		glDeleteVertexArrays(len, ctx->orphaned_vertex_array_ids.data());
-		ctx->orphaned_vertex_array_ids.clear();
-	}
-	if(!ctx->orphaned_frame_buffer_ids.empty()) {
-		GLsizei len = static_cast<GLsizei>(ctx->orphaned_frame_buffer_ids.size());
-		glDeleteFramebuffers(len, ctx->orphaned_frame_buffer_ids.data());
-		ctx->orphaned_frame_buffer_ids.clear();
-	}
-	ctx->orphaned_mutex.unlock();
+	MEM_delete<StateManager>(state_manager);
+	MEM_delete<FrameBuffer>(front_left);
+	MEM_delete<FrameBuffer>(back_left);
+	MEM_delete<FrameBuffer>(front_right);
+	MEM_delete<FrameBuffer>(back_right);
 	
-	orphaned_mutex.lock();
-	if(!orphaned_buffer_ids.empty()) {
-		GLsizei len = static_cast<GLsizei>(orphaned_buffer_ids.size());
-		glDeleteBuffers(len, orphaned_buffer_ids.data());
-		orphaned_buffer_ids.clear();
+	MEM_delete<Immediate>(imm);
+}
+
+bool Context::is_active_on_thread() {
+	return (this == active_ctx) && pthread_equal(pthread_self(), thread_);
+}
+
+Context *Context::get() {
+	return active_ctx;
+}
+
+}  // namespace rose::gpu
+
+/* \} */
+
+GPUContext *GPU_context_create(void *ghost_window, void *ghost_context) {
+	{
+		std::scoped_lock lock(backend_users_mutex);
+		if (num_backend_users == 0) {
+			/* Automatically create backend when first context is created. */
+			gpu_backend_create();
+
+			GPU_init();
+		}
+		num_backend_users++;
 	}
-	if(!orphaned_texture_ids.empty()) {
-		GLsizei len = static_cast<GLsizei>(orphaned_texture_ids.size());
-		glDeleteTextures(len, orphaned_texture_ids.data());
-		orphaned_texture_ids.clear();
+
+	Context *ctx = GPUBackend::get()->context_alloc(ghost_window, ghost_context);
+
+	GPU_context_active_set(wrap(ctx));
+	return wrap(ctx);
+}
+
+void GPU_context_discard(GPUContext *ctx_) {
+	Context *ctx = unwrap(ctx_);
+	MEM_delete<Context>(ctx);
+	active_ctx = nullptr;
+
+	{
+		std::scoped_lock lock(backend_users_mutex);
+		num_backend_users--;
+		ROSE_assert(num_backend_users >= 0);
+		if (num_backend_users == 0) {
+			GPU_exit();
+			
+			/* Discard backend when last context is discarded. */
+			gpu_backend_discard();
+		}
 	}
-	orphaned_mutex.unlock();
+}
+
+void GPU_context_active_set(GPUContext *ctx_) {
+	Context *ctx = unwrap(ctx_);
+
+	if (active_ctx) {
+		active_ctx->deactivate();
+	}
+
+	active_ctx = ctx;
+
+	if (ctx) {
+		ctx->activate();
+	}
+}
+
+GPUContext *GPU_context_active_get() {
+	return wrap(Context::get());
+}
+
+static std::mutex main_context_mutex;
+
+void GPU_context_main_lock() {
+	main_context_mutex.lock();
+}
+
+void GPU_context_main_unlock() {
+	main_context_mutex.unlock();
 }
 
 /* -------------------------------------------------------------------- */
-/** \name Create Methods
+/** \name Backend selection
  * \{ */
 
-GPUContext *GPU_context_new(void) {
-	/** Do not use MEM_mallocN here since we need to initialize, std::vector and std::mutex! */
-	GPUContext *context = MEM_new<GPUContext>("GPUContext");
-	glGenVertexArrays(1, &context->default_vertex_array);
-	GPU_context_active_set(context);
-	return context;
+static BackendType g_backend_type = GPU_BACKEND_OPENGL;
+static GPUBackend *g_backend = nullptr;
+
+void GPU_backend_type_selection_set(BackendType backend) {
+	/* We will try to install this backend first and if this fail we try others too. */
+	g_backend_type = backend;
 }
 
-/** \} */
+BackendType GPU_backend_get_type(void) {
+	return (g_backend) ? g_backend_type : GPU_BACKEND_NONE;
+}
+
+static void gpu_backend_create() {
+	switch (g_backend_type) {
+		case GPU_BACKEND_OPENGL: {
+			g_backend = MEM_new<GLBackend>("rose::gpu::Backend");
+		} break;
+		default: {
+			ROSE_assert_unreachable();
+		} break;
+	}
+}
+
+void gpu_backend_delete_resources() {
+	ROSE_assert(g_backend);
+	g_backend->delete_resources();
+}
+
+static void gpu_backend_discard() {
+	MEM_delete<GPUBackend>(g_backend);
+	g_backend = nullptr;
+}
+
+/* \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Destroy Methods
+/** \name Backend Utils
  * \{ */
 
-void GPU_context_free(GPUContext *context) {
-	ROSE_assert(context == ctx_active);
-	ROSE_assert(context->orphaned_vertex_array_ids.empty());
-	
-	glDeleteVertexArrays(1, &context->default_vertex_array);
-	MEM_delete<GPUContext>(context);
-	/** Since we require that context is made active before free, invalid the active context. */
-	ctx_active = NULL;
+GPUBackend *GPUBackend::get() {
+	return g_backend;
 }
 
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Get/Set Methods
- * \{ */
-
-void GPU_context_active_set(GPUContext *ctx) {
-	if(ctx) {
-		/** We require that the context is already made current. */
-		orphan_clear(ctx);
-	}
-	ctx_active = ctx;
-}
-GPUContext *GPU_context_active_get(void) {
-	return ctx_active;
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Object Allocation/Deallocation
- * \{ */
-
-GLuint GPU_buf_alloc(void) {
-	GLuint id = 0;
-	orphan_clear(ctx_active);
-	glGenBuffers(1, &id);
-	return id;
-}
-GLuint GPU_tex_alloc(void) {
-	GLuint id = 0;
-	orphan_clear(ctx_active);
-	glGenTextures(1, &id);
-	return id;
-}
-GLuint GPU_vao_alloc(void) {
-	GLuint id = 0;
-	orphan_clear(ctx_active);
-	glGenVertexArrays(1, &id);
-	return id;
-}
-GLuint GPU_fbo_alloc(void) {
-	GLuint id = 0;
-	orphan_clear(ctx_active);
-	glGenFramebuffers(1, &id);
-	return id;
-}
-
-void GPU_buf_free(GLuint id) {
-	if(ctx_active) {
-		glDeleteBuffers(1, &id);
-	}
-	else {
-		orphan_add(NULL, &orphaned_buffer_ids, id);
-	}
-}
-void GPU_tex_free(GLuint id) {
-	if(ctx_active) {
-		glDeleteTextures(1, &id);
-	}
-	else {
-		orphan_add(NULL, &orphaned_texture_ids, id);
-	}
-}
-
-void GPU_vao_free(GLuint id, GPUContext *context) {
-	ROSE_assert(context);
-	if(context == ctx_active) {
-		glDeleteVertexArrays(1, &id);
-	}
-	else {
-		orphan_add(context, &context->orphaned_vertex_array_ids, id);
-	}
-}
-void GPU_fbo_free(GLuint id, GPUContext *context) {
-	ROSE_assert(context);
-	if(context == ctx_active) {
-		glDeleteFramebuffers(1, &id);
-	}
-	else {
-		orphan_add(context, &context->orphaned_frame_buffer_ids, id);
-	}
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Get Methods
- * \{ */
-
-GLuint GPU_vao_default() {
-	ROSE_assert(ctx_active);
-	
-	return ctx_active->default_vertex_array;
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Get/Set Methods
- * \{ */
-
-void gpu_context_active_framebuffer_set(GPUContext *ctx, GPUFrameBuffer *fbo) {
-	ROSE_assert(ctx);
-	
-	ctx->fbo_active = fbo;
-}
-GPUFrameBuffer *gpu_context_active_framebuffer_get(GPUContext *ctx) {
-	ROSE_assert(ctx);
-	
-	return ctx->fbo_active;
-}
-
-/** \} */
+/* \} */

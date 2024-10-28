@@ -1,11 +1,23 @@
 #ifndef MATH_BIT_INLINE_C
 #define MATH_BIT_INLINE_C
 
+#include "LIB_assert.h"
 #include "LIB_math_bit.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* -------------------------------------------------------------------- */
+/** \name Pow 2
+ * \{ */
+
+ROSE_INLINE bool is_power_of_2_i(int x) {
+	ROSE_assert(x >= 0);
+	return (x & (x - 1)) == 0;
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Base 2
@@ -31,6 +43,30 @@ ROSE_INLINE uint64_t _lib_nextpow2_u64(uint64_t n) {
 	n |= n >> 32;
 	n++;
 	return n;
+}
+
+/** \} */
+
+
+/* -------------------------------------------------------------------- */
+/** \name Conversion
+ * \{ */
+
+ROSE_INLINE float int_as_float(int i) {
+	union {
+		int i;
+		float f;
+	} u;
+	u.i = i;
+	return u.f;
+}
+ROSE_INLINE int float_as_int(float f) {
+	union {
+		int i;
+		float f;
+	} u;
+	u.f = f;
+	return u.i;
 }
 
 /** \} */

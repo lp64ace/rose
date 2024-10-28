@@ -13,7 +13,7 @@ TEST(Span, IsReferencing) {
 	EXPECT_EQ(span[1], 10);
 }
 
-TEST(span, TakeFront) {
+TEST(Span, TakeFront) {
 	const int array[] = {4, 5, 6, 7};
 	auto slice = Span<int>(array, ARRAY_SIZE(array)).take_front(2);
 	EXPECT_EQ(slice.size(), 2);
@@ -21,7 +21,7 @@ TEST(span, TakeFront) {
 	EXPECT_EQ(slice[1], 5);
 }
 
-TEST(span, TakeBack) {
+TEST(Span, TakeBack) {
 	const int array[] = {4, 5, 6, 7};
 	auto slice = Span<int>(array, ARRAY_SIZE(array)).take_back(2);
 	EXPECT_EQ(slice.size(), 2);
@@ -29,7 +29,7 @@ TEST(span, TakeBack) {
 	EXPECT_EQ(slice[1], 7);
 }
 
-TEST(span, Comparison) {
+TEST(Span, Comparison) {
 	std::array<int, 3> a = {3, 4, 5};
 	std::array<int, 4> b = {3, 4, 5, 6};
 

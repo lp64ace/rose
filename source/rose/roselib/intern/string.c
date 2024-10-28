@@ -331,7 +331,7 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	/** Resulting string has to be null-terminated. */
 	if (n < maxncpy) {
 		/** Format the buffer and then make sure that it is null-terminated, see below! */
-		n = vsnprintf(buffer, n, fmt, args);
+		n = vsnprintf(buffer, maxncpy, fmt, args);
 	}
 	else {
 		n = 0;
@@ -339,6 +339,70 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 
 	buffer[n] = '\0';
 	return n;
+}
+
+char *LIB_strnformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
+	va_list args;
+
+	va_start(args, fmt);
+	/**
+	 * #vsnprintf, `int vsnprintf (char * s, size_t n, const char * format, va_list arg );`
+	 *
+	 * \return
+	 * The number of characters that would have been written if n had been sufficiently large, not counting the terminating null character.
+	 * If an encoding error occurs, a negative number is returned.
+	 * Notice that only when this returned value is non-negative and less than n, the string has been completely written.
+	 */
+	size_t n = vsnprintf(NULL, 0, fmt, args) + 1;
+	va_end(args);
+	
+	char *buffer = MEM_mallocN(n, "StringFormatN");
+	if(buffer) {
+		va_start(args, fmt);
+		vsnprintf(buffer, n, fmt, args);
+		va_end(args);
+	}
+	return buffer;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Replace in String
+ * \{ */
+
+void LIB_string_replace_single(char *buffer, char old, char nval) {
+	for(size_t index = 0; buffer[index] != '\0'; index++) {
+		if(buffer[index] == old) {
+			buffer[index] = nval;
+		}
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name String Build
+ * \{ */
+
+char *LIB_string_join_arrayN(const char **array, size_t length) {
+	size_t total = 0;
+	
+	for(size_t index = 0; index < length; index++) {
+		total += LIB_strlen(array[index]);
+	}
+	
+	char *result = MEM_mallocN(total + 1, "StringJoinArrayN");
+	if(result) {
+		char *offset = result;
+		for(size_t index = 0; index < length; index++) {
+			const size_t cpy = LIB_strlen(array[index]);
+			memcpy(offset, array[index], cpy);
+			offset += cpy;
+		}
+		*offset = '\0';
+	}
+	return result;
 }
 
 /** \} */

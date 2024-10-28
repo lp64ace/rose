@@ -237,6 +237,28 @@ const char *LIB_strprev(const char *begin, const char *end, const char *itr, int
 size_t LIB_strnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const char *fmt, ...);
 size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const char *fmt, va_list args);
 
+char *LIB_strnformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Replace in String
+ * \{ */
+
+/** Replace all occurances of #old in #buffer with #nval. */
+void LIB_string_replace_single(char *buffer, char old, char nval);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name String Build
+ * \{ */
+
+/**
+ * Join an array of strings into a newly allocated, null terminated string.
+ */
+char *LIB_string_join_arrayN(const char **array, size_t length);
+
 /** \} */
 
 #ifdef __cplusplus

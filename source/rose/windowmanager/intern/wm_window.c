@@ -16,7 +16,7 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 		window->handle = WTK_create_window(wm->handle, name, width, height);
 		window->parent = parent;
 		
-		window->context = GPU_context_new();
+		window->context = GPU_context_create(window->handle, NULL);
 		
 		/** Windows have the habbit of setting the swap interval to one by default. */
 		WTK_window_set_swap_interval(wm->handle, window->handle, 0);
@@ -57,7 +57,7 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 	WTK_window_make_context_current(window->handle);
 	if(window->context) {
 		GPU_context_active_set(window->context);
-		GPU_context_free(window->context);
+		GPU_context_discard(window->context);
 		window->context = NULL;
 	}
 	wm->windrawable = NULL;
