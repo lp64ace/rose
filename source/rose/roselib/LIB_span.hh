@@ -72,6 +72,9 @@ public:
 	using iterator = const T *;
 	using size_type = size_t;
 	
+	/* Similar to string::npos. */
+	static constexpr size_t not_found = -1;
+	
 protected:
 	const_pointer data_ = nullptr;
 	size_type size_ = 0;
@@ -96,7 +99,7 @@ public:
 	 *  Span<int> span = {1, 2, 3, 4};
 	 *  call_function_with_array(span);
 	 */
-	constexpr Span(const std::initializer_list<T> &list) : Span(list.begin(), size_t(list.size)) {
+	constexpr Span(const std::initializer_list<T> &list) : Span(list.begin(), list.size()) {
 	}
 	constexpr Span(const std::vector<T>& vector) : Span(vector.data(), vector.size()) {
 	}
@@ -241,7 +244,7 @@ public:
 	
 	constexpr size_t first_index(const T &value) const {
 		const size_t index = this->first_index_try(value);
-		ROSE_assert(index != static_cast<size_t>(-1));
+		ROSE_assert(index != not_found);
 		return index;
 	}
 	constexpr size_t first_index_try(const T &value) const {
@@ -250,7 +253,7 @@ public:
 				return index;
 			}
 		}
-		return static_cast<size_t>(-1);
+		return not_found;
 	}
 	
 	constexpr IndexRange index_range() const {

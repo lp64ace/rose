@@ -10,6 +10,21 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------- */
+/** \name Generic Nodes
+ * \{ */
+
+typedef struct LinkData {
+	struct LinkData *prev, *next;
+	
+	void *data;
+} LinkData;
+
+/** Creates a new LinkData node with the specified data. */
+struct LinkData *LIB_generic_nodeN(void *data);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Insert Methods
  * \{ */
 

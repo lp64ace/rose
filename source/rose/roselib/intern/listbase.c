@@ -6,6 +6,20 @@
 #include <string.h>
 
 /* -------------------------------------------------------------------- */
+/** \name Generic Nodes
+ * \{ */
+
+LinkData *LIB_generic_nodeN(void *data) {
+	LinkData *link = MEM_mallocN(sizeof(LinkData), "LinkData");
+	if(link) {
+		link->data = data;
+	}
+	return link;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Listbase Insert Methods
  * \{ */
 
