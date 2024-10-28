@@ -33,6 +33,8 @@ set(SRC
 	LIB_index_range.hh
 	LIB_listbase.h
 	LIB_math_bit.h
+	LIB_math_matrix_types.hh
+	LIB_math_vector_types.hh
 	LIB_memarena.h
 	LIB_memory_utils.hh
 	LIB_mempool.h
@@ -42,8 +44,10 @@ set(SRC
 	LIB_string_utils.h
 	LIB_sys_types.h
 	LIB_thread.h
+	LIB_unroll.hh
 	LIB_utildefines.h
 	LIB_utildefines_variadic.h
+	LIB_utility_mixins.hh
 	
 	algorithm/rabin_karp.c
 	algorithm/rabin_karp.h
@@ -56,6 +60,7 @@ set(SRC
 	intern/hash_mm2a.c
 	intern/listbase.c
 	intern/math_bit.c
+	intern/math_matrix.cc
 	intern/memarena.c
 	intern/mempool.c
 	intern/path_utils.c
@@ -110,6 +115,8 @@ set(TEST
 	test/ghash.cc
 	test/listbase.cc
 	test/math_bit.cc
+	test/math_matrix_types.cc
+	test/math_vector_types.cc
 	test/mempool.cc
 	test/rabin_karp.cc
 	test/span.cc
