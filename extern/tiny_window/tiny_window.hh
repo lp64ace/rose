@@ -2028,15 +2028,15 @@ private:
 			case WM_SIZING: {
 				RECT tempRect;
 				GetWindowRect(window->windowHandle, &tempRect);
-				window->settings.resolution.width = tempRect.right;
-				window->settings.resolution.height = tempRect.bottom;
+				window->settings.resolution.width = tempRect.right - tempRect.left;
+				window->settings.resolution.height = tempRect.bottom - tempRect.top;
 
 				GetClientRect(window->windowHandle, &tempRect);
-				window->clientArea.width = tempRect.right;
-				window->clientArea.height = tempRect.bottom;
+				window->clientArea.width = tempRect.right - tempRect.left;
+				window->clientArea.height = tempRect.bottom - tempRect.top;
 
 				if (manager->resizeEvent != nullptr) {
-					manager->resizeEvent(window, window->settings.resolution);
+					manager->resizeEvent(window, window->clientArea);
 				}
 
 				UpdateWindow(window->windowHandle);	 // , NULL, true);
@@ -3496,18 +3496,17 @@ private:
 		
 		XMapWindow(currentDisplay, window->windowHandle);
 		XStoreName(currentDisplay, window->windowHandle, window->settings.name);
-
-		XSetWMProtocols(currentDisplay, window->windowHandle, &window->AtomClose, 1);
 		
 		unsigned long mask = 0;
 		
 		mask |= KeyPressMask | KeyReleaseMask;
 		mask |= ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
 		mask |= PointerMotionMask | EnterWindowMask | LeaveWindowMask;
-		mask |= PropertyChangeMask | FocusChangeMask;
+		mask |= SubstructureNotifyMask | StructureNotifyMask | PropertyChangeMask | FocusChangeMask;
 		mask |= ExposureMask;
 
 		XSelectInput(currentDisplay, window->windowHandle, mask);
+		XSetWMProtocols(currentDisplay, window->windowHandle, &window->AtomClose, 1);
 
 		InitializeGL(window);
 
