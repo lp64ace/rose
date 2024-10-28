@@ -1,52 +1,58 @@
-#ifndef GPU_CONTEXT_H
-#define GPU_CONTEXT_H
+#pragma once
 
-#ifdef __cplusplus
+#include "GPU_platform.h"
+
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
+void GPU_backend_type_selection_set(BackendType backend);
+/** Returns the current backend type */
+BackendType GPU_backend_get_type(void);
+
+/** OPaque type hiding rose::gpu::Context. */
 typedef struct GPUContext GPUContext;
 
 /* -------------------------------------------------------------------- */
-/** \name Create Methods
+/** \name Creation & Deletion
  * \{ */
 
 /**
- * \brief Creates a new GPU context associated with a window.
+ * Create a context for the specified window or encase an already existing context.
+ * \param window The window we want to attach a GPU context to.
+ * \param context The context we want to encase, can be NULL if a window is specified.
  *
- * This function creates a new GPU context that is relevant to the current window, 
- * but it does not directly reference the underlying graphics backend context. 
- * The user is responsible for binding the appropriate OpenGL context before 
- * performing operations on this GPU context.
- *
- * \return A pointer to the newly created \ref GPUContext, or NULL if the context creation fails.
+ * We do not want to include GHOST here so we keep these as `void *`.
  */
-struct GPUContext *GPU_context_new(void);
+struct GPUContext *GPU_context_create(void *window, void *context);
 
-/** \} */
+/** Discard a context, beware this has to be called after #GPU_context_active_set(context). */
+void GPU_context_discard(struct GPUContext *context);
 
-/* -------------------------------------------------------------------- */
-/** \name Destroy Methods
- * \{ */
-
-/** Destroy the specified context and any associated resources. */
-void GPU_context_free(struct GPUContext *context);
-
-/** \} */
+/* \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Get/Set Methods
+/** \name Activate & Deactivate
  * \{ */
 
-/** Updates the active GPU context, to be called after the OpenGL context is made current. */
+/**
+ * Tells the module which context is active, this will not active the context using GHOST so this has to be called after the
+ * context was made active.
+ */
 void GPU_context_active_set(struct GPUContext *);
-/** Retrieves the active GPU context, returns the last context passed to #GPU_context_active_set. */
 struct GPUContext *GPU_context_active_get(void);
 
-/** \} */
+/* \} */
 
-#ifdef __cplusplus
+/* -------------------------------------------------------------------- */
+/** \name Lock & Unlock
+ * \{ */
+
+void GPU_context_main_lock(void);
+void GPU_context_main_unlock(void);
+
+/* \} */
+
+#if defined(__cplusplus)
 }
 #endif
-
-#endif // GPU_CONTEXT_H
