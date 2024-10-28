@@ -51,6 +51,12 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 	cmake --build .
 	```
 
+# Demo
+
+Here is a little demo I put together to test the application.
+
+![Demo](https://i.imgur.com/UhYzAvm.png)
+
 # Authors
 
 Dimitris Bokis,
