@@ -7,6 +7,10 @@
 extern "C" {
 #endif
 
+/* -------------------------------------------------------------------- */
+/** \name Endian Switch
+ * \{ */
+
 // endian_switch_inline.c
 
 ROSE_INLINE void LIB_endian_switch_int16(short *val);
@@ -20,6 +24,12 @@ ROSE_INLINE void LIB_endian_switch_double(double *val);
 
 ROSE_INLINE void LIB_endian_switch_rank(void *mem, size_t rank);
 
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Array Endian Switch
+ * \{ */
+
 // endian_switch.c
 
 void LIB_endian_switch_int16_array(short *val, int size);
@@ -30,6 +40,8 @@ void LIB_endian_switch_float_array(float *val, int size);
 void LIB_endian_switch_int64_array(int64_t *val, int size);
 void LIB_endian_switch_uint64_array(uint64_t *val, int size);
 void LIB_endian_switch_double_array(double *val, int size);
+
+/** \} */
 
 #ifdef __cplusplus
 }

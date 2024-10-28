@@ -23,16 +23,21 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
+	LIB_allocator.hh
 	LIB_assert.h
 	LIB_bitmap.h
 	LIB_endian_switch.h
 	LIB_ghash.h
+	LIB_hash.hh
 	LIB_hash_mm2a.h
+	LIB_index_range.hh
 	LIB_listbase.h
 	LIB_math_bit.h
 	LIB_memarena.h
+	LIB_memory_utils.hh
 	LIB_mempool.h
 	LIB_path_utils.h
+	LIB_random_access_iterator_mixin.hh
 	LIB_string.h
 	LIB_string_utils.h
 	LIB_sys_types.h
@@ -107,6 +112,7 @@ set(TEST
 	test/math_bit.cc
 	test/mempool.cc
 	test/rabin_karp.cc
+	test/span.cc
 	test/string.cc
 )
 
