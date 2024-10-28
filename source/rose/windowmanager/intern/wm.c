@@ -8,6 +8,8 @@
 #include "WM_draw.h"
 #include "WM_window.h"
 
+#include "GPU_init_exit.h"
+
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -148,7 +150,7 @@ void WM_main(struct rContext *C) {
 
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
-
+	
 	CTX_free(C);
 	exit(0);
 }
