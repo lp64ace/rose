@@ -148,11 +148,22 @@ void WM_init(struct rContext *C) {
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 	
+	double frames = 0;
+
+	clock_t old = clock();
 	while(true) {
+		clock_t now = clock();
+		if ((now - old) * 4 > CLOCKS_PER_SEC) {
+			frames = fprintf(stdout, "FPS %.2lf\n", (frames * CLOCKS_PER_SEC) / (double)(now - old)), 0;
+			old = now;
+		}
+
 		/** Handle all pending operating system events. */
 		WTK_window_manager_poll(wm->handle);
 		
 		WM_do_draw(C);
+
+		frames++;
 	}
 }
 
