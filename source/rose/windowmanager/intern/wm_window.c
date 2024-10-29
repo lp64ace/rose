@@ -8,6 +8,7 @@
 #include "LIB_utildefines.h"
 
 #include <tiny_window.h>
+#include <stdio.h>
 
 ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const char *name, int width, int height) {
 	WindowManager *wm = CTX_wm_manager(C);
@@ -15,7 +16,6 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 	if(window) {
 		window->handle = WTK_create_window(wm->handle, name, width, height);
 		window->parent = parent;
-		
 		window->context = GPU_context_create(window->handle, NULL);
 		
 		/** Windows have the habbit of setting the swap interval to one by default. */
