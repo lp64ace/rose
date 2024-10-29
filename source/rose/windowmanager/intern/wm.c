@@ -154,7 +154,7 @@ void WM_main(struct rContext *C) {
 	while(true) {
 		clock_t now = clock();
 		if ((now - old) * 4 > CLOCKS_PER_SEC) {
-			frames = fprintf(stdout, "FPS %.2lf\n", (frames * CLOCKS_PER_SEC) / (double)(now - old)), 0;
+			frames = fprintf(stdout, "FPS %4.2lf\n", (frames * CLOCKS_PER_SEC) / (double)(now - old)), 0;
 			old = now;
 		}
 
