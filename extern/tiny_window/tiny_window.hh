@@ -2015,13 +2015,10 @@ private:
 						}
 						break;
 					}
+				}
 
-					default: {
-						if (manager->resizeEvent != nullptr) {
-							manager->resizeEvent(window, window->settings.resolution);
-						}
-						break;
-					}
+				if (manager->resizeEvent != nullptr) {
+					manager->resizeEvent(window, window->settings.resolution);
 				}
 				break;
 			}

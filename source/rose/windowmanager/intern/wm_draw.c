@@ -55,6 +55,11 @@ void WM_do_draw(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 	
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
+		if (window->sizex <= 0 || window->sizey <= 0) {
+			/** Do not render windows that are not visible. */
+			continue;
+		}
+
 		CTX_wm_window_set(C, window);
 		do {
 			wm_window_make_drawable(wm, window);

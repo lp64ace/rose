@@ -64,8 +64,15 @@ ROSE_INLINE void wm_handle_window_event(struct WTKWindowManager *manager, struct
 	}
 	
 	CTX_wm_window_set(C, window);
-	{
-		WM_window_free(wm, window);
+	switch (event) {
+		case EVT_DESTROY: {
+			WM_window_free(wm, window);
+		} break;
+		case EVT_MINIMIZED: {
+			if (wm_window_update_size(window, 0, 0)) {
+				/** Resize events block the main loop so we need to manually draw the window. */
+			}
+		} break;
 	}
 	CTX_wm_window_set(C, NULL);
 	
@@ -115,6 +122,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	wm->handle = WTK_window_manager_new();
 	
 	WTK_window_manager_window_callback(wm->handle, EVT_DESTROY, wm_handle_window_event, C);
+	WTK_window_manager_window_callback(wm->handle, EVT_MINIMIZED, wm_handle_window_event, C);
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_move_event, C);
 	WTK_window_manager_move_callback(wm->handle, wm_handle_move_event, C);
 	
