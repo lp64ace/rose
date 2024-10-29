@@ -1601,16 +1601,17 @@ public:
 	 * Use this to shutdown the window manager when your program is finished
 	 */
 	void ShutDown() {
+		while (windowList.size()) {
+			auto &window = windowList.back();
+			ShutdownWindow(window.get());
+		}
+		windowList.clear();
+
 #if defined(TW_WINDOWS)
 		ResetMonitors();
 #elif defined(TW_LINUX)
 		Linux_Shutdown();
 #endif
-
-		for (auto &windowIndex : windowList) {
-			ShutdownWindow(windowIndex.get());
-		}
-		windowList.clear();
 	}
 
 	/**
@@ -4185,7 +4186,7 @@ private:
 		return TinyWindow::error_t::linuxFunctionNotImplemented;
 	}
 
-	GLXFBConfig GetBestFrameBufferConfig(tWindow *window) {
+	GLXFBConfig GetBestFrameBufferConfig(tWindow* window) {
 		const int visualAttributes[] = {
 			GLX_X_RENDERABLE, true,
 			GLX_RENDER_TYPE, GLX_RGBA_BIT,
@@ -4204,10 +4205,10 @@ private:
 		int frameBufferCount;
 		unsigned int bestBufferConfig;	//, bestNumSamples = 0;
 		int screen = XDefaultScreen(currentDisplay);
-		GLXFBConfig *configs = glXChooseFBConfig(currentDisplay, screen, visualAttributes, &frameBufferCount);
-		
+		GLXFBConfig* configs = glXChooseFBConfig(currentDisplay, screen, visualAttributes, &frameBufferCount);
+
 		for (int configIndex = 0; configIndex < frameBufferCount; configIndex++) {
-			XVisualInfo *visualInfo = glXGetVisualFromFBConfig(currentDisplay, configs[configIndex]);
+			XVisualInfo* visualInfo = glXGetVisualFromFBConfig(currentDisplay, configs[configIndex]);
 
 			if (visualInfo) {
 				int samples, sampleBuffer;
@@ -4251,10 +4252,10 @@ private:
 	}
 
 	std::error_code Linux_InitExtensions() {
-		glxCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((const unsigned char *)"glxCreateContextAttribsARB");
-		glxMakeContextCurrent = (PFNGLXMAKECONTEXTCURRENTPROC)glXGetProcAddress((const unsigned char *)"glXMakeContextCurrent");
-		glxSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddress((const unsigned char *)"glXSwapIntervalEXT");
-		glxChooseFBConfig = (PFNGLXCHOOSEFBCONFIGPROC)glXGetProcAddress((const unsigned char *)"glXChooseFBConfig");
+		glxCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((const unsigned char*)"glxCreateContextAttribsARB");
+		glxMakeContextCurrent = (PFNGLXMAKECONTEXTCURRENTPROC)glXGetProcAddress((const unsigned char*)"glXMakeContextCurrent");
+		glxSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddress((const unsigned char*)"glXSwapIntervalEXT");
+		glxChooseFBConfig = (PFNGLXCHOOSEFBCONFIGPROC)glXGetProcAddress((const unsigned char*)"glXChooseFBConfig");
 
 		if (glxCreateContextAttribsARB != nullptr && glxMakeContextCurrent != nullptr && glxSwapIntervalEXT != nullptr && glxChooseFBConfig != nullptr) {
 			return error_t::success;
@@ -4262,7 +4263,7 @@ private:
 		return error_t::noExtensions;
 	}
 
-	std::error_code Linux_InitGL(tWindow *window) {
+	std::error_code Linux_InitGL(tWindow* window) {
 		// create a dummy context and use the extenstions from that to make a new context
 		GLXContext dummyContext = glXCreateContext(currentDisplay, window->visualInfo, 0, true);
 
@@ -4275,7 +4276,9 @@ private:
 #	endif
 		// window->context = glXCreateContext(currentDisplay, window->visualInfo, 0, true);
 
-		int (*oldHandler)(Display *, XErrorEvent *) = XSetErrorHandler(&X11ErrorHandler);
+		int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&X11ErrorHandler);
+
+		GLXFBConfig fbConfig = GetBestFrameBufferConfig(window);
 
 		int contextAttribs[] = {
 			GLX_CONTEXT_MAJOR_VERSION_ARB, window->settings.versionMajor,
@@ -4284,8 +4287,6 @@ private:
 			GLX_CONTEXT_FLAGS_ARB,
 			GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
 		};
-
-		GLXFBConfig fbConfig = GetBestFrameBufferConfig(window);
 
 		window->context = glxCreateContextAttribsARB(window->currentDisplay, fbConfig, NULL, true, contextAttribs);
 

@@ -25,6 +25,7 @@ public:
 	static GPUBackend *get();
 
 	virtual void samplers_update() = 0;
+	virtual void compute_dispatch(unsigned int groups_x_len, unsigned int groups_y_len, unsigned int groups_z_len) = 0;
 
 	virtual Batch *batch_alloc() = 0;
 	virtual Context *context_alloc(void *window, void *context) = 0;

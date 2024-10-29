@@ -7,6 +7,8 @@
 
 #include "gpu_platform_private.hh"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Global GPU Platform
  * \{ */

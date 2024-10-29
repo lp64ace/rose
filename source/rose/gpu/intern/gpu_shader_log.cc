@@ -39,9 +39,9 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 	fprintf(stderr, "%s%sIncluded files (in order):%s\n", info_col, line_prefix, reset_col);
 #endif
 
-	Vector<int64_t> sources_end_line;
+	Vector<size_t> sources_end_line;
 	for (StringRefNull src : sources) {
-		int64_t cursor = 0, line_count = 0;
+		size_t cursor = 0, line_count = 0;
 		while ((cursor = src.find('\n', cursor) + 1)) {
 			line_count++;
 		}

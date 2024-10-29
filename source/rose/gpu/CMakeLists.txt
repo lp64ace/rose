@@ -30,10 +30,14 @@ set(GLSL_SRC
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
+	shaders/gpu_shader_mandelbrot.glsl
 	shaders/gpu_shader_test_frag.glsl
 	shaders/gpu_shader_test_vert.glsl
 	shaders/gpu_shader_text_frag.glsl
 	shaders/gpu_shader_text_vert.glsl
+	
+	shaders/test/gpu_compute_1d_test.glsl
+	shaders/test/gpu_compute_2d_test.glsl
 )
 
 set(GLSL_C
@@ -234,6 +238,7 @@ set(INFO_SRC
 	infos/gpu_shader_2D_image_overlays_stereo_merge_info.hh
 	infos/gpu_shader_2D_image_rect_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
+	infos/gpu_shader_mandelbrot_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh
 	
@@ -277,3 +282,54 @@ set(LIB
 
 rose_add_lib(gpu "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::gpu ALIAS gpu)
+
+# -----------------------------------------------------------------------------
+# Define Include Directories (Test)
+
+set(INC
+	# Internal Include Directories
+	PUBLIC .
+	${CMAKE_CURRENT_BINARY_DIR}
+	
+	# External Include Directories
+	
+)
+
+# -----------------------------------------------------------------------------
+# Define System Include Directories (Test)
+
+set(INC_SYS
+	# External System Include Directories
+	
+)
+
+# -----------------------------------------------------------------------------
+# Define Source Files (Test)
+
+set(TEST
+	test/gpu_test.cc
+	test/gpu_test.hh
+	test/gpu_test_compute.cc
+)
+
+# -----------------------------------------------------------------------------
+# Define Library Dependencies (Test)
+
+set(LIB
+	# Internal Library Dependencies
+	rose::extern::tiny_window
+	rose::intern::guardedalloc
+	rose::source::roselib
+	rose::source::gpu
+	
+	# External Library Dependencies
+	${PTHREADS_LIBRARIES}
+	
+)
+
+# -----------------------------------------------------------------------------
+# Declare Test
+
+if(BUILD_GRAPHIC_TESTS)
+	rose_add_test_executable(gpu "${TEST}" "${INC}" "${INC_SYS}" "${LIB}")
+endif()

@@ -87,7 +87,7 @@ unsigned int _lib_reverse_scan_u32(uint32_t n) {
 	_BitScanReverse(&clz, n);
 	return 31 - clz;
 #else
-	return (unsigned int)__builtin_clz(n);
+	return (unsigned int)31 - __builtin_ctz(n);
 #endif
 }
 unsigned int _lib_reverse_scan_u64(uint64_t n) {
@@ -96,7 +96,7 @@ unsigned int _lib_reverse_scan_u64(uint64_t n) {
 	_BitScanReverse64(&clz, n);
 	return 31 - clz;
 #else
-	return (unsigned int)__builtin_clzll(n);
+	return (unsigned int)31 - __builtin_ctzll(n);
 #endif
 }
 

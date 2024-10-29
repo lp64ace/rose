@@ -408,6 +408,7 @@ void *GLTexture::read(int mip, DataFormat type) {
 			glGetTexImage(target_, mip, gl_format, gl_type, data);
 		}
 	}
+
 	return data;
 }
 
