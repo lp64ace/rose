@@ -64,6 +64,8 @@ WTKWindow *WTK_create_window(WTKWindowManager *vmanager, const char *title, int 
 	settings.resolution = TinyWindow::vec2_t<unsigned int>(width, height);
 	settings.SetProfile(TinyWindow::profile_t::core);
 	settings.currentState = TinyWindow::state_t::normal;
+	settings.versionMajor = 4;
+	settings.versionMinor = 3;
 	
 	return reinterpret_cast<WTKWindow *>(manager->AddWindow(settings));
 }
