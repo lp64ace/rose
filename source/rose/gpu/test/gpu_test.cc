@@ -12,7 +12,7 @@ void GPUTest::SetUp() {
 	if (!manager) {
 		return;
 	}
-	window = WTK_create_window(manager, "gpu::test", 800, 600);
+	window = WTK_create_window(manager, "gpu::test", 1, 1);
 	ROSE_assert_msg(window != NULL, "[gpu::test] Failed to create window!");
 	if (!window) {
 		return;
