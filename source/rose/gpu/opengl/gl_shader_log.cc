@@ -12,10 +12,10 @@ const char *GLLogParser::parse_line(const char *log_line, GPULogItem &log_item) 
 	/* Parse error line & char numbers. */
 	if (at_number(log_line)) {
 		const char *error_line_number_end;
-		log_item.cursor.row = parse_number(log_line, &error_line_number_end);
+		log_item.cursor.column = parse_number(log_line, &error_line_number_end);
 		/* Try to fetch the error character (not always available). */
 		if (at_any(error_line_number_end, "(:") && at_number(&error_line_number_end[1])) {
-			log_item.cursor.column = parse_number(error_line_number_end + 1, &log_line);
+			log_item.cursor.row = parse_number(error_line_number_end + 1, &log_line);
 		}
 		else {
 			log_line = error_line_number_end;

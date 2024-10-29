@@ -7,6 +7,7 @@
 
 #include "gl_batch.hh"
 #include "gl_context.hh"
+#include "gl_compute.hh"
 #include "gl_framebuffer.hh"
 #include "gl_index_buffer.hh"
 #include "gl_shader.hh"
@@ -49,6 +50,10 @@ public:
 	void samplers_update() override {
 		GLTexture::samplers_update();
 	};
+	void compute_dispatch(unsigned int groups_x_len, unsigned int groups_y_len, unsigned int groups_z_len) override {
+		GLContext::get()->state_manager_active_get()->apply_state();
+		GLCompute::dispatch(groups_x_len, groups_y_len, groups_z_len);
+	}
 
 public:
 	Batch *batch_alloc() override {

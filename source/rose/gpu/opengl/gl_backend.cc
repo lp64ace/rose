@@ -22,6 +22,8 @@ void GLBackend::platform_init() {
 	const char *renderer = (const char *)glGetString(GL_RENDERER);
 	const char *version = (const char *)glGetString(GL_VERSION);
 
+	fprintf(stdout, "[OpenGL] Using OpenGL %s\n", version);
+
 	DeviceType device = GPU_DEVICE_ANY;
 	OperatingSystemType system = GPU_OS_ANY;
 	DriverType driver = GPU_DRIVER_ANY;
@@ -204,7 +206,7 @@ static void detect_workarounds() {
 	const char *renderer = (const char *)glGetString(GL_RENDERER);
 	const char *version = (const char *)glGetString(GL_VERSION);
 
-	if (0) {
+	if (false) {
 		printf("\n");
 		printf("GL: Forcing workaround usage and disabling extensions.\n");
 		printf("    OpenGL identification strings\n");
@@ -388,8 +390,6 @@ static void detect_workarounds() {
 		gpu_set_info_i(GPU_INFO_CLEAR_VIEWPORT_WORKAROUND, true);
 	}
 
-	/* Metal-related Workarounds. */
-
 	/* Minimum Per-Vertex stride is 1 byte for OpenGL. */
 	gpu_set_info_i(GPU_INFO_MINIMUM_PER_VERTEX_STRIDE, 1);
 }
@@ -430,6 +430,7 @@ float GLContext::derivative_signs[2] = {1.0f, 1.0f};
 
 void GLBackend::capabilities_init() {
 	ROSE_assert(gl_version() >= 33);
+
 	/* Common Capabilities. */
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gpu_get_info_i(GPU_INFO_MAX_TEXTURE_SIZE));
 	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &gpu_get_info_i(GPU_INFO_MAX_TEXTURE_LAYERS));

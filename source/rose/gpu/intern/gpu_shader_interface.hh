@@ -100,7 +100,7 @@ public:
 
 	/* Returns uniform location. */
 	inline int32_t uniform_builtin(const UniformBuiltin builtin) const {
-		ROSE_assert(0 <= builtin && builtin < GPU_NUM_UNIFORMS);
+		ROSE_assert(0 <= builtin && builtin < ARRAY_SIZE(builtins_));
 		return builtins_[builtin];
 	}
 

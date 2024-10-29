@@ -489,8 +489,8 @@ bool gpu_shader_create_info_compile(const char *name_starts_with_filter) {
 			GPU_shader_free(shader);
 		}
 	}
-	
-	printf("Shader Test compilation result: %d / %d passed", success, total);
+
+	printf("[GPU] Shader Test compilation result: %d / %d passed", success, total);
 	if (skipped_filter > 0) {
 		printf(" (skipped %d when filtering)", skipped_filter);
 	}
