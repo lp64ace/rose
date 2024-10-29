@@ -37,6 +37,8 @@ include(CMakeDependentOption)
 cmake_dependent_option(ROSE_BUILD_WIN32 "Build support for Win32" ON "WIN32" OFF)
 cmake_dependent_option(ROSE_BUILD_X11 "Build support for X11" ON "UNIX;NOT APPLE" OFF)
 
+option(BUILD_GRAPHIC_TESTS "Enable graphics related tests" ON)
+
 if(ROSE_BUILD_WIN32)
 	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including Win32 support")
 endif()

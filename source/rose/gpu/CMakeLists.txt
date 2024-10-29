@@ -330,4 +330,6 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Test
 
-rose_add_test_executable(gpu "${TEST}" "${INC}" "${INC_SYS}" "${LIB}")
+if(BUILD_GRAPHIC_TESTS)
+	rose_add_test_executable(gpu "${TEST}" "${INC}" "${INC_SYS}" "${LIB}")
+endif()
