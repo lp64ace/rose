@@ -1,3 +1,5 @@
+#include "LIB_assert.h"
+
 #include "gpu_test.hh"
 
 #include <stdio.h>
@@ -6,13 +8,23 @@ namespace rose::gpu {
 
 void GPUTest::SetUp() {
 	manager = WTK_window_manager_new();
-	EXPECT_NE(manager, nullptr);
+	ROSE_assert_msg(manager != NULL, "[gpu::test] Failed to create window manager!");
+	if (!manager) {
+		return;
+	}
 	window = WTK_create_window(manager, "gpu::test", 800, 600);
-	EXPECT_NE(window, nullptr);
+	ROSE_assert_msg(window != NULL, "[gpu::test] Failed to create window!");
+	if (!window) {
+		return;
+	}
 
 	WTK_window_make_context_current(window);
+
 	context = GPU_context_create(window, NULL);
-	EXPECT_NE(context, nullptr);
+	ROSE_assert_msg(window != NULL, "[gpu::test] Failed to create window context!");
+	if (!context) {
+		return;
+	}
 }
 void GPUTest::TearDown() {
 	if (context) {
