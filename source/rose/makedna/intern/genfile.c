@@ -11,8 +11,6 @@
 
 #include "genfile.h"
 
-#include <stdio.h>
-
 #ifdef __BIG_ENDIAN__
 /* Big Endian */
 #	define MAKE_ID4(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))

@@ -2,8 +2,6 @@
 
 #include <GL/glew.h>
 
-#include <stdio.h>
-
 namespace rose::gpu {
 
 void GLCompute::dispatch(unsigned int group_x_len, unsigned int group_y_len, unsigned int group_z_len) {

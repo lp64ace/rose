@@ -12,7 +12,6 @@
 #include "LIB_utildefines.h"
 
 #include <tiny_window.h>
-#include <stdio.h>
 
 ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, bool activate) {
 	ROSE_assert(ELEM(wm->windrawable, NULL, window));
