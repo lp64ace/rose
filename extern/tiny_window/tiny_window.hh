@@ -528,6 +528,7 @@ enum class error_t {
 	linuxCannotCreateWindow,	   /**< Linux: When X11 fails to create a new window */
 	linuxFunctionNotImplemented,   /**< Linux: When the function has not yet been implemented on the Linux in the current version of the API */
 	windowsCannotCreateWindows,	   /**< Windows: When Win32 cannot create a window */
+	windowsCannotCreateContext,	   /**< Windows: When Win32 cannot create a context */
 	windowsCannotInitialize,	   /**< Windows: When Win32 cannot initialize */
 	windowsFullscreenBadDualView,  /**< Windows: The system is DualView capable. whatever that means */
 	windowsFullscreenBadFlags,	   /**< Windows: Bad display change flags */
@@ -2567,7 +2568,7 @@ private:
 		InitializeGL(window);
 
 		if(!window->contextCreated) {
-			return TinyWindow::error_t::invalidContext;
+			return TinyWindow::error_t::windowsCannotCreateContext;
 		}
 #	endif
 		ShowWindow(window->windowHandle, 1);
@@ -3259,6 +3260,7 @@ private:
 		if (GLEW_OK != err) {
 			/* Problem: glewInit failed, something is seriously wrong. */
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+			return TinyWindow::error_t::invalidContext;
 		}
 		fprintf(stdout, "[OpenGL] Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
@@ -4317,6 +4319,7 @@ private:
 			if (GLEW_OK != err) {
 				/* Problem: glewInit failed, something is seriously wrong. */
 				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+				return TinyWindow::error_t::invalidContext;
 			}
 			fprintf(stdout, "[OpenGL] Using GLEW %s\n", glewGetString(GLEW_VERSION));
 

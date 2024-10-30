@@ -399,11 +399,11 @@ void MEM_guarded_print_memlist() {
 				fprintf(stdout, " }\n");
 			}
 			else {
-				fprintf(stdout, "    Corrupted memory (tail) block found.\n");
+				fprintf(stderr, "    Corrupted memory (tail) block found.\n");
 			}
 		}
 		else {
-			fprintf(stdout, "    Corrupted memory (head) block found.\n");
+			fprintf(stderr, "    Corrupted memory (head) block found.\n");
 		}
 	}
 	mem_unlock_thread();
