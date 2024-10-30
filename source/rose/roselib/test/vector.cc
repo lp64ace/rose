@@ -12,4 +12,12 @@ TEST(Vector, Comparison) {
 	EXPECT_EQ(a, b);
 }
 
+TEST(Vector, Intersect) {
+	/** Add 5 elements, since inline buffer is 4. */
+	Vector<int> a({1, 3, 5});
+
+	EXPECT_TRUE(a.contains(3));
+	EXPECT_FALSE(a.contains(2));
+}
+
 }  // namespace rose

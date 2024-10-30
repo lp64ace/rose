@@ -72,12 +72,12 @@ unsigned int _lib_forward_scan_u64(uint64_t n) {
 
 unsigned int _lib_forward_scan_clear_u32(uint32_t *n) {
 	unsigned int index = _lib_forward_scan_u32(*n);
-	*n &= (*n) - 1;
+	*n &= ~(1u << index);
 	return index;
 }
 unsigned int _lib_forward_scan_clear_u64(uint64_t *n) {
 	unsigned int index = _lib_forward_scan_u64(*n);
-	*n &= (*n) - 1;
+	*n &= ~(1ull << index);
 	return index;
 }
 
@@ -85,28 +85,28 @@ unsigned int _lib_reverse_scan_u32(uint32_t n) {
 #ifdef _MSC_VER
 	unsigned long clz;
 	_BitScanReverse(&clz, n);
-	return 31 - clz;
+	return clz;
 #else
-	return (unsigned int)31 - __builtin_ctz(n);
+	return (unsigned int)__builtin_ctz(n);
 #endif
 }
 unsigned int _lib_reverse_scan_u64(uint64_t n) {
 #ifdef _MSC_VER
 	unsigned long clz;
 	_BitScanReverse64(&clz, n);
-	return 31 - clz;
+	return clz;
 #else
-	return (unsigned int)31 - __builtin_ctzll(n);
+	return (unsigned int)__builtin_ctzll(n);
 #endif
 }
 
 unsigned int _lib_reverse_scan_clear_u32(uint32_t *n) {
-	unsigned int i = _lib_reverse_scan_u32(*n);
-	*n &= ~(0x80000000 >> i);
-	return i;
+	unsigned int index = _lib_reverse_scan_u32(*n);
+	*n &= ~(1ull << index);
+	return index;
 }
 unsigned int _lib_reverse_scan_clear_u64(uint64_t *n) {
-	unsigned int i = _lib_reverse_scan_u64(*n);
-	*n &= ~(0x8000000000000000 >> i);
-	return i;
+	unsigned int index = _lib_reverse_scan_u64(*n);
+	*n &= ~(1ull << index);
+	return index;
 }

@@ -8,22 +8,20 @@ namespace rose::gpu {
 
 void GPUTest::SetUp() {
 	manager = WTK_window_manager_new();
-	ROSE_assert_msg(manager != NULL, "[gpu::test] Failed to create window manager!");
 	if (!manager) {
-		return;
+		GTEST_SKIP() << "Skipping gpu::test, GUI not supported.";
 	}
+
 	window = WTK_create_window(manager, "gpu::test", 1, 1);
-	ROSE_assert_msg(window != NULL, "[gpu::test] Failed to create window!");
 	if (!window) {
-		return;
+		GTEST_SKIP() << "Skipping gpu::test, GUI not supported.";
 	}
 
 	WTK_window_make_context_current(window);
 
 	context = GPU_context_create(window, NULL);
-	ROSE_assert_msg(window != NULL, "[gpu::test] Failed to create window context!");
 	if (!context) {
-		return;
+		GTEST_SKIP() << "Skipping gpu::test, Graphics not supported.";
 	}
 }
 void GPUTest::TearDown() {

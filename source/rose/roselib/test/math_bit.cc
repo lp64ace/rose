@@ -62,26 +62,50 @@ TEST(MathBit, PopulationCount64) {
 }
 
 TEST(MathBit, ForwardSearch) {
-	uint32_t init = (1 << 31) | (1 << 16) | (1 << 0);
+	uint32_t init = (1u << 31) | (1u << 16) | (1u << 0);
 	uint32_t copy = 0;
 	
 	uint32_t mask = init;
 	while(mask) {
-		copy |= (1 << _lib_forward_scan_clear_u32(&mask));
+		copy |= (1u << _lib_forward_scan_clear_u32(&mask));
 	}
 	
 	ASSERT_EQ(copy, init);
 }
 
 TEST(MathBit, ForwardSearch64) {
-	uint64_t init = (1ULL << 63) | (1ULL << 32) | (1ULL << 0);
+	uint64_t init = (1ull << 63) | (1ull << 32) | (1ull << 0);
 	uint64_t copy = 0;
 	
 	uint64_t mask = init;
 	while(mask) {
-		copy |= (1ULL << _lib_forward_scan_clear_u64(&mask));
+		copy |= (1ull << _lib_forward_scan_clear_u64(&mask));
 	}
 	
+	ASSERT_EQ(copy, init);
+}
+
+TEST(MathBit, ReverseSearch) {
+	uint32_t init = (1u << 31) | (1u << 4) | (1u << 0);
+	uint32_t copy = 0;
+
+	uint32_t mask = init;
+	while (mask) {
+		copy |= (1u << _lib_reverse_scan_clear_u32(&mask));
+	}
+
+	ASSERT_EQ(copy, init);
+}
+
+TEST(MathBit, ReverseSearch64) {
+	uint64_t init = (1ull << 63) | (1ull << 4) | (1ull << 0);
+	uint64_t copy = 0;
+
+	uint64_t mask = init;
+	while (mask) {
+		copy |= (1ull << _lib_reverse_scan_clear_u64(&mask));
+	}
+
 	ASSERT_EQ(copy, init);
 }
 

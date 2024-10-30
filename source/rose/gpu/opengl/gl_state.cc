@@ -474,15 +474,15 @@ void GLStateManager::texture_bind_apply() {
 	dirty_texture_binds_ = 0;
 
 	int first = _lib_forward_scan_u64(dirty_bind);
-	int last = 64 - _lib_reverse_scan_u64(dirty_bind);
-	int count = last - first;
+	int last = _lib_reverse_scan_u64(dirty_bind);
+	int count = last - first + 1;
 
 	if (GLContext::multi_bind_support) {
 		glBindTextures(first, count, textures_ + first);
 		glBindSamplers(first, count, samplers_ + first);
 	}
 	else {
-		for (int unit = first; unit < last; unit++) {
+		for (int unit = first; unit <= last; unit++) {
 			if ((dirty_bind >> unit) & 1UL) {
 				glActiveTexture(GL_TEXTURE0 + unit);
 				glBindTexture(targets_[unit], textures_[unit]);
@@ -555,15 +555,15 @@ void GLStateManager::image_bind_apply() {
 	uint32_t dirty_bind = dirty_image_binds_;
 	dirty_image_binds_ = 0;
 
-	int first = _lib_forward_scan_u64(dirty_bind);
-	int last = 32 - _lib_reverse_scan_u64(dirty_bind);
-	int count = last - first;
+	int first = _lib_forward_scan_u32(dirty_bind);
+	int last = _lib_reverse_scan_u32(dirty_bind);
+	int count = last - first + 1;
 
 	if (GLContext::multi_bind_image_support) {
 		glBindImageTextures(first, count, images_ + first);
 	}
 	else {
-		for (int unit = first; unit < last; unit++) {
+		for (int unit = first; unit <= last; unit++) {
 			if ((dirty_bind >> unit) & 1UL) {
 				glBindImageTexture(unit, images_[unit], 0, GL_TRUE, 0, GL_READ_WRITE, formats_[unit]);
 			}

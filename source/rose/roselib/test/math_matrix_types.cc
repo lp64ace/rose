@@ -19,7 +19,7 @@ TEST(MathMatrixTypes, Float2x2) {
 	EXPECT_EQ(B[1], float2(5, 1));
 }
 
-TEST(MathMatrixTypes, Multiplication2x2) {
+TEST(MathMatrixTypes, Multiply2x2) {
 	float2x2 A({
 		{1, 2},
 		{2, 1}
@@ -35,7 +35,7 @@ TEST(MathMatrixTypes, Multiplication2x2) {
 	}));
 }
 
-TEST(MathMatrixTypes, Multiplication3x3) {
+TEST(MathMatrixTypes, Multiply3x3) {
 	float3x3 A({
 		{2, 5, 3},
 		{7, 5, 3},

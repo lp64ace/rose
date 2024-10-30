@@ -133,6 +133,7 @@ set(INC_SYS
 # Define Source Files (Test)
 
 set(TEST
+	test/bitmap.cc
 	test/endian.cc
 	test/ghash.cc
 	test/listbase.cc

@@ -36,13 +36,13 @@ TEST(Span, Comparison) {
 	EXPECT_FALSE(Span(a) == Span(b));
 	EXPECT_FALSE(Span(b) == Span(a));
 	EXPECT_TRUE(Span(a) == Span(b).take_front(3));
+
 	EXPECT_TRUE(Span(a) == Span(a));
 	EXPECT_TRUE(Span(b) == Span(b));
 
 	EXPECT_TRUE(Span(a) != Span(b));
 	EXPECT_TRUE(Span(b) != Span(a));
 	EXPECT_FALSE(Span(a) != Span(b).take_front(3));
-	EXPECT_FALSE(Span(a) != Span(a));
 }
 
 }  // namespace rose

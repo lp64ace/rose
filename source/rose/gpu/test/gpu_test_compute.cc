@@ -7,6 +7,10 @@
 namespace rose::gpu {
 
 TEST_F(GPUTest, ComputeDirect) {
+	if (!GPU_get_info_i(GPU_INFO_COMPUTE_SHADER_SUPPORT)) {
+		GTEST_SKIP() << "Skipping compute shader test.";
+	}
+	
 	static unsigned int SIZE = 32;
 
 	GPUShader *shader = GPU_shader_create_from_info_name("gpu_compute_2d_test");
