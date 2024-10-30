@@ -1621,7 +1621,10 @@ public:
 		if (windowSetting.name != nullptr) {
 			std::unique_ptr<tWindow> newWindow(new tWindow(windowSetting));
 			windowList.push_back(std::move(newWindow));
-			InitializeWindow(windowList.back().get());
+			if (InitializeWindow(windowList.back().get()) != error_t::success) {
+				windowList.pop_back();
+				return nullptr;
+			}
 
 			return windowList.back().get();
 		}
@@ -1632,9 +1635,12 @@ public:
 		if (windowSetting.name != nullptr) {
 			std::unique_ptr<tWindow> newWindow(new tWindow(windowSetting));
 			windowList.push_back(std::move(newWindow));
-			InitializeWindow(windowList.back().get());
-			ShareContexts(sourceWindow, windowList.back().get());
+			if (InitializeWindow(windowList.back().get()) != error_t::success) {
+				windowList.pop_back();
+				return nullptr;
+			}
 
+			ShareContexts(sourceWindow, windowList.back().get());
 			return windowList.back().get();
 		}
 		return nullptr;
@@ -1810,11 +1816,11 @@ private:
 #endif
 	}
 
-	void InitializeWindow(tWindow *window) {
+	std::error_code InitializeWindow(tWindow *window) {
 #if defined(TW_WINDOWS)
-		Windows_InitializeWindow(window);
+		return Windows_InitializeWindow(window);
 #elif defined(TW_LINUX)
-		Linux_InitializeWindow(window);
+		return Linux_InitializeWindow(window);
 #endif
 	}
 
@@ -2535,7 +2541,7 @@ private:
 	}
 
 	// initialize the given window using Win32
-	void Windows_InitializeWindow(tWindow *window, UINT style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW, int clearScreenExtra = 0, int windowExtra = 0, HINSTANCE winInstance = GetModuleHandle(nullptr), HICON icon = LoadIcon(nullptr, IDI_APPLICATION), HCURSOR cursor = LoadCursor(nullptr, IDC_ARROW), HBRUSH brush = (HBRUSH)GetStockObject(WHITE_BRUSH)) {
+	std::error_code Windows_InitializeWindow(tWindow *window, UINT style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW, int clearScreenExtra = 0, int windowExtra = 0, HINSTANCE winInstance = GetModuleHandle(nullptr), HICON icon = LoadIcon(nullptr, IDI_APPLICATION), HCURSOR cursor = LoadCursor(nullptr, IDC_ARROW), HBRUSH brush = (HBRUSH)GetStockObject(WHITE_BRUSH)) {
 		window->instanceHandle = winInstance;
 		window->windowClass.style = style;
 		window->windowClass.lpfnWndProc = windowManager::WindowProcedure;
@@ -2550,12 +2556,19 @@ private:
 		RegisterClass(&window->windowClass);
 
 		window->windowHandle = CreateWindow(window->settings.name, window->settings.name, WS_OVERLAPPEDWINDOW, 0, 0, window->settings.resolution.width, window->settings.resolution.height, nullptr, nullptr, nullptr, nullptr);
+		if (!window->windowHandle) {
+			return TinyWindow::error_t::windowsCannotCreateWindows;
+		}
 
 		SetWindowLongPtr(window->windowHandle, GWLP_USERDATA, (LONG_PTR)this);
 
 		// if TW_USE_VULKAN is defined then stop TinyWindow from creating an OpenGL context since it will conflict with a vulkan context
 #	if !defined(TW_USE_VULKAN)
 		InitializeGL(window);
+
+		if(!window->contextCreated) {
+			return TinyWindow::error_t::invalidContext;
+		}
 #	endif
 		ShowWindow(window->windowHandle, 1);
 		UpdateWindow(window->windowHandle);
@@ -2567,6 +2580,8 @@ private:
 		window->SetStyle(style_t::normal);
 
 		DragAcceptFiles(window->windowHandle, true);
+
+		return error_t::success;
 	}
 
 	std::error_code Windows_CreateDummyWindow() {
@@ -3516,6 +3531,10 @@ private:
 	}
 
 	void Linux_Shutdown() {
+		if (!currentDisplay) {
+			return;
+		}
+
 		for (unsigned int windowIndex = 0; windowIndex < windowList.size(); windowIndex++) {
 			Linux_ShutdownWindow(windowList[windowIndex].get());
 		}
