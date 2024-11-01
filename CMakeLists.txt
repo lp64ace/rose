@@ -44,6 +44,8 @@ if(ROSE_BUILD_WIN32)
 endif()
 if(ROSE_BUILD_X11)
 	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including X11 support")
+	
+	option(WITH_X11_XINPUT "Enable X11 Xinput (tablet support and unicode input)" ON)
 endif()
 
 # -----------------------------------------------------------------------------
