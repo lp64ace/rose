@@ -30,7 +30,6 @@ set(GLSL_SRC
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
-	shaders/gpu_shader_mandelbrot.glsl
 	shaders/gpu_shader_test_frag.glsl
 	shaders/gpu_shader_test_vert.glsl
 	shaders/gpu_shader_text_frag.glsl
@@ -238,7 +237,6 @@ set(INFO_SRC
 	infos/gpu_shader_2D_image_overlays_stereo_merge_info.hh
 	infos/gpu_shader_2D_image_rect_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
-	infos/gpu_shader_mandelbrot_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh
 	
