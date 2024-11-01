@@ -23,10 +23,13 @@ set(INC_SYS
 set(SRC
 	WM_api.h
 	WM_draw.h
+	WM_event.h
+	WM_handler.h
 	WM_window.h
 	
 	intern/wm.c
 	intern/wm_draw.c
+	intern/wm_event.c
 	intern/wm_window.c
 )
 
@@ -35,8 +38,8 @@ set(SRC
 
 set(LIB
 	# Internal Library Dependencies
-	rose::extern::tiny_window
 	rose::intern::guardedalloc
+	rose::intern::tiny_window
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::gpu

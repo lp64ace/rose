@@ -27,7 +27,7 @@ ROSE_INLINE void wm_window_clear_drawable(WindowManager *wm) {
 	wm->windrawable = NULL;
 }
 
-ROSE_INLINE void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
+void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
 	if(wm->windrawable != window && window->handle) {
 		wm_window_clear_drawable(wm);
 		wm_window_set_drawable(wm, window, true);
@@ -41,20 +41,17 @@ void wm_window_draw(struct rContext *C, wmWindow *window) {
 	}
 
 	GPUTexture *texture = GPU_offscreen_color_texture(screen);
-	GPUShader *shader = GPU_shader_create_from_info_name("gpu_shader_mandelbrot");
-	GPU_shader_bind(shader);
-	GPU_texture_image_bind(texture, GPU_shader_get_sampler_binding(shader, "canvas"));
-	GPU_compute_dispatch(shader, window->sizex, window->sizey, 1);
+	GPU_texture_clear(texture, GPU_DATA_FLOAT, (const float[4]){0.66f, 0.65f, 0.65f, 1.0f});
+
 	GPU_offscreen_draw_to_screen(screen, 0, 0);
 	GPU_offscreen_free(screen);
-	GPU_shader_free(shader);
 }
 
 void WM_do_draw(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 	
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
-		if (window->sizex <= 0 || window->sizey <= 0) {
+		if (WTK_window_is_minimized(window->handle)) {
 			/** Do not render windows that are not visible. */
 			continue;
 		}

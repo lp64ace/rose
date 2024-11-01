@@ -11,9 +11,15 @@ extern "C" {
 
 struct rContext;
 
+/* -------------------------------------------------------------------- */
+/** \name Main Loop
+ * \{ */
+
 void WM_init(struct rContext *C);
 void WM_main(struct rContext *C);
 void WM_exit(struct rContext *C);
+
+/** \} */
 
 #ifdef __cplusplus
 }

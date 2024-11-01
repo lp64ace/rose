@@ -11,8 +11,22 @@ extern "C" {
 
 struct wmWindow;
 
+/* -------------------------------------------------------------------- */
+/** \name Main Methods
+ * \{ */
+
 /** Draws the window. */
 void WM_do_draw(struct rContext *C);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Exposed Methods
+ * \{ */
+
+void wm_window_make_drawable(struct WindowManager *wm, struct wmWindow *window);
+
+/** \} */
 
 #ifdef __cplusplus
 }

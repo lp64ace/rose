@@ -6,6 +6,8 @@
 
 #include "WM_api.h"
 #include "WM_draw.h"
+#include "WM_event.h"
+#include "WM_handler.h"
 #include "WM_window.h"
 
 #include "GPU_init_exit.h"
@@ -29,7 +31,7 @@ ROSE_INLINE bool wm_window_update_pos(wmWindow *window, int x, int y) {
 	return false;
 }
 
-ROSE_INLINE bool wm_window_update_size(wmWindow *window, int x, int y) {
+ROSE_INLINE bool wm_window_update_size(wmWindow *window, unsigned int x, unsigned int y) {
 	if (window->sizex != x || window->sizey != y) {
 		window->sizex = x;
 		window->sizey = y;
@@ -53,7 +55,7 @@ ROSE_INLINE wmWindow *wm_window_find(WindowManager *wm, void *handle) {
 	return NULL;
 }
 
-ROSE_INLINE void wm_handle_window_event(struct WTKWindowManager *manager, struct WTKWindow *handle, int event, void *userdata) {
+ROSE_INLINE void wm_handle_window_event(struct WTKWindow *handle, void *userdata) {
 	struct rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
@@ -64,16 +66,7 @@ ROSE_INLINE void wm_handle_window_event(struct WTKWindowManager *manager, struct
 	}
 	
 	CTX_wm_window_set(C, window);
-	switch (event) {
-		case EVT_DESTROY: {
-			WM_window_free(wm, window);
-		} break;
-		case EVT_MINIMIZED: {
-			if (wm_window_update_size(window, 0, 0)) {
-				/** Resize events block the main loop so we need to manually draw the window. */
-			}
-		} break;
-	}
+	WM_window_free(wm, window);
 	CTX_wm_window_set(C, NULL);
 	
 	if(LIB_listbase_is_empty(&wm->windows)) {
@@ -81,7 +74,7 @@ ROSE_INLINE void wm_handle_window_event(struct WTKWindowManager *manager, struct
 	}
 }
 
-ROSE_INLINE void wm_handle_move_event(struct WTKWindowManager *manager, struct WTKWindow *handle, int event, int x, int y, void *userdata) {
+ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, unsigned int y, void *userdata) {
 	struct rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
@@ -91,20 +84,91 @@ ROSE_INLINE void wm_handle_move_event(struct WTKWindowManager *manager, struct W
 		return;
 	}
 
-	switch (event) {
-		case EVT_RESIZE: {
-			if (wm_window_update_size(window, x, y)) {
-				/** Resize events block the main loop so we need to manually draw the window. */
-				WM_do_draw(C);
-			}
-		} break;
-		case EVT_MOVED: {
-			if (wm_window_update_pos(window, x, y)) {
-				/** Move events block the main loop so we need to manually draw the window. */
-				WM_do_draw(C);
-			}
-		} break;
+	if (wm_window_update_size(window, x, y)) {
+		/** Resize events block the main loop so we need to manually draw the window. */
+		WM_do_draw(C);
 	}
+}
+
+ROSE_INLINE void wm_handle_move_event(struct WTKWindow *handle, int x, int y, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	if (wm_window_update_pos(window, x, y)) {
+		/** Move events block the main loop so we need to manually draw the window. */
+		WM_do_draw(C);
+	}
+}
+
+ROSE_INLINE void wm_handle_mouse_event(struct WTKWindow *handle, int x, int y, double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_MOUSEMOVE, 0, x, y, time);
+}
+
+ROSE_INLINE void wm_handle_button_down_event(struct WTKWindow *handle, int button, int x, int y, double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_BUTTONDOWN, button, x, y, time);
+}
+
+ROSE_INLINE void wm_handle_button_up_event(struct WTKWindow *handle, int button, int x, int y, double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_BUTTONUP, button, x, y, time);
+}
+
+ROSE_INLINE void wm_handle_key_down_event(struct WTKWindow *handle, int key, bool repeat, char utf8[4], double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_key(wm, window, WTK_EVT_KEYDOWN, key, repeat, utf8, time);
+}
+
+ROSE_INLINE void wm_handle_key_up_event(struct WTKWindow *handle, int key, double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_key(wm, window, WTK_EVT_KEYUP, key, false, NULL, time);
 }
 
 /** \} */
@@ -120,11 +184,16 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	}
 
 	wm->handle = WTK_window_manager_new();
+	ROSE_assert(wm->handle);
 	
-	WTK_window_manager_window_callback(wm->handle, EVT_DESTROY, wm_handle_window_event, C);
-	WTK_window_manager_window_callback(wm->handle, EVT_MINIMIZED, wm_handle_window_event, C);
-	WTK_window_manager_resize_callback(wm->handle, wm_handle_move_event, C);
+	WTK_window_manager_destroy_callback(wm->handle, wm_handle_window_event, C);
+	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
 	WTK_window_manager_move_callback(wm->handle, wm_handle_move_event, C);
+	WTK_window_manager_mouse_callback(wm->handle, wm_handle_mouse_event, C);
+	WTK_window_manager_button_down_callback(wm->handle, wm_handle_button_down_event, C);
+	WTK_window_manager_button_up_callback(wm->handle, wm_handle_button_up_event, C);
+	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
+	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
 	
 	CTX_data_main_set(C, main);
 	CTX_wm_manager_set(C, wm);
@@ -148,22 +217,11 @@ void WM_init(struct rContext *C) {
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 	
-	double frames = 0;
-
-	clock_t old = clock();
 	while(true) {
-		clock_t now = clock();
-		if ((now - old) * 4 > CLOCKS_PER_SEC) {
-			frames = fprintf(stdout, "FPS %4.2lf\n", (frames * CLOCKS_PER_SEC) / (double)(now - old)), 0;
-			old = now;
-		}
-
 		/** Handle all pending operating system events. */
 		WTK_window_manager_poll(wm->handle);
-		
+		WM_do_handlers(C);
 		WM_do_draw(C);
-
-		frames++;
 	}
 }
 
