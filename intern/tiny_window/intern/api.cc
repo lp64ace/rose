@@ -53,6 +53,14 @@ void WTK_window_manager_mouse_callback(WTKWindowManager *vmanager, WTKMouseCallb
 		};
 	}
 }
+void WTK_window_manager_wheel_callback(WTKWindowManager *vmanager, WTKWheelCallbackFn fn, void *userdata) {
+	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
+	if (manager) {
+		manager->WheelEvent = [=](tWindow *window, int dx, int dy, double time) -> void {
+			fn(reinterpret_cast<WTKWindow *>(window), dx, dy, time, userdata);
+		};
+	}
+}
 void WTK_window_manager_button_down_callback(WTKWindowManager *vmanager, WTKButtonDownCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {

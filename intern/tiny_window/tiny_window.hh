@@ -170,6 +170,7 @@ enum class State {
 using MoveEventFn = std::function<void(tWindow *window, int x, int y)>;
 using ResizeEventFn = std::function<void(tWindow *window, unsigned int cwidth, unsigned int cheight)>;
 using MouseEventFn = std::function<void(tWindow *window, int x, int y, double time)>;
+using WheelEventFn = std::function<void(tWindow *window, int dx, int dy, double time)>;
 using ButtonDownEventFn = std::function<void(tWindow *window, int key, int x, int y, double time)>;
 using ButtonUpEventFn = std::function<void(tWindow *window, int key, int x, int y, double time)>;
 using KeyDownEventFn = std::function<void(tWindow *window, int key, bool repeat, char utf8[4], double time)>;
@@ -289,6 +290,7 @@ public:
 	MoveEventFn MoveEvent;
 	ResizeEventFn ResizeEvent;
 	MouseEventFn MouseEvent;
+	WheelEventFn WheelEvent;
 	ButtonDownEventFn ButtonDownEvent;
 	ButtonUpEventFn ButtonUpEvent;
 	KeyDownEventFn KeyDownEvent;

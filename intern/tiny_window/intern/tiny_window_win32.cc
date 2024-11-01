@@ -2,6 +2,7 @@
 #include "tiny_window.h"
 
 #include <assert.h>
+#include <windowsx.h>
 
 #define SET_FLAG_FROM_TEST(value, test, flag) \
 	{                                         \
@@ -1056,8 +1057,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONDOWN:
 		case WM_MBUTTONDOWN:
 		case WM_RBUTTONDOWN: {
-			int x = static_cast<int>(LOWORD(lparam));
-			int y = static_cast<int>(HIWORD(lparam));
+			int x = static_cast<int>(GET_X_LPARAM(lparam));
+			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 			
 			switch(message) {
 				case WM_LBUTTONDOWN: {
@@ -1080,8 +1081,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONUP:
 		case WM_MBUTTONUP:
 		case WM_RBUTTONUP: {
-			int x = static_cast<int>(LOWORD(lparam));
-			int y = static_cast<int>(HIWORD(lparam));
+			int x = static_cast<int>(GET_X_LPARAM(lparam));
+			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
 			switch (message) {
 				case WM_LBUTTONUP: {
@@ -1102,11 +1103,18 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			}
 		} break;
 		case WM_MOUSEMOVE: {
-			int x = static_cast<int>(LOWORD(lparam));
-			int y = static_cast<int>(HIWORD(lparam));
+			int x = static_cast<int>(GET_X_LPARAM(lparam));
+			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
 			if (manager->MouseEvent) {
 				manager->MouseEvent(window, x, y, time);
+			}
+		} break;
+		case WM_MOUSEWHEEL: {
+			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
+
+			if (manager->WheelEvent) {
+				manager->WheelEvent(window, 0, delta / WHEEL_DELTA, time);
 			}
 		} break;
 	}

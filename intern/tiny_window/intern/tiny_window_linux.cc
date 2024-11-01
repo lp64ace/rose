@@ -104,9 +104,9 @@ void tWindowManager::Poll() {
          *                               :-:::::+::::
          *                              ::::::::*:::=
          *                              -:::::::*::.-
-         *                              +::-:::-+-:::	- I was trying for 4 hours to add multi-language support functionality 
+         *                              +::-:::-+-:::	- I was trying for 4 hours to add multi-language support functionality, 
          *                              -::-:::=++:::	that said, I had forgot to install a second language for the keyboard, 
-         *                              :::-:::***:::	and I was also trying to test that through PuTTY which turns out... 
+         *                              :::-:::***:::	and I was also trying to test that through PuTTY and VcXsrv which... 
          *                              :::-::::-::.:	IT DOES NOT SUPPORT MULTI-LANGUAGE (either that or I am retarded)!
          *                              ::::::::-::=:.
          *                             .:::########::
@@ -762,7 +762,7 @@ static int convert_key(const KeySym x11_key) {
 static int convert_code(XkbDescPtr xkb_descr, const KeyCode x11_code) {
 	if (x11_code >= xkb_descr->min_key_code && x11_code <= xkb_descr->max_key_code) {
 		const char *id_str = xkb_descr->names->keys[x11_code].name;
-		fprintf(stdout, "[Key] %s\n", id_str);
+		// fprintf(stdout, "[Linux/Key] %s\n", id_str);
 	}
 	return WTK_KEY_UNKOWN;
 }
@@ -988,13 +988,11 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 					
 					len = Xutf8LookupString(xic, xke, utf8_buf, sizeof(utf8_buf) - 5, &key_sym, &status);
 					utf8_buf[len] = '\0';
-					fprintf(stdout, "[Linux/1] Xutf8LookupString return %d length.\n", len);
 					
 					if(status == XBufferOverflow) {
 						utf8_buf = (char *)MEM_mallocN(len + 5, "tiny_window::utf8_buf");
 						len = Xutf8LookupString(xic, xke, utf8_buf, len, &key_sym, &status);
 						utf8_buf[len] = '\0';
-						fprintf(stdout, "[Linux/2] Xutf8LookupString return %d length.\n", len);
 					}
 				
 					if (status == XLookupChars || status == XLookupBoth) {
@@ -1006,7 +1004,7 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 						// This key doesn't have a text representation, it is a command key of some sort.
 					}
 					else {
-						fprintf(stderr, "Bad keycode lookup. Keysym 0x%x Status: %s\n",
+						fprintf(stderr, "Bad keycode lookup. KeySym 0x%x Status: %s\n",
 							static_cast<unsigned int>(key_sym),
 							(status == XLookupNone ? "XLookupNone" : status == XLookupKeySym ? "XLookupKeySym" : "XUnkownStatus")
 						);
@@ -1093,6 +1091,16 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 				case 3: {
 					if(ButtonUpEvent) {
 						ButtonUpEvent(window, WTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
+					}
+				} break;
+				case 4: {
+					if(WheelEvent) {
+						WheelEvent(window, 0, 1, time);
+					}
+				} break;
+				case 5: {
+					if(WheelEvent) {
+						WheelEvent(window, 0, -1, time);
 					}
 				} break;
 			}
