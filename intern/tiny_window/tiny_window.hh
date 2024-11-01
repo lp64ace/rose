@@ -195,7 +195,7 @@ struct tMonitor {
 	std::vector<MonitorSetting *> settings;
 
 #if defined(WIN32)
-	HMONITOR monitor_handle_;
+	HMONITOR monitor_handle_ = NULL;
 #endif
 };
 

@@ -127,7 +127,7 @@ bool tWindowManager::GetScreenInfo() {
 			monitor->device = graphicsDevice.DeviceString;
 			monitor->name = graphicsDevice.DeviceName;
 			// get current display mode
-			DEVMODE devmode;
+			DEVMODE devmode = {0};
 			// get all display modes
 			unsigned int modeIndex = UINT_MAX;
 			while (EnumDisplaySettings(graphicsDevice.DeviceName, modeIndex, &devmode)) {
@@ -726,6 +726,7 @@ bool tWindow::InitPixelFormat() {
 		return false;
 	}
 	SetPixelFormat(this->device_handle_, index, &pfd);
+	return true;
 }
 
 #ifndef VK_MINUS

@@ -185,7 +185,7 @@ ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double eve
 ROSE_STATIC void wm_event_state_update_and_click_set(wmEvent *evt, double event_time, wmEvent *event_state, double *prev_press_event_time, int tiny_window_type) {
 	const bool is_keyboard = ELEM(tiny_window_type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP);
 	
-	return wm_event_state_update_and_click_set_ex(evt, event_time, event_state, prev_press_event_time, is_keyboard, true);
+	wm_event_state_update_and_click_set_ex(evt, event_time, event_state, prev_press_event_time, is_keyboard, true);
 }
 
 ROSE_STATIC bool wm_event_is_same_key_press(const wmEvent *event_a, const wmEvent *event_b) {
