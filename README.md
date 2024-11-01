@@ -27,9 +27,8 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 
 	```bash
 	sudo apt-get update
-	sudo apt-get install -y libx11-dev
-	sudo apt-get install -y libglew-dev
-	sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
+	sudo apt-get install -y libx11-dev libxi-dev
+	sudo apt-get install -y libglew-dev libgl1-mesa-dev libglu1-mesa-dev
 	```
 
 ## Building Rose
