@@ -380,12 +380,13 @@ void MEM_guarded_print_memlist() {
 	LISTBASE_FOREACH(Link *, link, membase) {
 		GMemoryHead *head = (GMemoryHead *)(((char *)link) - offsetof(GMemoryHead, prev));
 
+		void *ptr = head + 1;
 		if (head->tag1 == MEMTAG1 && head->tag2 == MEMTAG2) {
 			GMemoryTail *tail = (GMemoryTail *)((char *)(head + 1) + head->size);
 
 			if (tail->tag3 == MEMTAG3) {
 				fprintf(stdout, "    { size %zu, align %zu, name '%s'", head->size, head->align, head->identity);
-				if (head->size < 32) {
+				if (head->size < 128) {
 					fprintf(stdout, ", content '");
 					for (unsigned char *p = (unsigned char *)(head + 1); p < (unsigned char *)tail; p++) {
 						fprintf(stdout, "%02x", *p);
