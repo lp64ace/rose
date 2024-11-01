@@ -119,6 +119,19 @@ ROSE_INLINE void wm_handle_mouse_event(struct WTKWindow *handle, int x, int y, d
 	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_MOUSEMOVE, 0, x, y, time);
 }
 
+ROSE_INLINE void wm_handle_wheel_event(struct WTKWindow *handle, int dx, int dy, double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_MOUSESCROLL, 0, dx, dy, time);
+}
+
 ROSE_INLINE void wm_handle_button_down_event(struct WTKWindow *handle, int button, int x, int y, double time, void *userdata) {
 	struct rContext *C = (struct rContext *)userdata;
 
@@ -190,6 +203,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
 	WTK_window_manager_move_callback(wm->handle, wm_handle_move_event, C);
 	WTK_window_manager_mouse_callback(wm->handle, wm_handle_mouse_event, C);
+	WTK_window_manager_wheel_callback(wm->handle, wm_handle_wheel_event, C);
 	WTK_window_manager_button_down_callback(wm->handle, wm_handle_button_down_event, C);
 	WTK_window_manager_button_up_callback(wm->handle, wm_handle_button_up_event, C);
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);

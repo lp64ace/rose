@@ -138,12 +138,12 @@ ROSE_STATIC wmEvent *wm_event_add_mousemove(wmWindow *win, const wmEvent *evt) {
 
 ROSE_STATIC void wm_event_prev_values_set(wmEvent *evt, wmEvent *event_state) {
 	evt->prev_value = event_state->prev_value = event_state->value;
-	evt->prev_value = event_state->prev_type = event_state->type;
+	evt->prev_type = event_state->prev_type = event_state->type;
 }
 
 ROSE_STATIC bool wm_event_is_double_click(wmEvent *evt, const double event_time, const double prev_press_event_time) {
 	if((evt->type == evt->prev_type) && (evt->prev_value == KM_RELEASE) && (evt->value == KM_PRESS)) {
-		if((event_time - prev_press_event_time) < 0.5) {
+		if((event_time - prev_press_event_time) < 0.25) {
 			return true;
 		}
 	}
@@ -209,7 +209,7 @@ ROSE_STATIC bool wm_event_is_ignorable_key_press(const wmWindow *win, const wmEv
 }
 
 void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y, double time) {
-	ROSE_assert(ELEM(type, WTK_EVT_MOUSEMOVE, WTK_EVT_BUTTONDOWN, WTK_EVT_BUTTONUP));
+	ROSE_assert(ELEM(type, WTK_EVT_MOUSEMOVE, WTK_EVT_MOUSESCROLL, WTK_EVT_BUTTONDOWN, WTK_EVT_BUTTONUP));
 	
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
 	memcpy(evt, event_state, sizeof(wmEvent));
@@ -227,11 +227,11 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 		ROSE_assert_unreachable();
 	}
 	
-	evt->mouse_xy[0] = x;
-	evt->mouse_xy[1] = y;
-	
 	switch (type) {
 		case WTK_EVT_MOUSEMOVE: {
+			evt->mouse_xy[0] = x;
+			evt->mouse_xy[1] = y;
+
 			evt->type = MOUSEMOVE;
 			evt->value = KM_NOTHING;
 			{
@@ -242,6 +242,9 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 		} break;
 		case WTK_EVT_BUTTONDOWN:
 		case WTK_EVT_BUTTONUP: {
+			evt->mouse_xy[0] = x;
+			evt->mouse_xy[1] = y;
+
 			evt->type = convert_btn(button);
 			if (evt->type == EVENT_NONE) {
 				break;
@@ -257,6 +260,20 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 			wm_event_state_update_and_click_set(evt, time, event_state, &window->prev_press_event_time, type);
 			copy_v2_v2_int(event_state->mouse_xy, evt->mouse_xy);
 			copy_v2_v2_int(event_state->prev_xy, evt->mouse_xy);
+			wm_event_add(window, evt);
+		} break;
+		case WTK_EVT_MOUSESCROLL: {
+			evt->mouse_xy[0] = evt->prev_xy[0];
+			evt->mouse_xy[0] = evt->prev_xy[1];
+
+			if (y > 0) {
+				evt->type = WHEELUPMOUSE;
+			}
+			if (y < 0) {
+				evt->type = WHEELDOWNMOUSE;
+			}
+			evt->value = KM_PRESS;
+
 			wm_event_add(window, evt);
 		} break;
 	}
