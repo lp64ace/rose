@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+struct wmEvent;
+
 typedef struct wmWindow {
 	struct wmWindow *prev, *next;
 	
@@ -22,8 +24,19 @@ typedef struct wmWindow {
 	
 	int posx;
 	int posy;
-	int sizex;
-	int sizey;
+	unsigned int sizex;
+	unsigned int sizey;
+	
+	/** Event state regarding information about the previous events, managed by WindowManager. */
+	struct wmEvent *event_state;
+	struct wmEvent *event_last_handled;
+	/** The time when the key is pressed, used to detect double-click events. */
+	double prev_press_event_time;
+	/** 
+	 * The queue of all the WindowManager processed events, these may include non-os related events. 
+	 * These will be dispatched to handlers, managed by WindowManager.
+	 */
+	ListBase event_queue;
 } wmWindow;
 
 typedef struct WindowManager {
