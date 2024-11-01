@@ -18,6 +18,7 @@ void GPUTest::SetUp() {
 	}
 
 	WTK_window_make_context_current(window);
+	WTK_window_hide(window);
 
 	context = GPU_context_create(window, NULL);
 	if (!context) {

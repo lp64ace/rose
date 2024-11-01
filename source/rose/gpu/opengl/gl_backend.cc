@@ -22,8 +22,6 @@ void GLBackend::platform_init() {
 	const char *renderer = (const char *)glGetString(GL_RENDERER);
 	const char *version = (const char *)glGetString(GL_VERSION);
 
-	fprintf(stdout, "[OpenGL] Using OpenGL %s\n", version);
-
 	DeviceType device = GPU_DEVICE_ANY;
 	OperatingSystemType system = GPU_OS_ANY;
 	DriverType driver = GPU_DRIVER_ANY;
