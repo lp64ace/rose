@@ -4,8 +4,8 @@
 #include "MEM_guardedalloc.h"
 
 #include <chrono>
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
 
 #if defined(WIN32)
@@ -46,7 +46,7 @@
 /* Useful to port C code using enums to C++ where enums are strongly typed.
  * To use after the enum declaration. */
 /* If any enumerator `C` is set to say `A|B`, then `C` would be the max enum value. */
-#	define ENUM_OPERATORS(_enum_type, _max_enum_value)								 \
+#	define ENUM_OPERATORS(_enum_type, _max_enum_value)                              \
 		extern "C++" {                                                               \
 		inline constexpr _enum_type operator|(_enum_type a, _enum_type b) {          \
 			return (_enum_type)(uint64_t(a) | uint64_t(b));                          \
@@ -80,22 +80,22 @@ class tWindow;
 struct WindowSetting {
 	/** The name for the window, this has to be a static string. */
 	const char *name = nullptr;
-	
+
 	/** Drawing buffer settings, used for creating the window context. */
 	struct {
 		int color_bits = 8;
 		int depth_bits = 24;
 		int stencil_bits = 8;
 		int accum_bits = 8;
-		
+
 		bool srgb = false;
 	};
-	
+
 	/** The width in pixels of the desired window's client area. */
 	int width = 800;
 	/** The height in pixels of the desired window's client area. */
 	int height = 450;
-	
+
 	/** Drawing context capabilities and settings. */
 	struct {
 		int major = 4;
@@ -145,7 +145,7 @@ struct Gamepad {
 		right_shoulder,
 		special1,
 		special2,
-		last = special2
+		last = special2,
 	};
 
 	struct {
@@ -170,6 +170,7 @@ enum class State {
 using MoveEventFn = std::function<void(tWindow *window, int x, int y)>;
 using ResizeEventFn = std::function<void(tWindow *window, unsigned int cwidth, unsigned int cheight)>;
 using MouseEventFn = std::function<void(tWindow *window, int x, int y, double time)>;
+using WheelEventFn = std::function<void(tWindow *window, int dx, int dy, double time)>;
 using ButtonDownEventFn = std::function<void(tWindow *window, int key, int x, int y, double time)>;
 using ButtonUpEventFn = std::function<void(tWindow *window, int key, int x, int y, double time)>;
 using KeyDownEventFn = std::function<void(tWindow *window, int key, bool repeat, char utf8[4], double time)>;
@@ -202,14 +203,15 @@ struct tMonitor {
 class tWindowManager {
 	MEM_CXX_CLASS_ALLOC_FUNCS("tWindowManager");
 	friend class tWindow;
-	
+
 private:
 	/** In order to create a new tWindowManager call #Init instead! */
 	tWindowManager();
+
 public:
 	/** Attempt to create a new window manager with the optional specified application name. */
 	static tWindowManager *Init(const char *application);
-	
+
 	/**
 	 * Shutdown the window manager and completely free all the allocated resources.
 	 * This method does not deallocate the #tWindowManager itself.
@@ -219,7 +221,7 @@ public:
 	void Poll();
 
 	double GetElapsedTime() const;
-	
+
 	/** Create and append a new window to our window management list. */
 	tWindow *AddWindow(WindowSetting settings);
 	/** This will destroy the specified window and remove it from our window management list. */
@@ -229,6 +231,7 @@ public:
 
 	int GetGamepadCount(void) const;
 	const Gamepad *GetGamepad(int index) const;
+
 private:
 	std::vector<tWindow *> windows_;
 	std::vector<tMonitor *> monitors_;
@@ -237,7 +240,7 @@ private:
 	std::chrono::high_resolution_clock::time_point start_;
 
 	std::vector<Gamepad> gamepads_;
-	
+
 #if defined(WIN32)
 	struct {
 		WNDCLASS window_class_ = {};
@@ -246,7 +249,7 @@ private:
 		HGLRC rendering_handle_ = nullptr;
 		HINSTANCE instance_handle_ = nullptr;
 	} dummy;
-	
+
 	PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = NULL;
 	PFNWGLGETEXTENSIONSSTRINGEXTPROC wglGetExtensionsStringEXT = NULL;
 	PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = NULL;
@@ -258,10 +261,10 @@ private:
 	PFNWGLGETPIXELFORMATATTRIBFVEXTPROC wglGetPixelFormatAttribfvEXT = NULL;
 	PFNWGLGETPIXELFORMATATTRIBIVARBPROC wglGetPixelFormatAttribivARB = NULL;
 	PFNWGLGETPIXELFORMATATTRIBIVEXTPROC wglGetPixelFormatAttribivEXT = NULL;
-	
+
 	bool has_swap_interval_control_ = false;
 	bool has_srgb_framebuffer_support_ = false;
-	
+
 	HKL keyboard_layout_ = {};
 
 	static LRESULT CALLBACK WindowProcedure(HWND windowHandle, unsigned int winMessage, WPARAM wordParam, LPARAM longParam);
@@ -269,31 +272,33 @@ private:
 #if defined(LINUX)
 	Display *display_;
 	XkbDescRec *xkb_descr_;
-	
+
 	int keycode_last_repeat_key_ = -1;
-	
+
 	PFNGLXCREATECONTEXTATTRIBSARBPROC glxCreateContextAttribsARB;
 	PFNGLXMAKECONTEXTCURRENTPROC glxMakeContextCurrent;
 	PFNGLXSWAPINTERVALEXTPROC glxSwapIntervalEXT;
 	PFNGLXCHOOSEFBCONFIGPROC glxChooseFBConfig;
-	
+
 	void EventProcedure(XEvent *evt);
 #endif
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
 	XIM xim_;
-	
+
 	bool InitXIM();
 #endif
-	
+
 public:
 	MoveEventFn MoveEvent;
 	ResizeEventFn ResizeEvent;
 	MouseEventFn MouseEvent;
+	WheelEventFn WheelEvent;
 	ButtonDownEventFn ButtonDownEvent;
 	ButtonUpEventFn ButtonUpEvent;
 	KeyDownEventFn KeyDownEvent;
 	KeyUpEventFn KeyUpEvent;
 	DestroyEventFn DestroyEvent;
+
 private:
 #if defined(WIN32)
 	tWindow *GetWindowByHandle(HWND handle) const;
@@ -318,10 +323,10 @@ private:
 #endif
 #if defined(LINUX)
 	tWindow *GetWindowByHandle(Window handle) const;
-	
+
 	bool InitExtensions();
 	bool InitKeyboardDescription();
-	
+
 	void ClearKeyboardDescription();
 	void ClearExtensions();
 #endif
@@ -375,12 +380,12 @@ enum class Style {
 class tWindow {
 	MEM_CXX_CLASS_ALLOC_FUNCS("tWindow");
 	friend class tWindowManager;
-	
+
 private:
 	tWindow(WindowSetting settings);
 	/** Use #tWindowManager->ShudownWindow instead! */
 	~tWindow();
-	
+
 	/** Attempt to create a new window with the specified window settings. */
 	bool Init(tWindowManager *manager);
 	bool InitContext(tWindowManager *manager);
@@ -418,7 +423,7 @@ public:
 
 private:
 	WindowSetting settings;
-	
+
 	/** A flag indicating that the window should close, set when the close button is pressed. */
 	bool should_close_ = false;
 	/** A flag indicating that the window has a valid context, set when the context is created. */
@@ -434,7 +439,7 @@ private:
 	HGLRC rendering_handle_ = nullptr;
 	HPALETTE palette_handle_ = nullptr;
 	HINSTANCE instance_handle_ = nullptr;
-	
+
 	PIXELFORMATDESCRIPTOR pixel_descriptor_ = {};
 	WNDCLASS window_class_ = {};
 #endif
@@ -443,49 +448,49 @@ private:
 	Window window_handle_ = {};
 	GLXContext rendering_handle_ = {};
 	GLXFBConfig pixel_config_ = {};
-	
+
 	LinuxDecorator linux_decorations_ = LinuxDecorator::none;
 	XVisualInfo *visual_info_ = nullptr;
 	XSetWindowAttributes window_attributes_ = {};
-	
+
 	int *visual_attribs_ = nullptr;
-	
+
 	/** These atoms are needed to change window states via the extended window manager */
-	Atom AtomState;					/**< Atom for the state of the window */						// _NET_WM_STATE
-	Atom AtomHidden;				/**< Atom for the current hidden state of the window */			// _NET_WM_STATE_HIDDEN
-	Atom AtomFullScreen;			/**< Atom for the full screen state of the window */			// _NET_WM_STATE_FULLSCREEN
-	Atom AtomMaxHorz;				/**< Atom for the maximized horizontally state of the window */	// _NET_WM_STATE_MAXIMIZED_HORZ
-	Atom AtomMaxVert;				/**< Atom for the maximized vertically state of the window */	// _NET_WM_STATE_MAXIMIZED_VERT
-	Atom AtomClose;					/**< Atom for closing the window */								// _NET_WM_CLOSE_WINDOW
-	Atom AtomActive;				/**< Atom for the active window */								// _NET_ACTIVE_WINDOW
-	Atom AtomDemandsAttention;		/**< Atom for when the window demands attention */				// _NET_WM_STATE_DEMANDS_ATTENTION
-	Atom AtomFocused;				/**< Atom for the focused state of the window */				// _NET_WM_STATE_FOCUSED
-	Atom AtomCardinal;				/**< Atom for cardinal coordinates */							// _NET_WM_CARDINAL
-	Atom AtomIcon;					/**< Atom for the icon of the window */							// _NET_WM_ICON
-	Atom AtomHints;					/**< Atom for the window decorations */							// _NET_WM_HINTS
-	
-	Atom AtomWindowType;			/**< Atom for the type of window */
-	Atom AtomWindowTypeDesktop;		/**< Atom for the desktop window type */						//_NET_WM_WINDOW_TYPE_SPLASH
-	Atom AtomWindowTypeSplash;		/**< Atom for the splash screen window type */
-	Atom AtomWindowTypeNormal;		/**< Atom for the normal splash screen window type */
+	Atom AtomState; /**< Atom for the state of the window */						   // _NET_WM_STATE
+	Atom AtomHidden; /**< Atom for the current hidden state of the window */		   // _NET_WM_STATE_HIDDEN
+	Atom AtomFullScreen; /**< Atom for the full screen state of the window */		   // _NET_WM_STATE_FULLSCREEN
+	Atom AtomMaxHorz; /**< Atom for the maximized horizontally state of the window */  // _NET_WM_STATE_MAXIMIZED_HORZ
+	Atom AtomMaxVert; /**< Atom for the maximized vertically state of the window */	   // _NET_WM_STATE_MAXIMIZED_VERT
+	Atom AtomClose; /**< Atom for closing the window */								   // _NET_WM_CLOSE_WINDOW
+	Atom AtomActive; /**< Atom for the active window */								   // _NET_ACTIVE_WINDOW
+	Atom AtomDemandsAttention; /**< Atom for when the window demands attention */	   // _NET_WM_STATE_DEMANDS_ATTENTION
+	Atom AtomFocused; /**< Atom for the focused state of the window */				   // _NET_WM_STATE_FOCUSED
+	Atom AtomCardinal; /**< Atom for cardinal coordinates */						   // _NET_WM_CARDINAL
+	Atom AtomIcon; /**< Atom for the icon of the window */							   // _NET_WM_ICON
+	Atom AtomHints; /**< Atom for the window decorations */							   // _NET_WM_HINTS
 
-	Atom AtomAllowedActions;		/**< Atom for allowed window actions */
-	Atom AtomActionResize;			/**< Atom for allowing the window to be resized */
-	Atom AtomActionMinimize;		/**< Atom for allowing the window to be minimized */
-	Atom AtomActionShade;			/**< Atom for allowing the window to be shaded */
-	Atom AtomActionMaximizeHorz;	/**< Atom for allowing the window to be maximized horizontally */
-	Atom AtomActionMaximizeVert;	/**< Atom for allowing the window to be maximized vertically */
-	Atom AtomActionClose;			/**< Atom for allowing the window to be closed */
+	Atom AtomWindowType;		/**< Atom for the type of window */
+	Atom AtomWindowTypeDesktop; /**< Atom for the desktop window type */
+	Atom AtomWindowTypeSplash;	/**< Atom for the splash screen window type */
+	Atom AtomWindowTypeNormal;	/**< Atom for the normal splash screen window type */
 
-	Atom AtomDesktopGeometry;		/**< Atom for Desktop Geometry */
+	Atom AtomAllowedActions;	 /**< Atom for allowed window actions */
+	Atom AtomActionResize;		 /**< Atom for allowing the window to be resized */
+	Atom AtomActionMinimize;	 /**< Atom for allowing the window to be minimized */
+	Atom AtomActionShade;		 /**< Atom for allowing the window to be shaded */
+	Atom AtomActionMaximizeHorz; /**< Atom for allowing the window to be maximized horizontally */
+	Atom AtomActionMaximizeVert; /**< Atom for allowing the window to be maximized vertically */
+	Atom AtomActionClose;		 /**< Atom for allowing the window to be closed */
+
+	Atom AtomDesktopGeometry; /**< Atom for Desktop Geometry */
 #endif
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
 	XIC xic_;
-	
+
 	bool InitXIC(tWindowManager *manager);
 #endif
 };
 
-} // namespace rose
+}  // namespace rose::tiny_window
 
-#endif // TINY_WINDOW_HH
+#endif	// TINY_WINDOW_HH

@@ -322,15 +322,15 @@ void IDP_foreach_property(IDProperty *property, int type_filter, LibraryIDProper
 	if (!property) {
 		return;
 	}
-	
+
 	if (type_filter == 0 || (1 << property->type) & type_filter) {
 		callback(property, user_data);
 	}
-	
+
 	/* Recursive call into container types of ID properties. */
 	switch (property->type) {
 		case IDP_GROUP: {
-			LISTBASE_FOREACH (IDProperty *, loop, &property->data.group) {
+			LISTBASE_FOREACH(IDProperty *, loop, &property->data.group) {
 				IDP_foreach_property(loop, type_filter, callback, user_data);
 			}
 		} break;
@@ -726,7 +726,9 @@ void IDP_SyncGroupTypes(IDProperty *destination, const IDProperty *source, bool 
 	LISTBASE_FOREACH_MUTABLE(IDProperty *, property, &destination->data.group) {
 		const IDProperty *other = IDP_GetPropertyFromGroup((IDProperty *)source, property->name);
 		if (other != NULL) {
-			if ((property->type != other->type || property->subtype != other->subtype) || (do_arraylen && ELEM(property->type, IDP_ARRAY, IDP_IDPARRAY) && (other->length != property->length))) {
+			const bool type_missmatch = (property->type != other->type || property->subtype != other->subtype);
+			const bool length_missmatch = (do_arraylen && ELEM(property->type, IDP_ARRAY, IDP_IDPARRAY) && (other->length != property->length));
+			if (type_missmatch || length_missmatch) {
 				LIB_insertlinkreplace(&destination->data.group, property, IDP_DuplicateProperty(other));
 				IDP_FreeProperty(property);
 			}

@@ -24,9 +24,9 @@ ROSE_INLINE bool init(int argc, char **argv) {
 			binary = argv[++i];
 			continue;
 		}
-		return false; // Invalid argument
+		return false;  // Invalid argument
 	}
-	return source && binary; // Return true only if both arguments are provided
+	return source && binary;  // Return true only if both arguments are provided
 }
 
 int main(int argc, char **argv) {
@@ -38,31 +38,31 @@ int main(int argc, char **argv) {
 
 	long size;
 
-	if(!init(argc, argv)) {
+	if (!init(argc, argv)) {
 		help(argv[0]);
 		return -1;
 	}
 
 	FILE *fpin;
-	
-	if(!(fpin = fopen(source, "rb"))) {
+
+	if (!(fpin = fopen(source, "rb"))) {
 		fprintf(stderr, "Failed to open input <%s>\n", source);
 		return -1;
 	}
-	
+
 	fseek(fpin, 0L, SEEK_END);
 	size = ftell(fpin);
 	fseek(fpin, 0L, SEEK_SET);
 
 	FILE *fpout;
 
-	if(!(fpout = fopen(binary, "wb"))) {
+	if (!(fpout = fopen(binary, "wb"))) {
 		fprintf(stderr, "Failed to open output <%s>\n", binary);
 		return -1;
 	}
-	
+
 	size_t slength = LIB_strlen(source);
-	
+
 	const char *last = source, *now = NULL;
 	if ((now = LIB_strprev(source, source + slength, source + slength - 1, '\\')) > last) {
 		last = now + 1;
@@ -70,11 +70,11 @@ int main(int argc, char **argv) {
 	if ((now = LIB_strprev(source, source + slength, source + slength - 1, '/')) > last) {
 		last = now + 1;
 	}
-	
+
 	char *name = LIB_strdupN(last);
-	
-	for(size_t i = 0; name[i] != '\0'; i++) {
-		if(name[i] == '.') {
+
+	for (size_t i = 0; name[i] != '\0'; i++) {
+		if (name[i] == '.') {
 			name[i] = '_';
 		}
 	}
@@ -85,23 +85,23 @@ int main(int argc, char **argv) {
 
 	fprintf(fpout, "const int datatoc_%s_size = %ld;\n", name, size);
 	fprintf(fpout, "const char datatoc_%s[] = {\n\t", name);
-	
+
 	MEM_freeN(name);
 
-	for(long index = 0; index <= size; index++) {
-		if(index && index % 16 == 0) {
+	for (long index = 0; index <= size; index++) {
+		if (index && index % 16 == 0) {
 			fprintf(fpout, "\n\t");
 		}
-		if(index < size) {
+		if (index < size) {
 			fprintf(fpout, "0x%02x, ", getc(fpin));
 		}
 		else {
 			fprintf(fpout, "0");
 		}
 	}
-	
+
 	fprintf(fpout, "\n};\n");
-	
+
 	fclose(fpout);
 	fclose(fpin);
 

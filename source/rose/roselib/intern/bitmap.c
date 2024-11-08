@@ -38,8 +38,8 @@ void LIB_bitmap_xor_all(BitMap *dst, const BitMap *src, size_t bits) {
 
 int LIB_bitmap_find_first_unset(const BitMap *bitmap, size_t bits) {
 	/**
-	 * Realistically we would never need a bitmap with more bits than "INT_MAX". 
-	 * It would also be inefficient to have that many bits and iterate them all. 
+	 * Realistically we would never need a bitmap with more bits than "INT_MAX".
+	 * It would also be inefficient to have that many bits and iterate them all.
 	 */
 	ROSE_assert_msg(bits < INT_MAX, "We use int for index, we can change it if needed!");
 

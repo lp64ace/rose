@@ -111,11 +111,11 @@ void GPU_indexbuf_create_subrange_in_place(GPUIndexBuf *, GPUIndexBuf *, uint st
 void GPU_indexbuf_discard(GPUIndexBuf *elem);
 
 #define GPU_INDEXBUF_DISCARD_SAFE(elem) \
-	do { \
-		if (elem != NULL) { \
+	do {                                \
+		if (elem != NULL) {             \
 			GPU_indexbuf_discard(elem); \
-			elem = NULL; \
-		} \
+			elem = NULL;                \
+		}                               \
 	} while (0)
 
 bool GPU_indexbuf_is_init(GPUIndexBuf *elem);

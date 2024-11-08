@@ -539,11 +539,11 @@ void GPU_texture_ref(GPUTexture *texture);
 void GPU_texture_free(GPUTexture *texture);
 
 #define GPU_TEXTURE_FREE_SAFE(texture) \
-	do { \
-		if (texture != NULL) { \
+	do {                               \
+		if (texture != NULL) {         \
 			GPU_texture_free(texture); \
-			texture = NULL; \
-		} \
+			texture = NULL;            \
+		}                              \
 	} while (0)
 
 /* \} */

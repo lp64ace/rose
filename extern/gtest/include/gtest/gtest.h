@@ -1838,7 +1838,8 @@ public:
 	// The current parameter value. Is also available in the test fixture's
 	// constructor.
 	static const ParamType &GetParam() {
-		GTEST_CHECK_(parameter_ != nullptr) << "GetParam() can only be called inside a value-parameterized test " << "-- did you intend to write TEST_P instead of TEST_F?";
+		GTEST_CHECK_(parameter_ != nullptr) << "GetParam() can only be called inside a value-parameterized test "
+											<< "-- did you intend to write TEST_P instead of TEST_F?";
 		return *parameter_;
 	}
 

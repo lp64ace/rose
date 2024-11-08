@@ -1,8 +1,9 @@
 #include "KER_context.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
-#include "KER_rose.h"
+#include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_rose.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -10,12 +11,15 @@
 #include "WM_handler.h"
 #include "WM_window.h"
 
+#include "ED_screen.h"
+#include "ED_space_api.h"
+
 #include "GPU_init_exit.h"
 
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
-#include <tiny_window.h>
+#include <oswin.h>
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
@@ -48,28 +52,28 @@ ROSE_INLINE bool wm_window_update_size(wmWindow *window, unsigned int x, unsigne
 
 ROSE_INLINE wmWindow *wm_window_find(WindowManager *wm, void *handle) {
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
-		if(window->handle == handle) {
+		if (window->handle == handle) {
 			return window;
 		}
 	}
 	return NULL;
 }
 
-ROSE_INLINE void wm_handle_window_event(struct WTKWindow *handle, void *userdata) {
+ROSE_INLINE void wm_handle_destroy_event(struct WTKWindow *handle, void *userdata) {
 	struct rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
 	wmWindow *window = wm_window_find(wm, handle);
-	if(!window) {
+	if (!window) {
 		return;
 	}
-	
+
 	CTX_wm_window_set(C, window);
-	WM_window_free(wm, window);
+	WM_window_close(C, window);
 	CTX_wm_window_set(C, NULL);
-	
-	if(LIB_listbase_is_empty(&wm->windows)) {
+
+	if (LIB_listbase_is_empty(&wm->windows)) {
 		WM_exit(C);
 	}
 }
@@ -86,6 +90,7 @@ ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, 
 
 	if (wm_window_update_size(window, x, y)) {
 		/** Resize events block the main loop so we need to manually draw the window. */
+		ED_screen_refresh(C, wm, window);
 		WM_do_draw(C);
 	}
 }
@@ -102,6 +107,7 @@ ROSE_INLINE void wm_handle_move_event(struct WTKWindow *handle, int x, int y, vo
 
 	if (wm_window_update_pos(window, x, y)) {
 		/** Move events block the main loop so we need to manually draw the window. */
+		ED_screen_refresh(C, wm, window);
 		WM_do_draw(C);
 	}
 }
@@ -117,6 +123,19 @@ ROSE_INLINE void wm_handle_mouse_event(struct WTKWindow *handle, int x, int y, d
 	}
 
 	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_MOUSEMOVE, 0, x, y, time);
+}
+
+ROSE_INLINE void wm_handle_wheel_event(struct WTKWindow *handle, int dx, int dy, double time, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_MOUSESCROLL, 0, dx, dy, time);
 }
 
 ROSE_INLINE void wm_handle_button_down_event(struct WTKWindow *handle, int button, int x, int y, double time, void *userdata) {
@@ -185,39 +204,42 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 
 	wm->handle = WTK_window_manager_new();
 	ROSE_assert(wm->handle);
-	
-	WTK_window_manager_destroy_callback(wm->handle, wm_handle_window_event, C);
+
+	WTK_window_manager_destroy_callback(wm->handle, wm_handle_destroy_event, C);
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
 	WTK_window_manager_move_callback(wm->handle, wm_handle_move_event, C);
 	WTK_window_manager_mouse_callback(wm->handle, wm_handle_mouse_event, C);
+	WTK_window_manager_wheel_callback(wm->handle, wm_handle_wheel_event, C);
 	WTK_window_manager_button_down_callback(wm->handle, wm_handle_button_down_event, C);
 	WTK_window_manager_button_up_callback(wm->handle, wm_handle_button_up_event, C);
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
-	
+
 	CTX_data_main_set(C, main);
 	CTX_wm_manager_set(C, wm);
-	
+
 	wmWindow *window = WM_window_open(C, NULL, "Rose", 1280, 800);
-	if(!window) {
+	if (!window) {
 		return;
 	}
 }
 
 void WM_init(struct rContext *C) {
 	KER_idtype_init();
-	
+
 	Main *main = KER_main_new();
 	KER_rose_globals_init();
 	KER_rose_globals_main_replace(main);
-	
+
+	ED_spacetypes_init();
+
 	wm_init_manager(C, main);
 }
 
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
-	
-	while(true) {
+
+	while (true) {
 		/** Handle all pending operating system events. */
 		WTK_window_manager_poll(wm->handle);
 		WM_do_handlers(C);
@@ -227,7 +249,9 @@ void WM_main(struct rContext *C) {
 
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
-	
+
+	ED_spacetypes_exit();
+
 	CTX_free(C);
 	exit(0);
 }
@@ -240,12 +264,21 @@ void WM_exit(struct rContext *C) {
 
 ROSE_INLINE void window_manager_free_data(struct ID *id) {
 	WindowManager *wm = (WindowManager *)id;
-	
-	while(!LIB_listbase_is_empty(&wm->windows)) {
+
+	while (!LIB_listbase_is_empty(&wm->windows)) {
 		WM_window_free(wm, (wmWindow *)wm->windows.first);
 	}
-	
+
 	WTK_window_manager_free(wm->handle);
+	wm->handle = NULL;
+}
+
+ROSE_INLINE void window_manager_foreach_id(struct ID *id, struct LibraryForeachIDData *data) {
+	WindowManager *wm = (WindowManager *)id;
+
+	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
+		KER_LIB_FOREACHID_PROCESS_ID(data, window->screen, IDWALK_CB_USER);
+	}
 }
 
 IDTypeInfo IDType_ID_WM = {
@@ -265,7 +298,7 @@ IDTypeInfo IDType_ID_WM = {
 	.copy_data = NULL,
 	.free_data = window_manager_free_data,
 
-	.foreach_id = NULL,
+	.foreach_id = window_manager_foreach_id,
 
 	.write = NULL,
 	.read_data = NULL,

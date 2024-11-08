@@ -373,4 +373,4 @@ template<typename T> inline T *MEM_cnew(char const *allocation_name, T const &ot
 
 #endif
 
-#endif // MEM_GUARDEDALLOC_H
+#endif	// MEM_GUARDEDALLOC_H

@@ -9,14 +9,14 @@
 
 void *RT_node_new(RCContext *C, const RCCToken *token, const RCCType *cast, int kind, int type, size_t length) {
 	RCCNode *base = RT_context_calloc(C, length);
-	
-	if(base) {
+
+	if (base) {
 		base->kind = kind;
 		base->type = type;
 		base->token = token;
 		base->cast = cast;
 	}
-	
+
 	return base;
 }
 
@@ -27,7 +27,7 @@ void *RT_node_new(RCContext *C, const RCCToken *token, const RCCType *cast, int 
  * \{ */
 
 bool RT_node_is_constexpr(const RCCNode *node) {
-	switch(node->kind) {
+	switch (node->kind) {
 		case NODE_CONSTANT: {
 			/** Nothing to do here, constants are always constexpr. */
 			return true;
@@ -35,17 +35,17 @@ bool RT_node_is_constexpr(const RCCNode *node) {
 		case NODE_BINARY: {
 			const struct RCCNode *lhs = RT_node_lhs(node);
 			const struct RCCNode *rhs = RT_node_rhs(node);
-			
-			if(ELEM(node->type, BINARY_ASSIGN, BINARY_COMMA)) {
+
+			if (ELEM(node->type, BINARY_ASSIGN, BINARY_COMMA)) {
 				return RT_node_is_constexpr(rhs);
 			}
-			
+
 			return RT_node_is_constexpr(lhs) && RT_node_is_constexpr(rhs);
 		} break;
 		case NODE_UNARY: {
 			const struct RCCNode *expr = RT_node_expr(node);
-			
-			if(ELEM(node->type, UNARY_NEG, UNARY_NOT, UNARY_BITNOT, UNARY_CAST)){
+
+			if (ELEM(node->type, UNARY_NEG, UNARY_NOT, UNARY_BITNOT, UNARY_CAST)) {
 				return RT_node_is_constexpr(expr);
 			}
 		} break;
@@ -53,8 +53,8 @@ bool RT_node_is_constexpr(const RCCNode *node) {
 			const struct RCCNode *condition = RT_node_condition(node);
 			const struct RCCNode *then = RT_node_then(node);
 			const struct RCCNode *otherwise = RT_node_otherwise(node);
-			
-			if(RT_node_is_constexpr(condition)) {
+
+			if (RT_node_is_constexpr(condition)) {
 				return RT_node_is_constexpr(then) && RT_node_is_constexpr(otherwise);
 			}
 		} break;

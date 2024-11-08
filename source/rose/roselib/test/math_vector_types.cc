@@ -39,4 +39,4 @@ TEST(MathVectorTypes, Divide) {
 	EXPECT_EQ(a / b, a * (1.0f / b));
 }
 
-}  // namespace rose
+}  // namespace

@@ -265,9 +265,9 @@ void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint ma
 		bool do_clamp_indices = false;
 #	ifdef __APPLE__
 		/**
-		 * NOTE: For the Metal Backend, we use degenerative primitives to hide vertices which are not restart compatible. 
-		 * When this is done, we need to ensure that compressed index ranges clamp all index values within the valid range, 
-		 * rather than maximally clamping against the USHORT restart index value of 0xFFFFu, 
+		 * NOTE: For the Metal Backend, we use degenerative primitives to hide vertices which are not restart compatible.
+		 * When this is done, we need to ensure that compressed index ranges clamp all index values within the valid range,
+		 * rather than maximally clamping against the USHORT restart index value of 0xFFFFu,
 		 * as this will cause an out-of-bounds read during vertex assembly.
 		 */
 		do_clamp_indices = GPU_type_matches_ex(GPU_DEVICE_ANY, GPU_OS_MAC, GPU_DRIVER_ANY, GPU_BACKEND_METAL);

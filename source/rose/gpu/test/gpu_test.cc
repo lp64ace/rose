@@ -12,7 +12,7 @@ void GPUTest::SetUp() {
 		GTEST_SKIP() << "Skipping gpu::test, GUI not supported.";
 	}
 
-	window = WTK_create_window(manager, "gpu::test", 1, 1);
+	window = WTK_create_window(manager, "gpu::test", 800, 450);
 	if (!window) {
 		GTEST_SKIP() << "Skipping gpu::test, GUI not supported.";
 	}
@@ -37,4 +37,4 @@ void GPUTest::TearDown() {
 	}
 }
 
-} // namespace rose::gpu
+}  // namespace rose::gpu

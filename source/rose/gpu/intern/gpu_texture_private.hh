@@ -291,8 +291,8 @@ protected:
 	size_t size_ = 0;
 
 public:
-	PixelBuffer(size_t size) : size_(size){};
-	virtual ~PixelBuffer(){};
+	PixelBuffer(size_t size) : size_(size) {};
+	virtual ~PixelBuffer() {};
 
 	virtual void *map() = 0;
 	virtual void unmap() = 0;

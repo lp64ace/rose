@@ -1,7 +1,8 @@
-#include "tiny_window.hh"
-#include "tiny_window.h"
+#include "oswin.h"
+#include "oswin.hh"
 
 #include <assert.h>
+#include <windowsx.h>
 
 #define SET_FLAG_FROM_TEST(value, test, flag) \
 	{                                         \
@@ -98,8 +99,8 @@ static int GetNumberOfGamepads(void) {
 	for (int iter = 0; iter < XUSER_MAX_COUNT; iter++) {
 		XINPUT_STATE state;
 		ZeroMemory(&state, sizeof(XINPUT_STATE));
-		
-		if(XInputGetState(iter, &state) == ERROR_SUCCESS) {
+
+		if (XInputGetState(iter, &state) == ERROR_SUCCESS) {
 			number = std::max(number, iter);
 		}
 	}
@@ -222,10 +223,10 @@ int tWindowManager::GetLegacyPFD(const FormatSetting *desired, HDC hdc) {
 	return 0;
 }
 int tWindowManager::FillGamepad(XINPUT_STATE state, int index) {
-	if(index >= gamepads_.size()) {
+	if (index >= gamepads_.size()) {
 		return -1;
 	}
-	
+
 	gamepads_[index].buttons[Gamepad::dpad_top] = state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP;
 	gamepads_[index].buttons[Gamepad::dpad_bottom] = state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
 	gamepads_[index].buttons[Gamepad::dpad_left] = state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
@@ -301,20 +302,7 @@ bool tWindowManager::InitDummy() {
 	dummy.window_class_.lpszClassName = "dummy";
 	RegisterClass(&dummy.window_class_);
 
-	dummy.window_handle_ = CreateWindowEx(
-		WS_EX_APPWINDOW,
-		"dummy",
-		"dummy",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		1,
-		1,
-		HWND_DESKTOP,
-		NULL,
-		dummy.instance_handle_,
-		NULL
-	);
+	dummy.window_handle_ = CreateWindowEx(WS_EX_APPWINDOW, "dummy", "dummy", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1, 1, HWND_DESKTOP, NULL, dummy.instance_handle_, NULL);
 
 	if (!dummy.window_handle_) {
 		return false;
@@ -491,7 +479,6 @@ void tWindow::SetWindowDecoration(Decorator decoration, bool add) {
 	SetWindowPos(this->window_handle_, HWND_TOP, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
 }
 void tWindow::SetTitleBar(const char *title) {
-
 }
 
 State tWindow::GetState() const {
@@ -564,8 +551,8 @@ tWindow::~tWindow() {
 	}
 	if (this->window_handle_) {
 		/**
-		 * Calling #DestroyWindow would send an message to WindowProcedure, 
-		 * that message would be sent to the user, if the user called this 
+		 * Calling #DestroyWindow would send an message to WindowProcedure,
+		 * that message would be sent to the user, if the user called this
 		 * then that message should not be sent back to the user again!
 		 */
 		DefWindowProc(this->window_handle_, WM_DESTROY, NULL, NULL);
@@ -588,20 +575,9 @@ bool tWindow::Init(tWindowManager *manager) {
 	this->window_class_.lpszClassName = settings.name;
 	RegisterClass(&this->window_class_);
 
-	this->window_handle_ = CreateWindowEx(
-		WS_EX_APPWINDOW,
-		settings.name,
-		settings.name,
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		settings.width,
-		settings.height,
-		HWND_DESKTOP,
-		NULL,
-		this->instance_handle_,
-		NULL
-	);
+	DWORD style = WS_OVERLAPPEDWINDOW & ~WS_VISIBLE;
+
+	this->window_handle_ = CreateWindowEx(WS_EX_APPWINDOW, settings.name, settings.name, style, CW_USEDEFAULT, CW_USEDEFAULT, settings.width, settings.height, HWND_DESKTOP, NULL, this->instance_handle_, NULL);
 
 	if (!this->window_handle_) {
 		return false;
@@ -621,8 +597,6 @@ bool tWindow::Init(tWindowManager *manager) {
 	::GetClientRect(this->window_handle_, &tempRect);
 	this->clientx = tempRect.right - tempRect.left;
 	this->clienty = tempRect.bottom - tempRect.top;
-
-	this->SetWindowStyle(Style::normal);
 	return true;
 }
 bool tWindow::InitContext(tWindowManager *manager) {
@@ -637,11 +611,7 @@ bool tWindow::InitContext(tWindowManager *manager) {
 	}
 
 	if (manager->wglCreateContextAttribsARB) {
-		int attribs[] {
-			WGL_CONTEXT_MAJOR_VERSION_ARB, settings.major,
-			WGL_CONTEXT_MINOR_VERSION_ARB, settings.minor,
-			0
-		};
+		int attribs[]{WGL_CONTEXT_MAJOR_VERSION_ARB, settings.major, WGL_CONTEXT_MINOR_VERSION_ARB, settings.minor, 0};
 
 		this->rendering_handle_ = wglCreateContext(this->device_handle_);
 
@@ -672,25 +642,7 @@ bool tWindow::InitPixelFormat() {
 
 	unsigned int count = WGL_NUMBER_PIXEL_FORMATS_ARB;
 	int index = 0;
-	int attribs[] = {
-		WGL_SUPPORT_OPENGL_ARB, 1,
-		WGL_DRAW_TO_WINDOW_ARB, 1,
-		WGL_DOUBLE_BUFFER_ARB, 1,
-		WGL_RED_BITS_ARB, settings.color_bits,
-		WGL_GREEN_BITS_ARB, settings.color_bits,
-		WGL_BLUE_BITS_ARB, settings.color_bits,
-		WGL_ALPHA_BITS_ARB, settings.color_bits,
-		WGL_DEPTH_BITS_ARB, settings.depth_bits,
-		WGL_STENCIL_BITS_ARB, settings.stencil_bits,
-		WGL_ACCUM_RED_BITS_ARB, settings.accum_bits,
-		WGL_ACCUM_GREEN_BITS_ARB, settings.accum_bits,
-		WGL_ACCUM_BLUE_BITS_ARB, settings.accum_bits,
-		WGL_ACCUM_ALPHA_BITS_ARB, settings.accum_bits,
-		WGL_ACCELERATION_ARB,
-		WGL_FULL_ACCELERATION_ARB,
-		WGL_PIXEL_TYPE_ARB,
-		WGL_TYPE_RGBA_ARB
-	};
+	int attribs[] = {WGL_SUPPORT_OPENGL_ARB, 1, WGL_DRAW_TO_WINDOW_ARB, 1, WGL_DOUBLE_BUFFER_ARB, 1, WGL_RED_BITS_ARB, settings.color_bits, WGL_GREEN_BITS_ARB, settings.color_bits, WGL_BLUE_BITS_ARB, settings.color_bits, WGL_ALPHA_BITS_ARB, settings.color_bits, WGL_DEPTH_BITS_ARB, settings.depth_bits, WGL_STENCIL_BITS_ARB, settings.stencil_bits, WGL_ACCUM_RED_BITS_ARB, settings.accum_bits, WGL_ACCUM_GREEN_BITS_ARB, settings.accum_bits, WGL_ACCUM_BLUE_BITS_ARB, settings.accum_bits, WGL_ACCUM_ALPHA_BITS_ARB, settings.accum_bits, WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB, WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB};
 
 	std::vector<int> attribList;
 	attribList.assign(attribs, attribs + std::size(attribs));
@@ -765,7 +717,7 @@ bool tWindow::InitPixelFormat() {
 
 static int convert_key(short win32_key, short scan_code, short extend) {
 	int key = WTK_KEY_UNKOWN;
-	
+
 	if ((win32_key >= '0') && (win32_key <= '9')) {
 		key = (win32_key - '0' + WTK_KEY_0);
 	}
@@ -939,7 +891,7 @@ static int convert_key(short win32_key, short scan_code, short extend) {
 			} break;
 		}
 	}
-	
+
 	return key;
 }
 
@@ -968,7 +920,7 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_SIZE: {
 			window->clientx = LOWORD(lparam);
 			window->clienty = HIWORD(lparam);
-			
+
 			RECT rect;
 			GetWindowRect(hwnd, &rect);
 			window->sizex = rect.right - rect.left;
@@ -1006,25 +958,25 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			UINT raw_size = sizeof(RAWINPUT);
 
 			::GetRawInputData((HRAWINPUT)lparam, RID_INPUT, &raw, &raw_size, sizeof(RAWINPUTHEADER));
-			
+
 			switch (raw.header.dwType) {
 				case RIM_TYPEKEYBOARD: {
 					const USHORT virtual_key = raw.data.keyboard.VKey;
 					const USHORT make_code = raw.data.keyboard.MakeCode;
 					const USHORT flags = raw.data.keyboard.Flags;
 					const UINT msg = raw.data.keyboard.Message;
-					
+
 					bool keydown = !(raw.data.keyboard.Flags & RI_KEY_BREAK) && msg != WM_KEYUP && msg != WM_SYSKEYUP;
 					bool repeat = false;
-					
+
 					int tiny_window_key = convert_key(virtual_key, make_code, flags & (RI_KEY_E1 | RI_KEY_E0));
-					
-					if(keydown) {
-						if(HIBYTE(GetKeyState(virtual_key)) != 0) {
+
+					if (keydown) {
+						if (HIBYTE(GetKeyState(virtual_key)) != 0) {
 							repeat = true;
 						}
 					}
-					
+
 					wchar_t utf16[2] = {0};
 					char utf8[4] = {0};
 					BYTE state[256];
@@ -1044,10 +996,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 						}
 					}
 
-					if(keydown && manager->KeyDownEvent) {
+					if (keydown && manager->KeyDownEvent) {
 						manager->KeyDownEvent(window, tiny_window_key, repeat, utf8, time);
 					}
-					if(!keydown && manager->KeyUpEvent) {
+					if (!keydown && manager->KeyUpEvent) {
 						manager->KeyUpEvent(window, tiny_window_key, time);
 					}
 				} break;
@@ -1056,10 +1008,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONDOWN:
 		case WM_MBUTTONDOWN:
 		case WM_RBUTTONDOWN: {
-			int x = static_cast<int>(LOWORD(lparam));
-			int y = static_cast<int>(HIWORD(lparam));
-			
-			switch(message) {
+			int x = static_cast<int>(GET_X_LPARAM(lparam));
+			int y = static_cast<int>(GET_Y_LPARAM(lparam));
+
+			switch (message) {
 				case WM_LBUTTONDOWN: {
 					if (manager->ButtonDownEvent) {
 						manager->ButtonDownEvent(window, WTK_BTN_LEFT, x, y, time);
@@ -1080,8 +1032,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONUP:
 		case WM_MBUTTONUP:
 		case WM_RBUTTONUP: {
-			int x = static_cast<int>(LOWORD(lparam));
-			int y = static_cast<int>(HIWORD(lparam));
+			int x = static_cast<int>(GET_X_LPARAM(lparam));
+			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
 			switch (message) {
 				case WM_LBUTTONUP: {
@@ -1102,11 +1054,18 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			}
 		} break;
 		case WM_MOUSEMOVE: {
-			int x = static_cast<int>(LOWORD(lparam));
-			int y = static_cast<int>(HIWORD(lparam));
+			int x = static_cast<int>(GET_X_LPARAM(lparam));
+			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
 			if (manager->MouseEvent) {
 				manager->MouseEvent(window, x, y, time);
+			}
+		} break;
+		case WM_MOUSEWHEEL: {
+			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
+
+			if (manager->WheelEvent) {
+				manager->WheelEvent(window, 0, delta / WHEEL_DELTA, time);
 			}
 		} break;
 	}

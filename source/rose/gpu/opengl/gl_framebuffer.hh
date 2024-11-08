@@ -88,10 +88,10 @@ private:
  * \{ */
 
 static inline GLenum to_gl(const AttachmentType type) {
-#define ATTACHMENT(X) \
+#define ATTACHMENT(X)  \
 	case GPU_FB_##X: { \
 		return GL_##X; \
-	} \
+	}                  \
 		((void)0)
 
 	switch (type) {

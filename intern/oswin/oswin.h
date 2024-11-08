@@ -48,7 +48,7 @@ enum {
 
 	WTK_EVT_MOUSEMOVE,
 	WTK_EVT_MOUSESCROLL,
-	
+
 	WTK_EVT_BUTTONDOWN,
 	WTK_EVT_BUTTONUP,
 	WTK_EVT_KEYDOWN,
@@ -59,6 +59,7 @@ typedef void (*WTKDestroyCallbackFn)(struct WTKWindow *, void *userdata);
 typedef void (*WTKResizeCallbackFn)(struct WTKWindow *, unsigned int x, unsigned int y, void *userdata);
 typedef void (*WTKMoveCallbackFn)(struct WTKWindow *, int x, int y, void *userdata);
 typedef void (*WTKMouseCallbackFn)(struct WTKWindow *, int x, int y, double time, void *userdata);
+typedef void (*WTKWheelCallbackFn)(struct WTKWindow *, int dx, int dy, double time, void *userdata);
 typedef void (*WTKButtonDownCallbackFn)(struct WTKWindow *, int key, int x, int y, double time, void *userdata);
 typedef void (*WTKButtonUpCallbackFn)(struct WTKWindow *, int key, int x, int y, double time, void *userdata);
 typedef void (*WTKKeyDownCallbackFn)(struct WTKWindow *, int key, bool repeat, char utf8[4], double time, void *userdata);
@@ -217,6 +218,7 @@ void WTK_window_manager_destroy_callback(struct WTKWindowManager *, WTKDestroyCa
 void WTK_window_manager_resize_callback(struct WTKWindowManager *, WTKResizeCallbackFn fn, void *userdata);
 void WTK_window_manager_move_callback(struct WTKWindowManager *, WTKMoveCallbackFn fn, void *userdata);
 void WTK_window_manager_mouse_callback(struct WTKWindowManager *, WTKMouseCallbackFn fn, void *userdata);
+void WTK_window_manager_wheel_callback(struct WTKWindowManager *, WTKWheelCallbackFn fn, void *userdata);
 void WTK_window_manager_button_down_callback(struct WTKWindowManager *, WTKButtonDownCallbackFn fn, void *userdata);
 void WTK_window_manager_button_up_callback(struct WTKWindowManager *, WTKButtonUpCallbackFn fn, void *userdata);
 void WTK_window_manager_key_down_callback(struct WTKWindowManager *, WTKKeyDownCallbackFn fn, void *userdata);
@@ -263,8 +265,8 @@ void WTK_window_set_swap_interval(struct WTKWindow *, int interval);
 /**
  * \brief Check if the window should close.
  *
- * This function checks if a given window has been marked for closure, returning a boolean 
- * value indicating whether it should be closed. Useful for determining when to exit the 
+ * This function checks if a given window has been marked for closure, returning a boolean
+ * value indicating whether it should be closed. Useful for determining when to exit the
  * main application loop.
  *
  * \param window A pointer to the \ref WTKWindow to be checked.
@@ -274,8 +276,8 @@ bool WTK_window_should_close(struct WTKWindow *);
 /**
  * \brief Swap the front and back buffers of a window.
  *
- * This function swaps the front and back buffers of the specified window, effectively 
- * displaying the current drawing buffer on the screen. Typically used in rendering 
+ * This function swaps the front and back buffers of the specified window, effectively
+ * displaying the current drawing buffer on the screen. Typically used in rendering
  * loops to present a new frame to the display.
  *
  * \param window A pointer to the \ref WTKWindow whose buffers are to be swapped.
@@ -328,4 +330,4 @@ double WTK_elapsed_time(struct WTKWindowManager *);
 }
 #endif
 
-#endif // TINY_WINDOW_H
+#endif	// TINY_WINDOW_H

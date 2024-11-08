@@ -77,9 +77,9 @@ public:
 	constexpr const char &back() const;
 
 	/**
-	* The behavior of those functions matches the standard library implementation of
-	* std::string_view.
-	*/
+	 * The behavior of those functions matches the standard library implementation of
+	 * std::string_view.
+	 */
 	constexpr size_t find(char c, size_t pos = 0) const;
 	constexpr size_t find(StringRef str, size_t pos = 0) const;
 	constexpr size_t rfind(char c, size_t pos = SIZE_MAX) const;
@@ -346,7 +346,8 @@ constexpr StringRef StringRefBase::trim(StringRef characters_to_remove) const {
 /** \name #StringRefNull Inline Methods
  * \{ */
 
-constexpr StringRefNull::StringRefNull() : StringRefBase("", 0) {}
+constexpr StringRefNull::StringRefNull() : StringRefBase("", 0) {
+}
 
 /**
  * Construct a StringRefNull from a null terminated c-string. This invokes undefined behavior
@@ -516,6 +517,6 @@ constexpr bool operator>=(StringRef a, StringRef b) {
 
 /** \} */
 
-} // namespace rose
+}  // namespace rose
 
-#endif // LIB_STRING_REF_HH
+#endif	// LIB_STRING_REF_HH

@@ -1,5 +1,5 @@
-#include "tiny_window.h"
-#include "tiny_window.hh"
+#include "oswin.h"
+#include "oswin.hh"
 
 using namespace rose::tiny_window;
 
@@ -10,7 +10,7 @@ WTKWindowManager *WTK_window_manager_new(void) {
 
 void WTK_window_manager_free(WTKWindowManager *vmanager) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
-	if(manager) {
+	if (manager) {
 		manager->Shutdown();
 		delete manager;
 	}
@@ -23,66 +23,92 @@ void WTK_window_manager_poll(WTKWindowManager *vmanager) {
 void WTK_window_manager_destroy_callback(WTKWindowManager *vmanager, WTKDestroyCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->DestroyEvent = [=](tWindow *window) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), userdata);
 		};
+		/* clang-format on */
 	}
 }
 
 void WTK_window_manager_resize_callback(WTKWindowManager *vmanager, WTKResizeCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->ResizeEvent = [=](tWindow *window, unsigned int cx, unsigned int cy) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), cx, cy, userdata);
 		};
+		/* clang-format on */
 	}
 }
 void WTK_window_manager_move_callback(WTKWindowManager *vmanager, WTKMoveCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->MoveEvent = [=](tWindow *window, int x, int y) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), x, y, userdata);
 		};
+		/* clang-format on */
 	}
 }
 void WTK_window_manager_mouse_callback(WTKWindowManager *vmanager, WTKMouseCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->MouseEvent = [=](tWindow *window, int x, int y, double time) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), x, y, time, userdata);
 		};
+		/* clang-format on */
+	}
+}
+void WTK_window_manager_wheel_callback(WTKWindowManager *vmanager, WTKWheelCallbackFn fn, void *userdata) {
+	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
+	if (manager) {
+		/* clang-format off */
+		manager->WheelEvent = [=](tWindow *window, int dx, int dy, double time) -> void {
+			fn(reinterpret_cast<WTKWindow *>(window), dx, dy, time, userdata);
+		};
+		/* clang-format on */
 	}
 }
 void WTK_window_manager_button_down_callback(WTKWindowManager *vmanager, WTKButtonDownCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->ButtonDownEvent = [=](tWindow *window, int key, int x, int y, double time) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), key, x, y, time, userdata);
 		};
+		/* clang-format on */
 	}
 }
 void WTK_window_manager_button_up_callback(WTKWindowManager *vmanager, WTKButtonUpCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->ButtonUpEvent = [=](tWindow *window, int key, int x, int y, double time) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), key, x, y, time, userdata);
 		};
+		/* clang-format on */
 	}
 }
 void WTK_window_manager_key_down_callback(WTKWindowManager *vmanager, WTKKeyDownCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->KeyDownEvent = [=](tWindow *window, int key, bool repeat, char utf8[4], double time) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), key, repeat, utf8, time, userdata);
 		};
+		/* clang-format on */
 	}
 }
 void WTK_window_manager_key_up_callback(WTKWindowManager *vmanager, WTKKeyUpCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
+		/* clang-format off */
 		manager->KeyUpEvent = [=](tWindow *window, int key, double time) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), key, time, userdata);
 		};
+		/* clang-format on */
 	}
 }
 
@@ -93,7 +119,7 @@ WTKWindow *WTK_create_window(WTKWindowManager *vmanager, const char *title, int 
 	settings.name = title;
 	settings.width = width;
 	settings.height = height;
-	
+
 	return reinterpret_cast<WTKWindow *>(manager->AddWindow(settings));
 }
 
@@ -131,8 +157,8 @@ void WTK_window_pos(WTKWindow *vwindow, int *r_posx, int *r_posy) {
 
 void WTK_window_size(WTKWindow *vwindow, int *r_sizex, int *r_sizey) {
 	tWindow *window = reinterpret_cast<tWindow *>(vwindow);
-	*r_sizex = window->sizex;
-	*r_sizey = window->sizey;
+	*r_sizex = window->clientx;
+	*r_sizey = window->clienty;
 }
 
 void WTK_window_show(WTKWindow *vwindow) {

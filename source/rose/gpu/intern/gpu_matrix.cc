@@ -46,11 +46,9 @@ struct GPUMatrixState {
 #define Projection ProjectionStack.stack[ProjectionStack.top]
 
 GPUMatrixState *GPU_matrix_state_create() {
-#define MATRIX_4X4_IDENTITY \
-	{ \
-		{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, { \
-			0.0f, 0.0f, 0.0f, 1.0f \
-		} \
+#define MATRIX_4X4_IDENTITY                                                                                    \
+	{                                                                                                          \
+		{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f} \
 	}
 
 	GPUMatrixState *state = (GPUMatrixState *)MEM_mallocN(sizeof(*state), __func__);

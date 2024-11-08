@@ -285,22 +285,32 @@ template<typename Key> struct DefaultSetSlot;
 /**
  * Use SimpleSetSlot by default, because it is the smallest slot type that works for all key types.
  */
-template<typename Key> struct DefaultSetSlot { using type = SimpleSetSlot<Key>; };
+template<typename Key> struct DefaultSetSlot {
+	using type = SimpleSetSlot<Key>;
+};
 
 /**
  * Store the hash of a string in the slot by default. Recomputing the hash or doing string
  * comparisons can be relatively costly.
  */
-template<> struct DefaultSetSlot<std::string> { using type = HashedSetSlot<std::string>; };
-template<> struct DefaultSetSlot<StringRef> { using type = HashedSetSlot<StringRef>; };
-template<> struct DefaultSetSlot<StringRefNull> { using type = HashedSetSlot<StringRefNull>; };
+template<> struct DefaultSetSlot<std::string> {
+	using type = HashedSetSlot<std::string>;
+};
+template<> struct DefaultSetSlot<StringRef> {
+	using type = HashedSetSlot<StringRef>;
+};
+template<> struct DefaultSetSlot<StringRefNull> {
+	using type = HashedSetSlot<StringRefNull>;
+};
 
 /**
  * Use a special slot type for pointer keys, because we can store whether a slot is empty or
  * removed with special pointer values.
  */
-template<typename Key> struct DefaultSetSlot<Key *> { using type = IntrusiveSetSlot<Key *, PointerKeyInfo<Key *>>; };
+template<typename Key> struct DefaultSetSlot<Key *> {
+	using type = IntrusiveSetSlot<Key *, PointerKeyInfo<Key *>>;
+};
 
 }  // namespace rose
 
-#endif // LIB_SET_SLOTS_HH
+#endif	// LIB_SET_SLOTS_HH

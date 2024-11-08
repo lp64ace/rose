@@ -6,8 +6,8 @@
 #include "intern/gpu_backend.hh"
 
 #include "gl_batch.hh"
-#include "gl_context.hh"
 #include "gl_compute.hh"
+#include "gl_context.hh"
 #include "gl_framebuffer.hh"
 #include "gl_index_buffer.hh"
 #include "gl_shader.hh"

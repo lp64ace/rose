@@ -22,10 +22,10 @@ void GPU_viewport_bind(struct GPUViewport *viewport, int view, const rcti *rect)
 void GPU_viewport_unbind(struct GPUViewport *viewport);
 
 /**
- * Merge and draw the buffers of \a viewport into the currently active framebuffer, 
+ * Merge and draw the buffers of \a viewport into the currently active framebuffer,
  * perfoming color transform to display space.
  *
- * \param rect Coordinates to draw into. By swapping min and max values, 
+ * \param rect Coordinates to draw into. By swapping min and max values,
  * drawing can be doen with inversed axis coordinates (upside down or sideways).
  */
 void GPU_viewport_draw_to_screen(struct GPUViewport *viewport, int view, const rcti *rect);

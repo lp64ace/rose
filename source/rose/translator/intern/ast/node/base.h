@@ -20,4 +20,4 @@ void *RT_node_new(struct RCContext *, const struct RCCToken *token, const struct
 }
 #endif
 
-#endif // RT_AST_NODE_BASE_H
+#endif	// RT_AST_NODE_BASE_H

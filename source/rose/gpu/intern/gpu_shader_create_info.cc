@@ -224,7 +224,9 @@ std::string ShaderCreateInfo::check_error() const {
 
 	if (!this->geometry_source_.is_empty()) {
 		if (bool(this->builtins_ & BuiltinBits::BARYCENTRIC_COORD)) {
-			error += "Shader " + this->name_ + " has geometry stage and uses barycentric coordinates. This is not allowed as fallback injects a geometry stage.\n";
+			error += "Shader " + this->name_ +
+					 " has geometry stage and uses barycentric coordinates. This is not allowed as fallback injects a geometry "
+					 "stage.\n";
 		}
 		if (bool(this->builtins_ & BuiltinBits::VIEWPORT_INDEX)) {
 			error += "Shader " + this->name_ + " has geometry stage and uses multi-viewport. This is not allowed as fallback injects a geometry stage.\n";
@@ -244,7 +246,9 @@ std::string ShaderCreateInfo::check_error() const {
 	}
 
 	if (!this->is_vulkan_compatible()) {
-		error += this->name_ + " contains a stage interface using an instance name and mixed interpolation modes. This is not compatible with Vulkan and need to be adjusted.\n";
+		error += this->name_ +
+				 " contains a stage interface using an instance name and mixed interpolation modes. This is not compatible "
+				 "with Vulkan and need to be adjusted.\n";
 	}
 #endif
 
@@ -360,16 +364,16 @@ void gpu_shader_create_info_init() {
 	g_create_infos = MEM_new<CreateInfoDictionnary>("rose::gpu::GlobalCreateInfoDictionary");
 	g_interfaces = MEM_new<InterfaceDictionnary>("rose::gpu::GlobalInterfaceDictionary");
 
-#define GPU_SHADER_INTERFACE_INFO(_interface, _inst_name) \
+#define GPU_SHADER_INTERFACE_INFO(_interface, _inst_name)                                                              \
 	StageInterfaceInfo *ptr_##_interface = MEM_new<StageInterfaceInfo>("StageInterfaceInfo", #_interface, _inst_name); \
-	StageInterfaceInfo &_interface = *ptr_##_interface; \
-	g_interfaces->add_new(#_interface, ptr_##_interface); \
+	StageInterfaceInfo &_interface = *ptr_##_interface;                                                                \
+	g_interfaces->add_new(#_interface, ptr_##_interface);                                                              \
 	_interface
 
-#define GPU_SHADER_CREATE_INFO(_info) \
+#define GPU_SHADER_CREATE_INFO(_info)                                                      \
 	ShaderCreateInfo *ptr_##_info = MEM_new<ShaderCreateInfo>("ShaderCreateInfo", #_info); \
-	ShaderCreateInfo &_info = *ptr_##_info; \
-	g_create_infos->add_new(#_info, ptr_##_info); \
+	ShaderCreateInfo &_info = *ptr_##_info;                                                \
+	g_create_infos->add_new(#_info, ptr_##_info);                                          \
 	_info
 
 /* Declare, register and construct the infos. */
@@ -398,7 +402,7 @@ void gpu_shader_create_info_init() {
 		}
 #endif
 	}
-	
+
 #ifndef NDEBUG
 	/** TEST */
 	gpu_shader_create_info_compile(nullptr);
@@ -490,7 +494,7 @@ bool gpu_shader_create_info_compile(const char *name_starts_with_filter) {
 		}
 	}
 
-	printf("[GPU] Shader Test compilation result: %d / %d passed", success, total);
+	printf("[GPU] Shader test compilation result: %d/%d, %d%% passed", success, total, success * 100 / total);
 	if (skipped_filter > 0) {
 		printf(" (skipped %d when filtering)", skipped_filter);
 	}

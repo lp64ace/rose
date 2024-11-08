@@ -35,4 +35,4 @@ public:
 
 }  // namespace rose
 
-#endif // LIB_UTILITY_MIXINS_HH
+#endif	// LIB_UTILITY_MIXINS_HH

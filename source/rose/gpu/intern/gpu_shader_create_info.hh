@@ -1,8 +1,8 @@
 #pragma once
 
 #include "LIB_string_ref.hh"
-#include "LIB_vector.hh"
 #include "LIB_utildefines.h"
+#include "LIB_vector.hh"
 
 #include "GPU_texture.h"
 
@@ -11,11 +11,11 @@
 namespace rose::gpu::shader {
 
 #ifndef GPU_SHADER_CREATE_INFO
-#	define GPU_SHADER_INTERFACE_INFO(_interface, _inst_name) \
+#	define GPU_SHADER_INTERFACE_INFO(_interface, _inst_name)   \
 		StageInterfaceInfo _interface(#_interface, _inst_name); \
 		_interface
 #	define GPU_SHADER_CREATE_INFO(_info) \
-		ShaderCreateInfo _info(#_info); \
+		ShaderCreateInfo _info(#_info);   \
 		_info
 #endif
 
@@ -278,8 +278,8 @@ struct StageInterfaceInfo {
 	/** List of all members of the interface. */
 	Vector<InOut> inouts;
 
-	StageInterfaceInfo(const char *name_, const char *instance_name_) : name(name_), instance_name(instance_name_){};
-	~StageInterfaceInfo(){};
+	StageInterfaceInfo(const char *name_, const char *instance_name_) : name(name_), instance_name(instance_name_) {};
+	~StageInterfaceInfo() {};
 
 	using Self = StageInterfaceInfo;
 
@@ -340,15 +340,15 @@ struct ShaderCreateInfo {
 	/** Manually set generated dependencies. */
 	Vector<const char *, 0> dependencies_generated;
 
-#define TEST_EQUAL(a, b, _member) \
+#define TEST_EQUAL(a, b, _member)        \
 	if (!((a)._member == (b)._member)) { \
-		return false; \
+		return false;                    \
 	}
 
-#define TEST_VECTOR_EQUAL(a, b, _vector) \
-	TEST_EQUAL(a, b, _vector.size()); \
+#define TEST_VECTOR_EQUAL(a, b, _vector)   \
+	TEST_EQUAL(a, b, _vector.size());      \
 	for (auto i : _vector.index_range()) { \
-		TEST_EQUAL(a, b, _vector[i]); \
+		TEST_EQUAL(a, b, _vector[i]);      \
 	}
 
 	struct VertIn {
@@ -401,7 +401,7 @@ struct ShaderCreateInfo {
 		Type type = {};
 		DualBlend blend = {};
 		StringRefNull name = {};
-		
+
 		int raster_order_group;
 
 		bool operator==(const FragOut &b) const {
@@ -459,7 +459,7 @@ struct ShaderCreateInfo {
 			StorageBuf storagebuf;
 		};
 
-		Resource(BindType type, int _slot) : bind_type(type), slot(_slot){};
+		Resource(BindType type, int _slot) : bind_type(type), slot(_slot) {};
 
 		bool operator==(const Resource &b) const {
 			TEST_EQUAL(*this, b, bind_type);
@@ -528,8 +528,8 @@ struct ShaderCreateInfo {
 	Vector<StringRefNull> additional_infos_;
 
 public:
-	ShaderCreateInfo(const char *name) : name_(name){};
-	~ShaderCreateInfo(){};
+	ShaderCreateInfo(const char *name) : name_(name) {};
+	~ShaderCreateInfo() {};
 
 	using Self = ShaderCreateInfo;
 
@@ -813,7 +813,7 @@ public:
 
 	/**
 	 * Comparison operator for GPUPass cache.
-	 * We only compare if it will create the same shader code. 
+	 * We only compare if it will create the same shader code.
 	 * So we do not compare name and some other internal stuff.
 	 */
 	bool operator==(const ShaderCreateInfo &b) {

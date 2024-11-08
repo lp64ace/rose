@@ -115,7 +115,7 @@ ROSE_INLINE RCCType *array_new(struct RCContext *C, int boundary, const RCCType 
 
 RCCType *RT_type_new_unbounded_array(struct RCContext *C, const RCCType *elem, const RCCTypeQualification *qual) {
 	RCCType *a = array_new(C, ARRAY_UNBOUNDED, elem, qual);
-	
+
 	a->tp_array.length = 0;
 
 	return a;

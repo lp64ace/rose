@@ -14,18 +14,18 @@
 
 typedef struct MemBuf {
 	struct MemBuf *next;
-	
+
 	unsigned char data[];
 } MemBuf;
 
 typedef struct MemArena {
 	MemBuf *buffers;
-	
+
 	unsigned char *itr;
-	
+
 	size_t bufsize;
 	size_t cursize;
-	
+
 	const char *name;
 } MemArena;
 
@@ -37,10 +37,10 @@ typedef struct MemArena {
 
 MemArena *LIB_memory_arena_create(size_t size, const char *name) {
 	MemArena *arena = MEM_callocN(sizeof(MemArena), name);
-	
+
 	arena->bufsize = size;
 	arena->name = name;
-	
+
 	return arena;
 }
 
@@ -51,7 +51,7 @@ MemArena *LIB_memory_arena_create(size_t size, const char *name) {
  * \{ */
 
 ROSE_INLINE void memory_arena_free_all(MemBuf *iter) {
-	while(iter) {
+	while (iter) {
 		MemBuf *next = iter->next;
 		MEM_freeN(iter);
 		iter = next;
@@ -70,43 +70,43 @@ void LIB_memory_arena_destroy(MemArena *arena) {
  * \{ */
 
 /** Pad num up by \a amt (must be power of two). */
-#define PADUP(num, amt) (((num) + ((amt)-1)) & ~((amt)-1))
+#define PADUP(num, amt) (((num) + ((amt) - 1)) & ~((amt) - 1))
 
 void *LIB_memory_arena_malloc(MemArena *arena, size_t size) {
 	void *ptr = NULL;
-	
+
 	ROSE_assert(size < arena->bufsize);
-	if(size > arena->cursize) {
+	if (size > arena->cursize) {
 		arena->cursize = arena->bufsize;
-		
+
 		MemBuf *nbuf = MEM_mallocN(arena->cursize, arena->name);
-		
+
 		/** Emplace this new buffer at the beginning of the list. */
 		nbuf->next = arena->buffers;
 		arena->buffers = nbuf;
 		arena->itr = nbuf->data;
 	}
-	
+
 	ptr = arena->itr;
-	
+
 	arena->itr = POINTER_OFFSET(arena->itr, size);
 	arena->cursize -= size;
-	
+
 	return ptr;
 }
 
 void *LIB_memory_arena_calloc(MemArena *arena, size_t size) {
 	void *ptr = LIB_memory_arena_malloc(arena, size);
-	
+
 	memset(ptr, 0, size);
-	
+
 	return ptr;
 }
 
 void LIB_memory_arena_clear(MemArena *arena) {
 	MemBuf *cbuf = arena->buffers;
-	
-	if(cbuf) {
+
+	if (cbuf) {
 		/** Free all the buffers except the first one. */
 		memory_arena_free_all(cbuf->next);
 

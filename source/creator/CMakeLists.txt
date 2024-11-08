@@ -31,12 +31,18 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::intern::oswin
 	
 	rose::source::dna
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::gpu
 	rose::source::windowmanager
+	rose::source::editors::screen
+	rose::source::editors::space_api
+	rose::source::editors::space_statusbar
+	rose::source::editors::space_topbar
+	rose::source::editors::space_view3d
 	
 	# External Library Dependencies
 	${PTHREADS_LIBRARIES}

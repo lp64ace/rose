@@ -72,4 +72,4 @@ unsigned int _lib_reverse_scan_clear_u64(uint64_t *n);
 
 #include "intern/math_bit_inline.c"
 
-#endif // LIB_MATH_BIT_H
+#endif	// LIB_MATH_BIT_H

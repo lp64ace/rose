@@ -10,11 +10,26 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------- */
+/** \name Init Methods
+ * \{ */
+
+void LIB_rctf_init(struct rctf *rect, float xmin, float xmax, float ymin, float ymax);
+void LIB_rcti_init(struct rcti *rect, int xmin, int xmax, int ymin, int ymax);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Util Methods
  * \{ */
 
 void LIB_rctf_sanitize(struct rctf *rect);
 void LIB_rcti_sanitize(struct rcti *rect);
+
+void LIB_rctf_resize(struct rctf *rect, float x, float y);
+void LIB_rcti_resize(struct rcti *rect, int x, int y);
+
+bool LIB_rctf_isect(const rctf *src1, const rctf *src2, rctf *dest);
+bool LIB_rcti_isect(const rcti *src1, const rcti *src2, rcti *dest);
 
 /** \} */
 
@@ -69,4 +84,4 @@ ROSE_INLINE float LIB_rctf_size_y(const struct rctf *rct) {
 }
 #endif
 
-#endif // LIB_RECT_H
+#endif	// LIB_RECT_H

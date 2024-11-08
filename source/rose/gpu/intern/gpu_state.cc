@@ -9,11 +9,11 @@
 
 using namespace rose::gpu;
 
-#define SET_STATE(_prefix, _state, _value) \
-	do { \
+#define SET_STATE(_prefix, _state, _value)                   \
+	do {                                                     \
 		StateManager *stack = Context::get()->state_manager; \
-		auto &state_object = stack->_prefix##state; \
-		state_object._state = (_value); \
+		auto &state_object = stack->_prefix##state;          \
+		state_object._state = (_value);                      \
 	} while (0)
 
 #define SET_IMMUTABLE_STATE(_state, _value) SET_STATE(, _state, _value)

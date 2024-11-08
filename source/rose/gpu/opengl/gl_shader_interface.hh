@@ -25,4 +25,4 @@ public:
 	void ref_remove(GLVaoCache *ref);
 };
 
-}
+}  // namespace rose::gpu

@@ -1,8 +1,8 @@
-#include "tiny_window.hh"
+#include "oswin.hh"
 
 #include <limits.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 
 namespace rose::tiny_window {
 
@@ -156,4 +156,4 @@ bool tWindow::ShouldClose() const {
 	return this->should_close_;
 }
 
-}
+}  // namespace rose::tiny_window

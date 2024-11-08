@@ -16,9 +16,9 @@ TEST(Token, Identifier) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_identifier(C, NULL, &loc, ARRAY_SIZE("identifier1") - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_identifier(tok));
 		ASSERT_TRUE(STREQ(RT_token_as_string(tok), "identifier1"));
 	}
@@ -32,9 +32,9 @@ TEST(Token, Keyword) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_keyword(C, NULL, &loc, ARRAY_SIZE("if") - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_keyword(tok));
 		ASSERT_TRUE(STREQ(RT_token_as_string(tok), "if"));
 	}
@@ -48,13 +48,13 @@ TEST(Token, DecNumber) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_unsigned(tok));
 		ASSERT_TRUE(RT_token_is_integer(tok));
-		
+
 		ASSERT_EQ(RT_token_as_uint(tok), 162U);
 	}
 	RT_context_free(C);
@@ -67,13 +67,13 @@ TEST(Token, OctNumber) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_signed(tok));
 		ASSERT_TRUE(RT_token_is_integer(tok));
-		
+
 		ASSERT_EQ(RT_token_as_int(tok), 0162);
 	}
 	RT_context_free(C);
@@ -86,13 +86,13 @@ TEST(Token, HexNumber) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_signed(tok));
 		ASSERT_TRUE(RT_token_is_integer(tok));
-		
+
 		ASSERT_EQ(RT_token_as_llong(tok), 0x162LL);
 	}
 	RT_context_free(C);
@@ -105,13 +105,13 @@ TEST(Token, ChrNumber) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_signed(tok));
 		ASSERT_TRUE(RT_token_is_integer(tok));
-		
+
 		ASSERT_EQ(RT_token_as_int(tok), (int)'X');
 	}
 	RT_context_free(C);
@@ -124,11 +124,11 @@ TEST(Token, StrLiteral) {
 		RCCSLoc loc = {
 			expr,
 		};
-		
+
 		RCCToken *tok = RT_token_new_string(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
-		
+
 		ASSERT_TRUE(RT_token_is_string(tok));
-		
+
 		ASSERT_STREQ(RT_token_string(tok), "Hello World\n");
 	}
 	RT_context_free(C);

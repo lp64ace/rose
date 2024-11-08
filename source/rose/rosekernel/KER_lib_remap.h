@@ -19,8 +19,8 @@ typedef struct IDRemapper IDRemapper;
 enum {
 	/**
 	 * Force internal ID runtime pointers (like `ID.newid`, `ID.orig_id` etc.) to also be processed.
-	 * This should only be needed in some very specific cases, typically only ID management code 
-	 * should need it (e.g. required from `id_delete` to ensure no runtime pointer remains using 
+	 * This should only be needed in some very specific cases, typically only ID management code
+	 * should need it (e.g. required from `id_delete` to ensure no runtime pointer remains using
 	 * freed ones).
 	 */
 	ID_REMAP_FORCE_INTERNAL_RUNTIME_POINTERS = 1 << 0,
@@ -33,7 +33,7 @@ enum {
 	 * etc.).
 	 */
 	ID_REMAP_DO_LIBRARY_POINTERS = 1 << 1,
-	
+
 	/**
 	 * Don't touch the special user counts (use when the 'old' remapped ID remains in use):
 	 * - Do not transfer 'fake user' status from old to new ID.
@@ -41,13 +41,13 @@ enum {
 	 */
 	ID_REMAP_SKIP_USER_CLEAR = 1 << 2,
 	/**
-	 * Force handling user count even for IDs that are outside of Main (used in some cases when 
+	 * Force handling user count even for IDs that are outside of Main (used in some cases when
 	 * dealing with IDs temporarily out of Main, but which will be put in it ultimately).
 	 */
 	ID_REMAP_FORCE_USER_REFCOUNT = 1 << 3,
 	/**
-	 * Do NOT handle user count for IDs (used in some cases when dealing with IDs from different 
-	 * BMains, if user-count will be recomputed anyway afterwards, like e.g. 
+	 * Do NOT handle user count for IDs (used in some cases when dealing with IDs from different
+	 * BMains, if user-count will be recomputed anyway afterwards, like e.g.
 	 * in memfile reading during undo step decoding).
 	 */
 	ID_REMAP_SKIP_USER_REFCOUNT = 1 << 4,
@@ -58,10 +58,10 @@ enum {
  * \{ */
 
 /**
- * Replace all references in given Main to \a old_id by \a new_id 
+ * Replace all references in given Main to \a old_id by \a new_id
  * (if \a new_id is NULL, it unlinks \a old_id).
  *
- * \note Requiring new_id to be non-null, this *may* not be the case ultimately, 
+ * \note Requiring new_id to be non-null, this *may* not be the case ultimately,
  * but makes things simpler for now.
  */
 void KER_libblock_remap_locked(struct Main *main, void *old_idv, void *new_idv, int flag);
@@ -81,7 +81,7 @@ void KER_libblock_unlink(struct Main *main, void *idv);
 /**
  * Similar to libblock_remap, but only affects IDs used by given \a idv ID.
  *
- * \param old_idv Unlike KER_libblock_remap, can be NULL, 
+ * \param old_idv Unlike KER_libblock_remap, can be NULL,
  * in which case all ID usages by given \a idv will be cleared.
  */
 void KER_libblock_relink_ex(struct Main *main, void *idv, void *old_idv, void *new_idv, int flag);
@@ -92,4 +92,4 @@ void KER_libblock_relink_ex(struct Main *main, void *idv, void *old_idv, void *n
 }
 #endif
 
-#endif // KER_LIB_REMAP_H
+#endif	// KER_LIB_REMAP_H

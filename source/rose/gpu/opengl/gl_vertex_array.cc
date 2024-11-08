@@ -79,8 +79,10 @@ static uint16_t vbo_bind(const ShaderInterface *interface, const GPUVertFormat *
 	return enabled_attrib;
 }
 
-void GLVertArray::update_bindings(const GLuint vao, const GPUBatch *batch_, /* Should be GLBatch. */
-								  const ShaderInterface *interface, const int base_instance) {
+void GLVertArray::update_bindings(const GLuint vao,
+								  const GPUBatch *batch_, /* Should be GLBatch. */
+								  const ShaderInterface *interface,
+								  const int base_instance) {
 	const GLBatch *batch = static_cast<const GLBatch *>(batch_);
 	uint16_t attr_mask = interface->enabled_attr_mask_;
 

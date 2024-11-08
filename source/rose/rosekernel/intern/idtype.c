@@ -12,26 +12,27 @@ static IDTypeInfo *id_types[INDEX_ID_MAX];
 
 static void id_type_init() {
 	int init_types_num = 0;
-	
-#define INIT_TYPE(_id_code) \
-	{ \
+
+#define INIT_TYPE(_id_code)                                       \
+	{                                                             \
 		ROSE_assert(IDType_##_id_code.index == INDEX_##_id_code); \
-		id_types[INDEX_##_id_code] = &IDType_##_id_code; \
-		init_types_num++; \
-	} \
+		id_types[INDEX_##_id_code] = &IDType_##_id_code;          \
+		init_types_num++;                                         \
+	}                                                             \
 	(void)0
-	
+
 	INIT_TYPE(ID_LI);
+	INIT_TYPE(ID_SCR);
 	INIT_TYPE(ID_WM);
-	
+
 	/* Special case. */
 	ROSE_assert(IDType_ID_LINK_PLACEHOLDER.index == INDEX_ID_NULL);
 	id_types[INDEX_ID_NULL] = &IDType_ID_LINK_PLACEHOLDER;
 	init_types_num++;
-	
+
 	ROSE_assert_msg(init_types_num == INDEX_ID_MAX, "Some IDTypeInfo initialization is missing");
 	UNUSED_VARS_NDEBUG(init_types_num);
-	
+
 #undef INIT_TYPE
 }
 
@@ -96,21 +97,22 @@ short KER_idtype_idcode_from_name(const char *idtype_name) {
 
 int KER_idtype_idcode_to_index(short idcode) {
 #define CASE_IDINDEX(_id) \
-	case ID_##_id: \
+	case ID_##_id:        \
 		return INDEX_ID_##_id
-	
-	switch(idcode) {
+
+	switch (idcode) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(SCR);
 		CASE_IDINDEX(WM);
 	}
-	
+
 	/* Special naughty boy... */
 	if (idcode == ID_LINK_PLACEHOLDER) {
 		return INDEX_ID_NULL;
 	}
-	
+
 	return -1;
-	
+
 #undef CASE_IDINDEX
 }
 
@@ -118,16 +120,17 @@ int KER_idtype_idfilter_to_index(int idfilter) {
 #define CASE_IDINDEX(_id) \
 	case FILTER_ID_##_id: \
 		return INDEX_ID_##_id
-	
+
 	switch (idfilter) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(SCR);
 		CASE_IDINDEX(WM);
 	}
-	
+
 	/* No handling of #ID_LINK_PLACEHOLDER or #INDEX_ID_NULL here. */
-	
+
 	return -1;
-	
+
 #undef CASE_IDINDEX
 }
 

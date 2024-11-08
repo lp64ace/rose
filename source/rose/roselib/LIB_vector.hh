@@ -12,24 +12,24 @@
 namespace rose {
 
 template<
-    /**
-     * Type of the values stored in this vector. It has to be movable.
-     */
-    typename T,
-    /**
-     * The number of values that can be stored in this vector, without doing a heap allocation.
-     * Sometimes it makes sense to increase this value a lot. The memory in the inline buffer is
-     * not initialized when it is not needed.
-     *
-     * When T is large, the small buffer optimization is disabled by default to avoid large
-     * unexpected allocations on the stack. It can still be enabled explicitly though.
-     */
-    size_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(T)),
-    /**
-     * The allocator used by this vector. Should rarely be changed, except when you don't want that
-     * MEM_* is used internally.
-     */
-    typename Allocator = GuardedAllocator>
+	/**
+	 * Type of the values stored in this vector. It has to be movable.
+	 */
+	typename T,
+	/**
+	 * The number of values that can be stored in this vector, without doing a heap allocation.
+	 * Sometimes it makes sense to increase this value a lot. The memory in the inline buffer is
+	 * not initialized when it is not needed.
+	 *
+	 * When T is large, the small buffer optimization is disabled by default to avoid large
+	 * unexpected allocations on the stack. It can still be enabled explicitly though.
+	 */
+	size_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(T)),
+	/**
+	 * The allocator used by this vector. Should rarely be changed, except when you don't want that
+	 * MEM_* is used internally.
+	 */
+	typename Allocator = GuardedAllocator>
 class Vector {
 public:
 	using value_type = T;
@@ -40,7 +40,7 @@ public:
 	using iterator = T *;
 	using const_iterator = const T *;
 	using size_type = size_t;
-	
+
 	/* Similar to string::npos. */
 	static constexpr size_t not_found = -1;
 
@@ -65,8 +65,7 @@ private:
 	 * Be a friend with other vector instantiations. This is necessary to implement some memory
 	 * management logic.
 	 */
-	template<typename OtherT, size_t OtherInlineBufferCapacity, typename OtherAllocator>
-	friend class Vector;
+	template<typename OtherT, size_t OtherInlineBufferCapacity, typename OtherAllocator> friend class Vector;
 
 	/** Required in case `T` is an incomplete type. */
 	static constexpr bool is_nothrow_move_constructible() {
@@ -77,6 +76,7 @@ private:
 			return std::is_nothrow_move_constructible_v<T>;
 		}
 	}
+
 public:
 	/**
 	 * Create an empty vector.
@@ -87,10 +87,10 @@ public:
 		end_ = begin_;
 		capacity_end_ = begin_ + InlineBufferCapacity;
 	}
-	
+
 	Vector(NoExceptConstructor, Allocator allocator = {}) noexcept : Vector(allocator) {
 	}
-	
+
 	/**
 	 * Create a vector with a specific size.
 	 * The elements will be default constructed.
@@ -99,74 +99,67 @@ public:
 	explicit Vector(size_t size, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		this->resize(size);
 	}
-	
+
 	/**
 	 * Create a vector filled with a specific value.
 	 */
 	Vector(size_t size, const T &value, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		this->resize(size, value);
 	}
-	
+
 	/**
-   * Create a vector from a span. The values in the vector are copy constructed.
-   */
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(Span<U> values, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
+	 * Create a vector from a span. The values in the vector are copy constructed.
+	 */
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(Span<U> values, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		const size_t size = values.size();
 		this->reserve(size);
 		uninitialized_convert_n<U, T>(values.data(), size, begin_);
 		this->increase_size_by_unchecked(size);
 	}
-	
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	explicit Vector(MutableSpan<U> values, Allocator allocator = {}) : Vector(values.as_span(), allocator)	{
+
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> explicit Vector(MutableSpan<U> values, Allocator allocator = {}) : Vector(values.as_span(), allocator) {
 	}
-	
+
 	/**
 	 * Create a vector that contains copies of the values in the initialized list.
 	 *
 	 * This allows you to write code like:
 	 * Vector<int> vec = {3, 4, 5};
 	 */
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(const std::initializer_list<U> &values) : Vector(Span<U>(values)) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(const std::initializer_list<U> &values) : Vector(Span<U>(values)) {
 	}
-	
+
 	Vector(const std::initializer_list<T> &values) : Vector(Span<T>(values)) {
 	}
-	
-	template<typename U, size_t N, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(const std::array<U, N> &values) : Vector(Span(values)) {
+
+	template<typename U, size_t N, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(const std::array<U, N> &values) : Vector(Span(values)) {
 	}
-	
-	template<typename InputIt, ROSE_ENABLE_IF((!std::is_convertible_v<InputIt, int>))>
-	Vector(InputIt first, InputIt last, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
+
+	template<typename InputIt, ROSE_ENABLE_IF((!std::is_convertible_v<InputIt, int>))> Vector(InputIt first, InputIt last, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		for (InputIt current = first; current != last; ++current) {
 			this->append(*current);
 		}
 	}
-	
+
 	/**
 	 * Create a copy of another vector. The other vector will not be changed. If the other vector has
 	 * less than InlineBufferCapacity elements, no allocation will be made.
 	 */
 	Vector(const Vector &other) : Vector(other.as_span(), other.allocator_) {
 	}
-	
+
 	/**
 	 * Create a copy of a vector with a different InlineBufferCapacity. This needs to be handled
 	 * separately, so that the other one is a valid copy constructor.
 	 */
-	template<size_t OtherInlineBufferCapacity>
-	Vector(const Vector<T, OtherInlineBufferCapacity, Allocator> &other) : Vector(other.as_span(), other.allocator_) {
+	template<size_t OtherInlineBufferCapacity> Vector(const Vector<T, OtherInlineBufferCapacity, Allocator> &other) : Vector(other.as_span(), other.allocator_) {
 	}
-	
+
 	/**
 	 * Steal the elements from another vector. This does not do an allocation. The other vector will
 	 * have zero elements afterwards.
 	 */
-	template<size_t OtherInlineBufferCapacity>
-	Vector(Vector<T, OtherInlineBufferCapacity, Allocator> &&other) noexcept(is_nothrow_move_constructible()) : Vector(NoExceptConstructor(), other.allocator_) {
+	template<size_t OtherInlineBufferCapacity> Vector(Vector<T, OtherInlineBufferCapacity, Allocator> &&other) noexcept(is_nothrow_move_constructible()) : Vector(NoExceptConstructor(), other.allocator_) {
 		const size_t size = other.size();
 
 		if (other.is_inline()) {
@@ -178,8 +171,7 @@ public:
 			else {
 				/* Copy from inline buffer to newly allocated buffer. */
 				const size_t capacity = size;
-				begin_ = static_cast<T *>(
-				allocator_.allocate(sizeof(T) * size_t(capacity), alignof(T), AT));
+				begin_ = static_cast<T *>(allocator_.allocate(sizeof(T) * size_t(capacity), alignof(T), AT));
 				capacity_end_ = begin_ + capacity;
 				uninitialized_relocate_n(other.begin_, size, begin_);
 				end_ = begin_ + size;
@@ -196,14 +188,14 @@ public:
 		other.end_ = other.begin_;
 		other.capacity_end_ = other.begin_ + OtherInlineBufferCapacity;
 	}
-	
+
 	~Vector() {
 		destruct_n(begin_, this->size());
-		if(!this->is_inline()) {
+		if (!this->is_inline()) {
 			allocator_.deallocate(begin_);
 		}
 	}
-	
+
 	Vector &operator=(const Vector &other) {
 		return copy_assign_container(*this, other);
 	}
@@ -211,7 +203,7 @@ public:
 	Vector &operator=(Vector &&other) {
 		return move_assign_container(*this, std::move(other));
 	}
-	
+
 	/**
 	 * Get the value at the given index. This invokes undefined behavior when the index is out of
 	 * bounds.
@@ -225,7 +217,7 @@ public:
 		ROSE_assert(index < this->size());
 		return begin_[index];
 	}
-	
+
 	operator Span<T>() const {
 		return Span<T>(begin_, this->size());
 	}
@@ -233,17 +225,15 @@ public:
 	operator MutableSpan<T>() {
 		return MutableSpan<T>(begin_, this->size());
 	}
-	
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))>
-	operator Span<U>() const {
+
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))> operator Span<U>() const {
 		return Span<U>(begin_, this->size());
 	}
 
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))>
-	operator MutableSpan<U>() {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))> operator MutableSpan<U>() {
 		return MutableSpan<U>(begin_, this->size());
 	}
-	
+
 	Span<T> as_span() const {
 		return *this;
 	}
@@ -251,7 +241,7 @@ public:
 	MutableSpan<T> as_mutable_span() {
 		return *this;
 	}
-	
+
 	/**
 	 * Make sure that enough memory is allocated to hold min_capacity elements.
 	 * This won't necessarily make an allocation when min_capacity is small.
@@ -262,7 +252,7 @@ public:
 			this->realloc_to_at_least(min_capacity);
 		}
 	}
-	
+
 	/**
 	 * Change the size of the vector so that it contains new_size elements.
 	 * If new_size is smaller than the old size, the elements at the end of the vector are
@@ -280,7 +270,7 @@ public:
 		}
 		end_ = begin_ + new_size;
 	}
-	
+
 	/**
 	 * Change the size of the vector so that it contains new_size elements.
 	 * If new_size is smaller than the old size, the elements at the end of the vector are
@@ -298,7 +288,7 @@ public:
 		}
 		end_ = begin_ + new_size;
 	}
-	
+
 	/**
 	 * Reset the size of the vector so that it contains new_size elements.
 	 * All existing elements are destructed, and not copied if the data must be reallocated.
@@ -307,7 +297,7 @@ public:
 		this->clear();
 		this->resize(new_size);
 	}
-	
+
 	/**
 	 * Afterwards the vector has 0 elements, but will still have
 	 * memory to be refilled again.
@@ -316,7 +306,7 @@ public:
 		destruct_n(begin_, this->size());
 		end_ = begin_;
 	}
-	
+
 	/**
 	 * Afterwards the vector has 0 elements and any allocated memory
 	 * will be freed.
@@ -331,7 +321,7 @@ public:
 		end_ = begin_;
 		capacity_end_ = begin_ + InlineBufferCapacity;
 	}
-	
+
 	/**
 	 * Insert a new element at the end of the vector.
 	 * This might cause a reallocation with the capacity is exceeded.
@@ -826,6 +816,6 @@ private:
 	}
 };
 
-} // namespace rose
+}  // namespace rose
 
-#endif // LIB_VECTOR_HH
+#endif	// LIB_VECTOR_HH

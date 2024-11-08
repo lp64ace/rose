@@ -311,7 +311,8 @@ UInt32 Random::Generate(UInt32 range) {
 	state_ = static_cast<UInt32>(1103515245ULL * state_ + 12345U) % kMaxRange;
 
 	GTEST_CHECK_(range > 0) << "Cannot generate a number in the range [0, 0).";
-	GTEST_CHECK_(range <= kMaxRange) << "Generation of a number in [0, " << range << ") was requested, " << "but this can only generate numbers in [0, " << kMaxRange << ").";
+	GTEST_CHECK_(range <= kMaxRange) << "Generation of a number in [0, " << range << ") was requested, "
+									 << "but this can only generate numbers in [0, " << kMaxRange << ").";
 
 	// Converting via modulus introduces a bit of downward bias, but
 	// it's simple, and a linear congruential generator isn't too good

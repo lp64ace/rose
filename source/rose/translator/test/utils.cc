@@ -19,11 +19,11 @@ TEST(Utils, ParserTypename) {
 		{
 			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
 			const RCCType *type = RT_parser_typename(parser, &token, token);
-			
+
 			EXPECT_STREQ(RT_token_string(token), ";");
-			
+
 			RCContext *C = parser->context;
-			
+
 			RCCType *expected;
 			{
 				expected = Tp_Int;
@@ -60,11 +60,11 @@ TEST(Utils, ParserTypenameEnum) {
 		{
 			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
 			const RCCType *type = RT_parser_typename(parser, &token, token);
-			
+
 			EXPECT_STREQ(RT_token_string(token), ";");
 
 			RCContext *C = parser->context;
-			
+
 			RCCType *expected;
 			{
 				RCCToken *e = RT_token_new_name(C, "e");
@@ -98,11 +98,11 @@ TEST(Utils, ParserTypenameStruct) {
 		{
 			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
 			const RCCType *type = RT_parser_typename(parser, &token, token);
-			
+
 			EXPECT_STREQ(RT_token_string(token), ";");
 
 			RCContext *C = parser->context;
-			
+
 			RCCType *expected;
 			{
 				RCCToken *s = RT_token_new_name(C, "s");
@@ -140,7 +140,7 @@ TEST(Utils, ParserExpression) {
 		{
 			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
 			const RCCNode *expr = RT_parser_conditional(parser, &token, token);
-			
+
 			EXPECT_STREQ(RT_token_string(token), ";");
 			EXPECT_EQ(RT_node_evaluate_integer(expr), 1LL << 0);
 		}
@@ -175,7 +175,7 @@ TEST(Utils, Parser) {
 		RCCParser *parser = RT_parser_new(file);
 		{
 			EXPECT_TRUE(RT_parser_do(parser));
-			
+
 			RCContext *C = parser->context;
 			RCCNode *node = reinterpret_cast<RCCNode *>(parser->nodes.first);
 
@@ -195,7 +195,7 @@ TEST(Utils, Parser) {
 					{
 						EXPECT_EQ(stmt->kind, NODE_UNARY);
 						EXPECT_EQ(stmt->type, UNARY_RETURN);
-						
+
 						const RCCNode *expr = RT_node_expr(stmt);
 						{
 							EXPECT_EQ(expr->kind, NODE_CONSTANT);
@@ -217,17 +217,17 @@ TEST(Utils, Parser) {
 
 TEST(Utils, ParserTypedef) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c",
-		"typedef struct something {\n"
-		"    int x;\n"
-		"    int y;\n"
-		"} something;\n"
-		"typedef struct different {\n"
-		"    something x;\n"
-		"    struct {\n"
-		"        int y;\n"
-		"    };\n"
-		"} different;\n"
-		, 154);
+										"typedef struct something {\n"
+										"    int x;\n"
+										"    int y;\n"
+										"} something;\n"
+										"typedef struct different {\n"
+										"    something x;\n"
+										"    struct {\n"
+										"        int y;\n"
+										"    };\n"
+										"} different;\n",
+										154);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
 		RCCParser *parser = RT_parser_new(file);

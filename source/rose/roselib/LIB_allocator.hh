@@ -10,12 +10,12 @@ public:
 	void *allocate(size_t size, size_t alignment, const char *name) {
 		return MEM_mallocN_aligned(size, alignment, name);
 	}
-	
+
 	void deallocate(void *ptr) {
 		MEM_freeN(ptr);
 	}
 };
 
-} // namespace rose
+}  // namespace rose
 
-#endif // LIB_ALLOCATOR_HH
+#endif	// LIB_ALLOCATOR_HH

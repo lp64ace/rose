@@ -230,4 +230,4 @@ void wm_event_add_tiny_window_key(struct WindowManager *wm, struct wmWindow *win
 }
 #endif
 
-#endif // WM_EVENT_H
+#endif	// WM_EVENT_H

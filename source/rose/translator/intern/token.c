@@ -315,36 +315,36 @@ RCCToken *RT_token_new_eof(RCContext *C) {
 
 RCCToken *RT_token_new_name(RCContext *C, const char *name) {
 	RCCToken *t = token_new(C, TOK_IDENTIFIER, NULL, NULL, 0);
-	
+
 	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), name);
-	
+
 	return t;
 }
 RCCToken *RT_token_new_size(RCContext *C, unsigned long long size) {
 	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
-	
+
 	*(unsigned long long *)t->payload = size;
-	
+
 	t->type = Tp_ULLong;
-	
+
 	return t;
 }
 RCCToken *RT_token_new_int(RCContext *C, int value) {
 	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
-	
+
 	*(long long *)t->payload = (long long)value;
-	
+
 	t->type = Tp_Int;
-	
+
 	return t;
 }
 RCCToken *RT_token_new_llong(RCContext *C, long long value) {
 	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
-	
+
 	*(long long *)t->payload = (long long)value;
-	
+
 	t->type = Tp_LLong;
-	
+
 	return t;
 }
 
@@ -354,12 +354,12 @@ RCCToken *RT_token_duplicate(RCContext *C, const RCCToken *token) {
 	 * this way we can do comparisons with the full extend of the payload in `RT_token_match`.
 	 */
 	RCCToken *t = RT_context_calloc(C, sizeof(RCCToken));
-	
+
 	memcpy(t, token, sizeof(RCCToken));
-	
+
 	t->prev = NULL;
 	t->next = NULL;
-	
+
 	return t;
 }
 
@@ -466,9 +466,9 @@ long long RT_token_as_integer(const RCCToken *tok) {
 	 * \note We translate the negative values after the unary expression '-'.
 	 */
 	ROSE_assert(RT_token_is_integer(tok));
-	
+
 	long long payload = *(const long long *)tok->payload;
-	
+
 	return payload;
 }
 
@@ -541,7 +541,7 @@ long double RT_token_as_ldouble(const RCCToken *tok) {
  * \{ */
 
 const char *RT_token_working_directory(const RCCToken *tok) {
-	if(tok->file) {
+	if (tok->file) {
 		return RT_file_path(tok->file);
 	}
 	return "";

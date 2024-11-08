@@ -147,7 +147,7 @@ using DefaultProbingStrategy = PythonProbingStrategy<>;
 
 /* Turning off clang format here, because otherwise it will mess up the alignment between the
  * macros. */
- 
+
 /* clang-format off */
 
 /**
@@ -175,9 +175,9 @@ using DefaultProbingStrategy = PythonProbingStrategy<>;
 		} while (++linear_offset < probing_strategy.linear_steps()); \
 		probing_strategy.next();									 \
 	} while (true)
-		
+
 /* clang-format on */
 
 }  // namespace rose
 
-#endif // LIB_PROBING_STATEGIES_HH
+#endif	// LIB_PROBING_STATEGIES_HH

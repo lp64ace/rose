@@ -13,17 +13,17 @@
 namespace rose {
 
 template<typename T,
-         /** The view dimensions. */
-         int NumCol,
-         int NumRow,
-         /** The source matrix dimensions. */
-         int SrcNumCol,
-         int SrcNumRow,
-         /** The base offset inside the source matrix. */
-         int SrcStartCol,
-         int SrcStartRow,
-         /** The source matrix alignment. */
-         int SrcAlignment>
+		 /** The view dimensions. */
+		 int NumCol,
+		 int NumRow,
+		 /** The source matrix dimensions. */
+		 int SrcNumCol,
+		 int SrcNumRow,
+		 /** The base offset inside the source matrix. */
+		 int SrcStartCol,
+		 int SrcStartRow,
+		 /** The source matrix alignment. */
+		 int SrcAlignment>
 struct MatView;
 
 template<
@@ -33,42 +33,45 @@ template<
 	typename T,
 	/**
 	 * \brief The number of columns/rows in the matrix view.
-	 * 
+	 *
 	 * Specifies the number of columns/rows to be viewed from the source matrix.
 	 */
-	int NumCol, int NumRow,
+	int NumCol,
+	int NumRow,
 	/**
 	 * \brief The total number of columns/rows in the source matrix.
 	 *
 	 * Specifies the column/row count of the original matrix that the view is derived from.
 	 */
-	int SrcNumCol, int SrcNumRow,
+	int SrcNumCol,
+	int SrcNumRow,
 	/**
 	 * \brief The starting column/row index of the view within the source matrix.
 	 *
 	 * Defines the column/row index in the source matrix from which the view begins.
 	 */
-	int SrcStartCol, int SrcStartRow,
+	int SrcStartCol,
+	int SrcStartRow,
 	/**
 	 * \brief The alignment constraint for the matrix view.
 	 *
-	 * Specifies memory alignment requirements for the matrix view, optimizing access or ensuring compatibility with specific hardware.
+	 * Specifies memory alignment requirements for the matrix view, optimizing access or ensuring compatibility with specific
+	 * hardware.
 	 */
 	int Alignment>
 struct MutableMatView;
 
-template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow) % 4 == 0) ? 4 : 1) * sizeof(T)>
-struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, NumCol> {
+template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow) % 4 == 0) ? 4 : 1) * sizeof(T)> struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, NumCol> {
 	using base_type = T;
 	using vec3_type = VecBase<T, 3>;
 	using col_type = VecBase<T, NumRow>;
 	using row_type = VecBase<T, NumCol>;
 	using loc_type = VecBase<T, (NumRow < NumCol) ? NumRow : (NumRow - 1)>;
-	
+
 	static constexpr int min_dim = (NumRow < NumCol) ? NumRow : NumCol;
 	static constexpr int col_len = NumCol;
 	static constexpr int row_len = NumRow;
-	
+
 	MatBase() = default;
 
 /* Workaround issue with template ROSE_ENABLE_IF((Size == 2)) not working. */
@@ -78,24 +81,23 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		(*this)[0] = _x;
 		(*this)[1] = _y;
 	}
-	
+
 	template<ROSE_ENABLE_IF_MAT(NumCol, == 3)> MatBase(col_type _x, col_type _y, col_type _z) {
 		(*this)[0] = _x;
 		(*this)[1] = _y;
 		(*this)[2] = _z;
 	}
-	
+
 	template<ROSE_ENABLE_IF_MAT(NumCol, == 4)> MatBase(col_type _x, col_type _y, col_type _z, col_type _w) {
 		(*this)[0] = _x;
 		(*this)[1] = _y;
 		(*this)[2] = _z;
 		(*this)[3] = _w;
 	}
-	
+
 	/** Masking. */
 
-	template<typename U, int OtherNumCol, int OtherNumRow>
-	explicit MatBase(const MatBase<U, OtherNumCol, OtherNumRow> &other) {
+	template<typename U, int OtherNumCol, int OtherNumRow> explicit MatBase(const MatBase<U, OtherNumCol, OtherNumRow> &other) {
 		if constexpr ((OtherNumRow >= NumRow) && (OtherNumCol >= NumCol)) {
 			unroll<NumCol>([&](auto i) { (*this)[i] = col_type(other[i]); });
 		}
@@ -120,7 +122,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 #undef ROSE_ENABLE_IF_MAT
 
 	/** Conversion from pointers (from C-style vectors). */
-	
+
 	explicit MatBase(const T *ptr) {
 		unroll<NumCol>([&](auto i) { (*this)[i] = reinterpret_cast<const col_type *>(ptr)[i]; });
 	}
@@ -135,50 +137,40 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 	template<typename U> explicit MatBase(const MatBase<U, NumRow, NumCol> &vec) {
 		unroll<NumCol>([&](auto i) { (*this)[i] = col_type(vec[i]); });
 	}
-	
+
 	/** C-style pointer dereference. */
-	
+
 	using c_style_mat = T[NumCol][NumRow];
-	
+
 	/** \note Prevent implicit cast to types that could fit other pointer constructor. */
 	const c_style_mat &ptr() const {
 		return *reinterpret_cast<const c_style_mat *>(this);
 	}
-	
+
 	/** \note Prevent implicit cast to types that could fit other pointer constructor. */
 	c_style_mat &ptr() {
 		return *reinterpret_cast<c_style_mat *>(this);
 	}
-	
+
 	/** \note Prevent implicit cast to types that could fit other pointer constructor. */
 	const T *base_ptr() const {
 		return reinterpret_cast<const T *>(this);
 	}
-	
+
 	/** \note Prevent implicit cast to types that could fit other pointer constructor. */
 	T *base_ptr() {
 		return reinterpret_cast<T *>(this);
 	}
-	
+
 	/** View creation. */
-	
-	template<
-		int ViewNumCol = NumCol,
-		int ViewNumRow = NumRow,
-		int SrcStartCol = 0,
-		int SrcStartRow = 0>
-	const MatView<T, ViewNumCol, ViewNumRow, NumCol, NumRow, SrcStartCol, SrcStartRow, Alignment> view() const {
+
+	template<int ViewNumCol = NumCol, int ViewNumRow = NumRow, int SrcStartCol = 0, int SrcStartRow = 0> const MatView<T, ViewNumCol, ViewNumRow, NumCol, NumRow, SrcStartCol, SrcStartRow, Alignment> view() const {
 		return MatView<T, ViewNumCol, ViewNumRow, NumCol, NumRow, SrcStartCol, SrcStartRow, Alignment>(const_cast<MatBase &>(*this));
 	}
-	template<
-		int ViewNumCol = NumCol,
-		int ViewNumRow = NumRow,
-		int SrcStartCol = 0,
-		int SrcStartRow = 0>
-	MutableMatView<T, ViewNumCol, ViewNumRow, NumCol, NumRow, SrcStartCol, SrcStartRow, Alignment> view() {
+	template<int ViewNumCol = NumCol, int ViewNumRow = NumRow, int SrcStartCol = 0, int SrcStartRow = 0> MutableMatView<T, ViewNumCol, ViewNumRow, NumCol, NumRow, SrcStartCol, SrcStartRow, Alignment> view() {
 		return MutableMatView<T, ViewNumCol, ViewNumRow, NumCol, NumRow, SrcStartCol, SrcStartRow, Alignment>(*this);
 	}
-	
+
 	/** Array access. */
 
 	const col_type &operator[](int index) const {
@@ -192,9 +184,9 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		ROSE_assert(index < NumCol);
 		return reinterpret_cast<col_type *>(this)[index];
 	}
-	
+
 	/** Access helpers. Using Blender coordinate system. */
-	
+
 	vec3_type &x_axis() {
 		ROSE_STATIC_ASSERT(NumCol >= 1, "Wrong Matrix dimension");
 		ROSE_STATIC_ASSERT(NumRow >= 3, "Wrong Matrix dimension");
@@ -218,7 +210,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		ROSE_STATIC_ASSERT(NumRow >= 2, "Wrong Matrix dimension");
 		return *reinterpret_cast<loc_type *>(&(*this)[NumCol - 1]);
 	}
-	
+
 	const vec3_type &x_axis() const {
 		ROSE_STATIC_ASSERT(NumCol >= 1, "Wrong Matrix dimension");
 		ROSE_STATIC_ASSERT(NumRow >= 3, "Wrong Matrix dimension");
@@ -242,7 +234,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		ROSE_STATIC_ASSERT(NumRow >= 2, "Wrong Matrix dimension");
 		return *reinterpret_cast<loc_type *>(&(*this)[NumCol - 1]);
 	}
-	
+
 	/** Matrix operators. */
 
 	friend MatBase operator+(const MatBase &a, const MatBase &b) {
@@ -257,7 +249,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		return result;
 	}
 
-	friend MatBase operator+(T a, const MatBase &b)	 {
+	friend MatBase operator+(T a, const MatBase &b) {
 		return b + a;
 	}
 
@@ -329,7 +321,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 		unroll<NumCol>([&](auto i) { (*this)[i] *= b; });
 		return *this;
 	}
-	
+
 	/** Vector operators. */
 
 	friend col_type operator*(const MatBase &a, const row_type &b) {
@@ -369,7 +361,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 	}
 
 	/** Miscellaneous. */
-	
+
 	static MatBase diagonal(T value) {
 		MatBase result{};
 		unroll<min_dim>([&](auto i) { result[i][i] = value; });
@@ -389,7 +381,7 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 	static MatBase zero() {
 		return all(0);
 	}
-	
+
 	uint64_t hash() const {
 		uint64_t h = 435109;
 		unroll<NumCol * NumRow>([&](auto i) {
@@ -401,34 +393,37 @@ struct alignas(Alignment) MatBase : public vec_struct_base<VecBase<T, NumRow>, N
 };
 
 template<typename T,
-         /** The view dimensions. */
-         int NumCol, int NumRow,
-         /** The source matrix dimensions. */
-         int SrcNumCol, int SrcNumRow,
-         /** The base offset inside the source matrix. */
-         int SrcStartCol, int SrcStartRow,
-         /** The source matrix alignment. */
-         int SrcAlignment>
+		 /** The view dimensions. */
+		 int NumCol,
+		 int NumRow,
+		 /** The source matrix dimensions. */
+		 int SrcNumCol,
+		 int SrcNumRow,
+		 /** The base offset inside the source matrix. */
+		 int SrcStartCol,
+		 int SrcStartRow,
+		 /** The source matrix alignment. */
+		 int SrcAlignment>
 struct MatView : NonCopyable, NonMovable {
 	using MatT = MatBase<T, NumCol, NumRow>;
 	using SrcMatT = MatBase<T, SrcNumCol, SrcNumRow, SrcAlignment>;
 	using col_type = VecBase<T, NumRow>;
 	using row_type = VecBase<T, NumCol>;
-	
+
 	const SrcMatT &mat;
-	
+
 	MatView() = delete;
-	
+
 	MatView(const SrcMatT &src) : mat(src) {
 		ROSE_STATIC_ASSERT(SrcStartCol >= 0, "View does not fit source matrix dimensions");
 		ROSE_STATIC_ASSERT(SrcStartRow >= 0, "View does not fit source matrix dimensions");
 		ROSE_STATIC_ASSERT(SrcStartCol + NumCol <= SrcNumCol, "View does not fit source matrix dimensions");
 		ROSE_STATIC_ASSERT(SrcStartRow + NumRow <= SrcNumRow, "View does not fit source matrix dimensions");
 	}
-	
+
 	/** Allow wrapping C-style matrices using view. IMPORTANT: Alignment of src needs to match. */
-	explicit MatView(const float (*src)[SrcNumRow]) : MatView(*reinterpret_cast<const SrcMatT *>(&src[0][0])){};
-	
+	explicit MatView(const float (*src)[SrcNumRow]) : MatView(*reinterpret_cast<const SrcMatT *>(&src[0][0])) {};
+
 	/** Array access. */
 
 	const col_type &operator[](int index) const {
@@ -462,37 +457,27 @@ struct MatView : NonCopyable, NonMovable {
 		unroll<NumCol>([&](auto i) { result[i] = -a[i]; });
 		return result;
 	}
-	
-	template<int OtherSrcNumCol,
-			 int OtherSrcNumRow,
-			 int OtherSrcStartCol,
-			 int OtherSrcStartRow,
-			 int OtherSrcAlignment>
-	friend MatT operator-(const MatView &a, const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
+
+	template<int OtherSrcNumCol, int OtherSrcNumRow, int OtherSrcStartCol, int OtherSrcStartRow, int OtherSrcAlignment> friend MatT operator-(const MatView &a, const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
 		MatT result;
 		unroll<NumCol>([&](auto i) { result[i] = a[i] - b[i]; });
 		return result;
 	}
-	
+
 	friend MatT operator-(const MatView &a, const MatT &b) {
 		return a - b.view();
 	}
-	
-	template<int OtherSrcNumCol,
-			 int OtherSrcNumRow,
-			 int OtherSrcStartCol,
-			 int OtherSrcStartRow,
-			 int OtherSrcAlignment>
-	friend MatT operator-(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &a, const MatView &b) {
+
+	template<int OtherSrcNumCol, int OtherSrcNumRow, int OtherSrcStartCol, int OtherSrcStartRow, int OtherSrcAlignment> friend MatT operator-(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &a, const MatView &b) {
 		MatT result;
 		unroll<NumCol>([&](auto i) { result[i] = a[i] - b[i]; });
 		return result;
 	}
-	
+
 	friend MatT operator-(const MatT &a, const MatView &b) {
 		return a.view() - b;
 	}
-	
+
 	friend MatT operator-(const MatView &a, T b) {
 		MatT result;
 		unroll<NumCol>([&](auto i) { result[i] = a[i] - b; });
@@ -543,9 +528,9 @@ struct MatView : NonCopyable, NonMovable {
 		unroll<NumCol>([&](auto c) { unroll<NumRow>([&](auto r) { result[c] += b[c][r] * a[r]; }); });
 		return result;
 	}
-	
+
 	/** Compare. */
-	
+
 	friend bool operator==(const MatView &a, const MatView &b) {
 		for (int i = 0; i < NumCol; i++) {
 			if (a[i] != b[i]) {
@@ -561,14 +546,17 @@ struct MatView : NonCopyable, NonMovable {
 };
 
 template<typename T,
-         /** The view dimensions. */
-         int NumCol, int NumRow,
-         /** The source matrix dimensions. */
-         int SrcNumCol, int SrcNumRow,
-         /** The base offset inside the source matrix. */
-         int SrcStartCol, int SrcStartRow,
-         /** The source matrix alignment. */
-         int SrcAlignment>
+		 /** The view dimensions. */
+		 int NumCol,
+		 int NumRow,
+		 /** The source matrix dimensions. */
+		 int SrcNumCol,
+		 int SrcNumRow,
+		 /** The base offset inside the source matrix. */
+		 int SrcStartCol,
+		 int SrcStartRow,
+		 /** The source matrix alignment. */
+		 int SrcAlignment>
 struct MutableMatView : MatView<T, NumCol, NumRow, SrcNumCol, SrcNumRow, SrcStartCol, SrcStartRow, SrcAlignment> {
 	using MatT = MatBase<T, NumCol, NumRow>;
 	using MatViewT = MatView<T, NumCol, NumRow, SrcNumCol, SrcNumRow, SrcStartCol, SrcStartRow, SrcAlignment>;
@@ -577,52 +565,42 @@ struct MutableMatView : MatView<T, NumCol, NumRow, SrcNumCol, SrcNumRow, SrcStar
 	using row_type = VecBase<T, NumCol>;
 
 	MutableMatView() = delete;
-	
-	MutableMatView(SrcMatT& src) : MatViewT(const_cast<const SrcMatT &>(src)) {
+
+	MutableMatView(SrcMatT &src) : MatViewT(const_cast<const SrcMatT &>(src)) {
 	}
-	
+
 	/** Allow wrapping C-style matrices using view. IMPORTANT: Alignment of src needs to match. */
-	explicit MutableMatView(float src[SrcNumCol][SrcNumRow]) : MutableMatView(*reinterpret_cast<SrcMatT *>(&src[0][0])){
+	explicit MutableMatView(float src[SrcNumCol][SrcNumRow]) : MutableMatView(*reinterpret_cast<SrcMatT *>(&src[0][0])) {
 	}
-	
+
 	/** Array access. */
-	
+
 	col_type &operator[](int index) {
 		return const_cast<col_type &>(static_cast<MatViewT &>(*this)[index]);
 	}
-	
+
 	/** Conversion to immutable view. */
-	
+
 	operator MatViewT() const {
 		return MatViewT(this->mat);
 	}
-	
+
 	/** Copy Assignment. */
-	
-	template<int OtherSrcNumCol,
-			 int OtherSrcNumRow,
-			 int OtherSrcStartCol,
-			 int OtherSrcStartRow,
-			 int OtherSrcAlignment>
-	MutableMatView &operator=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &other) {
+
+	template<int OtherSrcNumCol, int OtherSrcNumRow, int OtherSrcStartCol, int OtherSrcStartRow, int OtherSrcAlignment> MutableMatView &operator=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &other) {
 		ROSE_assert_msg((reinterpret_cast<const void *>(&other.mat[0][0]) != reinterpret_cast<const void *>(&this->mat[0][0])) || ((OtherSrcStartCol > SrcStartCol) || (OtherSrcStartCol + NumCol <= SrcStartCol) || (OtherSrcStartRow > SrcStartRow + NumRow) || (OtherSrcStartRow + NumRow <= SrcStartRow)), "Operation is undefined if views overlap.");
 		unroll<NumCol>([&](auto i) { (*this)[i] = other[i]; });
 		return *this;
 	}
-	
+
 	MutableMatView &operator=(const MatT &other) {
 		*this = other.view();
 		return *this;
 	}
-	
+
 	/** Matrix operators. */
 
-	template<int OtherSrcNumCol,
-			 int OtherSrcNumRow,
-			 int OtherSrcStartCol,
-			 int OtherSrcStartRow,
-			 int OtherSrcAlignment>
-	MutableMatView &operator+=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
+	template<int OtherSrcNumCol, int OtherSrcNumRow, int OtherSrcStartCol, int OtherSrcStartRow, int OtherSrcAlignment> MutableMatView &operator+=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
 		unroll<NumCol>([&](auto i) { (*this)[i] += b[i]; });
 		return *this;
 	}
@@ -636,12 +614,7 @@ struct MutableMatView : MatView<T, NumCol, NumRow, SrcNumCol, SrcNumRow, SrcStar
 		return *this;
 	}
 
-	template<int OtherSrcNumCol,
-			 int OtherSrcNumRow,
-			 int OtherSrcStartCol,
-			 int OtherSrcStartRow,
-			 int OtherSrcAlignment>
-	MutableMatView &operator-=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
+	template<int OtherSrcNumCol, int OtherSrcNumRow, int OtherSrcStartCol, int OtherSrcStartRow, int OtherSrcAlignment> MutableMatView &operator-=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
 		unroll<NumCol>([&](auto i) { (*this)[i] -= b[i]; });
 		return *this;
 	}
@@ -656,12 +629,7 @@ struct MutableMatView : MatView<T, NumCol, NumRow, SrcNumCol, SrcNumRow, SrcStar
 	}
 
 	/** Multiply two matrices using matrix multiplication. */
-	template<int OtherSrcNumCol,
-			 int OtherSrcNumRow,
-			 int OtherSrcStartCol,
-			 int OtherSrcStartRow,
-			 int OtherSrcAlignment>
-	MutableMatView &operator*=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
+	template<int OtherSrcNumCol, int OtherSrcNumRow, int OtherSrcStartCol, int OtherSrcStartRow, int OtherSrcAlignment> MutableMatView &operator*=(const MatView<T, NumCol, NumRow, OtherSrcNumCol, OtherSrcNumRow, OtherSrcStartCol, OtherSrcStartRow, OtherSrcAlignment> &b) {
 		*this = *static_cast<MatViewT *>(this) * b;
 		return *this;
 	}
@@ -703,14 +671,7 @@ struct MutableMatView : MatView<T, NumCol, NumRow, SrcNumCol, SrcNumRow, SrcStar
 namespace detail {
 
 /** Multiply two matrices using matrix multiplication. */
-template<typename T,
-         int A_NumCol,
-         int A_NumRow,
-         int B_NumCol,
-         int B_NumRow,
-         typename MatA,
-         typename MatB>
-MatBase<T, B_NumCol, A_NumRow> matrix_mul_impl(const MatA &a, const MatB &b) {
+template<typename T, int A_NumCol, int A_NumRow, int B_NumCol, int B_NumRow, typename MatA, typename MatB> MatBase<T, B_NumCol, A_NumRow> matrix_mul_impl(const MatA &a, const MatB &b) {
 	static_assert(A_NumCol == B_NumRow);
 	/**
 	 * This is the reference implementation.
@@ -720,51 +681,27 @@ MatBase<T, B_NumCol, A_NumRow> matrix_mul_impl(const MatA &a, const MatB &b) {
 	unroll<B_NumCol>([&](auto j) {
 		unroll<A_NumRow>([&](auto i) {
 			/* Same as dot product, but avoid dependency on vector math. */
-			unroll<A_NumCol>([&](auto k) {
-				result[j][i] += a[k][i] * b[j][k];
-			});
+			unroll<A_NumCol>([&](auto k) { result[j][i] += a[k][i] * b[j][k]; });
 		});
 	});
 	return result;
 }
 
-} // namespace details
+}  // namespace detail
 
-template<typename T, int A_NumCol, int A_NumRow, int B_NumCol, int B_NumRow>
-MatBase<T, B_NumCol, A_NumRow> operator*(const MatBase<T, A_NumCol, A_NumRow> &a, const MatBase<T, B_NumCol, B_NumRow> &b) {
+template<typename T, int A_NumCol, int A_NumRow, int B_NumCol, int B_NumRow> MatBase<T, B_NumCol, A_NumRow> operator*(const MatBase<T, A_NumCol, A_NumRow> &a, const MatBase<T, B_NumCol, B_NumRow> &b) {
 	return detail::matrix_mul_impl<T, A_NumCol, A_NumRow, B_NumCol, B_NumRow>(a, b);
 }
 
-template<typename T,
-         int A_NumCol, int A_NumRow,
-         int A_SrcNumCol, int A_SrcNumRow,
-         int A_SrcStartCol, int A_SrcStartRow,
-         int A_SrcAlignment,
-         int B_NumCol, int B_NumRow,
-         int B_SrcNumCol, int B_SrcNumRow,
-         int B_SrcStartCol, int B_SrcStartRow,
-         int B_SrcAlignment>
-MatBase<T, B_NumCol, A_NumRow> operator*(const MatView<T, A_NumCol, A_NumRow, A_SrcNumCol, A_SrcNumRow, A_SrcStartCol, A_SrcStartRow, A_SrcAlignment> &a, const MatView<T, B_NumCol, B_NumRow, B_SrcNumCol, B_SrcNumRow, B_SrcStartCol, B_SrcStartRow, B_SrcAlignment> &b) {
+template<typename T, int A_NumCol, int A_NumRow, int A_SrcNumCol, int A_SrcNumRow, int A_SrcStartCol, int A_SrcStartRow, int A_SrcAlignment, int B_NumCol, int B_NumRow, int B_SrcNumCol, int B_SrcNumRow, int B_SrcStartCol, int B_SrcStartRow, int B_SrcAlignment> MatBase<T, B_NumCol, A_NumRow> operator*(const MatView<T, A_NumCol, A_NumRow, A_SrcNumCol, A_SrcNumRow, A_SrcStartCol, A_SrcStartRow, A_SrcAlignment> &a, const MatView<T, B_NumCol, B_NumRow, B_SrcNumCol, B_SrcNumRow, B_SrcStartCol, B_SrcStartRow, B_SrcAlignment> &b) {
 	return detail::matrix_mul_impl<T, A_NumCol, A_NumRow, B_NumCol, B_NumRow>(a, b);
 }
 
-template<typename T,
-         int A_NumCol, int A_NumRow,
-         int A_SrcNumCol, int A_SrcNumRow,
-         int A_SrcStartCol, int A_SrcStartRow,
-         int A_SrcAlignment,
-         int B_NumCol, int B_NumRow>
-MatBase<T, B_NumCol, A_NumRow> operator*(const MatView<T, A_NumCol, A_NumRow, A_SrcNumCol, A_SrcNumRow, A_SrcStartCol, A_SrcStartRow, A_SrcAlignment> &a, const MatBase<T, B_NumCol, B_NumRow> &b) {
+template<typename T, int A_NumCol, int A_NumRow, int A_SrcNumCol, int A_SrcNumRow, int A_SrcStartCol, int A_SrcStartRow, int A_SrcAlignment, int B_NumCol, int B_NumRow> MatBase<T, B_NumCol, A_NumRow> operator*(const MatView<T, A_NumCol, A_NumRow, A_SrcNumCol, A_SrcNumRow, A_SrcStartCol, A_SrcStartRow, A_SrcAlignment> &a, const MatBase<T, B_NumCol, B_NumRow> &b) {
 	return detail::matrix_mul_impl<T, A_NumCol, A_NumRow, B_NumCol, B_NumRow>(a, b);
 }
 
-template<typename T,
-         int A_NumCol, int A_NumRow,
-         int B_NumCol, int B_NumRow,
-         int B_SrcNumCol, int B_SrcNumRow,
-         int B_SrcStartCol, int B_SrcStartRow,
-         int B_SrcAlignment>
-MatBase<T, B_NumCol, A_NumRow> operator*(const MatBase<T, A_NumCol, A_NumRow> &a, const MatView<T, B_NumCol, B_NumRow, B_SrcNumCol, B_SrcNumRow, B_SrcStartCol, B_SrcStartRow, B_SrcAlignment> &b) {
+template<typename T, int A_NumCol, int A_NumRow, int B_NumCol, int B_NumRow, int B_SrcNumCol, int B_SrcNumRow, int B_SrcStartCol, int B_SrcStartRow, int B_SrcAlignment> MatBase<T, B_NumCol, A_NumRow> operator*(const MatBase<T, A_NumCol, A_NumRow> &a, const MatView<T, B_NumCol, B_NumRow, B_SrcNumCol, B_SrcNumRow, B_SrcStartCol, B_SrcStartRow, B_SrcAlignment> &b) {
 	return detail::matrix_mul_impl<T, A_NumCol, A_NumRow, B_NumCol, B_NumRow>(a, b);
 }
 
@@ -801,6 +738,6 @@ extern template double2x2 operator*(const double2x2 &a, const double2x2 &b);
 extern template double3x3 operator*(const double3x3 &a, const double3x3 &b);
 extern template double4x4 operator*(const double4x4 &a, const double4x4 &b);
 
-} // namespace rose
+}  // namespace rose
 
-#endif // LIB_MATH_MATRIX_TYPES_HH
+#endif	// LIB_MATH_MATRIX_TYPES_HH

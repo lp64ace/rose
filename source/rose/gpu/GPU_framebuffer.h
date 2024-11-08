@@ -64,11 +64,11 @@ GPUFrameBuffer *GPU_framebuffer_back_get(void);
 void GPU_framebuffer_free(GPUFrameBuffer *framebuffer);
 
 #define GPU_FRAMEBUFFER_FREE_SAFE(fb) \
-	do { \
-		if (fb != NULL) { \
+	do {                              \
+		if (fb != NULL) {             \
 			GPU_framebuffer_free(fb); \
-			fb = NULL; \
-		} \
+			fb = NULL;                \
+		}                             \
 	} while (0)
 
 /* \} */
@@ -119,10 +119,8 @@ typedef struct GPULoadStore {
 } GPULoadStore;
 
 /* Empty bind point. */
-#define NULL_ATTACHMENT_COLOR \
-	{ 0.0, 0.0, 0.0, 0.0 }
-#define NULL_LOAD_STORE \
-	{ GPU_LOADACTION_DONT_CARE, GPU_STOREACTION_DONT_CARE, NULL_ATTACHMENT_COLOR }
+#define NULL_ATTACHMENT_COLOR {0.0, 0.0, 0.0, 0.0}
+#define NULL_LOAD_STORE {GPU_LOADACTION_DONT_CARE, GPU_STOREACTION_DONT_CARE, NULL_ATTACHMENT_COLOR}
 
 /**
  * Load store config array (load_store_actions) matches attachment structure of
@@ -152,9 +150,9 @@ typedef struct GPULoadStore {
  * \endcode
  */
 void GPU_framebuffer_bind_loadstore(GPUFrameBuffer *framebuffer, const GPULoadStore *load_store_actions, uint load_store_actions_len);
-#define GPU_framebuffer_bind_ex(_fb, ...) \
-	{ \
-		GPULoadStore actions[] = __VA_ARGS__; \
+#define GPU_framebuffer_bind_ex(_fb, ...)                                                       \
+	{                                                                                           \
+		GPULoadStore actions[] = __VA_ARGS__;                                                   \
 		GPU_framebuffer_bind_loadstore(_fb, actions, (sizeof(actions) / sizeof(GPULoadStore))); \
 	}
 
@@ -181,9 +179,9 @@ void GPU_framebuffer_bind_loadstore(GPUFrameBuffer *framebuffer, const GPULoadSt
  */
 void GPU_framebuffer_subpass_transition_array(GPUFrameBuffer *framebuffer, const AttachmentState *attachment_states, uint attachment_len);
 
-#define GPU_framebuffer_subpass_transition(_fb, ...) \
-	{ \
-		GPUAttachmentState actions[] = __VA_ARGS__; \
+#define GPU_framebuffer_subpass_transition(_fb, ...)                                                            \
+	{                                                                                                           \
+		GPUAttachmentState actions[] = __VA_ARGS__;                                                             \
 		GPU_framebuffer_subpass_transition_array(_fb, actions, (sizeof(actions) / sizeof(GPUAttachmentState))); \
 	}
 
@@ -212,12 +210,12 @@ void GPU_framebuffer_subpass_transition_array(GPUFrameBuffer *framebuffer, const
  * \note Make sure that the dimensions of your textures matches
  * otherwise you will have an invalid framebuffer error.
  */
-#define GPU_framebuffer_ensure_config(_fb, ...) \
-	do { \
-		if (*(_fb) == NULL) { \
-			*(_fb) = GPU_framebuffer_create(#_fb); \
-		} \
-		GPUAttachment config[] = __VA_ARGS__; \
+#define GPU_framebuffer_ensure_config(_fb, ...)                                                 \
+	do {                                                                                        \
+		if (*(_fb) == NULL) {                                                                   \
+			*(_fb) = GPU_framebuffer_create(#_fb);                                              \
+		}                                                                                       \
+		GPUAttachment config[] = __VA_ARGS__;                                                   \
 		GPU_framebuffer_config_array(*(_fb), config, (sizeof(config) / sizeof(GPUAttachment))); \
 	} while (0)
 
@@ -231,31 +229,63 @@ void GPU_framebuffer_config_array(GPUFrameBuffer *framebuffer, const GPUAttachme
 
 /** Empty bind point. */
 #define GPU_ATTACHMENT_NONE \
-	{ NULL, -1, 0, }
+	{                       \
+		NULL,               \
+		-1,                 \
+		0,                  \
+	}
 /** Leave currently bound texture in this slot. DEPRECATED: Specify all textures for clarity. */
 #define GPU_ATTACHMENT_LEAVE \
-	{ NULL, -1, -1, }
+	{                        \
+		NULL,                \
+		-1,                  \
+		-1,                  \
+	}
 /** Bind the first mip level of a texture (all layers). */
 #define GPU_ATTACHMENT_TEXTURE(_texture) \
-	{ _texture, -1, 0, }
+	{                                    \
+		_texture,                        \
+		-1,                              \
+		0,                               \
+	}
 /** Bind the \a _mip level of a texture (all layers). */
 #define GPU_ATTACHMENT_TEXTURE_MIP(_texture, _mip) \
-	{ _texture, -1, _mip, }
+	{                                              \
+		_texture,                                  \
+		-1,                                        \
+		_mip,                                      \
+	}
 /** Bind the \a _layer layer of the first mip level of a texture. */
 #define GPU_ATTACHMENT_TEXTURE_LAYER(_texture, _layer) \
-	{ _texture, _layer, 0, }
+	{                                                  \
+		_texture,                                      \
+		_layer,                                        \
+		0,                                             \
+	}
 /** Bind the \a _layer layer of the \a _mip level of a texture. */
 #define GPU_ATTACHMENT_TEXTURE_LAYER_MIP(_texture, _layer, _mip) \
-	{ _texture, _layer, _mip, }
+	{                                                            \
+		_texture,                                                \
+		_layer,                                                  \
+		_mip,                                                    \
+	}
 
 /** NOTE: The cube-face variants are equivalent to the layer ones but give better semantic. */
 
 /** Bind the first mip level of a cube-map \a _face texture. */
 #define GPU_ATTACHMENT_TEXTURE_CUBEFACE(_texture, _face) \
-	{ _texture, _face, 0, }
+	{                                                    \
+		_texture,                                        \
+		_face,                                           \
+		0,                                               \
+	}
 /** Bind the \a _mip level of a cube-map \a _face texture. */
 #define GPU_ATTACHMENT_TEXTURE_CUBEFACE_MIP(_texture, _face, _mip) \
-	{ _texture, _face, _mip, }
+	{                                                              \
+		_texture,                                                  \
+		_face,                                                     \
+		_mip,                                                      \
+	}
 
 /**
  * Attach an entire texture mip level to a #GPUFrameBuffer.

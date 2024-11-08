@@ -9,8 +9,8 @@
 #include "LIB_utildefines.h"
 #include "LIB_vector.hh"
 
-#include "LIB_math_bit.h"
 #include "LIB_hash.h"
+#include "LIB_math_bit.h"
 
 namespace rose {
 
@@ -295,9 +295,8 @@ struct SequenceComparison {
 	}
 };
 
-template<typename T, size_t InlineBufferCapacity, typename Allocator>
-struct DefaultEquality<Vector<T, InlineBufferCapacity, Allocator>> : public SequenceComparison {};
+template<typename T, size_t InlineBufferCapacity, typename Allocator> struct DefaultEquality<Vector<T, InlineBufferCapacity, Allocator>> : public SequenceComparison {};
 
 }  // namespace rose
 
-#endif // LIB_HASH_TABLES_HH
+#endif	// LIB_HASH_TABLES_HH

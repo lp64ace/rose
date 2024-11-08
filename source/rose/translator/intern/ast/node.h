@@ -21,12 +21,12 @@ struct RCCType;
 
 typedef struct RCCNode {
 	struct RCCNode *prev, *next;
-	
+
 	struct {
 		unsigned int kind : 16;
 		unsigned int type : 16;
 	};
-	
+
 	const struct RCCToken *token;
 	const struct RCCType *cast;
 } RCCNode;
@@ -121,7 +121,6 @@ const struct RCCObject *RT_node_object(const struct RCCNode *node);
 /** \name Constant Nodes
  * \{ */
 
-
 bool RT_node_is_integer(const struct RCCNode *node);
 bool RT_node_is_floating(const struct RCCNode *node);
 
@@ -198,4 +197,4 @@ ROSE_INLINE bool RT_node_is_member(const struct RCCNode *expr);
 
 #include "node/base_inline.c"
 
-#endif // RT_AST_NODE_H
+#endif	// RT_AST_NODE_H

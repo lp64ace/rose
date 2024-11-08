@@ -62,7 +62,7 @@ public:
 	bool is_init() const {
 		return is_init_;
 	}
-	
+
 	size_t size_get() const {
 		return index_len_ * to_bytesize(index_type_);
 	};

@@ -26,17 +26,17 @@ void KER_main_clear(Main *main) {
 	/* Also call when reading a file, erase all, etc */
 	ListBase *lbarray[INDEX_ID_MAX];
 	int a;
-	
+
 	const int free_flag = LIB_ID_FREE_NO_MAIN | LIB_ID_FREE_NO_USER_REFCOUNT;
-	
+
 	a = set_listbasepointers(main, lbarray);
 	while (a--) {
 		ListBase *lb = lbarray[a];
 		ID *id, *id_next;
-		
+
 		for (id = (ID *)(lb->first); id != NULL; id = id_next) {
 			id_next = (ID *)(id->next);
-			
+
 			KER_id_free_ex(main, id, free_flag, false);
 		}
 		LIB_listbase_clear(lb);
@@ -58,10 +58,10 @@ void KER_main_destroy(Main *main) {
 }
 
 void KER_main_free(Main *main) {
-	if(main->next) {
+	if (main->next) {
 		KER_main_free(main->next);
 	}
-	
+
 	KER_main_destroy(main);
 	MEM_freeN(main);
 }
@@ -75,22 +75,23 @@ void KER_main_free(Main *main) {
 bool KER_main_is_empty(struct Main *main) {
 	ListBase *lbarray[INDEX_ID_MAX];
 	int a;
-	
+
 	a = set_listbasepointers(main, lbarray);
 	while (a--) {
-		if(!LIB_listbase_is_empty(lbarray[a])) {
+		if (!LIB_listbase_is_empty(lbarray[a])) {
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
 int set_listbasepointers(Main *main, ListBase *lb[]) {
 	/* Libraries may be accessed from pretty much any other ID. */
 	lb[INDEX_ID_LI] = &(main->libraries);
+	lb[INDEX_ID_SCR] = &(main->screens);
 	lb[INDEX_ID_WM] = &(main->wm);
-	
+
 	lb[INDEX_ID_NULL] = NULL;
 
 	return (INDEX_ID_MAX - 1);
@@ -106,6 +107,8 @@ ListBase *which_libbase(Main *main, short type) {
 	switch (type) {
 		case ID_LI:
 			return &(main->libraries);
+		case ID_SCR:
+			return &(main->screens);
 		case ID_WM:
 			return &(main->wm);
 	}

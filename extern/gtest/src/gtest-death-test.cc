@@ -248,7 +248,8 @@ static std::string DeathTestThreadWarning(size_t thread_count) {
 	msg << " See "
 		   "https://github.com/google/googletest/blob/master/googletest/docs/"
 		   "advanced.md#death-tests-and-threads"
-		<< " for more explanation and suggested solutions, especially if" << " this is the last message you see before your test times out.";
+		<< " for more explanation and suggested solutions, especially if"
+		<< " this is the last message you see before your test times out.";
 	return msg.GetString();
 }
 #	endif	// !GTEST_OS_WINDOWS && !GTEST_OS_FUCHSIA

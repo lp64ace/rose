@@ -15,7 +15,7 @@ extern "C" {
 
 typedef struct LinkData {
 	struct LinkData *prev, *next;
-	
+
 	void *data;
 } LinkData;
 

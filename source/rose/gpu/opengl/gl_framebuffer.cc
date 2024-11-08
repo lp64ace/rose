@@ -2,8 +2,8 @@
 
 #include "gl_backend.hh"
 #include "gl_debug.hh"
-#include "gl_state.hh"
 #include "gl_shader.hh"
+#include "gl_state.hh"
 #include "gl_texture.hh"
 
 #include "gl_framebuffer.hh"
@@ -84,9 +84,9 @@ bool GLFrameBuffer::check(char err_out[256]) {
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
 #define FORMAT_STATUS(X) \
-	case X: { \
-		err = #X; \
-		break; \
+	case X: {            \
+		err = #X;        \
+		break;           \
 	}
 
 	const char *err;
@@ -315,7 +315,8 @@ void GLFrameBuffer::apply_state() {
 		glViewport(UNPACK4(viewport_[0]));
 	}
 	else {
-		/* Great API you have there! You have to convert to float values for setting int viewport values. **Audible Facepalm** */
+		/* Great API you have there! You have to convert to float values for setting int viewport values. **Audible Facepalm**
+		 */
 		float viewports_f[GPU_MAX_VIEWPORTS][4];
 		for (int i = 0; i < GPU_MAX_VIEWPORTS; i++) {
 			for (int j = 0; j < 4; j++) {

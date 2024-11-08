@@ -14,15 +14,15 @@
 
 size_t KER_libblock_get_alloc_info(short type, const char **r_name) {
 	const IDTypeInfo *info = KER_idtype_get_info_from_idcode(type);
-	
-	if(info == NULL) {
-		if(r_name) {
+
+	if (info == NULL) {
+		if (r_name) {
 			*r_name = NULL;
 		}
 		return 0;
 	}
-	
-	if(r_name) {
+
+	if (r_name) {
 		*r_name = info->name;
 	}
 	return info->size;
@@ -43,34 +43,34 @@ void *KER_libblock_alloc(Main *main, short type, const char *name, int flag) {
 	 * Main data-base is allowed to be NULL only if #LIB_ID_CREATE_NO_MAIN is specified.
 	 */
 	ROSE_assert((flag & LIB_ID_CREATE_NO_MAIN) != 0 || main != NULL);
-	
+
 	ID *id = KER_libblock_alloc_notest(type);
-	
-	if(id) {
+
+	if (id) {
 		if ((flag & LIB_ID_CREATE_NO_MAIN) != 0) {
 			id->tag |= ID_TAG_NO_MAIN;
 		}
-		if((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) != 0) {
+		if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) != 0) {
 			id->tag |= ID_TAG_NO_USER_REFCOUNT;
 		}
-		
+
 		*((short *)id->name) = type;
 		if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
 			id->user = 1;
 		}
-		
+
 		if ((flag & LIB_ID_CREATE_NO_MAIN) == 0) {
 			ListBase *lb = which_libbase(main, type);
-			
+
 			id->lib = NULL;
-			
+
 			KER_main_lock(main);
 			LIB_addtail(lb, id);
 			KER_main_unlock(main);
-			
+
 			/** TODO: Ensure that the name given is unique! */
 			LIB_strcpy(id->name + 2, ARRAY_SIZE(id->name) - 2, name);
-			if(main->curlib) {
+			if (main->curlib) {
 				id->lib = main->curlib;
 			}
 		}
@@ -79,10 +79,9 @@ void *KER_libblock_alloc(Main *main, short type, const char *name, int flag) {
 			id->lib = NULL;
 		}
 	}
-	
+
 	return id;
 }
-
 
 void KER_libblock_init_empty(ID *id) {
 	const IDTypeInfo *idtype_info = KER_idtype_get_info_from_id(id);
@@ -126,15 +125,15 @@ void KER_libblock_free_data(ID *id, bool do_id_user) {
 
 ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
 	ID *id = (ID *)(idv);
-	
-	if(use_flag_from_idtag) {
+
+	if (use_flag_from_idtag) {
 		if ((id->tag & ID_TAG_NO_MAIN) != 0) {
 			flag |= LIB_ID_FREE_NO_MAIN;
 		}
 		else {
 			flag &= ~LIB_ID_FREE_NO_MAIN;
 		}
-		
+
 		if ((id->tag & ID_TAG_NO_USER_REFCOUNT) != 0) {
 			flag |= LIB_ID_FREE_NO_USER_REFCOUNT;
 		}
@@ -142,37 +141,37 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 			flag &= ~LIB_ID_FREE_NO_USER_REFCOUNT;
 		}
 	}
-	
+
 	ROSE_assert((flag & LIB_ID_FREE_NO_MAIN) != 0 || main != NULL);
 	ROSE_assert((flag & LIB_ID_FREE_NO_MAIN) != 0 || (flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0);
-	
+
 	const short type = GS(id->name);
-	
+
 	if ((flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0) {
 		/** Remove any referenced ID's from us. */
 		KER_libblock_relink_ex(main, id, NULL, NULL, ID_REMAP_SKIP_USER_CLEAR);
 	}
-	
+
 	KER_libblock_free_datablock(id, flag);
-	
+
 	/* avoid notifying on removed data */
 	if ((flag & LIB_ID_FREE_NO_MAIN) == 0) {
 		KER_main_lock(main);
 	}
-	
+
 	if ((flag & LIB_ID_FREE_NO_MAIN) == 0) {
 		ListBase *lb = which_libbase(main, type);
 		LIB_remlink(lb, id);
 	}
-	
+
 	KER_libblock_free_data(id, (flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0);
-	
+
 	if ((flag & LIB_ID_FREE_NO_MAIN) == 0) {
 		KER_main_unlock(main);
 	}
-	
+
 	MEM_freeN(id);
-	
+
 	return flag;
 }
 
@@ -188,7 +187,7 @@ void KER_id_free_ex(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
 
 ROSE_INLINE int id_us_min(struct ID *id) {
 	/**
-	 * If there is a fake user set, 
+	 * If there is a fake user set,
 	 * then the minimum valid value of the user reference counter is one.
 	 *
 	 * If no extra or fake users are set then the user reference counter can become zero.
@@ -197,13 +196,13 @@ ROSE_INLINE int id_us_min(struct ID *id) {
 }
 
 void id_us_add(struct ID *id) {
-	if(id) {
+	if (id) {
 		id->user++;
 	}
 }
 void id_us_rem(struct ID *id) {
-	if(id) {
-		if(id->user > id_us_min(id)) {
+	if (id) {
+		if (id->user > id_us_min(id)) {
 			--id->user;
 		}
 		else {

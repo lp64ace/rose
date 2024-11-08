@@ -71,21 +71,20 @@ public:
 	using const_reference = const T &;
 	using iterator = const T *;
 	using size_type = size_t;
-	
+
 	/* Similar to string::npos. */
 	static constexpr size_t not_found = -1;
-	
+
 protected:
 	const_pointer data_ = nullptr;
 	size_type size_ = 0;
-	
+
 public:
 	constexpr Span() = default;
 	constexpr Span(const T *start, size_t size) : data_(start), size_(size) {
 		ROSE_assert(size >= 0);
 	}
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr Span(const U *start, size_t size) : data_(static_cast<const T *>(start)), size_(size) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr Span(const U *start, size_t size) : data_(static_cast<const T *>(start)), size_(size) {
 		ROSE_assert(size >= 0);
 	}
 	/**
@@ -101,7 +100,7 @@ public:
 	 */
 	constexpr Span(const std::initializer_list<T> &list) : Span(list.begin(), list.size()) {
 	}
-	constexpr Span(const std::vector<T>& vector) : Span(vector.data(), vector.size()) {
+	constexpr Span(const std::vector<T> &vector) : Span(vector.data(), vector.size()) {
 	}
 	template<std::size_t N> constexpr Span(const std::array<T, N> &array) : Span(array.data(), N) {
 	}
@@ -109,10 +108,9 @@ public:
 	 * Support implicit conversions like the one below:
 	 *   Span<T *> -> Span<const T *>
 	 */
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr Span(Span<U> span) : data_(static_cast<const T *>(span.data())), size_(span.size()) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr Span(Span<U> span) : data_(static_cast<const T *>(span.data())), size_(span.size()) {
 	}
-	
+
 	constexpr Span slice(size_t start, size_t size) const {
 		ROSE_assert(0 <= start && start <= size_);
 		ROSE_assert((0 <= start + size && start + size <= size_) || size == 0);
@@ -121,12 +119,12 @@ public:
 	constexpr Span slice(IndexRange range) const {
 		return this->slice(range.start(), range.size());
 	}
-	
+
 	constexpr Span slice_safe(size_t start, size_t size) const {
-		if(start + size <= size_ || size == 0) {
+		if (start + size <= size_ || size == 0) {
 			return Span(data_ + start, size);
 		}
-		else if(start <= size_) {
+		else if (start <= size_) {
 			return Span(data_ + start, size_ - start);
 		}
 		return Span(data_ + start, 0);
@@ -134,7 +132,7 @@ public:
 	constexpr Span slice_safe(IndexRange range) const {
 		return this->slice_safe(range.start(), range.size());
 	}
-	
+
 	/** Returns a new Span with n elements removed from the beginning. */
 	constexpr Span drop_front(size_t n) const {
 		return (n <= size_) ? Span(data_ + n, size_ - n) : Span(data_ + size_, 0);
@@ -149,9 +147,9 @@ public:
 	}
 	/** Returns a new Span that only contains the last n elements. */
 	constexpr Span take_back(size_t n) const {
-		return (n <= size_) ? Span(data_ + size_ - n, n) :  Span(data_, size_);
+		return (n <= size_) ? Span(data_ + size_ - n, n) : Span(data_, size_);
 	}
-	
+
 	constexpr const T *data() const {
 		return data_;
 	}
@@ -161,19 +159,19 @@ public:
 	constexpr const T *end() const {
 		return data_ + size_;
 	}
-	
+
 	constexpr std::reverse_iterator<const T *> rbegin() const {
 		return std::reverse_iterator<const T *>(this->end());
 	}
 	constexpr std::reverse_iterator<const T *> rend() const {
 		return std::reverse_iterator<const T *>(this->begin());
 	}
-	
+
 	constexpr const T &operator[](size_t index) const {
 		ROSE_assert(index <= size_);
 		return data_[index];
 	}
-	
+
 	constexpr size_t size() const {
 		return size_;
 	}
@@ -183,10 +181,10 @@ public:
 	constexpr size_t size_in_bytes() const {
 		return sizeof(T) * size_;
 	}
-	
-	constexpr bool contains(const T& value) const {
-		for(const T &e : *this) {
-			if(e == value) {
+
+	constexpr bool contains(const T &value) const {
+		for (const T &e : *this) {
+			if (e == value) {
 				return true;
 			}
 		}
@@ -195,17 +193,17 @@ public:
 	constexpr bool contains_ptr(const T *ptr) const {
 		return this->begin() <= ptr && ptr < this->end();
 	}
-	
+
 	constexpr size_t count(const T &value) const {
 		size_t counter = 0;
-		for(const T &e : *this) {
-			if(e == value) {
+		for (const T &e : *this) {
+			if (e == value) {
 				counter++;
 			}
 		}
 		return counter;
 	}
-	
+
 	constexpr const T &first() const {
 		ROSE_assert(size_ > 0);
 		return data_[0];
@@ -214,15 +212,15 @@ public:
 		ROSE_assert(n < size_);
 		return data_[size_ - 1 - n];
 	}
-	
+
 	/** Check if the array contains duplicates. Time complexity is O(n^2). */
 	constexpr bool has_duplicates() const {
 		ROSE_assert(size_ < 1000);
-		
-		for(size_t i = 0; i < size_; i++) {
+
+		for (size_t i = 0; i < size_; i++) {
 			const T &value = data_[i];
-			for(size_t j = i + 1; j < size_; j++) {
-				if(value == data_[j]) {
+			for (size_t j = i + 1; j < size_; j++) {
+				if (value == data_[j]) {
 					return true;
 				}
 			}
@@ -232,55 +230,55 @@ public:
 	/** Returns true when this and the other array have an element in common. Time complexity is O(n^2). */
 	constexpr bool intersects(Span other) const {
 		ROSE_assert(size_ < 1000);
-		
-		for(size_t i = 0; i < size_; i++) {
+
+		for (size_t i = 0; i < size_; i++) {
 			const T &value = data_[i];
-			if(other.contains(value)) {
+			if (other.contains(value)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
 	constexpr size_t first_index(const T &value) const {
 		const size_t index = this->first_index_try(value);
 		ROSE_assert(index != not_found);
 		return index;
 	}
 	constexpr size_t first_index_try(const T &value) const {
-		for(size_t index = 0; index < size_; index++) {
-			if(data_[index] == value) {
+		for (size_t index = 0; index < size_; index++) {
+			if (data_[index] == value) {
 				return index;
 			}
 		}
 		return not_found;
 	}
-	
+
 	constexpr IndexRange index_range() const {
 		return IndexRange(size_);
 	}
-	
+
 	constexpr uint64_t hash() const {
 		uint64_t hash = 0;
-		for(const T &value : *this) {
+		for (const T &value : *this) {
 			hash = hash * 33 ^ get_default_hash(value);
 		}
 		return hash;
 	}
-	
+
 	template<typename NewT> Span<NewT> constexpr cast() const {
 		ROSE_assert((size_ * sizeof(T)) & sizeof(NewT) == 0);
 		size_t new_size = size_ * sizeof(T) / sizeof(NewT);
 		return Span<NewT>(reinterpret_cast<const NewT *>(data_), new_size);
 	}
-	
-	friend bool operator ==(const Span<T> a, const Span<T> b) {
-		if(a.size() != b.size()) {
+
+	friend bool operator==(const Span<T> a, const Span<T> b) {
+		if (a.size() != b.size()) {
 			return false;
 		}
 		return std::equal(a.begin(), a.end(), b.begin());
 	}
-	friend bool operator !=(const Span<T> a, const Span<T> b) {
+	friend bool operator!=(const Span<T> a, const Span<T> b) {
 		return !(a == b);
 	}
 };
@@ -293,22 +291,21 @@ public:
 	using const_reference = const T &;
 	using iterator = const T *;
 	using size_type = size_t;
-	
+
 protected:
 	pointer data_ = nullptr;
 	size_type size_ = 0;
-	
+
 public:
 	constexpr MutableSpan() = default;
 	constexpr MutableSpan(T *start, size_t size) : data_(start), size_(size) {
 		ROSE_assert(size >= 0);
 	}
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr MutableSpan(U *start, size_t size) : data_(static_cast<T *>(start)), size_(size) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr MutableSpan(U *start, size_t size) : data_(static_cast<T *>(start)), size_(size) {
 		ROSE_assert(size >= 0);
 	}
-	
-	constexpr MutableSpan(std::vector<T>& vector) : MutableSpan(vector.data(), vector.size()) {
+
+	constexpr MutableSpan(std::vector<T> &vector) : MutableSpan(vector.data(), vector.size()) {
 	}
 	template<std::size_t N> constexpr MutableSpan(std::array<T, N> &array) : MutableSpan(array.data(), N) {
 	}
@@ -316,18 +313,16 @@ public:
 	 * Support implicit conversions like the one below:
 	 *   MutableSpan<T *> -> Span<const T *>
 	 */
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr MutableSpan(MutableSpan<U> span) : data_(static_cast<T *>(span.data())), size_(span.size()) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr MutableSpan(MutableSpan<U> span) : data_(static_cast<T *>(span.data())), size_(span.size()) {
 	}
-	
+
 	constexpr operator Span<T>() const {
 		return Span<T>(data_, size_);
 	}
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))>
-	constexpr operator Span<U>() const {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))> constexpr operator Span<U>() const {
 		return Span<U>(static_cast<const U *>(data_), size_);
 	}
-	
+
 	constexpr size_t size() const {
 		return size_;
 	}
@@ -337,11 +332,11 @@ public:
 	constexpr size_t size_in_bytes() const {
 		return sizeof(T) * size_;
 	}
-	
+
 	constexpr void fill(const T &value) const {
 		initialized_fill_n(data_, size_, value);
 	}
-	
+
 	/**
 	 * Replace a subset of all elements with the given value. This invokes undefined behavior when
 	 * one of the indices is out of bounds.
@@ -353,7 +348,7 @@ public:
 			data_[i] = value;
 		}
 	}
-	
+
 	constexpr T *data() const {
 		return data_;
 	}
@@ -363,19 +358,19 @@ public:
 	constexpr T *end() const {
 		return data_ + size_;
 	}
-	
+
 	constexpr std::reverse_iterator<T *> rbegin() const {
 		return std::reverse_iterator<T *>(this->end());
 	}
 	constexpr std::reverse_iterator<T *> rend() const {
 		return std::reverse_iterator<T *>(this->begin());
 	}
-	
+
 	constexpr T &operator[](const size_t index) const {
 		ROSE_assert(index < size_);
 		return data_[index];
 	}
-	
+
 	constexpr MutableSpan slice(size_t start, size_t size) const {
 		ROSE_assert(0 <= start && start <= size_);
 		ROSE_assert((0 <= start + size && start + size <= size_) || size == 0);
@@ -384,12 +379,12 @@ public:
 	constexpr MutableSpan slice(IndexRange range) const {
 		return this->slice(range.start(), range.size());
 	}
-	
+
 	constexpr MutableSpan slice_safe(size_t start, size_t size) const {
-		if(start + size <= size_ || size == 0) {
+		if (start + size <= size_ || size == 0) {
 			return MutableSpan(data_ + start, size);
 		}
-		else if(start <= size_) {
+		else if (start <= size_) {
 			return MutableSpan(data_ + start, size_ - start);
 		}
 		return MutableSpan(data_ + start, 0);
@@ -397,7 +392,7 @@ public:
 	constexpr MutableSpan slice_safe(IndexRange range) const {
 		return this->slice_safe(range.start(), range.size());
 	}
-	
+
 	/** Returns a new MutableSpan with n elements removed from the beginning. */
 	constexpr MutableSpan drop_front(size_t n) const {
 		return (n <= size_) ? MutableSpan(data_ + n, size_ - n) : MutableSpan(data_ + size_, 0);
@@ -412,15 +407,15 @@ public:
 	}
 	/** Returns a new MutableSpan that only contains the last n elements. */
 	constexpr MutableSpan take_back(size_t n) const {
-		return (n <= size_) ? MutableSpan(data_ + size_ - n, n) :  MutableSpan(data_, size_);
+		return (n <= size_) ? MutableSpan(data_ + size_ - n, n) : MutableSpan(data_, size_);
 	}
-	
+
 	constexpr void reverse() const {
-		for(const size_t i : IndexRange(size_ / 2)) {
+		for (const size_t i : IndexRange(size_ / 2)) {
 			std::swap(data_[size_ - 1 - i], data_[i]);
 		}
 	}
-	
+
 	/**
 	 * Returns an (immutable) Span that references the same array. This is usually not needed,
 	 * due to implicit conversions. However, sometimes automatic type deduction needs some help.
@@ -435,7 +430,7 @@ public:
 	constexpr IndexRange index_range() const {
 		return IndexRange(size_);
 	}
-	
+
 	constexpr T &first() const {
 		ROSE_assert(size_ > 0);
 		return data_[0];
@@ -444,17 +439,17 @@ public:
 		ROSE_assert(n < size_);
 		return data_[size_ - 1 - n];
 	}
-	
+
 	constexpr size_t count(const T &value) const {
 		size_t counter = 0;
-		for(const T &e : *this) {
-			if(e == value) {
+		for (const T &e : *this) {
+			if (e == value) {
 				counter++;
 			}
 		}
 		return counter;
 	}
-	
+
 	/**
 	 * Does a constant time check to see if the pointer points to a value in the referenced array.
 	 * Return true if it is, otherwise false.
@@ -471,7 +466,7 @@ public:
 		ROSE_assert(size_ == values.size());
 		initialized_copy_n(values.data(), size_, data_);
 	}
-	
+
 	/**
 	 * Returns a new span to the same underlying memory buffer. No conversions are done.
 	 * The caller is responsible for making sure that the type cast is valid.
@@ -483,6 +478,6 @@ public:
 	}
 };
 
-} // namespace rose
+}  // namespace rose
 
-#endif // LIB_SPAN_HH
+#endif	// LIB_SPAN_HH

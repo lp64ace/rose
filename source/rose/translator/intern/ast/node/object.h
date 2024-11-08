@@ -9,4 +9,4 @@ extern "C" {
 }
 #endif
 
-#endif // RT_AST_NODE_OBJECT_H
+#endif	// RT_AST_NODE_OBJECT_H

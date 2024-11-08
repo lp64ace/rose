@@ -49,4 +49,4 @@ void LIB_endian_switch_double_array(double *val, int size);
 
 #include "intern/endian_switch_inline.c"
 
-#endif // LIB_ENDIAN_SWITCH_H
+#endif	// LIB_ENDIAN_SWITCH_H

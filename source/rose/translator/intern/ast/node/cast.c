@@ -11,9 +11,9 @@
 
 RCCNode *RT_node_new_cast(RCContext *C, const RCCToken *token, const RCCType *type, const RCCNode *expr) {
 	RCCNode *node = RT_node_new_unary(C, token, UNARY_CAST, expr);
-	
+
 	node->cast = type;
-	
+
 	return node;
 }
 

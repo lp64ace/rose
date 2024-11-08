@@ -431,7 +431,8 @@ void Mutex::ThreadSafeLazyInit() {
 				break;	// The mutex is already initialized and ready for use.
 
 			default:
-				GTEST_CHECK_(false) << "Unexpected value of critical_section_init_phase_ " << "while initializing a static mutex.";
+				GTEST_CHECK_(false) << "Unexpected value of critical_section_init_phase_ "
+									<< "while initializing a static mutex.";
 		}
 	}
 }

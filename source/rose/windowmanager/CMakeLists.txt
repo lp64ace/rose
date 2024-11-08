@@ -39,10 +39,15 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::tiny_window
+	rose::intern::oswin
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::gpu
+	rose::source::editors::space_api
+	rose::source::editors::space_statusbar
+	rose::source::editors::space_topbar
+	rose::source::editors::space_view3d
+	rose::source::editors::screen
 	
 	# External Library Dependencies
 	

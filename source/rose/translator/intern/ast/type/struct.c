@@ -155,7 +155,7 @@ bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, con
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
 	LISTBASE_FOREACH(RCCField *, field, &s->tp_struct.fields) {
-		if(tag && RT_token_match(field->identifier, tag)) {
+		if (tag && RT_token_match(field->identifier, tag)) {
 			return false;
 		}
 	}
@@ -177,7 +177,7 @@ bool RT_type_struct_add_bitfield(RCContext *C, RCCType *s, const RCCToken *tag, 
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
 	LISTBASE_FOREACH(RCCField *, field, &s->tp_struct.fields) {
-		if(RT_token_match(field->identifier, tag)) {
+		if (RT_token_match(field->identifier, tag)) {
 			return false;
 		}
 	}

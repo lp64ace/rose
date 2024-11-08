@@ -4,8 +4,8 @@
 #include "LIB_listbase.h"
 
 /** We expose internal includes, so keep these paths relative! */
-#include "./intern/ast/type.h"
 #include "./intern/ast/node.h"
+#include "./intern/ast/type.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +22,7 @@ typedef struct DeclInfo {
 	bool is_static;
 	bool is_extern;
 	bool is_inline;
-	
+
 	int align;
 } DeclInfo;
 
@@ -40,12 +40,12 @@ typedef struct RCCParser {
 	 * The tokens extracted in the order they appear in the source.
 	 */
 	ListBase tokens;
-	
+
 	struct RCContext *context;
 	struct RCCState *state;
-	
+
 	RCConfiguration configuration;
-	
+
 	ListBase nodes;
 } RCCParser;
 

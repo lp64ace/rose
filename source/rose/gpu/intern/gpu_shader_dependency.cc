@@ -121,8 +121,7 @@ struct GPUSource {
 		return false;
 	}
 
-	template<bool check_whole_word = true, bool reversed = false, typename T>
-	static size_t find_str(const StringRef &input, const T keyword, size_t offset = 0) {
+	template<bool check_whole_word = true, bool reversed = false, typename T> static size_t find_str(const StringRef &input, const T keyword, size_t offset = 0) {
 		while (true) {
 			if constexpr (reversed) {
 				offset = input.rfind(keyword, offset);
@@ -174,10 +173,10 @@ struct GPUSource {
 		std::cerr << "^\n";
 	}
 
-#define CHECK(test_value, str, ofs, msg) \
+#define CHECK(test_value, str, ofs, msg)            \
 	if ((test_value) == StringRefBase::not_found) { \
-		print_error(str, ofs, msg); \
-		continue; \
+		print_error(str, ofs, msg);                 \
+		continue;                                   \
 	}
 
 	/**

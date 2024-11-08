@@ -297,7 +297,7 @@ void memswap(void *m1, void *m2, size_t n);
 /* Useful to port C code using enums to C++ where enums are strongly typed.
  * To use after the enum declaration. */
 /* If any enumerator `C` is set to say `A|B`, then `C` would be the max enum value. */
-#	define ENUM_OPERATORS(_enum_type, _max_enum_value)                               \
+#	define ENUM_OPERATORS(_enum_type, _max_enum_value)                              \
 		extern "C++" {                                                               \
 		inline constexpr _enum_type operator|(_enum_type a, _enum_type b) {          \
 			return (_enum_type)(uint64_t(a) | uint64_t(b));                          \

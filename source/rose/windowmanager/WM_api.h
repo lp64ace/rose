@@ -25,4 +25,4 @@ void WM_exit(struct rContext *C);
 }
 #endif
 
-#endif // WM_API_H
+#endif	// WM_API_H

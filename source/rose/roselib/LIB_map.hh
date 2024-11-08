@@ -119,7 +119,7 @@ private:
 	SlotArray slots_;
 
 	/** Iterate over a slot index sequence for a given hash. */
-#define MAP_SLOT_PROBING_BEGIN(HASH, R_SLOT) \
+#define MAP_SLOT_PROBING_BEGIN(HASH, R_SLOT)                          \
 	SLOT_PROBING_BEGIN(ProbingStrategy, HASH, slot_mask_, SLOT_INDEX) \
 	auto &R_SLOT = slots_[SLOT_INDEX];
 #define MAP_SLOT_PROBING_END() SLOT_PROBING_END()
@@ -1083,4 +1083,4 @@ private:
 
 }  // namespace rose
 
-#endif // LIB_MAP_HH
+#endif	// LIB_MAP_HH

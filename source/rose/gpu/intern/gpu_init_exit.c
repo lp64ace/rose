@@ -1,8 +1,8 @@
 #include "LIB_utildefines.h"
 
 #include "GPU_batch_presets.h"
-#include "GPU_shader_builtin.h"
 #include "GPU_init_exit.h"
+#include "GPU_shader_builtin.h"
 
 #include "intern/gpu_private.h"
 

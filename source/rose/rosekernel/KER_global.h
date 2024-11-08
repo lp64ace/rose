@@ -34,4 +34,4 @@ extern Global G;
  */
 #define G_MAIN (G).main
 
-#endif // KER_GLOBAL_H
+#endif	// KER_GLOBAL_H

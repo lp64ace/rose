@@ -16,11 +16,11 @@ struct RCCType;
 
 typedef struct RCCObject {
 	struct RCCObject *prev, *next;
-	
+
 	int kind;
-	
+
 	const struct RCCType *type;
-	
+
 	const struct RCCToken *identifier;
 	const struct RCCNode *body;
 } RCCObject;
@@ -60,4 +60,4 @@ bool RT_object_is_enum(const struct RCCObject *object);
 }
 #endif
 
-#endif // RT_OBJECT_H
+#endif	// RT_OBJECT_H

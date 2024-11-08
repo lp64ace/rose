@@ -67,7 +67,7 @@ public:
 	 * from the other have to moved as well. The other slot stays in the state it was in before. Its
 	 * optionally stored key and value remain in a moved-from state.
 	 */
-	SimpleMapSlot(SimpleMapSlot &&other) noexcept(std::is_nothrow_move_constructible_v<Key> &&std::is_nothrow_move_constructible_v<Value>) {
+	SimpleMapSlot(SimpleMapSlot &&other) noexcept(std::is_nothrow_move_constructible_v<Key> && std::is_nothrow_move_constructible_v<Value>) {
 		state_ = other.state_;
 		if (other.state_ == Occupied) {
 			initialize_pointer_pair(std::move(other.key_buffer_.ref()), std::move(other.value_buffer_.ref()), key_buffer_.ptr(), value_buffer_.ptr());
@@ -275,14 +275,18 @@ template<typename Key, typename Value> struct DefaultMapSlot;
 /**
  * Use SimpleMapSlot by default, because it is the smallest slot type, that works for all keys.
  */
-template<typename Key, typename Value> struct DefaultMapSlot { using type = SimpleMapSlot<Key, Value>; };
+template<typename Key, typename Value> struct DefaultMapSlot {
+	using type = SimpleMapSlot<Key, Value>;
+};
 
 /**
  * Use a special slot type for pointer keys, because we can store whether a slot is empty or
  * removed with special pointer values.
  */
-template<typename Key, typename Value> struct DefaultMapSlot<Key *, Value> { using type = IntrusiveMapSlot<Key *, Value, PointerKeyInfo<Key *>>; };
+template<typename Key, typename Value> struct DefaultMapSlot<Key *, Value> {
+	using type = IntrusiveMapSlot<Key *, Value, PointerKeyInfo<Key *>>;
+};
 
 }  // namespace rose
 
-#endif // LIB_MAP_SLOTS_HH
+#endif	// LIB_MAP_SLOTS_HH

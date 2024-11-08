@@ -23,7 +23,7 @@ void KER_rose_globals_clear() {
 	}
 	ROSE_assert(G_MAIN->is_global_main);
 	KER_main_free(G_MAIN);
-	
+
 	G_MAIN = NULL;
 }
 
