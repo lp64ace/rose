@@ -261,7 +261,8 @@ void MEM_use_guarded_allocator(void);
  * non-aligned versions of allocator API functions is okay, allowing use of
  * `calloc`, for example.
  */
-#	define MEM_MIN_CPP_ALIGNMENT (__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignof(void *) ? __STDCPP_DEFAULT_NEW_ALIGNMENT__ : alignof(void *))
+#	define MEM_MIN_CPP_ALIGNMENT \
+		(__STDCPP_DEFAULT_NEW_ALIGNMENT__ < alignof(void *) ? __STDCPP_DEFAULT_NEW_ALIGNMENT__ : alignof(void *))
 
 /**
  * Allocate new memory for and constructs an object of type #T.
@@ -373,4 +374,4 @@ template<typename T> inline T *MEM_cnew(char const *allocation_name, T const &ot
 
 #endif
 
-#endif // MEM_GUARDEDALLOC_H
+#endif	// MEM_GUARDEDALLOC_H

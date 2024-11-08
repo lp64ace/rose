@@ -390,7 +390,7 @@ void MEM_guarded_print_memlist() {
 					fprintf(stdout, ", content '");
 					for (unsigned char *p = (unsigned char *)(head + 1); p < (unsigned char *)tail; p++) {
 						fprintf(stdout, "%02x", *p);
-						if(isgraph(*p)) {
+						if (isgraph(*p)) {
 							fprintf(stdout, "|%c", *p);
 						}
 						fprintf(stdout, " ");
