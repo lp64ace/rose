@@ -116,7 +116,8 @@ public:
 	bool init_3D(int w, int h, int d, int mip_len, TextureFormat format);
 	bool init_cubemap(int w, int layers, int mip_len, TextureFormat format);
 	bool init_buffer(GPUVertBuf *vbo, TextureFormat format);
-	bool init_view(GPUTexture *src, TextureFormat format, TextureType type, int mip_start, int mip_len, int layer_start, int layer_len, bool cube_as_array, bool use_stencil);
+	bool init_view(GPUTexture *src, TextureFormat format, TextureType type, int mip_start, int mip_len, int layer_start,
+				   int layer_len, bool cube_as_array, bool use_stencil);
 
 	virtual void generate_mipmap() = 0;
 	virtual void copy_to(Texture *tex) = 0;
@@ -291,8 +292,8 @@ protected:
 	size_t size_ = 0;
 
 public:
-	PixelBuffer(size_t size) : size_(size){};
-	virtual ~PixelBuffer(){};
+	PixelBuffer(size_t size) : size_(size) {};
+	virtual ~PixelBuffer() {};
 
 	virtual void *map() = 0;
 	virtual void unmap() = 0;
@@ -698,7 +699,8 @@ inline size_t to_bytesize(TextureFormat tex_format, DataFormat data_format) {
 	/* Special case for compacted types.
 	 * Standard component len calculation does not apply, as the texture formats contain multiple
 	 * channels, but associated data format contains several compacted components. */
-	if ((tex_format == GPU_R11F_G11F_B10F && data_format == GPU_DATA_10_11_11_REV) || ((tex_format == GPU_RGB10_A2 || tex_format == GPU_RGB10_A2UI) && data_format == GPU_DATA_2_10_10_10_REV)) {
+	if ((tex_format == GPU_R11F_G11F_B10F && data_format == GPU_DATA_10_11_11_REV) ||
+		((tex_format == GPU_RGB10_A2 || tex_format == GPU_RGB10_A2UI) && data_format == GPU_DATA_2_10_10_10_REV)) {
 		return 4;
 	}
 

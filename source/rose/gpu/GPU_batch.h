@@ -69,14 +69,16 @@ typedef struct GPUBatch {
 /** \name Creation
  * \{ */
 
-/** Allocate a #GPUBatch with a cleared state, the return #GPUBatch needs to be passed to `GPU_batch_init` before being usable. */
+/** Allocate a #GPUBatch with a cleared state, the return #GPUBatch needs to be passed to `GPU_batch_init` before being usable.
+ */
 GPUBatch *GPU_batch_calloc(void);
 
 GPUBatch *GPU_batch_create_ex(PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer, BatchFlag ownership);
 /** Same as `GPU_batch_create_ex` but we assume that we don't own the #vertex_buffer specified. */
 GPUBatch *GPU_batch_create(PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer);
 
-void GPU_batch_init_ex(GPUBatch *batch, PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer, BatchFlag ownership);
+void GPU_batch_init_ex(GPUBatch *batch, PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer,
+					   BatchFlag ownership);
 /** Same as `GPU_batch_init_ex` but we assume that we don't own the #vertex_buffer specified. */
 void GPU_batch_init(GPUBatch *batch, PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer);
 
@@ -90,22 +92,22 @@ void GPU_batch_copy(GPUBatch *batch, GPUBatch *source);
 
 void GPU_batch_clear(GPUBatch *batch);
 
-#define GPU_BATCH_CLEAR_SAFE(batch) \
-	do { \
-		if (batch != NULL) { \
-			GPU_batch_clear(batch); \
+#define GPU_BATCH_CLEAR_SAFE(batch)             \
+	do {                                        \
+		if (batch != NULL) {                    \
+			GPU_batch_clear(batch);             \
 			memset(batch, 0, sizeof(*(batch))); \
-		} \
+		}                                       \
 	} while (0)
 
 void GPU_batch_discard(GPUBatch *batch);
 
 #define GPU_BATCH_DISCARD_SAFE(batch) \
-	do { \
-		if (batch != NULL) { \
+	do {                              \
+		if (batch != NULL) {          \
 			GPU_batch_discard(batch); \
-			batch = NULL; \
-		} \
+			batch = NULL;             \
+		}                             \
 	} while (0)
 
 /* \} */
@@ -270,7 +272,8 @@ void GPU_batch_multi_draw_indirect(GPUBatch *batch, GPUStorageBuf *indirect_buf,
  * Return indirect draw call parameters for this #GPUBatch.
  * NOTE: \a r_base_index is set to -1 if not using an index buffer.
  */
-void GPU_batch_draw_parameter_get(GPUBatch *batch, int *r_vertex_count, int *r_vertex_first, int *r_base_index, int *r_indices_count);
+void GPU_batch_draw_parameter_get(GPUBatch *batch, int *r_vertex_count, int *r_vertex_first, int *r_base_index,
+								  int *r_indices_count);
 
 /* \} */
 

@@ -40,8 +40,8 @@ public:
 	float uniform_color[4] = {};
 
 public:
-	Immediate(){};
-	virtual ~Immediate(){};
+	Immediate() {};
+	virtual ~Immediate() {};
 
 	virtual unsigned char *begin() = 0;
 	virtual void end() = 0;

@@ -66,14 +66,16 @@ public:
 	/* Attachment load-stores are currently no-op's in OpenGL. */
 	void attachment_set_loadstore_op(AttachmentType type, GPULoadStore ls) override;
 
-	void subpass_transition(const AttachmentState depth_attachment_state, Span<AttachmentState> color_attachment_states) override;
+	void subpass_transition(const AttachmentState depth_attachment_state,
+							Span<AttachmentState> color_attachment_states) override;
 
 	void read(FrameBufferBits planes, DataFormat format, const int area[4], int channel_len, int slot, void *r_data) override;
 
 	/**
 	 * Copy \a src at the give offset inside \a dst.
 	 */
-	void blit_to(FrameBufferBits planes, int src_slot, FrameBuffer *dst, int dst_slot, int dst_offset_x, int dst_offset_y) override;
+	void blit_to(FrameBufferBits planes, int src_slot, FrameBuffer *dst, int dst_slot, int dst_offset_x,
+				 int dst_offset_y) override;
 
 	void apply_state();
 
@@ -88,10 +90,10 @@ private:
  * \{ */
 
 static inline GLenum to_gl(const AttachmentType type) {
-#define ATTACHMENT(X) \
+#define ATTACHMENT(X)  \
 	case GPU_FB_##X: { \
 		return GL_##X; \
-	} \
+	}                  \
 		((void)0)
 
 	switch (type) {

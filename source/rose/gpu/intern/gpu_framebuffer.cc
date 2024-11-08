@@ -60,7 +60,8 @@ void FrameBuffer::attachment_set(AttachmentType type, const GPUAttachment &new_a
 	}
 
 	if (type >= GPU_FB_MAX_ATTACHMENT) {
-		fprintf(stderr, "GPUFramebuffer: Error: Trying to attach texture to type %d but maximum slot is %d.\n", type - GPU_FB_COLOR_ATTACHMENT0, GPU_FB_MAX_COLOR_ATTACHMENT);
+		fprintf(stderr, "GPUFramebuffer: Error: Trying to attach texture to type %d but maximum slot is %d.\n",
+				type - GPU_FB_COLOR_ATTACHMENT0, GPU_FB_MAX_COLOR_ATTACHMENT);
 		return;
 	}
 
@@ -78,7 +79,8 @@ void FrameBuffer::attachment_set(AttachmentType type, const GPUAttachment &new_a
 
 	GPUAttachment &attachment = attachments_[type];
 
-	if (attachment.tex == new_attachment.tex && attachment.layer == new_attachment.layer && attachment.mip == new_attachment.mip) {
+	if (attachment.tex == new_attachment.tex && attachment.layer == new_attachment.layer &&
+		attachment.mip == new_attachment.mip) {
 		return; /* Exact same texture already bound here. */
 	}
 	/* Unbind previous and bind new. */
@@ -169,7 +171,8 @@ void FrameBuffer::recursive_downsample(int max_lvl, void (*callback)(void *user_
 		for (GPUAttachment &attachment : attachments_) {
 			Texture *tex = reinterpret_cast<Texture *>(attachment.tex);
 			if (tex != nullptr) {
-				this->attachment_set_loadstore_op(type, {GPU_LOADACTION_DONT_CARE, GPU_STOREACTION_STORE, NULL_ATTACHMENT_COLOR});
+				this->attachment_set_loadstore_op(type,
+												  {GPU_LOADACTION_DONT_CARE, GPU_STOREACTION_STORE, NULL_ATTACHMENT_COLOR});
 			}
 			++type;
 		}
@@ -233,7 +236,8 @@ void GPU_framebuffer_bind_loadstore(GPUFrameBuffer *gpu_fb, const GPULoadStore *
 	fb->load_store_config_array(load_store_actions, actions_len);
 }
 
-void GPU_framebuffer_subpass_transition_array(GPUFrameBuffer *gpu_fb, const AttachmentState *attachment_states, uint attachment_len) {
+void GPU_framebuffer_subpass_transition_array(GPUFrameBuffer *gpu_fb, const AttachmentState *attachment_states,
+											  uint attachment_len) {
 	unwrap(gpu_fb)->subpass_transition(attachment_states[0], Span<AttachmentState>(attachment_states + 1, attachment_len - 1));
 }
 
@@ -317,7 +321,8 @@ void GPU_framebuffer_config_array(GPUFrameBuffer *gpu_fb, const GPUAttachment *c
 		fb->attachment_set(GPU_FB_DEPTH_ATTACHMENT, depth_attachment);
 	}
 	else {
-		AttachmentType type = GPU_texture_has_stencil_format(depth_attachment.tex) ? GPU_FB_DEPTH_STENCIL_ATTACHMENT : GPU_FB_DEPTH_ATTACHMENT;
+		AttachmentType type = GPU_texture_has_stencil_format(depth_attachment.tex) ? GPU_FB_DEPTH_STENCIL_ATTACHMENT :
+																					 GPU_FB_DEPTH_ATTACHMENT;
 		fb->attachment_set(type, depth_attachment);
 	}
 
@@ -353,7 +358,8 @@ void GPU_framebuffer_viewport_reset(GPUFrameBuffer *gpu_fb) {
 
 /* ---------- Frame-buffer Operations ----------- */
 
-void GPU_framebuffer_clear(GPUFrameBuffer *gpu_fb, FrameBufferBits buffers, const float clear_col[4], float clear_depth, uint clear_stencil) {
+void GPU_framebuffer_clear(GPUFrameBuffer *gpu_fb, FrameBufferBits buffers, const float clear_col[4], float clear_depth,
+						   uint clear_stencil) {
 	ROSE_assert_msg(unwrap(gpu_fb)->get_use_explicit_loadstore() == false,
 					"Using GPU_framebuffer_clear_* functions in conjunction with custom load-store "
 					"state via GPU_framebuffer_bind_ex is invalid.");
@@ -380,7 +386,8 @@ void GPU_framebuffer_clear_depth_stencil(GPUFrameBuffer *fb, float clear_depth, 
 	GPU_framebuffer_clear(fb, GPU_DEPTH_BIT | GPU_STENCIL_BIT, nullptr, clear_depth, clear_stencil);
 }
 
-void GPU_framebuffer_clear_color_depth_stencil(GPUFrameBuffer *fb, const float clear_col[4], float clear_depth, uint clear_stencil) {
+void GPU_framebuffer_clear_color_depth_stencil(GPUFrameBuffer *fb, const float clear_col[4], float clear_depth,
+											   uint clear_stencil) {
 	GPU_framebuffer_clear(fb, GPU_COLOR_BIT | GPU_DEPTH_BIT | GPU_STENCIL_BIT, clear_col, clear_depth, clear_stencil);
 }
 
@@ -412,7 +419,8 @@ void GPU_framebuffer_read_depth(GPUFrameBuffer *gpu_fb, int x, int y, int w, int
 	unwrap(gpu_fb)->read(GPU_DEPTH_BIT, format, rect, 1, 1, data);
 }
 
-void GPU_framebuffer_read_color(GPUFrameBuffer *gpu_fb, int x, int y, int w, int h, int channels, int slot, DataFormat format, void *data) {
+void GPU_framebuffer_read_color(GPUFrameBuffer *gpu_fb, int x, int y, int w, int h, int channels, int slot, DataFormat format,
+								void *data) {
 	int rect[4] = {x, y, w, h};
 	unwrap(gpu_fb)->read(GPU_COLOR_BIT, format, rect, channels, slot, data);
 }
@@ -423,7 +431,8 @@ void GPU_frontbuffer_read_color(int x, int y, int w, int h, int channels, DataFo
 }
 
 /* TODO(fclem): port as texture operation. */
-void GPU_framebuffer_blit(GPUFrameBuffer *gpufb_read, int read_slot, GPUFrameBuffer *gpufb_write, int write_slot, FrameBufferBits blit_buffers) {
+void GPU_framebuffer_blit(GPUFrameBuffer *gpufb_read, int read_slot, GPUFrameBuffer *gpufb_write, int write_slot,
+						  FrameBufferBits blit_buffers) {
 	FrameBuffer *fb_read = unwrap(gpufb_read);
 	FrameBuffer *fb_write = unwrap(gpufb_write);
 	ROSE_assert(blit_buffers != 0);
@@ -457,7 +466,8 @@ void GPU_framebuffer_blit(GPUFrameBuffer *gpufb_read, int read_slot, GPUFrameBuf
 	prev_fb->bind(true);
 }
 
-void GPU_framebuffer_recursive_downsample(GPUFrameBuffer *gpu_fb, int max_lvl, void (*callback)(void *user_data, int level), void *user_data) {
+void GPU_framebuffer_recursive_downsample(GPUFrameBuffer *gpu_fb, int max_lvl, void (*callback)(void *user_data, int level),
+										  void *user_data) {
 	unwrap(gpu_fb)->recursive_downsample(max_lvl, callback, user_data);
 }
 
@@ -525,11 +535,10 @@ static GPUFrameBuffer *gpu_offscreen_fb_get(GPUOffScreen *ofs) {
 	for (auto &framebuffer : ofs->framebuffers) {
 		if (framebuffer.fb == nullptr) {
 			framebuffer.ctx = ctx;
-			GPU_framebuffer_ensure_config(&framebuffer.fb,
-										  {
-											  GPU_ATTACHMENT_TEXTURE(ofs->depth),
-											  GPU_ATTACHMENT_TEXTURE(ofs->color),
-										  });
+			GPU_framebuffer_ensure_config(&framebuffer.fb, {
+															   GPU_ATTACHMENT_TEXTURE(ofs->depth),
+															   GPU_ATTACHMENT_TEXTURE(ofs->color),
+														   });
 		}
 
 		if (framebuffer.ctx == ctx) {
@@ -553,7 +562,8 @@ static GPUFrameBuffer *gpu_offscreen_fb_get(GPUOffScreen *ofs) {
 	return gpu_offscreen_fb_get(ofs);
 }
 
-GPUOffScreen *GPU_offscreen_create(int width, int height, bool depth, TextureFormat format, TextureUsage usage, char err_out[256]) {
+GPUOffScreen *GPU_offscreen_create(int width, int height, bool depth, TextureFormat format, TextureUsage usage,
+								   char err_out[256]) {
 	GPUOffScreen *ofs = MEM_cnew<GPUOffScreen>(__func__);
 
 	/* Sometimes areas can have 0 height or width and this will

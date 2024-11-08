@@ -502,12 +502,14 @@ static void print_resource(std::ostream &os, const ShaderCreateInfo::Resource &r
 			break;
 		case ShaderCreateInfo::Resource::BindType::UNIFORM_BUFFER:
 			array_offset = res.uniformbuf.name.find_first_of("[");
-			name_no_array = (array_offset == StringRefBase::not_found) ? res.uniformbuf.name : StringRef(res.uniformbuf.name.c_str(), array_offset);
+			name_no_array = (array_offset == StringRefBase::not_found) ? res.uniformbuf.name :
+																		 StringRef(res.uniformbuf.name.c_str(), array_offset);
 			os << "uniform " << name_no_array << " { " << res.uniformbuf.type_name << " _" << res.uniformbuf.name << "; };\n";
 			break;
 		case ShaderCreateInfo::Resource::BindType::STORAGE_BUFFER:
 			array_offset = res.storagebuf.name.find_first_of("[");
-			name_no_array = (array_offset == StringRefBase::not_found) ? res.storagebuf.name : StringRef(res.storagebuf.name.c_str(), array_offset);
+			name_no_array = (array_offset == StringRefBase::not_found) ? res.storagebuf.name :
+																		 StringRef(res.storagebuf.name.c_str(), array_offset);
 			print_qualifier(os, res.storagebuf.qualifiers);
 			os << "buffer ";
 			os << name_no_array << " { " << res.storagebuf.type_name << " _" << res.storagebuf.name << "; };\n";
@@ -522,12 +524,14 @@ static void print_resource_alias(std::ostream &os, const ShaderCreateInfo::Resou
 	switch (res.bind_type) {
 		case ShaderCreateInfo::Resource::BindType::UNIFORM_BUFFER:
 			array_offset = res.uniformbuf.name.find_first_of("[");
-			name_no_array = (array_offset == StringRefBase::not_found) ? res.uniformbuf.name : StringRef(res.uniformbuf.name.c_str(), array_offset);
+			name_no_array = (array_offset == StringRefBase::not_found) ? res.uniformbuf.name :
+																		 StringRef(res.uniformbuf.name.c_str(), array_offset);
 			os << "#define " << name_no_array << " (_" << name_no_array << ")\n";
 			break;
 		case ShaderCreateInfo::Resource::BindType::STORAGE_BUFFER:
 			array_offset = res.storagebuf.name.find_first_of("[");
-			name_no_array = (array_offset == StringRefBase::not_found) ? res.storagebuf.name : StringRef(res.storagebuf.name.c_str(), array_offset);
+			name_no_array = (array_offset == StringRefBase::not_found) ? res.storagebuf.name :
+																		 StringRef(res.storagebuf.name.c_str(), array_offset);
 			os << "#define " << name_no_array << " (_" << name_no_array << ")\n";
 			break;
 		default:
@@ -535,7 +539,8 @@ static void print_resource_alias(std::ostream &os, const ShaderCreateInfo::Resou
 	}
 }
 
-static void print_interface(std::ostream &os, const StringRefNull &prefix, const StageInterfaceInfo &iface, const StringRefNull &suffix = "") {
+static void print_interface(std::ostream &os, const StringRefNull &prefix, const StageInterfaceInfo &iface,
+							const StringRefNull &suffix = "") {
 	/* TODO(@fclem): Move that to interface check. */
 	// if (iface.instance_name.is_empty()) {
 	//   BLI_assert_msg(0, "Interfaces require an instance name for geometry shader.");
@@ -656,7 +661,8 @@ std::string GLShader::fragment_interface_declare(const ShaderCreateInfo &info) c
 	std::string pre_main, post_main;
 
 	ss << "\n/* Interfaces. */\n";
-	const Vector<StageInterfaceInfo *> &in_interfaces = info.geometry_source_.is_empty() ? info.vertex_out_interfaces_ : info.geometry_out_interfaces_;
+	const Vector<StageInterfaceInfo *> &in_interfaces = info.geometry_source_.is_empty() ? info.vertex_out_interfaces_ :
+																						   info.geometry_out_interfaces_;
 	for (const StageInterfaceInfo *iface : in_interfaces) {
 		print_interface(ss, "in", *iface);
 	}
@@ -711,7 +717,8 @@ std::string GLShader::fragment_interface_declare(const ShaderCreateInfo &info) c
 	for (const ShaderCreateInfo::SubpassIn &input : info.subpass_inputs_) {
 		if (GLContext::framebuffer_fetch_support) {
 			/* Declare as inout but do not write to it. */
-			ss << "layout(location = " << std::to_string(input.index) << ") inout " << to_string(input.type) << " " << input.name << ";\n";
+			ss << "layout(location = " << std::to_string(input.index) << ") inout " << to_string(input.type) << " "
+			   << input.name << ";\n";
 		}
 		else {
 			std::string image_name = "gpu_subpass_img_";
@@ -860,8 +867,10 @@ std::string GLShader::workaround_geometry_shader_source_create(const shader::Sha
 	std::stringstream ss;
 
 	const bool do_layer_workaround = !GLContext::layered_rendering_support && bool(info.builtins_ & BuiltinBits::LAYER);
-	const bool do_viewport_workaround = !GLContext::layered_rendering_support && bool(info.builtins_ & BuiltinBits::VIEWPORT_INDEX);
-	const bool do_barycentric_workaround = !GLContext::native_barycentric_support && bool(info.builtins_ & BuiltinBits::BARYCENTRIC_COORD);
+	const bool do_viewport_workaround = !GLContext::layered_rendering_support &&
+										bool(info.builtins_ & BuiltinBits::VIEWPORT_INDEX);
+	const bool do_barycentric_workaround = !GLContext::native_barycentric_support &&
+										   bool(info.builtins_ & BuiltinBits::BARYCENTRIC_COORD);
 
 	shader::ShaderCreateInfo info_modified = info;
 	info_modified.geometry_out_interfaces_ = info_modified.vertex_out_interfaces_;

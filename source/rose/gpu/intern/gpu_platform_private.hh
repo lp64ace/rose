@@ -23,7 +23,8 @@ public:
 	ArchitectureType architecture = GPU_ARCHITECTURE_IMR;
 
 public:
-	void init(DeviceType device, OperatingSystemType system, SupportLevel support_level, BackendType backend, const char *vendor, const char *renderer, const char *version, ArchitectureType architecture);
+	void init(DeviceType device, OperatingSystemType system, SupportLevel support_level, BackendType backend,
+			  const char *vendor, const char *renderer, const char *version, ArchitectureType architecture);
 	void clear();
 };
 

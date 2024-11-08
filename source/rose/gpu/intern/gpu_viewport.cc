@@ -59,8 +59,10 @@ static void gpu_viewport_textures_create(GPUViewport *viewport) {
 	TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
 
 	if (viewport->color_render_tx[0] == nullptr) {
-		viewport->color_render_tx[0] = GPU_texture_create_2d("dtxl_color", UNPACK2(viewport->size), 1, GPU_RGBA16F, usage | GPU_TEXTURE_USAGE_SHADER_WRITE, NULL);
-		viewport->color_overlay_tx[0] = GPU_texture_create_2d("dtxl_color_overlay", UNPACK2(viewport->size), 1, GPU_SRGB8_A8, usage, NULL);
+		viewport->color_render_tx[0] = GPU_texture_create_2d("dtxl_color", UNPACK2(viewport->size), 1, GPU_RGBA16F,
+															 usage | GPU_TEXTURE_USAGE_SHADER_WRITE, NULL);
+		viewport->color_overlay_tx[0] = GPU_texture_create_2d("dtxl_color_overlay", UNPACK2(viewport->size), 1, GPU_SRGB8_A8,
+															  usage, NULL);
 
 		if (GPU_get_info_i(GPU_INFO_CLEAR_VIEWPORT_WORKAROUND)) {
 			GPU_texture_clear(viewport->color_render_tx[0], GPU_DATA_FLOAT, &black);
@@ -69,7 +71,8 @@ static void gpu_viewport_textures_create(GPUViewport *viewport) {
 	}
 
 	if (viewport->depth_tx == nullptr) {
-		viewport->depth_tx = GPU_texture_create_2d("dtxl_depth", UNPACK2(viewport->size), 1, GPU_DEPTH24_STENCIL8, usage | GPU_TEXTURE_USAGE_HOST_READ | GPU_TEXTURE_USAGE_FORMAT_VIEW, NULL);
+		viewport->depth_tx = GPU_texture_create_2d("dtxl_depth", UNPACK2(viewport->size), 1, GPU_DEPTH24_STENCIL8,
+												   usage | GPU_TEXTURE_USAGE_HOST_READ | GPU_TEXTURE_USAGE_FORMAT_VIEW, NULL);
 
 		if (GPU_get_info_i(GPU_INFO_CLEAR_VIEWPORT_WORKAROUND)) {
 			const int zero = 0;
@@ -131,9 +134,10 @@ static GPUBatch *gpu_viewport_batch_create(const rctf *rect_pos, const rctf *rec
 
 static GPUBatch *gpu_viewport_batch_get(GPUViewport *viewport, const rctf *rect_pos, const rctf *rect_uv) {
 	const float compare_limit = 1e-4f;
-	const bool parameters_changed = (!LIB_rctf_compare(&viewport->batch.last_used_parameters.rect_pos, rect_pos, compare_limit) || !LIB_rctf_compare(&viewport->batch.last_used_parameters.rect_uv, rect_uv, compare_limit));
+	const bool changed_pos = !LIB_rctf_compare(&viewport->batch.last_used_parameters.rect_pos, rect_pos, compare_limit);
+	const bool changed_uv = !LIB_rctf_compare(&viewport->batch.last_used_parameters.rect_uv, rect_uv, compare_limit);
 
-	if (viewport->batch.batch && parameters_changed) {
+	if (viewport->batch.batch && (changed_pos || changed_uv)) {
 		GPU_batch_discard(viewport->batch.batch);
 		viewport->batch.batch = nullptr;
 	}
@@ -195,6 +199,11 @@ static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_
 	GPUTexture *color_overlay = viewport->color_overlay_tx[view];
 
 	GPUBatch *batch = gpu_viewport_batch_get(viewport, rect_pos, rect_uv);
+
+	GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE);
+	GPU_batch_uniform_1i(batch, "overlay", true);
+	GPU_batch_uniform_1i(batch, "display_transform", false);
+	GPU_batch_uniform_1i(batch, "use_hdr", false);
 
 	GPU_texture_bind(color, 0);
 	GPU_texture_bind(color_overlay, 1);
@@ -265,7 +274,7 @@ GPUFrameBuffer *GPU_viewport_framebuffer_overlay_get(GPUViewport *viewport) {
 			 GPU_ATTACHMENT_TEXTURE(viewport->color_overlay_tx[viewport->active_view]),
 		}
 	);
-	
+
 	/* clang-format on */
 	return viewport->overlay_fb;
 }

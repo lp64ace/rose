@@ -67,7 +67,9 @@ bool GLTexture::init_internal() {
 	GLenum gl_format = to_gl_data_format(format_);
 	GLenum gl_type = to_gl(to_data_format(format_));
 
-	auto mip_size = [&](int h, int w = 1, int d = 1) -> size_t { return divide_ceil_u32(w, 4) * divide_ceil_u32(h, 4) * divide_ceil_u32(d, 4) * to_block_size(format_); };
+	auto mip_size = [&](int h, int w = 1, int d = 1) -> size_t {
+		return divide_ceil_u32(w, 4) * divide_ceil_u32(h, 4) * divide_ceil_u32(d, 4) * to_block_size(format_);
+	};
 	switch (dimensions) {
 		default:
 		case 1:
@@ -180,7 +182,8 @@ bool GLTexture::init_internal(GPUTexture *src, int mip_offset, int layer_offset,
 /** \name Operations
  * \{ */
 
-void GLTexture::update_sub_direct_state_access(int mip, int offset[3], int extent[3], GLenum format, GLenum type, const void *data) {
+void GLTexture::update_sub_direct_state_access(int mip, int offset[3], int extent[3], GLenum format, GLenum type,
+											   const void *data) {
 	if (format_flag_ & GPU_FORMAT_COMPRESSED) {
 		size_t size = ((extent[0] + 3) / 4) * ((extent[1] + 3) / 4) * to_block_size(format_);
 		switch (this->dimensions_count()) {
@@ -419,7 +422,8 @@ void *GLTexture::read(int mip, DataFormat type) {
  * \{ */
 
 void GLTexture::swizzle_set(const char swizzle[4]) {
-	GLint gl_swizzle[4] = {(GLint)swizzle_to_gl(swizzle[0]), (GLint)swizzle_to_gl(swizzle[1]), (GLint)swizzle_to_gl(swizzle[2]), (GLint)swizzle_to_gl(swizzle[3])};
+	GLint gl_swizzle[4] = {(GLint)swizzle_to_gl(swizzle[0]), (GLint)swizzle_to_gl(swizzle[1]), (GLint)swizzle_to_gl(swizzle[2]),
+						   (GLint)swizzle_to_gl(swizzle[3])};
 	if (GLContext::direct_state_access_support) {
 		glTextureParameteriv(tex_id_, GL_TEXTURE_SWIZZLE_RGBA, gl_swizzle);
 	}
@@ -479,7 +483,8 @@ static inline GLenum to_gl(SamplerExtendMode extend_mode) {
 	}
 }
 
-GLuint GLTexture::samplers_state_cache_[GPU_SAMPLER_EXTEND_MODES_COUNT][GPU_SAMPLER_EXTEND_MODES_COUNT][GPU_SAMPLER_FILTERING_TYPES_COUNT] = {};
+GLuint GLTexture::samplers_state_cache_[GPU_SAMPLER_EXTEND_MODES_COUNT][GPU_SAMPLER_EXTEND_MODES_COUNT]
+									   [GPU_SAMPLER_FILTERING_TYPES_COUNT] = {};
 GLuint GLTexture::custom_samplers_state_cache_[GPU_SAMPLER_CUSTOM_TYPES_COUNT] = {};
 
 void GLTexture::samplers_init() {
@@ -497,8 +502,10 @@ void GLTexture::samplers_init() {
 				const SamplerFiltering filtering = SamplerFiltering(filtering_i);
 
 				const GLenum mag_filter = (filtering & GPU_SAMPLER_FILTERING_LINEAR) ? GL_LINEAR : GL_NEAREST;
-				const GLenum linear_min_filter = (filtering & GPU_SAMPLER_FILTERING_MIPMAP) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
-				const GLenum nearest_min_filter = (filtering & GPU_SAMPLER_FILTERING_MIPMAP) ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST;
+				const GLenum linear_min_filter = (filtering & GPU_SAMPLER_FILTERING_MIPMAP) ? GL_LINEAR_MIPMAP_LINEAR :
+																							  GL_LINEAR;
+				const GLenum nearest_min_filter = (filtering & GPU_SAMPLER_FILTERING_MIPMAP) ? GL_NEAREST_MIPMAP_LINEAR :
+																							   GL_NEAREST;
 				const GLenum min_filter = (filtering & GPU_SAMPLER_FILTERING_LINEAR) ? linear_min_filter : nearest_min_filter;
 
 				GLuint sampler = samplers_state_cache_[extend_yz_i][extend_x_i][filtering_i];
@@ -557,7 +564,8 @@ void GLTexture::samplers_update() {
 				const SamplerFiltering filtering = SamplerFiltering(filtering_i);
 
 				if ((filtering & GPU_SAMPLER_FILTERING_ANISOTROPIC) && (filtering & GPU_SAMPLER_FILTERING_MIPMAP)) {
-					glSamplerParameterf(samplers_state_cache_[extend_yz_i][extend_x_i][filtering_i], GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropic_filter);
+					glSamplerParameterf(samplers_state_cache_[extend_yz_i][extend_x_i][filtering_i],
+										GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropic_filter);
 				}
 			}
 		}
@@ -625,7 +633,8 @@ bool GLTexture::proxy_check(int mip) {
 		}
 	}
 
-	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_WIN, GPU_DRIVER_ANY) || GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_UNIX, GPU_DRIVER_OFFICIAL)) {
+	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_WIN, GPU_DRIVER_ANY) ||
+		GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_UNIX, GPU_DRIVER_OFFICIAL)) {
 		/* Some AMD drivers have a faulty `GL_PROXY_TEXTURE_..` check.
 		 * (see #55888, #56185, #59351).
 		 * Checking with `GL_PROXY_TEXTURE_..` doesn't prevent `Out Of Memory` issue,

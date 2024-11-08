@@ -10,13 +10,14 @@ TEST_F(GPUTest, ComputeDirect) {
 	if (!GPU_get_info_i(GPU_INFO_COMPUTE_SHADER_SUPPORT)) {
 		GTEST_SKIP() << "Skipping compute shader test.";
 	}
-	
+
 	static unsigned int SIZE = 32;
 
 	GPUShader *shader = GPU_shader_create_from_info_name("gpu_compute_2d_test");
 	EXPECT_NE(shader, nullptr);
 
-	GPUTexture *texture = GPU_texture_create_2d("gpu_shader_compute_2d", SIZE, SIZE, 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_GENERAL, NULL);
+	GPUTexture *texture = GPU_texture_create_2d("gpu_shader_compute_2d", SIZE, SIZE, 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_GENERAL,
+												NULL);
 	EXPECT_NE(texture, nullptr);
 
 	GPU_shader_bind(shader);
@@ -24,7 +25,7 @@ TEST_F(GPUTest, ComputeDirect) {
 
 	/* Dispatch compute task. */
 	GPU_compute_dispatch(shader, SIZE, SIZE, 1);
-	
+
 	/* Check if compute has been done. */
 	GPU_memory_barrier(GPU_BARRIER_TEXTURE_UPDATE);
 	float4 *data = static_cast<float4 *>(GPU_texture_read(texture, GPU_DATA_FLOAT, 0));
@@ -47,4 +48,4 @@ TEST_F(GPUTest, ComputeDirect) {
 	GPU_shader_free(shader);
 }
 
-} // namespace rose::gpu
+}  // namespace rose::gpu

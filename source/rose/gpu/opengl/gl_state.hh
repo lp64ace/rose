@@ -95,7 +95,7 @@ private:
 	GLsync gl_sync_ = 0;
 
 public:
-	GLFence() : Fence(){};
+	GLFence() : Fence() {};
 	~GLFence();
 
 	void signal() override;

@@ -58,7 +58,10 @@ void GLBackend::platform_init() {
 			device |= GPU_DEVICE_INTEL_UHD;
 		}
 	}
-	else if (strstr(renderer, "Mesa DRI R") || (strstr(renderer, "Radeon") && strstr(vendor, "X.Org")) || (strstr(renderer, "AMD") && strstr(vendor, "X.Org")) || (strstr(renderer, "Gallium ") && strstr(renderer, " on ATI ")) || (strstr(renderer, "Gallium ") && strstr(renderer, " on AMD "))) {
+	else if (strstr(renderer, "Mesa DRI R") || (strstr(renderer, "Radeon") && strstr(vendor, "X.Org")) ||
+			 (strstr(renderer, "AMD") && strstr(vendor, "X.Org")) ||
+			 (strstr(renderer, "Gallium ") && strstr(renderer, " on ATI ")) ||
+			 (strstr(renderer, "Gallium ") && strstr(renderer, " on AMD "))) {
 		device = GPU_DEVICE_ATI;
 		driver = GPU_DRIVER_OPENSOURCE;
 	}
@@ -111,7 +114,10 @@ void GLBackend::platform_init() {
 			 * Version Build 10.18.14.5067 is the latest available and appears to be working
 			 * ok with our workarounds, so excluded from this list.
 			 */
-			if (strstr(version, "Build 7.14") || strstr(version, "Build 7.15") || strstr(version, "Build 8.15") || strstr(version, "Build 9.17") || strstr(version, "Build 9.18") || strstr(version, "Build 10.18.10.3") || strstr(version, "Build 10.18.10.4") || strstr(version, "Build 10.18.10.5") || strstr(version, "Build 10.18.14.4")) {
+			if (strstr(version, "Build 7.14") || strstr(version, "Build 7.15") || strstr(version, "Build 8.15") ||
+				strstr(version, "Build 9.17") || strstr(version, "Build 9.18") || strstr(version, "Build 10.18.10.3") ||
+				strstr(version, "Build 10.18.10.4") || strstr(version, "Build 10.18.10.5") ||
+				strstr(version, "Build 10.18.14.4")) {
 				support_level = GPU_SUPPORT_LEVEL_LIMITED;
 			}
 			/**
@@ -152,7 +158,8 @@ void GLBackend::platform_exit() {
 static bool match_renderer(std::string renderer, const rose::Vector<std::string> &items) {
 	for (const std::string &item : items) {
 		const std::string wrapped = " " + item + " ";
-		if (renderer.compare(renderer.size() - item.size(), item.size(), item) == 0 || renderer.find(wrapped) != std::string::npos) {
+		if (renderer.compare(renderer.size() - item.size(), item.size(), item) == 0 ||
+			renderer.find(wrapped) != std::string::npos) {
 			return true;
 		}
 	}
@@ -249,7 +256,9 @@ static void detect_workarounds() {
 	if (!(gl_version() >= 40)) {
 		GLContext::base_instance_support = false;
 	}
-	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) && (strstr(version, "4.5.13399") || strstr(version, "4.5.13417") || strstr(version, "4.5.13422") || strstr(version, "4.5.13467"))) {
+	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) &&
+		(strstr(version, "4.5.13399") || strstr(version, "4.5.13417") || strstr(version, "4.5.13422") ||
+		 strstr(version, "4.5.13467"))) {
 		/* The renderers include:
 		 *   Radeon HD 5000;
 		 *   Radeon HD 7500M;
@@ -264,11 +273,13 @@ static void detect_workarounds() {
 		gpu_set_info_i(GPU_INFO_BROKEN_AMD_DRIVER, true);
 	}
 	/* Compute shaders have some issues with those versions (see #94936). */
-	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_ANY, GPU_DRIVER_OFFICIAL) && (strstr(version, "4.5.14831") || strstr(version, "4.5.14760"))) {
+	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_ANY, GPU_DRIVER_OFFICIAL) &&
+		(strstr(version, "4.5.14831") || strstr(version, "4.5.14760"))) {
 		gpu_set_info_i(GPU_INFO_COMPUTE_SHADER_SUPPORT, false);
 	}
 	/* We have issues with this specific renderer. (see #74024) */
-	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_UNIX, GPU_DRIVER_OPENSOURCE) && (strstr(renderer, "AMD VERDE") || strstr(renderer, "AMD KAVERI") || strstr(renderer, "AMD TAHITI"))) {
+	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_UNIX, GPU_DRIVER_OPENSOURCE) &&
+		(strstr(renderer, "AMD VERDE") || strstr(renderer, "AMD KAVERI") || strstr(renderer, "AMD TAHITI"))) {
 		GLContext::unused_fb_slot_workaround = true;
 		gpu_set_info_i(GPU_INFO_SHADER_IMAGE_LOAD_STORE_SUPPORT, false);
 		gpu_set_info_i(GPU_INFO_SHADER_DRAW_PARAMETERS_SUPPORT, false);
@@ -309,18 +320,23 @@ static void detect_workarounds() {
 	}
 	/* Special fix for these specific GPUs.
 	 * Without this workaround, rose crashes on startup. (see #72098) */
-	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) && (strstr(renderer, "HD Graphics 620") || strstr(renderer, "HD Graphics 630"))) {
+	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) &&
+		(strstr(renderer, "HD Graphics 620") || strstr(renderer, "HD Graphics 630"))) {
 		gpu_set_info_i(GPU_INFO_MIP_RENDER_WORKAROUND, true);
 	}
 	/* Intel Ivy Bridge GPU's seems to have buggy cube-map array support. (see #75943) */
-	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) && (strstr(renderer, "HD Graphics 4000") || strstr(renderer, "HD Graphics 4400") || strstr(renderer, "HD Graphics 2500"))) {
+	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) &&
+		(strstr(renderer, "HD Graphics 4000") || strstr(renderer, "HD Graphics 4400") ||
+		 strstr(renderer, "HD Graphics 2500"))) {
 		GLContext::texture_cube_map_array_support = false;
 	}
 	/* Maybe not all of these drivers have problems with `GL_ARB_base_instance`.
 	 * But it's hard to test each case.
 	 * We get crashes from some crappy Intel drivers don't work well with shaders created in
 	 * different rendering contexts. */
-	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_ANY) && (strstr(version, "Build 10.18.10.3") || strstr(version, "Build 10.18.10.4") || strstr(version, "Build 10.18.10.5") || strstr(version, "Build 10.18.14.4") || strstr(version, "Build 10.18.14.5"))) {
+	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_ANY) &&
+		(strstr(version, "Build 10.18.10.3") || strstr(version, "Build 10.18.10.4") || strstr(version, "Build 10.18.10.5") ||
+		 strstr(version, "Build 10.18.14.4") || strstr(version, "Build 10.18.14.5"))) {
 		GLContext::base_instance_support = false;
 		gpu_set_info_i(GPU_INFO_USE_MAIN_CONTEXT_WORKAROUND, true);
 	}
@@ -330,7 +346,9 @@ static void detect_workarounds() {
 	}
 	/* See #70187: merging vertices fail. This has been tested from `18.2.2` till `19.3.0~dev`
 	 * of the Mesa driver */
-	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_UNIX, GPU_DRIVER_OPENSOURCE) && (strstr(version, "Mesa 18.") || strstr(version, "Mesa 19.0") || strstr(version, "Mesa 19.1") || strstr(version, "Mesa 19.2"))) {
+	if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_UNIX, GPU_DRIVER_OPENSOURCE) &&
+		(strstr(version, "Mesa 18.") || strstr(version, "Mesa 19.0") || strstr(version, "Mesa 19.1") ||
+		 strstr(version, "Mesa 19.2"))) {
 		GLContext::unused_fb_slot_workaround = true;
 	}
 	/* There is a bug on older Nvidia GPU where GL_ARB_texture_gather
@@ -345,7 +363,9 @@ static void detect_workarounds() {
 		GLContext::derivative_signs[1] = -1.0;
 	}
 	else if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_ANY)) {
-		if (strstr(version, "4.0.0 - Build 10.18.10.3308") || strstr(version, "4.0.0 - Build 9.18.10.3186") || strstr(version, "4.0.0 - Build 9.18.10.3165") || strstr(version, "3.1.0 - Build 9.17.10.3347") || strstr(version, "3.1.0 - Build 9.17.10.4101") || strstr(version, "3.3.0 - Build 8.15.10.2618")) {
+		if (strstr(version, "4.0.0 - Build 10.18.10.3308") || strstr(version, "4.0.0 - Build 9.18.10.3186") ||
+			strstr(version, "4.0.0 - Build 9.18.10.3165") || strstr(version, "3.1.0 - Build 9.17.10.3347") ||
+			strstr(version, "3.1.0 - Build 9.17.10.4101") || strstr(version, "3.3.0 - Build 8.15.10.2618")) {
 			GLContext::derivative_signs[0] = -1.0;
 			GLContext::derivative_signs[1] = 1.0;
 		}
@@ -378,13 +398,15 @@ static void detect_workarounds() {
 	}
 
 	/* Buggy interface query functions cause crashes when handling SSBOs (#93680) */
-	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_ANY, GPU_DRIVER_ANY) && (strstr(renderer, "HD Graphics 4400") || strstr(renderer, "HD Graphics 4600"))) {
+	if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_ANY, GPU_DRIVER_ANY) &&
+		(strstr(renderer, "HD Graphics 4400") || strstr(renderer, "HD Graphics 4600"))) {
 		gpu_set_info_i(GPU_INFO_SHADER_STORAGE_BUFFER_OBJECTS_SUPPORT, false);
 	}
 
 	/* Certain Intel/AMD based platforms don't clear the viewport textures. Always clearing leads to
 	 * noticeable performance regressions on other platforms as well. */
-	if (GPU_type_matches(GPU_DEVICE_ANY, GPU_OS_MAC, GPU_DRIVER_ANY) || GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_ANY, GPU_DRIVER_ANY)) {
+	if (GPU_type_matches(GPU_DEVICE_ANY, GPU_OS_MAC, GPU_DRIVER_ANY) ||
+		GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_ANY, GPU_DRIVER_ANY)) {
 		gpu_set_info_i(GPU_INFO_CLEAR_VIEWPORT_WORKAROUND, true);
 	}
 
@@ -453,7 +475,8 @@ void GLBackend::capabilities_init() {
 	glGetIntegerv(GL_NUM_EXTENSIONS, &gpu_get_info_i(GPU_INFO_EXTENSIONS_LEN));
 
 	gpu_set_info_i(GPU_INFO_MAX_SAMPLERS, gpu_get_info_i(GPU_INFO_MAX_TEXTURES));
-	gpu_set_info_i(GPU_INFO_MEM_STATS_SUPPORT, has_gl_extension("GL_NVX_gpu_memory_info") || has_gl_extension("GL_ATI_meminfo"));
+	gpu_set_info_i(GPU_INFO_MEM_STATS_SUPPORT,
+				   has_gl_extension("GL_NVX_gpu_memory_info") || has_gl_extension("GL_ATI_meminfo"));
 	gpu_set_info_i(GPU_INFO_SHADER_IMAGE_LOAD_STORE_SUPPORT, has_gl_extension("GL_ARB_shader_image_load_store"));
 	gpu_set_info_i(GPU_INFO_SHADER_DRAW_PARAMETERS_SUPPORT, has_gl_extension("GL_ARB_shader_draw_parameters"));
 	gpu_set_info_i(GPU_INFO_COMPUTE_SHADER_SUPPORT, has_gl_extension("GL_ARB_compute_shader") && gl_version() >= 43);
@@ -497,7 +520,8 @@ void GLBackend::capabilities_init() {
 	GLContext::base_instance_support = has_gl_extension("GL_ARB_base_instance");
 	GLContext::clear_texture_support = has_gl_extension("GL_ARB_clear_texture");
 	GLContext::copy_image_support = has_gl_extension("GL_ARB_copy_image");
-	GLContext::debug_layer_support = gl_version() >= 43 || has_gl_extension("GL_KHR_debug") || has_gl_extension("GL_ARB_debug_output");
+	GLContext::debug_layer_support = gl_version() >= 43 || has_gl_extension("GL_KHR_debug") ||
+									 has_gl_extension("GL_ARB_debug_output");
 	GLContext::direct_state_access_support = has_gl_extension("GL_ARB_direct_state_access");
 	GLContext::explicit_location_support = gl_version() >= 43;
 	GLContext::geometry_shader_invocations = has_gl_extension("GL_ARB_gpu_shader5");

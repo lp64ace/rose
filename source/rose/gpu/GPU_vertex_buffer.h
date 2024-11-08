@@ -47,11 +47,11 @@ void GPU_vertbuf_clear(GPUVertBuf *buffer);
 void GPU_vertbuf_discard(GPUVertBuf *buffer);
 
 #define GPU_VERTBUF_DISCARD_SAFE(buffer) \
-	do { \
-		if (buffer != NULL) { \
+	do {                                 \
+		if (buffer != NULL) {            \
 			GPU_vertbuf_discard(buffer); \
-			buffer = NULL; \
-		} \
+			buffer = NULL;               \
+		}                                \
 	} while (0)
 
 void GPU_vertbuf_handle_ref_add(struct GPUVertBuf *buffer);

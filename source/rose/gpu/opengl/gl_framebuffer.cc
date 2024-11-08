@@ -2,8 +2,8 @@
 
 #include "gl_backend.hh"
 #include "gl_debug.hh"
-#include "gl_state.hh"
 #include "gl_shader.hh"
+#include "gl_state.hh"
 #include "gl_texture.hh"
 
 #include "gl_framebuffer.hh"
@@ -84,9 +84,9 @@ bool GLFrameBuffer::check(char err_out[256]) {
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
 #define FORMAT_STATUS(X) \
-	case X: { \
-		err = #X; \
-		break; \
+	case X: {            \
+		err = #X;        \
+		break;           \
 	}
 
 	const char *err;
@@ -205,7 +205,8 @@ void GLFrameBuffer::update_attachments() {
 	ROSE_assert(this->check(nullptr));
 }
 
-void GLFrameBuffer::subpass_transition(const AttachmentState depth_attachment_state, Span<AttachmentState> color_attachment_states) {
+void GLFrameBuffer::subpass_transition(const AttachmentState depth_attachment_state,
+									   Span<AttachmentState> color_attachment_states) {
 	/**
 	 * NOTE: Depth is not supported as input attachment because the Metal API doesn't support it and
 	 * because depth is not compatible with the framebuffer fetch implementation.
@@ -315,7 +316,8 @@ void GLFrameBuffer::apply_state() {
 		glViewport(UNPACK4(viewport_[0]));
 	}
 	else {
-		/* Great API you have there! You have to convert to float values for setting int viewport values. **Audible Facepalm** */
+		/* Great API you have there! You have to convert to float values for setting int viewport values. **Audible Facepalm**
+		 */
 		float viewports_f[GPU_MAX_VIEWPORTS][4];
 		for (int i = 0; i < GPU_MAX_VIEWPORTS; i++) {
 			for (int j = 0; j < 4; j++) {
@@ -492,7 +494,8 @@ void GLFrameBuffer::clear_multi(const float (*clear_cols)[4]) {
 	}
 }
 
-void GLFrameBuffer::read(FrameBufferBits plane, DataFormat data_format, const int area[4], int channel_len, int slot, void *r_data) {
+void GLFrameBuffer::read(FrameBufferBits plane, DataFormat data_format, const int area[4], int channel_len, int slot,
+						 void *r_data) {
 	GLenum format, type, mode;
 	mode = gl_attachments_[slot];
 	type = to_gl(data_format);
@@ -500,7 +503,9 @@ void GLFrameBuffer::read(FrameBufferBits plane, DataFormat data_format, const in
 	switch (plane) {
 		case GPU_DEPTH_BIT:
 			format = GL_DEPTH_COMPONENT;
-			ROSE_assert_msg(this->attachments_[GPU_FB_DEPTH_ATTACHMENT].tex != nullptr || this->attachments_[GPU_FB_DEPTH_STENCIL_ATTACHMENT].tex != nullptr, "GPUFramebuffer: Error: Trying to read depth without a depth buffer attached.");
+			ROSE_assert_msg(this->attachments_[GPU_FB_DEPTH_ATTACHMENT].tex != nullptr ||
+								this->attachments_[GPU_FB_DEPTH_STENCIL_ATTACHMENT].tex != nullptr,
+							"GPUFramebuffer: Error: Trying to read depth without a depth buffer attached.");
 			break;
 		case GPU_COLOR_BIT:
 			ROSE_assert_msg(mode != GL_NONE, "GPUFramebuffer: Error: Trying to read a color slot without valid attachment.");

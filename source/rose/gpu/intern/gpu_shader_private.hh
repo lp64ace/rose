@@ -127,7 +127,8 @@ public:
 	virtual const char *parse_line(const char *log_line, GPULogItem &log_item) = 0;
 
 protected:
-	const char *skip_severity(const char *log_line, GPULogItem &log_item, const char *error_msg, const char *warning_msg, const char *note_msg) const;
+	const char *skip_severity(const char *log_line, GPULogItem &log_item, const char *error_msg, const char *warning_msg,
+							  const char *note_msg) const;
 	const char *skip_separators(const char *log_line, const StringRef separators) const;
 	const char *skip_until(const char *log_line, char stop_char) const;
 	bool at_number(const char *log_line) const;

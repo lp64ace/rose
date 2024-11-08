@@ -87,11 +87,14 @@ public:
 
 	virtual void attachment_set_loadstore_op(AttachmentType type, GPULoadStore ls) = 0;
 
-	virtual void read(FrameBufferBits planes, DataFormat format, const int area[4], int channel_len, int slot, void *r_data) = 0;
+	virtual void read(FrameBufferBits planes, DataFormat format, const int area[4], int channel_len, int slot,
+					  void *r_data) = 0;
 
-	virtual void blit_to(FrameBufferBits planes, int src_slot, FrameBuffer *dst, int dst_slot, int dst_offset_x, int dst_offset_y) = 0;
+	virtual void blit_to(FrameBufferBits planes, int src_slot, FrameBuffer *dst, int dst_slot, int dst_offset_x,
+						 int dst_offset_y) = 0;
 
-	virtual void subpass_transition(const AttachmentState depth_attachment_state, Span<AttachmentState> color_attachment_states) = 0;
+	virtual void subpass_transition(const AttachmentState depth_attachment_state,
+									Span<AttachmentState> color_attachment_states) = 0;
 
 	void load_store_config_array(const GPULoadStore *load_store_actions, uint actions_len);
 

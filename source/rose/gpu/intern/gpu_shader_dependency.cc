@@ -38,7 +38,8 @@ struct GPUSource {
 	shader::BuiltinBits builtins = shader::BuiltinBits::NONE;
 	std::string processed_source;
 
-	GPUSource(const char *path, const char *file, const char *datatoc, GPUFunctionDictionnary *g_functions) : fullpath(path), filename(file), source(datatoc) {
+	GPUSource(const char *path, const char *file, const char *datatoc, GPUFunctionDictionnary *g_functions)
+		: fullpath(path), filename(file), source(datatoc) {
 		/* Scan for builtins. */
 		/* FIXME: This can trigger false positive caused by disabled #if blocks. */
 		/* TODO(fclem): Could be made faster by scanning once. */
@@ -99,7 +100,8 @@ struct GPUSource {
 				/* Avoid this file as it is a false positive match (matches "drw_debug_print_buf"). */
 				filename != StringRefNull("draw_debug_print_display_vert.glsl") &&
 				/* Avoid these two files where it makes no sense to add the dependency. */
-				!ELEM(filename, StringRefNull("common_debug_draw_lib.glsl"), StringRefNull("draw_debug_draw_display_vert.glsl"))) {
+				!ELEM(filename, StringRefNull("common_debug_draw_lib.glsl"),
+					  StringRefNull("draw_debug_draw_display_vert.glsl"))) {
 				builtins |= shader::BuiltinBits::USE_DEBUG_DRAW;
 			}
 #endif
@@ -174,10 +176,10 @@ struct GPUSource {
 		std::cerr << "^\n";
 	}
 
-#define CHECK(test_value, str, ofs, msg) \
+#define CHECK(test_value, str, ofs, msg)            \
 	if ((test_value) == StringRefBase::not_found) { \
-		print_error(str, ofs, msg); \
-		continue; \
+		print_error(str, ofs, msg);                 \
+		continue;                                   \
 	}
 
 	/**
@@ -334,7 +336,8 @@ struct GPUSource {
 
 		const char whitespace_chars[] = " \r\n\t";
 
-		auto function_parse = [&](const StringRef input, size_t &cursor, StringRef &out_return_type, StringRef &out_name, StringRef &out_args) -> bool {
+		auto function_parse = [&](const StringRef input, size_t &cursor, StringRef &out_return_type, StringRef &out_name,
+								  StringRef &out_args) -> bool {
 			cursor = find_keyword(input, "void ", cursor + 1);
 			if (cursor == StringRef::not_found) {
 				return false;
@@ -383,7 +386,8 @@ struct GPUSource {
 			return str.substr(keyword_start, keyword_end - keyword_start);
 		};
 
-		auto arg_parse = [&](const StringRef str, size_t &cursor, StringRef &out_qualifier, StringRef &out_type, StringRef &out_name) -> bool {
+		auto arg_parse = [&](const StringRef str, size_t &cursor, StringRef &out_qualifier, StringRef &out_type,
+							 StringRef &out_name) -> bool {
 			size_t arg_start = cursor + 1;
 			if (arg_start >= str.size()) {
 				return false;
@@ -622,12 +626,16 @@ struct GPUSource {
 				sub_output << "/* " << str << "*/";
 				sub_output << "drw_print_string_start(" << len_before_pad << ");";
 				for (size_t i = 0; i < len_before_pad; i += 4) {
-					uint8_t chars[4] = {*(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 0), *(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 1), *(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 2), *(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 3)};
+					uint8_t chars[4] = {*(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 0),
+										*(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 1),
+										*(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 2),
+										*(reinterpret_cast<const uint8_t *>(str.c_str()) + i + 3)};
 					if (i + 4 > len_before_pad) {
 						chars[len_before_pad - i] = '\0';
 					}
 					char uint_hex[12];
-					LIB_strnformat(uint_hex, ARRAY_SIZE(uint_hex), "0x%.2X%.2X%.2X%.2Xu", chars[3], chars[2], chars[1], chars[0]);
+					LIB_strnformat(uint_hex, ARRAY_SIZE(uint_hex), "0x%.2X%.2X%.2X%.2Xu", chars[3], chars[2], chars[1],
+								   chars[0]);
 					sub_output << "drw_print_char4(" << StringRefNull(uint_hex) << ");";
 				}
 				return 0;
@@ -797,7 +805,9 @@ struct GPUSource {
 	}
 
 	bool is_from_material_library() const {
-		return (filename.startswith("gpu_shader_material_") || filename.startswith("gpu_shader_common_") || filename.startswith("gpu_shader_compositor_")) && filename.endswith(".glsl");
+		return (filename.startswith("gpu_shader_material_") || filename.startswith("gpu_shader_common_") ||
+				filename.startswith("gpu_shader_compositor_")) &&
+			   filename.endswith(".glsl");
 	}
 };
 
@@ -812,7 +822,8 @@ void gpu_shader_dependency_init() {
 	g_sources = MEM_new<GPUSourceDictionnary>("rose::gpu::GlobalSourceDictionary");
 	g_functions = MEM_new<GPUFunctionDictionnary>("rose::gpu::GlobalFunctionDictionary");
 
-#define SHADER_SOURCE(datatoc, filename, filepath) g_sources->add_new(filename, MEM_new<GPUSource>("rose::gpu::Source", filepath, filename, datatoc, g_functions));
+#define SHADER_SOURCE(datatoc, filename, filepath) \
+	g_sources->add_new(filename, MEM_new<GPUSource>("rose::gpu::Source", filepath, filename, datatoc, g_functions));
 #include "gpu_shader_source_list.h"
 #undef SHADER_SOURCE
 

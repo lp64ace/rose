@@ -76,7 +76,8 @@ void GPU_vertformat_deinterleave(struct GPUVertFormat *format);
 
 int GPU_vertformat_attr_id_get(const struct GPUVertFormat *format, const char *name);
 
-ROSE_INLINE const char *GPU_vertformat_attr_name_get(const struct GPUVertFormat *format, const struct GPUVertAttr *attr, unsigned int n_idx) {
+ROSE_INLINE const char *GPU_vertformat_attr_name_get(const struct GPUVertFormat *format, const struct GPUVertAttr *attr,
+													 unsigned int n_idx) {
 	return format->names + attr->names[n_idx];
 }
 

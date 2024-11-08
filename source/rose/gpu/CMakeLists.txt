@@ -264,7 +264,7 @@ list(APPEND SRC ${SHADER_CREATE_INFO_LIST_FILE})
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::tiny_window
+	rose::intern::oswin
 	rose::source::roselib
 	rose::source::shaders
 	
@@ -316,7 +316,7 @@ set(TEST
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::tiny_window
+	rose::intern::oswin
 	rose::source::roselib
 	rose::source::gpu
 	

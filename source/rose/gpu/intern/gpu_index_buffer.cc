@@ -229,7 +229,8 @@ IndexBuf::~IndexBuf() {
 	}
 }
 
-void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint max_index, PrimType prim_type, bool uses_restart_indices) {
+void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint max_index, PrimType prim_type,
+					bool uses_restart_indices) {
 	is_init_ = true;
 	data_ = indices;
 	index_start_ = 0;
@@ -265,9 +266,9 @@ void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint ma
 		bool do_clamp_indices = false;
 #	ifdef __APPLE__
 		/**
-		 * NOTE: For the Metal Backend, we use degenerative primitives to hide vertices which are not restart compatible. 
-		 * When this is done, we need to ensure that compressed index ranges clamp all index values within the valid range, 
-		 * rather than maximally clamping against the USHORT restart index value of 0xFFFFu, 
+		 * NOTE: For the Metal Backend, we use degenerative primitives to hide vertices which are not restart compatible.
+		 * When this is done, we need to ensure that compressed index ranges clamp all index values within the valid range,
+		 * rather than maximally clamping against the USHORT restart index value of 0xFFFFu,
 		 * as this will cause an out-of-bounds read during vertex assembly.
 		 */
 		do_clamp_indices = GPU_type_matches_ex(GPU_DEVICE_ANY, GPU_OS_MAC, GPU_DRIVER_ANY, GPU_BACKEND_METAL);
@@ -388,7 +389,8 @@ GPUIndexBuf *GPU_indexbuf_create_subrange(GPUIndexBuf *elem_src, uint start, uin
 void GPU_indexbuf_build_in_place(GPUIndexBufBuilder *builder, GPUIndexBuf *elem) {
 	ROSE_assert(builder->data != nullptr);
 	/** Transfer data ownership to GPUIndexBuf. It will be uploaded upon first use. */
-	unwrap(elem)->init(builder->index_len, builder->data, builder->index_min, builder->index_max, builder->prim_type, builder->uses_restart_index);
+	unwrap(elem)->init(builder->index_len, builder->data, builder->index_min, builder->index_max, builder->prim_type,
+					   builder->uses_restart_index);
 	builder->data = nullptr;
 }
 

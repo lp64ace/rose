@@ -10,7 +10,7 @@ void GLCompute::dispatch(unsigned int group_x_len, unsigned int group_y_len, uns
 	if (group_x_len == 0 || group_y_len == 0 || group_z_len == 0) {
 		return;
 	}
-	
+
 	glDispatchCompute(group_x_len, group_y_len, group_z_len);
 }
 

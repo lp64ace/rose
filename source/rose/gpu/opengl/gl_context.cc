@@ -1,7 +1,7 @@
 #include "LIB_assert.h"
 #include "LIB_utildefines.h"
 
-#include <tiny_window.h>
+#include <oswin.h>
 
 #include "gl_backend.hh"
 #include "gl_context.hh"
@@ -21,27 +21,27 @@ GLContext::GLContext(void *window, GLSharedOrphanLists &shared_orphan_list) : sh
 	glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	this->state_manager = MEM_new<GLStateManager>("rose::gpu::GLStateManager");
-	this->imm = MEM_new<GLImmediate>("rose::gpu::GLImmediate");
+	this->state_manager = MEM_new<GLStateManager>("GLStateManager");
+	this->imm = MEM_new<GLImmediate>("GLImmediate");
 	this->window_ = window;
 
 	if (window) {
 		int w, h;
 		WTK_window_size(reinterpret_cast<WTKWindow *>(this->window_), &w, &h);
 
-		front_left = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::FrontLeft", "front_left", this, GL_FRONT_LEFT, 0, w, h);
-		back_left = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::BackLeft", "back_left", this, GL_BACK_LEFT, 0, w, h);
+		front_left = MEM_new<GLFrameBuffer>("GLFrameBuffer::FrontLeft", "front_left", this, GL_FRONT_LEFT, 0, w, h);
+		back_left = MEM_new<GLFrameBuffer>("GLFrameBuffer::BackLeft", "back_left", this, GL_BACK_LEFT, 0, w, h);
 
 		GLboolean supports_stereo_quad_buffer = GL_FALSE;
 		glGetBooleanv(GL_STEREO, &supports_stereo_quad_buffer);
 		if (supports_stereo_quad_buffer) {
-			front_right = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::FrontRight", "front_right", this, GL_FRONT_RIGHT, 0, w, h);
-			back_right = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::BackRight", "back_right", this, GL_BACK_RIGHT, 0, w, h);
+			front_right = MEM_new<GLFrameBuffer>("GLFrameBuffer::FrontRight", "front_right", this, GL_FRONT_RIGHT, 0, w, h);
+			back_right = MEM_new<GLFrameBuffer>("GLFrameBuffer::BackRight", "back_right", this, GL_BACK_RIGHT, 0, w, h);
 		}
 	}
 	else {
 		/* For off-screen contexts. Default frame-buffer is NULL. */
-		back_left = MEM_new<GLFrameBuffer>("rose::gpu::GLFrameBuffer::BackLeft", "back_left", this, GL_NONE, 0, 0, 0);
+		back_left = MEM_new<GLFrameBuffer>("GLFrameBuffer::BackLeft", "back_left", this, GL_NONE, 0, 0, 0);
 	}
 
 	active_fb = back_left;

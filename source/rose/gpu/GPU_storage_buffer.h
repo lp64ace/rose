@@ -38,7 +38,7 @@ void GPU_storagebuf_clear_to_zero(GPUStorageBuf *ssbo);
  * \{ */
 
 /**
- * Explicitly sync updated storage buffer contents back to host within the GPU command stream. 
+ * Explicitly sync updated storage buffer contents back to host within the GPU command stream.
  * This ensures any changes made by the GPU are visible to the host.
  * NOTE: This command is only valid for host-visible storage buffers.
  */
@@ -49,10 +49,10 @@ void GPU_storagebuf_sync_to_host(GPUStorageBuf *ssbo);
  * Slow! Only use for inspection/debugging.
  *
  * NOTE: If GPU_storagebuf_sync_to_host is called, this command is synchronized against that call.
- * If pending GPU updates to the storage buffer are not yet visible to the host, the command will 
+ * If pending GPU updates to the storage buffer are not yet visible to the host, the command will
  * stall until dependent GPU work has completed.
  *
- * Otherwise, this command is unsynchronized and will return current visible storage buffer 
+ * Otherwise, this command is unsynchronized and will return current visible storage buffer
  * contents immediately. Alternatively, use appropriate barrier or GPU_finish before reading.
  */
 void GPU_storagebuf_read(GPUStorageBuf *ssbo, void *data);

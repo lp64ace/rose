@@ -21,7 +21,7 @@ public:
 	FrameBuffer *active_fb = nullptr;
 	Shader *shader = nullptr;
 	StateManager *state_manager = nullptr;
-	
+
 	GPUMatrixState *matrix_state = nullptr;
 	Immediate *imm = nullptr;
 

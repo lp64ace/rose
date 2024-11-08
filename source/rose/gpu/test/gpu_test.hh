@@ -32,7 +32,7 @@
 #include "GPU_vertex_format.h"
 #include "GPU_viewport.h"
 
-#include "tiny_window.h"
+#include "oswin.h"
 #include "gtest/gtest.h"
 
 namespace rose::gpu {
@@ -47,9 +47,9 @@ private:
 
 public:
 	GPUTest() = default;
-	
+
 	void SetUp() override;
 	void TearDown() override;
 };
 
-} // namespace rose::gpu
+}  // namespace rose::gpu
