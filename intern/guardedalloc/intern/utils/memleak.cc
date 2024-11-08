@@ -10,10 +10,8 @@
 bool leak_detector_has_run = false;
 char free_after_leak_detection_message[] =
 	"Freeing memory after the leak detector has run. This can happen when "
-	"using "
-	"static variables in C++ that are defined outside of functions. To fix "
-	"this "
-	"error, use the 'construct on first use' idiom.";
+	"using static variables in C++ that are defined outside of functions. "
+	"To fix this error, use the 'construct on first use' idiom.";
 
 namespace {
 
