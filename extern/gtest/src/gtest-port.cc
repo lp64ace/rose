@@ -177,12 +177,7 @@ size_t GetThreadCount() {
 // we cannot detect it.
 size_t GetThreadCount() {
 	int mib[] = {
-		CTL_KERN,
-		KERN_PROC,
-		KERN_PROC_PID | KERN_PROC_SHOW_THREADS,
-		getpid(),
-		sizeof(struct kinfo_proc),
-		0,
+		CTL_KERN, KERN_PROC, KERN_PROC_PID | KERN_PROC_SHOW_THREADS, getpid(), sizeof(struct kinfo_proc), 0,
 	};
 	u_int miblen = sizeof(mib) / sizeof(mib[0]);
 
@@ -326,7 +321,8 @@ void Notification::WaitForNotification() {
 	GTEST_CHECK_(::WaitForSingleObject(event_.Get(), INFINITE) == WAIT_OBJECT_0);
 }
 
-Mutex::Mutex() : owner_thread_id_(0), type_(kDynamic), critical_section_init_phase_(0), critical_section_(new CRITICAL_SECTION) {
+Mutex::Mutex()
+	: owner_thread_id_(0), type_(kDynamic), critical_section_init_phase_(0), critical_section_(new CRITICAL_SECTION) {
 	::InitializeCriticalSection(critical_section_);
 }
 
@@ -431,7 +427,8 @@ void Mutex::ThreadSafeLazyInit() {
 				break;	// The mutex is already initialized and ready for use.
 
 			default:
-				GTEST_CHECK_(false) << "Unexpected value of critical_section_init_phase_ " << "while initializing a static mutex.";
+				GTEST_CHECK_(false) << "Unexpected value of critical_section_init_phase_ "
+									<< "while initializing a static mutex.";
 		}
 	}
 }
@@ -458,7 +455,8 @@ public:
 
 private:
 	struct ThreadMainParam {
-		ThreadMainParam(Runnable *runnable, Notification *thread_can_start) : runnable_(runnable), thread_can_start_(thread_can_start) {
+		ThreadMainParam(Runnable *runnable, Notification *thread_can_start)
+			: runnable_(runnable), thread_can_start_(thread_can_start) {
 		}
 		std::unique_ptr<Runnable> runnable_;
 		// Does not own.
@@ -482,7 +480,8 @@ private:
 
 }  // namespace
 
-ThreadWithParamBase::ThreadWithParamBase(Runnable *runnable, Notification *thread_can_start) : thread_(ThreadWithParamSupport::CreateThread(runnable, thread_can_start)) {
+ThreadWithParamBase::ThreadWithParamBase(Runnable *runnable, Notification *thread_can_start)
+	: thread_(ThreadWithParamSupport::CreateThread(runnable, thread_can_start)) {
 }
 
 ThreadWithParamBase::~ThreadWithParamBase() {
@@ -490,7 +489,8 @@ ThreadWithParamBase::~ThreadWithParamBase() {
 }
 
 void ThreadWithParamBase::Join() {
-	GTEST_CHECK_(::WaitForSingleObject(thread_.Get(), INFINITE) == WAIT_OBJECT_0) << "Failed to join the thread with error " << ::GetLastError() << ".";
+	GTEST_CHECK_(::WaitForSingleObject(thread_.Get(), INFINITE) == WAIT_OBJECT_0)
+		<< "Failed to join the thread with error " << ::GetLastError() << ".";
 }
 
 // Maps a thread to a set of ThreadIdToThreadLocals that have values
@@ -513,7 +513,11 @@ public:
 		ThreadLocalValues &thread_local_values = thread_local_pos->second;
 		ThreadLocalValues::iterator value_pos = thread_local_values.find(thread_local_instance);
 		if (value_pos == thread_local_values.end()) {
-			value_pos = thread_local_values.insert(std::make_pair(thread_local_instance, std::shared_ptr<ThreadLocalValueHolderBase>(thread_local_instance->NewValueForCurrentThread()))).first;
+			value_pos = thread_local_values
+							.insert(std::make_pair(
+								thread_local_instance,
+								std::shared_ptr<ThreadLocalValueHolderBase>(thread_local_instance->NewValueForCurrentThread())))
+							.first;
 		}
 		return value_pos->second.get();
 	}
@@ -525,7 +529,8 @@ public:
 		{
 			MutexLock lock(&mutex_);
 			ThreadIdToThreadLocals *const thread_to_thread_locals = GetThreadLocalsMapLocked();
-			for (ThreadIdToThreadLocals::iterator it = thread_to_thread_locals->begin(); it != thread_to_thread_locals->end(); ++it) {
+			for (ThreadIdToThreadLocals::iterator it = thread_to_thread_locals->begin(); it != thread_to_thread_locals->end();
+				 ++it) {
 				ThreadLocalValues &thread_local_values = it->second;
 				ThreadLocalValues::iterator value_pos = thread_local_values.find(thread_local_instance);
 				if (value_pos != thread_local_values.end()) {
@@ -551,7 +556,8 @@ public:
 			ThreadIdToThreadLocals::iterator thread_local_pos = thread_to_thread_locals->find(thread_id);
 			if (thread_local_pos != thread_to_thread_locals->end()) {
 				ThreadLocalValues &thread_local_values = thread_local_pos->second;
-				for (ThreadLocalValues::iterator value_pos = thread_local_values.begin(); value_pos != thread_local_values.end(); ++value_pos) {
+				for (ThreadLocalValues::iterator value_pos = thread_local_values.begin();
+					 value_pos != thread_local_values.end(); ++value_pos) {
 					value_holders.push_back(value_pos->second);
 				}
 				thread_to_thread_locals->erase(thread_local_pos);
@@ -584,8 +590,7 @@ private:
 											   0,		 // Default stack size
 											   &ThreadLocalRegistryImpl::WatcherThreadFunc,
 											   reinterpret_cast<LPVOID>(new ThreadIdAndHandle(thread_id, thread)),
-											   CREATE_SUSPENDED,
-											   &watcher_thread_id);
+											   CREATE_SUSPENDED, &watcher_thread_id);
 		GTEST_CHECK_(watcher_thread != nullptr);
 		// Give the watcher thread the same priority as ours to avoid being
 		// blocked by it.
@@ -765,7 +770,8 @@ bool AtomMatchesChar(bool escaped, char pattern_char, char ch) {
 
 // Helper function used by ValidateRegex() to format error messages.
 static std::string FormatRegexSyntaxError(const char *regex, int index) {
-	return (Message() << "Syntax error at index " << index << " in simple regular expression \"" << regex << "\": ").GetString();
+	return (Message() << "Syntax error at index " << index << " in simple regular expression \"" << regex << "\": ")
+		.GetString();
 }
 
 // Generates non-fatal failures and returns false if regex is invalid;
@@ -988,7 +994,10 @@ GTEST_API_ ::std::string FormatCompilerIndependentFileLocation(const char *file,
 }
 
 GTestLog::GTestLog(GTestLogSeverity severity, const char *file, int line) : severity_(severity) {
-	const char *const marker = severity == GTEST_INFO ? "[  INFO ]" : severity == GTEST_WARNING ? "[WARNING]" : severity == GTEST_ERROR ? "[ ERROR ]" : "[ FATAL ]";
+	const char *const marker = severity == GTEST_INFO	 ? "[  INFO ]" :
+							   severity == GTEST_WARNING ? "[WARNING]" :
+							   severity == GTEST_ERROR	 ? "[ ERROR ]" :
+														   "[ FATAL ]";
 	GetStream() << ::std::endl << marker << " " << FormatFileLocation(file, line).c_str() << ": ";
 }
 
@@ -1017,8 +1026,7 @@ public:
 		char temp_file_path[MAX_PATH + 1] = {'\0'};	 // NOLINT
 
 		::GetTempPathA(sizeof(temp_dir_path), temp_dir_path);
-		const UINT success = ::GetTempFileNameA(temp_dir_path,
-												"gtest_redir",
+		const UINT success = ::GetTempFileNameA(temp_dir_path, "gtest_redir",
 												0,	// Generate unique file name.
 												temp_file_path);
 		GTEST_CHECK_(success != 0) << "Unable to create a temporary file in " << temp_dir_path;
@@ -1048,7 +1056,8 @@ public:
 #		endif	// GTEST_OS_LINUX_ANDROID
 		const int captured_fd = mkstemp(name_template);
 		if (captured_fd == -1) {
-			GTEST_LOG_(WARNING) << "Failed to create tmp file " << name_template << " for test; does the test have access to the /tmp directory?";
+			GTEST_LOG_(WARNING) << "Failed to create tmp file " << name_template
+								<< " for test; does the test have access to the /tmp directory?";
 		}
 		filename_ = name_template;
 #	endif		// GTEST_OS_WINDOWS
@@ -1221,7 +1230,8 @@ bool ParseInt32(const Message &src_text, const char *str, Int32 *value) {
 	if (*end != '\0') {
 		// No - an invalid character was encountered.
 		Message msg;
-		msg << "WARNING: " << src_text << " is expected to be a 32-bit integer, but actually" << " has value \"" << str << "\".\n";
+		msg << "WARNING: " << src_text << " is expected to be a 32-bit integer, but actually" << " has value \"" << str
+			<< "\".\n";
 		printf("%s", msg.GetString().c_str());
 		fflush(stdout);
 		return false;
@@ -1236,7 +1246,8 @@ bool ParseInt32(const Message &src_text, const char *str, Int32 *value) {
 		// The parsed value overflows as an Int32.
 	) {
 		Message msg;
-		msg << "WARNING: " << src_text << " is expected to be a 32-bit integer, but actually" << " has value " << str << ", which overflows.\n";
+		msg << "WARNING: " << src_text << " is expected to be a 32-bit integer, but actually" << " has value " << str
+			<< ", which overflows.\n";
 		printf("%s", msg.GetString().c_str());
 		fflush(stdout);
 		return false;

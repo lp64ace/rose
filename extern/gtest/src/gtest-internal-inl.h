@@ -126,7 +126,8 @@ GTEST_API_ bool ParseInt32Flag(const char *str, const char *flag, Int32 *value);
 // Returns a random seed in range [1, kMaxRandomSeed] based on the
 // given --gtest_random_seed flag value.
 inline int GetRandomSeedFromFlag(Int32 random_seed_flag) {
-	const unsigned int raw_seed = (random_seed_flag == 0) ? static_cast<unsigned int>(GetTimeInMillis()) : static_cast<unsigned int>(random_seed_flag);
+	const unsigned int raw_seed = (random_seed_flag == 0) ? static_cast<unsigned int>(GetTimeInMillis()) :
+															static_cast<unsigned int>(random_seed_flag);
 
 	// Normalizes the actual seed to range [1, kMaxRandomSeed] such that
 	// it's easy to type.
@@ -138,7 +139,8 @@ inline int GetRandomSeedFromFlag(Int32 random_seed_flag) {
 // undefined if 'seed' is invalid.  The seed after kMaxRandomSeed is
 // considered to be 1.
 inline int GetNextRandomSeed(int seed) {
-	GTEST_CHECK_(1 <= seed && seed <= kMaxRandomSeed) << "Invalid random seed " << seed << " - must be in [1, " << kMaxRandomSeed << "].";
+	GTEST_CHECK_(1 <= seed && seed <= kMaxRandomSeed)
+		<< "Invalid random seed " << seed << " - must be in [1, " << kMaxRandomSeed << "].";
 	const int next_seed = seed + 1;
 	return (next_seed > kMaxRandomSeed) ? 1 : next_seed;
 }
@@ -293,8 +295,10 @@ template<typename E> inline E GetElementOr(const std::vector<E> &v, int i, E def
 // shuffle to the end of the vector.
 template<typename E> void ShuffleRange(internal::Random *random, int begin, int end, std::vector<E> *v) {
 	const int size = static_cast<int>(v->size());
-	GTEST_CHECK_(0 <= begin && begin <= size) << "Invalid shuffle range start " << begin << ": must be in range [0, " << size << "].";
-	GTEST_CHECK_(begin <= end && end <= size) << "Invalid shuffle range finish " << end << ": must be in range [" << begin << ", " << size << "].";
+	GTEST_CHECK_(0 <= begin && begin <= size)
+		<< "Invalid shuffle range start " << begin << ": must be in range [0, " << size << "].";
+	GTEST_CHECK_(begin <= end && end <= size)
+		<< "Invalid shuffle range finish " << end << ": must be in range [" << begin << ", " << size << "].";
 
 	// Fisher-Yates shuffle, from
 	// http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
@@ -635,11 +639,13 @@ public:
 	//                   this is not a typed or a type-parameterized test.
 	//   set_up_tc:      pointer to the function that sets up the test suite
 	//   tear_down_tc:   pointer to the function that tears down the test suite
-	TestSuite *GetTestSuite(const char *test_suite_name, const char *type_param, internal::SetUpTestSuiteFunc set_up_tc, internal::TearDownTestSuiteFunc tear_down_tc);
+	TestSuite *GetTestSuite(const char *test_suite_name, const char *type_param, internal::SetUpTestSuiteFunc set_up_tc,
+							internal::TearDownTestSuiteFunc tear_down_tc);
 
 //  Legacy API is deprecated but still available
 #ifndef GTEST_REMOVE_LEGACY_TEST_CASEAPI_
-	TestCase *GetTestCase(const char *test_case_name, const char *type_param, internal::SetUpTestSuiteFunc set_up_tc, internal::TearDownTestSuiteFunc tear_down_tc) {
+	TestCase *GetTestCase(const char *test_case_name, const char *type_param, internal::SetUpTestSuiteFunc set_up_tc,
+						  internal::TearDownTestSuiteFunc tear_down_tc) {
 		return GetTestSuite(test_case_name, type_param, set_up_tc, tear_down_tc);
 	}
 #endif	//  GTEST_REMOVE_LEGACY_TEST_CASEAPI_
@@ -651,7 +657,8 @@ public:
 	//   set_up_tc:    pointer to the function that sets up the test suite
 	//   tear_down_tc: pointer to the function that tears down the test suite
 	//   test_info:    the TestInfo object
-	void AddTestInfo(internal::SetUpTestSuiteFunc set_up_tc, internal::TearDownTestSuiteFunc tear_down_tc, TestInfo *test_info) {
+	void AddTestInfo(internal::SetUpTestSuiteFunc set_up_tc, internal::TearDownTestSuiteFunc tear_down_tc,
+					 TestInfo *test_info) {
 		// In order to support thread-safe death tests, we need to
 		// remember the original working directory when the test program
 		// was first invoked.  We cannot do this in RUN_ALL_TESTS(), as
@@ -1126,7 +1133,8 @@ public:
 	}
 
 	void OnTestIterationEnd(const UnitTest &unit_test, int /* iteration */) override {
-		SendLn("event=TestIterationEnd&passed=" + FormatBool(unit_test.Passed()) + "&elapsed_time=" + StreamableToString(unit_test.elapsed_time()) + "ms");
+		SendLn("event=TestIterationEnd&passed=" + FormatBool(unit_test.Passed()) +
+			   "&elapsed_time=" + StreamableToString(unit_test.elapsed_time()) + "ms");
 	}
 
 	// Note that "event=TestCaseStart" is a wire format and has to remain
@@ -1138,7 +1146,8 @@ public:
 	// Note that "event=TestCaseEnd" is a wire format and has to remain
 	// "case" for compatibilty
 	void OnTestCaseEnd(const TestCase &test_case) override {
-		SendLn("event=TestCaseEnd&passed=" + FormatBool(test_case.Passed()) + "&elapsed_time=" + StreamableToString(test_case.elapsed_time()) + "ms");
+		SendLn("event=TestCaseEnd&passed=" + FormatBool(test_case.Passed()) +
+			   "&elapsed_time=" + StreamableToString(test_case.elapsed_time()) + "ms");
 	}
 
 	void OnTestStart(const TestInfo &test_info) override {
@@ -1146,14 +1155,16 @@ public:
 	}
 
 	void OnTestEnd(const TestInfo &test_info) override {
-		SendLn("event=TestEnd&passed=" + FormatBool((test_info.result())->Passed()) + "&elapsed_time=" + StreamableToString((test_info.result())->elapsed_time()) + "ms");
+		SendLn("event=TestEnd&passed=" + FormatBool((test_info.result())->Passed()) +
+			   "&elapsed_time=" + StreamableToString((test_info.result())->elapsed_time()) + "ms");
 	}
 
 	void OnTestPartResult(const TestPartResult &test_part_result) override {
 		const char *file_name = test_part_result.file_name();
 		if (file_name == nullptr)
 			file_name = "";
-		SendLn("event=TestPartResult&file=" + UrlEncode(file_name) + "&line=" + StreamableToString(test_part_result.line_number()) + "&message=" + UrlEncode(test_part_result.message()));
+		SendLn("event=TestPartResult&file=" + UrlEncode(file_name) + "&line=" +
+			   StreamableToString(test_part_result.line_number()) + "&message=" + UrlEncode(test_part_result.message()));
 	}
 
 private:

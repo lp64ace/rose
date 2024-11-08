@@ -119,7 +119,8 @@ public:
 	// conversion to be implicit.
 	// Disable the conversion if T already has a magical conversion operator.
 	// Otherwise we get ambiguity.
-	template<typename T, typename std::enable_if<!std::is_convertible<T, Sink>::value, int>::type = 0> IgnoredValue(const T & /* ignored */) {
+	template<typename T, typename std::enable_if<!std::is_convertible<T, Sink>::value, int>::type = 0>
+	IgnoredValue(const T & /* ignored */) {
 	}  // NOLINT(runtime/explicit)
 };
 
@@ -155,10 +156,12 @@ enum EditType { kMatch, kAdd, kRemove, kReplace };
 GTEST_API_ std::vector<EditType> CalculateOptimalEdits(const std::vector<size_t> &left, const std::vector<size_t> &right);
 
 // Same as above, but the input is represented as strings.
-GTEST_API_ std::vector<EditType> CalculateOptimalEdits(const std::vector<std::string> &left, const std::vector<std::string> &right);
+GTEST_API_ std::vector<EditType> CalculateOptimalEdits(const std::vector<std::string> &left,
+													   const std::vector<std::string> &right);
 
 // Create a diff of the input strings in Unified diff format.
-GTEST_API_ std::string CreateUnifiedDiff(const std::vector<std::string> &left, const std::vector<std::string> &right, size_t context = 2);
+GTEST_API_ std::string CreateUnifiedDiff(const std::vector<std::string> &left, const std::vector<std::string> &right,
+										 size_t context = 2);
 
 }  // namespace edit_distance
 
@@ -183,10 +186,12 @@ GTEST_API_ std::string DiffStrings(const std::string &left, const std::string &r
 // The ignoring_case parameter is true if and only if the assertion is a
 // *_STRCASEEQ*.  When it's true, the string " (ignoring case)" will
 // be inserted into the message.
-GTEST_API_ AssertionResult EqFailure(const char *expected_expression, const char *actual_expression, const std::string &expected_value, const std::string &actual_value, bool ignoring_case);
+GTEST_API_ AssertionResult EqFailure(const char *expected_expression, const char *actual_expression,
+									 const std::string &expected_value, const std::string &actual_value, bool ignoring_case);
 
 // Constructs a failure message for Boolean assertions such as EXPECT_TRUE.
-GTEST_API_ std::string GetBoolAssertionFailureMessage(const AssertionResult &assertion_result, const char *expression_text, const char *actual_predicate_value, const char *expected_predicate_value);
+GTEST_API_ std::string GetBoolAssertionFailureMessage(const AssertionResult &assertion_result, const char *expression_text,
+													  const char *actual_predicate_value, const char *expected_predicate_value);
 
 // This template class represents an IEEE floating-point number
 // (either single-precision or double-precision, depending on the
@@ -537,7 +542,10 @@ struct SuiteApiResolver : T {
 //   factory:          pointer to the factory that creates a test object.
 //                     The newly created TestInfo instance will assume
 //                     ownership of the factory object.
-GTEST_API_ TestInfo *MakeAndRegisterTestInfo(const char *test_suite_name, const char *name, const char *type_param, const char *value_param, CodeLocation code_location, TypeId fixture_class_id, SetUpTestSuiteFunc set_up_tc, TearDownTestSuiteFunc tear_down_tc, TestFactoryBase *factory);
+GTEST_API_ TestInfo *MakeAndRegisterTestInfo(const char *test_suite_name, const char *name, const char *type_param,
+											 const char *value_param, CodeLocation code_location, TypeId fixture_class_id,
+											 SetUpTestSuiteFunc set_up_tc, TearDownTestSuiteFunc tear_down_tc,
+											 TestFactoryBase *factory);
 
 // If *pstr starts with the given prefix, modifies *pstr to be right
 // past the prefix and returns true; otherwise leaves *pstr unchanged
@@ -562,9 +570,7 @@ public:
 			fprintf(stderr,
 					"%s Test %s must be defined before "
 					"REGISTER_TYPED_TEST_SUITE_P(%s, ...).\n",
-					FormatFileLocation(file, line).c_str(),
-					test_name,
-					case_name);
+					FormatFileLocation(file, line).c_str(), test_name, case_name);
 			fflush(stderr);
 			posix::Abort();
 		}
@@ -663,32 +669,35 @@ public:
 	// specified in INSTANTIATE_TYPED_TEST_SUITE_P(Prefix, TestSuite,
 	// Types).  Valid values for 'index' are [0, N - 1] where N is the
 	// length of Types.
-	static bool Register(const char *prefix, const CodeLocation &code_location, const char *case_name, const char *test_names, int index, const std::vector<std::string> &type_names = GenerateNames<DefaultNameGenerator, Types>()) {
+	static bool Register(const char *prefix, const CodeLocation &code_location, const char *case_name, const char *test_names,
+						 int index, const std::vector<std::string> &type_names = GenerateNames<DefaultNameGenerator, Types>()) {
 		typedef typename Types::Head Type;
 		typedef Fixture<Type> FixtureClass;
 		typedef typename GTEST_BIND_(TestSel, Type) TestClass;
 
 		// First, registers the first type-parameterized test in the type
 		// list.
-		MakeAndRegisterTestInfo((std::string(prefix) + (prefix[0] == '\0' ? "" : "/") + case_name + "/" + type_names[static_cast<size_t>(index)]).c_str(),
-								StripTrailingSpaces(GetPrefixUntilComma(test_names)).c_str(),
-								GetTypeName<Type>().c_str(),
-								nullptr,  // No value parameter.
-								code_location,
-								GetTypeId<FixtureClass>(),
-								SuiteApiResolver<TestClass>::GetSetUpCaseOrSuite(code_location.file.c_str(), code_location.line),
-								SuiteApiResolver<TestClass>::GetTearDownCaseOrSuite(code_location.file.c_str(), code_location.line),
-								new TestFactoryImpl<TestClass>);
+		MakeAndRegisterTestInfo(
+			(std::string(prefix) + (prefix[0] == '\0' ? "" : "/") + case_name + "/" + type_names[static_cast<size_t>(index)])
+				.c_str(),
+			StripTrailingSpaces(GetPrefixUntilComma(test_names)).c_str(), GetTypeName<Type>().c_str(),
+			nullptr,  // No value parameter.
+			code_location, GetTypeId<FixtureClass>(),
+			SuiteApiResolver<TestClass>::GetSetUpCaseOrSuite(code_location.file.c_str(), code_location.line),
+			SuiteApiResolver<TestClass>::GetTearDownCaseOrSuite(code_location.file.c_str(), code_location.line),
+			new TestFactoryImpl<TestClass>);
 
 		// Next, recurses (at compile time) with the tail of the type list.
-		return TypeParameterizedTest<Fixture, TestSel, typename Types::Tail>::Register(prefix, code_location, case_name, test_names, index + 1, type_names);
+		return TypeParameterizedTest<Fixture, TestSel, typename Types::Tail>::Register(prefix, code_location, case_name,
+																					   test_names, index + 1, type_names);
 	}
 };
 
 // The base case for the compile time recursion.
 template<GTEST_TEMPLATE_ Fixture, class TestSel> class TypeParameterizedTest<Fixture, TestSel, Types0> {
 public:
-	static bool Register(const char * /*prefix*/, const CodeLocation &, const char * /*case_name*/, const char * /*test_names*/, int /*index*/, const std::vector<std::string> & = std::vector<std::string>() /*type_names*/) {
+	static bool Register(const char * /*prefix*/, const CodeLocation &, const char * /*case_name*/, const char * /*test_names*/,
+						 int /*index*/, const std::vector<std::string> & = std::vector<std::string>() /*type_names*/) {
 		return true;
 	}
 };
@@ -699,10 +708,13 @@ public:
 // something such that we can call this function in a namespace scope.
 template<GTEST_TEMPLATE_ Fixture, typename Tests, typename Types> class TypeParameterizedTestSuite {
 public:
-	static bool Register(const char *prefix, CodeLocation code_location, const TypedTestSuitePState *state, const char *case_name, const char *test_names, const std::vector<std::string> &type_names = GenerateNames<DefaultNameGenerator, Types>()) {
+	static bool Register(const char *prefix, CodeLocation code_location, const TypedTestSuitePState *state,
+						 const char *case_name, const char *test_names,
+						 const std::vector<std::string> &type_names = GenerateNames<DefaultNameGenerator, Types>()) {
 		std::string test_name = StripTrailingSpaces(GetPrefixUntilComma(test_names));
 		if (!state->TestExists(test_name)) {
-			fprintf(stderr, "Failed to get code location for test %s.%s at %s.", case_name, test_name.c_str(), FormatFileLocation(code_location.file.c_str(), code_location.line).c_str());
+			fprintf(stderr, "Failed to get code location for test %s.%s at %s.", case_name, test_name.c_str(),
+					FormatFileLocation(code_location.file.c_str(), code_location.line).c_str());
 			fflush(stderr);
 			posix::Abort();
 		}
@@ -714,14 +726,17 @@ public:
 		TypeParameterizedTest<Fixture, Head, Types>::Register(prefix, test_location, case_name, test_names, 0, type_names);
 
 		// Next, recurses (at compile time) with the tail of the test list.
-		return TypeParameterizedTestSuite<Fixture, typename Tests::Tail, Types>::Register(prefix, code_location, state, case_name, SkipComma(test_names), type_names);
+		return TypeParameterizedTestSuite<Fixture, typename Tests::Tail, Types>::Register(
+			prefix, code_location, state, case_name, SkipComma(test_names), type_names);
 	}
 };
 
 // The base case for the compile time recursion.
 template<GTEST_TEMPLATE_ Fixture, typename Types> class TypeParameterizedTestSuite<Fixture, Templates0, Types> {
 public:
-	static bool Register(const char * /*prefix*/, const CodeLocation &, const TypedTestSuitePState * /*state*/, const char * /*case_name*/, const char * /*test_names*/, const std::vector<std::string> & = std::vector<std::string>() /*type_names*/) {
+	static bool Register(const char * /*prefix*/, const CodeLocation &, const TypedTestSuitePState * /*state*/,
+						 const char * /*case_name*/, const char * /*test_names*/,
+						 const std::vector<std::string> & = std::vector<std::string>() /*type_names*/) {
 		return true;
 	}
 };
@@ -793,7 +808,8 @@ private:
 
 // IsAProtocolMessage<T>::value is a compile-time bool constant that's
 // true if and only if T is type proto2::Message or a subclass of it.
-template<typename T> struct IsAProtocolMessage : public bool_constant<std::is_convertible<const T *, const ::proto2::Message *>::value> {};
+template<typename T>
+struct IsAProtocolMessage : public bool_constant<std::is_convertible<const T *, const ::proto2::Message *>::value> {};
 
 // When the compiler sees expression IsContainerTest<C>(0), if C is an
 // STL-style container class, the first overload of IsContainerTest
@@ -820,7 +836,10 @@ template<typename T> struct IsAProtocolMessage : public bool_constant<std::is_co
 // IsContainerTest(typename C::const_iterator*) and
 // IsContainerTest(...) doesn't work with Visual Age C++ and Sun C++.
 typedef int IsContainer;
-template<class C, class Iterator = decltype(::std::declval<const C &>().begin()), class = decltype(::std::declval<const C &>().end()), class = decltype(++::std::declval<Iterator &>()), class = decltype(*::std::declval<Iterator>()), class = typename C::const_iterator> IsContainer IsContainerTest(int /* dummy */) {
+template<class C, class Iterator = decltype(::std::declval<const C &>().begin()),
+		 class = decltype(::std::declval<const C &>().end()), class = decltype(++::std::declval<Iterator &>()),
+		 class = decltype(*::std::declval<Iterator>()), class = typename C::const_iterator>
+IsContainer IsContainerTest(int /* dummy */) {
 	return 0;
 }
 
@@ -1029,7 +1048,8 @@ template<size_t... I, size_t sizeofT> struct DoubleSequence<false, IndexSequence
 
 // Backport of std::make_index_sequence.
 // It uses O(ln(N)) instantiation depth.
-template<size_t N> struct MakeIndexSequence : DoubleSequence<N % 2 == 1, typename MakeIndexSequence<N / 2>::type, N / 2>::type {};
+template<size_t N>
+struct MakeIndexSequence : DoubleSequence<N % 2 == 1, typename MakeIndexSequence<N / 2>::type, N / 2>::type {};
 
 template<> struct MakeIndexSequence<0> : IndexSequence<> {};
 
@@ -1046,7 +1066,8 @@ template<typename T, size_t I> struct ElemFromListImpl<T, I, I> {
 // It uses O(1) instantiation depth.
 template<size_t N, typename I, typename... T> struct ElemFromList;
 
-template<size_t N, size_t... I, typename... T> struct ElemFromList<N, IndexSequence<I...>, T...> : ElemFromListImpl<T, N, I>... {};
+template<size_t N, size_t... I, typename... T>
+struct ElemFromList<N, IndexSequence<I...>, T...> : ElemFromListImpl<T, N, I>... {};
 
 template<typename... T> class FlatTuple;
 
@@ -1062,7 +1083,8 @@ template<typename... T, size_t I> struct FlatTupleElemBase<FlatTuple<T...>, I> {
 
 template<typename Derived, typename Idx> struct FlatTupleBase;
 
-template<size_t... Idx, typename... T> struct FlatTupleBase<FlatTuple<T...>, IndexSequence<Idx...>> : FlatTupleElemBase<FlatTuple<T...>, Idx>... {
+template<size_t... Idx, typename... T>
+struct FlatTupleBase<FlatTuple<T...>, IndexSequence<Idx...>> : FlatTupleElemBase<FlatTuple<T...>, Idx>... {
 	using Indices = IndexSequence<Idx...>;
 	FlatTupleBase() = default;
 	explicit FlatTupleBase(T... t) : FlatTupleElemBase<FlatTuple<T...>, Idx>(std::move(t))... {
@@ -1078,7 +1100,8 @@ template<size_t... Idx, typename... T> struct FlatTupleBase<FlatTuple<T...>, Ind
 // regardless of T...
 // MakeIndexSequence, on the other hand, it is recursive but with an
 // instantiation depth of O(ln(N)).
-template<typename... T> class FlatTuple : private FlatTupleBase<FlatTuple<T...>, typename MakeIndexSequence<sizeof...(T)>::type> {
+template<typename... T>
+class FlatTuple : private FlatTupleBase<FlatTuple<T...>, typename MakeIndexSequence<sizeof...(T)>::type> {
 	using Indices = typename FlatTuple::FlatTupleBase::Indices;
 
 public:
@@ -1135,7 +1158,8 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() {
 }  // namespace internal
 }  // namespace testing
 
-#define GTEST_MESSAGE_AT_(file, line, message, result_type) ::testing::internal::AssertHelper(result_type, file, line, message) = ::testing::Message()
+#define GTEST_MESSAGE_AT_(file, line, message, result_type) \
+	::testing::internal::AssertHelper(result_type, file, line, message) = ::testing::Message()
 
 #define GTEST_MESSAGE_(message, result_type) GTEST_MESSAGE_AT_(__FILE__, __LINE__, message, result_type)
 
@@ -1155,26 +1179,28 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() {
 		statement;                                                \
 	}
 
-#define GTEST_TEST_THROW_(statement, expected_exception, fail)                                                                                        \
-	GTEST_AMBIGUOUS_ELSE_BLOCKER_                                                                                                                     \
-	if (::testing::internal::ConstCharPtr gtest_msg = "") {                                                                                           \
-		bool gtest_caught_expected = false;                                                                                                           \
-		try {                                                                                                                                         \
-			GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);                                                                                \
-		}                                                                                                                                             \
-		catch (expected_exception const &) {                                                                                                          \
-			gtest_caught_expected = true;                                                                                                             \
-		}                                                                                                                                             \
-		catch (...) {                                                                                                                                 \
-			gtest_msg.value = "Expected: " #statement " throws an exception of type " #expected_exception ".\n  Actual: it throws a different type."; \
-			goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);                                                                               \
-		}                                                                                                                                             \
-		if (!gtest_caught_expected) {                                                                                                                 \
-			gtest_msg.value = "Expected: " #statement " throws an exception of type " #expected_exception ".\n  Actual: it throws nothing.";          \
-			goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);                                                                               \
-		}                                                                                                                                             \
-	}                                                                                                                                                 \
-	else                                                                                                                                              \
+#define GTEST_TEST_THROW_(statement, expected_exception, fail)                                            \
+	GTEST_AMBIGUOUS_ELSE_BLOCKER_                                                                         \
+	if (::testing::internal::ConstCharPtr gtest_msg = "") {                                               \
+		bool gtest_caught_expected = false;                                                               \
+		try {                                                                                             \
+			GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);                                    \
+		}                                                                                                 \
+		catch (expected_exception const &) {                                                              \
+			gtest_caught_expected = true;                                                                 \
+		}                                                                                                 \
+		catch (...) {                                                                                     \
+			gtest_msg.value = "Expected: " #statement " throws an exception of type " #expected_exception \
+							  ".\n  Actual: it throws a different type.";                                 \
+			goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);                                   \
+		}                                                                                                 \
+		if (!gtest_caught_expected) {                                                                     \
+			gtest_msg.value = "Expected: " #statement " throws an exception of type " #expected_exception \
+							  ".\n  Actual: it throws nothing.";                                          \
+			goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);                                   \
+		}                                                                                                 \
+	}                                                                                                     \
+	else                                                                                                  \
 		GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__) : fail(gtest_msg.value)
 
 #define GTEST_TEST_NO_THROW_(statement, fail)                             \
@@ -1243,21 +1269,26 @@ constexpr bool InstantiateTypedTestCase_P_IsDeprecated() {
 #define GTEST_TEST_CLASS_NAME_(test_suite_name, test_name) test_suite_name##_##test_name##_Test
 
 // Helper macro for defining tests.
-#define GTEST_TEST_(test_suite_name, test_name, parent_class, parent_id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
-	static_assert(sizeof(GTEST_STRINGIFY_(test_suite_name)) > 1, "test_suite_name must not be empty");                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
-	static_assert(sizeof(GTEST_STRINGIFY_(test_name)) > 1, "test_name must not be empty");                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
-	class GTEST_TEST_CLASS_NAME_(test_suite_name, test_name) : public parent_class {                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
-	public:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
-		GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
-		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
-	private:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
-		virtual void TestBody();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
-		static ::testing::TestInfo *const test_info_ GTEST_ATTRIBUTE_UNUSED_;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
-		GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name, test_name));                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
-	};                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
-	::testing::TestInfo *const GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::test_info_ = ::testing::internal::MakeAndRegisterTestInfo(#test_suite_name, #test_name, nullptr, nullptr, ::testing::internal::CodeLocation(__FILE__, __LINE__), (parent_id), ::testing::internal::SuiteApiResolver<parent_class>::GetSetUpCaseOrSuite(__FILE__, __LINE__), ::testing::internal::SuiteApiResolver<parent_class>::GetTearDownCaseOrSuite(__FILE__, __LINE__), new ::testing::internal::TestFactoryImpl<GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)>); \
+#define GTEST_TEST_(test_suite_name, test_name, parent_class, parent_id)                                               \
+	static_assert(sizeof(GTEST_STRINGIFY_(test_suite_name)) > 1, "test_suite_name must not be empty");                 \
+	static_assert(sizeof(GTEST_STRINGIFY_(test_name)) > 1, "test_name must not be empty");                             \
+	class GTEST_TEST_CLASS_NAME_(test_suite_name, test_name) : public parent_class {                                   \
+	public:                                                                                                            \
+		GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() {                                                         \
+		}                                                                                                              \
+                                                                                                                       \
+	private:                                                                                                           \
+		virtual void TestBody();                                                                                       \
+		static ::testing::TestInfo *const test_info_ GTEST_ATTRIBUTE_UNUSED_;                                          \
+		GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name, test_name));                           \
+	};                                                                                                                 \
+                                                                                                                       \
+	::testing::TestInfo *const GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::test_info_ =                        \
+		::testing::internal::MakeAndRegisterTestInfo(                                                                  \
+			#test_suite_name, #test_name, nullptr, nullptr, ::testing::internal::CodeLocation(__FILE__, __LINE__),     \
+			(parent_id), ::testing::internal::SuiteApiResolver<parent_class>::GetSetUpCaseOrSuite(__FILE__, __LINE__), \
+			::testing::internal::SuiteApiResolver<parent_class>::GetTearDownCaseOrSuite(__FILE__, __LINE__),           \
+			new ::testing::internal::TestFactoryImpl<GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)>);             \
 	void GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::TestBody()
 
 #endif	// GTEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_

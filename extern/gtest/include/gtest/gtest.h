@@ -287,10 +287,9 @@ public:
 	// the argument is implicitly convertible to AssertionResult. In that case
 	// we want AssertionResult's copy constructor to be used.
 	template<typename T>
-	explicit AssertionResult(const T &success,
-							 typename std::enable_if<!std::is_convertible<T, AssertionResult>::value>::type *
-							 /*enabler*/
-							 = nullptr)
+	explicit AssertionResult(const T &success, typename std::enable_if<!std::is_convertible<T, AssertionResult>::value>::type *
+											   /*enabler*/
+											   = nullptr)
 		: success_(success) {
 	}
 
@@ -807,17 +806,19 @@ private:
 	friend class TestSuite;
 	friend class internal::UnitTestImpl;
 	friend class internal::StreamingListenerTest;
-	friend TestInfo *internal::MakeAndRegisterTestInfo(const char *test_suite_name, const char *name, const char *type_param, const char *value_param, internal::CodeLocation code_location, internal::TypeId fixture_class_id, internal::SetUpTestSuiteFunc set_up_tc, internal::TearDownTestSuiteFunc tear_down_tc, internal::TestFactoryBase *factory);
+	friend TestInfo *internal::MakeAndRegisterTestInfo(const char *test_suite_name, const char *name, const char *type_param,
+													   const char *value_param, internal::CodeLocation code_location,
+													   internal::TypeId fixture_class_id,
+													   internal::SetUpTestSuiteFunc set_up_tc,
+													   internal::TearDownTestSuiteFunc tear_down_tc,
+													   internal::TestFactoryBase *factory);
 
 	// Constructs a TestInfo object. The newly constructed instance assumes
 	// ownership of the factory object.
-	TestInfo(const std::string &test_suite_name,
-			 const std::string &name,
+	TestInfo(const std::string &test_suite_name, const std::string &name,
 			 const char *a_type_param,	 // NULL if not a type-parameterized test
 			 const char *a_value_param,	 // NULL if not a value-parameterized test
-			 internal::CodeLocation a_code_location,
-			 internal::TypeId fixture_class_id,
-			 internal::TestFactoryBase *factory);
+			 internal::CodeLocation a_code_location, internal::TypeId fixture_class_id, internal::TestFactoryBase *factory);
 
 	// Increments the number of death tests encountered in this test so
 	// far.
@@ -876,7 +877,8 @@ public:
 	//                 this is not a type-parameterized test.
 	//   set_up_tc:    pointer to the function that sets up the test suite
 	//   tear_down_tc: pointer to the function that tears down the test suite
-	TestSuite(const char *name, const char *a_type_param, internal::SetUpTestSuiteFunc set_up_tc, internal::TearDownTestSuiteFunc tear_down_tc);
+	TestSuite(const char *name, const char *a_type_param, internal::SetUpTestSuiteFunc set_up_tc,
+			  internal::TearDownTestSuiteFunc tear_down_tc);
 
 	// Destructor of TestSuite.
 	virtual ~TestSuite();
@@ -1461,7 +1463,8 @@ private:
 	// Google Test assertion macros (e.g. ASSERT_TRUE, EXPECT_EQ, etc)
 	// eventually call this to report their results.  The user code
 	// should use the assertion macros instead of calling this directly.
-	void AddTestPartResult(TestPartResult::Type result_type, const char *file_name, int line_number, const std::string &message, const std::string &os_stack_trace) GTEST_LOCK_EXCLUDED_(mutex_);
+	void AddTestPartResult(TestPartResult::Type result_type, const char *file_name, int line_number, const std::string &message,
+						   const std::string &os_stack_trace) GTEST_LOCK_EXCLUDED_(mutex_);
 
 	// Adds a TestProperty to the current TestResult object when invoked from
 	// inside a test, to current TestSuite's ad_hoc_test_result_ when invoked
@@ -1566,8 +1569,10 @@ namespace internal {
 // Separate the error generating code from the code path to reduce the stack
 // frame size of CmpHelperEQ. This helps reduce the overhead of some sanitizers
 // when calling EXPECT_* in a tight loop.
-template<typename T1, typename T2> AssertionResult CmpHelperEQFailure(const char *lhs_expression, const char *rhs_expression, const T1 &lhs, const T2 &rhs) {
-	return EqFailure(lhs_expression, rhs_expression, FormatForComparisonFailureMessage(lhs, rhs), FormatForComparisonFailureMessage(rhs, lhs), false);
+template<typename T1, typename T2>
+AssertionResult CmpHelperEQFailure(const char *lhs_expression, const char *rhs_expression, const T1 &lhs, const T2 &rhs) {
+	return EqFailure(lhs_expression, rhs_expression, FormatForComparisonFailureMessage(lhs, rhs),
+					 FormatForComparisonFailureMessage(rhs, lhs), false);
 }
 
 // This block of code defines operator==/!=
@@ -1582,7 +1587,8 @@ inline bool operator!=(faketype, faketype) {
 }
 
 // The helper function for {ASSERT|EXPECT}_EQ.
-template<typename T1, typename T2> AssertionResult CmpHelperEQ(const char *lhs_expression, const char *rhs_expression, const T1 &lhs, const T2 &rhs) {
+template<typename T1, typename T2>
+AssertionResult CmpHelperEQ(const char *lhs_expression, const char *rhs_expression, const T1 &lhs, const T2 &rhs) {
 	if (lhs == rhs) {
 		return AssertionSuccess();
 	}
@@ -1598,8 +1604,7 @@ GTEST_API_ AssertionResult CmpHelperEQ(const char *lhs_expression, const char *r
 class EqHelper {
 public:
 	// This templatized version is for the general case.
-	template<typename T1,
-			 typename T2,
+	template<typename T1, typename T2,
 			 // Disable this overload for cases where one argument is a pointer
 			 // and the other is the null pointer constant.
 			 typename std::enable_if<!std::is_integral<T1>::value || !std::is_pointer<T2>::value>::type * = nullptr>
@@ -1618,11 +1623,9 @@ public:
 	}
 
 	template<typename T>
-	static AssertionResult Compare(const char *lhs_expression,
-								   const char *rhs_expression,
+	static AssertionResult Compare(const char *lhs_expression, const char *rhs_expression,
 								   // Handle cases where '0' is used as a null pointer literal.
-								   std::nullptr_t /* lhs */,
-								   T *rhs) {
+								   std::nullptr_t /* lhs */, T *rhs) {
 		// We already know that 'lhs' is a null pointer.
 		return CmpHelperEQ(lhs_expression, rhs_expression, static_cast<T *>(nullptr), rhs);
 	}
@@ -1631,8 +1634,11 @@ public:
 // Separate the error generating code from the code path to reduce the stack
 // frame size of CmpHelperOP. This helps reduce the overhead of some sanitizers
 // when calling EXPECT_OP in a tight loop.
-template<typename T1, typename T2> AssertionResult CmpHelperOpFailure(const char *expr1, const char *expr2, const T1 &val1, const T2 &val2, const char *op) {
-	return AssertionFailure() << "Expected: (" << expr1 << ") " << op << " (" << expr2 << "), actual: " << FormatForComparisonFailureMessage(val1, val2) << " vs " << FormatForComparisonFailureMessage(val2, val1);
+template<typename T1, typename T2>
+AssertionResult CmpHelperOpFailure(const char *expr1, const char *expr2, const T1 &val1, const T2 &val2, const char *op) {
+	return AssertionFailure() << "Expected: (" << expr1 << ") " << op << " (" << expr2
+							  << "), actual: " << FormatForComparisonFailureMessage(val1, val2) << " vs "
+							  << FormatForComparisonFailureMessage(val2, val1);
 }
 
 // A macro for implementing the helper functions needed to implement
@@ -1646,15 +1652,16 @@ template<typename T1, typename T2> AssertionResult CmpHelperOpFailure(const char
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
-#define GTEST_IMPL_CMP_HELPER_(op_name, op)                                                                                                       \
-	template<typename T1, typename T2> AssertionResult CmpHelper##op_name(const char *expr1, const char *expr2, const T1 &val1, const T2 &val2) { \
-		if (val1 op val2) {                                                                                                                       \
-			return AssertionSuccess();                                                                                                            \
-		}                                                                                                                                         \
-		else {                                                                                                                                    \
-			return CmpHelperOpFailure(expr1, expr2, val1, val2, #op);                                                                             \
-		}                                                                                                                                         \
-	}                                                                                                                                             \
+#define GTEST_IMPL_CMP_HELPER_(op_name, op)                                                                    \
+	template<typename T1, typename T2>                                                                         \
+	AssertionResult CmpHelper##op_name(const char *expr1, const char *expr2, const T1 &val1, const T2 &val2) { \
+		if (val1 op val2) {                                                                                    \
+			return AssertionSuccess();                                                                         \
+		}                                                                                                      \
+		else {                                                                                                 \
+			return CmpHelperOpFailure(expr1, expr2, val1, val2, #op);                                          \
+		}                                                                                                      \
+	}                                                                                                          \
 	GTEST_API_ AssertionResult CmpHelper##op_name(const char *expr1, const char *expr2, BiggestInt val1, BiggestInt val2)
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
@@ -1680,7 +1687,8 @@ GTEST_API_ AssertionResult CmpHelperSTREQ(const char *s1_expression, const char 
 // The helper function for {ASSERT|EXPECT}_STRCASEEQ.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTRCASEEQ(const char *s1_expression, const char *s2_expression, const char *s1, const char *s2);
+GTEST_API_ AssertionResult CmpHelperSTRCASEEQ(const char *s1_expression, const char *s2_expression, const char *s1,
+											  const char *s2);
 
 // The helper function for {ASSERT|EXPECT}_STRNE.
 //
@@ -1690,17 +1698,20 @@ GTEST_API_ AssertionResult CmpHelperSTRNE(const char *s1_expression, const char 
 // The helper function for {ASSERT|EXPECT}_STRCASENE.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTRCASENE(const char *s1_expression, const char *s2_expression, const char *s1, const char *s2);
+GTEST_API_ AssertionResult CmpHelperSTRCASENE(const char *s1_expression, const char *s2_expression, const char *s1,
+											  const char *s2);
 
 // Helper function for *_STREQ on wide strings.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTREQ(const char *s1_expression, const char *s2_expression, const wchar_t *s1, const wchar_t *s2);
+GTEST_API_ AssertionResult CmpHelperSTREQ(const char *s1_expression, const char *s2_expression, const wchar_t *s1,
+										  const wchar_t *s2);
 
 // Helper function for *_STRNE on wide strings.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTRNE(const char *s1_expression, const char *s2_expression, const wchar_t *s1, const wchar_t *s2);
+GTEST_API_ AssertionResult CmpHelperSTRNE(const char *s1_expression, const char *s2_expression, const wchar_t *s1,
+										  const wchar_t *s2);
 
 }  // namespace internal
 
@@ -1712,16 +1723,24 @@ GTEST_API_ AssertionResult CmpHelperSTRNE(const char *s1_expression, const char 
 //
 // The {needle,haystack}_expr arguments are the stringified
 // expressions that generated the two real arguments.
-GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const char *needle, const char *haystack);
-GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const wchar_t *needle, const wchar_t *haystack);
-GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const char *needle, const char *haystack);
-GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const wchar_t *needle, const wchar_t *haystack);
-GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const ::std::string &needle, const ::std::string &haystack);
-GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const ::std::string &needle, const ::std::string &haystack);
+GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const char *needle,
+									   const char *haystack);
+GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const wchar_t *needle,
+									   const wchar_t *haystack);
+GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const char *needle,
+										  const char *haystack);
+GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const wchar_t *needle,
+										  const wchar_t *haystack);
+GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const ::std::string &needle,
+									   const ::std::string &haystack);
+GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const ::std::string &needle,
+										  const ::std::string &haystack);
 
 #if GTEST_HAS_STD_WSTRING
-GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const ::std::wstring &needle, const ::std::wstring &haystack);
-GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const ::std::wstring &needle, const ::std::wstring &haystack);
+GTEST_API_ AssertionResult IsSubstring(const char *needle_expr, const char *haystack_expr, const ::std::wstring &needle,
+									   const ::std::wstring &haystack);
+GTEST_API_ AssertionResult IsNotSubstring(const char *needle_expr, const char *haystack_expr, const ::std::wstring &needle,
+										  const ::std::wstring &haystack);
 #endif	// GTEST_HAS_STD_WSTRING
 
 namespace internal {
@@ -1733,7 +1752,9 @@ namespace internal {
 //   RawType: the raw floating-point type (either float or double)
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-template<typename RawType> AssertionResult CmpHelperFloatingPointEQ(const char *lhs_expression, const char *rhs_expression, RawType lhs_value, RawType rhs_value) {
+template<typename RawType>
+AssertionResult CmpHelperFloatingPointEQ(const char *lhs_expression, const char *rhs_expression, RawType lhs_value,
+										 RawType rhs_value) {
 	const FloatingPoint<RawType> lhs(lhs_value), rhs(rhs_value);
 
 	if (lhs.AlmostEquals(rhs)) {
@@ -1752,7 +1773,8 @@ template<typename RawType> AssertionResult CmpHelperFloatingPointEQ(const char *
 // Helper function for implementing ASSERT_NEAR.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult DoubleNearPredFormat(const char *expr1, const char *expr2, const char *abs_error_expr, double val1, double val2, double abs_error);
+GTEST_API_ AssertionResult DoubleNearPredFormat(const char *expr1, const char *expr2, const char *abs_error_expr, double val1,
+												double val2, double abs_error);
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN USER CODE.
 // A class that enables one to stream messages to assertion macros
@@ -1772,7 +1794,8 @@ private:
 	// re-using stack space even for temporary variables, so every EXPECT_EQ
 	// reserves stack space for another AssertHelper.
 	struct AssertHelperData {
-		AssertHelperData(TestPartResult::Type t, const char *srcfile, int line_num, const char *msg) : type(t), file(srcfile), line(line_num), message(msg) {
+		AssertHelperData(TestPartResult::Type t, const char *srcfile, int line_num, const char *msg)
+			: type(t), file(srcfile), line(line_num), message(msg) {
 		}
 
 		TestPartResult::Type const type;
@@ -1838,7 +1861,8 @@ public:
 	// The current parameter value. Is also available in the test fixture's
 	// constructor.
 	static const ParamType &GetParam() {
-		GTEST_CHECK_(parameter_ != nullptr) << "GetParam() can only be called inside a value-parameterized test " << "-- did you intend to write TEST_P instead of TEST_F?";
+		GTEST_CHECK_(parameter_ != nullptr) << "GetParam() can only be called inside a value-parameterized test "
+											<< "-- did you intend to write TEST_P instead of TEST_F?";
 		return *parameter_;
 	}
 
@@ -2243,7 +2267,8 @@ template<typename T1, typename T2> constexpr bool StaticAssertTypeEq() noexcept 
 // code.  GetTestTypeId() is guaranteed to always return the same
 // value, as it always calls GetTypeId<>() from the Google Test
 // framework.
-#define GTEST_TEST(test_suite_name, test_name) GTEST_TEST_(test_suite_name, test_name, ::testing::Test, ::testing::internal::GetTestTypeId())
+#define GTEST_TEST(test_suite_name, test_name) \
+	GTEST_TEST_(test_suite_name, test_name, ::testing::Test, ::testing::internal::GetTestTypeId())
 
 // Define this macro to 1 to omit the definition of TEST(), which
 // is a generic name and clashes with some other libraries.
@@ -2278,7 +2303,8 @@ template<typename T1, typename T2> constexpr bool StaticAssertTypeEq() noexcept 
 //   }
 //
 // GOOGLETEST_CM0011 DO NOT DELETE
-#define TEST_F(test_fixture, test_name) GTEST_TEST_(test_fixture, test_name, test_fixture, ::testing::internal::GetTypeId<test_fixture>())
+#define TEST_F(test_fixture, test_name) \
+	GTEST_TEST_(test_fixture, test_name, test_fixture, ::testing::internal::GetTypeId<test_fixture>())
 
 // Returns a path to temporary directory.
 // Tries to determine an appropriate directory for the platform.
@@ -2345,7 +2371,9 @@ GTEST_API_ std::string TempDir();
 //   return RUN_ALL_TESTS();
 // }
 //
-template<int &...ExplicitParameterBarrier, typename Factory> TestInfo *RegisterTest(const char *test_suite_name, const char *test_name, const char *type_param, const char *value_param, const char *file, int line, Factory factory) {
+template<int &...ExplicitParameterBarrier, typename Factory>
+TestInfo *RegisterTest(const char *test_suite_name, const char *test_name, const char *type_param, const char *value_param,
+					   const char *file, int line, Factory factory) {
 	using TestT = typename std::remove_pointer<decltype(factory())>::type;
 
 	class FactoryImpl : public internal::TestFactoryBase {
@@ -2360,7 +2388,10 @@ template<int &...ExplicitParameterBarrier, typename Factory> TestInfo *RegisterT
 		Factory factory_;
 	};
 
-	return internal::MakeAndRegisterTestInfo(test_suite_name, test_name, type_param, value_param, internal::CodeLocation(file, line), internal::GetTypeId<TestT>(), internal::SuiteApiResolver<TestT>::GetSetUpCaseOrSuite(file, line), internal::SuiteApiResolver<TestT>::GetTearDownCaseOrSuite(file, line), new FactoryImpl{std::move(factory)});
+	return internal::MakeAndRegisterTestInfo(
+		test_suite_name, test_name, type_param, value_param, internal::CodeLocation(file, line), internal::GetTypeId<TestT>(),
+		internal::SuiteApiResolver<TestT>::GetSetUpCaseOrSuite(file, line),
+		internal::SuiteApiResolver<TestT>::GetTearDownCaseOrSuite(file, line), new FactoryImpl{std::move(factory)});
 }
 
 }  // namespace testing

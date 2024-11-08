@@ -147,7 +147,8 @@ template<typename T, TypeKind kTypeKind> class TypeWithoutFormatter {
 public:
 	// This default version is called when kTypeKind is kOtherType.
 	static void PrintValue(const T &value, ::std::ostream *os) {
-		PrintBytesInObjectTo(static_cast<const unsigned char *>(reinterpret_cast<const void *>(std::addressof(value))), sizeof(value), os);
+		PrintBytesInObjectTo(static_cast<const unsigned char *>(reinterpret_cast<const void *>(std::addressof(value))),
+							 sizeof(value), os);
 	}
 };
 
@@ -218,14 +219,14 @@ public:
 // operator<<(std::ostream&, const T&) or
 // operator<<(std::basic_stream<Char, CharTraits>, const Foo&) is more
 // specific.
-template<typename Char, typename CharTraits, typename T>::std::basic_ostream<Char, CharTraits> &operator<<(::std::basic_ostream<Char, CharTraits> &os, const T &x) {
-	TypeWithoutFormatter<T,
-						 (internal::IsAProtocolMessage<T>::value					  ? kProtobuf :
-						  std::is_convertible<const T &, internal::BiggestInt>::value ? kConvertibleToInteger :
+template<typename Char, typename CharTraits, typename T>
+::std::basic_ostream<Char, CharTraits> &operator<<(::std::basic_ostream<Char, CharTraits> &os, const T &x) {
+	TypeWithoutFormatter<T, (internal::IsAProtocolMessage<T>::value						 ? kProtobuf :
+							 std::is_convertible<const T &, internal::BiggestInt>::value ? kConvertibleToInteger :
 #if GTEST_HAS_ABSL
-						  std::is_convertible<const T &, absl::string_view>::value ? kConvertibleToStringView :
+							 std::is_convertible<const T &, absl::string_view>::value ? kConvertibleToStringView :
 #endif
-																					 kOtherType)>::PrintValue(x, &os);
+																						kOtherType)>::PrintValue(x, &os);
 	return os;
 }
 
@@ -350,7 +351,8 @@ GTEST_IMPL_FORMAT_C_STRING_AS_STRING_(const wchar_t, ::std::wstring);
 // against an std::string object, for example.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-template<typename T1, typename T2> std::string FormatForComparisonFailureMessage(const T1 &value, const T2 & /* other_operand */) {
+template<typename T1, typename T2>
+std::string FormatForComparisonFailureMessage(const T1 &value, const T2 & /* other_operand */) {
 	return FormatForComparison<T1, T2>::Format(value);
 }
 
@@ -465,7 +467,12 @@ template<typename T> void PrintTo(const T &value, ::std::ostream *os) {
 	// cause this warning, and use a separate overload of DefaultPrintTo for
 	// function pointers so that the `*os << p` in the object pointer overload
 	// doesn't cause that warning either.
-	DefaultPrintTo(WrapPrinterType < (sizeof(IsContainerTest<T>(0)) == sizeof(IsContainer)) && !IsRecursiveContainer<T>::value ? kPrintContainer : !std::is_pointer<T>::value ? kPrintOther : std::is_function<typename std::remove_pointer<T>::type>::value ? kPrintFunctionPointer : kPrintPointer > (), value, os);
+	DefaultPrintTo(WrapPrinterType < (sizeof(IsContainerTest<T>(0)) == sizeof(IsContainer)) && !IsRecursiveContainer<T>::value ?
+					   kPrintContainer :
+				   !std::is_pointer<T>::value									  ? kPrintOther :
+				   std::is_function<typename std::remove_pointer<T>::type>::value ? kPrintFunctionPointer :
+																					kPrintPointer > (),
+				   value, os);
 }
 
 // The following list of PrintTo() overloads tells
@@ -811,7 +818,8 @@ typedef ::std::vector<::std::string> Strings;
 // one element for each field.
 template<typename Tuple> void TersePrintPrefixToStrings(const Tuple &, std::integral_constant<size_t, 0>, Strings *) {
 }
-template<typename Tuple, size_t I> void TersePrintPrefixToStrings(const Tuple &t, std::integral_constant<size_t, I>, Strings *strings) {
+template<typename Tuple, size_t I>
+void TersePrintPrefixToStrings(const Tuple &t, std::integral_constant<size_t, I>, Strings *strings) {
 	TersePrintPrefixToStrings(t, std::integral_constant<size_t, I - 1>(), strings);
 	::std::stringstream ss;
 	UniversalTersePrint(std::get<I - 1>(t), &ss);

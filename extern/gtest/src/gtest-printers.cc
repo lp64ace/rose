@@ -250,7 +250,10 @@ void PrintTo(wchar_t wc, ostream *os) {
 // char or wchar_t.
 // The array starts at begin, the length is len, it may include '\0' characters
 // and may not be NUL-terminated.
-template<typename CharType> GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_ GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_ GTEST_ATTRIBUTE_NO_SANITIZE_HWADDRESS_ GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_ static CharFormat PrintCharsAsStringTo(const CharType *begin, size_t len, ostream *os) {
+template<typename CharType>
+GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_ GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_ GTEST_ATTRIBUTE_NO_SANITIZE_HWADDRESS_
+	GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_ static CharFormat
+	PrintCharsAsStringTo(const CharType *begin, size_t len, ostream *os) {
 	const char *const kQuoteBegin = sizeof(CharType) == 1 ? "\"" : "L\"";
 	*os << kQuoteBegin;
 	bool is_previous_hex = false;
@@ -275,7 +278,10 @@ template<typename CharType> GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_ GTEST_ATTRIBUTE_
 
 // Prints a (const) char/wchar_t array of 'len' elements, starting at address
 // 'begin'.  CharType must be either char or wchar_t.
-template<typename CharType> GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_ GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_ GTEST_ATTRIBUTE_NO_SANITIZE_HWADDRESS_ GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_ static void UniversalPrintCharArray(const CharType *begin, size_t len, ostream *os) {
+template<typename CharType>
+GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_ GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_ GTEST_ATTRIBUTE_NO_SANITIZE_HWADDRESS_
+	GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_ static void
+	UniversalPrintCharArray(const CharType *begin, size_t len, ostream *os) {
 	// The code
 	//   const char kFoo[] = "foo";
 	// generates an array of 4, not 3, elements, with the last one being '\0'.
@@ -382,7 +388,8 @@ bool IsValidUTF8(const char *str, size_t length) {
 				 (lead != 0xe0 || s[i] >= 0xa0) && (lead != 0xed || s[i] < 0xa0)) {
 			i += 2;	 // 3-byte character
 		}
-		else if (0xf0 <= lead && lead <= 0xf4 && (i + 3) <= length && IsUTF8TrailByte(s[i]) && IsUTF8TrailByte(s[i + 1]) && IsUTF8TrailByte(s[i + 2]) &&
+		else if (0xf0 <= lead && lead <= 0xf4 && (i + 3) <= length && IsUTF8TrailByte(s[i]) && IsUTF8TrailByte(s[i + 1]) &&
+				 IsUTF8TrailByte(s[i + 2]) &&
 				 // check for non-shortest form
 				 (lead != 0xf0 || s[i] >= 0x90) && (lead != 0xf4 || s[i] < 0x90)) {
 			i += 3;	 // 4-byte character
