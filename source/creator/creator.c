@@ -14,11 +14,11 @@ int main(void) {
 #endif
 
 	struct rContext *C = CTX_new();
-	
+
 	WM_init(C);
 	do {
 		WM_main(C);
-	} while(false);
-	
+	} while (false);
+
 	return 0;
 }

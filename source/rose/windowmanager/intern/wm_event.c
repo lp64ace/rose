@@ -10,7 +10,7 @@
 #include "KER_global.h"
 #include "KER_main.h"
 
-#include <tiny_window.h>
+#include <oswin.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Event Management
@@ -29,7 +29,7 @@ wmEvent *wm_event_add_ex(wmWindow *win, const wmEvent *event_to_add, wmEvent *ev
 
 	memcpy(evt, event_to_add, sizeof(wmEvent));
 
-	if(event_to_add_after == NULL) {
+	if (event_to_add_after == NULL) {
 		LIB_addtail(&win->event_queue, evt);
 	}
 	else {
@@ -44,17 +44,17 @@ wmEvent *wm_event_add(wmWindow *win, const wmEvent *event_to_add) {
 }
 
 void wm_event_update_last_handled(wmWindow *win, wmEvent *evt) {
-	if(win->event_last_handled) {
+	if (win->event_last_handled) {
 		wm_event_free(win->event_last_handled);
 	}
-	
+
 	evt->next = evt->prev = NULL;
 	win->event_last_handled = evt;
 }
 
 void wm_event_free_last(wmWindow *win) {
 	wmEvent *evt = LIB_pophead(&win->event_queue);
-	if(evt) {
+	if (evt) {
 		wm_event_free(evt);
 	}
 }
@@ -90,19 +90,21 @@ void wm_event_free_and_remove_from_queue_if_valid(wmEvent *evt) {
 
 void WM_do_handlers(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
-	
+
 	LISTBASE_FOREACH_MUTABLE(wmWindow *, window, &wm->windows) {
 		wmEvent *evt;
 		while (evt = (wmEvent *)window->event_queue.first) {
 			CTX_wm_window_set(C, window);
-			
+
 			wm_window_make_drawable(wm, window);
-			
-			if(CTX_wm_window(C) == NULL) {
+
+			// dispatch the events to the handlers...
+
+			if (CTX_wm_window(C) == NULL) {
 				wm_event_free_and_remove_from_queue_if_valid(evt);
 				break;
 			}
-			
+
 			LIB_remlink(&window->event_queue, evt);
 			wm_event_update_last_handled(window, evt);
 		}
@@ -122,13 +124,13 @@ ROSE_STATIC int convert_btn(int tiny_window_btn);
 ROSE_STATIC wmEvent *wm_event_add_mousemove(wmWindow *win, const wmEvent *evt) {
 	wmEvent *event_last = (wmEvent *)win->event_queue.last;
 
-	if(event_last && event_last->type == MOUSEMOVE) {
+	if (event_last && event_last->type == MOUSEMOVE) {
 		event_last->type = INBETWEEN_MOUSEMOVE;
 		event_last->flag = 0;
 	}
 
 	wmEvent *event_new = wm_event_add(win, evt);
-	if(event_last == NULL) {
+	if (event_last == NULL) {
 		event_last = win->event_state;
 	}
 
@@ -142,8 +144,8 @@ ROSE_STATIC void wm_event_prev_values_set(wmEvent *evt, wmEvent *event_state) {
 }
 
 ROSE_STATIC bool wm_event_is_double_click(wmEvent *evt, const double event_time, const double prev_press_event_time) {
-	if((evt->type == evt->prev_type) && (evt->prev_value == KM_RELEASE) && (evt->value == KM_PRESS)) {
-		if((event_time - prev_press_event_time) < 0.25) {
+	if ((evt->type == evt->prev_type) && (evt->prev_value == KM_RELEASE) && (evt->value == KM_PRESS)) {
+		if ((event_time - prev_press_event_time) < 0.25) {
 			return true;
 		}
 	}
@@ -157,34 +159,38 @@ ROSE_STATIC void wm_event_prev_click_set(double event_time, wmEvent *event_state
 	*prev_press_event_time = event_time;
 }
 
-ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double event_time, wmEvent *event_state, double *prev_press_event_time, bool is_keyboard, bool check_double_click) {
+ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double event_time, wmEvent *event_state,
+														double *prev_press_event_time, bool is_keyboard,
+														bool check_double_click) {
 	ROSE_assert(ISKEYBOARD_OR_BUTTON(evt->type));
 	ROSE_assert(ELEM(evt->value, KM_PRESS, KM_RELEASE));
-	
+
 	const int event_state_flag_mask = WM_EVENT_IS_REPEAT;
 
 	wm_event_prev_values_set(evt, event_state);
-	
+
 	event_state->type = event_state->prev_type = evt->type;
 	event_state->value = event_state->prev_value = evt->value;
-	
-	if(is_keyboard) {
+
+	if (is_keyboard) {
 		event_state->modifier = evt->modifier;
 	}
 	event_state->flag = evt->flag & event_state_flag_mask;
-	
-	if(check_double_click && wm_event_is_double_click(evt, event_time, *prev_press_event_time)) {
+
+	if (check_double_click && wm_event_is_double_click(evt, event_time, *prev_press_event_time)) {
 		evt->value = KM_DBL_CLICK;
 	}
-	else if(evt->value == KM_PRESS) {
-		if((evt->flag & WM_EVENT_IS_REPEAT) == 0) {
+	else if (evt->value == KM_PRESS) {
+		if ((evt->flag & WM_EVENT_IS_REPEAT) == 0) {
 			wm_event_prev_click_set(event_time, event_state, prev_press_event_time);
 		}
 	}
 }
-ROSE_STATIC void wm_event_state_update_and_click_set(wmEvent *evt, double event_time, wmEvent *event_state, double *prev_press_event_time, int tiny_window_type) {
+
+ROSE_STATIC void wm_event_state_update_and_click_set(wmEvent *evt, double event_time, wmEvent *event_state,
+													 double *prev_press_event_time, int tiny_window_type) {
 	const bool is_keyboard = ELEM(tiny_window_type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP);
-	
+
 	wm_event_state_update_and_click_set_ex(evt, event_time, event_state, prev_press_event_time, is_keyboard, true);
 }
 
@@ -199,34 +205,37 @@ ROSE_STATIC bool wm_event_is_same_key_press(const wmEvent *event_a, const wmEven
 }
 
 ROSE_STATIC bool wm_event_is_ignorable_key_press(const wmWindow *win, const wmEvent *evt) {
-	if(LIB_listbase_is_empty(&win->event_queue)) {
+	if (LIB_listbase_is_empty(&win->event_queue)) {
 		return false;
 	}
-	if((evt->flag & WM_EVENT_IS_REPEAT) == 0) {
+	if ((evt->flag & WM_EVENT_IS_REPEAT) == 0) {
 		return false;
 	}
 	return wm_event_is_same_key_press((wmEvent *)win->event_queue.last, evt);
 }
 
-void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y, double time) {
+void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y,
+										   double time) {
 	ROSE_assert(ELEM(type, WTK_EVT_MOUSEMOVE, WTK_EVT_MOUSESCROLL, WTK_EVT_BUTTONDOWN, WTK_EVT_BUTTONUP));
-	
+
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
 	memcpy(evt, event_state, sizeof(wmEvent));
 	evt->flag = 0;
-	
+
 	evt->prev_type = evt->type;
 	evt->prev_value = evt->value;
-	
-	if((event_state->type || event_state->value) && !(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
+
+	if ((event_state->type || event_state->value) &&
+		!(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
-	if((event_state->prev_type || event_state->prev_value) && !(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
+	if ((event_state->prev_type || event_state->prev_value) &&
+		!(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
-	
+
 	switch (type) {
 		case WTK_EVT_MOUSEMOVE: {
 			evt->mouse_xy[0] = x;
@@ -256,7 +265,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 			else {
 				evt->value = KM_RELEASE;
 			}
-			
+
 			wm_event_state_update_and_click_set(evt, time, event_state, &window->prev_press_event_time, type);
 			copy_v2_v2_int(event_state->mouse_xy, evt->mouse_xy);
 			copy_v2_v2_int(event_state->prev_xy, evt->mouse_xy);
@@ -279,38 +288,41 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 	}
 }
 
-void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type, int key, bool repeat, char utf8[4], double event_time) {
+void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type, int key, bool repeat, char utf8[4],
+								  double event_time) {
 	ROSE_assert(ELEM(type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP));
-	
+
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
 	memcpy(evt, event_state, sizeof(wmEvent));
 	evt->flag = 0;
-	
+
 	evt->prev_type = evt->type;
 	evt->prev_value = evt->value;
-	
-	if((event_state->type || event_state->value) && !(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
+
+	if ((event_state->type || event_state->value) &&
+		!(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
-	if((event_state->prev_type || event_state->prev_value) && !(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
+	if ((event_state->prev_type || event_state->prev_value) &&
+		!(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
 
 	evt->mouse_xy[0] = event_state->mouse_xy[0];
 	evt->mouse_xy[1] = event_state->mouse_xy[1];
-	
-	switch(type) {
+
+	switch (type) {
 		case WTK_EVT_KEYDOWN:
 		case WTK_EVT_KEYUP: {
 			evt->type = convert_key(key);
-			if(evt->type == EVENT_NONE) {
+			if (evt->type == EVENT_NONE) {
 				break;
 			}
 			SET_FLAG_FROM_TEST(evt->flag, repeat, WM_EVENT_IS_REPEAT);
-			
-			if(type == WTK_EVT_KEYDOWN) {
+
+			if (type == WTK_EVT_KEYDOWN) {
 				memcpy(evt->input, utf8, sizeof(char[4]));
 				evt->value = KM_PRESS;
 			}
@@ -318,8 +330,8 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 				memset(evt->input, 0, sizeof(char[4]));
 				evt->value = KM_RELEASE;
 			}
-			
-			switch(evt->type) {
+
+			switch (evt->type) {
 				case EVT_LEFTSHIFTKEY:
 				case EVT_RIGHTSHIFTKEY: {
 					SET_FLAG_FROM_TEST(evt->modifier, (evt->value == KM_PRESS), KM_SHIFT);
@@ -336,9 +348,9 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 					SET_FLAG_FROM_TEST(evt->modifier, (evt->value == KM_PRESS), KM_OSKEY);
 				} break;
 			}
-			
+
 			wm_event_state_update_and_click_set(evt, event_time, event_state, &window->prev_press_event_time, type);
-			
+
 			if (!wm_event_is_ignorable_key_press(window, evt)) {
 				wm_event_add(window, evt);
 			}
@@ -360,9 +372,11 @@ ROSE_STATIC int convert_key(int tiny_window_key) {
 		return (EVT_F1KEY + (tiny_window_key - WTK_KEY_F1));
 	}
 
-#define ASSOCIATE(what, to) case what: return to;
+#define ASSOCIATE(what, to) \
+	case what:              \
+		return to;
 
-	switch(tiny_window_key) {
+	switch (tiny_window_key) {
 		ASSOCIATE(WTK_KEY_BACKSPACE, EVT_BACKSPACEKEY);
 		ASSOCIATE(WTK_KEY_TAB, EVT_TABKEY);
 		ASSOCIATE(WTK_KEY_CLEAR, EVENT_NONE);
@@ -424,7 +438,9 @@ ROSE_STATIC int convert_key(int tiny_window_key) {
 }
 
 ROSE_STATIC int convert_btn(int tiny_window_btn) {
-#define ASSOCIATE(what, to) case what: return to;
+#define ASSOCIATE(what, to) \
+	case what:              \
+		return to;
 
 	switch (tiny_window_btn) {
 		ASSOCIATE(WTK_BTN_LEFT, LEFTMOUSE);

@@ -1,23 +1,153 @@
 #include "MEM_guardedalloc.h"
 
-#include "WM_draw.h"
+#include "ED_screen.h"
 
-#include "GPU_context.h"
 #include "GPU_compute.h"
+#include "GPU_context.h"
+#include "GPU_batch.h"
+#include "GPU_batch_presets.h"
+#include "GPU_batch_utils.h"
 #include "GPU_framebuffer.h"
 #include "GPU_shader.h"
 #include "GPU_state.h"
+#include "GPU_viewport.h"
 
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
-#include <tiny_window.h>
+#include "KER_screen.h"
+
+#include "WM_draw.h"
+#include "WM_window.h"
+
+#include <oswin.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Region Drawing
+ *
+ * Each region draws into its own frame-buffer, which is then blit on the 
+ * window draw buffer. This helps with fast redrawing if only some regions 
+ * change. It also means we can share a single context for multiple windows, 
+ * so that for example VAOs can be shared between windows.
+ * \{ */
+
+ROSE_INLINE void wm_draw_region_buffer_free(ARegion *region) {
+	if (region->draw_buffer) {
+		if (region->draw_buffer->viewport) {
+			GPU_viewport_free(region->draw_buffer->viewport);
+		}
+		if (region->draw_buffer->offscreen) {
+			GPU_offscreen_free(region->draw_buffer->offscreen);
+		}
+
+		MEM_freeN(region->draw_buffer);
+		region->draw_buffer = NULL;
+	}
+}
+
+ROSE_INLINE void wm_draw_offscreen_texture_parameters(GPUOffScreen *offscreen) {
+	GPUTexture *texture = GPU_offscreen_color_texture(offscreen);
+	/** No mipmaps or filtering. */
+	GPU_texture_mipmap_mode(texture, false, false);
+}
+ROSE_INLINE void wm_draw_region_buffer_create(ARegion *region, bool viewport) {
+	if (region->draw_buffer) {
+		/** Free offscreen buffer on size changes. Viewport auto resizes. */
+		GPUOffScreen *offscreen = region->draw_buffer->offscreen;
+		if (offscreen) {
+			const bool changed_x = GPU_offscreen_width(offscreen) != region->sizex;
+			const bool changed_y = GPU_offscreen_height(offscreen) != region->sizey;
+			if(changed_x || changed_y) {
+				wm_draw_region_buffer_free(region);
+			}
+		}
+	}
+	if (!region->draw_buffer) {
+		if (viewport) {
+			region->draw_buffer = MEM_callocN(sizeof(wmDrawBuffer), "wmDrawBuffer");
+			region->draw_buffer->viewport = GPU_viewport_create();
+		}
+		else {
+			const TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ;
+			GPUOffScreen *offscreen = GPU_offscreen_create(region->sizex, region->sizey, false, GPU_RGBA8, usage, NULL);
+			if (!offscreen) {
+				return;
+			}
+			wm_draw_offscreen_texture_parameters(offscreen);
+			
+			region->draw_buffer = MEM_callocN(sizeof(wmDrawBuffer), "wmDrawBuffer");
+			region->draw_buffer->offscreen = offscreen;
+		}
+		
+		region->draw_buffer->bound = -1;
+	}
+}
+ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
+	if (!region->draw_buffer) {
+		return;
+	}
+	
+	if (region->draw_buffer->viewport) {
+		GPU_viewport_bind(region->draw_buffer->viewport, view, &region->winrct);
+	}
+	else {
+		GPU_offscreen_bind(region->draw_buffer->offscreen, false);
+		
+		GPU_scissor_test(true);
+		GPU_scissor(0, 0, region->sizex, region->sizey);
+	}
+	
+	region->draw_buffer->bound = view;
+}
+ROSE_INLINE void wm_draw_region_unbind(ARegion *region) {
+	if (!region->draw_buffer) {
+		return;
+	}
+	
+	region->draw_buffer->bound = -1;
+	
+	if (region->draw_buffer->viewport) {
+		GPU_viewport_unbind(region->draw_buffer->viewport);
+	}
+	else {
+		GPU_scissor_test(false);
+		GPU_offscreen_unbind(region->draw_buffer->offscreen, false);
+	}
+}
+
+ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
+	if (!region->draw_buffer) {
+		return;
+	}
+	
+	if (view == -1) {
+		view = 0;
+	}
+	else if (view > 0) {
+		if(region->draw_buffer->viewport == NULL) {
+			view = 0;
+		}
+	}
+	
+	if (region->draw_buffer->viewport) {
+		GPU_viewport_draw_to_screen(region->draw_buffer->viewport, view, &region->winrct);
+	}
+	else {
+		GPU_offscreen_draw_to_screen(region->draw_buffer->offscreen, region->winrct.xmin, region->winrct.ymin);
+	}
+}
+
+void WM_draw_region_free(ARegion *region) {
+	wm_draw_region_buffer_free(region);
+}
+
+/** \} */
 
 ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, bool activate) {
 	ROSE_assert(ELEM(wm->windrawable, NULL, window));
-	
+
 	wm->windrawable = window;
-	if(activate) {
+	if (activate) {
 		WTK_window_make_context_current(window->handle);
 	}
 	GPU_context_active_set(window->context);
@@ -28,42 +158,127 @@ ROSE_INLINE void wm_window_clear_drawable(WindowManager *wm) {
 }
 
 void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
-	if(wm->windrawable != window && window->handle) {
+	if (wm->windrawable != window && window->handle) {
 		wm_window_clear_drawable(wm);
 		wm_window_set_drawable(wm, window, true);
 	}
 }
 
-void wm_window_draw(struct rContext *C, wmWindow *window) {
-	GPUOffScreen *screen = GPU_offscreen_create(window->sizex, window->sizey, false, GPU_RGBA8, GPU_TEXTURE_USAGE_GENERAL, NULL);
+ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) {
+	Screen *screen = WM_window_screen_get(window);
 	if (!screen) {
 		return;
 	}
 
-	GPUTexture *texture = GPU_offscreen_color_texture(screen);
-	GPU_texture_clear(texture, GPU_DATA_FLOAT, (const float[4]){0.66f, 0.65f, 0.65f, 1.0f});
+	WindowManager *wm = CTX_wm_manager(C);
+	
+	ED_screen_areas_iter(window, screen, area) {
+		CTX_wm_area_set(C, area);
+		
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
+			if(region->visible || ignore_visibility) {
+				CTX_wm_region_set(C, region);
+				// We should update the region layout here.
+				CTX_wm_region_set(C, NULL);
+			}
+		}
+		
+		ED_area_update_region_sizes(wm, window, area);
+		
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if(!region->visible) {
+				continue;
+			}
+			
+			CTX_wm_region_set(C, region);
+			
+			wm_draw_region_buffer_create(region, false);
+			wm_draw_region_bind(region, 0);
+			ED_region_do_draw(C, region);
+			wm_draw_region_unbind(region);
+			CTX_wm_region_set(C, NULL);
+		}
+		
+		CTX_wm_area_set(C, NULL);
+	}
+	
+	/** Draw menus into their own frame-buffer. */
+	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
+		if (!region->visible) {
+			continue;
+		}
+		
+		CTX_wm_region_set(C, region);
+		
+		wm_draw_region_buffer_create(region, false);
+		wm_draw_region_bind(region, 0);
+		ED_region_do_draw(C, region);
+		wm_draw_region_unbind(region);
 
-	GPU_offscreen_draw_to_screen(screen, 0, 0);
-	GPU_offscreen_free(screen);
+		CTX_wm_region_set(C, NULL);
+	}
+}
+
+ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, int view) {
+	Screen *screen = WM_window_screen_get(window);
+	
+	GPU_clear_color(0.45f, 0.45f, 0.45f, 1.0f);
+
+	ED_screen_areas_iter(window, screen, area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if(!region->visible) {
+				continue;
+			}
+			if(!region->overlap) {
+				wm_draw_region_blit(region, view);
+			}
+		}
+	}
+	
+	ED_screen_areas_iter(window, screen, area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if(!region->visible) {
+				continue;
+			}
+			if(region->overlap) {
+				// wm_draw_region_blend(region, 0, true);
+			}
+		}
+	}
+	
+	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
+		if (!region->visible) {
+			continue;
+		}
+		// wm_draw_region_blend(region, 0, true);
+	}
+}
+
+void wm_window_draw(struct rContext *C, wmWindow *window) {
+	Screen *screen = WM_window_screen_get(window);
+	wm_draw_window_offscreen(C, window);
+	wm_draw_window_onscreen(C, window, -1);
+	screen->do_draw = false;
 }
 
 void WM_do_draw(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
-	
+
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
+		/** Do not render windows that are not visible. */
 		if (WTK_window_is_minimized(window->handle)) {
-			/** Do not render windows that are not visible. */
 			continue;
 		}
 
 		CTX_wm_window_set(C, window);
 		do {
 			wm_window_make_drawable(wm, window);
-			
+
 			wm_window_draw(C, window);
-			
+
 			WTK_window_swap_buffers(window->handle);
-		} while(false);
+		} while (false);
 		CTX_wm_window_set(C, NULL);
 	}
 }
