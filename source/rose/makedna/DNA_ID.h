@@ -53,7 +53,7 @@ typedef struct ID {
 
 typedef struct Library {
 	ID id;
-	
+
 	char filepath[1024];
 } Library;
 
@@ -63,7 +63,7 @@ typedef struct Library {
 
 enum {
 	/**
-	 * Indicates that this ID data-block has been assigned a fake user, 
+	 * Indicates that this ID data-block has been assigned a fake user,
 	 * see #ID_FAKE_USERS and #ID_REAL_USERS for information about the user counter.
 	 *
 	 * Will not delete the data-block even if unused.
@@ -86,11 +86,12 @@ enum {
  */
 #define ID_REAL_USERS(id) (((const ID *)id)->us - ID_FAKE_USERS(id))
 
-#define ID_NEW_SET(_id, _idn) (((ID *)(_id))->newid = (ID *)(_idn), ((ID *)(_id))->newid->tag |= ID_TAG_NEW, (void *)((ID *)(_id))->newid)
-#define ID_NEW_REMAP(a) \
-	if ((a) && (a)->id.newid) { \
+#define ID_NEW_SET(_id, _idn) \
+	(((ID *)(_id))->newid = (ID *)(_idn), ((ID *)(_id))->newid->tag |= ID_TAG_NEW, (void *)((ID *)(_id))->newid)
+#define ID_NEW_REMAP(a)                 \
+	if ((a) && (a)->id.newid) {         \
 		*(void **)&(a) = (a)->id.newid; \
-	} \
+	}                                   \
 	((void)0)
 
 enum {
@@ -106,7 +107,7 @@ enum {
 	 * RESET_NEVER
 	 */
 	ID_TAG_NO_USER_REFCOUNT = 1 << 1,
-	
+
 	/**
 	 * ID is newly duplicated/copied (see #ID_NEW_SET macro above).
 	 *
@@ -122,7 +123,8 @@ enum {
 };
 
 #define FILTER_ID_LI (1 << 0)
-#define FILTER_ID_WM (1 << 1)
+#define FILTER_ID_SCR (1 << 1)
+#define FILTER_ID_WM (1 << 2)
 
 /**
  * This enum defines the index assigned to each type of IDs in the array returned by
@@ -156,6 +158,7 @@ enum {
 typedef enum eID_Index {
 	/* Special case: Library, should never ever depend on any other type. */
 	INDEX_ID_LI = 0,
+	INDEX_ID_SCR,
 	INDEX_ID_WM,
 
 	/* Special values, keep last. */
@@ -168,4 +171,4 @@ typedef enum eID_Index {
 }
 #endif
 
-#endif // DNA_ID_H
+#endif	// DNA_ID_H

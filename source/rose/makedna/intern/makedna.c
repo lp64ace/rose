@@ -1,7 +1,7 @@
 #include "MEM_guardedalloc.h"
 
-#include "LIB_string.h"
 #include "LIB_ghash.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "RT_context.h"
@@ -12,8 +12,8 @@
 
 #include "genfile.h"
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 const char *header_typedef[] = {
 #include "DNA_strings_all.h"
@@ -46,9 +46,9 @@ ROSE_INLINE bool init(int argc, char **argv) {
 			binary = argv[++i];
 			continue;
 		}
-		return false; // Invalid argument
+		return false;  // Invalid argument
 	}
-	return source && binary; // Return true only if both arguments are provided
+	return source && binary;  // Return true only if both arguments are provided
 }
 
 ROSE_INLINE bool build_dna_c(const char *filepath, SDNA *sdna) {
@@ -57,21 +57,21 @@ ROSE_INLINE bool build_dna_c(const char *filepath, SDNA *sdna) {
 		fprintf(stderr, "Failed to open file '%s' for writing.\n", filepath);
 		return false;
 	}
-	
+
 	// Write a warning header into the generated file
 	fprintf(file, "/* Auto-generated file. Do not edit manually. */\n");
 	fprintf(file, "\n");
 
 	fprintf(file, "extern const unsigned char DNAstr[];\n");
 	fprintf(file, "const unsigned char DNAstr[] = {\n\t");
-	
-	for(size_t index = 0; index < sdna->length; index++) {
-		if(index && index % 16 == 0) {
+
+	for (size_t index = 0; index < sdna->length; index++) {
+		if (index && index % 16 == 0) {
 			fprintf(file, "\n\t");
 		}
 		fprintf(file, "0x%02x, ", ((const unsigned char *)sdna->data)[index]);
 	}
-	
+
 	fprintf(file, "\n};\n");
 	fprintf(file, "extern const int DNAlen;\n");
 	fprintf(file, "const int DNAlen = sizeof(DNAstr);\n");
@@ -86,7 +86,7 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 		fprintf(stderr, "Failed to open file '%s' for writing.\n", filepath);
 		return false;
 	}
-	
+
 	// Write a warning header into the generated file
 	fprintf(file, "/* Auto-generated file. Do not edit manually. */\n");
 	fprintf(file, "\n");
@@ -122,7 +122,8 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 
 			for (const RCCField *field = RT_type_struct_field_first(type); field; field = field->next) {
 				fprintf(file, "ROSE_STATIC_ASSERT(");
-				fprintf(file, "offsetof(%s, %s) == %llu, ", RT_token_as_string(token), RT_token_as_string(field->identifier), RT_parser_offsetof(parser, type, field));
+				fprintf(file, "offsetof(%s, %s) == %llu, ", RT_token_as_string(token), RT_token_as_string(field->identifier),
+						RT_parser_offsetof(parser, type, field));
 				fprintf(file, "\"DNA field offset verify\");\n");
 			}
 		}
@@ -135,6 +136,24 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 	return true;
 }
 
+RCCFileCache *build_virtual_source(const char *virtual_path) {
+	RCCFileCache *cache = NULL;
+
+	char *includes[ARRAY_SIZE(header_typedef)], *content;
+	for (size_t index = 0; index < ARRAY_SIZE(header_typedef); index++) {
+		includes[index] = LIB_strnformat_allocN("#include \"%s\"\n", header_typedef[index]);
+	}
+	content = LIB_string_join_arrayN((const char **)includes, ARRAY_SIZE(includes));
+
+	for (size_t index = 0; index < ARRAY_SIZE(header_typedef); index++) {
+		MEM_SAFE_FREE(includes[index]);
+	}
+	cache = RT_fcache_new(virtual_path, content, LIB_strlen(content));
+
+	MEM_freeN(content);
+	return cache;
+}
+
 int main(int argc, char **argv) {
 #ifndef NDEBUG
 	MEM_init_memleak_detection();
@@ -144,33 +163,27 @@ int main(int argc, char **argv) {
 
 	int status = 0;
 
-	if(!init(argc, argv)) {
+	if (!init(argc, argv)) {
 		help(argv[0]);
 		return -1;
 	}
-	
-	char path[1024];
-	
+
 	SDNA *sdna = DNA_sdna_new_empty();
-	
+
 	void *ptr = POINTER_OFFSET(sdna->data, sdna->length);
 
-	for(size_t index = 0; index < ARRAY_SIZE(header_typedef); index++) {
-		LIB_strcpy(path, ARRAY_SIZE(path), source);
-		LIB_strcat(path, ARRAY_SIZE(path), "/");
-		LIB_strcat(path, ARRAY_SIZE(path), header_typedef[index]);
-		
-		RCCFileCache *cache = RT_fcache_read(path);
-		RCCFile *file = RT_file_new(header_typedef[index], cache);
-		RCCParser *parser = RT_parser_new(file);
-		
-		if(!RT_parser_do(parser)) {
-			printf("Compilation failed for %s!\n", header_typedef[index]);
-			return -1;
-		}
-		
+	char path[1024];
+	LIB_strcpy(path, ARRAY_SIZE(path), source);
+	LIB_strcat(path, ARRAY_SIZE(path), "/");
+	LIB_strcat(path, ARRAY_SIZE(path), "include_all.c");
+
+	RCCFileCache *cache = build_virtual_source(path);
+	RCCFile *file = RT_file_new(path, cache);
+	RCCParser *parser = RT_parser_new(file);
+
+	if (RT_parser_do(parser)) {
 		LISTBASE_FOREACH(const RCCNode *, node, &parser->nodes) {
-			if(ELEM(node->kind, NODE_OBJECT) && ELEM(node->type, OBJ_TYPEDEF)) {
+			if (ELEM(node->kind, NODE_OBJECT) && ELEM(node->type, OBJ_TYPEDEF)) {
 				const RCCObject *object = RT_node_object(node);
 
 				if (object->type->kind != TP_STRUCT) {
@@ -181,11 +194,11 @@ int main(int argc, char **argv) {
 				status |= (!DNA_sdna_write_type(sdna, &ptr, ptr, object->type)) ? 0xe0 : 0x00;
 			}
 		}
-		
-		RT_parser_free(parser);
-		RT_file_free(file);
-		RT_fcache_free(cache);
 	}
+
+	RT_parser_free(parser);
+	RT_file_free(file);
+	RT_fcache_free(cache);
 
 	ROSE_assert(DNA_sdna_check(sdna));
 
@@ -201,14 +214,14 @@ int main(int argc, char **argv) {
 	LIB_strcpy(path, ARRAY_SIZE(path), binary);
 	LIB_strcat(path, ARRAY_SIZE(path), "/");
 	LIB_strcat(path, ARRAY_SIZE(path), "dna.c");
-	
-	if(!build_dna_c(path, sdna)) {
+
+	if (!build_dna_c(path, sdna)) {
 		DNA_sdna_free(sdna);
 		return -1;
 	}
-	
+
 	DNA_sdna_free(sdna);
-	
+
 	return status;
 }
 

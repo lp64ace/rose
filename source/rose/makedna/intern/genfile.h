@@ -12,13 +12,13 @@ struct SDNA;
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
  * \{ */
- 
+
 typedef struct SDNA {
 	struct RCContext *context;
-	
+
 	struct GHash *types;
 	struct GHash *visit;
-	
+
 	void *data;
 	size_t length;
 	size_t allocated;
@@ -99,4 +99,4 @@ bool DNA_sdna_check(const struct SDNA *sdna);
 }
 #endif
 
-#endif // DNA_GENFILE_H
+#endif	// DNA_GENFILE_H
