@@ -21,12 +21,12 @@ struct RCCType;
 
 typedef struct RCCNode {
 	struct RCCNode *prev, *next;
-	
+
 	struct {
 		unsigned int kind : 16;
 		unsigned int type : 16;
 	};
-	
+
 	const struct RCCToken *token;
 	const struct RCCType *cast;
 } RCCNode;
@@ -87,11 +87,14 @@ struct RCCNode *RT_node_new_function(struct RCContext *, const struct RCCObject 
 struct RCCNode *RT_node_new_constant(struct RCContext *, const struct RCCToken *token);
 struct RCCNode *RT_node_new_funcall(struct RCContext *, const struct RCCNode *func);
 
-struct RCCNode *RT_node_new_binary(struct RCContext *, const struct RCCToken *token, int type, const struct RCCNode *lhs, const struct RCCNode *rhs);
-struct RCCNode *RT_node_new_cast(struct RCContext *, const struct RCCToken *token, const struct RCCType *type, const struct RCCNode *expr);
+struct RCCNode *RT_node_new_binary(struct RCContext *, const struct RCCToken *token, int type, const struct RCCNode *lhs,
+								   const struct RCCNode *rhs);
+struct RCCNode *RT_node_new_cast(struct RCContext *, const struct RCCToken *token, const struct RCCType *type,
+								 const struct RCCNode *expr);
 struct RCCNode *RT_node_new_unary(struct RCContext *, const struct RCCToken *token, int type, const struct RCCNode *expr);
 
-struct RCCNode *RT_node_new_conditional(struct RCContext *, const struct RCCNode *cond, const struct RCCNode *then, const struct RCCNode *otherwise);
+struct RCCNode *RT_node_new_conditional(struct RCContext *, const struct RCCNode *cond, const struct RCCNode *then,
+										const struct RCCNode *otherwise);
 struct RCCNode *RT_node_new_member(struct RCContext *, const struct RCCNode *owner, const struct RCCField *field);
 
 struct RCCNode *RT_node_new_constant_size(struct RCContext *, unsigned long long size);
@@ -120,7 +123,6 @@ const struct RCCObject *RT_node_object(const struct RCCNode *node);
 /* -------------------------------------------------------------------- */
 /** \name Constant Nodes
  * \{ */
-
 
 bool RT_node_is_integer(const struct RCCNode *node);
 bool RT_node_is_floating(const struct RCCNode *node);
@@ -198,4 +200,4 @@ ROSE_INLINE bool RT_node_is_member(const struct RCCNode *expr);
 
 #include "node/base_inline.c"
 
-#endif // RT_AST_NODE_H
+#endif	// RT_AST_NODE_H

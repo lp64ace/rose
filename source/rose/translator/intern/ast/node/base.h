@@ -12,7 +12,8 @@ extern "C" {
 /** \name Creation Methods
  * \{ */
 
-void *RT_node_new(struct RCContext *, const struct RCCToken *token, const struct RCCType *cast, int kind, int type, size_t length);
+void *RT_node_new(struct RCContext *, const struct RCCToken *token, const struct RCCType *cast, int kind, int type,
+				  size_t length);
 
 /** \} */
 
@@ -20,4 +21,4 @@ void *RT_node_new(struct RCContext *, const struct RCCToken *token, const struct
 }
 #endif
 
-#endif // RT_AST_NODE_BASE_H
+#endif	// RT_AST_NODE_BASE_H

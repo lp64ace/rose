@@ -65,7 +65,7 @@ ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
 }
 
 ROSE_INLINE char *strndup_ex(RCContext *C, const char *str, size_t length) {
-	if(C) {
+	if (C) {
 		char *dup = RT_context_malloc(C, length + 1);
 		memcpy(dup, str, length);
 		dup[length] = '\0';
@@ -216,7 +216,7 @@ const char *RT_file_name(const RCCFile *file) {
 	return file->name;
 }
 const char *RT_file_fname(const RCCFile *file) {
-	return (file->cache) ? file->cache->filepath : file->name;
+	return (file->cache) ? file->cache->filename : file->name;
 }
 const char *RT_file_path(const RCCFile *file) {
 	return (file->cache) ? file->cache->filepath : "";
@@ -247,7 +247,7 @@ void RT_source_error(const RCCFile *file, const RCCSLoc *location, const char *f
 		end++;
 	}
 
-	int indent = fprintf(stderr, "%s:%u(%u): ", RT_file_fname(file), location->line, location->column);
+	int indent = fprintf(stderr, "%s%s:%u(%u): ", RT_file_path(file), RT_file_fname(file), location->line, location->column);
 	fprintf(stderr, "%.*s\n", (int)(end - begin), begin);
 
 	va_list varg;

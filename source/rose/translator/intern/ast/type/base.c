@@ -23,7 +23,7 @@ bool RT_type_compatible(const RCCType *a, const RCCType *b) {
 }
 
 const RCCType *RT_type_composite(struct RCContext *c, const RCCType *a, const RCCType *b) {
-	if (RT_type_same(a, b)) {	// This will save the allocation of a new type.
+	if (RT_type_same(a, b)) {  // This will save the allocation of a new type.
 		return a;
 	}
 	return (a && b) ? a->composite(c, a, b) : NULL;

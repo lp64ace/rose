@@ -16,11 +16,11 @@ struct RCCType;
 
 typedef struct RCCObject {
 	struct RCCObject *prev, *next;
-	
+
 	int kind;
-	
+
 	const struct RCCType *type;
-	
+
 	const struct RCCToken *identifier;
 	const struct RCCNode *body;
 } RCCObject;
@@ -40,8 +40,10 @@ enum {
 
 struct RCCObject *RT_object_new_variable(struct RCContext *, const struct RCCType *type, const struct RCCToken *token);
 struct RCCObject *RT_object_new_typedef(struct RCContext *, const struct RCCType *type, const struct RCCToken *token);
-struct RCCObject *RT_object_new_function(struct RCContext *, const struct RCCType *type, const struct RCCToken *token, const struct RCCNode *node);
-struct RCCObject *RT_object_new_enum(struct RCContext *, const struct RCCType *type, const struct RCCToken *identifier, const struct RCCNode *value);
+struct RCCObject *RT_object_new_function(struct RCContext *, const struct RCCType *type, const struct RCCToken *token,
+										 const struct RCCNode *node);
+struct RCCObject *RT_object_new_enum(struct RCContext *, const struct RCCType *type, const struct RCCToken *identifier,
+									 const struct RCCNode *value);
 
 /** \} */
 
@@ -60,4 +62,4 @@ bool RT_object_is_enum(const struct RCCObject *object);
 }
 #endif
 
-#endif // RT_OBJECT_H
+#endif	// RT_OBJECT_H

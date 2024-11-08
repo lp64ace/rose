@@ -22,7 +22,7 @@ typedef struct RCCToken {
 	RCCSLoc location;
 	const struct RCCFile *file;
 	const struct RCCType *type;
-	
+
 	bool has_leading_space;
 	bool beginning_of_line;
 

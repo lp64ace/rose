@@ -21,4 +21,4 @@ void RT_pp_do(struct RCContext *, const struct RCCFile *file, ListBase *tokens);
 }
 #endif
 
-#endif // RT_PREPROCESSOR_H
+#endif	// RT_PREPROCESSOR_H

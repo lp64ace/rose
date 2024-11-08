@@ -46,16 +46,16 @@ ROSE_INLINE bool isint(const RCCNode *expr) {
 	}
 
 long double RT_node_evaluate_scalar(const RCCNode *expr) {
-	if(isscalar(expr)) {
-		if(ELEM(expr->kind, NODE_CONSTANT)) {
+	if (isscalar(expr)) {
+		if (ELEM(expr->kind, NODE_CONSTANT)) {
 			/** This is a simple constant token node that evaluates to scalar. */
 			return RT_token_as_scalar(expr->token);
 		}
-		if(ELEM(expr->kind, NODE_BINARY)) {
+		if (ELEM(expr->kind, NODE_BINARY)) {
 			const RCCNode *lhs = RT_node_lhs(expr);
 			const RCCNode *rhs = RT_node_rhs(expr);
-			
-			switch(expr->type) {
+
+			switch (expr->type) {
 				case BINARY_ADD: {
 					MANAGE_BINARY(long double, lhs, rhs, +);
 				} break;
@@ -86,17 +86,17 @@ long double RT_node_evaluate_scalar(const RCCNode *expr) {
 				case BINARY_LESS: {
 					MANAGE_BINARY(long double, lhs, rhs, <);
 				} break;
-				
+
 				case BINARY_ASSIGN:
 				case BINARY_COMMA: {
 					return RT_node_evaluate_scalar(rhs);
 				} break;
 			}
 		}
-		if(ELEM(expr->kind, NODE_UNARY)) {
+		if (ELEM(expr->kind, NODE_UNARY)) {
 			const RCCNode *node = RT_node_expr(expr);
-			
-			switch(expr->type) {
+
+			switch (expr->type) {
 				case UNARY_RETURN: {
 					MANAGE_UNARY(long double, node, -);
 				} break;
@@ -108,19 +108,19 @@ long double RT_node_evaluate_scalar(const RCCNode *expr) {
 				} break;
 			}
 		}
-		if(ELEM(expr->kind, NODE_COND)) {
+		if (ELEM(expr->kind, NODE_COND)) {
 			const RCCNode *condition = RT_node_condition(expr);
 			const RCCNode *then = RT_node_then(expr);
 			const RCCNode *otherwise = RT_node_otherwise(expr);
-			
-			if(isint(condition)) {
+
+			if (isint(condition)) {
 				bool path = RT_node_evaluate_integer(condition);
-				
+
 				return path ? RT_node_evaluate_scalar(then) : RT_node_evaluate_scalar(otherwise);
 			}
-			else if(isscalar(condition)) {
+			else if (isscalar(condition)) {
 				bool path = RT_node_evaluate_scalar(condition);
-				
+
 				return path ? RT_node_evaluate_scalar(then) : RT_node_evaluate_scalar(otherwise);
 			}
 		}
@@ -130,16 +130,16 @@ long double RT_node_evaluate_scalar(const RCCNode *expr) {
 	return (long double)(isint(expr) ? RT_node_evaluate_integer(expr) : 0);
 }
 long long RT_node_evaluate_integer(const RCCNode *expr) {
-	if(isint(expr)) {
-		if(ELEM(expr->kind, NODE_CONSTANT)) {
+	if (isint(expr)) {
+		if (ELEM(expr->kind, NODE_CONSTANT)) {
 			/** This is a simple constant token node that evaluates to integer. */
 			return (long long)RT_token_as_integer(expr->token);
 		}
-		if(ELEM(expr->kind, NODE_BINARY)) {
+		if (ELEM(expr->kind, NODE_BINARY)) {
 			const RCCNode *lhs = RT_node_lhs(expr);
 			const RCCNode *rhs = RT_node_rhs(expr);
-			
-			switch(expr->type) {
+
+			switch (expr->type) {
 				case BINARY_ADD: {
 					MANAGE_BINARY(long long, lhs, rhs, +);
 				} break;
@@ -188,17 +188,17 @@ long long RT_node_evaluate_integer(const RCCNode *expr) {
 				case BINARY_LESS: {
 					MANAGE_BINARY(long long, lhs, rhs, <);
 				} break;
-				
+
 				case BINARY_ASSIGN:
 				case BINARY_COMMA: {
 					return RT_node_evaluate_integer(rhs);
 				} break;
 			}
 		}
-		if(ELEM(expr->kind, NODE_UNARY)) {
+		if (ELEM(expr->kind, NODE_UNARY)) {
 			const RCCNode *node = RT_node_expr(expr);
-			
-			switch(expr->type) {
+
+			switch (expr->type) {
 				case UNARY_RETURN: {
 					MANAGE_UNARY(long double, node, -);
 				} break;
@@ -210,19 +210,19 @@ long long RT_node_evaluate_integer(const RCCNode *expr) {
 				} break;
 			}
 		}
-		if(ELEM(expr->kind, NODE_COND)) {
+		if (ELEM(expr->kind, NODE_COND)) {
 			const RCCNode *condition = RT_node_condition(expr);
 			const RCCNode *then = RT_node_then(expr);
 			const RCCNode *otherwise = RT_node_otherwise(expr);
-			
-			if(isint(condition)) {
+
+			if (isint(condition)) {
 				bool path = RT_node_evaluate_integer(condition);
-				
+
 				return path ? RT_node_evaluate_scalar(then) : RT_node_evaluate_scalar(otherwise);
 			}
-			else if(isscalar(condition)) {
+			else if (isscalar(condition)) {
 				bool path = RT_node_evaluate_scalar(condition);
-				
+
 				return path ? RT_node_evaluate_scalar(then) : RT_node_evaluate_scalar(otherwise);
 			}
 		}

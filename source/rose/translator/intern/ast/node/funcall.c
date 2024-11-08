@@ -7,9 +7,9 @@
 
 typedef struct RCCNodeFuncall {
 	RCCNode base;
-	
+
 	const RCCNode *func;
-	
+
 	ListBase arguments;
 } RCCNodeFuncall;
 
@@ -19,9 +19,9 @@ typedef struct RCCNodeFuncall {
 
 RCCNode *RT_node_new_funcall(RCContext *C, const RCCNode *func) {
 	RCCNodeFuncall *node = RT_node_new(C, func->token, func->cast, NODE_FUNCALL, 0, sizeof(RCCNodeFuncall));
-	
+
 	node->func = func;
-	
+
 	return (RCCNode *)node;
 }
 

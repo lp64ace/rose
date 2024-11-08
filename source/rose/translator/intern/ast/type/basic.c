@@ -123,7 +123,7 @@ ROSE_INLINE const RCCType *composite_basic_types(struct RCContext *c, const RCCT
  * \{ */
 
 bool RT_type_is_numeric(const RCCType *tp) {
-	if(tp->is_basic) {
+	if (tp->is_basic) {
 		return ELEM(tp->kind, TP_BOOL, TP_CHAR, TP_SHORT, TP_INT, TP_LONG, TP_LLONG, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE);
 	}
 	return false;

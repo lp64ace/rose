@@ -14,17 +14,17 @@ struct RCCType;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
- * 
- * These data structures are critical to the functionality and integrity of the DNA module. 
- * Any modifications to them—whether it’s altering fields, changing types, or adjusting structure 
+ *
+ * These data structures are critical to the functionality and integrity of the DNA module.
+ * Any modifications to them—whether it’s altering fields, changing types, or adjusting structure
  * layouts—can have a significant impact on the module's behavior and performance.
- * 
- * It's essential to carefully understand how these structures are serialized (written to files) 
- * and deserialized (read from files) because incorrect changes may cause issues with data 
- * compatibility, corruption, or versioning. Be mindful of any dependencies in the file I/O logic 
+ *
+ * It's essential to carefully understand how these structures are serialized (written to files)
+ * and deserialized (read from files) because incorrect changes may cause issues with data
+ * compatibility, corruption, or versioning. Be mindful of any dependencies in the file I/O logic
  * and how different components rely on this data.
- * 
- * If updates are necessary, ensure proper testing, version control, and backward compatibility 
+ *
+ * If updates are necessary, ensure proper testing, version control, and backward compatibility
  * strategies are followed.
  * \{ */
 
@@ -41,7 +41,8 @@ typedef struct RCCTypeQualified {
  * \{ */
 
 struct RCCType *RT_type_new_qualified(struct RCContext *, const struct RCCType *type);
-struct RCCType *RT_type_new_qualified_ex(struct RCContext *, const struct RCCType *type, const RCCTypeQualification *qualification);
+struct RCCType *RT_type_new_qualified_ex(struct RCContext *, const struct RCCType *type,
+										 const RCCTypeQualification *qualification);
 
 /** \} */
 

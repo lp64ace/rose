@@ -27,7 +27,7 @@ TEST(Tokenizer, Simple) {
 		RCCFile *file = RT_file_new("main.c", cache);
 		{
 			RCCParser *parser = RT_parser_new(file);
-			
+
 			RCCSLoc sloc;
 			RCCToken *token = (RCCToken *)parser->tokens.first;
 			ASSERT_TRUE(RT_token_match(token, RT_token_new_keyword(C, NULL, loc(&sloc, "int"), 3)));
@@ -62,18 +62,18 @@ TEST(Tokenizer, SimpleWithLocation) {
 		RCCFile *file = RT_file_new("main.c", cache);
 		{
 			RCCParser *parser = RT_parser_new(file);
-			
+
 			RCCToken *token = (RCCToken *)parser->tokens.first;
-			ASSERT_TRUE(token->location.column == 0 && token->location.line == 1); // int
-			ASSERT_TRUE((token = token->next) && token->location.column ==  4 && token->location.line == 1); // main
-			ASSERT_TRUE((token = token->next) && token->location.column ==  8 && token->location.line == 1); // (
-			ASSERT_TRUE((token = token->next) && token->location.column ==  9 && token->location.line == 1); // void
-			ASSERT_TRUE((token = token->next) && token->location.column == 13 && token->location.line == 1); // )
-			ASSERT_TRUE((token = token->next) && token->location.column == 15 && token->location.line == 1); // {
-			ASSERT_TRUE((token = token->next) && token->location.column ==  4 && token->location.line == 2); // return
-			ASSERT_TRUE((token = token->next) && token->location.column == 11 && token->location.line == 2); // 0
-			ASSERT_TRUE((token = token->next) && token->location.column == 12 && token->location.line == 2); // ;
-			ASSERT_TRUE((token = token->next) && token->location.column ==  0 && token->location.line == 3); // }
+			ASSERT_TRUE(token->location.column == 0 && token->location.line == 1);							  // int
+			ASSERT_TRUE((token = token->next) && token->location.column == 4 && token->location.line == 1);	  // main
+			ASSERT_TRUE((token = token->next) && token->location.column == 8 && token->location.line == 1);	  // (
+			ASSERT_TRUE((token = token->next) && token->location.column == 9 && token->location.line == 1);	  // void
+			ASSERT_TRUE((token = token->next) && token->location.column == 13 && token->location.line == 1);  // )
+			ASSERT_TRUE((token = token->next) && token->location.column == 15 && token->location.line == 1);  // {
+			ASSERT_TRUE((token = token->next) && token->location.column == 4 && token->location.line == 2);	  // return
+			ASSERT_TRUE((token = token->next) && token->location.column == 11 && token->location.line == 2);  // 0
+			ASSERT_TRUE((token = token->next) && token->location.column == 12 && token->location.line == 2);  // ;
+			ASSERT_TRUE((token = token->next) && token->location.column == 0 && token->location.line == 3);	  // }
 
 			RT_parser_free(parser);
 		}

@@ -1,5 +1,5 @@
-#include "ast/type.h"
 #include "ast/node.h"
+#include "ast/type.h"
 
 #include "RT_context.h"
 #include "RT_token.h"
@@ -173,14 +173,14 @@ const struct RCCNode *RT_type_enum_value(const RCCType *e, const RCCToken *ident
 
 void RT_type_enum_finalize(RCContext *C, RCCType *e) {
 	ROSE_assert(e->kind == TP_ENUM);
-	
+
 	long long value = 0;
 	LISTBASE_FOREACH(EnumItem *, item, &e->tp_enum.items) {
-		if(item->value) {
+		if (item->value) {
 			value = RT_node_evaluate_integer(item->value) + 1;
 		}
 		else {
-			while(RT_type_enum_has_value(e, value)) {
+			while (RT_type_enum_has_value(e, value)) {
 				value++;
 			}
 			item->value = RT_node_new_constant_value(C, value++);

@@ -71,7 +71,8 @@ ROSE_INLINE bool compatible_qualified_type(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE const struct RCCType *composite_qualified_type(struct RCContext *C, const struct RCCType *a, const struct RCCType *b) {
+ROSE_INLINE const struct RCCType *composite_qualified_type(struct RCContext *C, const struct RCCType *a,
+														   const struct RCCType *b) {
 	if (!RT_type_compatible(a, b)) {
 		return NULL;
 	}
