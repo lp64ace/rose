@@ -119,7 +119,7 @@ private:
 	SlotArray slots_;
 
 	/** Iterate over a slot index sequence for a given hash. */
-#define MAP_SLOT_PROBING_BEGIN(HASH, R_SLOT) \
+#define MAP_SLOT_PROBING_BEGIN(HASH, R_SLOT)                          \
 	SLOT_PROBING_BEGIN(ProbingStrategy, HASH, slot_mask_, SLOT_INDEX) \
 	auto &R_SLOT = slots_[SLOT_INDEX];
 #define MAP_SLOT_PROBING_END() SLOT_PROBING_END()
@@ -130,7 +130,14 @@ public:
 	 * This is necessary to avoid a high cost when no elements are added at all. An optimized grow
 	 * operation is performed on the first insertion.
 	 */
-	Map(Allocator allocator = {}) noexcept : removed_slots_(0), occupied_and_removed_slots_(0), usable_slots_(0), slot_mask_(0), hash_(), is_equal_(), slots_(1, allocator) {
+	Map(Allocator allocator = {}) noexcept
+		: removed_slots_(0),
+		  occupied_and_removed_slots_(0),
+		  usable_slots_(0),
+		  slot_mask_(0),
+		  hash_(),
+		  is_equal_(),
+		  slots_(1, allocator) {
 	}
 
 	Map(NoExceptConstructor, Allocator allocator = {}) noexcept : Map(allocator) {
@@ -140,7 +147,8 @@ public:
 
 	Map(const Map &other) = default;
 
-	Map(Map &&other) noexcept(std::is_nothrow_move_constructible_v<SlotArray>) : Map(NoExceptConstructor(), other.slots_.allocator()) {
+	Map(Map &&other) noexcept(std::is_nothrow_move_constructible_v<SlotArray>)
+		: Map(NoExceptConstructor(), other.slots_.allocator()) {
 		if constexpr (std::is_nothrow_move_constructible_v<SlotArray>) {
 			slots_ = std::move(other.slots_);
 		}
@@ -323,7 +331,8 @@ public:
 	Value pop_default(const Key &key, Value &&default_value) {
 		return this->pop_default_as(key, std::move(default_value));
 	}
-	template<typename ForwardKey, typename... ForwardValue> Value pop_default_as(const ForwardKey &key, ForwardValue &&...default_value) {
+	template<typename ForwardKey, typename... ForwardValue>
+	Value pop_default_as(const ForwardKey &key, ForwardValue &&...default_value) {
 		Slot *slot = this->lookup_slot_ptr(key, hash_(key));
 		if (slot == nullptr) {
 			return Value(std::forward<ForwardValue>(default_value)...);
@@ -354,13 +363,19 @@ public:
 	 *                     [](int *value) { *value = 5; },
 	 *                     [](int *value) { (*value)++; });
 	 */
-	template<typename CreateValueF, typename ModifyValueF> auto add_or_modify(const Key &key, const CreateValueF &create_value, const ModifyValueF &modify_value) -> decltype(create_value(nullptr)) {
+	template<typename CreateValueF, typename ModifyValueF>
+	auto add_or_modify(const Key &key, const CreateValueF &create_value, const ModifyValueF &modify_value)
+		-> decltype(create_value(nullptr)) {
 		return this->add_or_modify_as(key, create_value, modify_value);
 	}
-	template<typename CreateValueF, typename ModifyValueF> auto add_or_modify(Key &&key, const CreateValueF &create_value, const ModifyValueF &modify_value) -> decltype(create_value(nullptr)) {
+	template<typename CreateValueF, typename ModifyValueF>
+	auto add_or_modify(Key &&key, const CreateValueF &create_value, const ModifyValueF &modify_value)
+		-> decltype(create_value(nullptr)) {
 		return this->add_or_modify_as(std::move(key), create_value, modify_value);
 	}
-	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF> auto add_or_modify_as(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value) -> decltype(create_value(nullptr)) {
+	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF>
+	auto add_or_modify_as(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value)
+		-> decltype(create_value(nullptr)) {
 		return this->add_or_modify__impl(std::forward<ForwardKey>(key), create_value, modify_value, hash_(key));
 	}
 
@@ -412,7 +427,8 @@ public:
 	Value lookup_default(const Key &key, const Value &default_value) const {
 		return this->lookup_default_as(key, default_value);
 	}
-	template<typename ForwardKey, typename... ForwardValue> Value lookup_default_as(const ForwardKey &key, ForwardValue &&...default_value) const {
+	template<typename ForwardKey, typename... ForwardValue>
+	Value lookup_default_as(const ForwardKey &key, ForwardValue &&...default_value) const {
 		const Value *ptr = this->lookup_ptr_as(key);
 		if (ptr != nullptr) {
 			return *ptr;
@@ -455,7 +471,8 @@ public:
 	template<typename CreateValueF> Value &lookup_or_add_cb(Key &&key, const CreateValueF &create_value) {
 		return this->lookup_or_add_cb_as(std::move(key), create_value);
 	}
-	template<typename ForwardKey, typename CreateValueF> Value &lookup_or_add_cb_as(ForwardKey &&key, const CreateValueF &create_value) {
+	template<typename ForwardKey, typename CreateValueF>
+	Value &lookup_or_add_cb_as(ForwardKey &&key, const CreateValueF &create_value) {
 		return this->lookup_or_add_cb__impl(std::forward<ForwardKey>(key), create_value, hash_(key));
 	}
 
@@ -532,7 +549,8 @@ public:
 		friend Map;
 
 	public:
-		BaseIterator(const Slot *slots, const size_type total_slots, const size_type current_slot) : slots_(const_cast<Slot *>(slots)), total_slots_(total_slots), current_slot_(current_slot) {
+		BaseIterator(const Slot *slots, const size_type total_slots, const size_type current_slot)
+			: slots_(const_cast<Slot *>(slots)), total_slots_(total_slots), current_slot_(current_slot) {
 		}
 
 		BaseIterator &operator++() {
@@ -572,7 +590,8 @@ public:
 	 */
 	template<typename SubIterator> class BaseIteratorRange : public BaseIterator {
 	public:
-		BaseIteratorRange(const Slot *slots, size_type total_slots, size_type current_slot) : BaseIterator(slots, total_slots, current_slot) {
+		BaseIteratorRange(const Slot *slots, size_type total_slots, size_type current_slot)
+			: BaseIterator(slots, total_slots, current_slot) {
 		}
 
 		SubIterator begin() const {
@@ -595,7 +614,8 @@ public:
 		using pointer = const Key *;
 		using reference = const Key &;
 
-		KeyIterator(const Slot *slots, size_type total_slots, size_type current_slot) : BaseIteratorRange<KeyIterator>(slots, total_slots, current_slot) {
+		KeyIterator(const Slot *slots, size_type total_slots, size_type current_slot)
+			: BaseIteratorRange<KeyIterator>(slots, total_slots, current_slot) {
 		}
 
 		const Key &operator*() const {
@@ -609,7 +629,8 @@ public:
 		using pointer = const Value *;
 		using reference = const Value &;
 
-		ValueIterator(const Slot *slots, size_type total_slots, size_type current_slot) : BaseIteratorRange<ValueIterator>(slots, total_slots, current_slot) {
+		ValueIterator(const Slot *slots, size_type total_slots, size_type current_slot)
+			: BaseIteratorRange<ValueIterator>(slots, total_slots, current_slot) {
 		}
 
 		const Value &operator*() const {
@@ -623,7 +644,8 @@ public:
 		using pointer = Value *;
 		using reference = Value &;
 
-		MutableValueIterator(Slot *slots, size_type total_slots, size_type current_slot) : BaseIteratorRange<MutableValueIterator>(slots, total_slots, current_slot) {
+		MutableValueIterator(Slot *slots, size_type total_slots, size_type current_slot)
+			: BaseIteratorRange<MutableValueIterator>(slots, total_slots, current_slot) {
 		}
 
 		Value &operator*() {
@@ -637,7 +659,8 @@ public:
 		using pointer = Item *;
 		using reference = Item &;
 
-		ItemIterator(const Slot *slots, size_type total_slots, size_type current_slot) : BaseIteratorRange<ItemIterator>(slots, total_slots, current_slot) {
+		ItemIterator(const Slot *slots, size_type total_slots, size_type current_slot)
+			: BaseIteratorRange<ItemIterator>(slots, total_slots, current_slot) {
 		}
 
 		Item operator*() const {
@@ -652,7 +675,8 @@ public:
 		using pointer = MutableItem *;
 		using reference = MutableItem &;
 
-		MutableItemIterator(Slot *slots, size_type total_slots, size_type current_slot) : BaseIteratorRange<MutableItemIterator>(slots, total_slots, current_slot) {
+		MutableItemIterator(Slot *slots, size_type total_slots, size_type current_slot)
+			: BaseIteratorRange<MutableItemIterator>(slots, total_slots, current_slot) {
 		}
 
 		MutableItem operator*() const {
@@ -856,7 +880,8 @@ public:
 private:
 	ROSE_NOINLINE void realloc_and_reinsert(size_type min_usable_slots) {
 		size_type total_slots, usable_slots;
-		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots, &usable_slots);
+		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots,
+														&usable_slots);
 		ROSE_assert(total_slots >= 1);
 		const uint64_t new_slot_mask = uint64_t(total_slots) - 1;
 
@@ -918,7 +943,8 @@ private:
 		new (this) Map(NoExceptConstructor(), allocator);
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> void add_new__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue>
+	void add_new__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		ROSE_assert(!this->contains_as(key));
 
 		this->ensure_can_add();
@@ -934,7 +960,8 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> bool add__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue>
+	bool add__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
@@ -951,7 +978,9 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF> auto add_or_modify__impl(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value, uint64_t hash) -> decltype(create_value(nullptr)) {
+	template<typename ForwardKey, typename CreateValueF, typename ModifyValueF>
+	auto add_or_modify__impl(ForwardKey &&key, const CreateValueF &create_value, const ModifyValueF &modify_value,
+							 uint64_t hash) -> decltype(create_value(nullptr)) {
 		using CreateReturnT = decltype(create_value(nullptr));
 		using ModifyReturnT = decltype(modify_value(nullptr));
 		ROSE_STATIC_ASSERT((std::is_same_v<CreateReturnT, ModifyReturnT>), "Both callbacks should return the same type.");
@@ -982,7 +1011,8 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename CreateValueF> Value &lookup_or_add_cb__impl(ForwardKey &&key, const CreateValueF &create_value, uint64_t hash) {
+	template<typename ForwardKey, typename CreateValueF>
+	Value &lookup_or_add_cb__impl(ForwardKey &&key, const CreateValueF &create_value, uint64_t hash) {
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
@@ -999,7 +1029,8 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> Value &lookup_or_add__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue>
+	Value &lookup_or_add__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		this->ensure_can_add();
 
 		MAP_SLOT_PROBING_BEGIN(hash, slot) {
@@ -1016,7 +1047,8 @@ private:
 		MAP_SLOT_PROBING_END();
 	}
 
-	template<typename ForwardKey, typename... ForwardValue> bool add_overwrite__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue>
+	bool add_overwrite__impl(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		auto create_func = [&](Value *ptr) {
 			new (static_cast<void *>(ptr)) Value(std::forward<ForwardValue>(value)...);
 			return true;
@@ -1083,4 +1115,4 @@ private:
 
 }  // namespace rose
 
-#endif // LIB_MAP_HH
+#endif	// LIB_MAP_HH

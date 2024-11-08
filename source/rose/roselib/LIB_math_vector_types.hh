@@ -74,8 +74,7 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 		}
 	}
 
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	explicit VecBase(U value) : VecBase(T(value)) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> explicit VecBase(U value) : VecBase(T(value)) {
 	}
 
 	template<ROSE_ENABLE_IF_VEC(Size, == 1)> VecBase(T _x) {
@@ -176,8 +175,7 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 		unroll<Size>([&](auto i) { (*this)[i] = ptr[i]; });
 	}
 
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	explicit VecBase(const U *ptr) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> explicit VecBase(const U *ptr) {
 		unroll<Size>([&](auto i) { (*this)[i] = ptr[i]; });
 	}
 
@@ -558,4 +556,4 @@ using double2 = rose::VecBase<double, 2>;
 using double3 = rose::VecBase<double, 3>;
 using double4 = rose::VecBase<double, 4>;
 
-#endif // LIB_MATH_VECTOR_TYPES_HH
+#endif	// LIB_MATH_VECTOR_TYPES_HH

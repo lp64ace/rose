@@ -130,4 +130,4 @@ void _ROSE_assert_unreachable_print(const char *file, int line, const char *func
 }
 #endif
 
-#endif // LIB_ASSERT_H
+#endif	// LIB_ASSERT_H

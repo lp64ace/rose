@@ -103,7 +103,8 @@ public:
 	 * Return true, when this slot is occupied and contains a key that compares equal to the given
 	 * key. The hash is used by other slot implementations to determine inequality faster.
 	 */
-	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
+	template<typename ForwardKey, typename IsEqual>
+	bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
 		if (state_ == Occupied) {
 			return is_equal(key, *key_buffer_);
 		}
@@ -194,7 +195,8 @@ public:
 		return hash_;
 	}
 
-	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t hash) const {
+	template<typename ForwardKey, typename IsEqual>
+	bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t hash) const {
 		/* `hash_` might be uninitialized here, but that is ok. */
 		if (hash_ == hash) {
 			if (state_ == Occupied) {
@@ -257,7 +259,8 @@ public:
 		return hash(key_);
 	}
 
-	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t /*hash*/) const {
+	template<typename ForwardKey, typename IsEqual>
+	bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t /*hash*/) const {
 		ROSE_assert(KeyInfo::is_not_empty_or_removed(key));
 		return is_equal(key_, key);
 	}
@@ -278,29 +281,40 @@ public:
  * This exists just to make it more convenient to define which special integer values can be used
  * to indicate an empty and removed value.
  */
-template<typename Int, Int EmptyValue, Int RemovedValue> using IntegerSetSlot = IntrusiveSetSlot<Int, TemplatedKeyInfo<Int, EmptyValue, RemovedValue>>;
+template<typename Int, Int EmptyValue, Int RemovedValue>
+using IntegerSetSlot = IntrusiveSetSlot<Int, TemplatedKeyInfo<Int, EmptyValue, RemovedValue>>;
 
 template<typename Key> struct DefaultSetSlot;
 
 /**
  * Use SimpleSetSlot by default, because it is the smallest slot type that works for all key types.
  */
-template<typename Key> struct DefaultSetSlot { using type = SimpleSetSlot<Key>; };
+template<typename Key> struct DefaultSetSlot {
+	using type = SimpleSetSlot<Key>;
+};
 
 /**
  * Store the hash of a string in the slot by default. Recomputing the hash or doing string
  * comparisons can be relatively costly.
  */
-template<> struct DefaultSetSlot<std::string> { using type = HashedSetSlot<std::string>; };
-template<> struct DefaultSetSlot<StringRef> { using type = HashedSetSlot<StringRef>; };
-template<> struct DefaultSetSlot<StringRefNull> { using type = HashedSetSlot<StringRefNull>; };
+template<> struct DefaultSetSlot<std::string> {
+	using type = HashedSetSlot<std::string>;
+};
+template<> struct DefaultSetSlot<StringRef> {
+	using type = HashedSetSlot<StringRef>;
+};
+template<> struct DefaultSetSlot<StringRefNull> {
+	using type = HashedSetSlot<StringRefNull>;
+};
 
 /**
  * Use a special slot type for pointer keys, because we can store whether a slot is empty or
  * removed with special pointer values.
  */
-template<typename Key> struct DefaultSetSlot<Key *> { using type = IntrusiveSetSlot<Key *, PointerKeyInfo<Key *>>; };
+template<typename Key> struct DefaultSetSlot<Key *> {
+	using type = IntrusiveSetSlot<Key *, PointerKeyInfo<Key *>>;
+};
 
 }  // namespace rose
 
-#endif // LIB_SET_SLOTS_HH
+#endif	// LIB_SET_SLOTS_HH

@@ -9,7 +9,7 @@ extern "C" {
 
 ROSE_INLINE unsigned int LIB_hash_string(const char *str) {
 	unsigned int h = 0;
-	for(size_t i = 0; str[i]; i++) {
+	for (size_t i = 0; str[i]; i++) {
 		h = h * 37 + str[i];
 	}
 	return h;
@@ -19,4 +19,4 @@ ROSE_INLINE unsigned int LIB_hash_string(const char *str) {
 }
 #endif
 
-#endif // LIB_HASH_H
+#endif	// LIB_HASH_H

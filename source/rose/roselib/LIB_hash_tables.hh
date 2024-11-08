@@ -9,8 +9,8 @@
 #include "LIB_utildefines.h"
 #include "LIB_vector.hh"
 
-#include "LIB_math_bit.h"
 #include "LIB_hash.h"
+#include "LIB_math_bit.h"
 
 namespace rose {
 
@@ -60,8 +60,11 @@ inline constexpr size_t floor_multiplication_with_fraction(const size_t x, const
 	return size_t((size_t(x) * size_t(numerator) / size_t(denominator)));
 }
 
-inline constexpr size_t total_slot_amount_for_usable_slots(const size_t min_usable_slots, const size_t max_load_factor_numerator, const size_t max_load_factor_denominator) {
-	return power_of_2_max_constexpr(ceil_division_by_fraction(min_usable_slots, max_load_factor_numerator, max_load_factor_denominator));
+inline constexpr size_t total_slot_amount_for_usable_slots(const size_t min_usable_slots,
+														   const size_t max_load_factor_numerator,
+														   const size_t max_load_factor_denominator) {
+	return power_of_2_max_constexpr(
+		ceil_division_by_fraction(min_usable_slots, max_load_factor_numerator, max_load_factor_denominator));
 }
 
 /** \} */
@@ -85,7 +88,8 @@ public:
 		ROSE_assert(numerator < denominator);
 	}
 
-	void compute_total_and_usable_slots(size_t min_total_slots, size_t min_usable_slots, size_t *r_total_slots, size_t *r_usable_slots) const {
+	void compute_total_and_usable_slots(size_t min_total_slots, size_t min_usable_slots, size_t *r_total_slots,
+										size_t *r_usable_slots) const {
 		ROSE_assert(is_power_of_2_i((int)min_total_slots));
 
 		size_t total_slots = this->compute_total_slots(min_usable_slots, numerator_, denominator_);
@@ -300,4 +304,4 @@ struct DefaultEquality<Vector<T, InlineBufferCapacity, Allocator>> : public Sequ
 
 }  // namespace rose
 
-#endif // LIB_HASH_TABLES_HH
+#endif	// LIB_HASH_TABLES_HH

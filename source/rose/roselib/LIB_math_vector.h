@@ -191,4 +191,4 @@ ROSE_INLINE float normalize_v4(float r[4]);
 
 #include "intern/math_vector_inline.c"
 
-#endif // LIB_MATH_VECTOR_H
+#endif	// LIB_MATH_VECTOR_H

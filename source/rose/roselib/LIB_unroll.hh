@@ -20,4 +20,4 @@ template<int N, class Fn> void unroll(Fn fn) {
 
 }  // namespace rose
 
-#endif // LIB_UNROLL_HH
+#endif	// LIB_UNROLL_HH

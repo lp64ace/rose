@@ -96,7 +96,8 @@ typedef struct GHash {
 /** \name Internal Utility API
  * \{ */
 
-ROSE_INLINE void ghash_entry_copy(GHash *dhash, Entry *dentry, const GHash *shash, const Entry *sentry, GHashKeyCopyFP keycopyfp, GHashValCopyFP valcopyfp) {
+ROSE_INLINE void ghash_entry_copy(GHash *dhash, Entry *dentry, const GHash *shash, const Entry *sentry,
+								  GHashKeyCopyFP keycopyfp, GHashValCopyFP valcopyfp) {
 	dentry->key = (keycopyfp) ? keycopyfp(sentry->key) : (void *)sentry->key;
 
 	if ((dhash->flag & GHASH_FLAG_IS_GSET) == 0) {
@@ -188,7 +189,8 @@ static void ghash_buckets_resize(GHash *cont, const size_t nbuckets) {
 				/* No need to recompute hashes in this case, since our mask is just smaller,
 				 * all items in old bucket 'i' will go in same new bucket (i & new_mask)! */
 				const uint bucket_index = ghash_bucket_index(cont, i);
-				ROSE_assert(!buckets_old[i] || (bucket_index == ghash_bucket_index(cont, ghash_entryhash(cont, buckets_old[i]))));
+				ROSE_assert(!buckets_old[i] ||
+							(bucket_index == ghash_bucket_index(cont, ghash_entryhash(cont, buckets_old[i]))));
 				Entry *e;
 				for (e = buckets_old[i]; e && e->next; e = e->next) {
 					/* pass */
@@ -353,7 +355,8 @@ ROSE_INLINE Entry *ghash_lookup_entry(const GHash *cont, const void *key) {
 	return ghash_lookup_entry_ex(cont, key, bucket_index);
 }
 
-static GHash *ghash_new(GHashHashFP hashfp, GHashCmpFP cmpfp, const char *info, const size_t nentries_reserve, const size_t flag) {
+static GHash *ghash_new(GHashHashFP hashfp, GHashCmpFP cmpfp, const char *info, const size_t nentries_reserve,
+						const size_t flag) {
 	GHash *cont = MEM_mallocN(sizeof(*cont), info);
 
 	cont->hashfp = hashfp;
@@ -412,7 +415,8 @@ ROSE_INLINE void ghash_insert(GHash *cont, void *key, void *val) {
 	ghash_insert_ex(cont, key, val, bucket_index);
 }
 
-ROSE_INLINE bool ghash_insert_safe(GHash *cont, void *key, void *val, const bool override, GHashKeyFreeFP keyfreefp, GHashValFreeFP valfreefp) {
+ROSE_INLINE bool ghash_insert_safe(GHash *cont, void *key, void *val, const bool override, GHashKeyFreeFP keyfreefp,
+								   GHashValFreeFP valfreefp) {
 	const uint hash = ghash_keyhash(cont, key);
 	const size_t bucket_index = ghash_bucket_index(cont, hash);
 	GHashEntry *e = (GHashEntry *)ghash_lookup_entry_ex(cont, key, bucket_index);
@@ -458,7 +462,8 @@ ROSE_INLINE bool ghash_insert_safe_keyonly(GHash *cont, void *key, const bool ov
 	return true;
 }
 
-static Entry *ghash_remove_ex(GHash *cont, const void *key, GHashKeyFreeFP keyfreefp, GHashValFreeFP valfreefp, size_t bucket_index) {
+static Entry *ghash_remove_ex(GHash *cont, const void *key, GHashKeyFreeFP keyfreefp, GHashValFreeFP valfreefp,
+							  size_t bucket_index) {
 	Entry *e_prev, *e = ghash_lookup_entry_prev_ex(cont, key, &e_prev, bucket_index);
 
 	ROSE_assert(!valfreefp || !(cont->flag & GHASH_FLAG_IS_GSET));

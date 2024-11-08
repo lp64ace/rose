@@ -10,13 +10,18 @@
 namespace rose {
 
 /**
- * Under some circumstances #std::is_trivial_v<T> is false even though we know that the type is 
+ * Under some circumstances #std::is_trivial_v<T> is false even though we know that the type is
  * actually trivial. Using that extra knowledge allows for some optimizations.
  */
 template<typename T> inline constexpr bool is_trivial_extended_v = std::is_trivial_v<T>;
-template<typename T> inline constexpr bool is_trivially_destructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_destructible_v<T>;
-template<typename T> inline constexpr bool is_trivially_copy_constructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_copy_constructible_v<T>;
-template<typename T> inline constexpr bool is_trivially_move_constructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_move_constructible_v<T>;
+template<typename T>
+inline constexpr bool is_trivially_destructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_destructible_v<T>;
+template<typename T>
+inline constexpr bool is_trivially_copy_constructible_extended_v = is_trivial_extended_v<T> ||
+																   std::is_trivially_copy_constructible_v<T>;
+template<typename T>
+inline constexpr bool is_trivially_move_constructible_extended_v = is_trivial_extended_v<T> ||
+																   std::is_trivially_move_constructible_v<T>;
 
 template<typename T> void destruct_n(T *ptr, size_t n) {
 	if (is_trivially_destructible_extended_v<T>) {
@@ -61,7 +66,8 @@ template<typename T> void uninitialized_fill_n(T *dst, size_t n, const T &value)
 template<typename T> struct DestructValueAtAddress {
 	DestructValueAtAddress() = default;
 
-	template<typename U> DestructValueAtAddress(const U &) {}
+	template<typename U> DestructValueAtAddress(const U &) {
+	}
 
 	void operator()(T *ptr) {
 		ptr->~T();
@@ -112,9 +118,9 @@ public:
  * optimization and hash table implementations.
  */
 template<typename T, int64_t Size = 1> class TypedBuffer {
- private:
-  /** Required so that `sizeof(T)` is not required when `Size` is 0. */
-  static constexpr size_t get_size() {
+private:
+	/** Required so that `sizeof(T)` is not required when `Size` is 0. */
+	static constexpr size_t get_size() {
 		if constexpr (Size == 0) {
 			return 0;
 		}
@@ -123,17 +129,17 @@ template<typename T, int64_t Size = 1> class TypedBuffer {
 		}
 	}
 
-  /** Required so that `alignof(T)` is not required when `Size` is 0. */
-  static constexpr size_t get_alignment() {
-	if constexpr (Size == 0) {
-		return 1;
+	/** Required so that `alignof(T)` is not required when `Size` is 0. */
+	static constexpr size_t get_alignment() {
+		if constexpr (Size == 0) {
+			return 1;
+		}
+		else {
+			return alignof(T);
+		}
 	}
-	else {
-		return alignof(T);
-	}
-  }
 
-  ROSE_NO_UNIQUE_ADDRESS AlignedBuffer<get_size(), get_alignment()> buffer_;
+	ROSE_NO_UNIQUE_ADDRESS AlignedBuffer<get_size(), get_alignment()> buffer_;
 
 public:
 	operator T *() {
@@ -176,8 +182,7 @@ public:
  *  - It can be used in loops safely.
  *  - If the buffer is heap allocated, it is free automatically in the destructor.
  */
-template<size_t ReservedSize = 64, size_t ReservedAlignment = 64>
-class alignas(ReservedAlignment) DynamicStackBuffer {
+template<size_t ReservedSize = 64, size_t ReservedAlignment = 64> class alignas(ReservedAlignment) DynamicStackBuffer {
 private:
 	/* Don't create an empty array. This causes problems with some compilers. */
 	char reserved_buffer_[(ReservedSize > 0) ? ReservedSize : 1];
@@ -231,7 +236,8 @@ class NoExceptConstructor {};
  * Adding const or casting to a parent class is fine.
  */
 template<typename From, typename To>
-inline constexpr bool is_convertible_pointer_v = std::is_convertible_v<From, To> && std::is_pointer_v<From> && std::is_pointer_v<To>;
+inline constexpr bool is_convertible_pointer_v = std::is_convertible_v<From, To> && std::is_pointer_v<From> &&
+												 std::is_pointer_v<To>;
 
 /**
  * Helper variable that checks if a Span<From> can be converted to Span<To> safely, whereby From
@@ -241,22 +247,20 @@ inline constexpr bool is_convertible_pointer_v = std::is_convertible_v<From, To>
  */
 template<typename From, typename To>
 inline constexpr bool is_span_convertible_pointer_v =
-    /* Make sure we are working with pointers. */
-    std::is_pointer_v<From> && std::is_pointer_v<To> &&
-    (
+	/* Make sure we are working with pointers. */
+	std::is_pointer_v<From> && std::is_pointer_v<To> &&
+	(
 		/* No casting is necessary when both types are the same. */
 		std::is_same_v<From, To> ||
 		/* Allow adding const to the underlying type. */
 		std::is_same_v<const std::remove_pointer_t<From>, std::remove_pointer_t<To>> ||
 		/* Allow casting non-const pointers to void pointers. */
-		(!std::is_const_v<std::remove_pointer_t<From>> && std::is_same_v<To, void *>) || std::is_same_v<To, const void *>
-	);
+		(!std::is_const_v<std::remove_pointer_t<From>> && std::is_same_v<To, void *>) || std::is_same_v<To, const void *>);
 
 /**
  * Same as #std::is_same_v but allows for checking multiple types at the same time.
  */
-template<typename T, typename... Args>
-inline constexpr bool is_same_any_v = (std::is_same_v<T, Args> || ...);
+template<typename T, typename... Args> inline constexpr bool is_same_any_v = (std::is_same_v<T, Args> || ...);
 
 /**
  * Inline buffers for small-object-optimization should be disabled by default for large objects.
@@ -286,9 +290,7 @@ template<typename Container> Container &copy_assign_container(Container &dst, co
  * tagged with the NoExceptConstructor tag.
  */
 template<typename Container>
-Container &move_assign_container(Container &dst, Container &&src) noexcept(
-    std::is_nothrow_move_constructible_v<Container>)
-{
+Container &move_assign_container(Container &dst, Container &&src) noexcept(std::is_nothrow_move_constructible_v<Container>) {
 	if (&dst == &src) {
 		return dst;
 	}
@@ -320,7 +322,7 @@ template<typename T> inline bool assign_if_different(T &old_value, T new_value) 
 	return false;
 }
 
-} // namespace rose
+}  // namespace rose
 
 namespace rose::detail {
 
@@ -332,6 +334,6 @@ template<typename Func> struct ScopedDeferHelper {
 	}
 };
 
-} // rose::detail
+}  // namespace rose::detail
 
-#endif // LIB_MEMORY_UTILS_HH
+#endif	// LIB_MEMORY_UTILS_HH

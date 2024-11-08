@@ -22,4 +22,4 @@ size_t LIB_strncpy_wchar_as_utf8(char *out, size_t maxncpy, const wchar_t *unico
 }
 #endif
 
-#endif // LIB_STRING_UTILS_H
+#endif	// LIB_STRING_UTILS_H

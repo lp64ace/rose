@@ -34,15 +34,15 @@ typedef uint32_t BitMap;
 /**
  * Set or clear the value of a single bit at '_index'.
  */
-#define ROSE_BITMAP_SET(_bitmap, _index, _set)	  \
-	{											  \
-		if (_set) {								  \
+#define ROSE_BITMAP_SET(_bitmap, _index, _set)    \
+	{                                             \
+		if (_set) {                               \
 			ROSE_BITMAP_ENABLE(_bitmap, _index);  \
-		}										  \
-		else {									  \
+		}                                         \
+		else {                                    \
 			ROSE_BITMAP_DISABLE(_bitmap, _index); \
-		}										  \
-	}											  \
+		}                                         \
+	}                                             \
 	(void)0
 
 #ifdef __cplusplus
@@ -66,4 +66,4 @@ int LIB_bitmap_find_first_unset(const BitMap *bitmap, size_t bits);
 }
 #endif
 
-#endif // LIB_BITMAP_H
+#endif	// LIB_BITMAP_H

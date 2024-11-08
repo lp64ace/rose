@@ -16,11 +16,11 @@ TEST(MathBit, NextPowTwo32) {
 		}
 	}
 	/** After that check logn steps for each exponensial value! */
-	for(unsigned int exp = 16; exp < 32; exp++) {
+	for (unsigned int exp = 16; exp < 32; exp++) {
 		uint32_t prev = (1u << (exp - 1));
 		uint32_t next = (1u << (exp - 0));
-		
-		for(uint32_t n = prev + 1; n <= next; n += (next - n + 2) >> 1) {
+
+		for (uint32_t n = prev + 1; n <= next; n += (next - n + 2) >> 1) {
 			ASSERT_EQ(_lib_nextpow2_u32(n), (1u << exp));
 		}
 	}
@@ -38,11 +38,11 @@ TEST(MathBit, NextPowTwo64) {
 		}
 	}
 	/** After that check logn steps for each exponensial value! */
-	for(unsigned int exp = 16; exp < 64; exp++) {
+	for (unsigned int exp = 16; exp < 64; exp++) {
 		uint64_t prev = (1ull << (exp - 1));
 		uint64_t next = (1ull << (exp - 0));
-		
-		for(uint64_t n = prev + 1; n <= next; n += (next - n + 2) >> 1) {
+
+		for (uint64_t n = prev + 1; n <= next; n += (next - n + 2) >> 1) {
 			ASSERT_EQ(_lib_nextpow2_u64(n), (1ull << exp));
 		}
 	}
@@ -51,37 +51,37 @@ TEST(MathBit, NextPowTwo64) {
 
 TEST(MathBit, PopulationCount32) {
 	uint32_t mask = (1 << 31) | (1 << 16) | (1 << 0);
-	
+
 	ASSERT_EQ(_lib_popcount_u32(mask), 3);
 }
 
 TEST(MathBit, PopulationCount64) {
 	uint64_t mask = (1ULL << 63) | (1ULL << 32) | (1ULL << 0);
-	
+
 	ASSERT_EQ(_lib_popcount_u64(mask), 3);
 }
 
 TEST(MathBit, ForwardSearch) {
 	uint32_t init = (1u << 31) | (1u << 16) | (1u << 0);
 	uint32_t copy = 0;
-	
+
 	uint32_t mask = init;
-	while(mask) {
+	while (mask) {
 		copy |= (1u << _lib_forward_scan_clear_u32(&mask));
 	}
-	
+
 	ASSERT_EQ(copy, init);
 }
 
 TEST(MathBit, ForwardSearch64) {
 	uint64_t init = (1ull << 63) | (1ull << 32) | (1ull << 0);
 	uint64_t copy = 0;
-	
+
 	uint64_t mask = init;
-	while(mask) {
+	while (mask) {
 		copy |= (1ull << _lib_forward_scan_clear_u64(&mask));
 	}
-	
+
 	ASSERT_EQ(copy, init);
 }
 

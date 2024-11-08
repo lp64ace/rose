@@ -15,7 +15,7 @@ extern "C" {
 
 typedef struct LinkData {
 	struct LinkData *prev, *next;
-	
+
 	void *data;
 } LinkData;
 
@@ -223,26 +223,34 @@ ROSE_INLINE void LIB_listbase_clear(ListBase *listbase);
 /** \name Iteration Macros
  * \{ */
 
-#define LISTBASE_FOREACH(type, var, list) for (type var = (type)((list)->first); var != NULL; var = (type)(((Link *)(var))->next))
+#define LISTBASE_FOREACH(type, var, list) \
+	for (type var = (type)((list)->first); var != NULL; var = (type)(((Link *)(var))->next))
 
-#define LISTBASE_FOREACH_BACKWARD(type, var, list) for (type var = (type)((list)->last); var != NULL; var = (type)(((Link *)(var))->prev))
+#define LISTBASE_FOREACH_BACKWARD(type, var, list) \
+	for (type var = (type)((list)->last); var != NULL; var = (type)(((Link *)(var))->prev))
 
 /**
  * A version of #LISTBASE_FOREACH that supports incrementing an index variable at every step.
  * Including this in the macro helps prevent mistakes where "continue" mistakenly skips the
  * incrementation.
  */
-#define LISTBASE_FOREACH_INDEX(type, var, list, index_var) for (type var = (((void)(index_var = 0)), (type)((list)->first)); var != NULL; var = (type)(((Link *)(var))->next), index_var++)
+#define LISTBASE_FOREACH_INDEX(type, var, list, index_var)                         \
+	for (type var = (((void)(index_var = 0)), (type)((list)->first)); var != NULL; \
+		 var = (type)(((Link *)(var))->next), index_var++)
 
 /**
  * A version of #LISTBASE_FOREACH that supports removing the item we're looping over.
  */
-#define LISTBASE_FOREACH_MUTABLE(type, var, list) for (type var = (type)((list)->first), *var##_iter_next; ((var != NULL) ? ((void)(var##_iter_next = (type)(((Link *)(var))->next)), 1) : 0); var = var##_iter_next)
+#define LISTBASE_FOREACH_MUTABLE(type, var, list)            \
+	for (type var = (type)((list)->first), *var##_iter_next; \
+		 ((var != NULL) ? ((void)(var##_iter_next = (type)(((Link *)(var))->next)), 1) : 0); var = var##_iter_next)
 
 /**
  * A version of #LISTBASE_FOREACH_BACKWARD that supports removing the item we're looping over.
  */
-#define LISTBASE_FOREACH_BACKWARD_MUTABLE(type, var, list) for (type var = (type)((list)->last), *var##_iter_prev; ((var != NULL) ? ((void)(var##_iter_prev = (type)(((Link *)(var))->prev)), 1) : 0); var = var##_iter_prev)
+#define LISTBASE_FOREACH_BACKWARD_MUTABLE(type, var, list)  \
+	for (type var = (type)((list)->last), *var##_iter_prev; \
+		 ((var != NULL) ? ((void)(var##_iter_prev = (type)(((Link *)(var))->prev)), 1) : 0); var = var##_iter_prev)
 
 /** \} */
 

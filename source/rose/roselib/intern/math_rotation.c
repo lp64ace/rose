@@ -5,7 +5,7 @@
 /* -------------------------------------------------------------------- */
 /** \name Axis Angle
  * \{ */
- 
+
 void axis_angle_normalized_to_mat3_ex(float mat[3][3], const float axis[3], const float angle_sin, const float angle_cos) {
 	float nsi[3], ico;
 	float n_00, n_01, n_11, n_02, n_12, n_22;

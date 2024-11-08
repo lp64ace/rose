@@ -74,7 +74,7 @@ GHash *LIB_ghash_new(GHashHashFP hashfp, GHashCmpFP cmpfp, const char *info);
 
 /**
  * Create a copy of the given hash table.
- * Keys and values are copied if the relevant callback functions are provided, 
+ * Keys and values are copied if the relevant callback functions are provided,
  * otherwise pointers remain the same.
  *
  * \param hash The hash table to be copied.
@@ -343,7 +343,7 @@ typedef GHashIterState GSetIterState;
 
 /**
  * Create a new GSet, a set that can store unique keys.
- * 
+ *
  * \param hashfp A function that takes a key and returns an unsigned int hash.
  * \param cmpfp A function that takes two keys and returns false when equal.
  * \param info A string providing additional information about the set.
@@ -354,7 +354,7 @@ typedef GHashIterState GSetIterState;
 GSet *LIB_gset_new_ex(GSetHashFP hashfp, GSetCmpFP cmpfp, const char *info, size_t reserve);
 /**
  * Create a new GSet, a set that can store unique keys.
- * 
+ *
  * \param hashfp A function that takes a key and returns an unsigned int hash.
  * \param cmpfp A function that takes two keys and returns false when equal.
  * \param info A string providing additional information about the set.
@@ -366,7 +366,7 @@ GSet *LIB_gset_new(GSetHashFP hashfp, GSetCmpFP cmpfp, const char *info);
 /**
  * Creates a copy of the given set.
  * If a key copy function is provided, the keys are copied; otherwise, the key pointers remain the same.
- * 
+ *
  * \param set The set to copy.
  * \param keycopyfp A function to copy the keys.
  *
@@ -376,7 +376,7 @@ GSet *LIB_gset_copy(const GSet *set, GSetKeyCopyFP keycopyfp);
 
 /**
  * Frees the set and its keys using the provided function to free each key.
- * 
+ *
  * \param set The set to free.
  * \param keyfreefp A function to free the keys.
  */
@@ -384,7 +384,7 @@ void LIB_gset_free(GSet *set, GSetKeyFreeFP keyfreefp);
 
 /**
  * Inserts a key into the set without checking for duplicates.
- * 
+ *
  * \param set The set.
  * \param key The key to insert.
  */
@@ -392,7 +392,7 @@ void LIB_gset_insert(GSet *set, void *key);
 /**
  * Adds a key to the set, checking for duplicates.
  * If the key is already in the set, it is not inserted again.
- * 
+ *
  * \param set The set.
  * \param key The key to add.
  *
@@ -403,7 +403,7 @@ bool LIB_gset_add(GSet *set, void *key);
 /**
  * Ensures that a key exists in the set.
  * If the key is not present, it is added. If the key is already present, no changes are made.
- * 
+ *
  * \param set The set.
  * \param key The key to ensure.
  * \param r_key A pointer to store the key if it's newly added.
@@ -413,7 +413,7 @@ bool LIB_gset_add(GSet *set, void *key);
 bool LIB_gset_ensure_p_ex(GSet *set, const void *key, void ***r_key);
 /**
  * Reinsert a key into the set, managing duplicates. If the key exists, it will be replaced.
- * 
+ *
  * \param set The set.
  * \param key The key to insert or update.
  * \param keyfreefp A function to free the old key if it is replaced.
@@ -424,7 +424,7 @@ bool LIB_gset_reinsert(GSet *set, void *key, GSetKeyFreeFP keyfreefp);
 /**
  * Replaces the key in the set if it is found, returning the old key.
  * If the key is not found, it returns NULL.
- * 
+ *
  * \param set The set.
  * \param key The new key.
  *
@@ -434,7 +434,7 @@ void *LIB_gset_replace_key(GSet *set, void *key);
 
 /**
  * Checks if a key exists in the set.
- * 
+ *
  * \param set The set.
  * \param key The key to check.
  *
@@ -444,7 +444,7 @@ bool LIB_gset_haskey(const GSet *set, const void *key);
 
 /**
  * Removes a random key from the set and updates the iterator state.
- * 
+ *
  * \param set The set.
  * \param state The iterator state.
  * \param r_key A pointer to store the removed key.
@@ -453,7 +453,7 @@ bool LIB_gset_haskey(const GSet *set, const void *key);
 bool LIB_gset_pop(GSet *set, GSetIterState *state, void ***r_key);
 /**
  * Removes a specific key from the set.
- * 
+ *
  * \param set The set.
  * \param key The key to remove.
  * \param keyfreefp A function to free the key.
@@ -464,7 +464,7 @@ bool LIB_gset_remove(GSet *set, const void *key, GSetKeyFreeFP keyfreefp);
 
 /**
  * Removes all keys from the set and optionally reserves space for a specified number of entries.
- * 
+ *
  * \param set The set.
  * \param keyfreefp A function to free the keys.
  * \param reserve The number of entries to reserve space for after clearing.
@@ -472,7 +472,7 @@ bool LIB_gset_remove(GSet *set, const void *key, GSetKeyFreeFP keyfreefp);
 void LIB_gset_clear_ex(GSet *set, GSetKeyFreeFP keyfreefp, size_t reserve);
 /**
  * Removes all keys from the set.
- * 
+ *
  * \param set The set.
  * \param keyfreefp A function to free the keys.
  */
@@ -480,7 +480,7 @@ void LIB_gset_clear(GSet *set, GSetKeyFreeFP keyfreefp);
 
 /**
  * Looks up a key in the set.
- * 
+ *
  * \param set The set.
  * \param key The key to look up.
  *
@@ -490,7 +490,7 @@ void *LIB_gset_lookup(const GSet *set, const void *key);
 
 /**
  * Removes a key from the set and returns it.
- * 
+ *
  * \param set The set.
  * \param key The key to remove.
  * \param keyfreefp A function to free the key if it is found.
@@ -501,7 +501,7 @@ void *LIB_gset_popkey(GSet *set, const void *key, GHashKeyFreeFP keyfreefp);
 
 /**
  * Gets the number of entries in the set.
- * 
+ *
  * \param set The set.
  *
  * \return The number of entries in the set.
@@ -510,14 +510,14 @@ size_t LIB_gset_len(const GSet *set);
 
 /**
  * Sets a flag on the set.
- * 
+ *
  * \param set The set.
  * \param flag The flag to set.
  */
 void LIB_gset_flag_set(GSet *set, uint flag);
 /**
  * Clears a flag on the set.
- * 
+ *
  * \param set The set.
  * \param flag The flag to clear.
  */

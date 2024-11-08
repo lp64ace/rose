@@ -123,4 +123,4 @@ void rotate_m4(float mat[4][4], char axis, float angle);
 }
 #endif
 
-#endif // LIB_MATH_MATRIX_H
+#endif	// LIB_MATH_MATRIX_H

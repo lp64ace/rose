@@ -122,4 +122,4 @@ ROSE_INLINE size_t _LIB_path_join_9(_ROSE_PATH_JOIN_ARGS_7) {
 }
 #endif
 
-#endif // LIB_PATH_UTILS_H
+#endif	// LIB_PATH_UTILS_H

@@ -35,4 +35,4 @@ void axis_angle_to_mat4(float R[4][4], const float axis[3], float angle);
 }
 #endif
 
-#endif // LIB_MATH_ROTATION_H
+#endif	// LIB_MATH_ROTATION_H

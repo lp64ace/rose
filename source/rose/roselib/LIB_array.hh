@@ -159,13 +159,11 @@ public:
 		return MutableSpan<T>(data_, size_);
 	}
 
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))>
-	operator Span<U>() const {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))> operator Span<U>() const {
 		return Span<U>(data_, size_);
 	}
 
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))>
-	operator MutableSpan<U>() {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<T, U>))> operator MutableSpan<U>() {
 		return MutableSpan<U>(data_, size_);
 	}
 
@@ -350,4 +348,4 @@ private:
 
 }  // namespace rose
 
-#endif // LIB_ARRAY_HH
+#endif	// LIB_ARRAY_HH

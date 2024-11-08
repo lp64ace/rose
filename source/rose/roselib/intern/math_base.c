@@ -15,10 +15,10 @@ uint64_t ceil_to_multiple_u64(uint64_t a, uint64_t b) {
 }
 
 float clampf(float x, float low, float high) {
-	if(x < low) {
+	if (x < low) {
 		return low;
 	}
-	if(x > high) {
+	if (x > high) {
 		return high;
 	}
 	return x;

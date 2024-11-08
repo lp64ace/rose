@@ -111,12 +111,11 @@ template<typename T> struct DefaultHash<const T> {
 	}
 };
 
-#define TRIVIAL_DEFAULT_INT_HASH(TYPE) \
-	template<> struct DefaultHash<TYPE> { \
-		uint64_t operator()(TYPE value) const \
-		{ \
-			return uint64_t(value); \
-		} \
+#define TRIVIAL_DEFAULT_INT_HASH(TYPE)          \
+	template<> struct DefaultHash<TYPE> {       \
+		uint64_t operator()(TYPE value) const { \
+			return uint64_t(value);             \
+		}                                       \
 	}
 
 /**
@@ -202,21 +201,17 @@ template<typename T> struct DefaultHash<T *> {
 	}
 };
 
-template<typename T> uint64_t get_default_hash(const T &v)
-{
+template<typename T> uint64_t get_default_hash(const T &v) {
 	return DefaultHash<std::decay_t<T>>{}(v);
 }
 
-template<typename T1, typename T2> uint64_t get_default_hash(const T1 &v1, const T2 &v2)
-{
+template<typename T1, typename T2> uint64_t get_default_hash(const T1 &v1, const T2 &v2) {
 	const uint64_t h1 = get_default_hash(v1);
 	const uint64_t h2 = get_default_hash(v2);
 	return h1 ^ (h2 * 19349669);
 }
 
-template<typename T1, typename T2, typename T3>
-uint64_t get_default_hash(const T1 &v1, const T2 &v2, const T3 &v3)
-{
+template<typename T1, typename T2, typename T3> uint64_t get_default_hash(const T1 &v1, const T2 &v2, const T3 &v3) {
 	const uint64_t h1 = get_default_hash(v1);
 	const uint64_t h2 = get_default_hash(v2);
 	const uint64_t h3 = get_default_hash(v3);
@@ -224,8 +219,7 @@ uint64_t get_default_hash(const T1 &v1, const T2 &v2, const T3 &v3)
 }
 
 template<typename T1, typename T2, typename T3, typename T4>
-uint64_t get_default_hash(const T1 &v1, const T2 &v2, const T3 &v3, const T4 &v4)
-{
+uint64_t get_default_hash(const T1 &v1, const T2 &v2, const T3 &v3, const T4 &v4) {
 	const uint64_t h1 = get_default_hash(v1);
 	const uint64_t h2 = get_default_hash(v2);
 	const uint64_t h3 = get_default_hash(v3);
@@ -255,6 +249,6 @@ template<typename T1, typename T2> struct DefaultHash<std::pair<T1, T2>> {
 	}
 };
 
-} // namespace rose
+}  // namespace rose
 
-#endif // LIB_HASH_HH
+#endif	// LIB_HASH_HH

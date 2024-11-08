@@ -29,4 +29,4 @@ int64_t rabin_karp_rolling_hash_roll_ex(int64_t hash, const void *itr, size_t le
 }
 #endif
 
-#endif // ALGORITHM_RABIN_KARP_H
+#endif	// ALGORITHM_RABIN_KARP_H

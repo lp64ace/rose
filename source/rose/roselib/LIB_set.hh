@@ -99,7 +99,7 @@ private:
 	SlotArray slots_;
 
 	/** Iterate over a slot index sequence for a given hash. */
-#define SET_SLOT_PROBING_BEGIN(HASH, R_SLOT) \
+#define SET_SLOT_PROBING_BEGIN(HASH, R_SLOT)                          \
 	SLOT_PROBING_BEGIN(ProbingStrategy, HASH, slot_mask_, SLOT_INDEX) \
 	auto &R_SLOT = slots_[SLOT_INDEX];
 #define SET_SLOT_PROBING_END() SLOT_PROBING_END()
@@ -109,7 +109,8 @@ public:
 	 * is. This is necessary to avoid a high cost when no elements are added at all. An optimized
 	 * grow operation is performed on the first insertion.
 	 */
-	Set(Allocator allocator = {}) noexcept : removed_slots_(0), occupied_and_removed_slots_(0), usable_slots_(0), slot_mask_(0), slots_(1, allocator) {
+	Set(Allocator allocator = {}) noexcept
+		: removed_slots_(0), occupied_and_removed_slots_(0), usable_slots_(0), slot_mask_(0), slots_(1, allocator) {
 	}
 
 	Set(NoExceptConstructor, Allocator allocator = {}) noexcept : Set(allocator) {
@@ -129,7 +130,8 @@ public:
 
 	Set(const Set &other) = default;
 
-	Set(Set &&other) noexcept(std::is_nothrow_move_constructible_v<SlotArray>) : Set(NoExceptConstructor(), other.slots_.allocator()) {
+	Set(Set &&other) noexcept(std::is_nothrow_move_constructible_v<SlotArray>)
+		: Set(NoExceptConstructor(), other.slots_.allocator()) {
 		if constexpr (std::is_nothrow_move_constructible_v<SlotArray>) {
 			slots_ = std::move(other.slots_);
 		}
@@ -183,8 +185,7 @@ public:
 	bool add(Key &&key) {
 		return this->add_as(std::move(key));
 	}
-	template<typename ForwardKey>
-	bool add_as(ForwardKey &&key) {
+	template<typename ForwardKey> bool add_as(ForwardKey &&key) {
 		return this->add__impl(std::forward<ForwardKey>(key), hash_(key));
 	}
 
@@ -219,8 +220,7 @@ public:
 	bool contains(const Key &key) const {
 		return this->contains_as(key);
 	}
-	template<typename ForwardKey>
-	bool contains_as(const ForwardKey &key) const {
+	template<typename ForwardKey> bool contains_as(const ForwardKey &key) const {
 		return this->contains__impl(key, hash_(key));
 	}
 
@@ -231,8 +231,7 @@ public:
 	const Key &lookup_key(const Key &key) const {
 		return this->lookup_key_as(key);
 	}
-	template<typename ForwardKey>
-	const Key &lookup_key_as(const ForwardKey &key) const {
+	template<typename ForwardKey> const Key &lookup_key_as(const ForwardKey &key) const {
 		return this->lookup_key__impl(key, hash_(key));
 	}
 
@@ -243,8 +242,7 @@ public:
 	const Key &lookup_key_default(const Key &key, const Key &default_value) const {
 		return this->lookup_key_default_as(key, default_value);
 	}
-	template<typename ForwardKey>
-	const Key &lookup_key_default_as(const ForwardKey &key, const Key &default_key) const {
+	template<typename ForwardKey> const Key &lookup_key_default_as(const ForwardKey &key, const Key &default_key) const {
 		const Key *ptr = this->lookup_key_ptr__impl(key, hash_(key));
 		if (ptr == nullptr) {
 			return default_key;
@@ -259,8 +257,7 @@ public:
 	const Key *lookup_key_ptr(const Key &key) const {
 		return this->lookup_key_ptr_as(key);
 	}
-	template<typename ForwardKey>
-	const Key *lookup_key_ptr_as(const ForwardKey &key) const {
+	template<typename ForwardKey> const Key *lookup_key_ptr_as(const ForwardKey &key) const {
 		return this->lookup_key_ptr__impl(key, hash_(key));
 	}
 
@@ -274,8 +271,7 @@ public:
 	const Key &lookup_key_or_add(Key &&key) {
 		return this->lookup_key_or_add_as(std::move(key));
 	}
-	template<typename ForwardKey>
-	const Key &lookup_key_or_add_as(ForwardKey &&key) {
+	template<typename ForwardKey> const Key &lookup_key_or_add_as(ForwardKey &&key) {
 		return this->lookup_key_or_add__impl(std::forward<ForwardKey>(key), hash_(key));
 	}
 
@@ -287,8 +283,7 @@ public:
 	bool remove(const Key &key) {
 		return this->remove_as(key);
 	}
-	template<typename ForwardKey>
-	bool remove_as(const ForwardKey &key) {
+	template<typename ForwardKey> bool remove_as(const ForwardKey &key) {
 		return this->remove__impl(key, hash_(key));
 	}
 
@@ -298,8 +293,7 @@ public:
 	void remove_contained(const Key &key) {
 		this->remove_contained_as(key);
 	}
-	template<typename ForwardKey>
-	void remove_contained_as(const ForwardKey &key) {
+	template<typename ForwardKey> void remove_contained_as(const ForwardKey &key) {
 		this->remove_contained__impl(key, hash_(key));
 	}
 
@@ -326,7 +320,8 @@ public:
 		friend Set;
 
 	public:
-		Iterator(const Slot *slots, size_t total_slots, size_t current_slot) : slots_(slots), total_slots_(total_slots), current_slot_(current_slot) {
+		Iterator(const Slot *slots, size_t total_slots, size_t current_slot)
+			: slots_(slots), total_slots_(total_slots), current_slot_(current_slot) {
 		}
 
 		Iterator &operator++() {
@@ -400,8 +395,7 @@ public:
 	 *
 	 * This is similar to std::erase_if.
 	 */
-	template<typename Predicate>
-	size_type remove_if(Predicate &&predicate) {
+	template<typename Predicate> size_type remove_if(Predicate &&predicate) {
 		const size_type prev_size = this->size();
 		for (Slot &slot : slots_) {
 			if (slot.is_occupied()) {
@@ -556,7 +550,8 @@ public:
 private:
 	ROSE_NOINLINE void realloc_and_reinsert(const size_type min_usable_slots) {
 		size_type total_slots, usable_slots;
-		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots, &usable_slots);
+		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots,
+														&usable_slots);
 		ROSE_assert(total_slots >= 1);
 		const uint64_t new_slot_mask = uint64_t(total_slots) - 1;
 
@@ -761,4 +756,4 @@ private:
 
 }  // namespace rose
 
-#endif // LIB_SET_HH
+#endif	// LIB_SET_HH

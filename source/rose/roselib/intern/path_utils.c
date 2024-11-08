@@ -6,10 +6,10 @@
 #include <limits.h>
 
 /**
- * Althrough there is a big diversity between LINUX and WINDOWS operating systems. 
- * Adding this to an operating system specific library/module would mean that 
+ * Althrough there is a big diversity between LINUX and WINDOWS operating systems.
+ * Adding this to an operating system specific library/module would mean that
  * I would have to link it to a platform or system object.
- * 
+ *
  * Having this dependency free is a very big advantage.
  */
 
@@ -26,15 +26,15 @@
 #endif
 
 bool LIB_path_is_win32_drive(const char *path) {
-  return isalpha(path[0]) && (path[1] == ':');
+	return isalpha(path[0]) && (path[1] == ':');
 }
 
 bool LIB_path_is_win32_drive_only(const char *path) {
-  return isalpha(path[0]) && (path[1] == ':') && (path[2] == '\0');
+	return isalpha(path[0]) && (path[1] == ':') && (path[2] == '\0');
 }
 
 bool LIB_path_is_win32_drive_with_slash(const char *path) {
-  return isalpha(path[0]) && (path[1] == ':') && ELEM(path[2], '\\', '/');
+	return isalpha(path[0]) && (path[1] == ':') && ELEM(path[2], '\\', '/');
 }
 
 ROSE_STATIC bool LIB_path_is_absolute_win32(const char *path) {
@@ -44,7 +44,7 @@ ROSE_STATIC bool LIB_path_is_absolute_win32(const char *path) {
 bool LIB_path_is_absolute_from_cwd(const char *path) {
 	bool is_abs = false;
 	const size_t path_len_clamp = LIB_strnlen(path, 3);
-	
+
 #ifdef WIN32
 	if (path_len_clamp >= 3 && LIB_path_is_absolute_win32(path)) {
 		is_abs = true;
@@ -54,7 +54,7 @@ bool LIB_path_is_absolute_from_cwd(const char *path) {
 		is_abs = true;
 	}
 #endif
-	
+
 	return false;
 }
 
@@ -84,8 +84,6 @@ bool LIB_path_current_working_directory(char *buffer, size_t maxncpy) {
 ROSE_STATIC bool LIB_path_combine(char *dst, size_t maxncpy, const char *left, const char *right) {
 	ROSE_assert(maxncpy != 0);
 	ROSE_assert(dst != left && dst != right);
-
-
 }
 
 bool LIB_path_absolute(char *buffer, size_t maxncpy, const char *original) {
@@ -94,17 +92,17 @@ bool LIB_path_absolute(char *buffer, size_t maxncpy, const char *original) {
 		return true;
 	}
 	char cwd[PATH_MAX];
-	if(!LIB_path_current_working_directory(cwd, ARRAY_SIZE(cwd))) {
+	if (!LIB_path_current_working_directory(cwd, ARRAY_SIZE(cwd))) {
 		return false;
 	}
-	
+
 	/** #buffer can be the same as #original, so we make a copy before we alter anything in #buffer. */
 	char orig[PATH_MAX];
-	if(buffer == original) {
+	if (buffer == original) {
 		original = LIB_strcpy(orig, ARRAY_SIZE(orig), original);
 	}
-	
-	if(LIB_path_join(buffer, maxncpy, cwd, original) < maxncpy) {
+
+	if (LIB_path_join(buffer, maxncpy, cwd, original) < maxncpy) {
 		return true;
 	}
 	return false;
@@ -116,21 +114,21 @@ bool LIB_path_absolute(char *buffer, size_t maxncpy, const char *original) {
 
 size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[], size_t length) {
 	ROSE_assert(length > 0);
-	
+
 	if (maxncpy == 0) {
 		return 0;
 	}
 	const char *path = paths[0];
 	const size_t last = maxncpy - 1;
 	size_t offset = LIB_strcpy_rlen(dst, maxncpy, path);
-	
+
 	if (offset == last) {
 		return offset;
 	}
-	
+
 #ifdef WIN32
 	/**
-	 * Special case `//` for relative paths, don't use separator #SEP 
+	 * Special case `//` for relative paths, don't use separator #SEP
 	 * as this has a special meaning on both WIN32 & LINUX.
 	 *
 	 * Without this check joining `"//", "path"`. results in `"//\path"`.
@@ -159,13 +157,13 @@ size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[],
 		while ((len != 0) && LIB_path_slash_is_native_compat(path[len - 1])) {
 			len--;
 		}
-	
+
 		if (len != 0) {
 			offset = len;
 		}
 		has_trailing_slash = (path[len] != '\0');
 	}
-	
+
 	for (int index = 1; index < length; index++) {
 		path = paths[index];
 		has_trailing_slash = false;
@@ -178,7 +176,7 @@ size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[],
 			while ((len != 0) && LIB_path_slash_is_native_compat(path[len - 1])) {
 				len--;
 			}
-	
+
 			if (len != 0) {
 				/** The very first path may have a slash at the end. */
 				if (offset && !LIB_path_slash_is_native_compat(dst[offset - 1])) {
@@ -202,7 +200,7 @@ size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[],
 			has_trailing_slash = (path_init != path);
 		}
 	}
-	
+
 	if (has_trailing_slash) {
 		if ((offset != last) && (offset != 0) && !LIB_path_slash_is_native_compat(dst[offset - 1])) {
 			dst[offset++] = SEP;
@@ -211,7 +209,7 @@ size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[],
 
 	ROSE_assert(offset <= last);
 	dst[offset] = '\0';
-	
+
 	return offset;
 }
 
