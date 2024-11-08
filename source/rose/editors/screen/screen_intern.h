@@ -46,4 +46,4 @@ void screen_geom_vertices_scale(struct wmWindow *window, struct Screen *screen);
 }
 #endif
 
-#endif // SCREEN_INTERN_H
+#endif	// SCREEN_INTERN_H

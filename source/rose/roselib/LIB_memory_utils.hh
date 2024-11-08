@@ -14,14 +14,9 @@ namespace rose {
  * actually trivial. Using that extra knowledge allows for some optimizations.
  */
 template<typename T> inline constexpr bool is_trivial_extended_v = std::is_trivial_v<T>;
-template<typename T>
-inline constexpr bool is_trivially_destructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_destructible_v<T>;
-template<typename T>
-inline constexpr bool is_trivially_copy_constructible_extended_v = is_trivial_extended_v<T> ||
-																   std::is_trivially_copy_constructible_v<T>;
-template<typename T>
-inline constexpr bool is_trivially_move_constructible_extended_v = is_trivial_extended_v<T> ||
-																   std::is_trivially_move_constructible_v<T>;
+template<typename T> inline constexpr bool is_trivially_destructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_destructible_v<T>;
+template<typename T> inline constexpr bool is_trivially_copy_constructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_copy_constructible_v<T>;
+template<typename T> inline constexpr bool is_trivially_move_constructible_extended_v = is_trivial_extended_v<T> || std::is_trivially_move_constructible_v<T>;
 
 template<typename T> void destruct_n(T *ptr, size_t n) {
 	if (is_trivially_destructible_extended_v<T>) {
@@ -235,9 +230,7 @@ class NoExceptConstructor {};
  * issues. Possible issues are casting away const and casting a pointer to a child class.
  * Adding const or casting to a parent class is fine.
  */
-template<typename From, typename To>
-inline constexpr bool is_convertible_pointer_v = std::is_convertible_v<From, To> && std::is_pointer_v<From> &&
-												 std::is_pointer_v<To>;
+template<typename From, typename To> inline constexpr bool is_convertible_pointer_v = std::is_convertible_v<From, To> && std::is_pointer_v<From> && std::is_pointer_v<To>;
 
 /**
  * Helper variable that checks if a Span<From> can be converted to Span<To> safely, whereby From
@@ -289,8 +282,7 @@ template<typename Container> Container &copy_assign_container(Container &dst, co
  * It assumes that the container has an exception-safe move-constructor and a noexcept constructor
  * tagged with the NoExceptConstructor tag.
  */
-template<typename Container>
-Container &move_assign_container(Container &dst, Container &&src) noexcept(std::is_nothrow_move_constructible_v<Container>) {
+template<typename Container> Container &move_assign_container(Container &dst, Container &&src) noexcept(std::is_nothrow_move_constructible_v<Container>) {
 	if (&dst == &src) {
 		return dst;
 	}

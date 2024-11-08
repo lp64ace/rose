@@ -27,17 +27,17 @@ typedef struct SpaceType {
 	struct SpaceType *prev, *next;
 
 	char name[64];
-	
+
 	int spaceid;
-	
+
 	/** Initial allocation, after this WM will call init() too. */
 	struct SpaceLink *(*create)(const struct ScrArea *area);
 	/** Does not free the #SpaceLink itself. */
 	void (*free)(struct SpaceLink *link);
-	
+
 	void (*init)(struct WindowManager *wm, struct ScrArea *area);
 	void (*exit)(struct WindowManager *wm, struct ScrArea *area);
-	
+
 	/* region type definitions */
 	ListBase regiontypes;
 } SpaceType;
@@ -52,16 +52,16 @@ struct SpaceType *KER_spacetype_from_id(int spaceid);
 
 typedef struct ARegionType {
 	struct ARegionType *prev, *next;
-	
+
 	int regionid;
-	
+
 	void (*init)(struct ARegion *region);
 	void (*exit)(struct ARegion *region);
 	/** Does not free the #ARegion itself. */
 	void (*free)(struct ARegion *region);
-	
+
 	void (*draw)(struct rContext *C, struct ARegion *region);
-	
+
 	int minsizex;
 	int minsizey;
 	int prefsizex;

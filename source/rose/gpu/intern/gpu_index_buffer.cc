@@ -229,8 +229,7 @@ IndexBuf::~IndexBuf() {
 	}
 }
 
-void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint max_index, PrimType prim_type,
-					bool uses_restart_indices) {
+void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint max_index, PrimType prim_type, bool uses_restart_indices) {
 	is_init_ = true;
 	data_ = indices;
 	index_start_ = 0;
@@ -389,8 +388,7 @@ GPUIndexBuf *GPU_indexbuf_create_subrange(GPUIndexBuf *elem_src, uint start, uin
 void GPU_indexbuf_build_in_place(GPUIndexBufBuilder *builder, GPUIndexBuf *elem) {
 	ROSE_assert(builder->data != nullptr);
 	/** Transfer data ownership to GPUIndexBuf. It will be uploaded upon first use. */
-	unwrap(elem)->init(builder->index_len, builder->data, builder->index_min, builder->index_max, builder->prim_type,
-					   builder->uses_restart_index);
+	unwrap(elem)->init(builder->index_len, builder->data, builder->index_min, builder->index_max, builder->prim_type, builder->uses_restart_index);
 	builder->data = nullptr;
 }
 

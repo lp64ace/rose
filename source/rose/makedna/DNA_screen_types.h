@@ -95,24 +95,24 @@ enum {
 
 typedef struct ScrArea {
 	struct ScrArea *prev, *next;
-	
+
 	/** Ordered, v1 := bottom-left, v2 := top-left, v3 := top-right, v4 := bottom-right. */
 	struct ScrVert *v1, *v2, *v3, *v4;
 	/** Rectangle bounded by the vertices, v1, v2, v3, v4. */
 	rcti totrct;
-	
+
 	int sizex;
 	int sizey;
 
 	int spacetype;
 	int flag;
-	
+
 	/** Callbacks for this space type. */
 	struct SpaceType *type;
 	struct ScrGlobalAreaData *global;
-	
+
 	/**
-	 * A list of space links (editors) that were open in this area before. 
+	 * A list of space links (editors) that were open in this area before.
 	 * When changing the editor type, we try to reuse old editor data from this list.
 	 * The first item is the active/visible one.
 	 */
@@ -132,24 +132,24 @@ enum {
 
 typedef struct ARegion {
 	struct ARegion *prev, *next;
-	
+
 	rcti winrct;
 	rcti drwrct;
-	
+
 	int sizex;
 	int sizey;
-	
+
 	int alignment;
 	int regiontype;
 	int flag;
-	
+
 	short visible;
 	short overlap;
-	
+
 	/** Callbacks for this region type. */
 	struct ARegionType *type;
 	struct wmDrawBuffer *draw_buffer;
-	
+
 	ListBase handlers;
 } ARegion;
 
@@ -164,9 +164,9 @@ enum {
 	RGN_ALIGN_VSPLIT,
 	RGN_ALIGN_FLOAT,
 	RGN_ALIGN_QSPLIT,
-	
+
 	/**
-	 * Region is split into the previous one, they share the same space allong a common edge. 
+	 * Region is split into the previous one, they share the same space allong a common edge.
 	 */
 	RGN_SPLIT_PREV = 1 << 5,
 	/**

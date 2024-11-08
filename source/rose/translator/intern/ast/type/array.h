@@ -55,14 +55,10 @@ enum {
  * \{ */
 
 struct RCCType *RT_type_new_unbounded_array(struct RCContext *, const struct RCCType *elem, const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_array(struct RCContext *, const struct RCCType *elem, const struct RCCNode *length,
-								  const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_array_static(struct RCContext *, const struct RCCType *elem, const struct RCCNode *length,
-										 const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_vla_array(struct RCContext *, const struct RCCType *elem, const struct RCCNode *vla,
-									  const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_vla_array_static(struct RCContext *, const struct RCCType *elem, const struct RCCNode *vla,
-											 const RCCTypeQualification *qual);
+struct RCCType *RT_type_new_array(struct RCContext *, const struct RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual);
+struct RCCType *RT_type_new_array_static(struct RCContext *, const struct RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual);
+struct RCCType *RT_type_new_vla_array(struct RCContext *, const struct RCCType *elem, const struct RCCNode *vla, const RCCTypeQualification *qual);
+struct RCCType *RT_type_new_vla_array_static(struct RCContext *, const struct RCCType *elem, const struct RCCNode *vla, const RCCTypeQualification *qual);
 
 /** \} */
 

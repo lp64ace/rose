@@ -116,7 +116,7 @@ void KER_screen_remove_double_scredges(Screen *screen) {
 void KER_screen_remove_unused_scredges(Screen *screen) {
 	/* sets flags when edge is used in area */
 	int a = 0;
-	LISTBASE_FOREACH_INDEX (ScrArea *, area, &screen->areabase, a) {
+	LISTBASE_FOREACH_INDEX(ScrArea *, area, &screen->areabase, a) {
 		ScrEdge *se = KER_screen_find_edge(screen, area->v1, area->v2);
 		if (se == NULL) {
 			fprintf(stderr, "[Kernel] Area %d, edge 1 doesn't exist\n", a);
@@ -159,7 +159,7 @@ void KER_screen_remove_unused_scredges(Screen *screen) {
 
 void KER_screen_remove_unused_scrverts(Screen *screen) {
 	/* we assume edges are ok */
-	LISTBASE_FOREACH (ScrEdge *, se, &screen->edgebase) {
+	LISTBASE_FOREACH(ScrEdge *, se, &screen->edgebase) {
 		se->v1->flag = 1;
 		se->v2->flag = 1;
 	}
@@ -217,13 +217,13 @@ void KER_screen_free_data(Screen *screen) {
 void KER_spacedata_freelist(ListBase *lb) {
 	LISTBASE_FOREACH(SpaceLink *, sl, lb) {
 		SpaceType *st = KER_spacetype_from_id(sl->spacetype);
-		
+
 		LISTBASE_FOREACH(ARegion *, region, &sl->regionbase) {
 			KER_area_region_free(st, region);
 		}
 		LIB_freelistN(&sl->regionbase);
-		
-		if(st && st->free) {
+
+		if (st && st->free) {
 			st->free(sl);
 		}
 	}
@@ -232,8 +232,8 @@ void KER_spacedata_freelist(ListBase *lb) {
 void KER_area_region_free(SpaceType *st, ARegion *region) {
 	if (st) {
 		ARegionType *art = KER_regiontype_from_id(st, region->regiontype);
-		
-		if(art && art->free) {
+
+		if (art && art->free) {
 			art->free(region);
 		}
 	}
@@ -243,18 +243,18 @@ void KER_area_region_free(SpaceType *st, ARegion *region) {
 }
 void KER_screen_area_free(ScrArea *area) {
 	SpaceType *st = KER_spacetype_from_id(area->spacetype);
-	
+
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		KER_area_region_free(st, region);
 	}
 	LIB_freelistN(&area->regionbase);
-	
+
 	MEM_SAFE_FREE(area->global);
-	
+
 	KER_spacedata_freelist(&area->spacedata);
 }
 void KER_screen_area_map_free(ScrAreaMap *area_map) {
-	LISTBASE_FOREACH_MUTABLE (ScrArea *, area, &area_map->areabase) {
+	LISTBASE_FOREACH_MUTABLE(ScrArea *, area, &area_map->areabase) {
 		KER_screen_area_free(area);
 	}
 	LIB_freelistN(&area_map->vertbase);

@@ -24,4 +24,4 @@ void ED_spacetype_view3d();
 }
 #endif
 
-#endif // ED_SPACE_API_H
+#endif	// ED_SPACE_API_H

@@ -70,12 +70,9 @@ TEST(Utils, ParserTypenameEnum) {
 				RCCToken *e = RT_token_new_name(C, "e");
 				expected = RT_type_new_enum(C, e, Tp_Int);
 				{
-					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal1"),
-												   RT_node_new_constant_value(C, 1));
-					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal2"),
-												   RT_node_new_constant_value(C, 2));
-					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal3"),
-												   RT_node_new_constant_value(C, 3));
+					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal1"), RT_node_new_constant_value(C, 1));
+					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal2"), RT_node_new_constant_value(C, 2));
+					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal3"), RT_node_new_constant_value(C, 3));
 					RT_type_enum_add_constant_auto(C, expected, RT_token_new_name(C, "eVal"));
 					RT_type_enum_finalize(C, expected);
 				}

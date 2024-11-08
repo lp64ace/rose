@@ -19,8 +19,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
-#include <stdio.h>
 #include <oswin.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
@@ -68,7 +68,7 @@ ROSE_INLINE void wm_handle_destroy_event(struct WTKWindow *handle, void *userdat
 	if (!window) {
 		return;
 	}
-	
+
 	CTX_wm_window_set(C, window);
 	WM_window_close(C, window);
 	CTX_wm_window_set(C, NULL);
@@ -164,8 +164,7 @@ ROSE_INLINE void wm_handle_button_up_event(struct WTKWindow *handle, int button,
 	wm_event_add_tiny_window_mouse_button(wm, window, WTK_EVT_BUTTONUP, button, x, y, time);
 }
 
-ROSE_INLINE void wm_handle_key_down_event(struct WTKWindow *handle, int key, bool repeat, char utf8[4], double time,
-										  void *userdata) {
+ROSE_INLINE void wm_handle_key_down_event(struct WTKWindow *handle, int key, bool repeat, char utf8[4], double time, void *userdata) {
 	struct rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
@@ -250,7 +249,7 @@ void WM_main(struct rContext *C) {
 
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
-	
+
 	ED_spacetypes_exit();
 
 	CTX_free(C);

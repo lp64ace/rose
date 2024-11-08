@@ -177,8 +177,7 @@ ROSE_INLINE void *RT_scope_var(struct RCCScope *scope, const struct RCCToken *na
 
 ROSE_INLINE size_t parse_punctuator(const char *p) {
 	static const char *match[] = {
-		"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=", "-=", "*=", "/=",
-		"++",  "--",  "%=",	 "&=", "|=", "^=", "&&", "||", "<<", ">>", "##",
+		"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=", "-=", "*=", "/=", "++", "--", "%=", "&=", "|=", "^=", "&&", "||", "<<", ">>", "##",
 	};
 	for (size_t i = 0; i < ARRAY_SIZE(match); i++) {
 		size_t length = LIB_strlen(match[i]);
@@ -201,10 +200,7 @@ ROSE_INLINE size_t parse_identifier(const char *p) {
 
 ROSE_INLINE size_t parse_keyword(const char *p) {
 	static char *match[] = {
-		"return",	"if",	"else",		"for",		"while",   "int",	  "sizeof", "char",	  "struct",	  "union",
-		"short",	"long", "void",		"typedef",	"bool",	   "enum",	  "static", "goto",	  "break",	  "continue",
-		"switch",	"case", "default",	"extern",	"alignof", "alignas", "do",		"signed", "unsigned", "const",
-		"volatile", "auto", "register", "restrict", "float",   "double",  "typeof", "asm",	  "atomic",
+		"return", "if", "else", "for", "while", "int", "sizeof", "char", "struct", "union", "short", "long", "void", "typedef", "bool", "enum", "static", "goto", "break", "continue", "switch", "case", "default", "extern", "alignof", "alignas", "do", "signed", "unsigned", "const", "volatile", "auto", "register", "restrict", "float", "double", "typeof", "asm", "atomic",
 	};
 	for (size_t i = 0; i < ARRAY_SIZE(match); i++) {
 		size_t length = LIB_strlen(match[i]);

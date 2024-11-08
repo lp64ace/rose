@@ -70,8 +70,7 @@ struct RCCType *RT_type_new_enum(struct RCContext *, struct RCCToken *identifier
 /** \name Util Methods
  * \{ */
 
-void RT_type_enum_add_constant_expr(struct RCContext *, struct RCCType *e, const struct RCCToken *identifier,
-									const struct RCCNode *expr);
+void RT_type_enum_add_constant_expr(struct RCContext *, struct RCCType *e, const struct RCCToken *identifier, const struct RCCNode *expr);
 void RT_type_enum_add_constant_auto(struct RCContext *, struct RCCType *e, const struct RCCToken *identifier);
 
 /** Returns if the specified enumerator type has the specified item or not. */

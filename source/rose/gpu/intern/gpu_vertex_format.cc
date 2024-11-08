@@ -71,8 +71,7 @@ static unsigned char copy_attr_name(GPUVertFormat *format, const char *name) {
 	return name_offset;
 }
 
-unsigned int GPU_vertformat_add(GPUVertFormat *format, const char *name, VertCompType comp_type, unsigned int comp_len,
-								VertFetchMode fetch_mode) {
+unsigned int GPU_vertformat_add(GPUVertFormat *format, const char *name, VertCompType comp_type, unsigned int comp_len, VertFetchMode fetch_mode) {
 #ifndef NDEBUG
 	ROSE_assert(format->name_len < GPU_VERT_FORMAT_MAX_NAMES);
 	ROSE_assert(format->attr_len < GPU_VERT_ATTR_MAX_LEN);
@@ -178,8 +177,7 @@ void VertexFormat_pack(struct GPUVertFormat *format) {
 }
 void VertexFormat_texture_buffer_pack(struct GPUVertFormat *format) {
 	for (unsigned int i = 0; i < format->attr_len; i++) {
-		ROSE_assert_msg(format->attrs[i].size == format->attrs[0].size,
-						"Texture buffer mode should only use a attributes with the same size.");
+		ROSE_assert_msg(format->attrs[i].size == format->attrs[0].size, "Texture buffer mode should only use a attributes with the same size.");
 	}
 
 	VertexFormat_pack_impl(format, 1);

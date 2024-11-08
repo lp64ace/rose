@@ -108,8 +108,7 @@ protected:
 	static inline const char *builtin_uniform_name(UniformBuiltin u);
 
 	inline uint32_t set_input_name(ShaderInput *input, char *name, uint32_t name_len) const;
-	inline void copy_input_name(ShaderInput *input, const StringRefNull &name, char *name_buffer,
-								uint32_t &name_buffer_offset) const;
+	inline void copy_input_name(ShaderInput *input, const StringRefNull &name, char *name_buffer, uint32_t &name_buffer_offset) const;
 
 	/**
 	 * Finalize interface construction by sorting the #ShaderInputs for faster lookups.
@@ -188,16 +187,14 @@ inline uint32_t ShaderInterface::set_input_name(ShaderInput *input, char *name, 
 	return name_len + 1; /* include NULL terminator */
 }
 
-inline void ShaderInterface::copy_input_name(ShaderInput *input, const StringRefNull &name, char *name_buffer,
-											 uint32_t &name_buffer_offset) const {
+inline void ShaderInterface::copy_input_name(ShaderInput *input, const StringRefNull &name, char *name_buffer, uint32_t &name_buffer_offset) const {
 	uint32_t name_len = name.size();
 	/* Copy include NULL terminator. */
 	memcpy(name_buffer + name_buffer_offset, name.c_str(), name_len + 1);
 	name_buffer_offset += set_input_name(input, name_buffer + name_buffer_offset, name_len);
 }
 
-inline const ShaderInput *ShaderInterface::input_lookup(const ShaderInput *const inputs, const uint inputs_len,
-														const char *name) const {
+inline const ShaderInput *ShaderInterface::input_lookup(const ShaderInput *const inputs, const uint inputs_len, const char *name) const {
 	const uint name_hash = LIB_hash_string(name);
 	/* Simple linear search for now. */
 	for (int i = inputs_len - 1; i >= 0; i--) {
@@ -222,8 +219,7 @@ inline const ShaderInput *ShaderInterface::input_lookup(const ShaderInput *const
 	return nullptr; /* not found */
 }
 
-inline const ShaderInput *ShaderInterface::input_lookup(const ShaderInput *const inputs, const uint inputs_len,
-														const int binding) const {
+inline const ShaderInput *ShaderInterface::input_lookup(const ShaderInput *const inputs, const uint inputs_len, const int binding) const {
 	/* Simple linear search for now. */
 	for (int i = inputs_len - 1; i >= 0; i--) {
 		if (inputs[i].binding == binding) {

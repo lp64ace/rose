@@ -5,8 +5,7 @@
 
 namespace rose {
 
-template<typename Src1, typename Src2, typename Dst1, typename Dst2>
-void initialize_pointer_pair(Src1 &&src1, Src2 &&src2, Dst1 *dst1, Dst2 *dst2) {
+template<typename Src1, typename Src2, typename Dst1, typename Dst2> void initialize_pointer_pair(Src1 &&src1, Src2 &&src2, Dst1 *dst1, Dst2 *dst2) {
 	new ((void *)dst1) Dst1(std::forward<Src1>(src1));
 	try {
 		new ((void *)dst2) Dst2(std::forward<Src2>(src2));
@@ -68,12 +67,10 @@ public:
 	 * from the other have to moved as well. The other slot stays in the state it was in before. Its
 	 * optionally stored key and value remain in a moved-from state.
 	 */
-	SimpleMapSlot(SimpleMapSlot &&other) noexcept(std::is_nothrow_move_constructible_v<Key> &&
-												  std::is_nothrow_move_constructible_v<Value>) {
+	SimpleMapSlot(SimpleMapSlot &&other) noexcept(std::is_nothrow_move_constructible_v<Key> && std::is_nothrow_move_constructible_v<Value>) {
 		state_ = other.state_;
 		if (other.state_ == Occupied) {
-			initialize_pointer_pair(std::move(other.key_buffer_.ref()), std::move(other.value_buffer_.ref()), key_buffer_.ptr(),
-									value_buffer_.ptr());
+			initialize_pointer_pair(std::move(other.key_buffer_.ref()), std::move(other.value_buffer_.ref()), key_buffer_.ptr(), value_buffer_.ptr());
 		}
 	}
 
@@ -132,8 +129,7 @@ public:
 	 * Returns true, when this slot is occupied and contains a key that compares equal to the given
 	 * key. The hash can be used by other slot implementations to determine inequality faster.
 	 */
-	template<typename ForwardKey, typename IsEqual>
-	bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
+	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
 		if (state_ == Occupied) {
 			return is_equal(key, *key_buffer_);
 		}
@@ -144,8 +140,7 @@ public:
 	 * Change the state of this slot from empty/removed to occupied. The key/value has to be
 	 * constructed by calling the constructor with the given key/value as parameter.
 	 */
-	template<typename ForwardKey, typename... ForwardValue>
-	void occupy(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue> void occupy(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		ROSE_assert(!this->is_occupied());
 		new (&value_buffer_) Value(std::forward<ForwardValue>(value)...);
 		this->occupy_no_value(std::forward<ForwardKey>(key), hash);
@@ -244,14 +239,12 @@ public:
 		return hash(key_);
 	}
 
-	template<typename ForwardKey, typename IsEqual>
-	bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
+	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
 		ROSE_assert(KeyInfo::is_not_empty_or_removed(key));
 		return is_equal(key, key_);
 	}
 
-	template<typename ForwardKey, typename... ForwardValue>
-	void occupy(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
+	template<typename ForwardKey, typename... ForwardValue> void occupy(ForwardKey &&key, uint64_t hash, ForwardValue &&...value) {
 		ROSE_assert(!this->is_occupied());
 		ROSE_assert(KeyInfo::is_not_empty_or_removed(key));
 		new (&value_buffer_) Value(std::forward<ForwardValue>(value)...);

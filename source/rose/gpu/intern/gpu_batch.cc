@@ -37,8 +37,7 @@ GPUBatch *GPU_batch_create(PrimType primitive_type, GPUVertBuf *vertex_buf, GPUI
 	return GPU_batch_create_ex(primitive_type, vertex_buf, index_buf, GPU_BATCH_OWNS_NONE);
 }
 
-void GPU_batch_init_ex(GPUBatch *batch, PrimType primitive_type, GPUVertBuf *vertex_buf, GPUIndexBuf *index_buf,
-					   BatchFlag owns_flag) {
+void GPU_batch_init_ex(GPUBatch *batch, PrimType primitive_type, GPUVertBuf *vertex_buf, GPUIndexBuf *index_buf, BatchFlag owns_flag) {
 	/* Do not pass any other flag */
 	ROSE_assert((owns_flag & ~(GPU_BATCH_OWNS_VBO | GPU_BATCH_OWNS_INDEX)) == 0);
 	/* Batch needs to be in cleared state. */
@@ -193,8 +192,7 @@ void GPU_batch_set_shader(GPUBatch *batch, GPUShader *shader) {
 /** \name Drawing / Drawcall functions
  * \{ */
 
-void GPU_batch_draw_parameter_get(GPUBatch *gpu_batch, int *r_vertex_count, int *r_vertex_first, int *r_base_index,
-								  int *r_indices_count) {
+void GPU_batch_draw_parameter_get(GPUBatch *gpu_batch, int *r_vertex_count, int *r_vertex_first, int *r_base_index, int *r_indices_count) {
 	Batch *batch = static_cast<Batch *>(gpu_batch);
 
 	if (batch->elem) {
@@ -269,8 +267,7 @@ void GPU_batch_draw_indirect(GPUBatch *gpu_batch, GPUStorageBuf *indirect_buf, i
 	batch->draw_indirect(indirect_buf, offset);
 }
 
-void GPU_batch_multi_draw_indirect(GPUBatch *gpu_batch, GPUStorageBuf *indirect_buf, int count, intptr_t offset,
-								   intptr_t stride) {
+void GPU_batch_multi_draw_indirect(GPUBatch *gpu_batch, GPUStorageBuf *indirect_buf, int count, intptr_t offset, intptr_t stride) {
 	ROSE_assert(Context::get()->shader != nullptr);
 	ROSE_assert(indirect_buf != nullptr);
 	Batch *batch = static_cast<Batch *>(gpu_batch);

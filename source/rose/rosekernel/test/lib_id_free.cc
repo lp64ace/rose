@@ -16,7 +16,7 @@ TEST(IDFree, Simple) {
 		ID *id = reinterpret_cast<ID *>(KER_libblock_alloc(main, ID_LINK_PLACEHOLDER, "ID", 0));
 		EXPECT_NE(id, nullptr);
 		KER_id_free_ex(main, id, 0, true);
-	} while(false);
+	} while (false);
 	KER_main_free(main);
 }
 

@@ -64,10 +64,8 @@ struct RCCType *RT_type_new_struct(struct RCContext *, const struct RCCToken *id
 const struct RCCField *RT_type_struct_field_first(const struct RCCType *);
 const struct RCCField *RT_type_struct_field_last(const struct RCCType *);
 
-bool RT_type_struct_add_field(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type,
-							  int alignment);
-bool RT_type_struct_add_bitfield(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type,
-								 int alignment, int width);
+bool RT_type_struct_add_field(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment);
+bool RT_type_struct_add_bitfield(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment, int width);
 
 void RT_type_struct_finalize(struct RCCType *type);
 

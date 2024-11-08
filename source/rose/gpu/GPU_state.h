@@ -164,8 +164,7 @@ void GPU_clip_distances(int distances);
 
 bool GPU_mipmap_enabled(void);
 
-void GPU_state_set(WriteMask write, Blend blend, FaceCullTest cull, DepthTest depth, StencilTest stencil,
-				   ProvokingVertex vertex);
+void GPU_state_set(WriteMask write, Blend blend, FaceCullTest cull, DepthTest depth, StencilTest stencil, ProvokingVertex vertex);
 
 void GPU_stencil_reference_set(unsigned int reference);
 void GPU_stencil_write_mask_set(unsigned int write_mask);

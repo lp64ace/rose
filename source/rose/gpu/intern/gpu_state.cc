@@ -95,8 +95,7 @@ void GPU_clip_distances(int distances_enabled) {
 	SET_IMMUTABLE_STATE(clip_distances, distances_enabled);
 }
 
-void GPU_state_set(WriteMask write_mask, Blend blend, FaceCullTest culling_test, DepthTest depth_test, StencilTest stencil_test,
-				   StencilOp stencil_op, ProvokingVertex provoking_vert) {
+void GPU_state_set(WriteMask write_mask, Blend blend, FaceCullTest culling_test, DepthTest depth_test, StencilTest stencil_test, StencilOp stencil_op, ProvokingVertex provoking_vert) {
 	StateManager *stack = Context::get()->state_manager;
 	auto &state = stack->state;
 	state.write_mask = uint32_t(write_mask);

@@ -43,8 +43,7 @@ static char *create_gpu_name(const char *vendor, const char *renderer, const cha
 	return gpu_name;
 }
 
-void GPUPlatformGlobal::init(DeviceType device, OperatingSystemType system, SupportLevel support_level, BackendType backend,
-							 const char *_vendor, const char *_renderer, const char *_version, ArchitectureType architecture) {
+void GPUPlatformGlobal::init(DeviceType device, OperatingSystemType system, SupportLevel support_level, BackendType backend, const char *_vendor, const char *_renderer, const char *_version, ArchitectureType architecture) {
 	this->clear();
 
 	this->initialized = true;

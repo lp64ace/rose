@@ -103,8 +103,7 @@ void KER_lib_query_foreachid_process(LibraryForeachIDData *data, ID **id_pp, int
 		ROSE_assert(*(id_pp) == old_id);
 	}
 	else {
-		ROSE_assert_msg((callback_return & (IDWALK_RET_STOP_ITER | IDWALK_RET_STOP_RECURSION)) == 0,
-						"Iteration over ID usages should not be interrupted by the callback in non-readonly cases");
+		ROSE_assert_msg((callback_return & (IDWALK_RET_STOP_ITER | IDWALK_RET_STOP_RECURSION)) == 0, "Iteration over ID usages should not be interrupted by the callback in non-readonly cases");
 	}
 
 	if (old_id && (flag & IDWALK_RECURSE)) {
@@ -156,8 +155,7 @@ void KER_lib_query_idpropertiesForeachIDLink_callback(IDProperty *id_prop, void 
 	}
 }
 
-ROSE_STATIC bool library_foreach_ID_link(Main *main, ID *owner_id, ID *id, LibraryIDLinkCallback callback, void *user_data,
-										 int flag, LibraryForeachIDData *inherit_data) {
+ROSE_STATIC bool library_foreach_ID_link(Main *main, ID *owner_id, ID *id, LibraryIDLinkCallback callback, void *user_data, int flag, LibraryForeachIDData *inherit_data) {
 	LibraryForeachIDData data;
 	memset(&data, 0, sizeof(LibraryForeachIDData));
 	data.main = main;

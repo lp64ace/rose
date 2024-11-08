@@ -72,9 +72,9 @@ wmWindow *WM_window_open(struct rContext *C, wmWindow *parent, const char *name,
 	if (window) {
 		rcti rect;
 		LIB_rcti_init(&rect, 0, window->sizex, 0, window->sizey);
-		
+
 		/**
-		 * We do not call #WM_window_screen_set here, 
+		 * We do not call #WM_window_screen_set here,
 		 * we do not want to increment the reference counter, since it already has a user on creation.
 		 */
 		window->screen = ED_screen_add(main, "Screen", &rect);
@@ -103,7 +103,7 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 	 * that would call this function again!
 	 */
 	LIB_remlink(&wm->windows, window);
-	
+
 	KER_screen_area_map_free(&window->global_areas);
 
 	if (window->context) {
@@ -138,17 +138,17 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
  * \{ */
 
 void WM_window_screen_set(struct rContext *C, wmWindow *window, Screen *screen) {
-	if(window->screen == screen) {
+	if (window->screen == screen) {
 		return;
 	}
-	
+
 	WindowManager *wm = CTX_wm_manager(C);
-	if(window->screen) {
+	if (window->screen) {
 		id_us_rem((ID *)window->screen);
 		ED_screen_exit(C, window, window->screen);
 	}
 	window->screen = screen;
-	if(window->screen) {
+	if (window->screen) {
 		ED_screen_refresh(C, wm, window);
 		id_us_add((ID *)window->screen);
 	}
@@ -176,12 +176,12 @@ void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 	WM_window_rect_calc(window, r_rect);
 	LISTBASE_FOREACH(ScrArea *, global_area, &window->global_areas.areabase) {
 		int height = ED_area_global_size_y(global_area) - 1;
-		
-		if((global_area->global->flag & GLOBAL_AREA_IS_HIDDEN) != 0) {
+
+		if ((global_area->global->flag & GLOBAL_AREA_IS_HIDDEN) != 0) {
 			continue;
 		}
-		
-		switch(global_area->global->alignment) {
+
+		switch (global_area->global->alignment) {
 			case GLOBAL_AREA_ALIGN_TOP: {
 				r_rect->ymax -= height;
 			} break;

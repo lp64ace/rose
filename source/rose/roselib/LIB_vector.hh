@@ -110,16 +110,14 @@ public:
 	/**
 	 * Create a vector from a span. The values in the vector are copy constructed.
 	 */
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(Span<U> values, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(Span<U> values, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		const size_t size = values.size();
 		this->reserve(size);
 		uninitialized_convert_n<U, T>(values.data(), size, begin_);
 		this->increase_size_by_unchecked(size);
 	}
 
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	explicit Vector(MutableSpan<U> values, Allocator allocator = {}) : Vector(values.as_span(), allocator) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> explicit Vector(MutableSpan<U> values, Allocator allocator = {}) : Vector(values.as_span(), allocator) {
 	}
 
 	/**
@@ -128,19 +126,16 @@ public:
 	 * This allows you to write code like:
 	 * Vector<int> vec = {3, 4, 5};
 	 */
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(const std::initializer_list<U> &values) : Vector(Span<U>(values)) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(const std::initializer_list<U> &values) : Vector(Span<U>(values)) {
 	}
 
 	Vector(const std::initializer_list<T> &values) : Vector(Span<T>(values)) {
 	}
 
-	template<typename U, size_t N, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Vector(const std::array<U, N> &values) : Vector(Span(values)) {
+	template<typename U, size_t N, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Vector(const std::array<U, N> &values) : Vector(Span(values)) {
 	}
 
-	template<typename InputIt, ROSE_ENABLE_IF((!std::is_convertible_v<InputIt, int>))>
-	Vector(InputIt first, InputIt last, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
+	template<typename InputIt, ROSE_ENABLE_IF((!std::is_convertible_v<InputIt, int>))> Vector(InputIt first, InputIt last, Allocator allocator = {}) : Vector(NoExceptConstructor(), allocator) {
 		for (InputIt current = first; current != last; ++current) {
 			this->append(*current);
 		}
@@ -157,17 +152,14 @@ public:
 	 * Create a copy of a vector with a different InlineBufferCapacity. This needs to be handled
 	 * separately, so that the other one is a valid copy constructor.
 	 */
-	template<size_t OtherInlineBufferCapacity>
-	Vector(const Vector<T, OtherInlineBufferCapacity, Allocator> &other) : Vector(other.as_span(), other.allocator_) {
+	template<size_t OtherInlineBufferCapacity> Vector(const Vector<T, OtherInlineBufferCapacity, Allocator> &other) : Vector(other.as_span(), other.allocator_) {
 	}
 
 	/**
 	 * Steal the elements from another vector. This does not do an allocation. The other vector will
 	 * have zero elements afterwards.
 	 */
-	template<size_t OtherInlineBufferCapacity>
-	Vector(Vector<T, OtherInlineBufferCapacity, Allocator> &&other) noexcept(is_nothrow_move_constructible())
-		: Vector(NoExceptConstructor(), other.allocator_) {
+	template<size_t OtherInlineBufferCapacity> Vector(Vector<T, OtherInlineBufferCapacity, Allocator> &&other) noexcept(is_nothrow_move_constructible()) : Vector(NoExceptConstructor(), other.allocator_) {
 		const size_t size = other.size();
 
 		if (other.is_inline()) {

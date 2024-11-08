@@ -287,9 +287,7 @@ template<typename T> internal::ParamGenerator<T> Range(T start, T end) {
 //                          CharTest,
 //                          ValuesIn(l.begin(), l.end()));
 //
-template<typename ForwardIterator>
-internal::ParamGenerator<typename std::iterator_traits<ForwardIterator>::value_type> ValuesIn(ForwardIterator begin,
-																							  ForwardIterator end) {
+template<typename ForwardIterator> internal::ParamGenerator<typename std::iterator_traits<ForwardIterator>::value_type> ValuesIn(ForwardIterator begin, ForwardIterator end) {
 	typedef typename std::iterator_traits<ForwardIterator>::value_type ParamType;
 	return internal::ParamGenerator<ParamType>(new internal::ValuesInIteratorRangeGenerator<ParamType>(begin, end));
 }
@@ -400,29 +398,22 @@ template<typename... Generator> internal::CartesianProductHolder<Generator...> C
 	return internal::CartesianProductHolder<Generator...>(g...);
 }
 
-#define TEST_P(test_suite_name, test_name)                                                                           \
-	class GTEST_TEST_CLASS_NAME_(test_suite_name, test_name) : public test_suite_name {                              \
-	public:                                                                                                          \
-		GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() {                                                       \
-		}                                                                                                            \
-		virtual void TestBody();                                                                                     \
-                                                                                                                     \
-	private:                                                                                                         \
-		static int AddToRegistry() {                                                                                 \
-			::testing::UnitTest::GetInstance()                                                                       \
-				->parameterized_test_registry()                                                                      \
-				.GetTestSuitePatternHolder<test_suite_name>(#test_suite_name,                                        \
-															::testing::internal::CodeLocation(__FILE__, __LINE__))   \
-				->AddTestPattern(                                                                                    \
-					GTEST_STRINGIFY_(test_suite_name), GTEST_STRINGIFY_(test_name),                                  \
-					new ::testing::internal::TestMetaFactory<GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)>()); \
-			return 0;                                                                                                \
-		}                                                                                                            \
-		static int gtest_registering_dummy_ GTEST_ATTRIBUTE_UNUSED_;                                                 \
-		GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name, test_name));                         \
-	};                                                                                                               \
-	int GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::gtest_registering_dummy_ = GTEST_TEST_CLASS_NAME_(       \
-		test_suite_name, test_name)::AddToRegistry();                                                                \
+#define TEST_P(test_suite_name, test_name)                                                                                                                                                                                                                                                                                                                                         \
+	class GTEST_TEST_CLASS_NAME_(test_suite_name, test_name) : public test_suite_name {                                                                                                                                                                                                                                                                                            \
+	public:                                                                                                                                                                                                                                                                                                                                                                        \
+		GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() {                                                                                                                                                                                                                                                                                                                     \
+		}                                                                                                                                                                                                                                                                                                                                                                          \
+		virtual void TestBody();                                                                                                                                                                                                                                                                                                                                                   \
+                                                                                                                                                                                                                                                                                                                                                                                   \
+	private:                                                                                                                                                                                                                                                                                                                                                                       \
+		static int AddToRegistry() {                                                                                                                                                                                                                                                                                                                                               \
+			::testing::UnitTest::GetInstance()->parameterized_test_registry().GetTestSuitePatternHolder<test_suite_name>(#test_suite_name, ::testing::internal::CodeLocation(__FILE__, __LINE__))->AddTestPattern(GTEST_STRINGIFY_(test_suite_name), GTEST_STRINGIFY_(test_name), new ::testing::internal::TestMetaFactory<GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)>()); \
+			return 0;                                                                                                                                                                                                                                                                                                                                                              \
+		}                                                                                                                                                                                                                                                                                                                                                                          \
+		static int gtest_registering_dummy_ GTEST_ATTRIBUTE_UNUSED_;                                                                                                                                                                                                                                                                                                               \
+		GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name, test_name));                                                                                                                                                                                                                                                                                       \
+	};                                                                                                                                                                                                                                                                                                                                                                             \
+	int GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::gtest_registering_dummy_ = GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::AddToRegistry();                                                                                                                                                                                                                        \
 	void GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::TestBody()
 
 // The last argument to INSTANTIATE_TEST_SUITE_P allows the user to specify
@@ -442,29 +433,19 @@ template<typename... Generator> internal::CartesianProductHolder<Generator...> C
 #define GTEST_GET_FIRST_(first, ...) first
 #define GTEST_GET_SECOND_(first, second, ...) second
 
-#define INSTANTIATE_TEST_SUITE_P(prefix, test_suite_name, ...)                                                      \
-	static ::testing::internal::ParamGenerator<test_suite_name::ParamType>                                          \
-		gtest_##prefix##test_suite_name##_EvalGenerator_() {                                                        \
-		return GTEST_EXPAND_(GTEST_GET_FIRST_(__VA_ARGS__, DUMMY_PARAM_));                                          \
-	}                                                                                                               \
-	static ::std::string gtest_##prefix##test_suite_name##_EvalGenerateName_(                                       \
-		const ::testing::TestParamInfo<test_suite_name::ParamType> &info) {                                         \
-		if (::testing::internal::AlwaysFalse()) {                                                                   \
-			::testing::internal::TestNotEmpty(GTEST_EXPAND_(GTEST_GET_SECOND_(                                      \
-				__VA_ARGS__, ::testing::internal::DefaultParamName<test_suite_name::ParamType>, DUMMY_PARAM_)));    \
-			auto t = std::make_tuple(__VA_ARGS__);                                                                  \
-			static_assert(std::tuple_size<decltype(t)>::value <= 2, "Too Many Args!");                              \
-		}                                                                                                           \
-		return ((GTEST_EXPAND_(GTEST_GET_SECOND_(                                                                   \
-			__VA_ARGS__, ::testing::internal::DefaultParamName<test_suite_name::ParamType>, DUMMY_PARAM_))))(info); \
-	}                                                                                                               \
-	static int gtest_##prefix##test_suite_name##_dummy_ GTEST_ATTRIBUTE_UNUSED_ =                                   \
-		::testing::UnitTest::GetInstance()                                                                          \
-			->parameterized_test_registry()                                                                         \
-			.GetTestSuitePatternHolder<test_suite_name>(#test_suite_name,                                           \
-														::testing::internal::CodeLocation(__FILE__, __LINE__))      \
-			->AddTestSuiteInstantiation(#prefix, &gtest_##prefix##test_suite_name##_EvalGenerator_,                 \
-										&gtest_##prefix##test_suite_name##_EvalGenerateName_, __FILE__, __LINE__)
+#define INSTANTIATE_TEST_SUITE_P(prefix, test_suite_name, ...)                                                                                                                 \
+	static ::testing::internal::ParamGenerator<test_suite_name::ParamType> gtest_##prefix##test_suite_name##_EvalGenerator_() {                                                \
+		return GTEST_EXPAND_(GTEST_GET_FIRST_(__VA_ARGS__, DUMMY_PARAM_));                                                                                                     \
+	}                                                                                                                                                                          \
+	static ::std::string gtest_##prefix##test_suite_name##_EvalGenerateName_(const ::testing::TestParamInfo<test_suite_name::ParamType> &info) {                               \
+		if (::testing::internal::AlwaysFalse()) {                                                                                                                              \
+			::testing::internal::TestNotEmpty(GTEST_EXPAND_(GTEST_GET_SECOND_(__VA_ARGS__, ::testing::internal::DefaultParamName<test_suite_name::ParamType>, DUMMY_PARAM_))); \
+			auto t = std::make_tuple(__VA_ARGS__);                                                                                                                             \
+			static_assert(std::tuple_size<decltype(t)>::value <= 2, "Too Many Args!");                                                                                         \
+		}                                                                                                                                                                      \
+		return ((GTEST_EXPAND_(GTEST_GET_SECOND_(__VA_ARGS__, ::testing::internal::DefaultParamName<test_suite_name::ParamType>, DUMMY_PARAM_))))(info);                       \
+	}                                                                                                                                                                          \
+	static int gtest_##prefix##test_suite_name##_dummy_ GTEST_ATTRIBUTE_UNUSED_ = ::testing::UnitTest::GetInstance()->parameterized_test_registry().GetTestSuitePatternHolder<test_suite_name>(#test_suite_name, ::testing::internal::CodeLocation(__FILE__, __LINE__))->AddTestSuiteInstantiation(#prefix, &gtest_##prefix##test_suite_name##_EvalGenerator_, &gtest_##prefix##test_suite_name##_EvalGenerateName_, __FILE__, __LINE__)
 
 // Legacy API is deprecated but still available
 #ifndef GTEST_REMOVE_LEGACY_TEST_CASEAPI_

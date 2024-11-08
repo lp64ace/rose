@@ -13,7 +13,7 @@ extern "C" {
 
 typedef struct SpaceLink {
 	struct SpaceLink *prev, *next;
-	
+
 	int spacetype;
 	int flag;
 
@@ -58,4 +58,4 @@ enum {
 }
 #endif
 
-#endif // DNA_SPACE_TYPES_H
+#endif	// DNA_SPACE_TYPES_H

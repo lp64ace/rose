@@ -86,17 +86,12 @@ const struct RCCType *RT_parser_enum(struct RCCParser *P, struct RCCToken **rest
 
 const struct RCCType *RT_parser_declspec(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, DeclInfo *info);
 const struct RCCType *RT_parser_typename(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCType *RT_parser_pointers(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token,
-										 const RCCType *source);
-const struct RCCType *RT_parser_abstract(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token,
-										 const RCCType *source);
-const struct RCCType *RT_parser_funcparams(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token,
-										   const RCCType *result);
-const struct RCCType *RT_parser_dimensions(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token,
-										   const RCCType *element);
+const struct RCCType *RT_parser_pointers(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *source);
+const struct RCCType *RT_parser_abstract(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *source);
+const struct RCCType *RT_parser_funcparams(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *result);
+const struct RCCType *RT_parser_dimensions(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *element);
 
-struct RCCObject *RT_parser_declarator(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token,
-									   const struct RCCType *source);
+struct RCCObject *RT_parser_declarator(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const struct RCCType *source);
 
 const struct RCCNode *RT_parser_assign(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
 const struct RCCNode *RT_parser_cast(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);

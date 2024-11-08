@@ -160,8 +160,7 @@ void GLStateManager::set_mutable_state(const GPUStateMutable &state) {
 
 void GLStateManager::set_write_mask(const WriteMask value) {
 	glDepthMask((value & GPU_WRITE_DEPTH) != 0);
-	glColorMask((value & GPU_WRITE_RED) != 0, (value & GPU_WRITE_GREEN) != 0, (value & GPU_WRITE_BLUE) != 0,
-				(value & GPU_WRITE_ALPHA) != 0);
+	glColorMask((value & GPU_WRITE_RED) != 0, (value & GPU_WRITE_GREEN) != 0, (value & GPU_WRITE_BLUE) != 0, (value & GPU_WRITE_ALPHA) != 0);
 
 	if (value == GPU_WRITE_NONE) {
 		glEnable(GL_RASTERIZER_DISCARD);

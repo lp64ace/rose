@@ -112,8 +112,7 @@ ROSE_STATIC int KER_id_remapper_mapping_apply(const IDRemapper *me, void **idv, 
 	ID **id_ptr = (ID **)idv;
 	ID *id_self = (ID *)self_idv;
 	ROSE_assert(idv != NULL);
-	ROSE_assert_msg(((options & ID_REMAP_APPLY_UNMAP_WHEN_REMAPPING_TO_SELF) == 0 || id_self != NULL),
-					"ID_REMAP_APPLY_WHEN_REMAPPING_TO_SELF requires a non-null `id_self` parameter.");
+	ROSE_assert_msg(((options & ID_REMAP_APPLY_UNMAP_WHEN_REMAPPING_TO_SELF) == 0 || id_self != NULL), "ID_REMAP_APPLY_WHEN_REMAPPING_TO_SELF requires a non-null `id_self` parameter.");
 	if (*id_ptr == NULL) {
 		return ID_REMAP_RESULT_SOURCE_NOT_MAPPABLE;
 	}
@@ -162,8 +161,7 @@ enum {
 	ID_REMAP_TYPE_CLEANUP = 1,
 };
 
-ROSE_STATIC void foreach_libblock_remap_callback_apply(ID *id_owner, ID *id_self, ID **id_ptr, IDRemap *data, int options,
-													   int cb_flag) {
+ROSE_STATIC void foreach_libblock_remap_callback_apply(ID *id_owner, ID *id_self, ID **id_ptr, IDRemap *data, int options, int cb_flag) {
 	const bool skip_user_refcount = (data->flag & ID_REMAP_SKIP_USER_REFCOUNT) != 0;
 	const bool force_user_refcount = (data->flag & ID_REMAP_FORCE_USER_REFCOUNT) != 0;
 	ROSE_assert(!skip_user_refcount || !force_user_refcount);

@@ -69,8 +69,7 @@ void GLVaoCache::insert(const GLShaderInterface *interface, GLuint vao) {
 			is_dynamic_vao_count = true;
 			/* Init dynamic arrays and let the branch below set the values. */
 			dynamic_vaos.count = GPU_BATCH_VAO_DYN_ALLOC_COUNT;
-			dynamic_vaos.interfaces = (const GLShaderInterface **)MEM_callocN(dynamic_vaos.count * sizeof(GLShaderInterface *),
-																			  "dyn vaos interfaces");
+			dynamic_vaos.interfaces = (const GLShaderInterface **)MEM_callocN(dynamic_vaos.count * sizeof(GLShaderInterface *), "dyn vaos interfaces");
 			dynamic_vaos.vao_ids = (GLuint *)MEM_callocN(dynamic_vaos.count * sizeof(GLuint), "dyn vaos ids");
 		}
 	}
@@ -87,8 +86,7 @@ void GLVaoCache::insert(const GLShaderInterface *interface, GLuint vao) {
 			/* Not enough place, realloc the array. */
 			i = dynamic_vaos.count;
 			dynamic_vaos.count += GPU_BATCH_VAO_DYN_ALLOC_COUNT;
-			dynamic_vaos.interfaces = (const GLShaderInterface **)MEM_recallocN(
-				(void *)dynamic_vaos.interfaces, sizeof(GLShaderInterface *) * dynamic_vaos.count);
+			dynamic_vaos.interfaces = (const GLShaderInterface **)MEM_recallocN((void *)dynamic_vaos.interfaces, sizeof(GLShaderInterface *) * dynamic_vaos.count);
 			dynamic_vaos.vao_ids = (GLuint *)MEM_recallocN(dynamic_vaos.vao_ids, sizeof(GLuint) * dynamic_vaos.count);
 		}
 		dynamic_vaos.interfaces[i] = interface;
@@ -270,8 +268,7 @@ void GLBatch::draw(int v_first, int v_count, int i_first, int i_count) {
 		void *v_first_ofs = el->offset_ptr(v_first);
 
 		if (GLContext::base_instance_support) {
-			glDrawElementsInstancedBaseVertexBaseInstance(gl_type, v_count, index_type, v_first_ofs, i_count, base_index,
-														  i_first);
+			glDrawElementsInstancedBaseVertexBaseInstance(gl_type, v_count, index_type, v_first_ofs, i_count, base_index, i_first);
 		}
 		else {
 			glDrawElementsInstancedBaseVertex(gl_type, v_count, index_type, v_first_ofs, i_count, base_index);

@@ -93,8 +93,7 @@ void ShaderCreateInfo::finalize() {
 	for (auto &info_name : additional_infos_) {
 
 		/* Fetch create info. */
-		const ShaderCreateInfo &info = *reinterpret_cast<const ShaderCreateInfo *>(
-			gpu_shader_create_info_get(info_name.c_str()));
+		const ShaderCreateInfo &info = *reinterpret_cast<const ShaderCreateInfo *>(gpu_shader_create_info_get(info_name.c_str()));
 
 		/* Recursive. */
 		const_cast<ShaderCreateInfo &>(info).finalize();
@@ -230,12 +229,10 @@ std::string ShaderCreateInfo::check_error() const {
 					 "stage.\n";
 		}
 		if (bool(this->builtins_ & BuiltinBits::VIEWPORT_INDEX)) {
-			error += "Shader " + this->name_ +
-					 " has geometry stage and uses multi-viewport. This is not allowed as fallback injects a geometry stage.\n";
+			error += "Shader " + this->name_ + " has geometry stage and uses multi-viewport. This is not allowed as fallback injects a geometry stage.\n";
 		}
 		if (bool(this->builtins_ & BuiltinBits::LAYER)) {
-			error += "Shader " + this->name_ +
-					 " has geometry stage and uses layer output. This is not allowed as fallback injects a geometry stage.\n";
+			error += "Shader " + this->name_ + " has geometry stage and uses layer output. This is not allowed as fallback injects a geometry stage.\n";
 		}
 	}
 
@@ -243,8 +240,7 @@ std::string ShaderCreateInfo::check_error() const {
 	if (bool(this->builtins_ & (BuiltinBits::BARYCENTRIC_COORD | BuiltinBits::VIEWPORT_INDEX | BuiltinBits::LAYER))) {
 		for (const StageInterfaceInfo *interface : this->vertex_out_interfaces_) {
 			if (interface->instance_name.is_empty()) {
-				error += "Shader " + this->name_ + " uses interface " + interface->name +
-						 " that doesn't contain an instance name, but is required for the fallback geometry shader.\n";
+				error += "Shader " + this->name_ + " uses interface " + interface->name + " that doesn't contain an instance name, but is required for the fallback geometry shader.\n";
 			}
 		}
 	}
@@ -349,8 +345,7 @@ void ShaderCreateInfo::validate_vertex_attributes(const ShaderCreateInfo *other_
 		}
 
 		if ((attr_bits & attr_new) != 0) {
-			std::cout << name_ << ": Attribute \"" << attr.name
-					  << "\" overlap one or more index from another attribute. Note that mat4 takes up 4 indices.";
+			std::cout << name_ << ": Attribute \"" << attr.name << "\" overlap one or more index from another attribute. Note that mat4 takes up 4 indices.";
 			if (other_info) {
 				std::cout << " While merging " << other_info->name_ << std::endl;
 			}
@@ -440,9 +435,7 @@ bool gpu_shader_create_info_compile(const char *name_starts_with_filter) {
 				skipped_filter++;
 				continue;
 			}
-			if ((GPU_get_info_i(GPU_INFO_GEOMETRY_SHADER_SUPPORT) == false && info->compute_source_ != nullptr) ||
-				(GPU_get_info_i(GPU_INFO_GEOMETRY_SHADER_SUPPORT) == false && info->geometry_source_ != nullptr) ||
-				(GPU_get_info_i(GPU_INFO_GEOMETRY_SHADER_SUPPORT) == false && info->has_resource_image())) {
+			if ((GPU_get_info_i(GPU_INFO_GEOMETRY_SHADER_SUPPORT) == false && info->compute_source_ != nullptr) || (GPU_get_info_i(GPU_INFO_GEOMETRY_SHADER_SUPPORT) == false && info->geometry_source_ != nullptr) || (GPU_get_info_i(GPU_INFO_GEOMETRY_SHADER_SUPPORT) == false && info->has_resource_image())) {
 				skipped++;
 				continue;
 			}

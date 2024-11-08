@@ -159,9 +159,7 @@ ROSE_STATIC void wm_event_prev_click_set(double event_time, wmEvent *event_state
 	*prev_press_event_time = event_time;
 }
 
-ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double event_time, wmEvent *event_state,
-														double *prev_press_event_time, bool is_keyboard,
-														bool check_double_click) {
+ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double event_time, wmEvent *event_state, double *prev_press_event_time, bool is_keyboard, bool check_double_click) {
 	ROSE_assert(ISKEYBOARD_OR_BUTTON(evt->type));
 	ROSE_assert(ELEM(evt->value, KM_PRESS, KM_RELEASE));
 
@@ -187,8 +185,7 @@ ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double eve
 	}
 }
 
-ROSE_STATIC void wm_event_state_update_and_click_set(wmEvent *evt, double event_time, wmEvent *event_state,
-													 double *prev_press_event_time, int tiny_window_type) {
+ROSE_STATIC void wm_event_state_update_and_click_set(wmEvent *evt, double event_time, wmEvent *event_state, double *prev_press_event_time, int tiny_window_type) {
 	const bool is_keyboard = ELEM(tiny_window_type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP);
 
 	wm_event_state_update_and_click_set_ex(evt, event_time, event_state, prev_press_event_time, is_keyboard, true);
@@ -214,8 +211,7 @@ ROSE_STATIC bool wm_event_is_ignorable_key_press(const wmWindow *win, const wmEv
 	return wm_event_is_same_key_press((wmEvent *)win->event_queue.last, evt);
 }
 
-void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y,
-										   double time) {
+void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y, double time) {
 	ROSE_assert(ELEM(type, WTK_EVT_MOUSEMOVE, WTK_EVT_MOUSESCROLL, WTK_EVT_BUTTONDOWN, WTK_EVT_BUTTONUP));
 
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
@@ -225,13 +221,11 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 	evt->prev_type = evt->type;
 	evt->prev_value = evt->value;
 
-	if ((event_state->type || event_state->value) &&
-		!(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
+	if ((event_state->type || event_state->value) && !(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
-	if ((event_state->prev_type || event_state->prev_value) &&
-		!(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
+	if ((event_state->prev_type || event_state->prev_value) && !(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
@@ -288,8 +282,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 	}
 }
 
-void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type, int key, bool repeat, char utf8[4],
-								  double event_time) {
+void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type, int key, bool repeat, char utf8[4], double event_time) {
 	ROSE_assert(ELEM(type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP));
 
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
@@ -299,13 +292,11 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 	evt->prev_type = evt->type;
 	evt->prev_value = evt->value;
 
-	if ((event_state->type || event_state->value) &&
-		!(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
+	if ((event_state->type || event_state->value) && !(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}
-	if ((event_state->prev_type || event_state->prev_value) &&
-		!(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
+	if ((event_state->prev_type || event_state->prev_value) && !(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
 		/** Event state should only keep information about keyboard or buttons. */
 		ROSE_assert_unreachable();
 	}

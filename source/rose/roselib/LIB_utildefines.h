@@ -43,8 +43,7 @@
 /** \name Array Macros
  * \{ */
 
-#define ARRAY_HAS_ITEM(arr_item, arr_start, arr_len) \
-	((size_t)((ptrdiff_t)(arr_item) - (ptrdiff_t)(arr_start)) < (size_t)(arr_len))
+#define ARRAY_HAS_ITEM(arr_item, arr_start, arr_len) ((size_t)((ptrdiff_t)(arr_item) - (ptrdiff_t)(arr_start)) < (size_t)(arr_len))
 
 /** Return the number of elements in a static array of elements. */
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*(arr)))

@@ -141,26 +141,11 @@ void IDP_Reset(IDProperty *property, const IDProperty *reference);
 #define IDP_Array(property) ((property)->data.pointer)
 /* C11 const correctness for casts. */
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
-#	define IDP_Float(property)                                 \
-		_Generic((property),                                    \
-			IDProperty *: (*(float *)&(property)->data.value1), \
-			const IDProperty *: (*(const float *)&(property)->data.value1))
-#	define IDP_Double(property)                                 \
-		_Generic((property),                                     \
-			IDProperty *: (*(double *)&(property)->data.value1), \
-			const IDProperty *: (*(const double *)&(property)->data.value1))
-#	define IDP_String(property)                              \
-		_Generic((property),                                  \
-			IDProperty *: ((char *)(property)->data.pointer), \
-			const IDProperty *: ((const char *)(property)->data.pointer))
-#	define IDP_IDPArray(property)                                  \
-		_Generic((property),                                        \
-			IDProperty *: ((IDProperty *)(property)->data.pointer), \
-			const IDProperty *: ((const IDProperty *)(property)->data.pointer))
-#	define IDP_Id(property)                                \
-		_Generic((property),                                \
-			IDProperty *: ((ID *)(property)->data.pointer), \
-			const IDProperty *: ((const ID *)(property)->data.pointer))
+#	define IDP_Float(property) _Generic((property), IDProperty *: (*(float *)&(property)->data.value1), const IDProperty *: (*(const float *)&(property)->data.value1))
+#	define IDP_Double(property) _Generic((property), IDProperty *: (*(double *)&(property)->data.value1), const IDProperty *: (*(const double *)&(property)->data.value1))
+#	define IDP_String(property) _Generic((property), IDProperty *: ((char *)(property)->data.pointer), const IDProperty *: ((const char *)(property)->data.pointer))
+#	define IDP_IDPArray(property) _Generic((property), IDProperty *: ((IDProperty *)(property)->data.pointer), const IDProperty *: ((const IDProperty *)(property)->data.pointer))
+#	define IDP_Id(property) _Generic((property), IDProperty *: ((ID *)(property)->data.pointer), const IDProperty *: ((const ID *)(property)->data.pointer))
 #else
 #	define IDP_Float(property) (*(float *)&(property)->data.value1)
 #	define IDP_Double(property) (*(double *)&(property)->data.value1)

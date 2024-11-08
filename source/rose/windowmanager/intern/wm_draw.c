@@ -2,11 +2,11 @@
 
 #include "ED_screen.h"
 
-#include "GPU_compute.h"
-#include "GPU_context.h"
 #include "GPU_batch.h"
 #include "GPU_batch_presets.h"
 #include "GPU_batch_utils.h"
+#include "GPU_compute.h"
+#include "GPU_context.h"
 #include "GPU_framebuffer.h"
 #include "GPU_shader.h"
 #include "GPU_state.h"
@@ -25,9 +25,9 @@
 /* -------------------------------------------------------------------- */
 /** \name Region Drawing
  *
- * Each region draws into its own frame-buffer, which is then blit on the 
- * window draw buffer. This helps with fast redrawing if only some regions 
- * change. It also means we can share a single context for multiple windows, 
+ * Each region draws into its own frame-buffer, which is then blit on the
+ * window draw buffer. This helps with fast redrawing if only some regions
+ * change. It also means we can share a single context for multiple windows,
  * so that for example VAOs can be shared between windows.
  * \{ */
 
@@ -57,7 +57,7 @@ ROSE_INLINE void wm_draw_region_buffer_create(ARegion *region, bool viewport) {
 		if (offscreen) {
 			const bool changed_x = GPU_offscreen_width(offscreen) != region->sizex;
 			const bool changed_y = GPU_offscreen_height(offscreen) != region->sizey;
-			if(changed_x || changed_y) {
+			if (changed_x || changed_y) {
 				wm_draw_region_buffer_free(region);
 			}
 		}
@@ -74,11 +74,11 @@ ROSE_INLINE void wm_draw_region_buffer_create(ARegion *region, bool viewport) {
 				return;
 			}
 			wm_draw_offscreen_texture_parameters(offscreen);
-			
+
 			region->draw_buffer = MEM_callocN(sizeof(wmDrawBuffer), "wmDrawBuffer");
 			region->draw_buffer->offscreen = offscreen;
 		}
-		
+
 		region->draw_buffer->bound = -1;
 	}
 }
@@ -86,26 +86,26 @@ ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
 	if (!region->draw_buffer) {
 		return;
 	}
-	
+
 	if (region->draw_buffer->viewport) {
 		GPU_viewport_bind(region->draw_buffer->viewport, view, &region->winrct);
 	}
 	else {
 		GPU_offscreen_bind(region->draw_buffer->offscreen, false);
-		
+
 		GPU_scissor_test(true);
 		GPU_scissor(0, 0, region->sizex, region->sizey);
 	}
-	
+
 	region->draw_buffer->bound = view;
 }
 ROSE_INLINE void wm_draw_region_unbind(ARegion *region) {
 	if (!region->draw_buffer) {
 		return;
 	}
-	
+
 	region->draw_buffer->bound = -1;
-	
+
 	if (region->draw_buffer->viewport) {
 		GPU_viewport_unbind(region->draw_buffer->viewport);
 	}
@@ -119,16 +119,16 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 	if (!region->draw_buffer) {
 		return;
 	}
-	
+
 	if (view == -1) {
 		view = 0;
 	}
 	else if (view > 0) {
-		if(region->draw_buffer->viewport == NULL) {
+		if (region->draw_buffer->viewport == NULL) {
 			view = 0;
 		}
 	}
-	
+
 	if (region->draw_buffer->viewport) {
 		GPU_viewport_draw_to_screen(region->draw_buffer->viewport, view, &region->winrct);
 	}
@@ -171,46 +171,46 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 	}
 
 	WindowManager *wm = CTX_wm_manager(C);
-	
+
 	ED_screen_areas_iter(window, screen, area) {
 		CTX_wm_area_set(C, area);
-		
+
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
-			if(region->visible || ignore_visibility) {
+			if (region->visible || ignore_visibility) {
 				CTX_wm_region_set(C, region);
 				// We should update the region layout here.
 				CTX_wm_region_set(C, NULL);
 			}
 		}
-		
+
 		ED_area_update_region_sizes(wm, window, area);
-		
+
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-			if(!region->visible) {
+			if (!region->visible) {
 				continue;
 			}
-			
+
 			CTX_wm_region_set(C, region);
-			
+
 			wm_draw_region_buffer_create(region, false);
 			wm_draw_region_bind(region, 0);
 			ED_region_do_draw(C, region);
 			wm_draw_region_unbind(region);
 			CTX_wm_region_set(C, NULL);
 		}
-		
+
 		CTX_wm_area_set(C, NULL);
 	}
-	
+
 	/** Draw menus into their own frame-buffer. */
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
 		if (!region->visible) {
 			continue;
 		}
-		
+
 		CTX_wm_region_set(C, region);
-		
+
 		wm_draw_region_buffer_create(region, false);
 		wm_draw_region_bind(region, 0);
 		ED_region_do_draw(C, region);
@@ -222,31 +222,31 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 
 ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, int view) {
 	Screen *screen = WM_window_screen_get(window);
-	
+
 	GPU_clear_color(0.45f, 0.45f, 0.45f, 1.0f);
 
 	ED_screen_areas_iter(window, screen, area) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-			if(!region->visible) {
+			if (!region->visible) {
 				continue;
 			}
-			if(!region->overlap) {
+			if (!region->overlap) {
 				wm_draw_region_blit(region, view);
 			}
 		}
 	}
-	
+
 	ED_screen_areas_iter(window, screen, area) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-			if(!region->visible) {
+			if (!region->visible) {
 				continue;
 			}
-			if(region->overlap) {
+			if (region->overlap) {
 				// wm_draw_region_blend(region, 0, true);
 			}
 		}
 	}
-	
+
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
 		if (!region->visible) {
 			continue;

@@ -727,8 +727,7 @@ void IDP_SyncGroupTypes(IDProperty *destination, const IDProperty *source, bool 
 		const IDProperty *other = IDP_GetPropertyFromGroup((IDProperty *)source, property->name);
 		if (other != NULL) {
 			const bool type_missmatch = (property->type != other->type || property->subtype != other->subtype);
-			const bool length_missmatch = (do_arraylen && ELEM(property->type, IDP_ARRAY, IDP_IDPARRAY) &&
-										   (other->length != property->length));
+			const bool length_missmatch = (do_arraylen && ELEM(property->type, IDP_ARRAY, IDP_IDPARRAY) && (other->length != property->length));
 			if (type_missmatch || length_missmatch) {
 				LIB_insertlinkreplace(&destination->data.group, property, IDP_DuplicateProperty(other));
 				IDP_FreeProperty(property);

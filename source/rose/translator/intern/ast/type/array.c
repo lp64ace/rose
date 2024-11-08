@@ -21,8 +21,7 @@ ROSE_INLINE bool same_array_type(const struct RCCType *a, const struct RCCType *
 		} break;
 		case ARRAY_VLA:
 		case ARRAY_VLA_STATIC: {
-			if (!((arr1->vla_length == NULL && arr2->vla_length == NULL) ||
-				  (arr1->vla_length != NULL && arr2->vla_length != NULL))) {
+			if (!((arr1->vla_length == NULL && arr2->vla_length == NULL) || (arr1->vla_length != NULL && arr2->vla_length != NULL))) {
 				return false;
 			}
 		} break;
@@ -46,8 +45,7 @@ ROSE_INLINE bool compatible_array_type(const struct RCCType *a, const struct RCC
 	if (!RT_type_compatible(arr1->element_type, arr2->element_type)) {
 		return false;
 	}
-	if (ELEM(arr1->boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC) &&
-		ELEM(arr2->boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC)) {
+	if (ELEM(arr1->boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC) && ELEM(arr2->boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC)) {
 		if (!(RT_type_array_length(a) == RT_type_array_length(b))) {
 			return false;
 		}
@@ -122,8 +120,7 @@ RCCType *RT_type_new_unbounded_array(struct RCContext *C, const RCCType *elem, c
 
 	return a;
 }
-RCCType *RT_type_new_array(struct RCContext *C, const RCCType *elem, const struct RCCNode *length,
-						   const RCCTypeQualification *qual) {
+RCCType *RT_type_new_array(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
 	RCCType *a = array_new(C, ARRAY_BOUNDED, elem, qual);
 
 	a->tp_array.const_length = length;
@@ -131,8 +128,7 @@ RCCType *RT_type_new_array(struct RCContext *C, const RCCType *elem, const struc
 
 	return a;
 }
-RCCType *RT_type_new_array_static(struct RCContext *C, const RCCType *elem, const struct RCCNode *length,
-								  const RCCTypeQualification *qual) {
+RCCType *RT_type_new_array_static(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
 	RCCType *a = array_new(C, ARRAY_BOUNDED_STATIC, elem, qual);
 
 	a->tp_array.const_length = length;
@@ -140,8 +136,7 @@ RCCType *RT_type_new_array_static(struct RCContext *C, const RCCType *elem, cons
 
 	return a;
 }
-RCCType *RT_type_new_vla_array(struct RCContext *C, const RCCType *elem, const struct RCCNode *length,
-							   const RCCTypeQualification *qual) {
+RCCType *RT_type_new_vla_array(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
 	RCCType *a = array_new(C, ARRAY_VLA, elem, qual);
 
 	a->tp_array.vla_length = length;
@@ -149,8 +144,7 @@ RCCType *RT_type_new_vla_array(struct RCContext *C, const RCCType *elem, const s
 
 	return a;
 }
-RCCType *RT_type_new_vla_array_static(struct RCContext *C, const RCCType *elem, const struct RCCNode *length,
-									  const RCCTypeQualification *qual) {
+RCCType *RT_type_new_vla_array_static(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
 	RCCType *a = array_new(C, ARRAY_VLA_STATIC, elem, qual);
 
 	a->tp_array.vla_length = length;

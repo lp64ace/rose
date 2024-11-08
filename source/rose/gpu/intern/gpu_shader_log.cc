@@ -108,8 +108,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 			fprintf(stderr, "%s\n", line_prefix);
 		}
 		/* Print line from the source file that is producing the error. */
-		if ((log_item.cursor.row != -1) &&
-			(log_item.cursor.row != previous_location.row || log_item.cursor.column != previous_location.column)) {
+		if ((log_item.cursor.row != -1) && (log_item.cursor.row != previous_location.row || log_item.cursor.column != previous_location.column)) {
 			const char *src_line_end;
 			found_line_id = false;
 			/* error_line is 1 based in this case. */
@@ -181,8 +180,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 		if (source_index > 0) {
 			StringRefNull filename = shader::gpu_shader_dependency_get_filename_from_source_string(sources[source_index]);
 			if (!filename.is_empty()) {
-				fprintf(stderr, "%s%s:%d:%d: %s", info_col, filename.c_str(), row_in_file, log_item.cursor.column + 1,
-						reset_col);
+				fprintf(stderr, "%s%s:%d:%d: %s", info_col, filename.c_str(), row_in_file, log_item.cursor.column + 1, reset_col);
 			}
 		}
 
@@ -207,8 +205,7 @@ void Shader::print_log(Span<const char *> sources, const char *log, const char *
 	MEM_freeN(sources_combined);
 }
 
-const char *GPULogParser::skip_severity(const char *log_line, GPULogItem &log_item, const char *error_msg,
-										const char *warning_msg, const char *note_msg) const {
+const char *GPULogParser::skip_severity(const char *log_line, GPULogItem &log_item, const char *error_msg, const char *warning_msg, const char *note_msg) const {
 	if (STREQLEN(log_line, error_msg, strlen(error_msg))) {
 		log_line += strlen(error_msg);
 		log_item.severity = Severity::Error;

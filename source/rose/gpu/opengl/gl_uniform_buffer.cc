@@ -57,14 +57,12 @@ void GLUniformBuf::clear_to_zero() {
 	DataFormat data_format = GPU_DATA_UINT;
 
 	if (GLContext::direct_state_access_support) {
-		glClearNamedBufferData(ubo_id_, to_gl_internal_format(internal_format), to_gl_data_format(internal_format),
-							   to_gl(data_format), &data);
+		glClearNamedBufferData(ubo_id_, to_gl_internal_format(internal_format), to_gl_data_format(internal_format), to_gl(data_format), &data);
 	}
 	else {
 		/* WATCH(@fclem): This should be ok since we only use clear outside of drawing functions. */
 		glBindBuffer(GL_UNIFORM_BUFFER, ubo_id_);
-		glClearBufferData(GL_UNIFORM_BUFFER, to_gl_internal_format(internal_format), to_gl_data_format(internal_format),
-						  to_gl(data_format), &data);
+		glClearBufferData(GL_UNIFORM_BUFFER, to_gl_internal_format(internal_format), to_gl_data_format(internal_format), to_gl(data_format), &data);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 }
@@ -77,8 +75,7 @@ void GLUniformBuf::clear_to_zero() {
 
 void GLUniformBuf::bind(int slot) {
 	if (slot >= GLContext::max_ubo_binds) {
-		fprintf(stderr, "Error: Trying to bind \"%s\" ubo to slot %d which is above the reported limit of %d.\n", name_, slot,
-				GLContext::max_ubo_binds);
+		fprintf(stderr, "Error: Trying to bind \"%s\" ubo to slot %d which is above the reported limit of %d.\n", name_, slot, GLContext::max_ubo_binds);
 		return;
 	}
 

@@ -16,8 +16,7 @@ TEST_F(GPUTest, ComputeDirect) {
 	GPUShader *shader = GPU_shader_create_from_info_name("gpu_compute_2d_test");
 	EXPECT_NE(shader, nullptr);
 
-	GPUTexture *texture = GPU_texture_create_2d("gpu_shader_compute_2d", SIZE, SIZE, 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_GENERAL,
-												NULL);
+	GPUTexture *texture = GPU_texture_create_2d("gpu_shader_compute_2d", SIZE, SIZE, 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_GENERAL, NULL);
 	EXPECT_NE(texture, nullptr);
 
 	GPU_shader_bind(shader);

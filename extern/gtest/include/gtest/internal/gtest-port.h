@@ -308,9 +308,7 @@
 // Clang on Windows does not understand MSVC's pragma warning.
 // We need clang-specific way to disable function deprecation warning.
 #ifdef __clang__
-#	define GTEST_DISABLE_MSC_DEPRECATED_PUSH_()                                                           \
-		_Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"") \
-			_Pragma("clang diagnostic ignored \"-Wdeprecated-implementations\"")
+#	define GTEST_DISABLE_MSC_DEPRECATED_PUSH_() _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"") _Pragma("clang diagnostic ignored \"-Wdeprecated-implementations\"")
 #	define GTEST_DISABLE_MSC_DEPRECATED_POP_() _Pragma("clang diagnostic pop")
 #else
 #	define GTEST_DISABLE_MSC_DEPRECATED_PUSH_() GTEST_DISABLE_MSC_WARNINGS_PUSH_(4996)
@@ -522,10 +520,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 //
 // To disable threading support in Google Test, add -DGTEST_HAS_PTHREAD=0
 // to your compiler flags.
-#	define GTEST_HAS_PTHREAD                                                                                      \
-		(GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_HPUX || GTEST_OS_QNX || GTEST_OS_FREEBSD || GTEST_OS_NACL ||   \
-		 GTEST_OS_NETBSD || GTEST_OS_FUCHSIA || GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_OPENBSD || \
-		 GTEST_OS_HAIKU)
+#	define GTEST_HAS_PTHREAD (GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_HPUX || GTEST_OS_QNX || GTEST_OS_FREEBSD || GTEST_OS_NACL || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA || GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_OPENBSD || GTEST_OS_HAIKU)
 #endif	// GTEST_HAS_PTHREAD
 
 #if GTEST_HAS_PTHREAD
@@ -548,8 +543,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 #		if GTEST_OS_LINUX_ANDROID
 // On Android, clone() became available at different API levels for each 32-bit
 // architecture.
-#			if defined(__LP64__) || (defined(__arm__) && __ANDROID_API__ >= 9) || \
-				(defined(__mips__) && __ANDROID_API__ >= 12) || (defined(__i386__) && __ANDROID_API__ >= 17)
+#			if defined(__LP64__) || (defined(__arm__) && __ANDROID_API__ >= 9) || (defined(__mips__) && __ANDROID_API__ >= 12) || (defined(__i386__) && __ANDROID_API__ >= 17)
 #				define GTEST_HAS_CLONE 1
 #			else
 #				define GTEST_HAS_CLONE 0
@@ -577,10 +571,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 
 // Determines whether to support death tests.
 // pops up a dialog window that cannot be suppressed programmatically.
-#if (GTEST_OS_LINUX || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS || (GTEST_OS_MAC && !GTEST_OS_IOS) ||                               \
-	 (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW || GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD ||  \
-	 GTEST_OS_QNX || GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA || GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || \
-	 GTEST_OS_HAIKU)
+#if (GTEST_OS_LINUX || GTEST_OS_CYGWIN || GTEST_OS_SOLARIS || (GTEST_OS_MAC && !GTEST_OS_IOS) || (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW || GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD || GTEST_OS_QNX || GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA || GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU)
 #	define GTEST_HAS_DEATH_TEST 1
 #endif
 
@@ -648,11 +639,9 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 // MinGW has two different printf implementations. Ensure the format macro
 // matches the selected implementation. See
 // https://sourceforge.net/p/mingw-w64/wiki2/gnu%20printf/.
-#		define GTEST_ATTRIBUTE_PRINTF_(string_index, first_to_check) \
-			__attribute__((__format__(__MINGW_PRINTF_FORMAT, string_index, first_to_check)))
+#		define GTEST_ATTRIBUTE_PRINTF_(string_index, first_to_check) __attribute__((__format__(__MINGW_PRINTF_FORMAT, string_index, first_to_check)))
 #	else
-#		define GTEST_ATTRIBUTE_PRINTF_(string_index, first_to_check) \
-			__attribute__((__format__(__printf__, string_index, first_to_check)))
+#		define GTEST_ATTRIBUTE_PRINTF_(string_index, first_to_check) __attribute__((__format__(__printf__, string_index, first_to_check)))
 #	endif
 #else
 #	define GTEST_ATTRIBUTE_PRINTF_(string_index, first_to_check)
@@ -708,9 +697,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 
 #ifndef GTEST_IS_THREADSAFE
 
-#	define GTEST_IS_THREADSAFE                                                                                        \
-		(GTEST_HAS_MUTEX_AND_THREAD_LOCAL_ || (GTEST_OS_WINDOWS && !GTEST_OS_WINDOWS_PHONE && !GTEST_OS_WINDOWS_RT) || \
-		 GTEST_HAS_PTHREAD)
+#	define GTEST_IS_THREADSAFE (GTEST_HAS_MUTEX_AND_THREAD_LOCAL_ || (GTEST_OS_WINDOWS && !GTEST_OS_WINDOWS_PHONE && !GTEST_OS_WINDOWS_RT) || GTEST_HAS_PTHREAD)
 
 #endif	// GTEST_IS_THREADSAFE
 
@@ -942,8 +929,7 @@ private:
 
 #if !defined(GTEST_LOG_)
 
-#	define GTEST_LOG_(severity) \
-		::testing::internal::GTestLog(::testing::internal::GTEST_##severity, __FILE__, __LINE__).GetStream()
+#	define GTEST_LOG_(severity) ::testing::internal::GTestLog(::testing::internal::GTEST_##severity, __FILE__, __LINE__).GetStream()
 
 inline void LogToStderr() {
 }
@@ -1282,8 +1268,7 @@ template<typename T> class ThreadWithParam : public ThreadWithParamBase {
 public:
 	typedef void UserThreadFunc(T);
 
-	ThreadWithParam(UserThreadFunc *func, T param, Notification *thread_can_start)
-		: func_(func), param_(param), thread_can_start_(thread_can_start), finished_(false) {
+	ThreadWithParam(UserThreadFunc *func, T param, Notification *thread_can_start) : func_(func), param_(param), thread_can_start_(thread_can_start), finished_(false) {
 		ThreadWithParamBase *const base = this;
 		// The thread can be created only after all fields except thread_
 		// have been initialized.
@@ -1475,8 +1460,7 @@ template<typename T> class ThreadWithParam : public ThreadWithParamBase {
 public:
 	typedef void UserThreadFunc(T);
 
-	ThreadWithParam(UserThreadFunc *func, T param, Notification *thread_can_start)
-		: ThreadWithParamBase(new RunnableImpl(func, param), thread_can_start) {
+	ThreadWithParam(UserThreadFunc *func, T param, Notification *thread_can_start) : ThreadWithParamBase(new RunnableImpl(func, param), thread_can_start) {
 	}
 	virtual ~ThreadWithParam() {
 	}
@@ -1648,8 +1632,7 @@ public:
 	// Does nothing if the current thread holds the mutex. Otherwise, crashes
 	// with high probability.
 	void AssertHeld() const {
-		GTEST_CHECK_(has_owner_ && pthread_equal(owner_, pthread_self()))
-			<< "The current thread is not holding the mutex @" << this;
+		GTEST_CHECK_(has_owner_ && pthread_equal(owner_, pthread_self())) << "The current thread is not holding the mutex @" << this;
 	}
 
 	// A static mutex may be used before main() is entered.  It may even

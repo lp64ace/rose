@@ -546,8 +546,7 @@ float determinant_m3(float a1, float a2, float a3, float b1, float b2, float b3,
 	return ans;
 }
 float determinant_m3_array(const float m[3][3]) {
-	return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[1][0] * (m[0][1] * m[2][2] - m[0][2] * m[2][1]) +
-			m[2][0] * (m[0][1] * m[1][2] - m[0][2] * m[1][1]));
+	return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[1][0] * (m[0][1] * m[2][2] - m[0][2] * m[2][1]) + m[2][0] * (m[0][1] * m[1][2] - m[0][2] * m[1][1]));
 }
 
 float determinant_m4(const float m[4][4]) {
@@ -574,8 +573,7 @@ float determinant_m4(const float m[4][4]) {
 	c4 = m[3][2];
 	d4 = m[3][3];
 
-	ans = (a1 * determinant_m3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1 * determinant_m3(a2, a3, a4, c2, c3, c4, d2, d3, d4) +
-		   c1 * determinant_m3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * determinant_m3(a2, a3, a4, b2, b3, b4, c2, c3, c4));
+	ans = (a1 * determinant_m3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1 * determinant_m3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1 * determinant_m3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * determinant_m3(a2, a3, a4, b2, b3, b4, c2, c3, c4));
 
 	return ans;
 }

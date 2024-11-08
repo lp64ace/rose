@@ -589,8 +589,7 @@ public:
 		return *(Self *)this;
 	}
 
-	Self &fragment_out(int slot, Type type, StringRefNull name, DualBlend blend = DualBlend::NONE,
-					   int raster_order_group = -1) {
+	Self &fragment_out(int slot, Type type, StringRefNull name, DualBlend blend = DualBlend::NONE, int raster_order_group = -1) {
 		fragment_outputs_.append({slot, type, blend, name, raster_order_group});
 		return *(Self *)this;
 	}
@@ -629,8 +628,7 @@ public:
 		return *(Self *)this;
 	}
 
-	Self &storage_buf(int slot, Qualifier qualifiers, StringRefNull type_name, StringRefNull name,
-					  Frequency freq = Frequency::PASS) {
+	Self &storage_buf(int slot, Qualifier qualifiers, StringRefNull type_name, StringRefNull name, Frequency freq = Frequency::PASS) {
 		Resource res(Resource::BindType::STORAGE_BUFFER, slot);
 		res.storagebuf.qualifiers = qualifiers;
 		res.storagebuf.type_name = type_name;
@@ -640,8 +638,7 @@ public:
 		return *(Self *)this;
 	}
 
-	Self &image(int slot, TextureFormat format, Qualifier qualifiers, ImageType type, StringRefNull name,
-				Frequency freq = Frequency::PASS) {
+	Self &image(int slot, TextureFormat format, Qualifier qualifiers, ImageType type, StringRefNull name, Frequency freq = Frequency::PASS) {
 		Resource res(Resource::BindType::IMAGE, slot);
 		res.image.format = format;
 		res.image.qualifiers = qualifiers;
@@ -652,8 +649,7 @@ public:
 		return *(Self *)this;
 	}
 
-	Self &sampler(int slot, ImageType type, StringRefNull name, Frequency freq = Frequency::PASS,
-				  GPUSamplerState sampler = GPUSamplerState::internal_sampler()) {
+	Self &sampler(int slot, ImageType type, StringRefNull name, Frequency freq = Frequency::PASS, GPUSamplerState sampler = GPUSamplerState::internal_sampler()) {
 		Resource res(Resource::BindType::SAMPLER, slot);
 		res.sampler.type = type;
 		res.sampler.name = name;
@@ -700,8 +696,7 @@ public:
 	 * \{ */
 
 	Self &push_constant(Type type, StringRefNull name, int array_size = 0) {
-		ROSE_assert_msg(name.find("[") == StringRefNull::not_found,
-						"Array syntax is forbidden for push constants. Use the array_size parameter instead.");
+		ROSE_assert_msg(name.find("[") == StringRefNull::not_found, "Array syntax is forbidden for push constants. Use the array_size parameter instead.");
 		push_constants_.append({type, name, array_size});
 		interface_names_size_ += name.size() + 1;
 		return *(Self *)this;

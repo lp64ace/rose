@@ -50,8 +50,7 @@ int64_t rabin_karp_rolling_hash_roll(int64_t hash, const void *buffer, size_t le
 	 * To remove the first (oldest) record we need to consider the following expression,
 	 * [POWMOD(BASE, l32u - 1) * BYTE1] + ... + [POWMOD(BASE, 1) * BYTE(l32u - 2)][POWMOD(BASE, 0) * BYTE(l32u - 2)]
 	 */
-	for (const unsigned char *prev = (((unsigned char *)buffer) - (l32u)), *next = buffer;
-		 next != POINTER_OFFSET(buffer, length); next++, prev++) {
+	for (const unsigned char *prev = (((unsigned char *)buffer) - (l32u)), *next = buffer; next != POINTER_OFFSET(buffer, length); next++, prev++) {
 		/**
 		 * #prev is the pointer to the previous (already) inserted bytes and
 		 * #next is the pointer to the newly (not already) bytes to be inserted.
@@ -100,8 +99,7 @@ int64_t rabin_karp_rolling_hash_roll_ex(int64_t hash, const void *buffer, size_t
 	 * To remove the first (oldest) record we need to consider the following expression,
 	 * [POWMOD(BASE, l32u - 1) * BYTE1] + ... + [POWMOD(BASE, 1) * BYTE(l32u - 2)][POWMOD(BASE, 0) * BYTE(l32u - 2)]
 	 */
-	for (const unsigned char *prev = (((unsigned char *)buffer) - (step * l32u)), *next = buffer;
-		 next != POINTER_OFFSET(buffer, step * length); next += step, prev += step) {
+	for (const unsigned char *prev = (((unsigned char *)buffer) - (step * l32u)), *next = buffer; next != POINTER_OFFSET(buffer, step * length); next += step, prev += step) {
 		/**
 		 * #prev is the pointer to the previous (already) inserted bytes and
 		 * #next is the pointer to the newly (not already) bytes to be inserted.

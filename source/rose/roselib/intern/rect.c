@@ -11,7 +11,7 @@ void LIB_rctf_init(rctf *rect, float xmin, float xmax, float ymin, float ymax) {
 	rect->xmax = xmax;
 	rect->ymin = ymin;
 	rect->ymax = ymax;
-	
+
 	LIB_rctf_sanitize(rect);
 }
 void LIB_rcti_init(rcti *rect, int xmin, int xmax, int ymin, int ymax) {
@@ -19,7 +19,7 @@ void LIB_rcti_init(rcti *rect, int xmin, int xmax, int ymin, int ymax) {
 	rect->xmax = xmax;
 	rect->ymin = ymin;
 	rect->ymax = ymax;
-	
+
 	LIB_rcti_sanitize(rect);
 }
 
@@ -59,7 +59,7 @@ void LIB_rcti_resize(rcti *rect, int x, int y) {
 	rect->ymax = rect->ymin + y;
 }
 
-bool LIB_rctf_isect(const rctf *src1, const rctf *src2, rctf *dest) { 
+bool LIB_rctf_isect(const rctf *src1, const rctf *src2, rctf *dest) {
 	float xmin, xmax;
 	float ymin, ymax;
 

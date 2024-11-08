@@ -77,8 +77,7 @@ GPUBatch *GPU_batch_create_ex(PrimType prim_type, GPUVertBuf *vertex_buffer, GPU
 /** Same as `GPU_batch_create_ex` but we assume that we don't own the #vertex_buffer specified. */
 GPUBatch *GPU_batch_create(PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer);
 
-void GPU_batch_init_ex(GPUBatch *batch, PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer,
-					   BatchFlag ownership);
+void GPU_batch_init_ex(GPUBatch *batch, PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer, BatchFlag ownership);
 /** Same as `GPU_batch_init_ex` but we assume that we don't own the #vertex_buffer specified. */
 void GPU_batch_init(GPUBatch *batch, PrimType prim_type, GPUVertBuf *vertex_buffer, GPUIndexBuf *index_buffer);
 
@@ -272,8 +271,7 @@ void GPU_batch_multi_draw_indirect(GPUBatch *batch, GPUStorageBuf *indirect_buf,
  * Return indirect draw call parameters for this #GPUBatch.
  * NOTE: \a r_base_index is set to -1 if not using an index buffer.
  */
-void GPU_batch_draw_parameter_get(GPUBatch *batch, int *r_vertex_count, int *r_vertex_first, int *r_base_index,
-								  int *r_indices_count);
+void GPU_batch_draw_parameter_get(GPUBatch *batch, int *r_vertex_count, int *r_vertex_first, int *r_base_index, int *r_indices_count);
 
 /* \} */
 

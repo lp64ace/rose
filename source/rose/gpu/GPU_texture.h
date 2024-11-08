@@ -168,8 +168,7 @@ typedef struct GPUSamplerState {
 	 * GPU_SAMPLER_CUSTOM_COMPARE is arbitrary, ignored, and irrelevant.
 	 */
 	static constexpr GPUSamplerState default_sampler() {
-		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND,
-				GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_PARAMETERS};
+		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_PARAMETERS};
 	}
 
 	/**
@@ -181,8 +180,7 @@ typedef struct GPUSamplerState {
 	 * the texture, so the rest of the options before it are arbitrary, ignored, and irrelevant.
 	 */
 	static constexpr GPUSamplerState internal_sampler() {
-		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND,
-				GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_INTERNAL};
+		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_INTERNAL};
 	}
 
 	/**
@@ -193,8 +191,7 @@ typedef struct GPUSamplerState {
 	 * the options before it are arbitrary, ignored, and irrelevant.
 	 */
 	static constexpr GPUSamplerState icon_sampler() {
-		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND,
-				GPU_SAMPLER_CUSTOM_ICON, GPU_SAMPLER_STATE_TYPE_CUSTOM};
+		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_CUSTOM_ICON, GPU_SAMPLER_STATE_TYPE_CUSTOM};
 	}
 
 	/**
@@ -207,8 +204,7 @@ typedef struct GPUSamplerState {
 	 * GPUSamplerState::default_sampler().
 	 */
 	static constexpr GPUSamplerState compare_sampler() {
-		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND,
-				GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_CUSTOM};
+		return {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_CUSTOM};
 	}
 
 	/**
@@ -328,17 +324,14 @@ typedef struct GPUSamplerState {
 	}
 
 	bool operator==(GPUSamplerState const &rhs) const {
-		return this->filtering == rhs.filtering && this->extend_x == rhs.extend_x && this->extend_yz == rhs.extend_yz &&
-			   this->custom_type == rhs.custom_type && this->type == rhs.type;
+		return this->filtering == rhs.filtering && this->extend_x == rhs.extend_x && this->extend_yz == rhs.extend_yz && this->custom_type == rhs.custom_type && this->type == rhs.type;
 	}
 #endif
 } GPUSamplerState;
 
 #ifndef __cplusplus
 /** Identical to GPUSamplerState::default_sampler for non C++ users. */
-static const GPUSamplerState GPU_SAMPLER_DEFAULT = {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND,
-													GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_CUSTOM_COMPARE,
-													GPU_SAMPLER_STATE_TYPE_PARAMETERS};
+static const GPUSamplerState GPU_SAMPLER_DEFAULT = {GPU_SAMPLER_FILTERING_DEFAULT, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_EXTEND_MODE_EXTEND, GPU_SAMPLER_CUSTOM_COMPARE, GPU_SAMPLER_STATE_TYPE_PARAMETERS};
 #endif
 
 /* \} */
@@ -559,8 +552,7 @@ void GPU_texture_free(GPUTexture *texture);
 /** \name Texture Views
  * \{ */
 
-GPUTexture *GPU_texture_create_view(const char *name, GPUTexture *texture, TextureFormat format, int mip_start, int mip_len,
-									int layer_start, int layer_len, bool cube_as_array, bool use_stencil);
+GPUTexture *GPU_texture_create_view(const char *name, GPUTexture *texture, TextureFormat format, int mip_start, int mip_len, int layer_start, int layer_len, bool cube_as_array, bool use_stencil);
 
 /* \} */
 
@@ -588,8 +580,7 @@ void GPU_texture_update(GPUTexture *texture, DataFormat format, const void *data
  * \a offset_x , \a offset_y , \a offset_z specify the bottom left corner of the updated region.
  * \a width , \a height , \a depth specify the extent of the updated region.
  */
-void GPU_texture_update_sub(GPUTexture *texture, DataFormat format, const void *pixels, int offset_x, int offset_y,
-							int offset_z, int width, int height, int depth);
+void GPU_texture_update_sub(GPUTexture *texture, DataFormat format, const void *pixels, int offset_x, int offset_y, int offset_z, int width, int height, int depth);
 
 /**
  * Update the content of a texture's specific mip-map level.
@@ -920,8 +911,7 @@ int64_t GPU_pixel_buffer_get_native_handle(GPUPixelBuffer *pixel_buf);
  * The \a pix_buf data is expected to be contiguous and big enough to fill the described
  * sub-region.
  */
-void GPU_texture_update_sub_from_pixel_buffer(GPUTexture *texture, DataFormat data_format, GPUPixelBuffer *pixel_buf,
-											  int offset_x, int offset_y, int offset_z, int width, int height, int depth);
+void GPU_texture_update_sub_from_pixel_buffer(GPUTexture *texture, DataFormat data_format, GPUPixelBuffer *pixel_buf, int offset_x, int offset_y, int offset_z, int width, int height, int depth);
 
 /* \} */
 

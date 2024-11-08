@@ -375,8 +375,7 @@ void GPU_matrix_perspective_set(float fovy, float aspect, float near, float far)
 	GPU_matrix_frustum_set(-half_width, +half_width, -half_height, +half_height, near, far);
 }
 
-void GPU_matrix_look_at(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY,
-						float upZ) {
+void GPU_matrix_look_at(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ) {
 	Mat4 cm;
 	float lookdir[3];
 	float camup[3] = {upX, upY, upZ};
@@ -391,8 +390,7 @@ void GPU_matrix_look_at(float eyeX, float eyeY, float eyeZ, float centerX, float
 	GPU_matrix_translate_3f(-eyeX, -eyeY, -eyeZ);
 }
 
-void GPU_matrix_project_3fv(const float world[3], const float model[4][4], const float proj[4][4], const int view[4],
-							float win[3]) {
+void GPU_matrix_project_3fv(const float world[3], const float model[4][4], const float proj[4][4], const int view[4], float win[3]) {
 	float v[4];
 
 	mul_v4_m4v3(v, model, world);
@@ -407,8 +405,7 @@ void GPU_matrix_project_3fv(const float world[3], const float model[4][4], const
 	win[2] = (v[2] + 1) * 0.5f;
 }
 
-void GPU_matrix_project_2fv(const float world[3], const float model[4][4], const float proj[4][4], const int view[4],
-							float win[2]) {
+void GPU_matrix_project_2fv(const float world[3], const float model[4][4], const float proj[4][4], const int view[4], float win[2]) {
 	float v[4];
 
 	mul_v4_m4v3(v, model, world);

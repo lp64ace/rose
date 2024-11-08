@@ -84,8 +84,7 @@ public:
 	constexpr Span(const T *start, size_t size) : data_(start), size_(size) {
 		ROSE_assert(size >= 0);
 	}
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr Span(const U *start, size_t size) : data_(static_cast<const T *>(start)), size_(size) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr Span(const U *start, size_t size) : data_(static_cast<const T *>(start)), size_(size) {
 		ROSE_assert(size >= 0);
 	}
 	/**
@@ -109,8 +108,7 @@ public:
 	 * Support implicit conversions like the one below:
 	 *   Span<T *> -> Span<const T *>
 	 */
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr Span(Span<U> span) : data_(static_cast<const T *>(span.data())), size_(span.size()) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr Span(Span<U> span) : data_(static_cast<const T *>(span.data())), size_(span.size()) {
 	}
 
 	constexpr Span slice(size_t start, size_t size) const {
@@ -303,8 +301,7 @@ public:
 	constexpr MutableSpan(T *start, size_t size) : data_(start), size_(size) {
 		ROSE_assert(size >= 0);
 	}
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr MutableSpan(U *start, size_t size) : data_(static_cast<T *>(start)), size_(size) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr MutableSpan(U *start, size_t size) : data_(static_cast<T *>(start)), size_(size) {
 		ROSE_assert(size >= 0);
 	}
 
@@ -316,8 +313,7 @@ public:
 	 * Support implicit conversions like the one below:
 	 *   MutableSpan<T *> -> Span<const T *>
 	 */
-	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))>
-	constexpr MutableSpan(MutableSpan<U> span) : data_(static_cast<T *>(span.data())), size_(span.size()) {
+	template<typename U, ROSE_ENABLE_IF((is_span_convertible_pointer_v<U, T>))> constexpr MutableSpan(MutableSpan<U> span) : data_(static_cast<T *>(span.data())), size_(span.size()) {
 	}
 
 	constexpr operator Span<T>() const {

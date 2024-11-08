@@ -101,36 +101,28 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 
 	/** Mixed scalar-vector constructors. */
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 3)>
-	constexpr VecBase(const VecBase<U, 2> &xy, T z) : VecBase(T(xy.x), T(xy.y), z) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 3)> constexpr VecBase(const VecBase<U, 2> &xy, T z) : VecBase(T(xy.x), T(xy.y), z) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 3)>
-	constexpr VecBase(T x, const VecBase<U, 2> &yz) : VecBase(x, T(yz.x), T(yz.y)) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 3)> constexpr VecBase(T x, const VecBase<U, 2> &yz) : VecBase(x, T(yz.x), T(yz.y)) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)>
-	VecBase(VecBase<U, 3> xyz, T w) : VecBase(T(xyz.x), T(xyz.y), T(xyz.z), T(w)) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)> VecBase(VecBase<U, 3> xyz, T w) : VecBase(T(xyz.x), T(xyz.y), T(xyz.z), T(w)) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)>
-	VecBase(T x, VecBase<U, 3> yzw) : VecBase(T(x), T(yzw.x), T(yzw.y), T(yzw.z)) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)> VecBase(T x, VecBase<U, 3> yzw) : VecBase(T(x), T(yzw.x), T(yzw.y), T(yzw.z)) {
 	}
 
-	template<typename U, typename V, ROSE_ENABLE_IF_VEC(Size, == 4)>
-	VecBase(VecBase<U, 2> xy, VecBase<V, 2> zw) : VecBase(T(xy.x), T(xy.y), T(zw.x), T(zw.y)) {
+	template<typename U, typename V, ROSE_ENABLE_IF_VEC(Size, == 4)> VecBase(VecBase<U, 2> xy, VecBase<V, 2> zw) : VecBase(T(xy.x), T(xy.y), T(zw.x), T(zw.y)) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)>
-	VecBase(VecBase<U, 2> xy, T z, T w) : VecBase(T(xy.x), T(xy.y), T(z), T(w)) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)> VecBase(VecBase<U, 2> xy, T z, T w) : VecBase(T(xy.x), T(xy.y), T(z), T(w)) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)>
-	VecBase(T x, VecBase<U, 2> yz, T w) : VecBase(T(x), T(yz.x), T(yz.y), T(w)) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)> VecBase(T x, VecBase<U, 2> yz, T w) : VecBase(T(x), T(yz.x), T(yz.y), T(w)) {
 	}
 
-	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)>
-	VecBase(T x, T y, VecBase<U, 2> zw) : VecBase(T(x), T(y), T(zw.x), T(zw.y)) {
+	template<typename U, ROSE_ENABLE_IF_VEC(Size, == 4)> VecBase(T x, T y, VecBase<U, 2> zw) : VecBase(T(x), T(y), T(zw.x), T(zw.y)) {
 	}
 
 	/** Masking. */

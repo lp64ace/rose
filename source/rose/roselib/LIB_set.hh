@@ -109,8 +109,7 @@ public:
 	 * is. This is necessary to avoid a high cost when no elements are added at all. An optimized
 	 * grow operation is performed on the first insertion.
 	 */
-	Set(Allocator allocator = {}) noexcept
-		: removed_slots_(0), occupied_and_removed_slots_(0), usable_slots_(0), slot_mask_(0), slots_(1, allocator) {
+	Set(Allocator allocator = {}) noexcept : removed_slots_(0), occupied_and_removed_slots_(0), usable_slots_(0), slot_mask_(0), slots_(1, allocator) {
 	}
 
 	Set(NoExceptConstructor, Allocator allocator = {}) noexcept : Set(allocator) {
@@ -130,8 +129,7 @@ public:
 
 	Set(const Set &other) = default;
 
-	Set(Set &&other) noexcept(std::is_nothrow_move_constructible_v<SlotArray>)
-		: Set(NoExceptConstructor(), other.slots_.allocator()) {
+	Set(Set &&other) noexcept(std::is_nothrow_move_constructible_v<SlotArray>) : Set(NoExceptConstructor(), other.slots_.allocator()) {
 		if constexpr (std::is_nothrow_move_constructible_v<SlotArray>) {
 			slots_ = std::move(other.slots_);
 		}
@@ -320,8 +318,7 @@ public:
 		friend Set;
 
 	public:
-		Iterator(const Slot *slots, size_t total_slots, size_t current_slot)
-			: slots_(slots), total_slots_(total_slots), current_slot_(current_slot) {
+		Iterator(const Slot *slots, size_t total_slots, size_t current_slot) : slots_(slots), total_slots_(total_slots), current_slot_(current_slot) {
 		}
 
 		Iterator &operator++() {
@@ -550,8 +547,7 @@ public:
 private:
 	ROSE_NOINLINE void realloc_and_reinsert(const size_type min_usable_slots) {
 		size_type total_slots, usable_slots;
-		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots,
-														&usable_slots);
+		max_load_factor_.compute_total_and_usable_slots(SlotArray::inline_buffer_capacity(), min_usable_slots, &total_slots, &usable_slots);
 		ROSE_assert(total_slots >= 1);
 		const uint64_t new_slot_mask = uint64_t(total_slots) - 1;
 

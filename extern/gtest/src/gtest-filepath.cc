@@ -249,8 +249,7 @@ bool FilePath::IsRootDirectory() const {
 bool FilePath::IsAbsolutePath() const {
 	const char *const name = pathname_.c_str();
 #if GTEST_OS_WINDOWS
-	return pathname_.length() >= 3 && ((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
-		   name[1] == ':' && IsPathSeparator(name[2]);
+	return pathname_.length() >= 3 && ((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) && name[1] == ':' && IsPathSeparator(name[2]);
 #else
 	return IsPathSeparator(name[0]);
 #endif

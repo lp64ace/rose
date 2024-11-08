@@ -41,8 +41,7 @@ typedef struct RCCTypeQualified {
  * \{ */
 
 struct RCCType *RT_type_new_qualified(struct RCContext *, const struct RCCType *type);
-struct RCCType *RT_type_new_qualified_ex(struct RCContext *, const struct RCCType *type,
-										 const RCCTypeQualification *qualification);
+struct RCCType *RT_type_new_qualified_ex(struct RCContext *, const struct RCCType *type, const RCCTypeQualification *qualification);
 
 /** \} */
 

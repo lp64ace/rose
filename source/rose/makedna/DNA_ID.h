@@ -86,8 +86,7 @@ enum {
  */
 #define ID_REAL_USERS(id) (((const ID *)id)->us - ID_FAKE_USERS(id))
 
-#define ID_NEW_SET(_id, _idn) \
-	(((ID *)(_id))->newid = (ID *)(_idn), ((ID *)(_id))->newid->tag |= ID_TAG_NEW, (void *)((ID *)(_id))->newid)
+#define ID_NEW_SET(_id, _idn) (((ID *)(_id))->newid = (ID *)(_idn), ((ID *)(_id))->newid->tag |= ID_TAG_NEW, (void *)((ID *)(_id))->newid)
 #define ID_NEW_REMAP(a)                 \
 	if ((a) && (a)->id.newid) {         \
 		*(void **)&(a) = (a)->id.newid; \

@@ -22,10 +22,8 @@ private:
 	 * respectively, and the third variation axis is the filtering type. See the samplers_init()
 	 * method for more information.
 	 */
-	static GLuint samplers_state_cache_[GPU_SAMPLER_EXTEND_MODES_COUNT][GPU_SAMPLER_EXTEND_MODES_COUNT]
-									   [GPU_SAMPLER_FILTERING_TYPES_COUNT];
-	static const int samplers_state_cache_count_ = GPU_SAMPLER_EXTEND_MODES_COUNT * GPU_SAMPLER_EXTEND_MODES_COUNT *
-												   GPU_SAMPLER_FILTERING_TYPES_COUNT;
+	static GLuint samplers_state_cache_[GPU_SAMPLER_EXTEND_MODES_COUNT][GPU_SAMPLER_EXTEND_MODES_COUNT][GPU_SAMPLER_FILTERING_TYPES_COUNT];
+	static const int samplers_state_cache_count_ = GPU_SAMPLER_EXTEND_MODES_COUNT * GPU_SAMPLER_EXTEND_MODES_COUNT * GPU_SAMPLER_FILTERING_TYPES_COUNT;
 	/**
 	 * A cache of all custom sampler configurations described in GPUSamplerCustomType. See the
 	 * samplers_init() method for more information.
@@ -106,8 +104,7 @@ protected:
 private:
 	bool proxy_check(int mip);
 	void stencil_texture_mode_set(bool use_stencil);
-	void update_sub_direct_state_access(int mip, int offset[3], int extent[3], GLenum gl_format, GLenum gl_type,
-										const void *data);
+	void update_sub_direct_state_access(int mip, int offset[3], int extent[3], GLenum gl_format, GLenum gl_type, const void *data);
 };
 
 class GLPixelBuffer : public PixelBuffer {

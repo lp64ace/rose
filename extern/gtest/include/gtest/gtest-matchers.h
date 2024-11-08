@@ -313,10 +313,7 @@ protected:
 	explicit MatcherBase(const MatcherInterface<const T &> *impl) : impl_(impl) {
 	}
 
-	template<typename U>
-	explicit MatcherBase(const MatcherInterface<U> *impl,
-						 typename std::enable_if<!std::is_same<U, const U &>::value>::type * = nullptr)
-		: impl_(new internal::MatcherInterfaceAdapter<U>(impl)) {
+	template<typename U> explicit MatcherBase(const MatcherInterface<U> *impl, typename std::enable_if<!std::is_same<U, const U &>::value>::type * = nullptr) : impl_(new internal::MatcherInterfaceAdapter<U>(impl)) {
 	}
 
 	MatcherBase(const MatcherBase &) = default;
@@ -349,10 +346,7 @@ public:
 	explicit Matcher(const MatcherInterface<const T &> *impl) : internal::MatcherBase<T>(impl) {
 	}
 
-	template<typename U>
-	explicit Matcher(const MatcherInterface<U> *impl,
-					 typename std::enable_if<!std::is_same<U, const U &>::value>::type * = nullptr)
-		: internal::MatcherBase<T>(impl) {
+	template<typename U> explicit Matcher(const MatcherInterface<U> *impl, typename std::enable_if<!std::is_same<U, const U &>::value>::type * = nullptr) : internal::MatcherBase<T>(impl) {
 	}
 
 	// Implicit constructor here allows people to write
@@ -406,8 +400,7 @@ public:
 	Matcher() {
 	}
 
-	explicit Matcher(const MatcherInterface<const absl::string_view &> *impl)
-		: internal::MatcherBase<const absl::string_view &>(impl) {
+	explicit Matcher(const MatcherInterface<const absl::string_view &> *impl) : internal::MatcherBase<const absl::string_view &>(impl) {
 	}
 
 	// Allows the user to write str instead of Eq(str) sometimes, where
@@ -671,8 +664,7 @@ public:
 	//
 	// This is a template, not just a plain function with const std::string&,
 	// because absl::string_view has some interfering non-explicit constructors.
-	template<class MatcheeStringType>
-	bool MatchAndExplain(const MatcheeStringType &s, MatchResultListener * /* listener */) const {
+	template<class MatcheeStringType> bool MatchAndExplain(const MatcheeStringType &s, MatchResultListener * /* listener */) const {
 		const std::string &s2(s);
 		return full_match_ ? RE::FullMatch(s2, *regex_) : RE::PartialMatch(s2, *regex_);
 	}

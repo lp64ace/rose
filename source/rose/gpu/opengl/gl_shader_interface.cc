@@ -244,8 +244,7 @@ GLShaderInterface::GLShaderInterface(GLuint program) {
 	int input_tot_len = attr_len + ubo_len + uniform_len + ssbo_len;
 	inputs_ = (ShaderInput *)MEM_callocN(sizeof(ShaderInput) * input_tot_len, __func__);
 
-	const uint32_t name_buffer_len = attr_len * max_attr_name_len + ubo_len * max_ubo_name_len +
-									 uniform_len * max_uniform_name_len + ssbo_len * max_ssbo_name_len;
+	const uint32_t name_buffer_len = attr_len * max_attr_name_len + ubo_len * max_ubo_name_len + uniform_len * max_uniform_name_len + ssbo_len * max_ssbo_name_len;
 	name_buffer_ = (char *)MEM_mallocN(name_buffer_len, "name_buffer");
 	uint32_t name_buffer_offset = 0;
 

@@ -11,15 +11,11 @@
 #ifdef __BIG_ENDIAN__
 /* Big Endian */
 #	define MAKE_ID4(a, b, c, d) ((int)(a) << 24 | (int)(b) << 16 | (c) << 8 | (d))
-#	define MAKE_ID8(a, b, c, d, e, f, g, h)                                                                      \
-		((int64_t)(a) << 56 | (int64_t)(b) << 48 | (int64_t)(c) << 40 | (int64_t)(d) << 32 | (int64_t)(e) << 24 | \
-		 (int64_t)(f) << 16 | (int64_t)(g) << 8 | (h))
+#	define MAKE_ID8(a, b, c, d, e, f, g, h) ((int64_t)(a) << 56 | (int64_t)(b) << 48 | (int64_t)(c) << 40 | (int64_t)(d) << 32 | (int64_t)(e) << 24 | (int64_t)(f) << 16 | (int64_t)(g) << 8 | (h))
 #else
 /* Little Endian */
 #	define MAKE_ID4(a, b, c, d) ((int)(d) << 24 | (int)(c) << 16 | (b) << 8 | (a))
-#	define MAKE_ID8(a, b, c, d, e, f, g, h)                                                                      \
-		((int64_t)(h) << 56 | (int64_t)(g) << 48 | (int64_t)(f) << 40 | (int64_t)(e) << 32 | (int64_t)(d) << 24 | \
-		 (int64_t)(c) << 16 | (int64_t)(b) << 8 | (a))
+#	define MAKE_ID8(a, b, c, d, e, f, g, h) ((int64_t)(h) << 56 | (int64_t)(g) << 48 | (int64_t)(f) << 40 | (int64_t)(e) << 32 | (int64_t)(d) << 24 | (int64_t)(c) << 16 | (int64_t)(b) << 8 | (a))
 #endif
 
 #define USEDWORD MAKE_ID4('u', 's', 'e', 'd')
@@ -29,8 +25,7 @@
  * the `freeword` will never be used.
  * To be safe, use a word that's the same in both directions.
  */
-#define FREEWORD \
-	((sizeof(void *) > sizeof(int32_t)) ? MAKE_ID8('e', 'e', 'r', 'f', 'f', 'r', 'e', 'e') : MAKE_ID4('e', 'f', 'f', 'e'))
+#define FREEWORD ((sizeof(void *) > sizeof(int32_t)) ? MAKE_ID8('e', 'e', 'r', 'f', 'f', 'r', 'e', 'e') : MAKE_ID4('e', 'f', 'f', 'e'))
 
 typedef struct FreeNode {
 	/** Each element represents a block which `LIB_memory_pool_malloc` may return. */

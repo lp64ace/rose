@@ -33,8 +33,7 @@ void GPU_matrix_rotate_3f(float deg, float x, float y, float z);
  */
 void GPU_matrix_rotate_3fv(float deg, const float axis[3]);
 
-void GPU_matrix_look_at(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY,
-						float upZ);
+void GPU_matrix_look_at(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ);
 
 /* 2D ModelView Matrix */
 

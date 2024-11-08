@@ -103,8 +103,7 @@ public:
 	 * Return true, when this slot is occupied and contains a key that compares equal to the given
 	 * key. The hash is used by other slot implementations to determine inequality faster.
 	 */
-	template<typename ForwardKey, typename IsEqual>
-	bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
+	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, uint64_t /*hash*/) const {
 		if (state_ == Occupied) {
 			return is_equal(key, *key_buffer_);
 		}
@@ -195,8 +194,7 @@ public:
 		return hash_;
 	}
 
-	template<typename ForwardKey, typename IsEqual>
-	bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t hash) const {
+	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t hash) const {
 		/* `hash_` might be uninitialized here, but that is ok. */
 		if (hash_ == hash) {
 			if (state_ == Occupied) {
@@ -259,8 +257,7 @@ public:
 		return hash(key_);
 	}
 
-	template<typename ForwardKey, typename IsEqual>
-	bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t /*hash*/) const {
+	template<typename ForwardKey, typename IsEqual> bool contains(const ForwardKey &key, const IsEqual &is_equal, const uint64_t /*hash*/) const {
 		ROSE_assert(KeyInfo::is_not_empty_or_removed(key));
 		return is_equal(key_, key);
 	}
@@ -281,8 +278,7 @@ public:
  * This exists just to make it more convenient to define which special integer values can be used
  * to indicate an empty and removed value.
  */
-template<typename Int, Int EmptyValue, Int RemovedValue>
-using IntegerSetSlot = IntrusiveSetSlot<Int, TemplatedKeyInfo<Int, EmptyValue, RemovedValue>>;
+template<typename Int, Int EmptyValue, Int RemovedValue> using IntegerSetSlot = IntrusiveSetSlot<Int, TemplatedKeyInfo<Int, EmptyValue, RemovedValue>>;
 
 template<typename Key> struct DefaultSetSlot;
 

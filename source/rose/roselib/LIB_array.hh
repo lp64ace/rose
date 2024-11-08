@@ -59,8 +59,7 @@ public:
 	/**
 	 * Create a new array that contains copies of all values.
 	 */
-	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))>
-	Array(Span<U> values, Allocator allocator = {}) : Array(NoExceptConstructor(), allocator) {
+	template<typename U, ROSE_ENABLE_IF((std::is_convertible_v<U, T>))> Array(Span<U> values, Allocator allocator = {}) : Array(NoExceptConstructor(), allocator) {
 		const size_type size = values.size();
 		data_ = this->get_buffer_for_size(size);
 		uninitialized_convert_n<U, T>(values.data(), size, data_);

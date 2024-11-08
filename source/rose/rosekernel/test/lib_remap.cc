@@ -1,7 +1,7 @@
 #include "MEM_guardedalloc.h"
 
-#include "DNA_windowmanager_types.h"
 #include "DNA_screen_types.h"
+#include "DNA_windowmanager_types.h"
 
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
@@ -25,10 +25,10 @@ TEST(IDRemap, Unlink) {
 			win->screen = reinterpret_cast<Screen *>(KER_libblock_alloc(main, ID_SCR, "Screen", 0));
 			EXPECT_NE(win->screen, nullptr);
 			KER_libblock_unlink(main, win->screen);
-		} while(false);
+		} while (false);
 		EXPECT_EQ(win->screen, nullptr);
 		LIB_freelistN(&wm->windows);
-	} while(false);
+	} while (false);
 	KER_main_free(main);
 }
 
@@ -49,11 +49,11 @@ TEST(IDRemap, UnlinkMultiple) {
 			/** Since #scr starts with a single user, we need to add one more since we reference it from two windows! */
 			id_us_add(reinterpret_cast<ID *>(scr));
 			KER_libblock_unlink(main, scr);
-		} while(false);
+		} while (false);
 		EXPECT_EQ(win1->screen, nullptr);
 		EXPECT_EQ(win2->screen, nullptr);
 		LIB_freelistN(&wm->windows);
-	} while(false);
+	} while (false);
 	KER_main_free(main);
 }
 

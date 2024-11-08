@@ -16,8 +16,7 @@ namespace rose::gpu {
  * \{ */
 
 /** Returns enabled vertex pointers as a bit-flag (one bit per attribute). */
-static uint16_t vbo_bind(const ShaderInterface *interface, const GPUVertFormat *format, uint v_first, uint v_len,
-						 const bool use_instancing) {
+static uint16_t vbo_bind(const ShaderInterface *interface, const GPUVertFormat *format, uint v_first, uint v_len, const bool use_instancing) {
 	uint16_t enabled_attrib = 0;
 	const uint attr_len = format->attr_len;
 	uint stride = format->stride;
@@ -80,8 +79,10 @@ static uint16_t vbo_bind(const ShaderInterface *interface, const GPUVertFormat *
 	return enabled_attrib;
 }
 
-void GLVertArray::update_bindings(const GLuint vao, const GPUBatch *batch_, /* Should be GLBatch. */
-								  const ShaderInterface *interface, const int base_instance) {
+void GLVertArray::update_bindings(const GLuint vao,
+								  const GPUBatch *batch_, /* Should be GLBatch. */
+								  const ShaderInterface *interface,
+								  const int base_instance) {
 	const GLBatch *batch = static_cast<const GLBatch *>(batch_);
 	uint16_t attr_mask = interface->enabled_attr_mask_;
 
@@ -139,8 +140,7 @@ void GLVertArray::update_bindings(const GLuint vao, const GPUBatch *batch_, /* S
 	}
 }
 
-void GLVertArray::update_bindings(const GLuint vao, const uint v_first, const GPUVertFormat *format,
-								  const ShaderInterface *interface) {
+void GLVertArray::update_bindings(const GLuint vao, const uint v_first, const GPUVertFormat *format, const ShaderInterface *interface) {
 	glBindVertexArray(vao);
 
 	vbo_bind(interface, format, v_first, 0, false);

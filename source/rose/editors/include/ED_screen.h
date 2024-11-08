@@ -59,15 +59,11 @@ struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const str
  * visible in the window, not just bScreen).
  * \note Skips global areas with flag GLOBAL_AREA_IS_HIDDEN.
  */
-#define ED_screen_areas_iter(win, screen, area) \
-	for (ScrArea *area = ED_screen_areas_iter_first(win, screen); area != NULL; area = ED_screen_areas_iter_next(screen, area))
+#define ED_screen_areas_iter(win, screen, area) for (ScrArea *area = ED_screen_areas_iter_first(win, screen); area != NULL; area = ED_screen_areas_iter_next(screen, area))
 
-#define ED_screen_verts_first(win, screen) \
-	((win)->global_areas.vertbase.first ? (ScrVert *)(win)->global_areas.vertbase.first : (ScrVert *)(screen)->vertbase.first)
-#define ED_screen_verts_next(win, screen, vert) \
-	((vert == (ScrVert *)(win)->global_areas.vertbase.last) ? (ScrVert *)(screen)->vertbase.first : vert->next)
-#define ED_screen_verts_iter(win, screen, vert) \
-	for (ScrVert *vert = ED_screen_verts_first(win, screen); vert != NULL; vert = ED_screen_verts_next(win, screen, vert))
+#define ED_screen_verts_first(win, screen) ((win)->global_areas.vertbase.first ? (ScrVert *)(win)->global_areas.vertbase.first : (ScrVert *)(screen)->vertbase.first)
+#define ED_screen_verts_next(win, screen, vert) ((vert == (ScrVert *)(win)->global_areas.vertbase.last) ? (ScrVert *)(screen)->vertbase.first : vert->next)
+#define ED_screen_verts_iter(win, screen, vert) for (ScrVert *vert = ED_screen_verts_first(win, screen); vert != NULL; vert = ED_screen_verts_next(win, screen, vert))
 
 void ED_area_update_region_sizes(struct WindowManager *wm, struct wmWindow *window, struct ScrArea *area);
 
@@ -88,4 +84,4 @@ void ED_screen_global_areas_refresh(struct wmWindow *window);
 }
 #endif
 
-#endif // ED_SCREEN_H
+#endif	// ED_SCREEN_H

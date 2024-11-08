@@ -302,8 +302,7 @@ bool tWindowManager::InitDummy() {
 	dummy.window_class_.lpszClassName = "dummy";
 	RegisterClass(&dummy.window_class_);
 
-	dummy.window_handle_ = CreateWindowEx(WS_EX_APPWINDOW, "dummy", "dummy", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-										  1, 1, HWND_DESKTOP, NULL, dummy.instance_handle_, NULL);
+	dummy.window_handle_ = CreateWindowEx(WS_EX_APPWINDOW, "dummy", "dummy", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1, 1, HWND_DESKTOP, NULL, dummy.instance_handle_, NULL);
 
 	if (!dummy.window_handle_) {
 		return false;
@@ -432,9 +431,7 @@ tWindow *tWindowManager::GetWindowByHandle(HWND handle) const {
 void tWindow::SetWindowStyle(Style style) {
 	switch (style) {
 		case Style::normal: {
-			SetWindowDecoration(Decorator::titlebar | Decorator::border | Decorator::destroy_btn | Decorator::minimize_btn |
-									Decorator::maximize_btn | Decorator::sizeable,
-								true);
+			SetWindowDecoration(Decorator::titlebar | Decorator::border | Decorator::destroy_btn | Decorator::minimize_btn | Decorator::maximize_btn | Decorator::sizeable, true);
 			break;
 		}
 
@@ -580,9 +577,7 @@ bool tWindow::Init(tWindowManager *manager) {
 
 	DWORD style = WS_OVERLAPPEDWINDOW & ~WS_VISIBLE;
 
-	this->window_handle_ = CreateWindowEx(WS_EX_APPWINDOW, settings.name, settings.name, style, CW_USEDEFAULT,
-										  CW_USEDEFAULT, settings.width, settings.height, HWND_DESKTOP, NULL,
-										  this->instance_handle_, NULL);
+	this->window_handle_ = CreateWindowEx(WS_EX_APPWINDOW, settings.name, settings.name, style, CW_USEDEFAULT, CW_USEDEFAULT, settings.width, settings.height, HWND_DESKTOP, NULL, this->instance_handle_, NULL);
 
 	if (!this->window_handle_) {
 		return false;
@@ -647,21 +642,7 @@ bool tWindow::InitPixelFormat() {
 
 	unsigned int count = WGL_NUMBER_PIXEL_FORMATS_ARB;
 	int index = 0;
-	int attribs[] = {WGL_SUPPORT_OPENGL_ARB,   1,
-					 WGL_DRAW_TO_WINDOW_ARB,   1,
-					 WGL_DOUBLE_BUFFER_ARB,	   1,
-					 WGL_RED_BITS_ARB,		   settings.color_bits,
-					 WGL_GREEN_BITS_ARB,	   settings.color_bits,
-					 WGL_BLUE_BITS_ARB,		   settings.color_bits,
-					 WGL_ALPHA_BITS_ARB,	   settings.color_bits,
-					 WGL_DEPTH_BITS_ARB,	   settings.depth_bits,
-					 WGL_STENCIL_BITS_ARB,	   settings.stencil_bits,
-					 WGL_ACCUM_RED_BITS_ARB,   settings.accum_bits,
-					 WGL_ACCUM_GREEN_BITS_ARB, settings.accum_bits,
-					 WGL_ACCUM_BLUE_BITS_ARB,  settings.accum_bits,
-					 WGL_ACCUM_ALPHA_BITS_ARB, settings.accum_bits,
-					 WGL_ACCELERATION_ARB,	   WGL_FULL_ACCELERATION_ARB,
-					 WGL_PIXEL_TYPE_ARB,	   WGL_TYPE_RGBA_ARB};
+	int attribs[] = {WGL_SUPPORT_OPENGL_ARB, 1, WGL_DRAW_TO_WINDOW_ARB, 1, WGL_DOUBLE_BUFFER_ARB, 1, WGL_RED_BITS_ARB, settings.color_bits, WGL_GREEN_BITS_ARB, settings.color_bits, WGL_BLUE_BITS_ARB, settings.color_bits, WGL_ALPHA_BITS_ARB, settings.color_bits, WGL_DEPTH_BITS_ARB, settings.depth_bits, WGL_STENCIL_BITS_ARB, settings.stencil_bits, WGL_ACCUM_RED_BITS_ARB, settings.accum_bits, WGL_ACCUM_GREEN_BITS_ARB, settings.accum_bits, WGL_ACCUM_BLUE_BITS_ARB, settings.accum_bits, WGL_ACCUM_ALPHA_BITS_ARB, settings.accum_bits, WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB, WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB};
 
 	std::vector<int> attribList;
 	attribList.assign(attribs, attribs + std::size(attribs));
@@ -918,8 +899,7 @@ static int convert_key(short win32_key, short scan_code, short extend) {
 
 }  // namespace rose::tiny_window
 
-LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam,
-																	LPARAM lparam) {
+LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam, LPARAM lparam) {
 	rose::tiny_window::tWindowManager *manager = (rose::tiny_window::tWindowManager *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	rose::tiny_window::tWindow *window = (manager) ? manager->GetWindowByHandle(hwnd) : nullptr;
 
@@ -1008,8 +988,7 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 					/** No text with control key pressed (Alt can be used to insert special characters though!). */
 					if ((!has_ctrl && has_alt) || ::MapVirtualKeyW(virtual_key, MAPVK_VK_TO_CHAR) != 0) {
 						INT ret;
-						if ((ret = ::ToUnicodeEx(virtual_key, raw.data.keyboard.MakeCode, state, utf16, 2, 0,
-												 manager->keyboard_layout_))) {
+						if ((ret = ::ToUnicodeEx(virtual_key, raw.data.keyboard.MakeCode, state, utf16, 2, 0, manager->keyboard_layout_))) {
 							ret = ::WideCharToMultiByte(CP_UTF8, 0, utf16, ret, utf8, sizeof(utf8), NULL, NULL);
 							if (0 <= ret && ret < sizeof(utf8) / sizeof(utf8[0])) {
 								utf8[ret] = '\0';

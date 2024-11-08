@@ -122,8 +122,7 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 
 			for (const RCCField *field = RT_type_struct_field_first(type); field; field = field->next) {
 				fprintf(file, "ROSE_STATIC_ASSERT(");
-				fprintf(file, "offsetof(%s, %s) == %llu, ", RT_token_as_string(token), RT_token_as_string(field->identifier),
-						RT_parser_offsetof(parser, type, field));
+				fprintf(file, "offsetof(%s, %s) == %llu, ", RT_token_as_string(token), RT_token_as_string(field->identifier), RT_parser_offsetof(parser, type, field));
 				fprintf(file, "\"DNA field offset verify\");\n");
 			}
 		}
