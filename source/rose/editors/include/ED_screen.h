@@ -19,8 +19,6 @@ struct wmWindow;
 /** \name Screen Creation
  * \{ */
 
-void ED_region_tag_redraw(struct ARegion *region);
-
 /**
  * Creates a new empty screen, with a single area initialzed as SPACE_EMPTY.
  */
