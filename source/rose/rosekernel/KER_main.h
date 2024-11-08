@@ -18,7 +18,7 @@ struct Main;
 
 typedef struct Main {
 	struct Main *prev, *next;
-	
+
 	/**
 	 * The file-path of this rose file, an empty string indicates an unsaved file.
 	 *
@@ -32,13 +32,14 @@ typedef struct Main {
 	 * where the `filepath` is not persistent or used as a basis for other paths.
 	 */
 	char filepath[1024];
-	
+
 	bool is_global_main;
-	
+
 	struct Library *curlib;
 	struct ListBase libraries;
+	struct ListBase screens;
 	struct ListBase wm; /* Singleton (exception). */
-	
+
 	SpinLock *lock;
 } Main;
 
@@ -106,4 +107,4 @@ void KER_main_unlock(struct Main *main);
 }
 #endif
 
-#endif // KER_MAIN_H
+#endif	// KER_MAIN_H

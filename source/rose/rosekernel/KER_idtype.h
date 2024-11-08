@@ -122,6 +122,7 @@ enum {
  * \{ */
 
 extern IDTypeInfo IDType_ID_LI;
+extern IDTypeInfo IDType_ID_SCR;
 extern IDTypeInfo IDType_ID_WM;
 
 /** Empty shell mostly, but needed for read code. */

@@ -13,7 +13,7 @@
  * \{ */
 
 bool KER_library_filepath_set(struct Main *main, struct Library *lib, const char *filepath) {
-	if(LIB_path_absolute(lib->filepath, ARRAY_SIZE(lib->filepath), filepath)) {
+	if (LIB_path_absolute(lib->filepath, ARRAY_SIZE(lib->filepath), filepath)) {
 		return true;
 	}
 	LIB_strcpy(lib->filepath, ARRAY_SIZE(lib->filepath), filepath);

@@ -18,7 +18,7 @@ struct Main;
 
 typedef struct LibraryIDLinkCallbackData {
 	void *user_data;
-	
+
 	/** Main database used to call `KER_library_foreach_ID_link()`. */
 	struct Main *main;
 	struct ID *owner_id;
@@ -32,7 +32,7 @@ enum {
 	IDWALK_CB_NOP = 0,
 	IDWALK_CB_NEVER_NULL = (1 << 0),
 	IDWALK_CB_NEVER_SELF = (1 << 1),
-	
+
 	/**
 	 * Indicates that this is an internal runtime ID pointer.
 	 * \note Those should be ignored in most cases, and won't be processed/generated anyway unless
@@ -84,75 +84,75 @@ struct Main *KER_lib_query_foreachid_process_main_get(const struct LibraryForeac
 int KER_lib_query_foreachid_process_callback_flag_override(struct LibraryForeachIDData *data, int cb_flag, bool do_replace);
 
 /** Should typically only be used when processing deprecated ID types (like IPO ones). */
-#define KER_LIB_FOREACHID_PROCESS_ID_NOCHECK(data_, id_, cb_flag_) \
-	{ \
+#define KER_LIB_FOREACHID_PROCESS_ID_NOCHECK(data_, id_, cb_flag_)           \
+	{                                                                        \
 		KER_lib_query_foreachid_process((data_), (ID **)&(id_), (cb_flag_)); \
-		if (KER_lib_query_foreachid_iter_stop((data_))) { \
-			return; \
-		} \
-	} \
+		if (KER_lib_query_foreachid_iter_stop((data_))) {                    \
+			return;                                                          \
+		}                                                                    \
+	}                                                                        \
 	((void)0)
 
-#define KER_LIB_FOREACHID_PROCESS_ID(data_, id_, cb_flag_) \
-	{ \
+#define KER_LIB_FOREACHID_PROCESS_ID(data_, id_, cb_flag_)          \
+	{                                                               \
 		KER_LIB_FOREACHID_PROCESS_ID_NOCHECK(data_, id_, cb_flag_); \
-	} \
+	}                                                               \
 	((void)0)
 
-#define KER_LIB_FOREACHID_PROCESS_IDSUPER_P(data_, id_super_p_, cb_flag_) \
-	{ \
+#define KER_LIB_FOREACHID_PROCESS_IDSUPER_P(data_, id_super_p_, cb_flag_)           \
+	{                                                                               \
 		KER_lib_query_foreachid_process((data_), (ID **)(id_super_p_), (cb_flag_)); \
-		if (KER_lib_query_foreachid_iter_stop((data_))) { \
-			return; \
-		} \
-	} \
+		if (KER_lib_query_foreachid_iter_stop((data_))) {                           \
+			return;                                                                 \
+		}                                                                           \
+	}                                                                               \
 	((void)0)
 
-#define KER_LIB_FOREACHID_PROCESS_IDSUPER(data_, id_super_, cb_flag_) \
-	{ \
+#define KER_LIB_FOREACHID_PROCESS_IDSUPER(data_, id_super_, cb_flag_)       \
+	{                                                                       \
 		KER_LIB_FOREACHID_PROCESS_IDSUPER_P(data_, &(id_super_), cb_flag_); \
-	} \
+	}                                                                       \
 	((void)0)
 
 #define KER_LIB_FOREACHID_PROCESS_FUNCTION_CALL(data_, func_call_) \
-	{ \
-		func_call_; \
-		if (KER_lib_query_foreachid_iter_stop((data_))) { \
-			return; \
-		} \
-	} \
+	{                                                              \
+		func_call_;                                                \
+		if (KER_lib_query_foreachid_iter_stop((data_))) {          \
+			return;                                                \
+		}                                                          \
+	}                                                              \
 	((void)0)
 
 /* Flags for the foreach function itself. */
 enum {
 	IDWALK_NOP = 0,
 	/**
-	* The callback will never modify the ID pointers it processes.
-	* WARNING: It is very important to pass this flag when valid, as it can lead to important
-	* optimizations and debug/assert code.
-	*/
+	 * The callback will never modify the ID pointers it processes.
+	 * WARNING: It is very important to pass this flag when valid, as it can lead to important
+	 * optimizations and debug/assert code.
+	 */
 	IDWALK_READONLY = (1 << 0),
 	/**
-	* Recurse into 'descendant' IDs.
-	* Each ID is only processed once. Order of ID processing is not guaranteed.
-	*
-	* Also implies #IDWALK_READONLY, and excludes #IDWALK_DO_INTERNAL_RUNTIME_POINTERS.
-	*
-	* NOTE: When enabled, embedded IDs are processed separately from their owner, as if they were
-	* regular IDs. The owner ID remains available in the #LibraryForeachIDData callback data, unless
-	* #IDWALK_IGNORE_MISSING_OWNER_ID is passed.
-	*/
+	 * Recurse into 'descendant' IDs.
+	 * Each ID is only processed once. Order of ID processing is not guaranteed.
+	 *
+	 * Also implies #IDWALK_READONLY, and excludes #IDWALK_DO_INTERNAL_RUNTIME_POINTERS.
+	 *
+	 * NOTE: When enabled, embedded IDs are processed separately from their owner, as if they were
+	 * regular IDs. The owner ID remains available in the #LibraryForeachIDData callback data, unless
+	 * #IDWALK_IGNORE_MISSING_OWNER_ID is passed.
+	 */
 	IDWALK_RECURSE = (1 << 1),
 	/** Include UI pointers (from WM and screens editors). */
 	IDWALK_INCLUDE_UI = (1 << 2),
 
 	/**
-	* Also process internal ID pointers like `ID.newid` or `ID.orig_id`.
-	* WARNING: Dangerous, use with caution.
-	*/
+	 * Also process internal ID pointers like `ID.newid` or `ID.orig_id`.
+	 * WARNING: Dangerous, use with caution.
+	 */
 	IDWALK_DO_INTERNAL_RUNTIME_POINTERS = (1 << 3),
 	/**
-	 * Also process the ID.lib pointer. It is an option because this pointer can usually be fully 
+	 * Also process the ID.lib pointer. It is an option because this pointer can usually be fully
 	 * ignored.
 	 */
 	IDWALK_DO_LIBRARY_POINTER = (1 << 4),
@@ -175,4 +175,4 @@ void KER_library_foreach_ID_link(struct Main *main, struct ID *id, LibraryIDLink
 }
 #endif
 
-#endif // KER_LIB_QUERY_H
+#endif	// KER_LIB_QUERY_H

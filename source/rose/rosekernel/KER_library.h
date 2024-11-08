@@ -22,4 +22,4 @@ bool KER_library_filepath_set(struct Main *main, struct Library *lib, const char
 }
 #endif
 
-#endif // KER_LIBRARY_H
+#endif	// KER_LIBRARY_H

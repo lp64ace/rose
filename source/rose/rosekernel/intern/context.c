@@ -10,8 +10,11 @@ typedef struct rContext {
 	struct {
 		struct WindowManager *manager;
 		struct wmWindow *window;
+		struct Screen *screen;
+		struct ScrArea *area;
+		struct ARegion *region;
 	} wm;
-	
+
 	struct {
 		struct Main *main;
 	} data;
@@ -25,7 +28,7 @@ typedef struct rContext {
 
 rContext *CTX_new(void) {
 	rContext *ctx = MEM_callocN(sizeof(rContext), "rContext");
-	
+
 	return ctx;
 }
 void CTX_free(rContext *ctx) {
@@ -44,6 +47,15 @@ struct WindowManager *CTX_wm_manager(const rContext *ctx) {
 struct wmWindow *CTX_wm_window(const rContext *ctx) {
 	return ctx->wm.window;
 }
+struct Screen *CTX_wm_screen(const rContext *ctx) {
+	return ctx->wm.screen;
+}
+struct ScrArea *CTX_wm_area(const rContext *ctx) {
+	return ctx->wm.area;
+}
+struct ARegion *CTX_wm_region(const rContext *ctx) {
+	return ctx->wm.region;
+}
 struct Main *CTX_data_main(const rContext *ctx) {
 	return ctx->data.main;
 }
@@ -53,6 +65,15 @@ void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {
 }
 void CTX_wm_window_set(rContext *ctx, struct wmWindow *window) {
 	ctx->wm.window = window;
+}
+void CTX_wm_screen_set(rContext *ctx, struct Screen *screen) {
+	ctx->wm.screen = screen;
+}
+void CTX_wm_area_set(rContext *ctx, struct ScrArea *area) {
+	ctx->wm.area = area;
+}
+void CTX_wm_region_set(rContext *ctx, struct ARegion *region) {
+	ctx->wm.region = region;
 }
 void CTX_data_main_set(rContext *ctx, struct Main *main) {
 	ctx->data.main = main;

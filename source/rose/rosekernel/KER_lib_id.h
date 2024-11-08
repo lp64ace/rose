@@ -4,6 +4,7 @@
 #include "LIB_utildefines.h"
 
 #include "DNA_ID.h"
+#include "DNA_ID_enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,19 +35,19 @@ size_t KER_libblock_get_alloc_info(short type, const char **r_name);
 void *KER_libblock_alloc_notest(short type);
 
 /**
- * Allocates and returns an ID block of the specified type, with the specified name 
+ * Allocates and returns an ID block of the specified type, with the specified name
  * (adjusted as necessary to ensure uniqueness), and appended to the specified list.
- * The user count is set to 1, all other content (apart from name and links) being 
+ * The user count is set to 1, all other content (apart from name and links) being
  * initialized to zero.
  *
- * \note By default, IDs allocated in a Main database will get the current library of the Main, 
- * i.e. usually (besides in readfile case), they will have a `NULL` `lib` pointer and be local 
+ * \note By default, IDs allocated in a Main database will get the current library of the Main,
+ * i.e. usually (besides in readfile case), they will have a `NULL` `lib` pointer and be local
  * data. IDs allocated outside of a Main database will always get a `NULL` `lib` pointer.
  */
 void *KER_libblock_alloc(struct Main *main, short type, const char *name, int flag);
 
 /**
- * Initialize an ID of given type, such that it has valid 'empty' data. 
+ * Initialize an ID of given type, such that it has valid 'empty' data.
  * ID is assumed to be just calloc'ed.
  */
 void KER_libblock_init_empty(struct ID *id);
@@ -75,9 +76,9 @@ void KER_libblock_free_data(struct ID *id, bool do_id_user);
  * Complete ID freeing, extended version for corner cases.
  * Can override default (and safe!) freeing process, to gain some speed up.
  *
- * At that point, given id is assumed to not be used by any other data-block already 
+ * At that point, given id is assumed to not be used by any other data-block already
  * (might not be actually true, in case e.g. several inter-related IDs get freed together...).
- * However, they might still be using (referencing) other IDs, this code takes care of it if 
+ * However, they might still be using (referencing) other IDs, this code takes care of it if
  * #ID_TAG_NO_USER_REFCOUNT is not defined.
  *
  * \param main #Main database containing the freed #ID.

@@ -35,4 +35,4 @@ struct Main *KER_rose_globals_main_swap(struct Main *nmain);
 }
 #endif
 
-#endif // KER_ROSE_H
+#endif	// KER_ROSE_H
