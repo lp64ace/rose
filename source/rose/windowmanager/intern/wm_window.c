@@ -188,9 +188,6 @@ void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 			case GLOBAL_AREA_ALIGN_BOTTOM: {
 				r_rect->ymin += height;
 			} break;
-			default: {
-				ROSE_assert_unreachable();
-			} break;
 		}
 	}
 }
