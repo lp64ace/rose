@@ -57,7 +57,10 @@ typedef struct Screen {
 
 typedef struct ScrVert {
 	struct ScrVert *prev, *next, *newv;
-	vec2s vec;
+	/**
+	 * In general operations happen in pixel space but we keep everything in floating values for scaling.
+	 */
+	vec2f vec;
 	int flag;
 } ScrVert;
 
@@ -198,7 +201,7 @@ enum {
 	RGN_FLAG_SIZE_CLAMP_Y = 1 << 7,
 };
 
-#define AREAMINX 192
+#define AREAMINX 32
 #define PIXELSIZE 1
 #define WIDGET_UNIT 24
 

@@ -54,7 +54,7 @@ void KER_screen_remove_double_scrverts(Screen *screen) {
 			ScrVert *v1 = verg->next;
 			while (v1) {
 				if (v1->newv == NULL) {
-					if (v1->vec.x == verg->vec.x && v1->vec.y == verg->vec.y) {
+					if (IS_EQF(v1->vec.x, verg->vec.x) && IS_EQF(v1->vec.y, verg->vec.y)) {
 						v1->newv = verg;
 					}
 				}
