@@ -5,6 +5,8 @@
 #include "KER_screen.h"
 
 #include "GPU_framebuffer.h"
+#include "GPU_matrix.h"
+#include "GPU_state.h"
 
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
@@ -13,6 +15,8 @@
 #include "WM_draw.h"
 
 #include "screen_intern.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Region
@@ -33,9 +37,17 @@ void ED_region_exit(struct rContext *C, ARegion *region) {
 	CTX_wm_region_set(C, prevar);
 }
 void ED_region_do_draw(struct rContext *C, struct ARegion *region) {
+	GPU_matrix_push();
+	GPU_matrix_push_projection();
+	GPU_matrix_ortho_2d_set(0.0f, region->sizex, 0.0f, region->sizey);
+	GPU_matrix_identity_set();
+
 	if (region->type && region->type->draw) {
 		region->type->draw(C, region);
 	}
+
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
 }
 
 void ED_region_header_init(ARegion *region) {

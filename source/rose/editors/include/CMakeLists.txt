@@ -2,6 +2,7 @@
 # Define Source Files
 
 set(SRC
+	ED_interface.h
 	ED_screen.h
 	ED_space_api.h
 	

@@ -6,6 +6,7 @@
 
 #include "GPU_framebuffer.h"
 
+#include "ED_interface.h"
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
@@ -14,6 +15,8 @@
 #include "LIB_utildefines.h"
 
 #include "KER_screen.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name View3D SpaceType Methods
@@ -49,6 +52,23 @@ ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
 
 void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 	GPU_clear_color(0.75f, 0.75f, 0.7f, 1.0f);
+
+	for (int index = 0;; index++) {
+		const float height = WIDGET_UNIT, pad = 2 * PIXELSIZE;
+		rctf rect = {
+			.xmin = pad * 8,
+			.xmax = AREAMINX * 8,
+			.ymin = region->sizey - (index + 1) * (height + pad) - height,
+			.ymax = region->sizey - (index + 1) * (height + pad),
+		};
+		if (!(height <= rect.ymax && rect.ymax <= region->sizey - height)) {
+			break;
+		}
+		if (!(height <= rect.ymin && rect.ymin <= region->sizey - height)) {
+			break;
+		}
+		UI_draw_roundbox_4fv(&rect, true, 2.0f, (const float[4]){0.45f, 0.45f, 0.45f, 1.0f});
+	}
 }
 
 void view3d_main_region_init(ARegion *region) {
