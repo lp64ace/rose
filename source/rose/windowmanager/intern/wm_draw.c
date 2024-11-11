@@ -1,5 +1,6 @@
 #include "MEM_guardedalloc.h"
 
+#include "ED_interface.h"
 #include "ED_screen.h"
 
 #include "GPU_batch.h"
@@ -8,6 +9,7 @@
 #include "GPU_compute.h"
 #include "GPU_context.h"
 #include "GPU_framebuffer.h"
+#include "GPU_matrix.h"
 #include "GPU_shader.h"
 #include "GPU_state.h"
 #include "GPU_viewport.h"
@@ -192,7 +194,6 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 			}
 
 			CTX_wm_region_set(C, region);
-
 			wm_draw_region_buffer_create(region, false);
 			wm_draw_region_bind(region, 0);
 			ED_region_do_draw(C, region);
@@ -210,12 +211,10 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 		}
 
 		CTX_wm_region_set(C, region);
-
 		wm_draw_region_buffer_create(region, false);
 		wm_draw_region_bind(region, 0);
 		ED_region_do_draw(C, region);
 		wm_draw_region_unbind(region);
-
 		CTX_wm_region_set(C, NULL);
 	}
 }
@@ -224,6 +223,7 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 	Screen *screen = WM_window_screen_get(window);
 
 	GPU_clear_color(0.45f, 0.45f, 0.45f, 1.0f);
+	GPU_clear_depth(1.0f);
 
 	ED_screen_areas_iter(window, screen, area) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
@@ -265,6 +265,8 @@ void wm_window_draw(struct rContext *C, wmWindow *window) {
 void WM_do_draw(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
+	GPU_context_main_lock();
+
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
 		/** Do not render windows that are not visible. */
 		if (WTK_window_is_minimized(window->handle)) {
@@ -281,4 +283,6 @@ void WM_do_draw(struct rContext *C) {
 		} while (false);
 		CTX_wm_window_set(C, NULL);
 	}
+
+	GPU_context_main_unlock();
 }
