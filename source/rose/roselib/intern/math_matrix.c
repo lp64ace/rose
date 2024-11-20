@@ -617,6 +617,23 @@ void scale_m4_fl(float R[4][4], float scale) {
 	R[3][0] = R[3][1] = R[3][2] = 0.0f;
 }
 
+void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) {
+	float Xdelta, Ydelta, Zdelta;
+
+	Xdelta = xmax - xmin;
+	Ydelta = ymax - ymin;
+	Zdelta = zmax - zmin;
+	if (Xdelta == 0.0f || Ydelta == 0.0f || Zdelta == 0.0f) {
+	return;
+	}
+	unit_m4(mat);
+	mat[0][0] = 2.0f / Xdelta;
+	mat[3][0] = -(xmax + xmin) / Xdelta;
+	mat[1][1] = 2.0f / Ydelta;
+	mat[3][1] = -(ymax + ymin) / Ydelta;
+	mat[2][2] = -2.0f / Zdelta;
+	mat[3][2] = -(zmax + zmin) / Zdelta;
+}
 void translate_m4(float mat[4][4], float Tx, float Ty, float Tz) {
 	mat[3][0] += (Tx * mat[0][0] + Ty * mat[1][0] + Tz * mat[2][0]);
 	mat[3][1] += (Tx * mat[0][1] + Ty * mat[1][1] + Tz * mat[2][1]);

@@ -6,6 +6,7 @@
 
 #include "LIB_utildefines_variadic.h"
 
+#include <math.h>
 #include <string.h>
 
 /* -------------------------------------------------------------------- */

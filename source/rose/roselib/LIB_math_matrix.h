@@ -106,6 +106,7 @@ float determinant_m4(const float m[4][4]);
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);
 
+void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float ymax, float zmin, float zmax);
 void translate_m4(float mat[4][4], float Tx, float Ty, float Tz);
 
 /**
