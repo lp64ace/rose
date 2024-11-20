@@ -356,6 +356,19 @@ void MEM_guarded_freeN(void *vptr) {
 	LISTBASE_FOREACH(Link *, link, membase) {
 		if (link == MEMLINK(head)) {
 			fprintf(stderr, "Memory block %s has a corrupted header.\n", head->identity);
+			if (head->tag1 != MEMTAG1) {
+				fprintf(stderr, "invalid first-tag!\n");
+			}
+			if (head->tag2 != MEMTAG2) {
+				fprintf(stderr, "invalid second-tag!\n");
+			}
+			if ((head->tag1 == MEMTAG1) && (head->tag2 == MEMTAG2)) {
+				GMemoryTail *tail = (GMemoryTail *)((char *)(head + 1) + head->size);
+
+				if (tail->tag3 != MEMTAG3) {
+					fprintf(stderr, "invalid tail-tag!\n");
+				}
+			}
 			mem_unlock_thread();
 			abort();
 			return;
