@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+struct GHash;
 struct SpaceType;
 struct ARegionType;
 
@@ -133,6 +134,10 @@ enum {
 	AREA_FLAG_REGION_SIZE_UPDATE = 1 << 0,
 };
 
+typedef struct ARegionRuntime {
+	struct GHash *block_name_map;
+} ARegionRuntime;
+
 typedef struct ARegion {
 	struct ARegion *prev, *next;
 
@@ -153,7 +158,10 @@ typedef struct ARegion {
 	struct ARegionType *type;
 	struct wmDrawBuffer *draw_buffer;
 
+	ListBase uiblocks;
 	ListBase handlers;
+	
+	ARegionRuntime runtime;
 } ARegion;
 
 /** #ARegion->alignment */
@@ -204,6 +212,9 @@ enum {
 #define AREAMINX 32
 #define PIXELSIZE 1
 #define WIDGET_UNIT 24
+
+#define UI_UNIT_X WIDGET_UNIT
+#define UI_UNIT_Y WIDGET_UNIT
 
 #ifdef __cplusplus
 }
