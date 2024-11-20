@@ -54,12 +54,21 @@ void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 
 	uiBlock *block;
 	if((block = UI_block_begin(C, region, "block-one"))) {
-		uiLayout *layout;
-
-		layout = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 2, region->sizey - 1, 0, 2);
-		uiDefBut(block, UI_BTYPE_TXT, "one", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
-		uiDefBut(block, UI_BTYPE_TXT, "two", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
-
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 2, region->sizey - 2, 0, 0);
+		do {
+			uiLayout *global = UI_layout_col(root, 2);
+			do {
+				uiLayout *layout = UI_layout_row(global, 2);
+				uiDefBut(block, UI_BTYPE_TXT, "one", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y);
+				uiDefBut(block, UI_BTYPE_TXT, "two", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y);
+				uiDefBut(block, UI_BTYPE_TXT, "three", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y);
+			} while (false);
+			do {
+				uiLayout *layout = UI_layout_row(global, 2);
+				uiDefBut(block, UI_BTYPE_TXT, "one", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y);
+				uiDefBut(block, UI_BTYPE_TXT, "two", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y);
+			} while (false);
+		} while (false);
 		block->bounds = 2;
 		UI_block_end(C, block);
 	}
