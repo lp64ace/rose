@@ -31,7 +31,7 @@
 
 ROSE_STATIC void ui_but_free(const struct rContext *C, uiBut *but);
 
-ROSE_INLINE bool ui_but_equals_old(uiBut *but_new, uiBut *but_old) {
+ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if(but_new->type != but_old->type) {
 		return false;
 	}
