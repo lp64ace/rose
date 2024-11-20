@@ -14,7 +14,7 @@
 #include "GPU_matrix.h"
 #include "GPU_state.h"
 
-#include "ED_interface.h"
+#include "UI_interface.h"
 
 #include "interface_intern.h"
 

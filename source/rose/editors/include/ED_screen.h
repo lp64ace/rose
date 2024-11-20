@@ -3,6 +3,8 @@
 
 #include "DNA_vector_types.h"
 
+#include "LIB_utildefines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,6 +31,8 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 /* -------------------------------------------------------------------- */
 /** \name Region
  * \{ */
+
+void ED_region_pixelspace(struct ARegion *region);
 
 void ED_region_exit(struct rContext *C, struct ARegion *region);
 void ED_region_do_draw(struct rContext *C, struct ARegion *region);

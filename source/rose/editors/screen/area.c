@@ -5,6 +5,7 @@
 #include "DNA_windowmanager_types.h"
 
 #include "ED_screen.h"
+#include "UI_interface.h"
 
 #include "KER_screen.h"
 
@@ -119,14 +120,14 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 		region->type->prefsizex = AREAMINX;
 	}
 	if (region->sizey == 0 && region->type->prefsizey == 0) {
-		region->type->prefsizey = WIDGET_UNIT;
+		region->type->prefsizey = UI_UNIT_Y;
 	}
 
 	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 0.5f : region->type->prefsizex);
 	int prefsizey;
 
 	if (region->regiontype == RGN_TYPE_HEADER) {
-		prefsizey = WIDGET_UNIT;
+		prefsizey = UI_UNIT_Y;
 	}
 	else {
 		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 0.5f : region->type->prefsizey);
@@ -136,12 +137,12 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 		/** completely ingore this region. */
 	}
 	else if (alignment == RGN_ALIGN_FLOAT) {
-		const int size_min[2] = {WIDGET_UNIT, WIDGET_UNIT};
+		const int size_min[2] = {UI_UNIT_X, UI_UNIT_Y};
 		rcti overlap_remainder_margin;
 		memcpy(&overlap_remainder_margin, overlap_remainder, sizeof(rcti));
 
-		int sizex = ROSE_MAX(0, LIB_rcti_size_x(overlap_remainder) - WIDGET_UNIT / 2);
-		int sizey = ROSE_MAX(0, LIB_rcti_size_y(overlap_remainder) - WIDGET_UNIT / 2);
+		int sizex = ROSE_MAX(0, LIB_rcti_size_x(overlap_remainder) - UI_UNIT_X / 2);
+		int sizey = ROSE_MAX(0, LIB_rcti_size_y(overlap_remainder) - UI_UNIT_Y / 2);
 		LIB_rcti_resize(&overlap_remainder_margin, sizex, sizey);
 		region->winrct.xmin = overlap_remainder_margin.xmin;
 		region->winrct.ymin = overlap_remainder_margin.ymin;
@@ -190,11 +191,11 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 
 			if (alignment == RGN_ALIGN_TOP) {
 				region->winrct.ymin = region->winrct.ymax - prefsizey + 1;
-				winrct->ymax = region->winrct.ymin - 1;
+				winrct->ymax = region->winrct.ymin;
 			}
 			else {
 				region->winrct.ymax = region->winrct.ymin + prefsizey - 1;
-				winrct->ymin = region->winrct.ymax + 1;
+				winrct->ymin = region->winrct.ymax;
 			}
 			LIB_rcti_sanitize(winrct);
 		}
@@ -216,11 +217,11 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 
 			if (alignment == RGN_ALIGN_RIGHT) {
 				region->winrct.xmin = region->winrct.xmax - prefsizex + 1;
-				winrct->xmax = region->winrct.xmin - 1;
+				winrct->xmax = region->winrct.xmin;
 			}
 			else {
 				region->winrct.xmax = region->winrct.xmin + prefsizex - 1;
-				winrct->xmin = region->winrct.xmax + 1;
+				winrct->xmin = region->winrct.xmax;
 			}
 			LIB_rcti_sanitize(winrct);
 		}
@@ -370,8 +371,13 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		region_evaulate_visibility(region);
 
-		if (region->type->init) {
-			region->type->init(region);
+		if (region->visible) {
+			if (region->type->init) {
+				region->type->init(region);
+			}
+		}
+		else {
+			UI_blocklist_free(NULL, region);
 		}
 	}
 }

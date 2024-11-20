@@ -64,7 +64,7 @@ void screen_geom_select_connected_edge(const wmWindow *window, ScrEdge *edge) {
 
 	/* 'dir_axis' is the direction of EDGE */
 	char axis;
-	if (IS_EQF(edge->v1->vec.x, edge->v2->vec.x)) {
+	if (edge->v1->vec.x == edge->v2->vec.x) {
 		axis = 'v';
 	}
 	else {
@@ -85,13 +85,13 @@ void screen_geom_select_connected_edge(const wmWindow *window, ScrEdge *edge) {
 		LISTBASE_FOREACH(ScrEdge *, vert, &screen->edgebase) {
 			if (vert->v1->flag + vert->v2->flag == 1) {
 				if (axis == 'h') {
-					if (IS_EQF(vert->v1->vec.y, vert->v2->vec.y)) {
+					if (vert->v1->vec.y == vert->v2->vec.y) {
 						vert->v1->flag = vert->v2->flag = 1;
 						oneselected = true;
 					}
 				}
 				else if (axis == 'v') {
-					if (IS_EQF(vert->v1->vec.x, vert->v2->vec.x)) {
+					if (vert->v1->vec.x == vert->v2->vec.x) {
 						vert->v1->flag = vert->v2->flag = 1;
 						oneselected = true;
 					}
@@ -124,13 +124,13 @@ bool screen_geom_vertices_scale_pass(wmWindow *window, Screen *screen, rcti *scr
 		const float facy = ((float)(screen_size_y - 1)) / ((float)(screen_size_y_prev - 1));
 
 		LISTBASE_FOREACH(ScrVert *, vert, &screen->vertbase) {
-			vert->vec.x = screen_rect->xmin + (facx * (float)(vert->vec.x - min[0]));
+			vert->vec.x = screen_rect->xmin + (short)(facx * (float)(vert->vec.x - min[0]) + 0.5f);
 			CLAMP(vert->vec.x, screen_rect->xmin, screen_rect->xmax - 1);
-			vert->vec.y = screen_rect->ymin + (facy * (float)(vert->vec.y - min[1]));
+			vert->vec.y = screen_rect->ymin + (short)(facy * (float)(vert->vec.y - min[1]) + 0.5f);
 			CLAMP(vert->vec.y, screen_rect->ymin, screen_rect->ymax - 1);
 		}
 
-		int headery = PIXELSIZE * WIDGET_UNIT;
+		int headery = PIXELSIZE * UI_UNIT_Y;
 
 		if (facy < 1) {
 			/** make each window at least a single header size high. */
@@ -138,7 +138,7 @@ bool screen_geom_vertices_scale_pass(wmWindow *window, Screen *screen, rcti *scr
 				if (screen_geom_area_height(area) < headery) {
 					ScrEdge *e = KER_screen_find_edge(screen, area->v4, area->v1);
 					if (e && area->v1 != area->v2) {
-						const float yval = area->v2->vec.y - headery + 1;
+						const int yval = area->v2->vec.y - headery + 1;
 						screen_geom_select_connected_edge(window, e);
 						LISTBASE_FOREACH(ScrVert *, vert, &screen->vertbase) {
 							if (!ELEM(vert, area->v2, area->v3)) {
@@ -163,7 +163,7 @@ void screen_geom_vertices_scale(wmWindow *window, Screen *screen) {
 	WM_window_rect_calc(window, &window_rect);
 	WM_window_screen_rect_calc(window, &screen_rect);
 
-	for (int pass = 0; pass < 8 && screen_geom_vertices_scale_pass(window, screen, &screen_rect); pass++) {
+	for (int pass = 0; pass < 10 && screen_geom_vertices_scale_pass(window, screen, &screen_rect); pass++) {
 		/** Avoid endless loop, max pass number is arbitrary. */
 	}
 

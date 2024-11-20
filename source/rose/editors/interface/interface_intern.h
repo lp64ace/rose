@@ -3,11 +3,19 @@
 
 #include "DNA_vector_types.h"
 
+#include "LIB_utildefines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct GPUBatch;
+struct uiBut;
+struct uiLayout;
+
+/* -------------------------------------------------------------------- */
+/** \name Drawing
+ * \{ */
 
 /**
  * Widget shader parameters, must match the shader layout.
@@ -46,6 +54,33 @@ enum {
 
 struct GPUBatch *ui_batch_roundbox_widget_get();
 struct GPUBatch *ui_batch_roundbox_shadow_get();
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Block
+ * \{ */
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Button
+ * \{ */
+
+void ui_but_update(struct uiBut *but);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Layout
+ * \{ */
+
+bool ui_layout_replace_but_ptr(struct uiLayout *layout, const void *old, struct uiBut *but);
+
+void ui_layout_add_but(struct uiLayout *layout, struct uiBut *but);
+void ui_layout_free(struct uiLayout *layout);
+
+/** \} */
 
 #ifdef __cplusplus
 }

@@ -23,7 +23,9 @@ set(INC_SYS
 set(SRC
 	interface_intern.h
 	
+	interface.c
 	interface_draw.c
+	interface_layout.cc
 	interface_widgets.c
 	
 )
@@ -34,8 +36,10 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::gpu
+	rose::source::windowmanager
 	
 	# External Library Dependencies
 	
