@@ -1,6 +1,5 @@
 #include "MEM_guardedalloc.h"
 
-#include "ED_interface.h"
 #include "ED_screen.h"
 
 #include "GPU_batch.h"
@@ -15,6 +14,8 @@
 #include "GPU_viewport.h"
 
 #include "LIB_listbase.h"
+#include "LIB_math_matrix.h"
+#include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
 #include "KER_screen.h"
@@ -224,8 +225,19 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 
 	GPU_clear_color(0.45f, 0.45f, 0.45f, 1.0f);
 	GPU_clear_depth(1.0f);
-
-	ED_screen_areas_iter(window, screen, area) {
+	
+	/** A #ED_screen_areas_iter gives us the global areas first! */
+	LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (!region->visible) {
+				continue;
+			}
+			if (!region->overlap) {
+				wm_draw_region_blit(region, view);
+			}
+		}
+	}
+	LISTBASE_FOREACH(ScrArea *, area, &window->global_areas.areabase) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			if (!region->visible) {
 				continue;
@@ -286,3 +298,17 @@ void WM_do_draw(struct rContext *C) {
 
 	GPU_context_main_unlock();
 }
+
+/* -------------------------------------------------------------------- */
+/** \name Projection
+ * \{ */
+
+void WM_get_projection_matrix(float r_mat[4][4], const rcti *rect) {
+	int width = LIB_rcti_size_x(rect) + 1;
+	int height = LIB_rcti_size_y(rect) + 1;
+	const float near = GPU_MATRIX_ORTHO_CLIP_NEAR_DEFAULT;
+	const float far = GPU_MATRIX_ORTHO_CLIP_FAR_DEFAULT;
+	orthographic_m4(r_mat, 0.0f, (float)width, 0.0f, (float)height, near, far);
+}
+
+/** \} */

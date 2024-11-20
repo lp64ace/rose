@@ -155,13 +155,13 @@ void WM_window_screen_set(struct rContext *C, wmWindow *window, Screen *screen) 
 
 	WindowManager *wm = CTX_wm_manager(C);
 	if (window->screen) {
-		id_us_rem((ID *)window->screen);
 		ED_screen_exit(C, window, window->screen);
+		id_us_rem((ID *)window->screen);
 	}
 	window->screen = screen;
 	if (window->screen) {
-		ED_screen_refresh(C, wm, window);
 		id_us_add((ID *)window->screen);
+		ED_screen_refresh(C, wm, window);
 	}
 }
 Screen *WM_window_screen_get(const wmWindow *window) {
