@@ -106,6 +106,33 @@ uiLayout *UI_block_layout(uiBlock *block, int dir, int type, int x, int y, int s
 	return root->layout;
 }
 
+void UI_block_layout_set_current(uiBlock *block, uiLayout *layout) {
+	block->layout = layout;
+}
+
+ROSE_INLINE void ui_item_init_from_parent(uiLayout *layout, uiLayout *parent) {
+	layout->root = parent->root;
+	layout->parent = parent;
+	LIB_addtail(&parent->items, layout);
+}
+
+uiLayout *UI_layout_row(uiLayout *parent, int space) {
+	uiLayout *layout = static_cast<uiLayout *>(MEM_callocN(sizeof(uiLayout), "uiLayout"));
+	ui_item_init_from_parent(layout, parent);
+	layout->type = ITEM_LAYOUT_ROW;
+	layout->space = space;
+	UI_block_layout_set_current(layout->root->block, layout);
+	return layout;
+}
+uiLayout *UI_layout_col(uiLayout *parent, int space) {
+	uiLayout *layout = static_cast<uiLayout *>(MEM_callocN(sizeof(uiLayout), "uiLayout"));
+	ui_item_init_from_parent(layout, parent);
+	layout->type = ITEM_LAYOUT_COL;
+	layout->space = space;
+	UI_block_layout_set_current(layout->root->block, layout);
+	return layout;
+}
+
 void UI_block_layout_free(uiBlock *block) {
 	LISTBASE_FOREACH_MUTABLE(uiLayoutRoot *, root, &block->layouts) {
 		ui_layout_free(root->layout);
@@ -277,10 +304,7 @@ ROSE_INLINE int spaces_after_column_item(const uiLayout *layout, const uiItem *i
 	if(i1 == NULL || i2 == NULL) {
 		return 0;
 	}
-	if(i1 != reinterpret_cast<const uiItem *>(layout->items.first)) {
-		return 1;
-	}
-	return 0;
+	return 1;
 }
 
 ROSE_INLINE void ui_item_estimate_column(uiLayout *layout) {
@@ -347,8 +371,8 @@ ROSE_STATIC void ui_item_estimate(uiItem *vitem) {
 #define ESTIMATE(type, call) case type: call; break
 	
 		switch(item->type) {
-			ESTIMATE(ITEM_LAYOUT_ROW, ui_item_estimate_column(item));
-			ESTIMATE(ITEM_LAYOUT_COL, ui_item_estimate_row(item));
+			ESTIMATE(ITEM_LAYOUT_ROW, ui_item_estimate_row(item));
+			ESTIMATE(ITEM_LAYOUT_COL, ui_item_estimate_column(item));
 			ESTIMATE(ITEM_LAYOUT_ROOT, ui_item_estimate_root(item));
 		}
 	
@@ -413,12 +437,16 @@ ROSE_STATIC void ui_item_layout(uiItem *vitem) {
 #define LAYOUT(type, call) case type: call; break
 	
 		switch(item->type) {
-			LAYOUT(ITEM_LAYOUT_ROW, ui_item_layout_column(item));
-			LAYOUT(ITEM_LAYOUT_COL, ui_item_layout_row(item));
+			LAYOUT(ITEM_LAYOUT_ROW, ui_item_layout_row(item));
+			LAYOUT(ITEM_LAYOUT_COL, ui_item_layout_column(item));
 			LAYOUT(ITEM_LAYOUT_ROOT, ui_item_layout_root(item));
 		}
 	
 #undef LAYOUT
+
+		LISTBASE_FOREACH(uiLayout *, nested, &item->items) {
+			ui_item_layout(nested);
+		}
 	}
 }
 

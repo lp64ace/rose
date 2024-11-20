@@ -129,10 +129,11 @@ enum {
 };
 
 struct uiLayout *UI_block_layout(struct uiBlock *block, int dir, int type, int x, int y, int size, int padding);
+struct uiLayout *UI_layout_row(struct uiLayout *layout, int space);
+struct uiLayout *UI_layout_col(struct uiLayout *layout, int space);
 void UI_block_layout_free(struct uiBlock *block);
 
 void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
-
 
 /** \} */
 
