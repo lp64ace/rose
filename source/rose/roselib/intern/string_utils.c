@@ -1,6 +1,12 @@
 #include "LIB_string.h"
 #include "LIB_string_utils.h"
 
+#include <wcwidth.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Unicode Conversion
+ * \{ */
+
 size_t LIB_unicode_encode_as_utf8(char *out, size_t maxncpy, uint32_t unicode) {
 	if (unicode <= 0x7f) {
 		if (maxncpy >= 2) {
@@ -74,3 +80,179 @@ size_t LIB_strncpy_wchar_as_utf8(char *out, size_t maxncpy, const wchar_t *unico
 	}
 	return len;
 }
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UTF8 Conversion
+ * \{ */
+
+ROSE_INLINE int utf8_char_compute_skip_or_error_with_mask(const char c, char *r_mask) {
+	if (c < 128) {
+		*r_mask = 0x7f;
+		return 1;
+	}
+	if ((c & 0xe0) == 0xc0) {
+		*r_mask = 0x1f;
+		return 2;
+	}
+	if ((c & 0xf0) == 0xe0) {
+		*r_mask = 0x0f;
+		return 3;
+	}
+	if ((c & 0xf8) == 0xf0) {
+		*r_mask = 0x07;
+		return 4;
+	}
+	if ((c & 0xfc) == 0xf8) {
+		*r_mask = 0x03;
+		return 5;
+	}
+	if ((c & 0xfe) == 0xfc) {
+		*r_mask = 0x01;
+		return 6;
+	}
+	return -1;
+}
+
+ROSE_INLINE uint utf8_char_decode(const char *p, const char mask, const int len, const uint err) {
+	/* Originally from GLIB `UTF8_GET` macro, added an 'err' argument. */
+	uint result = p[0] & mask;
+	for (int count = 1; count < len; count++) {
+		if ((p[count] & 0xc0) != 0x80) {
+			return err;
+		}
+		result <<= 6;
+		result |= p[count] & 0x3f;
+	}
+	return result;
+}
+
+unsigned int LIB_str_utf8_as_unicode_step_or_error(const char *p, const size_t length, size_t *r_index) {
+	const unsigned char c = (unsigned char)(*(p += *r_index));
+
+	ROSE_assert(*r_index < length);
+	ROSE_assert(c != '\0');
+
+	char mask = 0;
+	const int len = utf8_char_compute_skip_or_error_with_mask(c, &mask);
+	if (len == -1 || (*r_index + len > length)) {
+		return ROSE_UTF8_ERR;
+	}
+
+	const uint result = utf8_char_decode(p, mask, len, ROSE_UTF8_ERR);
+	if (result == ROSE_UTF8_ERR) {
+		return ROSE_UTF8_ERR;
+	}
+	*r_index += len;
+	ROSE_assert(*r_index <= length);
+	return result;
+}
+
+int LIB_wcwidth_or_error(wchar_t ucs) {
+	/* Treat private use areas (icon fonts), symbols, and emoticons as double-width. */
+	if (ucs >= 0xf0000 || (ucs >= 0xe000 && ucs < 0xf8ff) || (ucs >= 0x1f300 && ucs < 0x1fbff)) {
+		return 2;
+	}
+	return mk_wcwidth(ucs);
+}
+
+int LIB_wcwidth_safe(wchar_t ucs) {
+	const int columns = LIB_wcwidth_or_error(ucs);
+	if (columns >= 0) {
+		return columns;
+	}
+	return 1;
+}
+
+const char *LIB_str_find_prev_char_utf8(const char *p, const char *str_start) {
+	ROSE_assert(p >= str_start);
+	if (str_start < p) {
+		for (--p; p >= str_start; p--) {
+			if ((*p & 0xc0) != 0x80) {
+				return (char *)p;
+			}
+		}
+	}
+	return p;
+}
+
+const char *LIB_str_find_next_char_utf8(const char *p, const char *str_end) {
+	ROSE_assert(p <= str_end);
+	if ((p < str_end) && (*p != '\0')) {
+		for (++p; p < str_end && (*p & 0xc0) == 0x80; p++) {
+			/* do nothing */
+		}
+	}
+	return p;
+}
+
+bool LIB_str_cursor_step_next_utf8(const char *str, const int str_maxlen, int *pos) {
+	ROSE_assert(str_maxlen >= 0);
+	ROSE_assert(*pos >= 0);
+
+	if (*pos >= str_maxlen) {
+		return false;
+	}
+	const char *str_end = str + (str_maxlen + 1);
+	const char *str_pos = str + *pos;
+	const char *str_next = str_pos;
+	do {
+		str_next = LIB_str_find_next_char_utf8(str_next, str_end);
+	} while ((str_next < str_end) && (str_next[0] != 0) && (LIB_str_utf8_char_width_or_error(str_next) == 0));
+	*pos += (int)(str_next - str_pos);
+	if (*pos > str_maxlen) {
+		*pos = str_maxlen;
+	}
+
+	return true;
+}
+
+bool LIB_str_cursor_step_prev_utf8(const char *str, const int str_maxlen, int *pos) {
+	ROSE_assert(str_maxlen >= 0);
+	ROSE_assert(*pos >= 0);
+
+	if ((*pos > 0) && (*pos <= str_maxlen)) {
+		const char *str_pos = str + *pos;
+		const char *str_prev = str_pos;
+		do {
+			str_prev = LIB_str_find_prev_char_utf8(str_prev, str);
+		} while ((str_prev > str) && (LIB_str_utf8_char_width_or_error(str_prev) == 0));
+		*pos -= (int)(str_pos - str_prev);
+		return true;
+	}
+
+	return false;
+}
+
+unsigned int LIB_str_utf8_as_unicode_or_error(const char *p) {
+	const unsigned char c = *p;
+
+	char mask = 0;
+	const int len = utf8_char_compute_skip_or_error_with_mask(c, &mask);
+	if (len == -1) {
+		return ROSE_UTF8_ERR;
+	}
+	return utf8_char_decode(p, mask, len, ROSE_UTF8_ERR);
+}
+
+unsigned int LIB_str_utf8_char_width_or_error(const char *p) {
+	uint unicode = LIB_str_utf8_as_unicode_or_error(p);
+	if (unicode == ROSE_UTF8_ERR) {
+		return -1;
+	}
+
+	return LIB_wcwidth_or_error(unicode);
+}
+
+unsigned int LIB_str_utf8_as_unicode_step_safe(const char *p, size_t length, size_t *r_index) {
+	uint result = LIB_str_utf8_as_unicode_step_or_error(p, length, r_index);
+	if (result == ROSE_UTF8_ERR) {
+		result = (unsigned int)(p[*r_index]);
+		*r_index += 1;
+	}
+	ROSE_assert(*r_index <= length);
+	return result;
+}
+
+/** \} */

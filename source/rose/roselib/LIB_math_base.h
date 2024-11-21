@@ -50,9 +50,11 @@ extern "C" {
 #endif
 
 uint32_t divide_ceil_u32(uint32_t a, uint32_t b);
+uint32_t divide_round_u32(uint32_t a, uint32_t b);
 uint32_t ceil_to_multiple_u32(uint32_t a, uint32_t b);
 
 uint64_t divide_ceil_u64(uint64_t a, uint64_t b);
+uint64_t divide_round_u64(uint64_t a, uint64_t b);
 uint64_t ceil_to_multiple_u64(uint64_t a, uint64_t b);
 
 float clampf(float x, float low, float high);

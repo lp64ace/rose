@@ -27,8 +27,10 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 
 	```bash
 	sudo apt-get update
+	sudo apt-get install -y meson pkg-config ragel gtk-doc-tools
 	sudo apt-get install -y libx11-dev libxi-dev
 	sudo apt-get install -y libglew-dev libgl1-mesa-dev libglu1-mesa-dev
+	sudo apt-get install -y libfreetype6-dev libglib2.0-dev libcairo2-dev
 	```
 
 ## Building Rose
@@ -57,7 +59,7 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 Here is a little preview of the application running in its current state, this is simply a 
 showcase demo.
 
-![Demo](https://i.imgur.com/BwtJid5.png)
+![Demo](https://i.imgur.com/DVFK4xn.png)
 
 # Authors
 

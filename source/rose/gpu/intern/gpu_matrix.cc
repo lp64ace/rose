@@ -80,28 +80,6 @@ void GPU_matrix_reset() {
 	gpu_matrix_state_active_set_dirty(true);
 }
 
-#ifdef WITH_GPU_SAFETY
-
-/* Check if matrix is numerically good */
-static void checkmat(cosnt float *m) {
-	const int n = 16;
-	for (int i = 0; i < n; i++) {
-#	if _MSC_VER
-		ROSE_assert(_finite(m[i]));
-#	else
-		ROSE_assert(!isinf(m[i]));
-#	endif
-	}
-}
-
-#	define CHECKMAT(m) checkmat((const float *)m)
-
-#else
-
-#	define CHECKMAT(m)
-
-#endif
-
 void GPU_matrix_push() {
 	ROSE_assert(ModelViewStack.top + 1 < MATRIX_STACK_DEPTH);
 	ModelViewStack.top++;
@@ -128,19 +106,16 @@ void GPU_matrix_pop_projection() {
 
 void GPU_matrix_set(const float m[4][4]) {
 	copy_m4_m4(ModelView, m);
-	CHECKMAT(ModelView3D);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
 void GPU_matrix_identity_projection_set() {
 	unit_m4(Projection);
-	CHECKMAT(Projection3D);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
 void GPU_matrix_projection_set(const float m[4][4]) {
 	copy_m4_m4(Projection, m);
-	CHECKMAT(Projection3D);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
@@ -163,7 +138,6 @@ void GPU_matrix_translate_2fv(const float vec[2]) {
 
 void GPU_matrix_translate_3f(float x, float y, float z) {
 	translate_m4(ModelView, x, y, z);
-	CHECKMAT(ModelView);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
@@ -205,7 +179,6 @@ void GPU_matrix_scale_3fv(const float vec[3]) {
 
 void GPU_matrix_mul(const float m[4][4]) {
 	mul_m4_m4_post(ModelView, m);
-	CHECKMAT(ModelView);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
@@ -227,7 +200,6 @@ void GPU_matrix_rotate_3fv(float deg, const float axis[3]) {
 void GPU_matrix_rotate_axis(float deg, char axis) {
 	/* rotate_m4 works in place */
 	rotate_m4(ModelView, axis, DEG2RADF(deg));
-	CHECKMAT(ModelView);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
@@ -345,27 +317,22 @@ static void mat4_look_from_origin(float m[4][4], float lookdir[3], float camup[3
 
 void GPU_matrix_ortho_set(float left, float right, float bottom, float top, float near, float far) {
 	mat4_ortho_set(Projection, left, right, bottom, top, near, far);
-	CHECKMAT(Projection);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
 void GPU_matrix_ortho_set_z(float near, float far) {
-	CHECKMAT(Projection);
 	Projection[2][2] = -2.0f / (far - near);
 	Projection[3][2] = -(far + near) / (far - near);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
 void GPU_matrix_ortho_2d_set(float left, float right, float bottom, float top) {
-	Mat4 m;
-	mat4_ortho_set(m, left, right, bottom, top, -1.0f, 1.0f);
-	CHECKMAT(Projection2D);
+	mat4_ortho_set(Projection, left, right, bottom, top, GPU_MATRIX_ORTHO_CLIP_NEAR_DEFAULT, GPU_MATRIX_ORTHO_CLIP_FAR_DEFAULT);
 	gpu_matrix_state_active_set_dirty(true);
 }
 
 void GPU_matrix_frustum_set(float left, float right, float bottom, float top, float near, float far) {
 	mat4_frustum_set(Projection, left, right, bottom, top, near, far);
-	CHECKMAT(Projection);
 	gpu_matrix_state_active_set_dirty(true);
 }
 

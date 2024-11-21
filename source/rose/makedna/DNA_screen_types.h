@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+struct GHash;
 struct SpaceType;
 struct ARegionType;
 
@@ -57,7 +58,10 @@ typedef struct Screen {
 
 typedef struct ScrVert {
 	struct ScrVert *prev, *next, *newv;
-	vec2s vec;
+	/**
+	 * In general operations happen in pixel space but we keep everything in floating values for scaling.
+	 */
+	vec2f vec;
 	int flag;
 } ScrVert;
 
@@ -130,6 +134,10 @@ enum {
 	AREA_FLAG_REGION_SIZE_UPDATE = 1 << 0,
 };
 
+typedef struct ARegionRuntime {
+	struct GHash *block_name_map;
+} ARegionRuntime;
+
 typedef struct ARegion {
 	struct ARegion *prev, *next;
 
@@ -150,7 +158,10 @@ typedef struct ARegion {
 	struct ARegionType *type;
 	struct wmDrawBuffer *draw_buffer;
 
+	ListBase uiblocks;
 	ListBase handlers;
+	
+	ARegionRuntime runtime;
 } ARegion;
 
 /** #ARegion->alignment */
@@ -198,9 +209,12 @@ enum {
 	RGN_FLAG_SIZE_CLAMP_Y = 1 << 7,
 };
 
-#define AREAMINX 192
+#define AREAMINX 32
 #define PIXELSIZE 1
 #define WIDGET_UNIT 24
+
+#define UI_UNIT_X WIDGET_UNIT
+#define UI_UNIT_Y WIDGET_UNIT
 
 #ifdef __cplusplus
 }

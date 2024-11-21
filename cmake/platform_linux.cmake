@@ -26,3 +26,17 @@ find_package(GLEW REQUIRED)
 if (NOT GLEW_FOUND)
     message(FATAL_ERROR "GLEW not found. Install it using `sudo apt-get install libglew-dev`")
 endif()
+
+find_package(ZLIB REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(PNG REQUIRED)
+
+find_package(BROTLI REQUIRED
+	HINTS ${LIBDIR}/brotli
+)
+find_package(HARFBUZZ REQUIRED
+	HINTS ${LIBDIR}/harfbuzz
+)
+find_package(FREETYPE REQUIRED
+	HINTS ${LIBDIR}/freetype
+)

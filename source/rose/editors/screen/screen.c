@@ -11,6 +11,7 @@
 #include "LIB_utildefines.h"
 
 #include "KER_lib_id.h"
+#include "KER_screen.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -44,15 +45,25 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 
 	ScrVert *sv1 = screen_geom_vertex_add(screen, rect->xmin, rect->ymin);
 	ScrVert *sv2 = screen_geom_vertex_add(screen, rect->xmin, rect->ymax);
-	ScrVert *sv3 = screen_geom_vertex_add(screen, rect->xmax, rect->ymax);
-	ScrVert *sv4 = screen_geom_vertex_add(screen, rect->xmax, rect->ymin);
 
-	screen_geom_edge_add(screen, sv1, sv2);
-	screen_geom_edge_add(screen, sv2, sv3);
-	screen_geom_edge_add(screen, sv3, sv4);
-	screen_geom_edge_add(screen, sv4, sv1);
-
-	ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, SPACE_EMPTY);
+	const int cnt = 1;
+	for(int i = 1; i <= cnt; i++) {
+		ScrVert *sv3 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymax);
+		ScrVert *sv4 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymin);
+		
+		screen_geom_edge_add(screen, sv1, sv2);
+		screen_geom_edge_add(screen, sv2, sv3);
+		screen_geom_edge_add(screen, sv3, sv4);
+		screen_geom_edge_add(screen, sv4, sv1);
+		
+		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, SPACE_EMPTY);
+		
+		sv1 = sv4;
+		sv2 = sv3;
+	}
+	
+	KER_screen_remove_double_scrverts(screen);
+	KER_screen_remove_double_scredges(screen);
 
 	return screen;
 }

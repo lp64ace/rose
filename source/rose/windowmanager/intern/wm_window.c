@@ -83,6 +83,16 @@ wmWindow *WM_window_open(struct rContext *C, wmWindow *parent, const char *name,
 	return window;
 }
 
+/**
+ * Properly closes the window by clearing all draw buffers from the screen regions.
+ * This is achieved by calling #WM_window_screen_set and setting the screen to NULL.
+ *
+ * Attempting to delete a #Main database while it is in use by an active window will fail.
+ * Deleting data blocks with active windows is prohibited because draw buffers, owned by the windows, 
+ * require active graphics contexts to be properly released.
+ *
+ * Note: Kernel code does not handle GPU contexts, #WM_window_free does not handle draw buffers either.
+ */
 void WM_window_close(struct rContext *C, wmWindow *window) {
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -94,6 +104,7 @@ void WM_window_close(struct rContext *C, wmWindow *window) {
 	WM_window_free(wm, window);
 }
 
+/** Do not call this for active windows since it will not delete the screen draw buffers. */
 void WM_window_free(WindowManager *wm, wmWindow *window) {
 	/**
 	 * First and foremost we remove this window from the window list,
@@ -144,13 +155,13 @@ void WM_window_screen_set(struct rContext *C, wmWindow *window, Screen *screen) 
 
 	WindowManager *wm = CTX_wm_manager(C);
 	if (window->screen) {
-		id_us_rem((ID *)window->screen);
 		ED_screen_exit(C, window, window->screen);
+		id_us_rem((ID *)window->screen);
 	}
 	window->screen = screen;
 	if (window->screen) {
-		ED_screen_refresh(C, wm, window);
 		id_us_add((ID *)window->screen);
+		ED_screen_refresh(C, wm, window);
 	}
 }
 Screen *WM_window_screen_get(const wmWindow *window) {
@@ -187,9 +198,6 @@ void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 			} break;
 			case GLOBAL_AREA_ALIGN_BOTTOM: {
 				r_rect->ymin += height;
-			} break;
-			default: {
-				ROSE_assert_unreachable();
 			} break;
 		}
 	}

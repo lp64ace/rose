@@ -5,6 +5,7 @@
 #include "KER_screen.h"
 
 #include "LIB_assert.h"
+#include "LIB_ghash.h"
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -54,7 +55,7 @@ void KER_screen_remove_double_scrverts(Screen *screen) {
 			ScrVert *v1 = verg->next;
 			while (v1) {
 				if (v1->newv == NULL) {
-					if (v1->vec.x == verg->vec.x && v1->vec.y == verg->vec.y) {
+					if (IS_EQF(v1->vec.x, verg->vec.x) && IS_EQF(v1->vec.y, verg->vec.y)) {
 						v1->newv = verg;
 					}
 				}
@@ -239,6 +240,11 @@ void KER_area_region_free(SpaceType *st, ARegion *region) {
 	}
 	else if (region->type && region->type->free) {
 		region->type->free(region);
+	}
+	
+	if (region->runtime.block_name_map != NULL) {
+		LIB_ghash_free(region->runtime.block_name_map, NULL, NULL);
+		region->runtime.block_name_map = NULL;
 	}
 }
 void KER_screen_area_free(ScrArea *area) {

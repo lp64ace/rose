@@ -5,11 +5,9 @@ vec3 compute_masks(vec2 uv) {
 	bool right_half = uv.x > outRectSize.x * 0.5;
 	float corner_rad;
 
-	/**
-	 *	Correct aspect ratio for 2D views not using uniform scaling. uv is already in pixel space so a uniform scale should
-	 *give us a ratio of 1.
-	 */
-	float ratio = (butCo != -2.0) ? (dFdy(uv.y) / dFdx(uv.x)) : 1.0;
+	/* Correct aspect ratio for 2D views not using uniform scaling.
+	* uv is already in pixel space so a uniform scale should give us a ratio of 1. */
+	float ratio = (butCo != -2.0) ? abs(dFdy(uv.y) / dFdx(uv.x)) : 1.0;
 	vec2 uv_sdf = uv;
 	uv_sdf.x *= ratio;
 
@@ -27,18 +25,18 @@ vec3 compute_masks(vec2 uv) {
 	/* Fade emboss at the border. */
 	float emboss_size = upper_half ? 0.0 : min(1.0, uv_sdf.x / (corner_rad * ratio));
 
-	/* Signed distance field from the corner (in pixel) inner_sdf is sharp and outer_sdf is rounded. */
+	/* Signed distance field from the corner (in pixel).
+	* inner_sdf is sharp and outer_sdf is rounded. */
 	uv_sdf -= corner_rad;
 	float inner_sdf = max(0.0, min(uv_sdf.x, uv_sdf.y));
 	float outer_sdf = -length(min(uv_sdf, 0.0));
 	float sdf = inner_sdf + outer_sdf + corner_rad;
 
-	/**
-	 * Clamp line width to be at least 1px wide. This can happen if the projection matrix has been scaled (i.e: Node editor)...
-	 */
+	/* Clamp line width to be at least 1px wide. This can happen if the projection matrix
+	* has been scaled (i.e: Node editor)... */
 	float line_width = (lineWidth > 0.0) ? max(fwidth(uv.y), lineWidth) : 0.0;
 
-	const float aa_radius = 0.5;
+	const float aa_radius = 0.25;
 	vec3 masks;
 	masks.x = smoothstep(-aa_radius, aa_radius, sdf);
 	masks.y = smoothstep(-aa_radius, aa_radius, sdf - line_width);
@@ -82,14 +80,14 @@ void main() {
 		fragColor.a = 1.0;
 	}
 	else {
-		/* Premultiply here. */
+		/* Pre-multiply here. */
 		fragColor = innerColor * vec4(innerColor.aaa, 1.0);
 	}
 	fragColor *= masks.y;
 	fragColor += masks.x * borderColor;
 	fragColor += masks.z * embossColor;
 
-	/* Un-premult because the blend equation is already doing the mult. */
+	/* Un-pre-multiply because the blend equation is already doing the multiplication. */
 	if (fragColor.a > 0.0) {
 		fragColor.rgb /= fragColor.a;
 	}

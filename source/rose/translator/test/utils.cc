@@ -11,7 +11,7 @@
 
 namespace {
 
-TEST(Utils, ParserTypename) {
+TEST(Utils, TypeName) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "const volatile int (*(*)(unsigned long x, short y))[0xff];", 58);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
@@ -52,7 +52,7 @@ TEST(Utils, ParserTypename) {
 	RT_fcache_free(cache);
 }
 
-TEST(Utils, ParserTypenameEnum) {
+TEST(Utils, EnumType) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "enum e { eVal1 = 1, eVal2 = 2, eVal3 = 3, eVal, };", 50);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
@@ -90,7 +90,7 @@ TEST(Utils, ParserTypenameEnum) {
 	RT_fcache_free(cache);
 }
 
-TEST(Utils, ParserTypenameStruct) {
+TEST(Utils, StructType) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "struct s { int f1 : 16; int f2 : 16; int f3 : 16; int x; };", 59);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
@@ -132,7 +132,7 @@ TEST(Utils, ParserTypenameStruct) {
 	RT_fcache_free(cache);
 }
 
-TEST(Utils, ParserExpression) {
+TEST(Utils, Expr1) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "1 << 0;", 7);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
@@ -150,7 +150,7 @@ TEST(Utils, ParserExpression) {
 	RT_fcache_free(cache);
 }
 
-TEST(Utils, ParserConditional) {
+TEST(Utils, Expr2) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "(1 == 1) ? 0x3fLL : 01771LL;", 28);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
@@ -168,7 +168,7 @@ TEST(Utils, ParserConditional) {
 	RT_fcache_free(cache);
 }
 
-TEST(Utils, Parser) {
+TEST(Utils, Parser1) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "int main() { return 0; }", 24);
 	RCCFile *file = RT_file_new("test.c", cache);
 	{
@@ -215,7 +215,7 @@ TEST(Utils, Parser) {
 	RT_fcache_free(cache);
 }
 
-TEST(Utils, ParserTypedef) {
+TEST(Utils, Parser2) {
 	RCCFileCache *cache = RT_fcache_new("D:/test/test.c",
 										"typedef struct something {\n"
 										"    int x;\n"

@@ -140,7 +140,7 @@ RCCFileCache *build_virtual_source(const char *virtual_path) {
 
 	char *includes[ARRAY_SIZE(header_typedef)], *content;
 	for (size_t index = 0; index < ARRAY_SIZE(header_typedef); index++) {
-		includes[index] = LIB_strnformat_allocN("#include \"%s\"\n", header_typedef[index]);
+		includes[index] = LIB_strformat_allocN("#include \"%s\"\n", header_typedef[index]);
 	}
 	content = LIB_string_join_arrayN((const char **)includes, ARRAY_SIZE(includes));
 

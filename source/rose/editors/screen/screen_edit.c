@@ -102,7 +102,7 @@ ROSE_INLINE void screen_global_area_refresh(wmWindow *window, Screen *screen, in
 	}
 }
 ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *screen) {
-	const int size = PIXELSIZE * WIDGET_UNIT;
+	const int size = PIXELSIZE * UI_UNIT_Y;
 	rcti rect;
 
 	LIB_rcti_init(&rect, 0, WM_window_width(window) - 1, 0, WM_window_height(window) - 1);
@@ -110,10 +110,9 @@ ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *scr
 
 	screen_global_area_refresh(window, screen, SPACE_TOPBAR, GLOBAL_AREA_ALIGN_TOP, &rect, size, size, size);
 }
-
 ROSE_INLINE void screen_global_statusbar_area_refresh(wmWindow *window, Screen *screen) {
 	const int size_min = 1;
-	const int size_max = PIXELSIZE * WIDGET_UNIT;
+	const int size_max = PIXELSIZE * UI_UNIT_Y;
 	const int size = size_max;
 	rcti rect;
 
@@ -132,8 +131,12 @@ void ED_screen_global_areas_refresh(wmWindow *window) {
 		return;
 	}
 
-	screen_global_topbar_area_refresh(window, screen);
+	/**
+	 * We add the status bar first so that when drawing them the topbar will be on top in case of collision.
+	 * (since it will be drawn after, it will be drawn on top)
+	 */
 	screen_global_statusbar_area_refresh(window, screen);
+	screen_global_topbar_area_refresh(window, screen);
 }
 
 /** \} */

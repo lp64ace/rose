@@ -21,6 +21,14 @@ void WM_exit(struct rContext *C);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Projection
+ * \{ */
+
+void WM_get_projection_matrix(float r_mat[4][4], const struct rcti *rect);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

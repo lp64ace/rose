@@ -1,4 +1,5 @@
 #include "LIB_math_matrix.h"
+#include "LIB_math_vector.h"
 
 #include <math.h>
 
@@ -124,6 +125,7 @@ void mul_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]) {
 		copy_m3_m3(R, T);
 		return;
 	}
+
 	R[0][0] = B[0][0] * A[0][0] + B[0][1] * A[1][0] + B[0][2] * A[2][0];
 	R[0][1] = B[0][0] * A[0][1] + B[0][1] * A[1][1] + B[0][2] * A[2][1];
 	R[0][2] = B[0][0] * A[0][2] + B[0][1] * A[1][2] + B[0][2] * A[2][2];
@@ -182,15 +184,32 @@ void mul_m4_m4m3(float R[4][4], const float A[4][4], const float B[3][3]) {
 	R[2][2] = B[2][0] * A[0][2] + B[2][1] * A[1][2] + B[2][2] * A[2][2];
 }
 void mul_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]) {
-	R[0][0] = B[0][0] * A[0][0] + B[0][1] * A[1][0] + B[0][2] * A[2][0];
-	R[0][1] = B[0][0] * A[0][1] + B[0][1] * A[1][1] + B[0][2] * A[2][1];
-	R[0][2] = B[0][0] * A[0][2] + B[0][1] * A[1][2] + B[0][2] * A[2][2];
-	R[1][0] = B[1][0] * A[0][0] + B[1][1] * A[1][0] + B[1][2] * A[2][0];
-	R[1][1] = B[1][0] * A[0][1] + B[1][1] * A[1][1] + B[1][2] * A[2][1];
-	R[1][2] = B[1][0] * A[0][2] + B[1][1] * A[1][2] + B[1][2] * A[2][2];
-	R[2][0] = B[2][0] * A[0][0] + B[2][1] * A[1][0] + B[2][2] * A[2][0];
-	R[2][1] = B[2][0] * A[0][1] + B[2][1] * A[1][1] + B[2][2] * A[2][1];
-	R[2][2] = B[2][0] * A[0][2] + B[2][1] * A[1][2] + B[2][2] * A[2][2];
+	if (ELEM(R, A, B)) {
+		float T[4][4];
+		mul_m4_m4m4(T, A, B);
+		copy_m4_m4(R, T);
+		return;
+	}
+
+	R[0][0] = B[0][0] * A[0][0] + B[0][1] * A[1][0] + B[0][2] * A[2][0] + B[0][3] * A[3][0];
+	R[0][1] = B[0][0] * A[0][1] + B[0][1] * A[1][1] + B[0][2] * A[2][1] + B[0][3] * A[3][1];
+	R[0][2] = B[0][0] * A[0][2] + B[0][1] * A[1][2] + B[0][2] * A[2][2] + B[0][3] * A[3][2];
+	R[0][3] = B[0][0] * A[0][3] + B[0][1] * A[1][3] + B[0][2] * A[2][3] + B[0][3] * A[3][3];
+
+	R[1][0] = B[1][0] * A[0][0] + B[1][1] * A[1][0] + B[1][2] * A[2][0] + B[1][3] * A[3][0];
+	R[1][1] = B[1][0] * A[0][1] + B[1][1] * A[1][1] + B[1][2] * A[2][1] + B[1][3] * A[3][1];
+	R[1][2] = B[1][0] * A[0][2] + B[1][1] * A[1][2] + B[1][2] * A[2][2] + B[1][3] * A[3][2];
+	R[1][3] = B[1][0] * A[0][3] + B[1][1] * A[1][3] + B[1][2] * A[2][3] + B[1][3] * A[3][3];
+
+	R[2][0] = B[2][0] * A[0][0] + B[2][1] * A[1][0] + B[2][2] * A[2][0] + B[2][3] * A[3][0];
+	R[2][1] = B[2][0] * A[0][1] + B[2][1] * A[1][1] + B[2][2] * A[2][1] + B[2][3] * A[3][1];
+	R[2][2] = B[2][0] * A[0][2] + B[2][1] * A[1][2] + B[2][2] * A[2][2] + B[2][3] * A[3][2];
+	R[2][3] = B[2][0] * A[0][3] + B[2][1] * A[1][3] + B[2][2] * A[2][3] + B[2][3] * A[3][3];
+
+	R[3][0] = B[3][0] * A[0][0] + B[3][1] * A[1][0] + B[3][2] * A[2][0] + B[3][3] * A[3][0];
+	R[3][1] = B[3][0] * A[0][1] + B[3][1] * A[1][1] + B[3][2] * A[2][1] + B[3][3] * A[3][1];
+	R[3][2] = B[3][0] * A[0][2] + B[3][1] * A[1][2] + B[3][2] * A[2][2] + B[3][3] * A[3][2];
+	R[3][3] = B[3][0] * A[0][3] + B[3][1] * A[1][3] + B[3][2] * A[2][3] + B[3][3] * A[3][3];
 }
 
 void mul_m4_v3(const float mat[4][4], float r[3]) {
@@ -580,6 +599,23 @@ float determinant_m4(const float m[4][4]) {
 
 /** \} */
 
+
+/* -------------------------------------------------------------------- */
+/** \name Comparison
+ * \{ */
+
+bool equals_m2_m2(const float a[2][2], const float b[2][2]) {
+	return equals_v2_v2(a[0], b[0]) && equals_v2_v2(a[1], b[1]);
+}
+bool equals_m3_m3(const float a[3][3], const float b[3][3]) {
+	return equals_v3_v3(a[0], b[0]) && equals_v3_v3(a[1], b[1]) && equals_v3_v3(a[2], b[2]);
+}
+bool equals_m4_m4(const float a[4][4], const float b[4][4]) {
+	return equals_v4_v4(a[0], b[0]) && equals_v4_v4(a[1], b[1]) && equals_v4_v4(a[2], b[2]) && equals_v4_v4(a[3], b[3]);
+}
+
+/** \} */
+
 /* -------------------------------------------------------------------- */
 /** \name Transformations
  * \{ */
@@ -599,6 +635,23 @@ void scale_m4_fl(float R[4][4], float scale) {
 	R[3][0] = R[3][1] = R[3][2] = 0.0f;
 }
 
+void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) {
+	float Xdelta, Ydelta, Zdelta;
+
+	Xdelta = xmax - xmin;
+	Ydelta = ymax - ymin;
+	Zdelta = zmax - zmin;
+	if (Xdelta == 0.0f || Ydelta == 0.0f || Zdelta == 0.0f) {
+	return;
+	}
+	unit_m4(mat);
+	mat[0][0] = 2.0f / Xdelta;
+	mat[3][0] = -(xmax + xmin) / Xdelta;
+	mat[1][1] = 2.0f / Ydelta;
+	mat[3][1] = -(ymax + ymin) / Ydelta;
+	mat[2][2] = -2.0f / Zdelta;
+	mat[3][2] = -(zmax + zmin) / Zdelta;
+}
 void translate_m4(float mat[4][4], float Tx, float Ty, float Tz) {
 	mat[3][0] += (Tx * mat[0][0] + Ty * mat[1][0] + Tz * mat[2][0]);
 	mat[3][1] += (Tx * mat[0][1] + Ty * mat[1][1] + Tz * mat[2][1]);

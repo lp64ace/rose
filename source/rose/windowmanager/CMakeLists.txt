@@ -42,6 +42,7 @@ set(LIB
 	rose::intern::oswin
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::rosefont
 	rose::source::gpu
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar

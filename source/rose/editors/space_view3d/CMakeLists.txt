@@ -34,6 +34,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::gpu
 	rose::source::dna
+	rose::source::editors::interface
 	
 	# External Library Dependencies
 	

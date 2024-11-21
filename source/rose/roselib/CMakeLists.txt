@@ -98,6 +98,7 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::intern::wcwidth
 	
 	# External Library Dependencies
 	PUBLIC ${PTHREADS_LIBRARIES}
@@ -153,6 +154,7 @@ set(TEST
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::intern::wcwidth
 	rose::source::roselib
 	
 	# External Library Dependencies

@@ -3,6 +3,8 @@
 
 #include "DNA_vector_types.h"
 
+#include "LIB_utildefines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +32,8 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 /** \name Region
  * \{ */
 
+void ED_region_pixelspace(struct ARegion *region);
+
 void ED_region_exit(struct rContext *C, struct ARegion *region);
 void ED_region_do_draw(struct rContext *C, struct ARegion *region);
 
@@ -52,16 +56,24 @@ int ED_area_global_size_y(const struct ScrArea *area);
 struct ScrArea *ED_screen_areas_iter_first(const struct wmWindow *win, const struct Screen *screen);
 struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const struct ScrArea *area);
 
+/* clang-format off */
+
 /**
  * Iterate over all areas visible in the screen (screen as in everything
  * visible in the window, not just bScreen).
  * \note Skips global areas with flag GLOBAL_AREA_IS_HIDDEN.
  */
-#define ED_screen_areas_iter(win, screen, area) for (ScrArea *area = ED_screen_areas_iter_first(win, screen); area != NULL; area = ED_screen_areas_iter_next(screen, area))
+#define ED_screen_areas_iter(win, screen, area) \
+	for (ScrArea *area = ED_screen_areas_iter_first(win, screen); area != NULL; area = ED_screen_areas_iter_next(screen, area))
 
-#define ED_screen_verts_first(win, screen) ((win)->global_areas.vertbase.first ? (ScrVert *)(win)->global_areas.vertbase.first : (ScrVert *)(screen)->vertbase.first)
-#define ED_screen_verts_next(win, screen, vert) ((vert == (ScrVert *)(win)->global_areas.vertbase.last) ? (ScrVert *)(screen)->vertbase.first : vert->next)
-#define ED_screen_verts_iter(win, screen, vert) for (ScrVert *vert = ED_screen_verts_first(win, screen); vert != NULL; vert = ED_screen_verts_next(win, screen, vert))
+#define ED_screen_verts_first(win, screen) \
+	((win)->global_areas.vertbase.first ? (ScrVert *)(win)->global_areas.vertbase.first : (ScrVert *)(screen)->vertbase.first)
+#define ED_screen_verts_next(win, screen, vert) \
+	((vert == (ScrVert *)(win)->global_areas.vertbase.last) ? (ScrVert *)(screen)->vertbase.first : vert->next)
+#define ED_screen_verts_iter(win, screen, vert) \
+	for (ScrVert *vert = ED_screen_verts_first(win, screen); vert != NULL; vert = ED_screen_verts_next(win, screen, vert))
+
+/* clang-format on */
 
 void ED_area_update_region_sizes(struct WindowManager *wm, struct wmWindow *window, struct ScrArea *area);
 

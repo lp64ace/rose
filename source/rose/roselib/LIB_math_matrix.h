@@ -100,12 +100,23 @@ float determinant_m4(const float m[4][4]);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Comparison
+ * \{ */
+
+bool equals_m2_m2(const float a[2][2], const float b[2][2]);
+bool equals_m3_m3(const float a[3][3], const float b[3][3]);
+bool equals_m4_m4(const float a[4][4], const float b[4][4]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Transformations
  * \{ */
 
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);
 
+void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float ymax, float zmin, float zmax);
 void translate_m4(float mat[4][4], float Tx, float Ty, float Tz);
 
 /**
