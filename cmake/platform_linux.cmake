@@ -26,3 +26,8 @@ find_package(GLEW REQUIRED)
 if (NOT GLEW_FOUND)
     message(FATAL_ERROR "GLEW not found. Install it using `sudo apt-get install libglew-dev`")
 endif()
+
+# This needs to be updated, this is really ugly!
+find_package(FREETYPE REQUIRED
+	PATHS ${LIBDIR}/freetype
+)

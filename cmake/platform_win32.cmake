@@ -44,6 +44,14 @@ elseif(MSVC_VERSION GREATER 1919)
 	set(LIBDIR ${CMAKE_SOURCE_DIR}/cmake/lib/${LIBDIR_BASE})
 endif()
 
+macro(windows_find_package
+	package_name
+)
+	if(WITH_WINDOWS_FIND_MODULES)
+		find_package(${package_name})
+	endif()
+endmacro()
+
 # -----------------------------------------------------------------------------
 # Pre-Built Libraries
 
@@ -56,3 +64,6 @@ include_directories(SYSTEM "${PTHREADS_INCLUDE_DIRS}")
 set(GLEW_INCLUDE_DIRS ${LIBDIR}/glew/include)
 set(GLEW_LIBRARIES ${LIBDIR}/glew/lib/glew32.lib)
 set(GLEW_BINARIES ${LIBDIR}/glew/bin/glew32.dll)
+
+set(FREETYPE_INCLUDE_DIRS ${LIBDIR}/freetype/include ${LIBDIR}/freetype/include/freetype2)
+set(FREETYPE_LIBRARIES ${LIBDIR}/freetype/lib/freetype.lib)

@@ -1,0 +1,20 @@
+set(FREETYPE_VERSION "2.13.3")
+set(FREETYPE_FOUND TRUE)
+
+set(FREETYPE_INCLUDE_DIRS
+	"${CMAKE_CURRENT_SOURCE_DIR}/include"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/freetype"
+)
+set(FREETYPE_LIBRARY_STATIC
+	"${CMAKE_CURRENT_SOURCE_DIR}/lib/libfreetype.a"
+)
+
+if(NOT TARGET Freetype::Freetype)
+	add_library(Freetype::Freetype UNKNOWN IMPORTED)
+	set_target_properties(Freetype::Freetype PROPERTIES
+		IMPORTED_LOCATION ${FREETYPE_LIBRARY_STATIC}
+		INTERFACE_INCLUDE_DIRECTORIES ${FREETYPE_INCLUDE_DIRS}
+	)
+endif()
+
+set(FREETYPE_LIBRARIES Freetype::Freetype)
