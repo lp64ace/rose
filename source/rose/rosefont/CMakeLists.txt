@@ -16,6 +16,7 @@ set(INC_SYS
 	# External Include Directories
 	${PTHREADS_INCLUDE_DIRS}
 	${FREETYPE_INCLUDE_DIRS}
+	${HARFBUZZ_INCLUDE_DIRS}
 	
 )
 
@@ -48,6 +49,7 @@ set(LIB
 	# External Include Directories
 	${PTHREADS_LIBRARIES}
 	PUBLIC ${FREETYPE_LIBRARIES}
+	PUBLIC ${HARFBUZZ_LIBRARIES}
 	
 )
 
