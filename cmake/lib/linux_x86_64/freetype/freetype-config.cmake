@@ -2,11 +2,11 @@ set(FREETYPE_VERSION "2.13.3")
 set(FREETYPE_FOUND TRUE)
 
 set(FREETYPE_INCLUDE_DIRS
-	"${CMAKE_CURRENT_SOURCE_DIR}/include"
-	"${CMAKE_CURRENT_SOURCE_DIR}/include/freetype"
+	"${LIBDIR}/freetype/include"
+	"${LIBDIR}/freetype/include/freetype"
 )
 set(FREETYPE_LIBRARY_STATIC
-	"${CMAKE_CURRENT_SOURCE_DIR}/lib/libfreetype.a"
+	"${LIBDIR}/freetype/lib/libfreetype.a"
 )
 
 if(NOT TARGET Freetype::Freetype)
