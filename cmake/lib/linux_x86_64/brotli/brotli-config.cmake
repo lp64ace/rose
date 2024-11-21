@@ -5,25 +5,15 @@ set(BROTLI_INCLUDE_DIRS
     "${LIBDIR}/brotli/include"
     "${LIBDIR}/brotli/include/brotli"
 )
-
 set(BROTLI_LIBRARY_STATIC
-    "${LIBDIR}/brotli/lib/libbrotlicommon.a"
-    "${LIBDIR}/brotli/lib/libbrotlidec.a"
-    "${LIBDIR}/brotli/lib/libbrotlienc.a"
+    "${LIBDIR}/brotli/lib/libbrotli.a"
 )
-set(BROTLI_LIBRARY_SHARED
-    "${LIBDIR}/brotli/lib/libbrotlicommon.so"
-    "${LIBDIR}/brotli/lib/libbrotlidec.so"
-    "${LIBDIR}/brotli/lib/libbrotlienc.so"
-)
+if(NOT TARGET Brotli::Brotli)
+    add_library(Brotli::Brotli UNKNOWN IMPORTED)
+    set_target_properties(Brotli::Brotli PROPERTIES
+        IMPORTED_LOCATION "${BROTLI_LIBRARY_STATIC}"
+        INTERFACE_INCLUDE_DIRECTORIES "${BROTLI_INCLUDE_DIRS}"
+    )
+endif()
 
-add_library(Brotli INTERFACE)
-
-foreach(LIB ${BROTLI_LIBRARY_STATIC})
-    target_link_libraries(Brotli INTERFACE ${LIB})
-endforeach()
-
-target_include_directories(Brotli INTERFACE ${BROTLI_INCLUDE_DIRS})
-target_link_libraries(Brotli INTERFACE ${BROTLI_LIBRARY_SHARED})
-
-set(BROTLI_LIBRARIES Brotli)
+set(BROTLI_LIBRARIES Brotli::Brotli)

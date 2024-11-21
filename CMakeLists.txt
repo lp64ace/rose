@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.28)
 
 include(cmake/cfg.cmake)
 include(cmake/add.cmake)
+include(cmake/opt.cmake)
 
 # -----------------------------------------------------------------------------
 # Initialize Project
