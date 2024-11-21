@@ -85,7 +85,7 @@ uiLayout *UI_block_layout(uiBlock *block, int dir, int type, int x, int y, int s
 		layout->y = y;
 		layout->root = root;
 		layout->parent = NULL;
-		layout->space = 1;
+		layout->space = 0;
 		
 		if(dir == UI_LAYOUT_HORIZONTAL) {
 			layout->w = 0;
@@ -342,7 +342,7 @@ ROSE_INLINE void ui_item_estimate_row(uiLayout *layout) {
 		layout->h = ROSE_MAX(layout->h, h);
 		
 		const int cnt = spaces_after_row_item(layout, nested, nested->next);
-		layout->h = layout->h + layout->space * cnt;
+		layout->w = layout->w + layout->space * cnt;
 	}
 }
 

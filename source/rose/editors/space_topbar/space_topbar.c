@@ -7,6 +7,8 @@
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
+#include "UI_interface.h"
+
 #include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
@@ -26,6 +28,7 @@ ROSE_INLINE SpaceLink *topbar_create(const ScrArea *area) {
 		LIB_addtail(&topbar->regionbase, region);
 		region->regiontype = RGN_TYPE_HEADER;
 		region->alignment = RGN_ALIGN_TOP;
+		region->sizex = 4 * UI_UNIT_X;
 	}
 	// Right Header
 	{
@@ -33,6 +36,7 @@ ROSE_INLINE SpaceLink *topbar_create(const ScrArea *area) {
 		LIB_addtail(&topbar->regionbase, region);
 		region->regiontype = RGN_TYPE_HEADER;
 		region->alignment = RGN_ALIGN_RIGHT | RGN_SPLIT_PREV;
+		region->sizex = 1 * UI_UNIT_X;
 	}
 	// Main Region
 	{
@@ -51,6 +55,41 @@ ROSE_INLINE void topbar_init(WindowManager *wm, ScrArea *area) {
 }
 
 ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name TopBar Header Region Methods
+ * \{ */
+
+ROSE_INLINE void topbar_header_region_draw(struct rContext *C, ARegion *region) {
+	ED_region_header_draw(C, region);
+
+	if ((region->alignment & RGN_ALIGN_RIGHT) == 0) {
+		uiBlock *block;
+		if ((block = UI_block_begin(C, region, "block-left"))) {
+			uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
+			uiLayout *layout = UI_layout_row(root, 1);
+			uiDefBut(block, UI_BTYPE_TXT, "file", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y - 3);
+			uiDefBut(block, UI_BTYPE_TXT, "help", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y - 3);
+			UI_block_end(C, block);
+		}
+	}
+	else {
+		uiBlock *block;
+		if ((block = UI_block_begin(C, region, "block-right"))) {
+			uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
+			uiLayout *layout = UI_layout_row(root, 1);
+			uiDefBut(block, UI_BTYPE_TXT, "xxx", 0, 0, UI_UNIT_X - 2, UI_UNIT_Y - 3);
+			UI_block_end(C, block);
+		}
+	}
+}
+
+void topbar_header_region_init(ARegion *region) {
+}
+void topbar_header_region_exit(ARegion *region) {
 }
 
 /** \} */
@@ -85,9 +124,9 @@ void ED_spacetype_topbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "SpaceTopBar::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = ED_region_header_draw;
-		art->init = ED_region_header_init;
-		art->exit = ED_region_header_exit;
+		art->draw = topbar_header_region_draw;
+		art->init = topbar_header_region_init;
+		art->exit = topbar_header_region_exit;
 	}
 	// Main Region
 	{

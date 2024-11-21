@@ -131,8 +131,12 @@ void ED_screen_global_areas_refresh(wmWindow *window) {
 		return;
 	}
 
-	screen_global_topbar_area_refresh(window, screen);
+	/**
+	 * We add the status bar first so that when drawing them the topbar will be on top in case of collision.
+	 * (since it will be drawn after, it will be drawn on top)
+	 */
 	screen_global_statusbar_area_refresh(window, screen);
+	screen_global_topbar_area_refresh(window, screen);
 }
 
 /** \} */

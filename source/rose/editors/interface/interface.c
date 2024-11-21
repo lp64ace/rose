@@ -23,6 +23,8 @@
 #include "WM_handler.h"
 #include "WM_window.h"
 
+#include "RFT_api.h"
+
 #include "interface_intern.h"
 
 /* -------------------------------------------------------------------- */
@@ -166,6 +168,21 @@ uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w,
 void ui_but_update(uiBut *but) {
 }
 
+ROSE_INLINE void ui_draw_text(uiBut *but, const rcti *rect) {
+	int font = RFT_set_default();
+	RFT_clipping(font, rect->xmin, rect->ymin, rect->xmax, rect->ymax);
+	RFT_color3f(font, 0.0f, 0.0f, 0.0f);
+	
+	int cx = LIB_rcti_cent_x(rect);
+	int cy = LIB_rcti_cent_y(rect);
+
+	rcti bound;
+	RFT_boundbox(font, but->name, -1, &bound);
+	/** By default text is horizontally centered. */
+	RFT_position(font, cx - LIB_rcti_size_x(&bound) / 2, cy - RFT_height_max(font) / 3, -1.0f);
+	RFT_draw(font, but->name, -1);
+}
+
 ROSE_STATIC void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
 	if (but->type == UI_BTYPE_SEPR) {
 		return;
@@ -174,7 +191,9 @@ ROSE_STATIC void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *b
 	rctf rectf;
 	LIB_rctf_rcti_copy(&rectf, rect);
 
-	UI_draw_roundbox_4fv(&rectf, true, 2.0f, (const float[4]){0.5f, 0.5f, 0.5f, 1.0f});
+	UI_draw_roundbox_4fv(&rectf, true, 0.0f, (const float[4]){0.5f, 0.5f, 0.5f, 1.0f});
+
+	ui_draw_text(but, rect);
 }
 
 /** \} */
@@ -273,10 +292,6 @@ void UI_block_end(const struct rContext *C, uiBlock *block) {
 }
 
 ROSE_INLINE void ui_draw_menu_back(ARegion *region, uiBlock *block, const rcti *rect) {
-	rctf rectf;
-	LIB_rctf_rcti_copy(&rectf, rect);
-
-	UI_draw_roundbox_4fv(&rectf, true, 2.0f, (const float[4]){0.5f, 0.5f, 0.5f, 0.4f});
 }
 
 void UI_block_draw(const struct rContext *C, uiBlock *block) {
@@ -287,6 +302,8 @@ void UI_block_draw(const struct rContext *C, uiBlock *block) {
 	GPU_matrix_push_projection();
 	GPU_matrix_push();
 	GPU_matrix_identity_set();
+
+	RFT_batch_draw_begin();
 
 	rcti rect;
 	ui_but_to_pixelrect(&rect, region, block, NULL);
@@ -299,6 +316,8 @@ void UI_block_draw(const struct rContext *C, uiBlock *block) {
 			ui_draw_but(C, region, but, &rect);
 		}
 	}
+
+	RFT_batch_draw_end();
 
 	GPU_matrix_pop();
 	GPU_matrix_pop_projection();

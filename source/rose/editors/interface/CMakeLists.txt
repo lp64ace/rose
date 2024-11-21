@@ -38,6 +38,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::rosefont
 	rose::source::gpu
 	rose::source::windowmanager
 	

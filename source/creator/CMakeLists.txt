@@ -36,6 +36,7 @@ set(LIB
 	rose::source::dna
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::rosefont
 	rose::source::gpu
 	rose::source::windowmanager
 	rose::source::editors::screen

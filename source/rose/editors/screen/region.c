@@ -17,8 +17,6 @@
 
 #include "screen_intern.h"
 
-#include <stdio.h>
-
 /* -------------------------------------------------------------------- */
 /** \name Region
  * \{ */
@@ -68,7 +66,7 @@ void ED_region_header_init(ARegion *region) {
 void ED_region_header_exit(ARegion *region) {
 }
 void ED_region_header_draw(struct rContext *C, ARegion *region) {
-	GPU_clear_color(0.65f, 0.65f, 0.65f, 1.0f);
+	GPU_clear_color(0.35f, 0.35f, 0.35f, 1.0f);
 }
 
 /** \} */
