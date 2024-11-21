@@ -124,10 +124,10 @@ bool screen_geom_vertices_scale_pass(wmWindow *window, Screen *screen, rcti *scr
 		const float facy = ((float)(screen_size_y - 1)) / ((float)(screen_size_y_prev - 1));
 
 		LISTBASE_FOREACH(ScrVert *, vert, &screen->vertbase) {
-			vert->vec.x = screen_rect->xmin + (short)(facx * (float)(vert->vec.x - min[0]) + 0.5f);
-			CLAMP(vert->vec.x, screen_rect->xmin, screen_rect->xmax - 1);
-			vert->vec.y = screen_rect->ymin + (short)(facy * (float)(vert->vec.y - min[1]) + 0.5f);
-			CLAMP(vert->vec.y, screen_rect->ymin, screen_rect->ymax - 1);
+			vert->vec.x = screen_rect->xmin + (facx * (float)(vert->vec.x - min[0]));
+			CLAMP(vert->vec.x, screen_rect->xmin, screen_rect->xmax);
+			vert->vec.y = screen_rect->ymin + (facy * (float)(vert->vec.y - min[1]));
+			CLAMP(vert->vec.y, screen_rect->ymin, screen_rect->ymax);
 		}
 
 		int headery = PIXELSIZE * UI_UNIT_Y;
