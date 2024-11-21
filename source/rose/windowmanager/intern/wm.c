@@ -19,6 +19,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "RFT_api.h"
+
 #include <oswin.h>
 #include <stdio.h>
 
@@ -231,6 +233,8 @@ void WM_init(struct rContext *C) {
 	KER_rose_globals_init();
 	KER_rose_globals_main_replace(main);
 
+	RFT_init();
+
 	ED_spacetypes_init();
 
 	wm_init_manager(C, main);
@@ -251,6 +255,8 @@ void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
 
 	ED_spacetypes_exit();
+
+	RFT_exit();
 
 	CTX_free(C);
 	exit(0);

@@ -54,6 +54,9 @@ void LIB_rcti_union(rcti *rct_a, const rcti *rct_b);
 bool LIB_rctf_compare(const struct rctf *rect_a, const struct rctf *rect_b, float limit);
 bool LIB_rcti_compare(const struct rcti *rect_a, const struct rcti *rect_b);
 
+bool LIB_rctf_inside_rctf(const rctf *rct_a, const rctf *rct_b);
+bool LIB_rcti_inside_rcti(const rcti *rct_a, const rcti *rct_b);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

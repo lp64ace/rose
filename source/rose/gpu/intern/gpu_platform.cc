@@ -20,13 +20,13 @@ static char *create_key(SupportLevel support_level, const char *vendor, const ch
 
 	switch (support_level) {
 		case GPU_SUPPORT_LEVEL_SUPPORTED: {
-			support_key = LIB_strnformat_allocN("[%s/SUPPORTED] %s %s", vendor, renderer, version);
+			support_key = LIB_strformat_allocN("[%s/SUPPORTED] %s %s", vendor, renderer, version);
 		} break;
 		case GPU_SUPPORT_LEVEL_LIMITED: {
-			support_key = LIB_strnformat_allocN("[%s/LIMITED] %s %s", vendor, renderer, version);
+			support_key = LIB_strformat_allocN("[%s/LIMITED] %s %s", vendor, renderer, version);
 		} break;
 		default: {
-			support_key = LIB_strnformat_allocN("[%s/UNSUPPORTED] %s %s", vendor, renderer, version);
+			support_key = LIB_strformat_allocN("[%s/UNSUPPORTED] %s %s", vendor, renderer, version);
 		} break;
 	}
 
@@ -36,7 +36,7 @@ static char *create_key(SupportLevel support_level, const char *vendor, const ch
 }
 
 static char *create_gpu_name(const char *vendor, const char *renderer, const char *version) {
-	char *gpu_name = LIB_strnformat_allocN("[%s] %s %s", vendor, renderer, version);
+	char *gpu_name = LIB_strformat_allocN("[%s] %s %s", vendor, renderer, version);
 
 	LIB_string_replace_single(gpu_name, '\n', ' ');
 	LIB_string_replace_single(gpu_name, '\r', ' ');

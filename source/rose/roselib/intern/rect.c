@@ -231,4 +231,18 @@ bool LIB_rcti_compare(const rcti *rect_a, const rcti *rect_b) {
 	return false;
 }
 
+bool LIB_rctf_inside_rctf(const rctf *rct_a, const rctf *rct_b) {
+	if ((rct_a->xmin <= rct_b->xmin) && (rct_a->xmax >= rct_b->xmax)) {
+		return (rct_a->ymin <= rct_b->ymin) && (rct_a->ymax >= rct_b->ymax);
+	}
+	return false;
+}
+
+bool LIB_rcti_inside_rcti(const rcti *rct_a, const rcti *rct_b) {
+	if ((rct_a->xmin <= rct_b->xmin) && (rct_a->xmax >= rct_b->xmax)) {
+		return (rct_a->ymin <= rct_b->ymin) && (rct_a->ymax >= rct_b->ymax);
+	}
+	return false;
+}
+
 /** \} */

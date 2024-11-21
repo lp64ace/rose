@@ -266,6 +266,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::intern::oswin
 	rose::source::roselib
+	rose::source::rosefont
 	rose::source::shaders
 	
 	# External Library Dependencies

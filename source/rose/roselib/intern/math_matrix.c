@@ -1,4 +1,5 @@
 #include "LIB_math_matrix.h"
+#include "LIB_math_vector.h"
 
 #include <math.h>
 
@@ -594,6 +595,23 @@ float determinant_m4(const float m[4][4]) {
 	ans = (a1 * determinant_m3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1 * determinant_m3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1 * determinant_m3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * determinant_m3(a2, a3, a4, b2, b3, b4, c2, c3, c4));
 
 	return ans;
+}
+
+/** \} */
+
+
+/* -------------------------------------------------------------------- */
+/** \name Comparison
+ * \{ */
+
+bool equals_m2_m2(const float a[2][2], const float b[2][2]) {
+	return equals_v2_v2(a[0], b[0]) && equals_v2_v2(a[1], b[1]);
+}
+bool equals_m3_m3(const float a[3][3], const float b[3][3]) {
+	return equals_v3_v3(a[0], b[0]) && equals_v3_v3(a[1], b[1]) && equals_v3_v3(a[2], b[2]);
+}
+bool equals_m4_m4(const float a[4][4], const float b[4][4]) {
+	return equals_v4_v4(a[0], b[0]) && equals_v4_v4(a[1], b[1]) && equals_v4_v4(a[2], b[2]) && equals_v4_v4(a[3], b[3]);
 }
 
 /** \} */

@@ -3,12 +3,18 @@
 uint32_t divide_ceil_u32(uint32_t a, uint32_t b) {
 	return (a + b - 1) / b;
 }
+uint32_t divide_round_u32(uint32_t a, uint32_t b) {
+	return (2 * a + b) / (2 * b);
+}
 uint32_t ceil_to_multiple_u32(uint32_t a, uint32_t b) {
 	return divide_ceil_u64(a, b) * b;
 }
 
 uint64_t divide_ceil_u64(uint64_t a, uint64_t b) {
 	return (a + b - 1) / b;
+}
+uint64_t divide_round_u64(uint64_t a, uint64_t b) {
+	return (2 * a + b) / (2 * b);
 }
 uint64_t ceil_to_multiple_u64(uint64_t a, uint64_t b) {
 	return divide_ceil_u64(a, b) * b;

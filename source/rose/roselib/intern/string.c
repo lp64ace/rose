@@ -341,7 +341,7 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	return n;
 }
 
-char *LIB_strnformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
+char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 	va_list args;
 
 	va_start(args, fmt);
