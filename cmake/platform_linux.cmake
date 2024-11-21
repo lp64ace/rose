@@ -28,10 +28,6 @@ if (NOT GLEW_FOUND)
 endif()
 
 # This needs to be updated, this is really ugly!
-find_package(HARFBUZZ REQUIRED
-	PATHS ${LIBDIR}/harfbuzz
-)
-# This needs to be updated, this is really ugly!
 find_package(FREETYPE REQUIRED
 	PATHS ${LIBDIR}/freetype
 )
