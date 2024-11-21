@@ -8,16 +8,11 @@ set(FREETYPE_INCLUDE_DIRS
 set(FREETYPE_LIBRARY_STATIC
     "${LIBDIR}/freetype/lib/libfreetype.a"
 )
-
-find_package(ZLIB REQUIRED)
-find_package(BZip2 REQUIRED)
-
 if(NOT TARGET Freetype::Freetype)
     add_library(Freetype::Freetype UNKNOWN IMPORTED)
     set_target_properties(Freetype::Freetype PROPERTIES
         IMPORTED_LOCATION "${FREETYPE_LIBRARY_STATIC}"
         INTERFACE_INCLUDE_DIRECTORIES "${FREETYPE_INCLUDE_DIRS}"
-        INTERFACE_LINK_LIBRARIES "${ZLIB_LIBRARIES};${BZIP2_LIBRARIES}"
     )
 endif()
 

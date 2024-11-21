@@ -61,7 +61,7 @@ jobs:
 
     - name: Install Freetype on Ubuntu
       if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y meson pkg-config ragel gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev
+      run: sudo apt-get install -y libfreetype6-dev zlib1g-dev libbz2-dev libpng-dev libharfbuzz-dev libbrotli-dev
 
     - name: Install Mesa on Ubuntu
       if: matrix.os == 'ubuntu-latest'
