@@ -18,6 +18,8 @@ Before proceeding, ensure that the following prerequisites are met:
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
 
+Freetype is used in order to handle text rendering but precompiled libraries are distributed alongside the project for both linux x86_64 and windows x64.
+
 ## (Linux) Installation Instructions
 
 Before building the project, ensure that the following development libraries are installed on your Linux system.
@@ -57,7 +59,7 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 Here is a little preview of the application running in its current state, this is simply a 
 showcase demo.
 
-![Demo](https://i.imgur.com/94FK4GS.png)
+![Demo](https://i.imgur.com/DVFK4xn.png)
 
 # Authors
 
