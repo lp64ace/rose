@@ -18,8 +18,6 @@ Before proceeding, ensure that the following prerequisites are met:
 - **Git:** Make sure Git is installed on your system.
 - **CMake:** Ensure CMake is installed and accessible from your command prompt.
 
-Freetype is used in order to handle text rendering but precompiled libraries are distributed alongside the project for both linux x86_64 and windows x64.
-
 ## (Linux) Installation Instructions
 
 Before building the project, ensure that the following development libraries are installed on your Linux system.
@@ -29,8 +27,10 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 
 	```bash
 	sudo apt-get update
+	sudo apt-get install -y meson pkg-config ragel gtk-doc-tools
 	sudo apt-get install -y libx11-dev libxi-dev
 	sudo apt-get install -y libglew-dev libgl1-mesa-dev libglu1-mesa-dev
+	sudo apt-get install -y libfreetype6-dev libglib2.0-dev libcairo2-dev
 	```
 
 ## Building Rose
