@@ -61,9 +61,7 @@ jobs:
 
     - name: Install Freetype on Ubuntu
       if: matrix.os == 'ubuntu-latest'
-      run: >
-        sudo apt-get install -y libfreetype6-dev
-        sudo apt-get install -y zlib1g-dev libpng-dev
+      run: sudo apt-get install -y libfreetype6-dev zlib1g-dev libpng-dev
 
     - name: Install Mesa on Ubuntu
       if: matrix.os == 'ubuntu-latest'
