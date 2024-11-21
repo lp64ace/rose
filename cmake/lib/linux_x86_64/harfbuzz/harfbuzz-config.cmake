@@ -1,4 +1,4 @@
-set(HARFBUZZ_VERSION "2.13.3")
+set(HARFBUZZ_VERSION "10.1.0")
 set(HARFBUZZ_FOUND TRUE)
 
 set(HARFBUZZ_INCLUDE_DIRS
@@ -6,8 +6,8 @@ set(HARFBUZZ_INCLUDE_DIRS
     "${LIBDIR}/harfbuzz/include/harfbuzz"
 )
 set(HARFBUZZ_LIBRARY_STATIC
-    "${LIBDIR}/freetype/lib/libharfbuzz.a"
-    "${LIBDIR}/freetype/lib/libharfbuzz-subset.a"
+    "${LIBDIR}/harfbuzz/lib/libharfbuzz.a"
+    "${LIBDIR}/harfbuzz/lib/libharfbuzz-subset.a"
 )
 if(NOT TARGET HarfBuzz::HarfBuzz)
     add_library(HarfBuzz::HarfBuzz UNKNOWN IMPORTED)
