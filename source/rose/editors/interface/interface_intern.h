@@ -74,6 +74,9 @@ void ui_window_to_block_fl(const struct ARegion *region, const struct uiBlock *b
  * \{ */
 
 void ui_but_update(struct uiBut *but);
+void ui_draw_but(const struct rContext *C, struct ARegion *region, struct uiBut *but, const rcti *rect);
+
+bool ui_but_contains_px(const struct uiBut *but, const struct ARegion *region, const int xy[2]);
 
 bool ui_but_contains_pt(const struct uiBut *but, float mx, float my);
 bool ui_but_contains_rect(const struct uiBut *but, const rctf *rect);
@@ -85,6 +88,7 @@ struct uiBut *ui_but_find_mouse_over_ex(const struct ARegion *region, const int 
 
 void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but);
 void ui_do_but_activate_exit(struct rContext *C, struct ARegion *region, struct uiBut *but);
+void ui_but_active_free(struct rContext *C, struct uiBut *but);
 
 bool ui_but_is_editing(struct uiBut *but);
 

@@ -76,6 +76,7 @@ void UI_block_draw(const struct rContext *C, struct uiBlock *block);
 void UI_block_region_set(struct uiBlock *block, struct ARegion *region);
 
 void UI_blocklist_free(struct rContext *C, struct ARegion *region);
+void UI_region_free_active_but_all(struct rContext *C, struct ARegion *region);
 void UI_blocklist_free_inactive(struct rContext *C, struct ARegion *region);
 void UI_block_free(struct rContext *C, struct uiBlock *block);
 

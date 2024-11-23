@@ -24,6 +24,7 @@ set(SRC
 	interface_intern.h
 	
 	interface.c
+	interface_button.c
 	interface_draw.c
 	interface_handlers.c
 	interface_layout.cc

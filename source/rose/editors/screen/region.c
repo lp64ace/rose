@@ -41,6 +41,8 @@ void ED_region_exit(struct rContext *C, ARegion *region) {
 	
 	WM_event_remove_handlers(C, &region->handlers);
 	WM_event_modal_handler_region_replace(window, region, NULL);
+	
+	UI_region_free_active_but_all(C, region);
 
 	WM_draw_region_free(region);
 	region->visible = false;

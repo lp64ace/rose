@@ -100,9 +100,7 @@ ROSE_STATIC void ui_but_mem_delete(uiBut *but) {
 ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but) {
 	if (but->active) {
 		if (C) {
-			ARegion *region = CTX_wm_region(C);
-
-			ui_do_but_activate_exit(C, region, but);
+			ui_but_active_free(C, but);
 		}
 		else {
 			MEM_freeN(but->active);
@@ -188,6 +186,30 @@ uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w,
 	return but;
 }
 
+bool ui_region_contains_point_px(const ARegion *region, const int xy[2]) {
+	if (!LIB_rcti_isect_pt_v(&region->winrct, xy)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool ui_but_contains_px(const uiBut *but, const ARegion *region, const int xy[2]) {
+	uiBlock *block = but->block;
+	if (!ui_region_contains_point_px(region, xy)) {
+		return false;
+	}
+
+	float mx = xy[0], my = xy[1];
+	ui_window_to_block_fl(region, block, &mx, &my);
+
+	if (!ui_but_contains_pt(but, mx, my)) {
+		return false;
+	}
+
+	return true;
+}
+
 bool ui_but_contains_pt(const uiBut *but, float mx, float my) {
 	return LIB_rctf_isect_pt(&but->rect, mx, my);
 }
@@ -230,179 +252,6 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 		}
 	}
 	return NULL;
-}
-
-ROSE_INLINE uiWidgetColors *widget_colors(int type) {
-	Theme *theme = UI_GetTheme();
-	
-	switch(type) {
-		case UI_BTYPE_BUT: {
-			return &theme->tui.wcol_but;
-		} break;
-		case UI_BTYPE_TXT: {
-			return &theme->tui.wcol_txt;
-		} break;
-		case UI_BTYPE_EDIT: {
-			return &theme->tui.wcol_edit;
-		} break;
-	}
-	
-	return &theme->tui.wcol_but;
-}
-
-ROSE_INLINE void copy_float_v4_uchar_v4(float a[4], const unsigned char b[4]) {
-	a[0] = b[0] / 255.0f;
-	a[1] = b[1] / 255.0f;
-	a[2] = b[2] / 255.0f;
-	a[3] = b[3] / 255.0f;
-}
-
-/** Temporary hack */
-ROSE_INLINE bool ui_but_is_hovered(const struct rContext *C, uiBut *but) {
-	wmWindow *window = CTX_wm_window(C);
-	ARegion *region = CTX_wm_region(C);
-
-	float mx = window->event_state->mouse_xy[0], my = window->event_state->mouse_xy[1];
-	ui_window_to_block_fl(region, but->block, &mx, &my);
-	if (ui_but_contains_pt(but, mx, my)) {
-		return (but->flag & UI_HOVER) != 0;
-	}
-	return (but->flag & UI_SELECT) != 0;
-}
-
-ROSE_INLINE void ui_draw_but_back(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	ARegion *region = CTX_wm_region(C);
-	
-	float fill[4];
-	
-	if (ui_but_is_hovered(C, but)) {
-		copy_float_v4_uchar_v4(fill, colors->inner_sel);
-	}
-	else {
-		copy_float_v4_uchar_v4(fill, colors->inner);
-	}
-
-	if (colors->inner[3] < 1e-3f) {
-		return;
-	}
-	
-	float border[4];
-	copy_v4_v4(border, fill);
-	mul_v3_fl(border, 0.25f);
-	
-	rctf rectf;
-	LIB_rctf_rcti_copy(&rectf, rect);
-	
-	UI_draw_roundbox_4fv_ex(&rectf, fill, fill, 0, border, 1, colors->roundness);
-}
-
-ROSE_INLINE bool ui_draw_but_text_sel(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	int font = RFT_set_default();
-	const int padx = UI_TEXT_MARGIN_X, halfy = RFT_height_max(font) / 2;
-	
-	int cx = LIB_rcti_cent_x(rect);
-	int cy = LIB_rcti_cent_y(rect);
-	
-	rcti boundl, boundr;
-	RFT_boundbox(font, but->name, but->selsta, &boundl);
-	RFT_boundbox(font, but->name, but->selend, &boundr);
-	rcti sel;
-	sel.xmin = boundl.xmax + rect->xmin + padx;
-	sel.xmax = boundr.xmax + rect->xmin + padx;
-	sel.ymax = cy + halfy;
-	sel.ymin = cy - halfy;
-	
-	if (!LIB_rcti_isect(rect, &sel, NULL)) {
-		return false;
-	}
-	
-	float back[4];
-	copy_float_v4_uchar_v4(back, colors->text_sel);
-	
-	rctf self;
-	LIB_rctf_rcti_copy(&self, &sel);
-	UI_draw_roundbox_4fv_ex(&self, back, back, 0, NULL, 1, 0);
-
-	return true;
-}
-
-ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	int font = RFT_set_default();
-	const int padx = UI_TEXT_MARGIN_X, pady = RFT_height_max(font) / 3;
-
-	float text[4];
-	copy_float_v4_uchar_v4(text, colors->text);
-
-	RFT_clipping(font, rect->xmin + padx, rect->ymin + pady, rect->xmax - padx, rect->ymax - pady);
-	RFT_color4f(font, text[0], text[1], text[2], text[3]);
-	RFT_enable(font, RFT_CLIPPING);
-	
-	int cx = LIB_rcti_cent_x(rect);
-	int cy = LIB_rcti_cent_y(rect);
-	
-	rcti bound;
-	RFT_boundbox(font, but->name, -1, &bound);
-	
-	GPU_blend(GPU_BLEND_ALPHA);
-	
-	if (ELEM(but->type, UI_BTYPE_BUT)) { // Button texts are aligned in the center.
-		RFT_position(font, cx - LIB_rcti_size_x(&bound) / 2, cy - pady, -1.0f);
-		RFT_draw(font, but->name, -1);
-	}
-	else {
-		ROSE_assert(ELEM(but->type, UI_BTYPE_EDIT, UI_BTYPE_TXT));
-		
-		ui_draw_but_text_sel(C, but, colors, rect);
-		
-		RFT_position(font, rect->xmin + padx, cy - pady, -1.0f);
-		RFT_draw(font, but->name, -1);
-	}
-}
-
-ROSE_INLINE void ui_draw_but_cursor(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	if(!ui_but_is_editing(but)) {
-		return;
-	}
-
-	int font = RFT_set_default();
-	const int padx = UI_TEXT_MARGIN_X, halfy = RFT_height_max(font) / 2;
-	
-	rcti bound;
-	RFT_boundbox(font, but->name, but->offset, &bound);
-	
-	int cx = LIB_rcti_cent_x(rect);
-	int cy = LIB_rcti_cent_y(rect);
-	
-	bound.xmin = bound.xmax - bound.xmin + rect->xmin + padx;
-	bound.xmax = bound.xmin + 1;
-	
-	bound.ymax = cy + halfy;
-	bound.ymin = cy - halfy;
-
-	if (!LIB_rcti_isect(rect, &bound, NULL)) {
-		return;
-	}
-	
-	Theme *theme = UI_GetTheme();
-
-	float cursor[4];
-	copy_float_v4_uchar_v4(cursor, theme->tui.text_cur);
-	
-	rctf boundf;
-	LIB_rctf_rcti_copy(&boundf, &bound);
-	UI_draw_roundbox_4fv_ex(&boundf, cursor, cursor, 0, NULL, 1, 0);
-}
-
-ROSE_STATIC void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
-	if (but->type == UI_BTYPE_SEPR) {
-		return;
-	}
-	
-	uiWidgetColors *colors = widget_colors(but->type);
-
-	ui_draw_but_back(C, but, colors, rect);
-	ui_draw_but_text(C, but, colors, rect);
-	ui_draw_but_cursor(C, but, colors, rect);
 }
 
 /** \} */
@@ -559,6 +408,17 @@ void UI_blocklist_free(struct rContext *C, ARegion *region) {
 	if(region->runtime.block_name_map != NULL) {
 		LIB_ghash_free(region->runtime.block_name_map, NULL, NULL);
 		region->runtime.block_name_map = NULL;
+	}
+}
+
+void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
+	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+			if (but->active == NULL) {
+				continue;
+			}
+			ui_but_active_free(C, but);
+		}
 	}
 }
 

@@ -48,6 +48,7 @@ typedef struct uiHandleButtonData {
 enum {
 	BUTTON_STATE_TEXT_EDITING = 1,
 	BUTTON_STATE_TEXT_SELECTING,
+	BUTTON_STATE_WAIT_RELEASE,
 };
 
 bool ui_but_is_editing(uiBut *but) {
@@ -56,7 +57,7 @@ bool ui_but_is_editing(uiBut *but) {
 }
 
 ROSE_INLINE bool button_modal_state(int state) {
-	return ELEM(state, BUTTON_STATE_TEXT_EDITING);
+	return ELEM(state, BUTTON_STATE_TEXT_EDITING, BUTTON_STATE_TEXT_SELECTING, BUTTON_STATE_WAIT_RELEASE);
 }
 
 ROSE_STATIC void ui_textedit_set_cursor_pos(uiBut *but, const ARegion *region, const float x) {
@@ -117,6 +118,10 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but) {
 			button_activate_state(C, but, BUTTON_STATE_TEXT_SELECTING);
 			data->selini = -1;
 		} break;
+		default: {
+			/** We have marked this button as hovered and we await release of the flag. */
+			button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
+		} break;
 	}
 }
 
@@ -135,6 +140,13 @@ void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but) {
 	but->selsta = but->selend = but->offset = 0;
 
 	MEM_SAFE_FREE(but->active);
+}
+
+void ui_but_active_free(struct rContext *C, uiBut *but) {
+	if (but->active) {
+		uiHandleButtonData *data = but->active;
+		ui_do_but_activate_exit(C, data->region, but);
+	}
 }
 
 ROSE_STATIC void ui_but_activate(struct rContext *C, ARegion *region, uiBut *but) {
@@ -326,6 +338,12 @@ ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but
 	switch (evt->type) {
 		case MOUSEMOVE: {
 			ui_textedit_cursor_select(but, data, evt->mouse_xy[0]);
+			
+			if (data->selini < 0) {
+				if (!ui_but_contains_px(but, data->region, evt->mouse_xy)) {
+					ui_do_but_activate_exit(C, data->region, but);
+				}
+			}
 		} break;
 		case LEFTMOUSE: {
 			ui_textedit_cursor_select(but, data, evt->mouse_xy[0]);
@@ -357,11 +375,7 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 			
 			bool is_press_in_button = false;
 			if (ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
-				float mx = evt->mouse_xy[0];
-				float my = evt->mouse_xy[1];
-				ui_window_to_block_fl(data->region, block, &mx, &my);
-
-				if (ui_but_contains_pt(but, mx, my)) {
+				if (ui_but_contains_px(but, data->region, evt->mouse_xy)) {
 					is_press_in_button = true;
 				}
 			}
@@ -467,15 +481,6 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 	int retval = WM_UI_HANDLER_CONTINUE;
 
 	uiHandleButtonData *data = but->active;
-
-	float x = evt->mouse_xy[0], y = evt->mouse_xy[1];
-	ui_window_to_block_fl(data->region, but->block, &x, &y);
-
-	if (ui_but_contains_pt(but, x, y) && ISMOUSE_BUTTON(evt->type)) {
-		if (ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
-			but->flag |= UI_SELECT;
-		}
-	}
 	
 	switch (data->state) {
 		case BUTTON_STATE_TEXT_EDITING: {
@@ -483,6 +488,11 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 		} break;
 		case BUTTON_STATE_TEXT_SELECTING: {
 			retval |= ui_do_but_textsel(C, but->block, but, but->active, evt);
+		} break;
+		case BUTTON_STATE_WAIT_RELEASE: {
+			if (!ui_but_contains_px(but, data->region, evt->mouse_xy)) {
+				ui_do_but_activate_exit(C, data->region, but);
+			}
 		} break;
 	}
 
@@ -493,13 +503,6 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 	switch (evt->type) {
 		case WINDEACTIVATE: {
 			ui_do_but_activate_exit(C, data->region, but);
-		} break;
-		default: {
-			if ((but->flag & UI_SELECT) == 0 || ELEM(but->type, UI_BTYPE_BUT, UI_BTYPE_TXT)) {
-				if (!ui_but_contains_pt(but, x, y)) {
-					ui_do_but_activate_exit(C, data->region, but);
-				}
-			}
 		} break;
 	}
 
@@ -519,15 +522,14 @@ ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, AR
 ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data) {
 	uiHandleButtonData *data = (uiHandleButtonData *)user_data;
 	
-	int retval = WM_UI_HANDLER_CONTINUE;
-	
 	if(data) {
 		uiBut *but = ui_region_find_active_but(data->region);
 		
-		retval |= ui_handle_button_event(C, evt, but);
+		ui_handle_button_event(C, evt, but);
 	}
 	
-	return retval;
+	/** This is a modal handler don't allow anything to interfere with us! */
+	return WM_UI_HANDLER_BREAK;
 }
 
 ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *user_data) {
@@ -557,17 +559,6 @@ void UI_region_handlers_add(ListBase *handlers) {
 	/** We just move the handler to another listbase, we don't need to call #ui_region_handler_remove. */
 	WM_event_remove_ui_handler(handlers, ui_region_handler, ui_region_handler_remove, NULL, false);
 	WM_event_add_ui_handler(NULL, handlers, ui_region_handler, ui_region_handler_remove, NULL, 0);
-}
-
-void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
-	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
-		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
-			if (but->active == NULL) {
-				continue;
-			}
-			ui_do_but_activate_exit(C, region, but);
-		}
-	}
 }
 
 /** \} */
