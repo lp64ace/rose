@@ -41,6 +41,10 @@ void LIB_rcti_translate(struct rcti *rect, int x, int y);
 
 bool LIB_rctf_isect(const rctf *src1, const rctf *src2, rctf *dest);
 bool LIB_rcti_isect(const rcti *src1, const rcti *src2, rcti *dest);
+bool LIB_rctf_isect_pt(const rctf *rect, const float x, const float y);
+bool LIB_rcti_isect_pt(const rcti *rect, const int x, const int y);
+bool LIB_rctf_isect_pt_v(const rctf *rect, const float v[2]);
+bool LIB_rcti_isect_pt_v(const rcti *rect, const int v[2]);
 
 void LIB_rctf_union(rctf *rct_a, const rctf *rct_b);
 void LIB_rcti_union(rcti *rct_a, const rcti *rct_b);

@@ -1,6 +1,9 @@
 #include "MEM_guardedalloc.h"
 
 #include "LIB_math_vector.h"
+#include "LIB_rect.h"
+
+#include "ED_screen.h"
 
 #include "WM_draw.h"
 #include "WM_handler.h"
@@ -88,17 +91,212 @@ void wm_event_free_and_remove_from_queue_if_valid(wmEvent *evt) {
 /** \name Main Methods
  * \{ */
 
+typedef enum eHandlerActionFlag {
+	WM_HANDLER_BREAK = 1 << 0,
+	WM_HANDLER_HANDLED = 1 << 1,
+	/** `WM_HANDLER_MODAL | WM_HANDLER_BREAK` means unhandled. */
+	WM_HANDLER_MODAL = 1 << 2,
+} eHandlerActionFlag;
+#define WM_HANDLER_CONTINUE ((eHandlerActionFlag)0)
+
+ROSE_INLINE void wm_region_mouse_co(struct rContext *C, wmEvent *event) {
+	ARegion *region = CTX_wm_region(C);
+	if (region) {
+		/* Compatibility convention. */
+		event->mouse_local[0] = event->mouse_xy[0] - region->winrct.xmin;
+		event->mouse_local[1] = event->mouse_xy[1] - region->winrct.ymin;
+	}
+	else {
+		/* These values are invalid (avoid odd behavior by relying on old #wmEvent.mouse_local values). */
+		event->mouse_local[0] = -1;
+		event->mouse_local[1] = -1;
+	}
+}
+
+ROSE_INLINE bool wm_event_always_pass(const wmEvent *evt) {
+	return ELEM(evt->type, WINDEACTIVATE);
+}
+
+ROSE_INLINE bool wm_event_inside_rect(const wmEvent *evt, const rcti *rect) {
+	if (wm_event_always_pass(evt) || LIB_rcti_isect_pt_v(rect, evt->mouse_xy)) {
+		return true;
+	}
+	return false;
+}
+
+ROSE_INLINE ScrArea *area_event_inside(struct rContext *C, const int xy[2]) {
+	wmWindow *win = CTX_wm_window(C);
+	Screen *screen = CTX_wm_screen(C);
+
+	if (screen) {
+		ED_screen_areas_iter(win, screen, area) {
+			if (LIB_rcti_isect_pt_v(&area->totrct, xy)) {
+				return area;
+			}
+		}
+	}
+	return NULL;
+}
+ROSE_INLINE ARegion *region_event_inside(struct rContext *C, const int xy[2]) {
+	Screen *screen = CTX_wm_screen(C);
+	ScrArea *area = CTX_wm_area(C);
+
+	if (screen && area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (LIB_rcti_isect_pt_v(&region->winrct, xy)) {
+				return region;
+			}
+		}
+	}
+	return NULL;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(struct rContext *C, wmEventHandler_UI *handler, wmEvent *event) {
+	ScrArea *area = CTX_wm_area(C);
+	ARegion *region = CTX_wm_region(C);
+	
+	if (handler->context.area) {
+		CTX_wm_area_set(C, handler->context.area);
+	}
+	if (handler->context.region) {
+		CTX_wm_region_set(C, handler->context.region);
+	}
+	
+	int retval = handler->handle_fn(C, event, handler->user_data);
+	
+	if (retval != WM_UI_HANDLER_BREAK) {
+		CTX_wm_area_set(C, area);
+		CTX_wm_region_set(C, region);
+	}
+	else {
+		CTX_wm_area_set(C, NULL);
+		CTX_wm_region_set(C, NULL);
+	}
+	
+	if (retval == WM_UI_HANDLER_BREAK) {
+		return WM_HANDLER_BREAK;
+	}
+	return WM_HANDLER_CONTINUE;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handlers_do(struct rContext *C, wmEvent *event, ListBase *handlers) {
+	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+	
+	if (handlers == NULL) {
+		return action;
+	}
+	
+	wmWindow *window = CTX_wm_window(C);
+	
+	LISTBASE_FOREACH_MUTABLE(wmEventHandler *, handler_base, handlers) {
+		if((handler_base->flag & WM_HANDLER_DO_FREE) != 0) {
+			/* Pass. */
+		}
+		else if(handler_base->poll == NULL || handler_base->poll(CTX_wm_region(C), event)) {
+			if (handler_base->flag & WM_HANDLER_BLOCKING) {
+				action |= WM_HANDLER_BREAK;
+			}
+			
+			if (handler_base->type == WM_HANDLER_TYPE_UI) {
+				wmEventHandler_UI *handler = (wmEventHandler_UI *)handler_base;
+				ROSE_assert(handler->handle_fn != NULL);
+				
+				action |= wm_handler_ui_call(C, handler, event);
+			}
+			else {
+				ROSE_assert_unreachable();
+			}
+		}
+		
+		if ((action & WM_HANDLER_BREAK) != 0) {
+			break;
+		}
+			
+		if(LIB_haslink(handlers, handler_base)) {
+			if((handler_base->flag & WM_HANDLER_DO_FREE) != 0) {
+				LIB_remlink(handlers, handler_base);
+				MEM_freeN(handler_base);
+			}
+		}
+	}
+	
+	return action;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_event_do_region_handlers(struct rContext *C, wmEvent *event, ARegion *region) {
+	CTX_wm_region_set(C, region);
+	wm_region_mouse_co(C, event);
+	return wm_handlers_do(C, event, &region->handlers);
+}
+
+ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(struct rContext *C, wmEvent *event, ScrArea *area) {
+	if (wm_event_always_pass(event)) {
+		eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			action |= wm_event_do_region_handlers(C, event, region);
+		}
+		return action;
+	}
+	
+	ARegion *region_hovered = ED_area_find_region_xy_visual(area, RGN_TYPE_ANY, event->mouse_xy);
+	if (!region_hovered) {
+		return WM_HANDLER_CONTINUE;
+	}
+	return wm_event_do_region_handlers(C, event, region_hovered);
+}
+
 void WM_do_handlers(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	LISTBASE_FOREACH_MUTABLE(wmWindow *, window, &wm->windows) {
 		wmEvent *evt;
 		while (evt = (wmEvent *)window->event_queue.first) {
+			eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+			
 			CTX_wm_window_set(C, window);
+			
+			/* We let modal handlers get active area/region. */
+			CTX_wm_area_set(C, area_event_inside(C, evt->mouse_xy));
+			CTX_wm_region_set(C, region_event_inside(C, evt->mouse_xy));
 
 			wm_window_make_drawable(wm, window);
+			
+			wm_region_mouse_co(C, evt);
 
-			// dispatch the events to the handlers...
+			/* First we do priority handlers, modal + some limited key-maps. */
+			action |= wm_handlers_do(C, evt, &window->modalhandlers);
+			
+			Screen *screen = WM_window_screen_get(window);
+			if ((action & WM_HANDLER_BREAK) == 0) {
+				if (evt->type == MOUSEMOVE) {
+					ED_screen_set_active_region(C, window, evt->mouse_xy);
+				}
+				
+				ED_screen_areas_iter(window, screen, area) {
+					if (wm_event_inside_rect(evt, &area->totrct)) {
+						CTX_wm_area_set(C, area);
+						
+						action |= wm_event_do_handlers_area_regions(C, evt, area);
+						
+						CTX_wm_region_set(C, NULL);
+						if ((action & WM_HANDLER_BREAK) == 0) {
+							wm_region_mouse_co(C, evt);
+							action |= wm_handlers_do(C, evt, &area->handlers);
+						}
+						CTX_wm_area_set(C, NULL);
+					}
+				}
+				
+				if ((action & WM_HANDLER_BREAK) == 0) {
+					CTX_wm_area_set(C, area_event_inside(C, evt->mouse_xy));
+					CTX_wm_region_set(C, region_event_inside(C, evt->mouse_xy));
+					
+					wm_region_mouse_co(C, evt);
+					
+					action |= wm_handlers_do(C, evt, &window->handlers);
+				}
+			}
 
 			if (CTX_wm_window(C) == NULL) {
 				wm_event_free_and_remove_from_queue_if_valid(evt);
@@ -211,6 +409,43 @@ ROSE_STATIC bool wm_event_is_ignorable_key_press(const wmWindow *win, const wmEv
 	return wm_event_is_same_key_press((wmEvent *)win->event_queue.last, evt);
 }
 
+ROSE_STATIC void wm_cursor_position_to_ghost_screen_coords(wmWindow *window, int *x, int *y) {
+	*y = window->sizey - *y - 1;
+}
+
+void wm_event_add_tiny_window_activate(WindowManager *wm, wmWindow *window, bool activate) {
+	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
+	memcpy(evt, event_state, sizeof(wmEvent));
+	evt->flag = 0;
+
+	evt->prev_type = evt->type;
+	evt->prev_value = evt->value;
+	
+	if ((event_state->type || event_state->value) && !(ISKEYBOARD_OR_BUTTON(event_state->type) || (event_state->type == EVENT_NONE))) {
+		/** Event state should only keep information about keyboard or buttons. */
+		ROSE_assert_unreachable();
+	}
+	if ((event_state->prev_type || event_state->prev_value) && !(ISKEYBOARD_OR_BUTTON(event_state->prev_type) || (event_state->prev_type == EVENT_NONE))) {
+		/** Event state should only keep information about keyboard or buttons. */
+		ROSE_assert_unreachable();
+	}
+	
+	evt->mouse_xy[0] = -1;
+	evt->mouse_xy[1] = -1;
+	evt->value = KM_NOTHING;
+	
+	if(activate) {
+		// evt->type = WINACTIVATE;
+		// wm_event_add(window, evt);
+	}
+	else {
+		evt->type = WINDEACTIVATE;
+		wm_event_add(window, evt);
+	}
+
+	memset(event_state, 0, sizeof(wmEvent));
+}
+
 void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y, double time) {
 	ROSE_assert(ELEM(type, WTK_EVT_MOUSEMOVE, WTK_EVT_MOUSESCROLL, WTK_EVT_BUTTONDOWN, WTK_EVT_BUTTONUP));
 
@@ -234,6 +469,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 		case WTK_EVT_MOUSEMOVE: {
 			evt->mouse_xy[0] = x;
 			evt->mouse_xy[1] = y;
+			wm_cursor_position_to_ghost_screen_coords(window, &evt->mouse_xy[0], &evt->mouse_xy[1]);
 
 			evt->type = MOUSEMOVE;
 			evt->value = KM_NOTHING;
@@ -247,6 +483,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 		case WTK_EVT_BUTTONUP: {
 			evt->mouse_xy[0] = x;
 			evt->mouse_xy[1] = y;
+			wm_cursor_position_to_ghost_screen_coords(window, &evt->mouse_xy[0], &evt->mouse_xy[1]);
 
 			evt->type = convert_btn(button);
 			if (evt->type == EVENT_NONE) {
@@ -308,13 +545,13 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 		case WTK_EVT_KEYDOWN:
 		case WTK_EVT_KEYUP: {
 			evt->type = convert_key(key);
-			if (evt->type == EVENT_NONE) {
-				break;
-			}
 			SET_FLAG_FROM_TEST(evt->flag, repeat, WM_EVENT_IS_REPEAT);
 
 			if (type == WTK_EVT_KEYDOWN) {
 				memcpy(evt->input, utf8, sizeof(char[4]));
+				if ((evt->input[0] < 32 && evt->input[0] > 0) || (evt->input[0] == 127)) {
+					evt->input[0] = '\0';
+				}
 				evt->value = KM_PRESS;
 			}
 			else {
@@ -340,7 +577,9 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 				} break;
 			}
 
-			wm_event_state_update_and_click_set(evt, event_time, event_state, &window->prev_press_event_time, type);
+			if (evt->type != EVENT_NONE) {
+				wm_event_state_update_and_click_set(evt, event_time, event_state, &window->prev_press_event_time, type);
+			}
 
 			if (!wm_event_is_ignorable_key_press(window, evt)) {
 				wm_event_add(window, evt);

@@ -33,6 +33,7 @@ ScrArea *ED_screen_areas_iter_first(const wmWindow *win, const Screen *screen) {
 	}
 	return ED_screen_areas_iter_next(screen, global_area);
 }
+
 ScrArea *ED_screen_areas_iter_next(const Screen *screen, const ScrArea *area) {
 	if (!area->global) {
 		return area->next;
@@ -69,6 +70,7 @@ ROSE_STATIC void screen_refresh(struct rContext *C, WindowManager *wm, wmWindow 
 	screen->winid = window->winid;
 	screen->do_refresh = false;
 }
+
 void ED_screen_refresh(struct rContext *C, WindowManager *wm, wmWindow *window) {
 	screen_refresh(C, wm, window, true);
 }
@@ -101,6 +103,7 @@ ROSE_INLINE void screen_global_area_refresh(wmWindow *window, Screen *screen, in
 		screen->do_refresh = true;
 	}
 }
+
 ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *screen) {
 	const int size = PIXELSIZE * UI_UNIT_Y;
 	rcti rect;
@@ -110,6 +113,7 @@ ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *scr
 
 	screen_global_area_refresh(window, screen, SPACE_TOPBAR, GLOBAL_AREA_ALIGN_TOP, &rect, size, size, size);
 }
+
 ROSE_INLINE void screen_global_statusbar_area_refresh(wmWindow *window, Screen *screen) {
 	const int size_min = 1;
 	const int size_max = PIXELSIZE * UI_UNIT_Y;

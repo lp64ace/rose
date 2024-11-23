@@ -1,4 +1,4 @@
-#include "MEM_guardedalloc.h"
+﻿#include "MEM_guardedalloc.h"
 
 #include "DNA_screen_types.h"
 #include "DNA_space_types.h"
@@ -8,6 +8,9 @@
 
 #include "ED_screen.h"
 #include "ED_space_api.h"
+
+#include "UI_interface.h"
+#include "UI_resource.h"
 
 #include "LIB_listbase.h"
 #include "LIB_string.h"
@@ -48,7 +51,20 @@ ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
  * \{ */
 
 void view3d_main_region_draw(struct rContext *C, ARegion *region) {
-	GPU_clear_color(0.75f, 0.75f, 0.7f, 1.0f);
+	float back[4];
+	UI_GetThemeColor4fv(TH_BACK, back);
+	
+	GPU_clear_color(back[0], back[1], back[2], back[3]);
+
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "block-left"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
+		uiLayout *layout = UI_layout_row(root, 1);
+		uiDefBut(block, UI_BTYPE_BUT, "Button", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_TXT, "Text", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_EDIT, "Edit", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+		UI_block_end(C, block);
+	}
 }
 
 void view3d_main_region_init(ARegion *region) {

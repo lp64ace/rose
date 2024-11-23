@@ -5,6 +5,7 @@
 #include "DNA_windowmanager_types.h"
 
 #include "ED_screen.h"
+
 #include "UI_interface.h"
 
 #include "KER_screen.h"
@@ -13,6 +14,7 @@
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
+#include "WM_handler.h"
 #include "WM_window.h"
 
 #include "screen_intern.h"
@@ -363,7 +365,7 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	memcpy(&overlap_rect, &area->totrct, sizeof(rcti));
 	region_rect_recursive(area, (ARegion *)area->regionbase.first, &rect, &overlap_rect, 0);
 	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
-
+	
 	if (area->type->init) {
 		area->type->init(wm, area);
 	}
@@ -375,14 +377,18 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 			if (region->type->init) {
 				region->type->init(region);
 			}
+			
+			UI_region_handlers_add(&region->handlers);
 		}
 		else {
 			UI_blocklist_free(NULL, region);
 		}
 	}
 }
+
 void ED_area_exit(struct rContext *C, ScrArea *area) {
 	WindowManager *wm = CTX_wm_manager(C);
+	wmWindow *window = CTX_wm_window(C);
 	ScrArea *prevsa = CTX_wm_area(C);
 
 	if (area->type && area->type->exit) {
@@ -394,6 +400,9 @@ void ED_area_exit(struct rContext *C, ScrArea *area) {
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		ED_region_exit(C, region);
 	}
+	
+	WM_event_remove_handlers(C, &area->handlers);
+	WM_event_modal_handler_area_replace(window, area, NULL);
 
 	CTX_wm_area_set(C, prevsa);
 }
@@ -401,6 +410,7 @@ void ED_area_exit(struct rContext *C, ScrArea *area) {
 bool ED_area_is_global(const ScrArea *area) {
 	return area->global != NULL;
 }
+
 int ED_area_global_size_y(const ScrArea *area) {
 	ROSE_assert(ED_area_is_global(area));
 	return PIXELSIZE * area->global->height;
@@ -430,6 +440,7 @@ struct ScrArea *screen_area_create_with_geometry_ex(struct ScrAreaMap *areamap, 
 
 	return screen_addarea_ex(areamap, bottom_left, top_left, top_right, bottom_right, spacetype);
 }
+
 struct ScrArea *screen_area_create_with_geometry(struct Screen *screen, const rcti *rect, int spacetype) {
 	return screen_area_create_with_geometry_ex(AREAMAP_FROM_SCREEN(screen), rect, spacetype);
 }

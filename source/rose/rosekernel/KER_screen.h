@@ -37,6 +37,8 @@ typedef struct SpaceType {
 
 	void (*init)(struct WindowManager *wm, struct ScrArea *area);
 	void (*exit)(struct WindowManager *wm, struct ScrArea *area);
+	/** Called when the mouse exits the area. */
+	void (*deactivate)(struct ScrArea *area);
 
 	/* region type definitions */
 	ListBase regiontypes;

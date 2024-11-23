@@ -1,3 +1,5 @@
+#include "DNA_userdef_types.h"
+
 #include "KER_global.h"
 #include "KER_main.h"
 #include "KER_rose.h"
@@ -5,6 +7,15 @@
 #include <string.h>
 
 Global G;
+
+extern const Theme U_theme_default;
+
+UserDef U = {
+	.themes = {
+		.first = (Link *)&U_theme_default,
+		.last = (Link *)&U_theme_default,
+	},
+};
 
 /* -------------------------------------------------------------------- */
 /** \name Global Main Methods

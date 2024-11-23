@@ -88,6 +88,66 @@ void tWindowManager::Poll() {
 	PollGamepads();
 }
 
+bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) const {
+	if (selection || !buffer) {
+		return false;
+	}
+
+	if (OpenClipboard(NULL)) {
+		EmptyClipboard();
+
+		INT ret = ::MultiByteToWideChar(CP_UTF8, 0, buffer, length, NULL, 0);
+
+		HGLOBAL clipbuffer = GlobalAlloc(GMEM_MOVEABLE, sizeof(wchar_t) * (ret + 1));
+		if (clipbuffer) {
+			wchar_t *data = (wchar_t *)GlobalLock(clipbuffer);
+
+			if (::MultiByteToWideChar(CP_UTF8, 0, buffer, length, data, ret + 1) < 0) {
+				data[0] = '\0';
+			}
+
+			GlobalUnlock(clipbuffer);
+			SetClipboardData(CF_UNICODETEXT, clipbuffer);
+		}
+
+		CloseClipboard();
+	}
+
+	return true;
+}
+
+bool tWindowManager::GetClipboard(char **r_buffer, unsigned int *r_length, bool selection) const {
+	if (IsClipboardFormatAvailable(CF_UNICODETEXT) && OpenClipboard(NULL)) {
+		wchar_t *buffer;
+		HANDLE handle = GetClipboardData(CF_UNICODETEXT);
+		if (!handle) {
+			CloseClipboard();
+			return false;
+		}
+		buffer = (wchar_t *)GlobalLock(handle);
+		if (!buffer) {
+			CloseClipboard();
+			return false;
+		}
+
+		INT ret = ::WideCharToMultiByte(CP_UTF8, 0, buffer, -1, NULL, 0, NULL, NULL);
+
+		*r_buffer = static_cast<char *>(MEM_mallocN(ret + 1, "win32::clipboard"));
+		*r_length = static_cast<unsigned int>(ret);
+
+		if (::WideCharToMultiByte(CP_UTF8, 0, buffer, ret, *r_buffer, *r_length, NULL, NULL) < 0) {
+			r_buffer[0] = '\0';
+		}
+
+		*r_length = strlen(*r_buffer);
+
+		GlobalUnlock(handle);
+		CloseClipboard();
+
+		return true;
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -950,10 +1010,27 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 				manager->MoveEvent(window, window->posx, window->posy);
 			}
 		} break;
+		case WM_ACTIVATE: {
+			if (LOWORD(wparam) == WA_INACTIVE) {
+				if (manager->ActivateEvent) {
+					manager->ActivateEvent(window, false);
+				}
+				window->active_ = false;
+			} else {
+				if (manager->ActivateEvent) {
+					manager->ActivateEvent(window, true);
+				}
+				window->active_ = true;
+			}
+		} break;
 		case WM_INPUTLANGCHANGE: {
 			manager->keyboard_layout_ = (HKL)lparam;
 		} break;
 		case WM_INPUT: {
+			if(!window->active_) {
+				break;
+			}
+			
 			RAWINPUT raw;
 			UINT raw_size = sizeof(RAWINPUT);
 
@@ -985,10 +1062,12 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 					const BOOL has_ctrl = has_state && state[VK_CONTROL] & 0x80;
 					const BOOL has_alt = has_state && state[VK_MENU] & 0x80;
 
-					/** No text with control key pressed (Alt can be used to insert special characters though!). */
-					if ((!has_ctrl && has_alt) || ::MapVirtualKeyW(virtual_key, MAPVK_VK_TO_CHAR) != 0) {
+					if (has_ctrl && !has_alt) {
+						/** No text with control key pressed (Alt can be used to insert special characters though!). */
+					}
+					else if (::MapVirtualKeyW(virtual_key, MAPVK_VK_TO_CHAR) != 0) {
 						INT ret;
-						if ((ret = ::ToUnicodeEx(virtual_key, raw.data.keyboard.MakeCode, state, utf16, 2, 0, manager->keyboard_layout_))) {
+						if ((ret = ::ToUnicodeEx(virtual_key, raw.data.keyboard.MakeCode, state, utf16, 2, 0, manager->keyboard_layout_)) > 0) {
 							ret = ::WideCharToMultiByte(CP_UTF8, 0, utf16, ret, utf8, sizeof(utf8), NULL, NULL);
 							if (0 <= ret && ret < sizeof(utf8) / sizeof(utf8[0])) {
 								utf8[ret] = '\0';
@@ -1008,6 +1087,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONDOWN:
 		case WM_MBUTTONDOWN:
 		case WM_RBUTTONDOWN: {
+			if(!window->active_) {
+				break;
+			}
+			
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1032,6 +1115,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONUP:
 		case WM_MBUTTONUP:
 		case WM_RBUTTONUP: {
+			if(!window->active_) {
+				break;
+			}
+			
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1054,6 +1141,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			}
 		} break;
 		case WM_MOUSEMOVE: {
+			if(!window->active_) {
+				break;
+			}
+			
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1062,6 +1153,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			}
 		} break;
 		case WM_MOUSEWHEEL: {
+			if(!window->active_) {
+				break;
+			}
+			
 			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
 
 			if (manager->WheelEvent) {

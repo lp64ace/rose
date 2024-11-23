@@ -10,8 +10,11 @@
 extern "C" {
 #endif
 
+struct ARegion;
+struct ScrArea;
 struct rContext;
 struct wmEvent;
+struct wmWindow;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -74,6 +77,51 @@ enum {
 	KM_OSKEY = 1 << 3,
 };
 
+
+typedef bool (*EventHandlerPoll)(const struct ARegion *, const struct wmEvent *);
+
+typedef struct wmEventHandler {
+	struct wmEventHandler *prev, *next;
+	
+	int type;
+	int flag;
+	
+	EventHandlerPoll poll;
+} wmEventHandler;
+
+/** #wmHandler->type */
+enum {
+	WM_HANDLER_TYPE_UI = 1,
+};
+
+/** #wmHandler->flag */
+enum {
+	/** Handler tagged to be freed. */
+	WM_HANDLER_DO_FREE = 1 << 0,
+	/** After this handler all others are ignored. */
+	WM_HANDLER_BLOCKING = 1 << 1,
+};
+
+typedef int (*wmUIHandlerFunc)(struct rContext *C, const struct wmEvent *event, void *userdata);
+typedef void (*wmUIHandlerRemoveFunc)(struct rContext *C, void *userdata);
+
+#define WM_UI_HANDLER_CONTINUE 0
+#define WM_UI_HANDLER_BREAK 1
+
+typedef struct wmEventHandler_UI {
+	wmEventHandler head;
+	
+	wmUIHandlerFunc handle_fn;
+	wmUIHandlerRemoveFunc remove_fn;
+	/** Associated user data to call the handle function with. */
+	void *user_data;
+	
+	struct {
+		struct ScrArea *area;
+		struct ARegion *region;
+	} context;
+} wmEventHandler_UI;
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -81,6 +129,19 @@ enum {
  * \{ */
 
 void WM_do_handlers(struct rContext *C);
+void WM_event_remove_handlers(struct rContext *C, ListBase *handlers);
+void WM_event_modal_handler_area_replace(struct wmWindow *win, const struct ScrArea *old_area, struct ScrArea *new_area);
+void WM_event_modal_handler_region_replace(struct wmWindow *win, const struct ARegion *old_region, struct ARegion *new_region);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Handle Methods
+ * \{ */
+
+wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *userdata, int flag);
+void WM_event_remove_ui_handler(ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, bool postpone);
+void WM_event_free_ui_handler_all(struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn);
 
 /** \} */
 

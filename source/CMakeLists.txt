@@ -7,6 +7,7 @@ set(DNA_TYPEDEF_HEADERS
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_listbase.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_vector_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_space_types.h
+	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_userdef_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_screen_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_windowmanager_types.h
 )

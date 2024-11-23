@@ -3,7 +3,9 @@
 
 #include "DNA_windowmanager_types.h"
 
-#include "LIB_sys_types.h"
+#include "LIB_utildefines.h"
+
+#include "WM_handler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +28,15 @@ void WM_exit(struct rContext *C);
  * \{ */
 
 void WM_get_projection_matrix(float r_mat[4][4], const struct rcti *rect);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Clipboard
+ * \{ */
+
+char *WM_clipboard_text_get_firstline(struct rContext *C, bool selection, unsigned int *r_len);
+void WM_clipboard_text_set(struct rContext *C, const char *buf, bool selection);
 
 /** \} */
 

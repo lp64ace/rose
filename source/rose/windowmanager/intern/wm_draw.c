@@ -175,6 +175,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 
 	WindowManager *wm = CTX_wm_manager(C);
 
+	CTX_wm_screen_set(C, screen);
 	ED_screen_areas_iter(window, screen, area) {
 		CTX_wm_area_set(C, area);
 
@@ -204,6 +205,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 
 		CTX_wm_area_set(C, NULL);
 	}
+	CTX_wm_screen_set(C, NULL);
 
 	/** Draw menus into their own frame-buffer. */
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {

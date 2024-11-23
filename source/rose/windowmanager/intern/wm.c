@@ -1,3 +1,5 @@
+#include "MEM_guardedalloc.h"
+
 #include "KER_context.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
@@ -17,12 +19,12 @@
 #include "GPU_init_exit.h"
 
 #include "LIB_listbase.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "RFT_api.h"
 
 #include <oswin.h>
-#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
@@ -90,6 +92,10 @@ ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, 
 		return;
 	}
 
+	if (WTK_window_is_minimized(handle)) {
+		return;
+	}
+
 	if (wm_window_update_size(window, x, y)) {
 		/** Resize events block the main loop so we need to manually draw the window. */
 		ED_screen_refresh(C, wm, window);
@@ -107,11 +113,28 @@ ROSE_INLINE void wm_handle_move_event(struct WTKWindow *handle, int x, int y, vo
 		return;
 	}
 
+	if (WTK_window_is_minimized(handle)) {
+		return;
+	}
+
 	if (wm_window_update_pos(window, x, y)) {
 		/** Move events block the main loop so we need to manually draw the window. */
 		ED_screen_refresh(C, wm, window);
 		WM_do_draw(C);
 	}
+}
+
+ROSE_INLINE void wm_handle_activate_event(struct WTKWindow *handle, bool activate, void *userdata) {
+	struct rContext *C = (struct rContext *)userdata;
+
+	WindowManager *wm = CTX_wm_manager(C);
+
+	wmWindow *window = wm_window_find(wm, handle);
+	if (!window) {
+		return;
+	}
+
+	wm_event_add_tiny_window_activate(wm, window, activate);
 }
 
 ROSE_INLINE void wm_handle_mouse_event(struct WTKWindow *handle, int x, int y, double time, void *userdata) {
@@ -210,6 +233,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_destroy_callback(wm->handle, wm_handle_destroy_event, C);
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
 	WTK_window_manager_move_callback(wm->handle, wm_handle_move_event, C);
+	WTK_window_manager_activate_callback(wm->handle, wm_handle_activate_event, C);
 	WTK_window_manager_mouse_callback(wm->handle, wm_handle_mouse_event, C);
 	WTK_window_manager_wheel_callback(wm->handle, wm_handle_wheel_event, C);
 	WTK_window_manager_button_down_callback(wm->handle, wm_handle_button_down_event, C);
@@ -260,6 +284,34 @@ void WM_exit(struct rContext *C) {
 
 	CTX_free(C);
 	exit(0);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Clipboard
+ * \{ */
+
+char *WM_clipboard_text_get_firstline(struct rContext *C, bool selection, unsigned int *r_len) {
+	WindowManager *wm = CTX_wm_manager(C);
+
+	char *ret;
+	if (!WTK_get_clipboard(wm->handle, &ret, r_len, selection)) {
+		MEM_SAFE_FREE(ret);
+	}
+	else {
+		const char *itr = LIB_strnext(ret, ret + *r_len, ret, '\n');
+		ret[itr - ret] = '\0';
+	}
+	return ret;
+}
+
+void WM_clipboard_text_set(struct rContext *C, const char *buf, bool selection) {
+	WindowManager *wm = CTX_wm_manager(C);
+
+	if (!WTK_set_clipboard(wm->handle, buf, LIB_strlen(buf), selection)) {
+		/** Handle error? */
+	}
 }
 
 /** \} */

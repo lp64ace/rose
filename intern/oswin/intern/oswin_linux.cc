@@ -34,7 +34,7 @@ tWindowManager::~tWindowManager() {
 		XCloseIM(xim_);
 	}
 #endif
-	if(this->display_) {
+	if (this->display_) {
 		XCloseDisplay(this->display_);
 	}
 	
@@ -51,17 +51,17 @@ tWindowManager::~tWindowManager() {
 tWindowManager *tWindowManager::Init(const char *application) {
 	tWindowManager *manager = new tWindowManager;
 
-	if(!(manager->display_ = XOpenDisplay(NULL))) {
+	if (!(manager->display_ = XOpenDisplay(NULL))) {
 		delete manager;
 		return nullptr;
 	}
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-	if(!manager->InitXIM()) {
+	if (!manager->InitXIM()) {
 		// delete manager;
 		// return nullptr;
 	}
 #endif
-	if(!manager->InitKeyboardDescription()) {
+	if (!manager->InitKeyboardDescription()) {
 		delete manager;
 		return nullptr;
 	}
@@ -125,13 +125,13 @@ void tWindowManager::Poll() {
          *                               +%%- :%%:
          *                                .%#  %-
 		 */
-		if(evt.type == FocusIn || evt.type == KeyPress) {
-			if(!this->xim_) {
+		if (evt.type == FocusIn || evt.type == KeyPress) {
+			if (!this->xim_) {
 				this->InitXIM();
 			}
-			if(this->xim_) {
+			if (this->xim_) {
 				tWindow *window = this->GetWindowByHandle(evt.xany.window);
-				if(window && !window->xic_ && window->InitXIC(this)) {
+				if (window && !window->xic_ && window->InitXIC(this)) {
 					if (evt.type == KeyPress) {
 						XSetICFocus(window->xic_);
 					}
@@ -141,6 +141,14 @@ void tWindowManager::Poll() {
 #endif
 		EventProcedure(&evt);
 	}
+}
+
+bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) const {
+	return false;
+}
+
+bool tWindowManager::GetClipboard(char **buffer, unsigned int *length, bool selection) const {
+	return false;
 }
 
 /** \} */
@@ -159,16 +167,16 @@ tWindow *tWindowManager::GetWindowByHandle(Window handle) const {
 }
 
 bool tWindowManager::InitExtensions() {
-	if(!(glxCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((const unsigned char*)"glXCreateContextAttribsARB"))) {
+	if (!(glxCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((const unsigned char*)"glXCreateContextAttribsARB"))) {
 		return false;
 	}
-	if(!(glxMakeContextCurrent = (PFNGLXMAKECONTEXTCURRENTPROC)glXGetProcAddress((const unsigned char*)"glXMakeContextCurrent"))) {
+	if (!(glxMakeContextCurrent = (PFNGLXMAKECONTEXTCURRENTPROC)glXGetProcAddress((const unsigned char*)"glXMakeContextCurrent"))) {
 		return false;
 	}
-	if(!(glxSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddress((const unsigned char*)"glXSwapIntervalEXT"))) {
+	if (!(glxSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddress((const unsigned char*)"glXSwapIntervalEXT"))) {
 		// return false;
 	}
-	if(!(glxChooseFBConfig = (PFNGLXCHOOSEFBCONFIGPROC)glXGetProcAddress((const unsigned char*)"glXChooseFBConfig"))) {
+	if (!(glxChooseFBConfig = (PFNGLXCHOOSEFBCONFIGPROC)glXGetProcAddress((const unsigned char*)"glXChooseFBConfig"))) {
 		return false;
 	}
 	return true;
@@ -184,7 +192,7 @@ bool tWindowManager::InitKeyboardDescription() {
 		XkbSetDetectableAutoRepeat(this->display_, true, nullptr);
 		
 		this->xkb_descr_ = XkbGetMap(this->display_, 0, XkbUseCoreKbd);
-		if(this->xkb_descr_) {
+		if (this->xkb_descr_) {
 			XkbGetNames(this->display_, XkbKeyNamesMask, this->xkb_descr_);
 			XkbGetControls(this->display_, XkbPerKeyRepeatMask | XkbRepeatKeysMask, this->xkb_descr_);
 			return true;
@@ -343,17 +351,17 @@ tWindow::tWindow(WindowSetting settings) : settings(settings) {
 }
 
 tWindow::~tWindow() {
-	if(this->visual_info_) {
+	if (this->visual_info_) {
 		// Do we need to free this?
 	}
-	if(this->window_handle_) {
+	if (this->window_handle_) {
 		XDestroyWindow(this->display_, this->window_handle_);
 	}
 	MEM_SAFE_FREE(this->visual_attribs_);
 }
 
 bool tWindow::Init(tWindowManager *manager) {
-	if(!manager->display_) {
+	if (!manager->display_) {
 		return false;
 	}
 	
@@ -381,7 +389,7 @@ bool tWindow::Init(tWindowManager *manager) {
 		this->visual_info_ = glXChooseVisual(this->display_, XDefaultScreen(this->display_), this->visual_attribs_);
 	}
 	
-	if(!this->visual_info_) {
+	if (!this->visual_info_) {
 		return false;
 	}
 	
@@ -409,7 +417,7 @@ bool tWindow::Init(tWindowManager *manager) {
 		&this->window_attributes_
 	);
 	
-	if(!this->window_handle_) {
+	if (!this->window_handle_) {
 		return false;
 	}
 	
@@ -429,7 +437,7 @@ bool tWindow::Init(tWindowManager *manager) {
 	XSetWMProtocols(this->display_, this->window_handle_, &this->AtomClose, 1);
 	
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-	if(!this->InitXIC(manager)) {
+	if (!this->InitXIC(manager)) {
 		return false;
 	}
 #endif
@@ -448,7 +456,7 @@ bool tWindow::Init(tWindowManager *manager) {
 	this->clientx = attributes.width;
 	this->clienty = attributes.height;
 	
-	if(manager->glxSwapIntervalEXT != nullptr) {
+	if (manager->glxSwapIntervalEXT != nullptr) {
 		manager->glxSwapIntervalEXT(this->display_, this->window_handle_, 0);
 	}
 	
@@ -458,11 +466,11 @@ bool tWindow::InitContext(tWindowManager *manager) {
 	GLXContext dummyContext = glXCreateContext(this->display_, this->visual_info_, 0, true);
 	glXMakeCurrent(this->display_, this->window_handle_, dummyContext);
 	
-	if(!manager->InitExtensions()) {
+	if (!manager->InitExtensions()) {
 		return false;
 	}
 	
-	if(!InitPixelConfig(manager)) {
+	if (!InitPixelConfig(manager)) {
 		return false;
 	}
 	
@@ -528,7 +536,7 @@ bool tWindow::InitPixelConfig(tWindowManager *manager) {
 	int screen = XDefaultScreen(this->display_);
 	GLXFBConfig* configs = manager->glxChooseFBConfig(this->display_, screen, attribs, &count);
 	
-	if(!count) {
+	if (!count) {
 		return false;
 	}
 
@@ -636,7 +644,7 @@ bool tWindow::InitXIC(tWindowManager *manager) {
 		nullptr
 	);
 	
-	if(!this->xic_) {
+	if (!this->xic_) {
 		return false;
 	}
 	
@@ -669,7 +677,7 @@ static int convert_key(const KeySym x11_key) {
 	else if ((x11_key >= XK_0) && (x11_key <= XK_9)) {
 		key = (x11_key - XK_0 + WTK_KEY_0);
 	}
-	else if((x11_key >= XK_F1) && (x11_key <= XK_F24)) {
+	else if ((x11_key >= XK_F1) && (x11_key <= XK_F24)) {
 		key = (x11_key - XK_F1 + WTK_KEY_F1);
 	}
 	else {
@@ -786,7 +794,7 @@ static unsigned char bit_is_on(const unsigned char *ptr, int bit) {
 void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 	rose::tiny_window::tWindow *window = this->GetWindowByHandle(evt->xany.window);
 	
-	if(!window) {
+	if (!window) {
 		return;
 	}
 	
@@ -874,6 +882,10 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 		
 		case KeyPress:
 		case KeyRelease: {
+			if(!window->active_) {
+				break;
+			}
+			
 			XKeyEvent *xke = &(evt->xkey);
 
 			char *utf8_buf = nullptr;
@@ -915,9 +927,9 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 			 */
 			const unsigned int mode_switch_mask = XkbKeysymToModifiers(xke->display, XK_Mode_switch);
 			const unsigned int number_hack_forbidden_kmods_mask = mode_switch_mask | ShiftMask;
-			if((xke->keycode >= 10 && xke->keycode < 20) && ((xke->state & number_hack_forbidden_kmods_mask) == 0)) {
+			if ((xke->keycode >= 10 && xke->keycode < 20) && ((xke->state & number_hack_forbidden_kmods_mask) == 0)) {
 				key_sym = XLookupKeysym(xke, ShiftMask);
-				if(!(XK_0 <= key_sym && key_sym <= XK_9)) {
+				if (!(XK_0 <= key_sym && key_sym <= XK_9)) {
 					key_sym = XLookupKeysym(xke, 0);
 				}
 			}
@@ -969,7 +981,7 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 					break;
 				default: {
 					int mkey_str = convert_key(key_sym_str);
-					if(mkey_str != WTK_KEY_UNKOWN) {
+					if (mkey_str != WTK_KEY_UNKOWN) {
 						mkey = mkey_str;
 					}
 				} break;
@@ -982,18 +994,28 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 			utf8_buf = utf8_array;
 
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-			if(xke->type == KeyPress) {
+			if (xke->type == KeyPress) {
 				xic = window->xic_;
-				if(xic) {
+				if (xic) {
 					Status status;
 					
 					len = Xutf8LookupString(xic, xke, utf8_buf, sizeof(utf8_buf) - 5, &key_sym, &status);
-					utf8_buf[len] = '\0';
+					if (len >= 0) {
+						utf8_buf[len] = '\0';
+					}
+					else {
+						utf8_buf[0] = '\0';
+					}
 					
-					if(status == XBufferOverflow) {
+					if (status == XBufferOverflow) {
 						utf8_buf = (char *)MEM_mallocN(len + 5, "tiny_window::utf8_buf");
 						len = Xutf8LookupString(xic, xke, utf8_buf, len, &key_sym, &status);
-						utf8_buf[len] = '\0';
+						if (len >= 0) {
+							utf8_buf[len] = '\0';
+						}
+						else {
+							utf8_buf[0] = '\0';
+						}
 					}
 				
 					if (status == XLookupChars || status == XLookupBoth) {
@@ -1001,7 +1023,7 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 							utf8_buf[0] = '\0';
 						}
 					}
-					else if(status == XLookupKeySym) {
+					else if (status == XLookupKeySym) {
 						// This key doesn't have a text representation, it is a command key of some sort.
 					}
 					else {
@@ -1028,21 +1050,21 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 			switch(evt->type) {
 				case KeyPress: {
 					bool is_repeat_keycode = false;
-					if(this->xkb_descr_ != nullptr) {
-						if((xke->keycode < (XkbPerKeyBitArraySize << 3)) && bit_is_on(this->xkb_descr_->ctrls->per_key_repeat, xke->keycode)) {
+					if (this->xkb_descr_ != nullptr) {
+						if ((xke->keycode < (XkbPerKeyBitArraySize << 3)) && bit_is_on(this->xkb_descr_->ctrls->per_key_repeat, xke->keycode)) {
 							is_repeat_keycode = (this->keycode_last_repeat_key_ == xke->keycode);
 						}
 					}
 					this->keycode_last_repeat_key_ = xke->keycode;
 					
-					if(KeyDownEvent) {
+					if (KeyDownEvent) {
 						KeyDownEvent(window, mkey, is_repeat_keycode, utf8_buf, time);
 					}
 				} break;
 				case KeyRelease: {
 					this->keycode_last_repeat_key_ = -1;
 					
-					if(KeyUpEvent) {
+					if (KeyUpEvent) {
 						KeyUpEvent(window, mkey, time);
 					}
 				} break;
@@ -1054,21 +1076,25 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 		} break;
 		
 		case ButtonPress: {
+			if(!window->active_) {
+				break;
+			}
+			
 			double time = static_cast<double>(evt->xbutton.time) / 1000.0;
 			
 			switch(evt->xbutton.button) {
 				case 1: {
-					if(ButtonDownEvent) {
+					if (ButtonDownEvent) {
 						ButtonDownEvent(window, WTK_BTN_LEFT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 2: {
-					if(ButtonDownEvent) {
+					if (ButtonDownEvent) {
 						ButtonDownEvent(window, WTK_BTN_MIDDLE, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 3: {
-					if(ButtonDownEvent) {
+					if (ButtonDownEvent) {
 						ButtonDownEvent(window, WTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
@@ -1076,31 +1102,35 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 		} break;
 		
 		case ButtonRelease: {
+			if(!window->active_) {
+				break;
+			}
+			
 			double time = static_cast<double>(evt->xbutton.time) / 1000.0;
 			
 			switch(evt->xbutton.button) {
 				case 1: {
-					if(ButtonUpEvent) {
+					if (ButtonUpEvent) {
 						ButtonUpEvent(window, WTK_BTN_LEFT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 2: {
-					if(ButtonUpEvent) {
+					if (ButtonUpEvent) {
 						ButtonUpEvent(window, WTK_BTN_MIDDLE, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 3: {
-					if(ButtonUpEvent) {
+					if (ButtonUpEvent) {
 						ButtonUpEvent(window, WTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 4: {
-					if(WheelEvent) {
+					if (WheelEvent) {
 						WheelEvent(window, 0, 1, time);
 					}
 				} break;
 				case 5: {
-					if(WheelEvent) {
+					if (WheelEvent) {
 						WheelEvent(window, 0, -1, time);
 					}
 				} break;
@@ -1109,24 +1139,36 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 		
 		case FocusIn: {
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-			if(window->xic_) {
+			if (window->xic_) {
 				XSetICFocus(window->xic_);
 			}
 #endif
+			if(ActivateEvent) {
+				ActivateEvent(window, true);
+			}
+			window->active_ = true;
 		} break;
 		
 		case FocusOut: {
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-			if(window->xic_) {
+			if (window->xic_) {
 				XUnsetICFocus(window->xic_);
 			}
 #endif
+			if(ActivateEvent) {
+				ActivateEvent(window, false);
+			}
+			window->active_ = false;
 		} break;
 		
 		case MotionNotify: {
+			if(!window->active_) {
+				break;
+			}
+			
 			double time = static_cast<double>(evt->xmotion.time) / 1000.0;
 			
-			if(MouseEvent) {
+			if (MouseEvent) {
 				MouseEvent(window, evt->xmotion.x, evt->xmotion.y, time);
 			}
 		} break;
