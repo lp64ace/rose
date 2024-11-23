@@ -20,6 +20,15 @@ void WTK_window_manager_poll(WTKWindowManager *vmanager) {
 	manager->Poll();
 }
 
+bool WTK_set_clipboard(WTKWindowManager *vmanager, const char *buffer, unsigned int len, bool selection) {
+	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
+	return manager->SetClipboard(buffer, len, selection);
+}
+bool WTK_get_clipboard(WTKWindowManager *vmanager, char **r_buffer, unsigned int *r_len, bool selection) {
+	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
+	return manager->GetClipboard(r_buffer, r_len, selection);
+}
+
 void WTK_window_manager_destroy_callback(WTKWindowManager *vmanager, WTKDestroyCallbackFn fn, void *userdata) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	if (manager) {
@@ -47,6 +56,16 @@ void WTK_window_manager_move_callback(WTKWindowManager *vmanager, WTKMoveCallbac
 		/* clang-format off */
 		manager->MoveEvent = [=](tWindow *window, int x, int y) -> void {
 			fn(reinterpret_cast<WTKWindow *>(window), x, y, userdata);
+		};
+		/* clang-format on */
+	}
+}
+void WTK_window_manager_activate_callback(WTKWindowManager *vmanager, WTKActivateCallbackFn fn, void *userdata) {
+	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
+	if (manager) {
+		/* clang-format off */
+		manager->ActivateEvent = [=](tWindow *window, bool activate) -> void {
+			fn(reinterpret_cast<WTKWindow *>(window), activate, userdata);
 		};
 		/* clang-format on */
 	}

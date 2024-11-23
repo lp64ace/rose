@@ -25,8 +25,12 @@ set(SRC
 	
 	interface.c
 	interface_draw.c
+	interface_handlers.c
 	interface_layout.cc
 	interface_widgets.c
+	resources.c
+	
+	intern/userdef_theme_default.c
 	
 )
 

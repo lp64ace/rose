@@ -35,7 +35,11 @@ const char *LIB_str_find_prev_char_utf8(const char *p, const char *str_start);
 bool LIB_str_cursor_step_next_utf8(const char *str, int str_maxlen, int *pos);
 bool LIB_str_cursor_step_prev_utf8(const char *str, int str_maxlen, int *pos);
 
+void LIB_str_cursor_step_bounds_utf8(const char *p, int maxlen, int pos, int *left, int *right);
+
 unsigned int LIB_str_utf8_char_width_or_error(const char *p);
+unsigned int LIB_str_utf8_size_or_error(const char *p);
+
 unsigned int LIB_str_utf8_as_unicode_step_safe(const char *p, size_t length, size_t *r_index);
 
 /** \} */

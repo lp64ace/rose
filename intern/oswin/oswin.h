@@ -41,6 +41,9 @@ void WTK_window_manager_free(struct WTKWindowManager *);
  */
 void WTK_window_manager_poll(struct WTKWindowManager *);
 
+bool WTK_set_clipboard(struct WTKWindowManager *, const char *buffer, unsigned int len, bool selection);
+bool WTK_get_clipboard(struct WTKWindowManager *, char **r_buffer, unsigned int *r_len, bool selection);
+
 enum {
 	WTK_EVT_DESTROY = 1,
 	WTK_EVT_RESIZE,
@@ -58,6 +61,7 @@ enum {
 typedef void (*WTKDestroyCallbackFn)(struct WTKWindow *, void *userdata);
 typedef void (*WTKResizeCallbackFn)(struct WTKWindow *, unsigned int x, unsigned int y, void *userdata);
 typedef void (*WTKMoveCallbackFn)(struct WTKWindow *, int x, int y, void *userdata);
+typedef void (*WTKActivateCallbackFn)(struct WTKWindow *, bool activate, void *userdata);
 typedef void (*WTKMouseCallbackFn)(struct WTKWindow *, int x, int y, double time, void *userdata);
 typedef void (*WTKWheelCallbackFn)(struct WTKWindow *, int dx, int dy, double time, void *userdata);
 typedef void (*WTKButtonDownCallbackFn)(struct WTKWindow *, int key, int x, int y, double time, void *userdata);
@@ -217,6 +221,7 @@ enum {
 void WTK_window_manager_destroy_callback(struct WTKWindowManager *, WTKDestroyCallbackFn fn, void *userdata);
 void WTK_window_manager_resize_callback(struct WTKWindowManager *, WTKResizeCallbackFn fn, void *userdata);
 void WTK_window_manager_move_callback(struct WTKWindowManager *, WTKMoveCallbackFn fn, void *userdata);
+void WTK_window_manager_activate_callback(struct WTKWindowManager *, WTKActivateCallbackFn fn, void *userdata);
 void WTK_window_manager_mouse_callback(struct WTKWindowManager *, WTKMouseCallbackFn fn, void *userdata);
 void WTK_window_manager_wheel_callback(struct WTKWindowManager *, WTKWheelCallbackFn fn, void *userdata);
 void WTK_window_manager_button_down_callback(struct WTKWindowManager *, WTKButtonDownCallbackFn fn, void *userdata);

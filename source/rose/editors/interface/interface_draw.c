@@ -30,6 +30,7 @@ void UI_draw_roundbox_4fv_ex(const rctf *rect, const float inner1[4], const floa
 	/* WATCH: This is assuming the ModelViewProjectionMatrix is area pixel space.
 	 * If it has been scaled, then it's no longer valid. */
 	uiWidgetBaseParameters widget_params;
+	memset(&widget_params, 0, sizeof(uiWidgetBaseParameters));
 	widget_params.recti.xmin = rect->xmin + outline_width;
 	widget_params.recti.ymin = rect->ymin + outline_width;
 	widget_params.recti.xmax = rect->xmax - outline_width;

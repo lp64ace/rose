@@ -87,7 +87,7 @@ size_t LIB_strncpy_wchar_as_utf8(char *out, size_t maxncpy, const wchar_t *unico
 /** \name UTF8 Conversion
  * \{ */
 
-ROSE_INLINE int utf8_char_compute_skip_or_error_with_mask(const char c, char *r_mask) {
+ROSE_INLINE int utf8_char_compute_skip_or_error_with_mask(const unsigned char c, char *r_mask) {
 	if (c < 128) {
 		*r_mask = 0x7f;
 		return 1;
@@ -110,6 +110,28 @@ ROSE_INLINE int utf8_char_compute_skip_or_error_with_mask(const char c, char *r_
 	}
 	if ((c & 0xfe) == 0xfc) {
 		*r_mask = 0x01;
+		return 6;
+	}
+	return -1;
+}
+
+ROSE_INLINE int utf8_char_compute_skip_or_error(const unsigned char c) {
+	if (c < 128) {
+		return 1;
+	}
+	if ((c & 0xe0) == 0xc0) {
+		return 2;
+	}
+	if ((c & 0xf0) == 0xe0) {
+		return 3;
+	}
+	if ((c & 0xf8) == 0xf0) {
+		return 4;
+	}
+	if ((c & 0xfc) == 0xf8) {
+		return 5;
+	}
+	if ((c & 0xfe) == 0xfc) {
 		return 6;
 	}
 	return -1;
@@ -225,6 +247,146 @@ bool LIB_str_cursor_step_prev_utf8(const char *str, const int str_maxlen, int *p
 	return false;
 }
 
+/**
+ * The category of character as returned by #cursor_delim_type_unicode.
+ *
+ * \note Don't compare with any values besides #STRCUR_DELIM_NONE as cursor motion
+ * should only delimit on changes, not treat some groups differently.
+ *
+ * For range calculation the order prioritizes expansion direction,
+ * when the cursor is between two different categories, "hug" the smaller values.
+ * Where white-space gets lowest priority. See #BLI_str_cursor_step_bounds_utf8.
+ * This is done so expanding the range at a word boundary always chooses the word instead
+ * of the white-space before or after it.
+ */
+typedef enum eStrCursorDelimType {
+	STRCUR_DELIM_NONE,
+	STRCUR_DELIM_ALPHANUMERIC,
+	STRCUR_DELIM_PUNCT,
+	STRCUR_DELIM_BRACE,
+	STRCUR_DELIM_OPERATOR,
+	STRCUR_DELIM_QUOTE,
+	STRCUR_DELIM_OTHER,
+	STRCUR_DELIM_WHITESPACE,
+} eStrCursorDelimType;
+
+static eStrCursorDelimType cursor_delim_type_unicode(const unsigned int uch) {
+	switch (uch) {
+		case ',':
+		case '.':
+		case 0x2026: /* Horizontal ellipsis. */
+		case 0x3002: /* CJK full width full stop. */
+		case 0xFF0C: /* CJK full width comma. */
+		case 0xFF61: /* CJK half width full stop. */
+			return STRCUR_DELIM_PUNCT;
+	
+		case '{':
+		case '}':
+		case '[':
+		case ']':
+		case '(':
+		case ')':
+		case 0x3010: /* CJK full width left black lenticular bracket. */
+		case 0x3011: /* CJK full width right black lenticular bracket. */
+		case 0xFF08: /* CJK full width left parenthesis. */
+		case 0xFF09: /* CJK full width right parenthesis. */
+			return STRCUR_DELIM_BRACE;
+	
+		case '+':
+		case '-':
+		case '=':
+		case '~':
+		case '%':
+		case '/':
+		case '<':
+		case '>':
+		case '^':
+		case '*':
+		case '&':
+		case '|':
+		case 0x2014: /* Em dash. */
+		case 0x300A: /* CJK full width left double angle bracket. */
+		case 0x300B: /* CJK full width right double angle bracket. */
+		case 0xFF0F: /* CJK full width solidus (forward slash). */
+		case 0xFF5E: /* CJK full width tilde. */
+			return STRCUR_DELIM_OPERATOR;
+	
+		case '\'':
+		case '\"':
+		case '`':
+		case 0xB4:   /* Acute accent. */
+		case 0x2018: /* Left single quotation mark. */
+		case 0x2019: /* Right single quotation mark. */
+		case 0x201C: /* Left double quotation mark. */
+		case 0x201D: /* Right double quotation mark. */
+			return STRCUR_DELIM_QUOTE;
+	
+		case ' ':
+		case '\t':
+		case '\n':
+			return STRCUR_DELIM_WHITESPACE;
+	
+		case '\\':
+		case '@':
+		case '#':
+		case '$':
+		case ':':
+		case ';':
+		case '?':
+		case '!':
+		case 0xA3:        /* Pound sign. */
+		case 0x80:        /* Euro sign. */
+		case 0x3001:      /* CJK ideographic comma. */
+		case 0xFF01:      /* CJK full width exclamation mark. */
+		case 0xFF64:      /* CJK half width ideographic comma. */
+		case 0xFF65:      /* Katakana half width middle dot. */
+		case 0xFF1A:      /* CJK full width colon. */
+		case 0xFF1B:      /* CJK full width semicolon. */
+		case 0xFF1F:      /* CJK full width question mark. */
+			/* case '_': */ /* special case, for python */
+			return STRCUR_DELIM_OTHER;
+	
+		default:
+			break;
+	}
+	return STRCUR_DELIM_ALPHANUMERIC; /* Not quite true, but ok for now */
+}
+
+ROSE_STATIC eStrCursorDelimType cursor_delim_type_utf8(const char *ch_utf8, const int ch_utf8_len, const int pos) {
+	ROSE_assert(ch_utf8_len >= 0);
+	size_t index = (size_t)pos;
+	unsigned int uch = LIB_str_utf8_as_unicode_step_or_error(ch_utf8, (size_t)ch_utf8_len, &index);
+	return cursor_delim_type_unicode(uch);
+}
+
+void LIB_str_cursor_step_bounds_utf8(const char *p, int n, int pos, int *l, int *r) {
+	ROSE_assert(n >= 0);
+	ROSE_assert(pos >= 0 && pos <= n);
+	
+	eStrCursorDelimType prev = (pos > 0) ? cursor_delim_type_utf8(p, n, pos - 1) : STRCUR_DELIM_NONE;
+	eStrCursorDelimType next = (pos < n) ? cursor_delim_type_utf8(p, n, pos + 0) : STRCUR_DELIM_NONE;
+	
+	*l = pos;
+	*r = pos;
+	
+	if(prev != STRCUR_DELIM_NONE) {
+		while (*l > 0 && ((prev <= next) || (next == STRCUR_DELIM_NONE))) {
+			LIB_str_cursor_step_prev_utf8(p, n, l);
+			if (*l > 0) {
+				prev = cursor_delim_type_utf8(p, n, *l - 1);
+			}
+		}
+	}
+	if(next != STRCUR_DELIM_NONE) {
+		while (*r < n && ((next <= prev) || (prev == STRCUR_DELIM_NONE))) {
+			LIB_str_cursor_step_next_utf8(p, n, r);
+			if (*r < n) {
+				next = cursor_delim_type_utf8(p, n, *r);
+			}
+		}
+	}
+}
+
 unsigned int LIB_str_utf8_as_unicode_or_error(const char *p) {
 	const unsigned char c = *p;
 
@@ -244,6 +406,11 @@ unsigned int LIB_str_utf8_char_width_or_error(const char *p) {
 
 	return LIB_wcwidth_or_error(unicode);
 }
+
+unsigned int LIB_str_utf8_size_or_error(const char *p) {
+	return utf8_char_compute_skip_or_error(*(const unsigned char *)p);
+}
+
 
 unsigned int LIB_str_utf8_as_unicode_step_safe(const char *p, size_t length, size_t *r_index) {
 	uint result = LIB_str_utf8_as_unicode_step_or_error(p, length, r_index);

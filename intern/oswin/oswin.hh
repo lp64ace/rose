@@ -169,6 +169,7 @@ enum class State {
 
 using MoveEventFn = std::function<void(tWindow *window, int x, int y)>;
 using ResizeEventFn = std::function<void(tWindow *window, unsigned int cwidth, unsigned int cheight)>;
+using ActivateEventFn = std::function<void(tWindow *window, bool activate)>;
 using MouseEventFn = std::function<void(tWindow *window, int x, int y, double time)>;
 using WheelEventFn = std::function<void(tWindow *window, int dx, int dy, double time)>;
 using ButtonDownEventFn = std::function<void(tWindow *window, int key, int x, int y, double time)>;
@@ -232,6 +233,9 @@ public:
 	int GetGamepadCount(void) const;
 	const Gamepad *GetGamepad(int index) const;
 
+	bool SetClipboard(const char *buffer, unsigned int length, bool selection) const;
+	bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
+
 private:
 	std::vector<tWindow *> windows_;
 	std::vector<tMonitor *> monitors_;
@@ -291,6 +295,7 @@ private:
 public:
 	MoveEventFn MoveEvent;
 	ResizeEventFn ResizeEvent;
+	ActivateEventFn ActivateEvent;
 	MouseEventFn MouseEvent;
 	WheelEventFn WheelEvent;
 	ButtonDownEventFn ButtonDownEvent;
@@ -430,6 +435,7 @@ private:
 	bool context_created_ = false;
 	/** A flag indicating that the window has a current context, set when the context is made current. */
 	bool context_current_ = false;
+	bool active_;
 
 	State state_ = State::normal;
 
@@ -454,6 +460,8 @@ private:
 	XSetWindowAttributes window_attributes_ = {};
 
 	int *visual_attribs_ = nullptr;
+	
+	char *clipboard_[2] = {nullptr, nullptr};
 
 	/** These atoms are needed to change window states via the extended window manager */
 	Atom AtomState;			   /**< Atom for the state of the window */

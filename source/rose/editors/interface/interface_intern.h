@@ -9,7 +9,10 @@
 extern "C" {
 #endif
 
+struct ARegion;
 struct GPUBatch;
+struct rContext;
+struct uiBlock;
 struct uiBut;
 struct uiLayout;
 
@@ -61,6 +64,9 @@ struct GPUBatch *ui_batch_roundbox_shadow_get();
 /** \name UI Block
  * \{ */
 
+void ui_block_to_window_fl(const struct ARegion *region, const struct uiBlock *block, float *x, float *y);
+void ui_window_to_block_fl(const struct ARegion *region, const struct uiBlock *block, float *x, float *y);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -68,6 +74,19 @@ struct GPUBatch *ui_batch_roundbox_shadow_get();
  * \{ */
 
 void ui_but_update(struct uiBut *but);
+
+bool ui_but_contains_pt(const struct uiBut *but, float mx, float my);
+bool ui_but_contains_rect(const struct uiBut *but, const rctf *rect);
+
+struct uiBut *ui_block_active_but_get(const struct uiBlock *block);
+struct uiBut *ui_region_find_active_but(const struct ARegion *region);
+
+struct uiBut *ui_but_find_mouse_over_ex(const struct ARegion *region, const int xy[2]);
+
+void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but);
+void ui_do_but_activate_exit(struct rContext *C, struct ARegion *region, struct uiBut *but);
+
+bool ui_but_is_editing(struct uiBut *but);
 
 /** \} */
 

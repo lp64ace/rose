@@ -44,6 +44,7 @@ typedef struct wmWindow {
 	 * These will be dispatched to handlers, managed by WindowManager.
 	 */
 	ListBase event_queue;
+	ListBase modalhandlers;
 	ListBase handlers;
 } wmWindow;
 

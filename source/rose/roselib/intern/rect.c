@@ -167,6 +167,42 @@ bool LIB_rcti_isect(const rcti *src1, const rcti *src2, rcti *dest) {
 	return false;
 }
 
+bool LIB_rctf_isect_pt(const rctf *rect, const float x, const float y) {
+	if (x >= rect->xmin && x <= rect->xmax) {
+		if (y >= rect->ymin && y <= rect->ymax) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool LIB_rcti_isect_pt(const rcti *rect, const int x, const int y) {
+	if (x >= rect->xmin && x <= rect->xmax) {
+		if (y >= rect->ymin && y <= rect->ymax) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool LIB_rctf_isect_pt_v(const rctf *rect, const float v[2]) {
+	if(v[0] >= rect->xmin && v[0] <= rect->xmax) {
+		if(v[1] >= rect->ymin && v[1] <= rect->ymax) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool LIB_rcti_isect_pt_v(const rcti *rect, const int v[2]) {
+	if(v[0] >= rect->xmin && v[0] <= rect->xmax) {
+		if(v[1] >= rect->ymin && v[1] <= rect->ymax) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void LIB_rctf_union(rctf *rct_a, const rctf *rct_b) {
 	if (rct_a->xmin > rct_b->xmin) {
 		rct_a->xmin = rct_b->xmin;

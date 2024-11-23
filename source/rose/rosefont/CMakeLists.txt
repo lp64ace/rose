@@ -62,6 +62,7 @@ set(LIB
 # Internal Fonts
 
 set(FONTS_SRC
+	fonts/CourierNew.ttf
 	fonts/DejaVuSans.ttf
 	fonts/DejaVuSansMono.ttf
 )

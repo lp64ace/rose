@@ -95,13 +95,21 @@ wmWindow *WM_window_open(struct rContext *C, wmWindow *parent, const char *name,
  */
 void WM_window_close(struct rContext *C, wmWindow *window) {
 	WindowManager *wm = CTX_wm_manager(C);
+	wmWindow *window_prev = CTX_wm_window(C);
 
-	if (CTX_wm_window(C) == window) {
-		CTX_wm_window_set(C, NULL);
-	}
+	CTX_wm_window_set(C, window);
+	WM_event_remove_handlers(C, &window->handlers);
+	WM_event_remove_handlers(C, &window->modalhandlers);
 
 	WM_window_screen_set(C, window, NULL);
 	WM_window_free(wm, window);
+	
+	if (window_prev == window) {
+		CTX_wm_window_set(C, NULL);
+	}
+	else {
+		CTX_wm_window_set(C, window_prev);
+	}
 }
 
 /** Do not call this for active windows since it will not delete the screen draw buffers. */

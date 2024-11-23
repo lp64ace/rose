@@ -13,7 +13,10 @@
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
+#include "KER_context.h"
 #include "KER_screen.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name TopBar SpaceType Methods
@@ -59,11 +62,11 @@ ROSE_INLINE void topbar_header_region_draw(struct rContext *C, ARegion *region) 
 
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "block-left"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, 1);
-		uiDefBut(block, UI_BTYPE_TXT, "file", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y - 3);
-		uiDefBut(block, UI_BTYPE_TXT, "view", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y - 3);
-		uiDefBut(block, UI_BTYPE_TXT, "help", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y - 3);
+		uiDefBut(block, UI_BTYPE_BUT, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y - 1);
+		uiDefBut(block, UI_BTYPE_BUT, "View", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y - 1);
+		uiDefBut(block, UI_BTYPE_BUT, "Help", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y - 1);
 		UI_block_end(C, block);
 	}
 }

@@ -69,15 +69,15 @@ typedef struct uiBlock {
 	ListBase layouts;
 } uiBlock;
 
-struct uiBlock *UI_block_begin(const struct rContext *C, struct ARegion *region, const char *name);
-void UI_block_end_ex(const struct rContext *C, struct uiBlock *block, const int xy[2], int r_xy[2]);
-void UI_block_end(const struct rContext *C, struct uiBlock *block);
+struct uiBlock *UI_block_begin(struct rContext *C, struct ARegion *region, const char *name);
+void UI_block_end_ex(struct rContext *C, struct uiBlock *block, const int xy[2], int r_xy[2]);
+void UI_block_end(struct rContext *C, struct uiBlock *block);
 void UI_block_draw(const struct rContext *C, struct uiBlock *block);
 void UI_block_region_set(struct uiBlock *block, struct ARegion *region);
 
-void UI_blocklist_free(const struct rContext *C, struct ARegion *region);
-void UI_blocklist_free_inactive(const struct rContext *C, struct ARegion *region);
-void UI_block_free(const struct rContext *C, struct uiBlock *block);
+void UI_blocklist_free(struct rContext *C, struct ARegion *region);
+void UI_blocklist_free_inactive(struct rContext *C, struct ARegion *region);
+void UI_block_free(struct rContext *C, struct uiBlock *block);
 
 /** \} */
 
@@ -89,7 +89,7 @@ typedef struct uiBut {
 	struct uiBut *prev, *next;
 
 	char *name;
-	bool active;
+	void *active;
 
 	rctf rect;
 	int type;
@@ -97,12 +97,24 @@ typedef struct uiBut {
 
 	struct uiLayout *layout;
 	struct uiBlock *block;
+	
+	int offset;
+	int selsta;
+	int selend;
 } uiBut;
 
 /** #uiBut->type */
 enum {
 	UI_BTYPE_SEPR,
+	UI_BTYPE_BUT,
+	UI_BTYPE_EDIT,
 	UI_BTYPE_TXT,
+};
+
+/** #uiBut->flag */
+enum {
+	UI_HOVER = 1 << 0,
+	UI_SELECT = 1 << 1,
 };
 
 struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h);
@@ -115,11 +127,6 @@ struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x,
 
 typedef struct uiLayout uiLayout;
 
-enum {
-	UI_LAYOUT_HORIZONTAL = 0,
-	UI_LAYOUT_VERTICAL = 1,
-};
-
 /** #uiItem->item */
 enum {
 	ITEM_BUTTON = 1,
@@ -128,12 +135,25 @@ enum {
 	ITEM_LAYOUT_ROOT,
 };
 
+enum {
+	UI_LAYOUT_HORIZONTAL = 0,
+	UI_LAYOUT_VERTICAL = 1,
+};
+
 struct uiLayout *UI_block_layout(struct uiBlock *block, int dir, int type, int x, int y, int size, int padding);
 struct uiLayout *UI_layout_row(struct uiLayout *layout, int space);
 struct uiLayout *UI_layout_col(struct uiLayout *layout, int space);
 void UI_block_layout_free(struct uiBlock *block);
 
 void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Handlers
+ * \{ */
+
+void UI_region_handlers_add(ListBase *handlers);
 
 /** \} */
 

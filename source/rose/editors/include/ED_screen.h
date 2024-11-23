@@ -41,6 +41,20 @@ void ED_region_header_init(struct ARegion *region);
 void ED_region_header_exit(struct ARegion *region);
 void ED_region_header_draw(struct rContext *C, struct ARegion *region);
 
+/**
+ * \note This may return true for multiple overlapping regions.
+ * If it matters, check overlapped regions first (#ARegion.overlap).
+ */
+bool ED_region_contains_xy(const struct ARegion *region, const int event_xy[2]);
+/**
+ * Similar to #KER_area_find_region_xy() but when \a event_xy intersects an overlapping region,
+ * this returns the region that is visually under the cursor. E.g. when over the
+ * transparent part of the region, it returns the region underneath.
+ *
+ * The overlapping region is determined using the #ED_region_contains_xy() query.
+ */
+struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int regiontype, const int event_xy[2]);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -83,6 +97,7 @@ void ED_area_update_region_sizes(struct WindowManager *wm, struct wmWindow *wind
 /** \name Screen
  * \{ */
 
+void ED_screen_set_active_region(struct rContext *C, struct wmWindow *window, const int xy[2]);
 void ED_screen_exit(struct rContext *C, struct wmWindow *window, struct Screen *screen);
 
 void ED_screen_refresh(struct rContext *C, struct WindowManager *wm, struct wmWindow *window);

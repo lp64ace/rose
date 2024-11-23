@@ -46,7 +46,7 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 	ScrVert *sv1 = screen_geom_vertex_add(screen, rect->xmin, rect->ymin);
 	ScrVert *sv2 = screen_geom_vertex_add(screen, rect->xmin, rect->ymax);
 
-	const int cnt = 1;
+	const int cnt = 2;
 	for(int i = 1; i <= cnt; i++) {
 		ScrVert *sv3 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymax);
 		ScrVert *sv4 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymin);
@@ -66,6 +66,57 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 	KER_screen_remove_double_scredges(screen);
 
 	return screen;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Screen Utils
+ * \{ */
+
+void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int xy[2]) {
+	Screen *screen = WM_window_screen_get(window);
+	if(screen == NULL) {
+		return;
+	}
+	
+	ScrArea *area = NULL;
+	ARegion *region_prev = screen->active_region;
+	
+	ED_screen_areas_iter(window, screen, area_iter) {
+		if (xy[0] > (area_iter->totrct.xmin) && xy[0] < (area_iter->totrct.xmax)) {
+			if (xy[1] > (area_iter->totrct.ymin) && xy[1] < (area_iter->totrct.ymax)) {
+				area = area_iter;
+				break;
+			}
+		}
+	}
+	if (area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (ED_region_contains_xy(region, xy)) {
+				screen->active_region = region;
+				break;
+			}
+		}
+	}
+	else {
+		screen->active_region = NULL;
+	}
+	
+	if (region_prev != screen->active_region) {
+		ED_screen_areas_iter(window, screen, area_iter) {
+			if(area == area_iter) {
+				// Do not deactivate the area if it is the same as the old one.
+				continue;
+			}
+			
+			LISTBASE_FOREACH(ARegion *, region, &area_iter->regionbase) {
+				if (region == region_prev && area_iter->type && area_iter->type->deactivate) {
+					area_iter->type->deactivate(area_iter);
+				}
+			}
+		}
+	}
 }
 
 /** \} */

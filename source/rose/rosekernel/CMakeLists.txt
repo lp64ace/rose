@@ -54,6 +54,7 @@ set(LIB
 	rose::intern::guardedalloc
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::dna
+	PUBLIC rose::source::editors::interface
 	
 	# External Library Dependencies
 	
