@@ -86,7 +86,14 @@ void ED_region_header_exit(ARegion *region) {
 
 void ED_region_header_draw(struct rContext *C, ARegion *region) {
 	float back[4];
-	UI_GetThemeColor4fv(TH_BACK, back);
+	
+	ScrArea *area = CTX_wm_area(C);
+	if (ED_area_is_global(area)) {
+		UI_GetThemeColor4fv(TH_BACK_HI, back);
+	}
+	else {
+		UI_GetThemeColor4fv(TH_BACK, back);
+	}
 	
 	GPU_clear_color(back[0], back[1], back[2], back[3]);
 }

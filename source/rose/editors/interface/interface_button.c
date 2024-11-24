@@ -60,83 +60,104 @@ ROSE_INLINE void copy_f4_u4(float a[4], const unsigned char b[4]) {
 	a[3] = b[3] / 255.0f;
 }
 
+ROSE_INLINE int ui_but_text_font(uiBut *but) {
+	return RFT_set_default();
+}
+
+ROSE_INLINE void ui_but_text_rect(uiBut *but, const rcti *rect, rcti *client) {
+	client->xmin = rect->xmin + UI_TEXT_MARGIN_X;
+	client->xmax = rect->xmax - UI_TEXT_MARGIN_X;
+	client->ymin = rect->ymin;
+	client->ymax = rect->ymax;
+	LIB_rcti_sanitize(client);
+}
+
+ROSE_INLINE bool ui_but_text_bounds(uiBut *but, const rcti *rect, rcti *content, int offset) {
+	int font = ui_but_text_font(but);
+	
+	rcti client;
+	ui_but_text_rect(but, rect, &client);
+	RFT_boundbox(font, but->name, offset, content);
+	
+	content->xmin += client.xmin;
+	content->xmax += client.xmin;
+	content->ymin = client.ymin;
+	content->ymax = client.ymax;
+	
+	if (!LIB_rcti_inside_rcti(&client, content)) {
+		LIB_rcti_isect(&client, content, content);
+		return false;
+	}
+	return true;
+}
+
 ROSE_INLINE void ui_draw_but_back(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
 	ARegion *region = CTX_wm_region(C);
 
 	float fill[4];
+	float border[4];
 
-	if ((but->flag & UI_HOVER) != 0) {
-		copy_f4_u4(fill, colors->inner_sel);
-	}
-	else {
-		copy_f4_u4(fill, colors->inner);
-	}
+	copy_f4_u4(fill, (but->flag & UI_HOVER) ? colors->inner_sel : colors->inner);
 
-	if (colors->inner[3] < 1e-3f) {
+	if (fill[3] < 1e-3f) {
 		return;
 	}
-
-	float border[4];
-	copy_v4_v4(border, fill);
-	mul_v3_fl(border, 0.25f);
+	
+	copy_f4_u4(border, colors->outline);
 
 	rctf rectf;
 	LIB_rctf_rcti_copy(&rectf, rect);
-
 	UI_draw_roundbox_4fv_ex(&rectf, fill, fill, 0, border, 1, colors->roundness);
 }
 
 ROSE_INLINE bool ui_draw_but_text_sel(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	int font = RFT_set_default();
-	const int padx = UI_TEXT_MARGIN_X, halfy = RFT_height_max(font) / 2;
-
-	int cx = LIB_rcti_cent_x(rect);
-	int cy = LIB_rcti_cent_y(rect);
-
-	rcti boundl, boundr;
-	RFT_boundbox(font, but->name, but->selsta, &boundl);
-	RFT_boundbox(font, but->name, but->selend, &boundr);
-	rcti sel;
-	sel.xmin = boundl.xmax + rect->xmin + padx;
-	sel.xmax = boundr.xmax + rect->xmin + padx;
-	sel.ymax = cy + halfy;
-	sel.ymin = cy - halfy;
-
-	if (!LIB_rcti_isect(rect, &sel, NULL)) {
+	if(but->selend - but->selsta <= 0) {
 		return false;
 	}
 
-	float back[4];
-	copy_f4_u4(back, colors->text_sel);
+	float fill[4];
+	copy_f4_u4(fill, colors->text_sel);
+	
+	if (fill[3] < 1e-3f) {
+		return false;
+	}
+	
+	int font = ui_but_text_font(but);
+	
+	rcti selection, a, b;
+	ui_but_text_bounds(but, rect, &a, but->selsta);
+	ui_but_text_bounds(but, rect, &b, but->selend);
+	selection.xmin = ROSE_MIN(a.xmax, b.xmax);
+	selection.xmax = ROSE_MAX(a.xmax, b.xmax);
+	
+	int cy = LIB_rcti_cent_y(&a);
+	
+	selection.ymin = cy - (RFT_height_max(font) * 2) / 3;
+	selection.ymax = cy + (RFT_height_max(font) * 2) / 3;
 
 	rctf self;
-	LIB_rctf_rcti_copy(&self, &sel);
-	UI_draw_roundbox_4fv_ex(&self, back, back, 0, NULL, 1, 0);
+	LIB_rctf_rcti_copy(&self, &selection);
+	UI_draw_roundbox_4fv_ex(&self, fill, fill, 0, NULL, 1, 0);
 
 	return true;
 }
 
 ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	int font = RFT_set_default();
-	const int padx = UI_TEXT_MARGIN_X, pady = RFT_height_max(font) / 3;
+	rcti client;
+	ui_but_text_rect(but, rect, &client);
 
 	float text[4];
 	copy_f4_u4(text, colors->text);
-
-	RFT_clipping(font, rect->xmin + padx, rect->ymin + pady, rect->xmax - padx, rect->ymax - pady);
+	
+	int font = ui_but_text_font(but);
+	RFT_clipping(font, client.xmin, client.ymin, client.xmax, client.ymax);
 	RFT_color4f(font, text[0], text[1], text[2], text[3]);
 	RFT_enable(font, RFT_CLIPPING);
-
-	int cx = LIB_rcti_cent_x(rect);
-	int cy = LIB_rcti_cent_y(rect);
-
-	rcti bound;
-	RFT_boundbox(font, but->name, -1, &bound);
 
 	GPU_blend(GPU_BLEND_ALPHA);
 
 	if (ELEM(but->type, UI_BTYPE_BUT)) { // Button texts are aligned in the center.
-		RFT_position(font, cx - LIB_rcti_size_x(&bound) / 2, cy - pady, -1.0f);
+		RFT_position(font, client.xmin, LIB_rcti_cent_y(&client) - RFT_height_max(font) / 2, 0.0f);
 		RFT_draw(font, but->name, -1);
 	}
 	else {
@@ -144,7 +165,7 @@ ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidget
 
 		ui_draw_but_text_sel(C, but, colors, rect);
 
-		RFT_position(font, rect->xmin + padx, cy - pady, -1.0f);
+		RFT_position(font, client.xmin, LIB_rcti_cent_y(&client) - RFT_height_max(font) / 2, 0.0f);
 		RFT_draw(font, but->name, -1);
 	}
 }
@@ -153,34 +174,28 @@ ROSE_INLINE void ui_draw_but_cursor(const struct rContext *C, uiBut *but, uiWidg
 	if(!ui_but_is_editing(but)) {
 		return;
 	}
-
-	int font = RFT_set_default();
-	const int padx = UI_TEXT_MARGIN_X, halfy = RFT_height_max(font) / 2;
-
-	rcti bound;
-	RFT_boundbox(font, but->name, but->offset, &bound);
-
-	int cx = LIB_rcti_cent_x(rect);
-	int cy = LIB_rcti_cent_y(rect);
-
-	bound.xmin = bound.xmax - bound.xmin + rect->xmin + padx;
-	bound.xmax = bound.xmin + 1;
-
-	bound.ymax = cy + halfy;
-	bound.ymin = cy - halfy;
-
-	if (!(rect->xmin + padx <= bound.xmin && bound.xmax <= rect->xmax - padx)) {
-		return;
+	
+	int font = ui_but_text_font(but);
+	
+	rcti bounds;
+	if (ui_but_text_bounds(but, rect, &bounds, but->offset)) {
+		bounds.xmin = bounds.xmax;
+		bounds.xmax = bounds.xmin + 1;
+		
+		int cy = LIB_rcti_cent_y(&bounds);
+		
+		bounds.ymin = cy - (RFT_height_max(font) * 2) / 3;
+		bounds.ymax = cy + (RFT_height_max(font) * 2) / 3;
+		
+		Theme *theme = UI_GetTheme();
+		
+		float cur[4];
+		copy_f4_u4(cur, theme->tui.text_cur);
+		
+		rctf rectf;
+		LIB_rctf_rcti_copy(&rectf, &bounds);
+		UI_draw_roundbox_4fv_ex(&rectf, cur, cur, 0, NULL, 1, 0);
 	}
-
-	Theme *theme = UI_GetTheme();
-
-	float cursor[4];
-	copy_f4_u4(cursor, theme->tui.text_cur);
-
-	rctf boundf;
-	LIB_rctf_rcti_copy(&boundf, &bound);
-	UI_draw_roundbox_4fv_ex(&boundf, cursor, cursor, 0, NULL, 1, 0);
 }
 
 void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
@@ -189,6 +204,10 @@ void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rc
 	}
 
 	uiWidgetColors *colors = widget_colors(but->type);
+	
+	if (colors == NULL) {
+		return;
+	}
 
 	ui_draw_but_back(C, but, colors, rect);
 	ui_draw_but_text(C, but, colors, rect);

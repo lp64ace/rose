@@ -62,7 +62,7 @@ const Theme U_theme_default = {
 		.back = RGBA(0x1a1a1aff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0x00ffccff),
-		.header = RGBA(0x2a2a2aff),
+		.header = RGBA(0x1a1a1aff),
 		.header_hi = RGBA(0x333333ff),
 	},
 };

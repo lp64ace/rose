@@ -9,6 +9,7 @@ struct Theme;
 
 enum {
 	TH_BACK,
+	TH_BACK_HI,
 	TH_TEXT,
 	TH_TEXT_HI,
 	

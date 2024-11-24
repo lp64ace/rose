@@ -49,6 +49,17 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 					ROSE_assert_unreachable();
 				}
 			} break;
+			case TH_BACK_HI: {
+				if(ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
+					cp = ts->back;
+				}
+				else if(ELEM(theme_state.regionid, RGN_TYPE_HEADER)) {
+					cp = ts->header_hi;
+				}
+				else {
+					ROSE_assert_unreachable();
+				}
+			} break;
 			case TH_TEXT: {
 				cp = ts->text;
 			} break;

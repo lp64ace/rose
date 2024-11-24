@@ -41,7 +41,7 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if(but_new->type != but_old->type) {
 		return false;
 	}
-	if (but_new->type == UI_BTYPE_TXT && !STREQ(but_new->name, but_old->name)) {
+	if (ELEM(but_new->type, UI_BTYPE_BUT, UI_BTYPE_TXT) && !STREQ(but_new->name, but_old->name)) {
 		return false;
 	}
 	return true;

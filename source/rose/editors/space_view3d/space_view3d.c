@@ -93,6 +93,15 @@ void ED_spacetype_view3d() {
 	st->init = view3d_init;
 	st->exit = view3d_exit;
 
+	// Header Region
+	{
+		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Header");
+		LIB_addtail(&st->regiontypes, art);
+		art->regionid = RGN_TYPE_HEADER;
+		art->draw = ED_region_header_draw;
+		art->init = ED_region_header_init;
+		art->exit = ED_region_header_exit;
+	}
 	// Main Region
 	{
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Main");
