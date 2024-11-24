@@ -23,9 +23,9 @@ const Theme U_theme_default = {
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
-			.outline = RGBA(0x333333ff),
-			.inner = RGBA(0x222222cc),
-			.inner_sel = RGBA(0x222222cc),
+			.outline = RGBA(0x00000000),
+			.inner = RGBA(0x00000000),
+			.inner_sel = RGBA(0x00000000),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
             .roundness = 0.5f,
