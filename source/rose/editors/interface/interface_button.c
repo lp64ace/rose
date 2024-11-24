@@ -169,7 +169,7 @@ ROSE_INLINE void ui_draw_but_cursor(const struct rContext *C, uiBut *but, uiWidg
 	bound.ymax = cy + halfy;
 	bound.ymin = cy - halfy;
 
-	if (!LIB_rcti_isect(rect, &bound, NULL)) {
+	if (!(rect->xmin + padx <= bound.xmin && bound.xmax <= rect->xmax - padx)) {
 		return;
 	}
 

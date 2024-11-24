@@ -235,6 +235,8 @@ public:
 
 	bool SetClipboard(const char *buffer, unsigned int length, bool selection) const;
 	bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
+	
+	static void Sleep(int ms);
 
 private:
 	std::vector<tWindow *> windows_;

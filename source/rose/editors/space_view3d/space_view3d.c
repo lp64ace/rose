@@ -59,10 +59,18 @@ void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "block-left"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
-		uiLayout *layout = UI_layout_row(root, 1);
-		uiDefBut(block, UI_BTYPE_BUT, "Button", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-		uiDefBut(block, UI_BTYPE_TXT, "Text", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-		uiDefBut(block, UI_BTYPE_EDIT, "Edit", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+		{
+			uiLayout *layout = UI_layout_row(root, 1);
+			uiDefBut(block, UI_BTYPE_BUT, "Button", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+			uiDefBut(block, UI_BTYPE_TXT, "Text", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+			uiDefBut(block, UI_BTYPE_EDIT, "Edit", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+		}
+		{
+			uiLayout *layout = UI_layout_row(root, 1);
+			uiDefBut(block, UI_BTYPE_EDIT, "Edit", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+			uiDefBut(block, UI_BTYPE_TXT, "Text", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+			uiDefBut(block, UI_BTYPE_BUT, "Button", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+		}
 		UI_block_end(C, block);
 	}
 }

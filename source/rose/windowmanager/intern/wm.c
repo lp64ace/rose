@@ -268,8 +268,12 @@ void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	while (true) {
-		/** Handle all pending operating system events. */
-		WTK_window_manager_poll(wm->handle);
+		if (WTK_window_manager_has_events(wm->handle)) {
+			/** Handle all pending operating system events. */
+			WTK_window_manager_poll(wm->handle);
+		} else {
+			WTK_sleep(1);
+		}
 		WM_do_handlers(C);
 		WM_do_draw(C);
 	}

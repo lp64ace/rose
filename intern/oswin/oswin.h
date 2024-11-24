@@ -40,9 +40,12 @@ void WTK_window_manager_free(struct WTKWindowManager *);
  * \param manager A pointer to the \ref WTKWindowManager.
  */
 void WTK_window_manager_poll(struct WTKWindowManager *);
+bool WTK_window_manager_has_events(struct WTKWindowManager *);
 
 bool WTK_set_clipboard(struct WTKWindowManager *, const char *buffer, unsigned int len, bool selection);
 bool WTK_get_clipboard(struct WTKWindowManager *, char **r_buffer, unsigned int *r_len, bool selection);
+
+void WTK_sleep(int ms);
 
 enum {
 	WTK_EVT_DESTROY = 1,

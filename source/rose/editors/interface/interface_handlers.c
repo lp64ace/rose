@@ -344,6 +344,16 @@ ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int
 	return changed;
 }
 
+ROSE_STATIC bool ui_textedit_set(uiBut *but, const char *text) {
+	if (text) {
+		MEM_freeN(but->name);
+		but->name = LIB_strdupN(text);
+		but->selsta = but->selend = but->offset = LIB_strlen(but->name);
+		return true;
+	}
+	return false;
+}
+
 ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
 	switch (evt->type) {
 		case MOUSEMOVE: {
@@ -484,13 +494,10 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 #endif
 					((evt->modifier & KM_CTRL) != 0 && ((evt->modifier & (KM_ALT | KM_OSKEY)) == 0))) {
 					int offset;
+
 					const char *text = ui_textedit_undo(data->undo_stack, direction * multiply, &offset);
-					if (text) {
-						MEM_freeN(but->name);
-						but->name = LIB_strdupN(text);
+					if (ui_textedit_set(but, text)) {
 						but->selsta = but->selend = but->offset = offset;
-						
-						changed = false; /** Do not add the undo step again! */
 					}
 					
 					retval |= WM_UI_HANDLER_BREAK;
