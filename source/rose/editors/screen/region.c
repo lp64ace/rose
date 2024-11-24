@@ -67,10 +67,12 @@ void ED_region_do_draw(struct rContext *C, struct ARegion *region) {
 		region->type->draw(C, region);
 	}
 
+	/** Before we draw we delete the inactive blocks, so that they do not appear on screen. */
+	UI_blocklist_free_inactive(C, region);
+
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		UI_block_draw(C, block);
 	}
-	UI_blocklist_free_inactive(C, region);
 
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();

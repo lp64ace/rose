@@ -34,6 +34,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::dna
 	rose::source::editors::screen
+	rose::source::windowmanager
 	
 	# External Library Dependencies
 	

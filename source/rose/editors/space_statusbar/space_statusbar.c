@@ -7,11 +7,15 @@
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
+#include "UI_interface.h"
+
 #include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "KER_screen.h"
+
+#include "WM_api.h"
 
 /* -------------------------------------------------------------------- */
 /** \name StatusBar SpaceType Methods
@@ -49,6 +53,40 @@ ROSE_INLINE void statusbar_exit(WindowManager *wm, ScrArea *area) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name StatusBar Header Region Methods
+ * \{ */
+
+void statusbar_header_region_draw(struct rContext *C, ARegion *region) {
+	ED_region_header_draw(C, region);
+
+	static float old = 0.0f;
+
+	float now = WM_time(C);
+
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "block"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
+		do {
+			char *text = LIB_strformat_allocN("%.1f", 1.0f / (now - old));
+			uiDefBut(block, UI_BTYPE_TXT, text, 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
+			MEM_freeN(text);
+		} while (false);
+		UI_block_end(C, block);
+	}
+
+	old = now;
+}
+
+void statusbar_header_region_init(ARegion *region) {
+	ED_region_header_init(region);
+}
+void statusbar_header_region_exit(ARegion *region) {
+	ED_region_header_exit(region);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name StatusBar Main Region Methods
  * \{ */
 
@@ -78,9 +116,9 @@ void ED_spacetype_statusbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "StatusBar::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = ED_region_header_draw;
-		art->init = ED_region_header_init;
-		art->exit = ED_region_header_exit;
+		art->draw = statusbar_header_region_draw;
+		art->init = statusbar_header_region_init;
+		art->exit = statusbar_header_region_exit;
 	}
 	// Main
 	{

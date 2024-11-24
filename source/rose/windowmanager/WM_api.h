@@ -40,6 +40,14 @@ void WM_clipboard_text_set(struct rContext *C, const char *buf, bool selection);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Clipboard
+ * \{ */
+
+float WM_time(struct rContext *C);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif
