@@ -19,16 +19,16 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0.5f,
+			.roundness = 0,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
-			.outline = RGBA(0x333333ff),
-			.inner = RGBA(0x222222cc),
-			.inner_sel = RGBA(0x222222cc),
+			.outline = RGBA(0x00000000),
+			.inner = RGBA(0x00000000),
+			.inner_sel = RGBA(0x00000000),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
-            .roundness = 0.5f,
+            .roundness = 0,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
@@ -36,8 +36,8 @@ const Theme U_theme_default = {
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xe0e0e0ff),
-			.text_sel = RGBA(0x0000ccff),
-            .roundness = 0.5f,
+			.text_sel = RGBA(0x2222e0ee),
+            .roundness = 0,
 		},
 		.text_cur = RGBA(0xffffffff),
 	},
@@ -62,7 +62,7 @@ const Theme U_theme_default = {
 		.back = RGBA(0x1a1a1aff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0x00ffccff),
-		.header = RGBA(0x2a2a2aff),
+		.header = RGBA(0x1a1a1aff),
 		.header_hi = RGBA(0x333333ff),
 	},
 };

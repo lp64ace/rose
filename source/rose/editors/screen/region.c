@@ -67,10 +67,12 @@ void ED_region_do_draw(struct rContext *C, struct ARegion *region) {
 		region->type->draw(C, region);
 	}
 
+	/** Before we draw we delete the inactive blocks, so that they do not appear on screen. */
+	UI_blocklist_free_inactive(C, region);
+
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		UI_block_draw(C, block);
 	}
-	UI_blocklist_free_inactive(C, region);
 
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
@@ -84,7 +86,14 @@ void ED_region_header_exit(ARegion *region) {
 
 void ED_region_header_draw(struct rContext *C, ARegion *region) {
 	float back[4];
-	UI_GetThemeColor4fv(TH_BACK, back);
+	
+	ScrArea *area = CTX_wm_area(C);
+	if (ED_area_is_global(area)) {
+		UI_GetThemeColor4fv(TH_BACK_HI, back);
+	}
+	else {
+		UI_GetThemeColor4fv(TH_BACK, back);
+	}
 	
 	GPU_clear_color(back[0], back[1], back[2], back[3]);
 }

@@ -20,6 +20,11 @@ void WTK_window_manager_poll(WTKWindowManager *vmanager) {
 	manager->Poll();
 }
 
+bool WTK_window_manager_has_events(WTKWindowManager *vmanager) {
+	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
+	return manager->HasEventsWaiting();
+}
+
 bool WTK_set_clipboard(WTKWindowManager *vmanager, const char *buffer, unsigned int len, bool selection) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	return manager->SetClipboard(buffer, len, selection);
@@ -27,6 +32,10 @@ bool WTK_set_clipboard(WTKWindowManager *vmanager, const char *buffer, unsigned 
 bool WTK_get_clipboard(WTKWindowManager *vmanager, char **r_buffer, unsigned int *r_len, bool selection) {
 	tWindowManager *manager = reinterpret_cast<tWindowManager *>(vmanager);
 	return manager->GetClipboard(r_buffer, r_len, selection);
+}
+
+void WTK_sleep(int ms) {
+	tWindowManager::Sleep(ms);
 }
 
 void WTK_window_manager_destroy_callback(WTKWindowManager *vmanager, WTKDestroyCallbackFn fn, void *userdata) {

@@ -1037,13 +1037,14 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 					utf8_buf[0] = '\0';
 				}
 			}
-#endif
+#else
 			if (xke->type == KeyPress) {
 				if (utf8_buf[0] == '\0' && ascii) {
 					utf8_buf[0] = ascii;
 					utf8_buf[1] = '\0';
 				}
 			}
+#endif
 			
 			double time = static_cast<double>(evt->xkey.time) / 1000.0;
 			

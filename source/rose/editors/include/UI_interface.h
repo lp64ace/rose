@@ -99,9 +99,14 @@ typedef struct uiBut {
 	struct uiLayout *layout;
 	struct uiBlock *block;
 	
+	float strwidth;
+	
 	int offset;
 	int selsta;
 	int selend;
+	
+	int vscroll;
+	int hscroll;
 } uiBut;
 
 /** #uiBut->type */

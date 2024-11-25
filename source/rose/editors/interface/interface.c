@@ -41,6 +41,9 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if(but_new->type != but_old->type) {
 		return false;
 	}
+	if (ELEM(but_new->type, UI_BTYPE_BUT, UI_BTYPE_TXT) && !STREQ(but_new->name, but_old->name)) {
+		return false;
+	}
 	return true;
 }
 
@@ -219,6 +222,16 @@ bool ui_but_contains_rect(const uiBut *but, const rctf *rect) {
 }
 
 void ui_but_update(uiBut *but) {
+	switch (but->type) {
+		case UI_BTYPE_EDIT: {
+			if (ui_but_is_editing(but)) {
+				
+			}
+			else {
+				but->hscroll = 0;
+			}
+		} break;
+	}
 }
 
 uiBut *ui_block_active_but_get(const uiBlock *block) {

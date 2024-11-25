@@ -1,8 +1,10 @@
 #include "oswin.hh"
 
+#include <chrono>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
+#include <thread>
 
 namespace rose::tiny_window {
 
@@ -145,11 +147,16 @@ FormatSetting *tWindowManager::GetClosestFormat(const FormatSetting *desired) co
 int tWindowManager::GetGamepadCount(void) const {
 	return this->gamepads_.size();
 }
+
 const Gamepad *tWindowManager::GetGamepad(int index) const {
 	if (index < this->gamepads_.size()) {
 		return &this->gamepads_[index];
 	}
 	return NULL;
+}
+
+void tWindowManager::Sleep(int ms) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 bool tWindow::ShouldClose() const {

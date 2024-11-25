@@ -5,6 +5,8 @@
 
 #include "LIB_utildefines.h"
 
+#include <limits.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,6 +17,7 @@ struct rContext;
 struct uiBlock;
 struct uiBut;
 struct uiLayout;
+struct uiUndoStack_Text;
 
 /* -------------------------------------------------------------------- */
 /** \name Drawing
@@ -73,6 +76,8 @@ void ui_window_to_block_fl(const struct ARegion *region, const struct uiBlock *b
 /** \name UI Button
  * \{ */
 
+int ui_but_text_font(struct uiBut *but);
+
 void ui_but_update(struct uiBut *but);
 void ui_draw_but(const struct rContext *C, struct ARegion *region, struct uiBut *but, const rcti *rect);
 
@@ -91,6 +96,18 @@ void ui_do_but_activate_exit(struct rContext *C, struct ARegion *region, struct 
 void ui_but_active_free(struct rContext *C, struct uiBut *but);
 
 bool ui_but_is_editing(struct uiBut *but);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Undo
+ * \{ */
+
+void ui_textedit_undo_push(struct uiUndoStack_Text *stack, const char *text, int cursor_index);
+const char *ui_textedit_undo(struct uiUndoStack_Text *stack, int direction, int *cursor_index);
+
+struct uiUndoStack_Text *ui_textedit_undo_stack_create(void);
+void ui_textedit_undo_stack_destroy(struct uiUndoStack_Text *stack);
 
 /** \} */
 
