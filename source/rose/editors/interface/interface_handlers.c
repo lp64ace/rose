@@ -630,7 +630,7 @@ ROSE_STATIC void ui_region_handler_remove(struct rContext *C, void *user_data) {
 }
 
 void UI_region_handlers_add(ListBase *handlers) {
-	/** We just move the handler to another listbase, we don't need to call #ui_region_handler_remove. */
+	/** We just ensure the handler in the listbase, we don't need to call #ui_region_handler_remove. */
 	WM_event_remove_ui_handler(handlers, ui_region_handler, ui_region_handler_remove, NULL, false);
 	WM_event_add_ui_handler(NULL, handlers, ui_region_handler, ui_region_handler_remove, NULL, 0);
 }

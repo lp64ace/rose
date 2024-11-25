@@ -278,7 +278,7 @@ void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rc
 		return;
 	}
 	
-	ui_text_clip_cursor (but, rect);
+	ui_text_clip_cursor(but, rect);
 
 	ui_draw_but_back(C, but, colors, rect);
 	ui_draw_but_text(C, but, colors, rect);
