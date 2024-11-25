@@ -137,6 +137,27 @@ ROSE_INLINE int utf8_char_compute_skip_or_error(const unsigned char c) {
 	return -1;
 }
 
+ROSE_INLINE int utf8_char_compute_skip(const char c) {
+	if (c >= 192) {
+		if ((c & 0xe0) == 0xc0) {
+			return 2;
+		}
+		if ((c & 0xf0) == 0xe0) {
+			return 3;
+		}
+		if ((c & 0xf8) == 0xf0) {
+			return 4;
+		}
+		if ((c & 0xfc) == 0xf8) {
+			return 5;
+		}
+		if ((c & 0xfe) == 0xfc) {
+			return 6;
+		}
+	}
+	return 1;
+}
+
 ROSE_INLINE uint utf8_char_decode(const char *p, const char mask, const int len, const uint err) {
 	/* Originally from GLIB `UTF8_GET` macro, added an 'err' argument. */
 	uint result = p[0] & mask;
@@ -411,6 +432,9 @@ unsigned int LIB_str_utf8_size_or_error(const char *p) {
 	return utf8_char_compute_skip_or_error(*(const unsigned char *)p);
 }
 
+unsigned int LIB_str_utf8_size_safe(const char *p) {
+	return utf8_char_compute_skip(*(const unsigned char *)p);
+}
 
 unsigned int LIB_str_utf8_as_unicode_step_safe(const char *p, size_t length, size_t *r_index) {
 	uint result = LIB_str_utf8_as_unicode_step_or_error(p, length, r_index);

@@ -29,6 +29,8 @@ int LIB_wcwidth_safe(wchar_t ucs);
 /** \name UTF8
  * \{ */
 
+unsigned int LIB_str_utf8_size_safe(const char *p);
+
 const char *LIB_str_find_next_char_utf8(const char *p, const char *str_end);
 const char *LIB_str_find_prev_char_utf8(const char *p, const char *str_start);
 

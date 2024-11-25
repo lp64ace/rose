@@ -31,6 +31,9 @@ typedef struct wmWindow {
 	unsigned int sizex;
 	unsigned int sizey;
 
+	float last_draw;
+	float delta_time;
+
 	/** Internal window id, used for matching screens, greater than 0. */
 	int winid;
 

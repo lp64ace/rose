@@ -222,6 +222,16 @@ bool ui_but_contains_rect(const uiBut *but, const rctf *rect) {
 }
 
 void ui_but_update(uiBut *but) {
+	switch (but->type) {
+		case UI_BTYPE_EDIT: {
+			if (ui_but_is_editing(but)) {
+				
+			}
+			else {
+				but->hscroll = 0;
+			}
+		} break;
+	}
 }
 
 uiBut *ui_block_active_but_get(const uiBlock *block) {

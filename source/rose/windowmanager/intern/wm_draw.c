@@ -53,6 +53,7 @@ ROSE_INLINE void wm_draw_offscreen_texture_parameters(GPUOffScreen *offscreen) {
 	/** No mipmaps or filtering. */
 	GPU_texture_mipmap_mode(texture, false, false);
 }
+
 ROSE_INLINE void wm_draw_region_buffer_create(ARegion *region, bool viewport) {
 	if (region->draw_buffer) {
 		/** Free offscreen buffer on size changes. Viewport auto resizes. */
@@ -85,6 +86,7 @@ ROSE_INLINE void wm_draw_region_buffer_create(ARegion *region, bool viewport) {
 		region->draw_buffer->bound = -1;
 	}
 }
+
 ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
 	if (!region->draw_buffer) {
 		return;
@@ -102,6 +104,7 @@ ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
 
 	region->draw_buffer->bound = view;
 }
+
 ROSE_INLINE void wm_draw_region_unbind(ARegion *region) {
 	if (!region->draw_buffer) {
 		return;
@@ -290,9 +293,11 @@ void WM_do_draw(struct rContext *C) {
 		CTX_wm_window_set(C, window);
 		do {
 			wm_window_make_drawable(wm, window);
+			window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
 
 			wm_window_draw(C, window);
 
+			window->last_draw += window->delta_time;
 			WTK_window_swap_buffers(window->handle);
 		} while (false);
 		CTX_wm_window_set(C, NULL);

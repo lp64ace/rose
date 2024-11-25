@@ -5,6 +5,8 @@
 
 #include "LIB_utildefines.h"
 
+#include <limits.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -73,6 +75,8 @@ void ui_window_to_block_fl(const struct ARegion *region, const struct uiBlock *b
 /* -------------------------------------------------------------------- */
 /** \name UI Button
  * \{ */
+
+int ui_but_text_font(struct uiBut *but);
 
 void ui_but_update(struct uiBut *but);
 void ui_draw_but(const struct rContext *C, struct ARegion *region, struct uiBut *but, const rcti *rect);
