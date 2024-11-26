@@ -20,6 +20,7 @@ typedef struct uiWidgetColors {
 } uiWidgetColors;
 
 typedef struct ThemeUI {
+	uiWidgetColors wcol_sepr;
 	uiWidgetColors wcol_but;
 	uiWidgetColors wcol_txt;
 	uiWidgetColors wcol_edit;
@@ -43,6 +44,7 @@ typedef struct Theme {
 	
 	ThemeUI tui;
 	
+	ThemeSpace space_empty;
 	ThemeSpace space_view3d;
 	ThemeSpace space_topbar;
 	ThemeSpace space_statusbar;

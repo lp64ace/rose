@@ -57,16 +57,71 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name TopBar Header Region Methods
  * \{ */
 
+ROSE_INLINE uiBlock *topbar_create_file_new_menu(struct rContext *C, ARegion *region, void *arg) {
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "file-new-menu"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_BUT, "File", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Project", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Workspace", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		block->direction = UI_DIR_RIGHT;
+		UI_block_end(C, block);
+	}
+	return block;
+}
+
+ROSE_INLINE uiBlock *topbar_create_file_open_menu(struct rContext *C, ARegion *region, void *arg) {
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "file-open-menu"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_BUT, "File", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Project", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Workspace", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		block->direction = UI_DIR_RIGHT;
+		UI_block_end(C, block);
+	}
+	return block;
+}
+
+ROSE_INLINE uiBlock *topbar_create_file_menu(struct rContext *C, ARegion *region, void *arg) {
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "file-menu"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+		uiDefMenu(block, UI_BTYPE_MENU, "> New", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, topbar_create_file_new_menu);
+		uiDefMenu(block, UI_BTYPE_MENU, "> Open", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, topbar_create_file_new_menu);
+		uiDefBut(block, UI_BTYPE_HSEPR, "", 0, 0, 8 * UI_UNIT_X, 1);
+		uiDefBut(block, UI_BTYPE_BUT, "Save", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Save As...", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_HSEPR, "", 0, 0, 8 * UI_UNIT_X, 1);
+		uiDefBut(block, UI_BTYPE_BUT, "Quit", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		block->direction = UI_DIR_DOWN;
+		UI_block_end(C, block);
+	}
+	return block;
+}
+
+ROSE_INLINE uiBlock *topbar_create_help_menu(struct rContext *C, ARegion *region, void *arg) {
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "help-menu"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_BUT, "Documentation", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Credits", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		uiDefBut(block, UI_BTYPE_BUT, "Copyright", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y);
+		block->direction = UI_DIR_DOWN;
+		UI_block_end(C, block);
+	}
+	return block;
+}
+
 ROSE_INLINE void topbar_header_region_draw(struct rContext *C, ARegion *region) {
 	ED_region_header_draw(C, region);
 
 	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "block-left"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 0);
-		uiLayout *layout = UI_layout_row(root, 1);
-		uiDefBut(block, UI_BTYPE_BUT, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y - 1);
-		uiDefBut(block, UI_BTYPE_BUT, "View", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y - 1);
-		uiDefBut(block, UI_BTYPE_BUT, "Help", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y - 1);
+	if ((block = UI_block_begin(C, region, "menu"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
+		uiLayout *layout = UI_layout_row(root, 0);
+		uiDefMenu(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, region->sizey, topbar_create_file_menu);
+		uiDefMenu(block, UI_BTYPE_MENU, "Help", 0, 0, 2 * UI_UNIT_X, region->sizey, topbar_create_help_menu);
 		UI_block_end(C, block);
 	}
 }

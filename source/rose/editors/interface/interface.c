@@ -135,6 +135,12 @@ void ui_block_to_window_rctf(const ARegion *region, const uiBlock *block, rctf *
 	ui_block_to_window_fl(region, block, &dst->xmax, &dst->ymax);
 }
 
+void ui_window_to_block_rctf(const ARegion *region, const uiBlock *block, rctf *dst, const rctf *src) {
+	memcpy(dst, src, sizeof(rctf));
+	ui_window_to_block_fl(region, block, &dst->xmin, &dst->ymin);
+	ui_window_to_block_fl(region, block, &dst->xmax, &dst->ymax);
+}
+
 void ui_window_to_block_fl(const ARegion *region, const uiBlock *block, float *x, float *y) {
 	const float getsizex = (float)LIB_rcti_size_x(&region->winrct) + 1;
 	const float getsizey = (float)LIB_rcti_size_y(&region->winrct) + 1;
@@ -186,6 +192,14 @@ uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w,
 	
 	LIB_addtail(&block->buttons, but);
 	
+	return but;
+}
+
+uiBut *uiDefMenu(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiBlockCreateFunc create) {
+	uiBut *but = uiDefBut(block, type, name, x, y, w, h);
+	if (but) {
+		but->menu_create_func = create;
+	}
 	return but;
 }
 
@@ -278,8 +292,8 @@ ROSE_INLINE void ui_update_window_matrix(wmWindow *window, ARegion *region, uiBl
 		GPU_matrix_projection_get(block->winmat);
 	}
 	else {
-		const int sizex = WM_window_width(window);
-		const int sizey = WM_window_height(window);
+		const int sizex = WM_window_size_x(window);
+		const int sizey = WM_window_size_y(window);
 		const rcti winrct = {
 			.xmin = 0,
 			.xmax = sizex - 1,
@@ -354,6 +368,7 @@ void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_
 	}
 	UI_block_update_from_old(C, block);
 	ui_block_bounds_calc(block);
+	block->closed = true;
 }
 
 void UI_block_end(struct rContext *C, uiBlock *block) {
@@ -411,6 +426,23 @@ void UI_block_region_set(uiBlock *block, ARegion *region) {
 		LIB_ghash_reinsert(region->runtime.block_name_map, block->name, block, NULL, NULL);
 	}
 	block->oldblock = oldblock;
+}
+
+void UI_block_translate(uiBlock *block, float dx, float dy) {
+	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+		LIB_rctf_translate(&but->rect, dx, dy);
+	}
+	LIB_rctf_translate(&block->rect, dx, dy);
+}
+
+void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {
+	wmWindow *window = CTX_wm_window(C);
+
+	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+		if (block->active) {
+			ui_update_window_matrix(window, region, block);
+		}
+	}
 }
 
 void UI_blocklist_free(struct rContext *C, ARegion *region) {

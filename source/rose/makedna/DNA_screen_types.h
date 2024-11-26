@@ -196,6 +196,8 @@ enum {
 	RGN_TYPE_ANY = -1,
 	RGN_TYPE_WINDOW,
 	RGN_TYPE_HEADER,
+	/** Use for temporary regions, for example pop-ups! */
+	RGN_TYPE_TEMPORARY,
 };
 
 /** #ARegion->flag */
@@ -212,11 +214,12 @@ enum {
 
 #define AREAMINX 32
 #define PIXELSIZE 1
-#define WIDGET_UNIT 26
+#define WIDGET_UNIT 22
 
 #define UI_UNIT_X WIDGET_UNIT
 #define UI_UNIT_Y WIDGET_UNIT
-#define UI_TEXT_MARGIN_X 8
+#define UI_TEXT_MARGIN_X 4
+#define UI_MENU_PADDING 0
 
 #ifdef __cplusplus
 }

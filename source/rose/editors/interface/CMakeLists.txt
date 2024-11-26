@@ -28,6 +28,8 @@ set(SRC
 	interface_draw.c
 	interface_handlers.c
 	interface_layout.cc
+	interface_region.c
+	interface_region_popup.c
 	interface_undo.c
 	interface_widgets.c
 	resources.c

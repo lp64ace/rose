@@ -62,6 +62,7 @@ typedef struct ARegionType {
 	/** Does not free the #ARegion itself. */
 	void (*free)(struct ARegion *region);
 
+	void (*layout)(struct rContext *C, struct ARegion *region);
 	void (*draw)(struct rContext *C, struct ARegion *region);
 
 	int minsizex;

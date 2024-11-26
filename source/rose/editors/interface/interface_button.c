@@ -40,6 +40,10 @@ ROSE_INLINE uiWidgetColors *widget_colors(int type) {
 	Theme *theme = UI_GetTheme();
 
 	switch(type) {
+		case UI_BTYPE_HSEPR:
+		case UI_BTYPE_VSEPR: {
+			return &theme->tui.wcol_sepr;
+		} break;
 		case UI_BTYPE_BUT: {
 			return &theme->tui.wcol_but;
 		} break;
@@ -169,6 +173,14 @@ ROSE_INLINE void ui_draw_but_back(const struct rContext *C, uiBut *but, uiWidget
 
 	rctf rectf;
 	LIB_rctf_rcti_copy(&rectf, rect);
+
+	if (but->type == UI_BTYPE_HSEPR) {
+		rectf.ymin = rectf.ymax = LIB_rctf_cent_y(&rectf);
+	}
+	else if (but->type == UI_BTYPE_VSEPR) {
+		rectf.xmin = rectf.xmax = LIB_rctf_cent_x(&rectf);
+	}
+
 	UI_draw_roundbox_4fv_ex(&rectf, fill, fill, 0, border, 1, colors->roundness);
 }
 
@@ -222,19 +234,10 @@ ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidget
 
 	GPU_blend(GPU_BLEND_ALPHA);
 
-	if (ELEM(but->type, UI_BTYPE_BUT)) {
-		/** Button texts are aligned in the center */
-		int x = LIB_rcti_cent_x(&client) - but->strwidth / 2;
-		int y = LIB_rcti_cent_y(&client) - RFT_height_max(font) / 3;
-		RFT_position(font, x, y, 0.0f);
-	}
-	else {
-		ROSE_assert(ELEM(but->type, UI_BTYPE_EDIT, UI_BTYPE_TXT));
-		ui_draw_but_text_sel(C, but, colors, rect);
-		int x = client.xmin;
-		int y = LIB_rcti_cent_y(&client) - RFT_height_max(font) / 3;
-		RFT_position(font, x, y, 0.0f);
-	}
+	ui_draw_but_text_sel(C, but, colors, rect);
+	int x = client.xmin;
+	int y = LIB_rcti_cent_y(&client) - RFT_height_max(font) / 3;
+	RFT_position(font, x, y, 0.0f);
 	
 	RFT_draw(font, but->name + but->hscroll, INT_MAX);
 }

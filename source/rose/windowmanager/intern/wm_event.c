@@ -255,7 +255,7 @@ void WM_do_handlers(struct rContext *C) {
 			eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 			
 			CTX_wm_window_set(C, window);
-			
+	
 			/* We let modal handlers get active area/region. */
 			CTX_wm_area_set(C, area_event_inside(C, evt->mouse_xy));
 			CTX_wm_region_set(C, region_event_inside(C, evt->mouse_xy));
@@ -264,21 +264,31 @@ void WM_do_handlers(struct rContext *C) {
 			
 			wm_region_mouse_co(C, evt);
 
-			/* First we do priority handlers, modal + some limited key-maps. */
-			action |= wm_handlers_do(C, evt, &window->modalhandlers);
-			
 			Screen *screen = WM_window_screen_get(window);
+			CTX_wm_screen_set(C, screen);
+
+			LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
+				action |= wm_event_do_region_handlers(C, evt, region);
+
+				CTX_wm_region_set(C, NULL);
+			}
+
+			if ((action & WM_HANDLER_BREAK) == 0) {
+				/* First we do priority handlers, modal + some limited key-maps. */
+				action |= wm_handlers_do(C, evt, &window->modalhandlers);
+			}
+		
 			if ((action & WM_HANDLER_BREAK) == 0) {
 				if (evt->type == MOUSEMOVE) {
 					ED_screen_set_active_region(C, window, evt->mouse_xy);
 				}
-				
+
 				ED_screen_areas_iter(window, screen, area) {
 					if (wm_event_inside_rect(evt, &area->totrct)) {
 						CTX_wm_area_set(C, area);
-						
+
 						action |= wm_event_do_handlers_area_regions(C, evt, area);
-						
+
 						CTX_wm_region_set(C, NULL);
 						if ((action & WM_HANDLER_BREAK) == 0) {
 							wm_region_mouse_co(C, evt);
@@ -306,6 +316,7 @@ void WM_do_handlers(struct rContext *C) {
 			LIB_remlink(&window->event_queue, evt);
 			wm_event_update_last_handled(window, evt);
 		}
+		CTX_wm_screen_set(C, NULL);
 		CTX_wm_window_set(C, NULL);
 	}
 }

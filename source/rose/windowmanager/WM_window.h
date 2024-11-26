@@ -40,8 +40,8 @@ struct Screen *WM_window_screen_get(const struct wmWindow *window);
 /** \name Query Methods
  * \{ */
 
-int WM_window_width(const struct wmWindow *window);
-int WM_window_height(const struct wmWindow *window);
+int WM_window_size_x(const struct wmWindow *window);
+int WM_window_size_y(const struct wmWindow *window);
 void WM_window_rect_calc(const struct wmWindow *window, rcti *r_rect);
 void WM_window_screen_rect_calc(const struct wmWindow *window, rcti *r_rect);
 

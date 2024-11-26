@@ -23,6 +23,9 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 		const unsigned char *cp = error;
 		
 		switch(spacetype) {
+			case SPACE_EMPTY: {
+				ts = &theme->space_empty;
+			} break;
 			case SPACE_VIEW3D: {
 				ts = &theme->space_view3d;
 			} break;
@@ -39,7 +42,7 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 		
 		switch(color) {
 			case TH_BACK: {
-				if(ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
+				if(ELEM(theme_state.regionid, RGN_TYPE_WINDOW, RGN_TYPE_TEMPORARY)) {
 					cp = ts->back;
 				}
 				else if(ELEM(theme_state.regionid, RGN_TYPE_HEADER)) {

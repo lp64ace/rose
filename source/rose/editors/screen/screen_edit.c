@@ -108,7 +108,7 @@ ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *scr
 	const int size = PIXELSIZE * UI_UNIT_Y;
 	rcti rect;
 
-	LIB_rcti_init(&rect, 0, WM_window_width(window) - 1, 0, WM_window_height(window) - 1);
+	LIB_rcti_init(&rect, 0, WM_window_size_x(window) - 1, 0, WM_window_size_y(window) - 1);
 	rect.ymin = rect.ymax - size;
 
 	screen_global_area_refresh(window, screen, SPACE_TOPBAR, GLOBAL_AREA_ALIGN_TOP, &rect, size, size, size);
@@ -120,7 +120,7 @@ ROSE_INLINE void screen_global_statusbar_area_refresh(wmWindow *window, Screen *
 	const int size = size_max;
 	rcti rect;
 
-	LIB_rcti_init(&rect, 0, WM_window_width(window) - 1, 0, WM_window_height(window) - 1);
+	LIB_rcti_init(&rect, 0, WM_window_size_x(window) - 1, 0, WM_window_size_y(window) - 1);
 	rect.ymax = rect.ymin + size;
 
 	screen_global_area_refresh(window, screen, SPACE_STATUSBAR, GLOBAL_AREA_ALIGN_BOTTOM, &rect, size, size_min, size_max);

@@ -182,14 +182,14 @@ Screen *WM_window_screen_get(const wmWindow *window) {
 /** \name Query Methods
  * \{ */
 
-int WM_window_width(const struct wmWindow *window) {
+int WM_window_size_x(const struct wmWindow *window) {
 	return window->sizex;
 }
-int WM_window_height(const struct wmWindow *window) {
+int WM_window_size_y(const struct wmWindow *window) {
 	return window->sizey;
 }
 void WM_window_rect_calc(const wmWindow *window, rcti *r_rect) {
-	LIB_rcti_init(r_rect, 0, WM_window_width(window), 0, WM_window_height(window));
+	LIB_rcti_init(r_rect, 0, WM_window_size_x(window), 0, WM_window_size_y(window));
 }
 void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 	WM_window_rect_calc(window, r_rect);

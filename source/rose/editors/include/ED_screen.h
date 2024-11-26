@@ -32,10 +32,14 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 /** \name Region
  * \{ */
 
+void ED_region_floating_init(struct ARegion *region);
 void ED_region_pixelspace(struct ARegion *region);
 
 void ED_region_exit(struct rContext *C, struct ARegion *region);
+void ED_region_do_layout(struct rContext *C, struct ARegion *region);
 void ED_region_do_draw(struct rContext *C, struct ARegion *region);
+
+void ED_region_update_rect(struct ARegion *region);
 
 void ED_region_header_init(struct ARegion *region);
 void ED_region_header_exit(struct ARegion *region);

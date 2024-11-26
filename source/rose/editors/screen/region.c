@@ -24,6 +24,10 @@
 /** \name Region
  * \{ */
 
+void ED_region_floating_init(ARegion *region) {
+	region->visible = true;
+}
+
 void ED_region_pixelspace(ARegion *region) {
 	GPU_matrix_ortho_2d_set(0.0f, region->sizex, 0.0f, region->sizey);
 }
@@ -52,7 +56,27 @@ void ED_region_exit(struct rContext *C, ARegion *region) {
 	CTX_wm_region_set(C, prevar);
 }
 
-void ED_region_do_draw(struct rContext *C, struct ARegion *region) {
+void ED_region_update_rect(ARegion *region) {
+	region->sizex = LIB_rcti_size_x(&region->winrct);
+	region->sizey = LIB_rcti_size_y(&region->winrct);
+}
+
+void ED_region_do_layout(struct rContext *C, ARegion *region) {
+	GPU_matrix_push();
+	GPU_matrix_push_projection();
+	GPU_matrix_identity_set();
+	
+	ED_region_pixelspace(region);
+	
+	if (region->type && region->type->layout) {
+		region->type->layout(C, region);
+	}
+	
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
+}
+
+void ED_region_do_draw(struct rContext *C, ARegion *region) {
 	ScrArea *area = CTX_wm_area(C);
 	
 	UI_SetTheme((area) ? area->spacetype : SPACE_EMPTY, region->regiontype);

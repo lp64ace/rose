@@ -119,17 +119,17 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	}
 
 	if (region->sizex == 0 && region->type->prefsizex == 0) {
-		region->type->prefsizex = AREAMINX;
+		region->type->prefsizex = PIXELSIZE * AREAMINX;
 	}
 	if (region->sizey == 0 && region->type->prefsizey == 0) {
-		region->type->prefsizey = UI_UNIT_Y;
+		region->type->prefsizey = PIXELSIZE * UI_UNIT_Y;
 	}
 
 	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 0.5f : region->type->prefsizex);
 	int prefsizey;
 
 	if (region->regiontype == RGN_TYPE_HEADER) {
-		prefsizey = UI_UNIT_Y;
+		prefsizey = PIXELSIZE * UI_UNIT_Y;
 	}
 	else {
 		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 0.5f : region->type->prefsizey);
@@ -413,7 +413,7 @@ bool ED_area_is_global(const ScrArea *area) {
 
 int ED_area_global_size_y(const ScrArea *area) {
 	ROSE_assert(ED_area_is_global(area));
-	return PIXELSIZE * area->global->height;
+	return area->global->height;
 }
 
 void screen_area_spacelink_add(ScrArea *area, int spacetype) {
