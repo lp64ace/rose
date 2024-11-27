@@ -112,6 +112,8 @@ typedef struct uiBut {
 	struct uiBut *prev, *next;
 
 	char *name;
+	char *str;
+	char *drawstr;
 	void *active;
 
 	rctf rect;

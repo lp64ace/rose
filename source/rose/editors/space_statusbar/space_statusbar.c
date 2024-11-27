@@ -57,12 +57,10 @@ ROSE_INLINE void statusbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name StatusBar Main Region Methods
  * \{ */
 
-void statusbar_header_region_draw(struct rContext *C, ARegion *region) {
+ROSE_STATIC void statusbar_header_region_layout(struct rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
 
 	char *text = LIB_strformat_allocN("%.1f", 1.0f / window->delta_time);
-
-	ED_region_header_draw(C, region);
 
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "block"))) {
@@ -72,13 +70,6 @@ void statusbar_header_region_draw(struct rContext *C, ARegion *region) {
 	}
 
 	MEM_freeN(text);
-}
-
-void statusbar_header_region_init(ARegion *region) {
-	ED_region_header_init(region);
-}
-void statusbar_header_region_exit(ARegion *region) {
-	ED_region_header_exit(region);
 }
 
 /** \} */
@@ -113,9 +104,10 @@ void ED_spacetype_statusbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "StatusBar::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = statusbar_header_region_draw;
-		art->init = statusbar_header_region_init;
-		art->exit = statusbar_header_region_exit;
+		art->layout = statusbar_header_region_layout;
+		art->draw = ED_region_header_draw;
+		art->init = ED_region_header_init;
+		art->exit = ED_region_header_exit;
 	}
 	// Main
 	{

@@ -55,26 +55,40 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name TopBar Header Region Methods
  * \{ */
 
-ROSE_INLINE void topbar_but(struct rContext *C, void *vbut, void *unused) {
-	/** Not handled currently! */
+ROSE_INLINE void topbar_header_file_menu_but(struct rContext *C, void *vbut, void *unused) {
+	
 }
 
-ROSE_INLINE void topbar_header_region_draw(struct rContext *C, ARegion *region) {
-	ED_region_header_draw(C, region);
+ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, void *arg) {
+	const int isize_x = 6 * PIXELSIZE * UI_UNIT_X;
+	const int isize_y = 1 * PIXELSIZE * UI_UNIT_Y;
 
 	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "menu"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
-		uiLayout *layout = UI_layout_row(root, 1);
-		uiDefBut(block, UI_BTYPE_BUT, "File", 0, 0, 2 * UI_UNIT_X, region->sizey, topbar_but);
-		uiDefBut(block, UI_BTYPE_BUT, "Help", 0, 0, 2 * UI_UNIT_X, region->sizey, topbar_but);
+	if ((block = UI_block_begin(C, region, "file"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_BUT, "New", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
+		uiDefBut(block, UI_BTYPE_BUT, "Open", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
+		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
+
+		uiDefBut(block, UI_BTYPE_BUT, "Save", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
+		uiDefBut(block, UI_BTYPE_BUT, "Save As...", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
+		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
+
+		uiDefBut(block, UI_BTYPE_BUT, "Quit", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
+		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
 		UI_block_end(C, block);
 	}
+	return block;
 }
 
-void topbar_header_region_init(ARegion *region) {
-}
-void topbar_header_region_exit(ARegion *region) {
+ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region) {
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "topbar"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
+		uiLayout *layout = UI_layout_row(root, 1);
+		uiDefMenu(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, region->sizey, topbar_header_file_menu);
+		UI_block_end(C, block);
+	}
 }
 
 /** \} */
@@ -109,9 +123,10 @@ void ED_spacetype_topbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "SpaceTopBar::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = topbar_header_region_draw;
-		art->init = topbar_header_region_init;
-		art->exit = topbar_header_region_exit;
+		art->layout = topbar_header_region_layout;
+		art->draw = ED_region_header_draw;
+		art->init = ED_region_header_init;
+		art->exit = ED_region_header_exit;
 	}
 	// Main Region
 	{

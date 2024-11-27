@@ -296,7 +296,7 @@ ROSE_STATIC uiBlock *ui_popup_block_refresh(struct rContext *C, uiPopupBlockHand
 	ED_region_update_rect(region);
 
 	WM_get_projection_matrix(block->winmat, &region->winrct);
-	
+
 	return block;
 }
 

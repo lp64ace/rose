@@ -47,7 +47,7 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->menu_create_func != but_old->menu_create_func) {
 		return false;
 	}
-	if (ELEM(but_new->type, UI_BTYPE_BUT, UI_BTYPE_TXT) && !STREQ(but_new->name, but_old->name)) {
+	if (!STREQ(but_new->name, but_old->name)) {
 		return false;
 	}
 	return true;
@@ -103,6 +103,8 @@ ROSE_STATIC bool ui_but_update_from_old_block(struct rContext *C, uiBlock *block
 
 ROSE_STATIC void ui_but_mem_delete(uiBut *but) {
 	MEM_freeN(but->name);
+	MEM_SAFE_FREE(but->str);
+	MEM_SAFE_FREE(but->drawstr);
 	MEM_freeN(but);
 }
 
@@ -184,6 +186,9 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
 	
 	but->name = LIB_strdupN(name);
+	if (ELEM(type, UI_BTYPE_BUT, UI_BTYPE_EDIT, UI_BTYPE_MENU, UI_BTYPE_TXT)) {
+		but->str = LIB_strdupN(name);
+	}
 	but->rect.xmin = x;
 	but->rect.ymin = y;
 	but->rect.xmax = but->rect.xmin + w;
@@ -449,11 +454,11 @@ void UI_block_region_set(uiBlock *block, ARegion *region) {
 			region->runtime.block_name_map = LIB_ghash_str_new(__func__);
 		}
 		oldblock = (uiBlock *)LIB_ghash_lookup(region->runtime.block_name_map, block->name);
-		
+
 		if(oldblock) {
 			oldblock->active = false;
 		}
-		
+
 		LIB_addhead(lb, block);
 		LIB_ghash_reinsert(region->runtime.block_name_map, block->name, block, NULL, NULL);
 	}

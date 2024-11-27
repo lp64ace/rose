@@ -267,14 +267,19 @@ void WM_do_handlers(struct rContext *C) {
 			Screen *screen = WM_window_screen_get(window);
 			CTX_wm_screen_set(C, screen);
 
-			LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
+			LISTBASE_FOREACH_MUTABLE(ARegion *, region, &screen->regionbase) {
+				if (!LIB_haslink(&screen->regionbase, region)) {
+					/** These are temporary regions, they may be deleted anytime. */
+					break;
+				}
+
 				action |= wm_event_do_region_handlers(C, evt, region);
 
 				CTX_wm_region_set(C, NULL);
 			}
 
 			if ((action & WM_HANDLER_BREAK) == 0) {
-				/* First we do priority handlers, modal + some limited key-maps. */
+				/** First we do priority handlers, modal + some limited key-maps. */
 				action |= wm_handlers_do(C, evt, &window->modalhandlers);
 			}
 		

@@ -187,9 +187,9 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 			if (region->visible || ignore_visibility) {
 				CTX_wm_region_set(C, region);
 				ED_region_do_layout(C, region);
-				CTX_wm_region_set(C, NULL);
 			}
 		}
+		CTX_wm_region_set(C, NULL);
 
 		ED_area_update_region_sizes(wm, window, area);
 
@@ -203,22 +203,22 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 			wm_draw_region_bind(region, 0);
 			ED_region_do_draw(C, region);
 			wm_draw_region_unbind(region);
-			CTX_wm_region_set(C, NULL);
 		}
-
-		CTX_wm_area_set(C, NULL);
+		CTX_wm_region_set(C, NULL);
 	}
-	CTX_wm_screen_set(C, NULL);
+	CTX_wm_area_set(C, NULL);
 
-	/** Draw menus into their own frame-buffer. */
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
 		const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
 		if (region->visible || ignore_visibility) {
 			CTX_wm_region_set(C, region);
 			ED_region_do_layout(C, region);
-			CTX_wm_region_set(C, NULL);
 		}
-		
+	}
+	CTX_wm_region_set(C, NULL);
+
+	/** Draw menus into their own frame-buffer. */
+	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
 		if (!region->visible) {
 			continue;
 		}
@@ -228,8 +228,11 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 		wm_draw_region_bind(region, 0);
 		ED_region_do_draw(C, region);
 		wm_draw_region_unbind(region);
-		CTX_wm_region_set(C, NULL);
+
 	}
+	CTX_wm_region_set(C, NULL);
+
+	CTX_wm_screen_set(C, NULL);
 }
 
 ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, int view) {
