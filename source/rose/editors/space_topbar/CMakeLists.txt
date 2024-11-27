@@ -33,6 +33,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::rosekernel
 	rose::source::dna
+	rose::source::windowmanager
 	rose::source::editors::screen
 	
 	# External Library Dependencies

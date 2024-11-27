@@ -67,7 +67,7 @@ ROSE_INLINE void ui_layout_add_padding_button(uiLayoutRoot *root) {
 		uiLayout *prev_layout = block->layout;
 		
 		block->layout = root->layout;
-		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding);
+		uiDefSepr(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding);
 		block->layout = prev_layout;
 	}
 }

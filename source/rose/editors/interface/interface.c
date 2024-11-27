@@ -38,7 +38,13 @@
 ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but);
 
 ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
-	if(but_new->type != but_old->type) {
+	if (but_new->type != but_old->type) {
+		return false;
+	}
+	if (but_new->handle_func != but_old->handle_func) {
+		return false;
+	}
+	if (but_new->menu_create_func != but_old->menu_create_func) {
 		return false;
 	}
 	if (ELEM(but_new->type, UI_BTYPE_BUT, UI_BTYPE_TXT) && !STREQ(but_new->name, but_old->name)) {
@@ -172,7 +178,7 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 	memcpy(rect, &recti, sizeof(recti));
 }
 
-uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
+ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
 	ROSE_assert(w >= 0 && h >= 0 || (type == UI_BTYPE_SEPR));
 	
 	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
@@ -195,8 +201,34 @@ uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w,
 	return but;
 }
 
+uiBut *uiDefSepr(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
+	ROSE_assert(ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSEPR, UI_BTYPE_VSEPR));
+	
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
+	return but;
+}
+
+uiBut *uiDefText(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
+	ROSE_assert(ELEM(type, UI_BTYPE_TXT));
+	
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
+	return but;
+}
+
+uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiButHandleFunc handle) {
+	ROSE_assert(ELEM(type, UI_BTYPE_BUT, UI_BTYPE_EDIT));
+	
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
+	if (but) {
+		but->handle_func = handle;
+	}
+	return but;
+}
+
 uiBut *uiDefMenu(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiBlockCreateFunc create) {
-	uiBut *but = uiDefBut(block, type, name, x, y, w, h);
+	ROSE_assert(ELEM(type, UI_BTYPE_MENU));
+	
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
 	if (but) {
 		but->menu_create_func = create;
 	}

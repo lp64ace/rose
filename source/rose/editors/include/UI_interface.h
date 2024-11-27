@@ -104,6 +104,8 @@ void UI_block_free(struct rContext *C, struct uiBlock *block);
 /** \name UI Button
  * \{ */
 
+typedef void (*uiButHandleFunc)(struct rContext *C, void *arg1, void *arg2);
+
 typedef struct uiBlock *(*uiBlockCreateFunc)(struct rContext *C, struct ARegion *region, void *arg);
 
 typedef struct uiBut {
@@ -127,6 +129,8 @@ typedef struct uiBut {
 	
 	int vscroll;
 	int hscroll;
+	
+	uiButHandleFunc handle_func;
 
 	/** For #UI_BTYPE_MENU this will be called when the layout has to be refreshed for the menu. */
 	uiBlockCreateFunc menu_create_func;
@@ -149,7 +153,9 @@ enum {
 	UI_SELECT = 1 << 1,
 };
 
-struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h);
+struct uiBut *uiDefSepr(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h);
+struct uiBut *uiDefText(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h);
+struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiButHandleFunc handle);
 struct uiBut *uiDefMenu(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiBlockCreateFunc create);
 
 /** \} */

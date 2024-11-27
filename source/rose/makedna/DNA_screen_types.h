@@ -214,7 +214,7 @@ enum {
 
 #define AREAMINX 32
 #define PIXELSIZE 1
-#define WIDGET_UNIT 22
+#define WIDGET_UNIT 24
 
 #define UI_UNIT_X WIDGET_UNIT
 #define UI_UNIT_Y WIDGET_UNIT
@@ -225,4 +225,4 @@ enum {
 }
 #endif
 
-#endif	// DNA_SCREEN_TYPES_H
+#endif // DNA_SCREEN_TYPES_H

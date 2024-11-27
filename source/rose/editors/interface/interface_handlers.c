@@ -102,6 +102,12 @@ ROSE_STATIC void ui_textedit_set_cursor_pos(uiBut *but, const ARegion *region, c
 	}
 }
 
+ROSE_STATIC void ui_apply_but_func(struct rContext *C, uiBut *but, void *arg1, void *arg2) {
+	if (but->handle_func && ELEM(but, arg1, arg2)) {
+		but->handle_func(C, arg1, arg2);
+	}
+}
+
 ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data);
 
 void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but);
@@ -200,7 +206,7 @@ void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but) {
 void ui_but_active_free(struct rContext *C, uiBut *but) {
 	if (but->active) {
 		uiHandleButtonData *data = but->active;
-		ui_do_but_activate_exit(C, data->region, but);
+		button_activate_state(C, but, BUTTON_STATE_EXIT);
 	}
 }
 
@@ -410,6 +416,7 @@ ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but
 			
 			if (data->selini < 0) {
 				if (!ui_but_contains_px(but, data->region, evt->mouse_xy)) {
+					/** This should cancel the editing and restore the original string. */
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 				}
 			}
@@ -465,6 +472,7 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 					retval |= WM_UI_HANDLER_BREAK;
 				}
 				else {
+					/** This should call the handle function with the new string. */
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 				}
 			}
@@ -477,7 +485,12 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 				}
 			}
 		} break;
+		case EVT_RETKEY: {
+			/** This should call the handle function with the new string. */
+			button_activate_state(C, but, BUTTON_STATE_EXIT);
+		} break;
 		case EVT_ESCKEY: {
+			/** This should cancel the editing and restore the original string. */
 			button_activate_state(C, but, BUTTON_STATE_EXIT);
 		} break;
 		case EVT_BACKSPACEKEY:
@@ -591,7 +604,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 				button_activate_state(C, but, BUTTON_STATE_EXIT);
 				break;
 			}
-			if (evt->type == LEFTMOUSE && evt->value == KM_PRESS) {
+			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
 				retval |= WM_UI_HANDLER_BREAK;
 			}
@@ -607,13 +620,15 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 					button_activate_state(C, but, BUTTON_STATE_MENU_OPEN);
 				}
 				else {
+					ui_apply_but_func(C, but, but, NULL);
+					
 					button_activate_state(C, but, BUTTON_STATE_HIGHLIGHT);
 				}
 				retval |= WM_UI_HANDLER_BREAK;
 			}
 		} break;
 		case BUTTON_STATE_MENU_OPEN: {
-			if (evt->type == RIGHTMOUSE && evt->value == KM_PRESS) {
+			if (evt->type == RIGHTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				button_activate_state(C, but, BUTTON_STATE_EXIT);
 				break;
 			}

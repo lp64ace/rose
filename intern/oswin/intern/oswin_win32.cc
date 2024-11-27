@@ -146,6 +146,8 @@ bool tWindowManager::GetClipboard(char **r_buffer, unsigned int *r_length, bool 
 
 		return true;
 	}
+	
+	return false;
 }
 
 /** \} */

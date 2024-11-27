@@ -25,6 +25,7 @@
 #include "RFT_api.h"
 
 #include <oswin.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
@@ -226,9 +227,15 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	if (!wm) {
 		return;
 	}
+	
+	CTX_data_main_set(C, main);
+	CTX_wm_manager_set(C, wm);
 
 	wm->handle = WTK_window_manager_new();
-	ROSE_assert(wm->handle);
+	if (!wm->handle) {
+		printf("[WindowManager] Suitable backend was not found, running headless...\n");
+		return;
+	}
 
 	WTK_window_manager_destroy_callback(wm->handle, wm_handle_destroy_event, C);
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
@@ -240,9 +247,6 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_button_up_callback(wm->handle, wm_handle_button_up_event, C);
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
-
-	CTX_data_main_set(C, main);
-	CTX_wm_manager_set(C, wm);
 
 	wmWindow *window = WM_window_open(C, NULL, "Rose", 1280, 800);
 	if (!window) {
@@ -267,9 +271,9 @@ void WM_init(struct rContext *C) {
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
-	while (true) {
+	while(true) {
 		bool poll = false;
-		if ((poll = WTK_window_manager_has_events(wm->handle))) {
+		if ((poll = (wm->handle && WTK_window_manager_has_events(wm->handle)))) {
 			/** Handle all pending operating system events. */
 			WTK_window_manager_poll(wm->handle);
 		}
@@ -342,8 +346,10 @@ ROSE_INLINE void window_manager_free_data(struct ID *id) {
 		WM_window_free(wm, (wmWindow *)wm->windows.first);
 	}
 
-	WTK_window_manager_free(wm->handle);
-	wm->handle = NULL;
+	if (wm->handle) {
+		WTK_window_manager_free(wm->handle);
+		wm->handle = NULL;
+	}
 }
 
 ROSE_INLINE void window_manager_foreach_id(struct ID *id, struct LibraryForeachIDData *data) {
