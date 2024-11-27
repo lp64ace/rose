@@ -1142,10 +1142,31 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 				} break;
 			}
 		} break;
+		case WM_MOUSELEAVE: {
+			if (!window->active_) {
+				break;
+			}
+
+			POINT xy;
+			::GetCursorPos(&xy);
+			::ScreenToClient(hwnd, &xy);
+
+
+			if (manager->MouseEvent) {
+				manager->MouseEvent(window, xy.x, xy.y, time);
+			}
+		} break;
 		case WM_MOUSEMOVE: {
 			if(!window->active_) {
 				break;
 			}
+
+			TRACKMOUSEEVENT track;
+			track.cbSize = sizeof(TRACKMOUSEEVENT);
+			track.dwFlags = TME_LEAVE;
+			track.hwndTrack = hwnd;
+			track.dwHoverTime = HOVER_DEFAULT;
+			::TrackMouseEvent(&track);
 			
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
