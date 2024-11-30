@@ -53,11 +53,12 @@ struct RCCToken *RT_token_new_number(struct RCContext *, const struct RCCFile *f
 struct RCCToken *RT_token_new_string(struct RCContext *, const struct RCCFile *f, const RCCSLoc *loc, size_t length);
 struct RCCToken *RT_token_new_eof(struct RCContext *);
 
-struct RCCToken *RT_token_new_name(struct RCContext *, const char *name);
-struct RCCToken *RT_token_new_size(struct RCContext *, unsigned long long size);
-
-struct RCCToken *RT_token_new_int(struct RCContext *, int value);
-struct RCCToken *RT_token_new_llong(struct RCContext *, long long value);
+struct RCCToken *RT_token_new_virtual_keyword(struct RCContext *, const char *keyword);
+struct RCCToken *RT_token_new_virtual_identifier(struct RCContext *, const char *name);
+struct RCCToken *RT_token_new_virtual_punctuator(struct RCContext *, const char *punc);
+struct RCCToken *RT_token_new_virtual_size(struct RCContext *, unsigned long long size);
+struct RCCToken *RT_token_new_virtual_int(struct RCContext *, int value);
+struct RCCToken *RT_token_new_virtual_llong(struct RCContext *, long long value);
 
 struct RCCToken *RT_token_duplicate(struct RCContext *, const struct RCCToken *token);
 

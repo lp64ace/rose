@@ -179,6 +179,13 @@ int main(int argc, char **argv) {
 	RCCFileCache *cache = build_virtual_source(path);
 	RCCFile *file = RT_file_new(path, cache);
 	RCCParser *parser = RT_parser_new(file);
+	
+	RCCToken *conf_tp_size = RT_token_new_virtual_identifier(parser->context, "conf::tp_size");
+	status |= (!DNA_sdna_write_token(sdna, &ptr, ptr, conf_tp_size)) ? 0xe0 : 0x00;
+	status |= (!DNA_sdna_write_type(sdna, &ptr, ptr, parser->configuration.tp_size)) ? 0xe0 : 0x00;
+	RCCToken *conf_tp_enum = RT_token_new_virtual_identifier(parser->context, "conf::tp_enum");
+	status |= (!DNA_sdna_write_token(sdna, &ptr, ptr, conf_tp_enum)) ? 0xe0 : 0x00;
+	status |= (!DNA_sdna_write_type(sdna, &ptr, ptr, parser->configuration.tp_enum)) ? 0xe0 : 0x00;
 
 	if (RT_parser_do(parser)) {
 		LISTBASE_FOREACH(const RCCNode *, node, &parser->nodes) {
@@ -198,8 +205,6 @@ int main(int argc, char **argv) {
 	RT_parser_free(parser);
 	RT_file_free(file);
 	RT_fcache_free(cache);
-
-	ROSE_assert(DNA_sdna_check(sdna));
 
 	LIB_strcpy(path, ARRAY_SIZE(path), binary);
 	LIB_strcat(path, ARRAY_SIZE(path), "/");

@@ -95,7 +95,13 @@ RCCType *Tp_Ellipsis = &(RCCType){
 /** \} */
 
 ROSE_INLINE bool same_basic_types(const RCCType *a, const RCCType *b) {
-	return a->kind == b->kind && (a->tp_basic.is_unsigned == b->tp_basic.is_unsigned);
+	if (ELEM(a->kind, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE) && ELEM(b->kind, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE)) {
+		return a->tp_basic.rank == b->tp_basic.rank;
+	}
+	if (!ELEM(a->kind, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE) && !ELEM(b->kind, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE)) {
+		return a->tp_basic.rank == b->tp_basic.rank && a->tp_basic.is_unsigned == b->tp_basic.is_unsigned;
+	}
+	return false;
 }
 
 ROSE_INLINE bool compatible_basic_types(const RCCType *a, const RCCType *b) {
@@ -121,6 +127,15 @@ ROSE_INLINE const RCCType *composite_basic_types(struct RCContext *c, const RCCT
 /* -------------------------------------------------------------------- */
 /** \name Utils
  * \{ */
+
+RCCType *RT_type_new_empty_basic(RCContext *C) {
+	RCCType *type = RT_context_calloc(C, sizeof(RCCType));
+	type->is_basic = true;
+	type->same = same_basic_types;
+	type->compatible = compatible_basic_types;
+	type->composite = composite_basic_types;
+	return type;
+}
 
 bool RT_type_is_numeric(const RCCType *tp) {
 	if (tp->is_basic) {

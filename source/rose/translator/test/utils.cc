@@ -36,8 +36,8 @@ TEST(Utils, TypeName) {
 				expected = RT_type_new_pointer(C, expected);
 				expected = RT_type_new_function(C, expected);
 				{
-					RCCToken *x = RT_token_new_name(C, "x");
-					RCCToken *y = RT_token_new_name(C, "y");
+					RCCToken *x = RT_token_new_virtual_identifier(C, "x");
+					RCCToken *y = RT_token_new_virtual_identifier(C, "y");
 					RT_type_function_add_named_parameter(C, expected, Tp_ULong, x);
 					RT_type_function_add_named_parameter(C, expected, Tp_Short, y);
 					RT_type_function_finalize(C, expected);
@@ -67,13 +67,13 @@ TEST(Utils, EnumType) {
 
 			RCCType *expected;
 			{
-				RCCToken *e = RT_token_new_name(C, "e");
+				RCCToken *e = RT_token_new_virtual_identifier(C, "e");
 				expected = RT_type_new_enum(C, e, Tp_Int);
 				{
-					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal1"), RT_node_new_constant_value(C, 1));
-					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal2"), RT_node_new_constant_value(C, 2));
-					RT_type_enum_add_constant_expr(C, expected, RT_token_new_name(C, "eVal3"), RT_node_new_constant_value(C, 3));
-					RT_type_enum_add_constant_auto(C, expected, RT_token_new_name(C, "eVal"));
+					RT_type_enum_add_constant_expr(C, expected, RT_token_new_virtual_identifier(C, "eVal1"), RT_node_new_constant_value(C, 1));
+					RT_type_enum_add_constant_expr(C, expected, RT_token_new_virtual_identifier(C, "eVal2"), RT_node_new_constant_value(C, 2));
+					RT_type_enum_add_constant_expr(C, expected, RT_token_new_virtual_identifier(C, "eVal3"), RT_node_new_constant_value(C, 3));
+					RT_type_enum_add_constant_auto(C, expected, RT_token_new_virtual_identifier(C, "eVal"));
 					RT_type_enum_finalize(C, expected);
 				}
 			}
@@ -105,13 +105,13 @@ TEST(Utils, StructType) {
 
 			RCCType *expected;
 			{
-				RCCToken *s = RT_token_new_name(C, "s");
+				RCCToken *s = RT_token_new_virtual_identifier(C, "s");
 				expected = RT_type_new_struct(C, s);
 				{
-					RT_type_struct_add_bitfield(C, expected, RT_token_new_name(C, "f1"), Tp_Int, 0, 16);
-					RT_type_struct_add_bitfield(C, expected, RT_token_new_name(C, "f2"), Tp_Int, 0, 16);
-					RT_type_struct_add_bitfield(C, expected, RT_token_new_name(C, "f3"), Tp_Int, 0, 16);
-					RT_type_struct_add_field(C, expected, RT_token_new_name(C, "x"), Tp_Int, 0);
+					RT_type_struct_add_bitfield(C, expected, RT_token_new_virtual_identifier(C, "f1"), Tp_Int, 0, 16);
+					RT_type_struct_add_bitfield(C, expected, RT_token_new_virtual_identifier(C, "f2"), Tp_Int, 0, 16);
+					RT_type_struct_add_bitfield(C, expected, RT_token_new_virtual_identifier(C, "f3"), Tp_Int, 0, 16);
+					RT_type_struct_add_field(C, expected, RT_token_new_virtual_identifier(C, "x"), Tp_Int, 0);
 					RT_type_struct_finalize(expected);
 				}
 			}
@@ -189,7 +189,7 @@ TEST(Utils, Parser1) {
 					}
 				}
 				EXPECT_TRUE(RT_type_same(RT_node_object(node)->type, expected));
-				EXPECT_TRUE(RT_token_match(RT_node_object(node)->identifier, RT_token_new_name(C, "main")));
+				EXPECT_TRUE(RT_token_match(RT_node_object(node)->identifier, RT_token_new_virtual_identifier(C, "main")));
 				{
 					const RCCNode *stmt = RT_node_block_first(RT_node_object(node)->body);
 					{
@@ -199,7 +199,7 @@ TEST(Utils, Parser1) {
 						const RCCNode *expr = RT_node_expr(stmt);
 						{
 							EXPECT_EQ(expr->kind, NODE_CONSTANT);
-							EXPECT_TRUE(RT_token_match(expr->token, RT_token_new_int(C, 0)));
+							EXPECT_TRUE(RT_token_match(expr->token, RT_token_new_virtual_int(C, 0)));
 						}
 						stmt = stmt->next;
 					}
@@ -241,10 +241,10 @@ TEST(Utils, Parser2) {
 			{
 				EXPECT_TRUE(node->kind == NODE_OBJECT && node->type == OBJ_TYPEDEF);
 				{
-					something = RT_type_new_struct(C, RT_token_new_name(C, "something"));
+					something = RT_type_new_struct(C, RT_token_new_virtual_identifier(C, "something"));
 					{
-						RT_type_struct_add_field(C, something, RT_token_new_name(C, "x"), Tp_Int, 0);
-						RT_type_struct_add_field(C, something, RT_token_new_name(C, "y"), Tp_Int, 0);
+						RT_type_struct_add_field(C, something, RT_token_new_virtual_identifier(C, "x"), Tp_Int, 0);
+						RT_type_struct_add_field(C, something, RT_token_new_virtual_identifier(C, "y"), Tp_Int, 0);
 						RT_type_struct_finalize(something);
 					}
 				}
@@ -255,12 +255,12 @@ TEST(Utils, Parser2) {
 			{
 				EXPECT_TRUE(node->kind == NODE_OBJECT && node->type == OBJ_TYPEDEF);
 				{
-					different = RT_type_new_struct(C, RT_token_new_name(C, "different"));
+					different = RT_type_new_struct(C, RT_token_new_virtual_identifier(C, "different"));
 					{
-						RT_type_struct_add_field(C, different, RT_token_new_name(C, "x"), something, 0);
+						RT_type_struct_add_field(C, different, RT_token_new_virtual_identifier(C, "x"), something, 0);
 						RCCType *unnamed = RT_type_new_struct(C, NULL);
 						{
-							RT_type_struct_add_field(C, unnamed, RT_token_new_name(C, "y"), Tp_Int, 0);
+							RT_type_struct_add_field(C, unnamed, RT_token_new_virtual_identifier(C, "y"), Tp_Int, 0);
 							RT_type_struct_finalize(unnamed);
 						}
 						RT_type_struct_add_field(C, different, NULL, unnamed, 0);

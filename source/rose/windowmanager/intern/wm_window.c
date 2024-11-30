@@ -6,6 +6,7 @@
 #include "KER_main.h"
 #include "KER_screen.h"
 
+#include "WM_api.h"
 #include "WM_handler.h"
 #include "WM_window.h"
 
@@ -95,20 +96,23 @@ wmWindow *WM_window_open(struct rContext *C, wmWindow *parent, const char *name,
  */
 void WM_window_close(struct rContext *C, wmWindow *window) {
 	WindowManager *wm = CTX_wm_manager(C);
-	wmWindow *window_prev = CTX_wm_window(C);
 
 	CTX_wm_window_set(C, window);
 	WM_event_remove_handlers(C, &window->handlers);
 	WM_event_remove_handlers(C, &window->modalhandlers);
-
+	
+	LISTBASE_FOREACH_MUTABLE(wmWindow *, iter, &wm->windows) {
+		if(iter->parent == window) {
+			WM_window_close(C, iter);
+		}
+	}
+	
 	WM_window_screen_set(C, window, NULL);
 	WM_window_free(wm, window);
+	CTX_wm_window_set(C, NULL);
 	
-	if (window_prev == window) {
-		CTX_wm_window_set(C, NULL);
-	}
-	else {
-		CTX_wm_window_set(C, window_prev);
+	if (LIB_listbase_is_empty(&wm->windows)) {
+		WM_exit(C);
 	}
 }
 

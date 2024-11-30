@@ -42,6 +42,8 @@ typedef struct RCCTypeBasic {
 /** \name Utils
  * \{ */
 
+struct RCCType *RT_type_new_empty_basic(struct RCContext *);
+
 bool RT_type_is_numeric(const struct RCCType *tp);
 bool RT_type_is_unsigned(const struct RCCType *tp);
 

@@ -41,7 +41,7 @@ const Theme U_theme_default = {
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
-			.outline = RGBA(0x222222ff),
+			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xc0c0c0ff),

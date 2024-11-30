@@ -313,38 +313,45 @@ RCCToken *RT_token_new_eof(RCContext *C) {
 	return t;
 }
 
-RCCToken *RT_token_new_name(RCContext *C, const char *name) {
+RCCToken *RT_token_new_virtual_keyword(RCContext *C, const char *keyword) {
+	RCCToken *t = token_new(C, TOK_KEYWORD, NULL, NULL, 0);
+	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), keyword);
+	t->beginning_of_line = true;
+	return t;
+}
+
+RCCToken *RT_token_new_virtual_identifier(RCContext *C, const char *name) {
 	RCCToken *t = token_new(C, TOK_IDENTIFIER, NULL, NULL, 0);
-
 	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), name);
-
+	t->beginning_of_line = true;
 	return t;
 }
-RCCToken *RT_token_new_size(RCContext *C, unsigned long long size) {
-	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 
+RCCToken *RT_token_new_virtual_punctuator(RCContext *C, const char *punc) {
+	RCCToken *t = token_new(C, TOK_PUNCTUATOR, NULL, NULL, 0);
+	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), punc);
+	t->beginning_of_line = true;
+	return t;
+}
+
+RCCToken *RT_token_new_virtual_size(RCContext *C, unsigned long long size) {
+	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 	*(unsigned long long *)t->payload = size;
-
 	t->type = Tp_ULLong;
-
 	return t;
 }
-RCCToken *RT_token_new_int(RCContext *C, int value) {
+
+RCCToken *RT_token_new_virtual_int(RCContext *C, int value) {
 	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
-
 	*(long long *)t->payload = (long long)value;
-
 	t->type = Tp_Int;
-
 	return t;
 }
-RCCToken *RT_token_new_llong(RCContext *C, long long value) {
+
+RCCToken *RT_token_new_virtual_llong(RCContext *C, long long value) {
 	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
-
 	*(long long *)t->payload = (long long)value;
-
 	t->type = Tp_LLong;
-
 	return t;
 }
 

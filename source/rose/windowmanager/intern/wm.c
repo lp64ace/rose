@@ -77,10 +77,6 @@ ROSE_INLINE void wm_handle_destroy_event(struct WTKWindow *handle, void *userdat
 	CTX_wm_window_set(C, window);
 	WM_window_close(C, window);
 	CTX_wm_window_set(C, NULL);
-
-	if (LIB_listbase_is_empty(&wm->windows)) {
-		WM_exit(C);
-	}
 }
 
 ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, unsigned int y, void *userdata) {
@@ -258,6 +254,7 @@ void WM_init(struct rContext *C) {
 	KER_idtype_init();
 
 	Main *main = KER_main_new();
+	KER_rose_userdef_init();
 	KER_rose_globals_init();
 	KER_rose_globals_main_replace(main);
 
@@ -284,6 +281,7 @@ void WM_main(struct rContext *C) {
 
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
+	KER_rose_userdef_clear();
 
 	ED_spacetypes_exit();
 

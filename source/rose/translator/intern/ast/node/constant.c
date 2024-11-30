@@ -14,12 +14,12 @@ RCCNode *RT_node_new_constant(RCContext *C, const RCCToken *token) {
 }
 
 RCCNode *RT_node_new_constant_size(RCContext *C, unsigned long long size) {
-	RCCToken *token = RT_token_new_size(C, size);
+	RCCToken *token = RT_token_new_virtual_size(C, size);
 
 	return RT_node_new_constant(C, token);
 }
 RCCNode *RT_node_new_constant_value(RCContext *C, long long value) {
-	RCCToken *token = RT_token_new_llong(C, value);
+	RCCToken *token = RT_token_new_virtual_llong(C, value);
 
 	return RT_node_new_constant(C, token);
 }

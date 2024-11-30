@@ -740,7 +740,7 @@ GHashIterator *LIB_ghashIterator_new(GHash *cont) {
 void LIB_ghashIterator_init(GHashIterator *iter, GHash *cont) {
 	iter->hash = cont;
 	iter->curr_entry = NULL;
-	iter->curr_bucket = UINT_MAX; /* wraps to zero */
+	iter->curr_bucket = SIZE_MAX; /* wraps to zero */
 	if (cont->nentries) {
 		do {
 			iter->curr_bucket++;

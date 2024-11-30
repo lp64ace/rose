@@ -41,6 +41,10 @@ RCCType *RT_type_new_pointer(struct RCContext *C, const RCCType *base) {
 	return p;
 }
 
+RCCType *RT_type_new_empty_pointer(RCContext *C) {
+	return RT_type_new_pointer(C, NULL);
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

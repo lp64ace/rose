@@ -404,8 +404,10 @@ RCCParser *RT_parser_new(const RCCFile *file) {
 
 	configure(parser);
 
-	RT_parser_tokenize(parser->context, &parser->tokens, file);
-	LIB_addtail(&parser->tokens, RT_token_new_eof(parser->context));
+	if (file) {
+		RT_parser_tokenize(parser->context, &parser->tokens, file);
+		LIB_addtail(&parser->tokens, RT_token_new_eof(parser->context));
+	}
 
 	return parser;
 }
@@ -1959,6 +1961,8 @@ const RCCNode *RT_parser_typedef(RCCParser *P, RCCToken **rest, RCCToken *token,
 				break;
 			}
 		}
+
+		ROSE_assert(base);
 
 		RCCObject *object = RT_parser_declarator(P, &token, token, base);
 		if (!object->identifier) {

@@ -37,6 +37,15 @@ typedef struct LMemoryHead {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Query Methods
+ * \{ */
+
+/** Returns the size of the allocated memory block. */
+size_t MEM_lockfree_allocN_length(const void *vptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Allocation Methods
  * \{ */
 

@@ -90,6 +90,9 @@ typedef struct RCCPreprocessor {
 
 	RCContext *context;
 	RCCConditionalInclude *conditional;
+
+	/** Internal headers single include lock variable! */
+	unsigned int included_stdint : 1;
 } RCCPreprocessor;
 
 /** \} */
@@ -309,6 +312,76 @@ ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *toke
 	}
 }
 
+ROSE_INLINE void include_do_stdint(RCCPreprocessor *P, ListBase *ntokens, bool local) {
+	if (P->included_stdint) {
+		return;
+	}
+
+	RCCType *types[] = {
+		Tp_Void,
+		Tp_Char,
+		Tp_Short,
+		Tp_Int,
+		Tp_Long,
+		Tp_LLong,
+	};
+
+	const char *names[] = {
+		"void",
+		"char",
+		"short",
+		"int",
+		"long",
+		"long",
+	};
+
+	size_t primwidth[64];
+	memset(primwidth, 0, sizeof(primwidth));
+
+	for (size_t i = 1; i < ARRAY_SIZE(types); i++) {
+		RCCType *primitive = types[i];
+		if (primitive->tp_basic.is_unsigned == false && primwidth[primitive->tp_basic.rank] == 0) {
+			primwidth[primitive->tp_basic.rank] = i;
+		}
+	}
+
+	LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));
+
+#define DEFINE_FIXED_WIDTH(width)                                                                        \
+	do {                                                                                                 \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, "typedef"));                       \
+		if (types[primwidth[width / 8]] == Tp_LLong) {                                                   \
+			/** Special case the keyword 'long' needs to be inserted twice for long long. */             \
+			LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]])); \
+		}                                                                                                \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]]));     \
+		LIB_addtail(ntokens, RT_token_new_virtual_identifier(P->context, "int" #width "_t"));            \
+		LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));                          \
+	} while (false);                                                                                     \
+	do {                                                                                                 \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, "typedef"));                       \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, "unsigned"));                      \
+		if (types[primwidth[width / 8]] == Tp_LLong) {                                                   \
+			/** Special case the keyword 'long' needs to be inserted twice for long long. */             \
+			LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]])); \
+		}                                                                                                \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]]));     \
+		LIB_addtail(ntokens, RT_token_new_virtual_identifier(P->context, "uint" #width "_t"));           \
+		LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));                          \
+	} while (false);
+
+	DEFINE_FIXED_WIDTH(8);
+	DEFINE_FIXED_WIDTH(16);	 // int16_t, uint16_t
+	DEFINE_FIXED_WIDTH(32);	 // int32_t, uint32_t
+	DEFINE_FIXED_WIDTH(64);	 // int64_t, uint64_t
+
+	LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));
+
+#undef DEFINE_FIXED_WIDTH
+
+	P->included_stdint = true;
+}
+
 ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
 	if (local) {
 		RCCToken *fname = token;
@@ -336,14 +409,29 @@ ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
 		}
 	}
 	else {
+		ListBase ntokens = {
+			.first = NULL,
+			.last = NULL,
+		};
+
 		if (!skip(P, &token, token, "<")) {
 			return;
 		}
 
-		ROSE_assert_unreachable();
+		if (skip(P, &token, token, "stdint") && skip(P, &token, token, ".") && skip(P, &token, token, "h")) {
+			include_do_stdint(P, &ntokens, local);
+		}
 
 		if (!skip(P, &token, token, ">")) {
 			return;
+		}
+
+		RCCToken *ntoken;
+		while ((ntoken = LIB_pophead(&ntokens))) {
+			token->prev->next = ntoken;
+			ntoken->prev = token->prev;
+			ntoken->next = token;
+			token->prev = ntoken;
 		}
 	}
 }
@@ -388,6 +476,8 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 	preprocessor->conditional = NULL;
 	preprocessor->defines = LIB_ghash_str_new("RCCPreprocessor::defines");
 
+	preprocessor->included_stdint = false;
+	
 	RCCToken *itr = (RCCToken *)tokens->first;
 
 	LIB_listbase_clear(tokens);
@@ -497,7 +587,7 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 		/**
 		 * TODO:
 		 *
-		 * Handle #include, #if, #elif, #elifdef, #error
+		 * Handle #if, #elif, #elifdef, #error
 		 */
 
 		ERROR(preprocessor, itr, "invalid preprocessor directive");

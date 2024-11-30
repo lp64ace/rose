@@ -17,7 +17,10 @@ ROSE_INLINE bool isscalar(const RCCNode *expr) {
 	return false;
 }
 ROSE_INLINE bool isint(const RCCNode *expr) {
-	return ELEM(expr->cast->kind, TP_BOOL, TP_DOUBLE, TP_CHAR, TP_SHORT, TP_INT, TP_LONG, TP_LLONG, TP_PTR);
+	if (expr) {
+		return ELEM(expr->cast->kind, TP_BOOL, TP_DOUBLE, TP_CHAR, TP_SHORT, TP_INT, TP_LONG, TP_LLONG, TP_PTR);
+	}
+	return false;
 }
 
 #define MANAGE_BINARY(cast, left, right, op)                                                  \

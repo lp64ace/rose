@@ -16,6 +16,9 @@ struct Main;
  */
 void KER_rose_free();
 
+void KER_rose_userdef_init();
+void KER_rose_userdef_clear();
+
 void KER_rose_globals_init();
 void KER_rose_globals_clear();
 

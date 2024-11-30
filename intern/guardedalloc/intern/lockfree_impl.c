@@ -26,6 +26,21 @@ enum {
 /** \name Allocation Methods
  * \{ */
 
+size_t MEM_lockfree_allocN_length(const void *vptr) {
+	if (vptr) {
+		LMemoryHead *head = (LMemoryHead *)vptr;
+		--head;
+		return head->size;
+	}
+	return 0;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Allocation Methods
+ * \{ */
+
 void *MEM_lockfree_mallocN(size_t size, char const *identity) {
 	size = SIZET_ALIGN_4(size);
 

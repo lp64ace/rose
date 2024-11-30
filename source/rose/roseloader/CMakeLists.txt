@@ -3,7 +3,7 @@
 
 set(INC
 	# Internal Include Directories
-	PUBLIC ../include
+	PUBLIC .
 	
 	# External Include Directories
 	
@@ -21,8 +21,13 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	space_topbar.c
+	RLO_read_write.h
+	RLO_readfile.h
+	RLO_writefile.h
 	
+	intern/readfile.cc
+	intern/versioning_userdef.cc
+	intern/writefile.cc
 )
 
 # -----------------------------------------------------------------------------
@@ -31,11 +36,10 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::source::rosekernel
-	rose::source::roseloader
 	rose::source::dna
-	rose::source::windowmanager
-	rose::source::editors::screen
+	rose::source::roselib
+	rose::source::rosekernel
+	rose::source::translator
 	
 	# External Library Dependencies
 	
@@ -44,5 +48,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(space_topbar "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::editors::space_topbar ALIAS space_topbar)
+rose_add_lib(roseloader "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::source::roseloader ALIAS roseloader)

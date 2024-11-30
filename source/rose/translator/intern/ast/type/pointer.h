@@ -11,6 +11,8 @@ struct RCContext;
 /** \name Creation Methods
  * \{ */
 
+struct RCCType *RT_type_new_empty_pointer(struct RCContext *);
+
 struct RCCType *RT_type_new_pointer(struct RCContext *, const struct RCCType *base);
 
 /** \} */
