@@ -77,15 +77,14 @@ enum {
 	KM_OSKEY = 1 << 3,
 };
 
-
 typedef bool (*EventHandlerPoll)(const struct ARegion *, const struct wmEvent *);
 
 typedef struct wmEventHandler {
 	struct wmEventHandler *prev, *next;
-	
+
 	int type;
 	int flag;
-	
+
 	EventHandlerPoll poll;
 } wmEventHandler;
 
@@ -110,12 +109,12 @@ typedef void (*wmUIHandlerRemoveFunc)(struct rContext *C, void *userdata);
 
 typedef struct wmEventHandler_UI {
 	wmEventHandler head;
-	
+
 	wmUIHandlerFunc handle_fn;
 	wmUIHandlerRemoveFunc remove_fn;
 	/** Associated user data to call the handle function with. */
 	void *user_data;
-	
+
 	struct {
 		struct ScrArea *area;
 		struct ARegion *region;

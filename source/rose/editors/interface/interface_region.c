@@ -8,11 +8,11 @@
 
 #include "ED_screen.h"
 
-#include "LIB_listbase.h"
 #include "LIB_ghash.h"
+#include "LIB_listbase.h"
+#include "LIB_rect.h"
 #include "LIB_string.h"
 #include "LIB_string_utils.h"
-#include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"
@@ -35,7 +35,7 @@ ARegion *ui_region_temp_add(Screen *screen) {
 
 void ui_region_temp_remove(struct rContext *C, Screen *screen, ARegion *region) {
 	wmWindow *win = CTX_wm_window(C);
-	
+
 	ROSE_assert(region->regiontype == RGN_TYPE_TEMPORARY);
 	ROSE_assert(LIB_haslink(&screen->regionbase, region));
 

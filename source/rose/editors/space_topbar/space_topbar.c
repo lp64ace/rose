@@ -65,10 +65,10 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 
 ROSE_INLINE void topbar_header_file_menu_but(struct rContext *C, void *vbut, void *unused) {
 	uiBut *but = (uiBut *)vbut;
-	
+
 	if (STREQ(but->name, "Quit")) {
 		wmWindow *window = CTX_wm_window(C);
-		
+
 		/** Close the window and any child windows and potentially exit the application. */
 		WM_window_close(C, window);
 	}
@@ -77,18 +77,18 @@ ROSE_INLINE void topbar_header_file_menu_but(struct rContext *C, void *vbut, voi
 ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, void *arg) {
 	const int isize_x = 6 * PIXELSIZE * UI_UNIT_X;
 	const int isize_y = 1 * PIXELSIZE * UI_UNIT_Y;
-	
+
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
 		uiDefBut(block, UI_BTYPE_BUT, "New", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
 		uiDefBut(block, UI_BTYPE_BUT, "Open", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
 		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
-		
+
 		uiDefBut(block, UI_BTYPE_BUT, "Save", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
 		uiDefBut(block, UI_BTYPE_BUT, "Save As...", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
 		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
-		
+
 		uiDefBut(block, UI_BTYPE_BUT, "Quit", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
 		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
 		UI_block_end(C, block);

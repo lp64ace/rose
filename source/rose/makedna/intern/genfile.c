@@ -590,7 +590,7 @@ ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RCCType *ty
 	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 	ptrdiff_t offset = (ptrdiff_t)RT_parser_offsetof(parser, type, field);
 	RT_parser_free(parser);
-	
+
 	return offset;
 }
 
@@ -600,7 +600,7 @@ ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RCCType *type) {
 	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 	size_t size = (size_t)RT_parser_size(parser, type);
 	RT_parser_free(parser);
-	
+
 	return size;
 }
 
@@ -609,7 +609,7 @@ size_t DNA_sdna_struct_size(const SDNA *sdna, uint64_t struct_nr) {
 	if (!type) {
 		return 0;
 	}
-	
+
 	return dna_find_type_size(sdna, type);
 }
 
@@ -704,48 +704,52 @@ ROSE_STATIC const RCCField *dna_find_member_with_matching_name(const SDNA *sdna,
 ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const SDNA *dna_new, const RCCType *struct_old, const RCCField *field_new, ReconstructStep *r_step) {
 	const RCCType *struct_new = dna_find_struct_with_matching_name(dna_new, RT_token_as_string(struct_old->tp_struct.identifier));
 	const RCCField *field_old = dna_find_member_with_matching_name(dna_old, struct_old, RT_token_as_string(field_new->identifier));
-	
+
 	fprintf(stdout, "reconstruct info | struct: %s(new), %s(old) | ", RT_token_as_string(struct_new->tp_struct.identifier), RT_token_as_string(struct_old->tp_struct.identifier));
 	fprintf(stdout, "field: %s(new), %s(old) | ", RT_token_as_string(field_new->identifier), (field_old) ? RT_token_as_string(field_old->identifier) : "(null)");
-	
+
 	if (!field_old) {
 		/** Could not find an old member to copy the data to the new member, init to zero! */
 		r_step->type = RECONSTRUCT_STEP_INIT_ZERO;
 		fprintf(stdout, "zero\n");
 		return;
 	}
-	
+
 	const RCCType *type_old = RT_type_unqualified(field_old->type);
 	const RCCType *type_new = RT_type_unqualified(field_new->type);
-	
+
 	const size_t narr_len = (type_new->kind == TP_ARRAY) ? RT_type_array_length(type_new) : 1;
 	const size_t oarr_len = (type_old->kind == TP_ARRAY) ? RT_type_array_length(type_old) : 1;
 	const size_t carr_len = ROSE_MIN(narr_len, oarr_len);
-	
+
 	if (type_new->kind == TP_ARRAY && type_old->kind == TP_ARRAY) {
 		type_old = RT_type_unqualified(type_old->tp_array.element_type);
 		type_new = RT_type_unqualified(type_new->tp_array.element_type);
 	}
-	
+
 	if (type_new->kind == TP_ENUM && type_old->kind == TP_ENUM) {
 		type_old = RT_type_unqualified(type_old->tp_enum.underlying_type);
 		type_new = RT_type_unqualified(type_new->tp_enum.underlying_type);
 	}
-	
+
 	if (type_old->kind == TP_PTR && type_new->kind == TP_PTR) {
+		/**
+		 * TODO: This allows converting files from x32 to x64 systems but causes issues
+		 * when converting files from x64 to x32 since collisions may occur!
+		 */
 		type_old = LIB_ghash_lookup(dna_old->types, "conf::tp_size");
 		type_new = LIB_ghash_lookup(dna_new->types, "conf::tp_size");
 	}
-	
+
 	if (RT_type_same(type_new, type_old)) {
 		r_step->type = RECONSTRUCT_STEP_MEMCPY;
 		r_step->offset_old = dna_find_member_offset(dna_old, struct_old, field_old);
 		r_step->offset_new = dna_find_member_offset(dna_old, struct_new, field_new);
 		r_step->memcpy.size = dna_find_type_size(dna_new, type_new) * carr_len;
-		fprintf(stdout, "memcpy [%zd <- %zd x %zu]\n", r_step->offset_new , r_step->offset_old, carr_len);
+		fprintf(stdout, "memcpy [%zd <- %zd x %zu]\n", r_step->offset_new, r_step->offset_old, carr_len);
 		return;
 	}
-	
+
 	if (type_new->is_basic && type_old->is_basic) {
 		r_step->type = RECONSTRUCT_STEP_CAST_PRIMITIVE;
 		r_step->offset_old = dna_find_member_offset(dna_old, struct_old, field_old);
@@ -753,13 +757,13 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 		r_step->cast.length = carr_len;
 		r_step->cast.type_old = type_old;
 		r_step->cast.type_new = type_new;
-		fprintf(stdout, "cast [%zd <- %zd x %zu]\n", r_step->offset_new , r_step->offset_old, carr_len);
+		fprintf(stdout, "cast [%zd <- %zd x %zu]\n", r_step->offset_new, r_step->offset_old, carr_len);
 		return;
 	}
-	
+
 	if (type_new->kind == TP_STRUCT && type_old->kind == TP_STRUCT) {
 		size_t nfields = LIB_listbase_count(&type_new->tp_struct.fields);
-		
+
 		r_step->type = RECONSTRUCT_STEP_RECONSTRUCT;
 		r_step->offset_old = dna_find_member_offset(dna_old, struct_old, field_old);
 		r_step->offset_new = dna_find_member_offset(dna_old, struct_new, field_new);
@@ -768,15 +772,15 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 		r_step->reconstruct.length = carr_len;
 		r_step->reconstruct.steps = nfields;
 		r_step->reconstruct.info = MEM_mallocN(sizeof(ReconstructStep) * nfields, "ReconstructStep[]");
-		fprintf(stdout, "reconstruct [%zd <- %zd x %zu]\n", r_step->offset_new , r_step->offset_old, carr_len);
-		
+		fprintf(stdout, "reconstruct [%zd <- %zd x %zu]\n", r_step->offset_new, r_step->offset_old, carr_len);
+
 		size_t index;
 		LISTBASE_FOREACH_INDEX(RCCField *, field, &type_new->tp_struct.fields, index) {
 			dna_init_reconstruct_step_for_member(dna_old, dna_new, type_old, field, &r_step->reconstruct.info[index]);
 		}
 		return;
 	}
-	
+
 	fprintf(stdout, "zero\n");
 	r_step->type = RECONSTRUCT_STEP_INIT_ZERO;
 }
@@ -785,7 +789,7 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *dna_old, const SDNA *dna_new, const RCCType *struct_old, const RCCType *struct_new) {
 	size_t nfields = LIB_listbase_count(&struct_new->tp_struct.fields);
 	ReconstructStep *r_step = MEM_mallocN(sizeof(ReconstructStep), "ReconstructStep");
-	
+
 	if (RT_type_same(struct_new, struct_old)) {
 		r_step->type = RECONSTRUCT_STEP_MEMCPY;
 		r_step->offset_old = 0;
@@ -807,7 +811,7 @@ ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *
 			dna_init_reconstruct_step_for_member(dna_old, dna_new, struct_old, field, &r_step->reconstruct.info[index]);
 		}
 	}
-	
+
 	return r_step;
 }
 
@@ -815,19 +819,19 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RC
 #define CAST(cast_new, cast_old)                                                                  \
 	do {                                                                                          \
 		if (tnew->tp_basic.rank == sizeof(cast_new) && told->tp_basic.rank == sizeof(cast_old)) { \
-			if (!tnew->tp_basic.is_unsigned && !told->tp_basic.is_unsigned) { \
-				cast_new *value_new = (cast_new *)ptr_a;                      \
-				cast_old *value_old = (cast_old *)ptr_b;                      \
-				value_new[index] = value_old[index];                          \
-				continue;                                                     \
-			}                                                                 \
-			if (tnew->tp_basic.is_unsigned && told->tp_basic.is_unsigned) {   \
-				unsigned cast_new *value_new = (unsigned cast_new *)ptr_a;    \
-				unsigned cast_old *value_old = (unsigned cast_old *)ptr_b;    \
-				value_new[index] = value_old[index];                          \
-				continue;                                                     \
-			}                                                                 \
-		}                                                                     \
+			if (!tnew->tp_basic.is_unsigned && !told->tp_basic.is_unsigned) {                     \
+				cast_new *value_new = (cast_new *)ptr_a;                                          \
+				cast_old *value_old = (cast_old *)ptr_b;                                          \
+				value_new[index] = value_old[index];                                              \
+				continue;                                                                         \
+			}                                                                                     \
+			if (tnew->tp_basic.is_unsigned && told->tp_basic.is_unsigned) {                       \
+				unsigned cast_new *value_new = (unsigned cast_new *)ptr_a;                        \
+				unsigned cast_old *value_old = (unsigned cast_old *)ptr_b;                        \
+				value_new[index] = value_old[index];                                              \
+				continue;                                                                         \
+			}                                                                                     \
+		}                                                                                         \
 	} while (false)
 
 	for (size_t index = 0; index < length; index++) {
@@ -835,41 +839,40 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RC
 		 * NOTE: We do not allow casting between bool and integer types
 		 * since that would have problematic effects when casting flags.
 		 *
-		 * The main purpose of this conversion/casting is to tackle the 
+		 * The main purpose of this conversion/casting is to tackle the
 		 * issue with sizeof(long long) (Windows) != sizeof(long long) (Linux)
-		 *
-		 * This will handle conversions between the same signedness and 
+		 * This will handle conversions between the same signedness and
 		 * different size!
 		 */
 
 		const bool new_is_integer = ELEM(tnew->kind, TP_CHAR, TP_SHORT, TP_LONG, TP_LLONG);
 		const bool old_is_integer = ELEM(told->kind, TP_CHAR, TP_SHORT, TP_LONG, TP_LLONG);
-		
+
 		if (new_is_integer && old_is_integer) {
 			CAST(char, char);
 			CAST(char, short);
 			CAST(char, int);
 			CAST(char, long);
 			CAST(char, long long);
-			
+
 			CAST(short, char);
 			CAST(short, short);
 			CAST(short, int);
 			CAST(short, long);
 			CAST(short, long long);
-			
+
 			CAST(int, char);
 			CAST(int, short);
 			CAST(int, int);
 			CAST(int, long);
 			CAST(int, long long);
-			
+
 			CAST(long, char);
 			CAST(long, short);
 			CAST(long, int);
 			CAST(long, long);
 			CAST(long, long long);
-			
+
 			CAST(long long, char);
 			CAST(long long, short);
 			CAST(long long, int);
@@ -878,10 +881,10 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RC
 		}
 
 		/**
-		 * NOTE: We do not allow casting between float and integer types 
-		 * since that would have problemati c effects when casting colors, 
-		 * e.g. When trying to cast an unsigned char [3] to float [3] we 
-		 * would get unormalized values that would not be usable when 
+		 * NOTE: We do not allow casting between float and integer types
+		 * since that would have problemati c effects when casting colors,
+		 * e.g. When trying to cast an unsigned char [3] to float [3] we
+		 * would get unormalized values that would not be usable when
 		 * drawing colors!
 		 */
 
@@ -903,7 +906,7 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RC
 }
 
 ROSE_STATIC void dna_reconstruct_struct(void *data_new, const void *data_old, ReconstructStep *step) {
-	switch(step->type){
+	switch (step->type) {
 		case RECONSTRUCT_STEP_INIT_ZERO: {
 		} break;
 		case RECONSTRUCT_STEP_MEMCPY: {
@@ -911,7 +914,7 @@ ROSE_STATIC void dna_reconstruct_struct(void *data_new, const void *data_old, Re
 		} break;
 		case RECONSTRUCT_STEP_CAST_PRIMITIVE: {
 			/**
-			 * Not really able to used templates in C, this code is responsible for handling 
+			 * Not really able to used templates in C, this code is responsible for handling
 			 * trivial casting between types.
 			 *
 			 * An equivalent in C++ would be something like this:
@@ -977,13 +980,13 @@ void *DNA_sdna_struct_reconstruct(const SDNA *dna_old, const SDNA *dna_new, uint
 		fprintf(stderr, "Invalid reconstruct for struct %s, missing equivalent.\n", RT_token_as_string(struct_old->tp_struct.identifier));
 		return NULL;
 	}
-	
+
 	void *data_new = MEM_callocN(dna_find_type_size(dna_new, struct_new), blockname);
-	
+
 	ReconstructStep *step = dna_create_reconstruct_step_for_struct(dna_old, dna_new, struct_old, struct_new);
 	dna_reconstruct_struct(data_new, data_old, step);
 	dna_reconstruct_free_step(step);
-	
+
 	return data_new;
 }
 

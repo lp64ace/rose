@@ -107,4 +107,4 @@ void KER_main_unlock(struct Main *main);
 }
 #endif
 
-#endif // KER_MAIN_H
+#endif	// KER_MAIN_H

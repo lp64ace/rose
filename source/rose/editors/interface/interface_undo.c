@@ -9,11 +9,11 @@
 #include "KER_context.h"
 #include "KER_screen.h"
 
-#include "LIB_listbase.h"
 #include "LIB_ghash.h"
+#include "LIB_listbase.h"
+#include "LIB_rect.h"
 #include "LIB_string.h"
 #include "LIB_string_utils.h"
-#include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"
@@ -40,14 +40,14 @@ typedef struct uiUndoStack_Text {
 } uiUndoStack_Text;
 
 ROSE_STATIC const char *ui_textedit_undo_impl(uiUndoStack_Text *stack, int *cursor_index) {
-	if(stack->current == NULL) {
+	if (stack->current == NULL) {
 		return NULL;
 	}
-	
+
 	/* Travel backwards in the stack and copy information to the caller. */
-	if(stack->current->prev != NULL) {
+	if (stack->current->prev != NULL) {
 		stack->current = stack->current->prev;
-		
+
 		*cursor_index = stack->current->cursor_index;
 		return stack->current->text;
 	}
@@ -55,14 +55,14 @@ ROSE_STATIC const char *ui_textedit_undo_impl(uiUndoStack_Text *stack, int *curs
 }
 
 ROSE_STATIC const char *ui_textedit_redo_impl(uiUndoStack_Text *stack, int *cursor_index) {
-	if(stack->current == NULL) {
+	if (stack->current == NULL) {
 		return NULL;
 	}
-	
+
 	/* Only redo if new data has not been entered since the last undo. */
-	if(stack->current->next != NULL) {
+	if (stack->current->next != NULL) {
 		stack->current = stack->current->next;
-		
+
 		*cursor_index = stack->current->cursor_index;
 		return stack->current->text;
 	}
@@ -70,21 +70,21 @@ ROSE_STATIC const char *ui_textedit_redo_impl(uiUndoStack_Text *stack, int *curs
 }
 
 const char *ui_textedit_undo(uiUndoStack_Text *stack, int direction, int *cursor_index) {
-	if(direction < 0) {
+	if (direction < 0) {
 		return ui_textedit_undo_impl(stack, cursor_index);
 	}
 	return ui_textedit_redo_impl(stack, cursor_index);
 }
 
 void ui_textedit_undo_push(uiUndoStack_Text *stack, const char *text, int cursor_index) {
-	if(stack->current) {
+	if (stack->current) {
 		while (stack->current->next) {
 			uiUndoStack_Text_State *state = stack->current->next;
 			LIB_remlink(&stack->states, state);
 			MEM_freeN(state);
 		}
 	}
-	
+
 	const unsigned int size = LIB_strlen(text) + 1;
 	stack->current = MEM_mallocN(sizeof(uiUndoStack_Text_State) + size, "uiUndoStack_Text_State");
 	stack->current->cursor_index = cursor_index;

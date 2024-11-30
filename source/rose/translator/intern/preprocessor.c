@@ -335,6 +335,7 @@ ROSE_INLINE void include_do_stdint(RCCPreprocessor *P, ListBase *ntokens, bool l
 		"long",
 	};
 
+	/** Only 0 (void), 1 (char), 2 (short), 4 (int), 8 (long/long long), 16 (long long) will be used! */
 	size_t primwidth[64];
 	memset(primwidth, 0, sizeof(primwidth));
 
@@ -477,7 +478,7 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 	preprocessor->defines = LIB_ghash_str_new("RCCPreprocessor::defines");
 
 	preprocessor->included_stdint = false;
-	
+
 	RCCToken *itr = (RCCToken *)tokens->first;
 
 	LIB_listbase_clear(tokens);

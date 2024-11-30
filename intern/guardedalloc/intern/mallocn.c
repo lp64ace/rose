@@ -63,7 +63,7 @@ void MEM_use_lockfree_allocator(void) {
 	assert_for_allocator_change();
 
 	MEM_allocN_length = MEM_lockfree_allocN_length;
-	
+
 	MEM_mallocN = MEM_lockfree_mallocN;
 	MEM_mallocN_aligned = MEM_lockfree_mallocN_aligned;
 	MEM_callocN = MEM_lockfree_callocN;

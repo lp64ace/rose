@@ -365,7 +365,7 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	memcpy(&overlap_rect, &area->totrct, sizeof(rcti));
 	region_rect_recursive(area, (ARegion *)area->regionbase.first, &rect, &overlap_rect, 0);
 	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
-	
+
 	if (area->type->init) {
 		area->type->init(wm, area);
 	}
@@ -377,7 +377,7 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 			if (region->type->init) {
 				region->type->init(region);
 			}
-			
+
 			UI_region_handlers_add(&region->handlers);
 		}
 		else {
@@ -400,7 +400,7 @@ void ED_area_exit(struct rContext *C, ScrArea *area) {
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		ED_region_exit(C, region);
 	}
-	
+
 	WM_event_remove_handlers(C, &area->handlers);
 	WM_event_modal_handler_area_replace(window, area, NULL);
 

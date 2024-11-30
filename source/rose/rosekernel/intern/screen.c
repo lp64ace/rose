@@ -241,7 +241,7 @@ void KER_area_region_free(SpaceType *st, ARegion *region) {
 	else if (region->type && region->type->free) {
 		region->type->free(region);
 	}
-	
+
 	if (region->runtime.block_name_map != NULL) {
 		LIB_ghash_free(region->runtime.block_name_map, NULL, NULL);
 		region->runtime.block_name_map = NULL;

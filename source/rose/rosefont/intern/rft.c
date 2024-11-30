@@ -1,8 +1,8 @@
 #include "MEM_guardedalloc.h"
 
-#include "LIB_string.h"
-#include "LIB_rect.h"
 #include "LIB_math_vector.h"
+#include "LIB_rect.h"
+#include "LIB_string.h"
 #include "LIB_thread.h"
 
 #include "RFT_api.h"

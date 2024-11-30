@@ -1,7 +1,7 @@
 #include "MEM_guardedalloc.h"
 
-#include <math.h>
 #include <ft2build.h>
+#include <math.h>
 
 #include FT_FREETYPE_H
 #include FT_GLYPH_H

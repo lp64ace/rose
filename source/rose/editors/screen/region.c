@@ -42,17 +42,17 @@ void ED_region_exit(struct rContext *C, ARegion *region) {
 	}
 
 	CTX_wm_region_set(C, region);
-	
+
 	WM_event_remove_handlers(C, &region->handlers);
 	WM_event_modal_handler_region_replace(window, region, NULL);
-	
+
 	UI_region_free_active_but_all(C, region);
 
 	WM_draw_region_free(region);
 	region->visible = false;
 
 	UI_blocklist_free(C, region);
-	
+
 	CTX_wm_region_set(C, prevar);
 }
 
@@ -65,28 +65,28 @@ void ED_region_do_layout(struct rContext *C, ARegion *region) {
 	GPU_matrix_push();
 	GPU_matrix_push_projection();
 	GPU_matrix_identity_set();
-	
+
 	ED_region_pixelspace(region);
-	
+
 	if (region->type && region->type->layout) {
 		region->type->layout(C, region);
 	}
-	
+
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
 }
 
 void ED_region_do_draw(struct rContext *C, ARegion *region) {
 	ScrArea *area = CTX_wm_area(C);
-	
+
 	UI_SetTheme((area) ? area->spacetype : SPACE_EMPTY, region->regiontype);
-	
+
 	GPU_matrix_push();
 	GPU_matrix_push_projection();
 	GPU_matrix_identity_set();
-	
+
 	ED_region_pixelspace(region);
-	
+
 	if (region->type && region->type->draw) {
 		region->type->draw(C, region);
 	}
@@ -110,7 +110,7 @@ void ED_region_header_exit(ARegion *region) {
 
 void ED_region_header_draw(struct rContext *C, ARegion *region) {
 	float back[4];
-	
+
 	ScrArea *area = CTX_wm_area(C);
 	if (ED_area_is_global(area)) {
 		UI_GetThemeColor4fv(TH_BACK_HI, back);
@@ -118,7 +118,7 @@ void ED_region_header_draw(struct rContext *C, ARegion *region) {
 	else {
 		UI_GetThemeColor4fv(TH_BACK, back);
 	}
-	
+
 	GPU_clear_color(back[0], back[1], back[2], back[3]);
 }
 
@@ -131,28 +131,28 @@ bool ED_region_contains_xy(const ARegion *region, const int event_xy[2]) {
 }
 
 struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int regiontype, const int event_xy[2]) {
-	if(!area) {
+	if (!area) {
 		return NULL;
 	}
-	
+
 	/* Check overlapped regions first. */
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-		if(!region->overlap) {
+		if (!region->overlap) {
 			continue;
 		}
-		if(ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
-			if(ED_region_contains_xy(region, event_xy)) {
+		if (ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
+			if (ED_region_contains_xy(region, event_xy)) {
 				return region;
 			}
 		}
 	}
 	/* Now non-overlapping ones. */
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-		if(region->overlap) {
+		if (region->overlap) {
 			continue;
 		}
-		if(ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
-			if(ED_region_contains_xy(region, event_xy)) {
+		if (ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
+			if (ED_region_contains_xy(region, event_xy)) {
 				return region;
 			}
 		}

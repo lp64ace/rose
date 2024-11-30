@@ -19,7 +19,7 @@ typedef struct FileReader {
 	FileReaderReadFn read;
 	FileReaderSeekFn seek;
 	FileReaderCloseFn close;
-	
+
 	uint64_t offset;
 } FileReader;
 
@@ -30,4 +30,4 @@ FileReader *LIB_filereader_new_file(int descr);
 }
 #endif
 
-#endif // LIB_FILEREADER_H
+#endif	// LIB_FILEREADER_H

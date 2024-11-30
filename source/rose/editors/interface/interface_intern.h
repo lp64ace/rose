@@ -43,9 +43,9 @@ typedef struct uiWidgetBaseParameters {
 	float tria1_size, tria2_size;
 	float shade_dir;
 	/* We pack alpha check and discard factor in alpha_discard.
-	* If the value is negative then we do alpha check.
-	* The absolute value itself is the discard factor.
-	* Initialize value to 1.0f if you don't want discard. */
+	 * If the value is negative then we do alpha check.
+	 * The absolute value itself is the discard factor.
+	 * Initialize value to 1.0f if you don't want discard. */
 	float alpha_discard;
 	float tria_type;
 	float _pad[3];
@@ -100,7 +100,7 @@ typedef struct uiPopupBlockCreate {
 	uiBlockCreateFunc block_create_func;
 	uiBlockHandleCreateFunc handle_create_func;
 	void *arg;
-	
+
 	int event_xy[2];
 
 	/** Set when popup is initialized from a button. */
@@ -110,12 +110,12 @@ typedef struct uiPopupBlockCreate {
 
 typedef struct uiPopupBlockHandle {
 	struct ARegion *region;
-	
+
 	uiPopupBlockCreate popup_create_vars;
-	
+
 	int max_size_x;
 	int max_size_y;
-	
+
 	struct {
 		struct ScrArea *area;
 		struct ARegion *region;
@@ -181,4 +181,4 @@ void ui_layout_free(struct uiLayout *layout);
 }
 #endif
 
-#endif // INTERFACE_INTERN_H
+#endif	// INTERFACE_INTERN_H

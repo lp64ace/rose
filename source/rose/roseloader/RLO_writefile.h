@@ -13,4 +13,4 @@ bool RLO_write_file(struct Main *main, const char *filepath, int flag);
 }
 #endif
 
-#endif // RLO_WRITEFILE_H
+#endif	// RLO_WRITEFILE_H

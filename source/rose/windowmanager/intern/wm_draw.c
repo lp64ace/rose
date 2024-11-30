@@ -228,7 +228,6 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 		wm_draw_region_bind(region, 0);
 		ED_region_do_draw(C, region);
 		wm_draw_region_unbind(region);
-
 	}
 	CTX_wm_region_set(C, NULL);
 
@@ -240,7 +239,7 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 
 	GPU_clear_color(0.45f, 0.45f, 0.45f, 1.0f);
 	GPU_clear_depth(1.0f);
-	
+
 	/** A #ED_screen_areas_iter gives us the global areas first! */
 	LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {

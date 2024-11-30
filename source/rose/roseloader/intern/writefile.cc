@@ -1,7 +1,7 @@
 #include "MEM_guardedalloc.h"
 
-#include "DNA_userdef_types.h"
 #include "DNA_sdna_types.h"
+#include "DNA_userdef_types.h"
 
 #include "LIB_assert.h"
 #include "LIB_fileops.h"
@@ -10,16 +10,16 @@
 #include "LIB_utildefines.h"
 
 #include "KER_global.h"
-#include "KER_main.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
+#include "KER_main.h"
 
 #include "RLO_read_write.h"
 #include "RLO_writefile.h"
 
 #include "RT_parser.h"
 
-#include "intern/genfile.h" // DNA
+#include "intern/genfile.h"	 // DNA
 
 #include <limits.h>
 
@@ -39,7 +39,7 @@ public:
 	bool open(const char *filepath) override;
 	bool close() override;
 	bool write(const void *but, size_t lenth) override;
-	
+
 private:
 	int fd = -1;
 };
@@ -68,12 +68,12 @@ bool RawWriteWrap::write(const void *buffer, size_t length) {
 
 typedef struct WriteData {
 	struct SDNA *dna;
-	
+
 	struct {
 		/** Set on unlikely case of an error (ignores further file writing). */
 		bool error;
 	} validation;
-	
+
 	/** Wrap writing, so we can use zstd or other compression types later! */
 	WriteWrap *ww;
 } WriteData;
@@ -93,12 +93,12 @@ ROSE_INLINE void writedata_do_write(WriteData *wd, const void *mem, size_t lengt
 	if ((wd == NULL) || (wd->validation.error != false)) {
 		return;
 	}
-	
+
 	if (length > INT_MAX) {
 		ROSE_assert_msg(0, "Cannot write chunks bigger than INT_MAX!");
 		return;
 	}
-	
+
 	if (wd->ww) {
 		if (!wd->ww->write(mem, length)) {
 			wd->validation.error = true;
@@ -110,7 +110,7 @@ ROSE_INLINE void writedata_free(WriteData *wd) {
 	if (wd->dna) {
 		DNA_sdna_free(wd->dna);
 	}
-	
+
 	MEM_freeN(wd);
 }
 
@@ -122,21 +122,21 @@ ROSE_INLINE void writedata_free(WriteData *wd) {
 
 ROSE_STATIC void writestruct_at_address_nr(WriteData *wd, int filecode, uint64_t struct_nr, int nr, const void *address, const void *data) {
 	RHead head;
-	
+
 	if (address == NULL || data == NULL || nr == 0) {
 		return;
 	}
-	
+
 	head.filecode = filecode;
 	head.size = nr * DNA_sdna_struct_size(wd->dna, struct_nr);
 	head.length = nr;
 	head.address = (uint64_t)address;
 	head.dnatype = struct_nr;
-	
+
 	if (head.size == 0) {
 		return;
 	}
-	
+
 	writedata_do_write(wd, &head, sizeof(RHead));
 	writedata_do_write(wd, data, head.size);
 }
@@ -147,43 +147,43 @@ ROSE_STATIC void writestruct_nr(WriteData *wd, int filecode, uint64_t struct_nr,
 
 ROSE_STATIC void writedata(WriteData *wd, int fildecode, size_t length, const void *address) {
 	RHead head;
-	
+
 	if (address == NULL || length == 0) {
 		return;
 	}
-	
+
 	length = (length + 3) & ~(size_t)(3);
-	
+
 	if (length > INT_MAX) {
 		ROSE_assert_msg(0, "Cannot write chunks bigger than INT_MAX!");
 		return;
 	}
-	
+
 	head.filecode = fildecode;
 	head.size = length;
 	head.length = 1;
 	head.address = (uint64_t)address;
 	head.dnatype = 0;
-	
+
 	writedata_do_write(wd, &head, sizeof(RHead));
 	writedata_do_write(wd, address, head.size);
 }
 
 ROSE_STATIC void writelist_nr(WriteData *wd, int filecode, uint64_t struct_nr, const ListBase *lb) {
 	const Link *link = (Link *)lb->first;
-	
+
 	while (link) {
 		writestruct_nr(wd, filecode, struct_nr, 1, link);
 		link = link->next;
 	}
 }
 
-#define writestruct(wd, filecode, _struct, nr, data) \
-	do { \
+#define writestruct(wd, filecode, _struct, nr, data)                \
+	do {                                                            \
 		uint64_t struct_nr = DNA_sdna_struct_id(wd->dna, #_struct); \
-		ROSE_assert(struct_nr != 0); \
-		writestruct_nr(wd, filecode, struct_nr, nr, data); \
-	} while(false)
+		ROSE_assert(struct_nr != 0);                                \
+		writestruct_nr(wd, filecode, struct_nr, nr, data);          \
+	} while (false)
 
 /** \} */
 

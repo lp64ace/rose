@@ -54,21 +54,21 @@ void UI_draw_roundbox_4fv_ex(const struct rctf *rect, const float inner1[4], con
 typedef struct uiBlock {
 	struct uiBlock *prev, *next;
 	struct uiBlock *oldblock;
-	
+
 	char *name;
 	bool active;
 	bool closed;
-	
+
 	rctf rect;
 	int bounds;
 	int minbounds;
 	int direction;
-	
+
 	float winmat[4][4];
-	
+
 	struct uiLayout *layout;
 	struct uiPopupBlockHandle *handle;
-	
+
 	ListBase buttons;
 	ListBase layouts;
 } uiBlock;
@@ -122,16 +122,16 @@ typedef struct uiBut {
 
 	struct uiLayout *layout;
 	struct uiBlock *block;
-	
+
 	float strwidth;
-	
+
 	int offset;
 	int selsta;
 	int selend;
-	
+
 	int vscroll;
 	int hscroll;
-	
+
 	uiButHandleFunc handle_func;
 
 	/** For #UI_BTYPE_MENU this will be called when the layout has to be refreshed for the menu. */
@@ -202,4 +202,4 @@ void UI_region_handlers_add(ListBase *handlers);
 }
 #endif
 
-#endif // ED_INTERFACE_H
+#endif	// ED_INTERFACE_H

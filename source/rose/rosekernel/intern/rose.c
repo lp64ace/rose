@@ -25,7 +25,7 @@ void KER_rose_free() {
 void KER_rose_userdef_init() {
 	Theme *theme = MEM_mallocN(sizeof(Theme), "DefaultTheme");
 	memcpy(theme, &U_theme_default, sizeof(Theme));
-	
+
 	LIB_addtail(&U.themes, theme);
 }
 void KER_rose_userdef_clear() {

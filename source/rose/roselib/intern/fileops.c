@@ -25,7 +25,7 @@ uint64_t LIB_read(int fd, void *buffer, size_t size) {
 		if (nbytes > size) {
 			ROSE_assert_unreachable();
 		}
-		
+
 		buffer = POINTER_OFFSET(buffer, nbytes);
 		nbytes_read_total += nbytes;
 		size -= nbytes;

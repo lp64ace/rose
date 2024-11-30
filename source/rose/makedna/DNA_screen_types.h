@@ -160,7 +160,7 @@ typedef struct ARegion {
 
 	ListBase uiblocks;
 	ListBase handlers;
-	
+
 	ARegionRuntime runtime;
 } ARegion;
 
@@ -225,4 +225,4 @@ enum {
 }
 #endif
 
-#endif // DNA_SCREEN_TYPES_H
+#endif	// DNA_SCREEN_TYPES_H

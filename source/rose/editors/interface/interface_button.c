@@ -1,8 +1,8 @@
 #include "MEM_guardedalloc.h"
 
 #include "DNA_screen_types.h"
-#include "DNA_vector_types.h"
 #include "DNA_userdef_types.h"
+#include "DNA_vector_types.h"
 #include "DNA_windowmanager_types.h"
 
 #include "ED_screen.h"
@@ -16,12 +16,12 @@
 #include "GPU_matrix.h"
 #include "GPU_state.h"
 
-#include "LIB_listbase.h"
 #include "LIB_ghash.h"
+#include "LIB_listbase.h"
 #include "LIB_math_vector.h"
+#include "LIB_rect.h"
 #include "LIB_string.h"
 #include "LIB_string_utils.h"
-#include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"
@@ -39,7 +39,7 @@
 ROSE_INLINE uiWidgetColors *widget_colors(int type) {
 	Theme *theme = UI_GetTheme();
 
-	switch(type) {
+	switch (type) {
 		case UI_BTYPE_HSEPR:
 		case UI_BTYPE_VSEPR: {
 			return &theme->tui.wcol_sepr;
@@ -84,17 +84,17 @@ ROSE_INLINE const char *ui_but_text(uiBut *but) {
 /** Returns false if clipping had to be done to fit the text inside! */
 ROSE_INLINE bool ui_but_text_bounds(uiBut *but, const rcti *rect, rcti *content, int offset) {
 	int font = ui_but_text_font(but);
-	
+
 	rcti client;
 	ui_but_text_rect(but, rect, &client);
-	
+
 	RFT_boundbox(font, ui_but_text(but) + but->hscroll, offset, content);
-	
+
 	content->xmin += client.xmin;
 	content->xmax += client.xmin;
 	content->ymin = client.ymin;
 	content->ymax = client.ymax;
-	
+
 	if (!LIB_rcti_inside_rcti(&client, content)) {
 		LIB_rcti_isect(&client, content, content);
 		return false;
@@ -120,31 +120,31 @@ ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 	rcti client;
 	ui_but_text_rect(but, rect, &client);
 	const int cwidth = ROSE_MAX(0, LIB_rcti_size_x(&client));
-	
+
 	const char *str = ui_but_text(but);
 	if (!str) {
 		return;
 	}
-	
+
 	if (but->hscroll > but->offset) {
 		but->hscroll = but->offset;
 	}
-	
+
 	int font = ui_but_text_font(but);
-	
+
 	if (RFT_width(font, str, INT_MAX) <= cwidth) {
 		but->hscroll = 0;
 	}
-	
+
 	but->strwidth = RFT_width(font, str + but->hscroll, INT_MAX);
-	
+
 	if (but->strwidth > cwidth) {
 		unsigned int length = LIB_strlen(str);
 		unsigned int adjusted = length;
-		
+
 		while (but->strwidth > cwidth) {
 			float width = RFT_width(font, str + but->hscroll, but->offset - but->hscroll);
-			
+
 			if (width > cwidth - 20) {
 				ui_text_clip_give_next_off(but, str, str + length);
 			}
@@ -154,9 +154,9 @@ ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 				}
 				adjusted -= LIB_str_utf8_size_safe(LIB_str_find_prev_char_utf8(str + adjusted, str));
 			}
-			
+
 			but->strwidth = RFT_width(font, str + but->hscroll, adjusted - but->hscroll);
-			
+
 			if (but->strwidth < 10) {
 				break;
 			}
@@ -175,7 +175,7 @@ ROSE_INLINE void ui_draw_but_back(const struct rContext *C, uiBut *but, uiWidget
 	if (fill[3] < 1e-3f) {
 		return;
 	}
-	
+
 	copy_f4_u4(border, colors->outline);
 
 	rctf rectf;
@@ -192,27 +192,27 @@ ROSE_INLINE void ui_draw_but_back(const struct rContext *C, uiBut *but, uiWidget
 }
 
 ROSE_INLINE bool ui_draw_but_text_sel(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	if(but->selend - but->selsta <= 0) {
+	if (but->selend - but->selsta <= 0) {
 		return false;
 	}
 
 	float fill[4];
 	copy_f4_u4(fill, colors->text_sel);
-	
+
 	if (fill[3] < 1e-3f) {
 		return false;
 	}
-	
+
 	int font = ui_but_text_font(but);
-	
+
 	rcti selection, a, b;
 	ui_but_text_bounds(but, rect, &a, ROSE_MAX(0, but->selsta - but->hscroll));
 	ui_but_text_bounds(but, rect, &b, ROSE_MAX(0, but->selend - but->hscroll));
 	selection.xmin = ROSE_MIN(a.xmax, b.xmax);
 	selection.xmax = ROSE_MAX(a.xmax, b.xmax);
-	
+
 	int cy = LIB_rcti_cent_y(&a);
-	
+
 	selection.ymin = cy - RFT_height_max(font) / 2;
 	selection.ymax = cy + RFT_height_max(font) / 2;
 
@@ -229,11 +229,11 @@ ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidget
 
 	float text[4];
 	copy_f4_u4(text, colors->text);
-	
+
 	if (text[3] < 1e-3f) {
 		return;
 	}
-	
+
 	int font = ui_but_text_font(but);
 	RFT_clipping(font, client.xmin, client.ymin, client.xmax, client.ymax);
 	RFT_color4f(font, text[0], text[1], text[2], text[3]);
@@ -245,32 +245,32 @@ ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidget
 	int x = client.xmin;
 	int y = LIB_rcti_cent_y(&client) - RFT_height_max(font) / 3;
 	RFT_position(font, x, y, 0.0f);
-	
+
 	RFT_draw(font, ui_but_text(but) + but->hscroll, INT_MAX);
 }
 
 ROSE_INLINE void ui_draw_but_cursor(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	if(!ui_but_is_editing(but)) {
+	if (!ui_but_is_editing(but)) {
 		return;
 	}
-	
+
 	int font = ui_but_text_font(but);
-	
+
 	rcti bounds;
 	if (ui_but_text_bounds(but, rect, &bounds, but->offset - but->hscroll)) {
 		bounds.xmin = bounds.xmax;
 		bounds.xmax = bounds.xmin + 1;
-		
+
 		int cy = LIB_rcti_cent_y(&bounds);
-		
+
 		bounds.ymin = cy - RFT_height_max(font) / 2;
 		bounds.ymax = cy + RFT_height_max(font) / 2;
-		
+
 		Theme *theme = UI_GetTheme();
-		
+
 		float cur[4];
 		copy_f4_u4(cur, theme->tui.text_cur);
-		
+
 		rctf rectf;
 		LIB_rctf_rcti_copy(&rectf, &bounds);
 		UI_draw_roundbox_4fv_ex(&rectf, cur, cur, 0, NULL, 1, 0);
@@ -283,11 +283,11 @@ void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rc
 	}
 
 	uiWidgetColors *colors = widget_colors(but->type);
-	
+
 	if (colors == NULL) {
 		return;
 	}
-	
+
 	ui_text_clip_cursor(but, rect);
 
 	ui_draw_but_back(C, but, colors, rect);

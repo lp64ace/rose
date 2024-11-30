@@ -14,18 +14,18 @@ struct UserDef;
 
 typedef struct FileData {
 	ListBase headlist;
-	
+
 	struct FileReader *file;
-	
+
 	struct OldNewMap *map_data;
 	struct OldNewMap *map_glob;
-	
+
 	/** Used for relative paths handling. */
 	char relabase[1024];
-	
+
 	struct SDNA *f_dna;
 	struct SDNA *m_dna;
-	
+
 	int flag;
 } FileData;
 
@@ -44,4 +44,4 @@ bool RLO_read_file(struct Main *main, const char *filepath, int flag);
 }
 #endif
 
-#endif // RLO_READFILE_H
+#endif	// RLO_READFILE_H

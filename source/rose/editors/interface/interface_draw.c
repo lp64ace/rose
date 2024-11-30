@@ -62,7 +62,7 @@ void UI_draw_roundbox_4fv_ex(const rctf *rect, const float inner1[4], const floa
 
 	GPUBatch *batch = ui_batch_roundbox_widget_get();
 	GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_WIDGET_BASE);
-	GPU_batch_uniform_4fv_array(batch, "parameters", 12, (const float(*)[4])&widget_params);
+	GPU_batch_uniform_4fv_array(batch, "parameters", 12, (const float(*)[4]) & widget_params);
 	GPU_blend(GPU_BLEND_ALPHA);
 	GPU_batch_draw(batch);
 	GPU_blend(GPU_BLEND_NONE);

@@ -223,7 +223,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	if (!wm) {
 		return;
 	}
-	
+
 	CTX_data_main_set(C, main);
 	CTX_wm_manager_set(C, wm);
 
@@ -268,7 +268,7 @@ void WM_init(struct rContext *C) {
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
-	while(true) {
+	while (true) {
 		bool poll = false;
 		if ((poll = (wm->handle && WTK_window_manager_has_events(wm->handle)))) {
 			/** Handle all pending operating system events. */

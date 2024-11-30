@@ -186,8 +186,8 @@ bool LIB_rcti_isect_pt(const rcti *rect, const int x, const int y) {
 }
 
 bool LIB_rctf_isect_pt_v(const rctf *rect, const float v[2]) {
-	if(v[0] >= rect->xmin && v[0] <= rect->xmax) {
-		if(v[1] >= rect->ymin && v[1] <= rect->ymax) {
+	if (v[0] >= rect->xmin && v[0] <= rect->xmax) {
+		if (v[1] >= rect->ymin && v[1] <= rect->ymax) {
 			return true;
 		}
 	}
@@ -195,8 +195,8 @@ bool LIB_rctf_isect_pt_v(const rctf *rect, const float v[2]) {
 }
 
 bool LIB_rcti_isect_pt_v(const rcti *rect, const int v[2]) {
-	if(v[0] >= rect->xmin && v[0] <= rect->xmax) {
-		if(v[1] >= rect->ymin && v[1] <= rect->ymax) {
+	if (v[0] >= rect->xmin && v[0] <= rect->xmax) {
+		if (v[1] >= rect->ymin && v[1] <= rect->ymax) {
 			return true;
 		}
 	}

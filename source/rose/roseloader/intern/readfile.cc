@@ -13,9 +13,9 @@
 #include "LIB_utildefines.h"
 
 #include "KER_global.h"
-#include "KER_main.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
+#include "KER_main.h"
 #include "KER_rosefile.h"
 #include "KER_userdef.h"
 
@@ -24,10 +24,10 @@
 
 #include "RT_parser.h"
 
-#include "intern/genfile.h" // DNA
+#include "intern/genfile.h"	 // DNA
 
-#include <stdio.h>
 #include <limits.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name OldNewMap API
@@ -35,7 +35,7 @@
 
 typedef struct NewAddress {
 	void *newp;
-	
+
 	int nr;
 } NewAddress;
 
@@ -98,7 +98,7 @@ ROSE_STATIC void *newataddr_no_us(FileData *fd, uint64_t address) {
 
 typedef struct RHeadN {
 	struct RHeadN *prev, *next;
-	
+
 	uint64_t offset;
 	bool has_data;
 
@@ -120,12 +120,12 @@ ROSE_STATIC void switch_endian_rhead(RHead *head) {
 
 ROSE_STATIC RHeadN *get_rhead(FileData *fd) {
 	RHeadN *nheadn = NULL;
-	
+
 	uint64_t readsize;
-	
+
 	if (fd) {
 		RHead head;
-		
+
 		readsize = fd->file->read(fd->file, &head, sizeof(head));
 		if (readsize == sizeof(head) && head.filecode != RLO_CODE_ENDB) {
 			if ((fd->flag & FD_FLAG_SWITCH_ENDIAN) != 0) {
@@ -135,16 +135,16 @@ ROSE_STATIC RHeadN *get_rhead(FileData *fd) {
 		else {
 			return NULL;
 		}
-		
+
 		if (head.size < 0 || head.length < 0) {
 			return NULL;
 		}
-		
+
 		/** For now we read everything immediately! */
 		nheadn = static_cast<RHeadN *>(MEM_mallocN(sizeof(RHeadN) + head.size, "RHeadN"));
 		memcpy(&nheadn->head, &head, sizeof(RHead));
 		nheadn->offset = fd->file->offset;
-		
+
 		readsize = fd->file->read(fd->file, nheadn + 1, head.size);
 		if (readsize == head.size) {
 			nheadn->has_data = true;
@@ -153,11 +153,11 @@ ROSE_STATIC RHeadN *get_rhead(FileData *fd) {
 			MEM_SAFE_FREE(nheadn);
 		}
 	}
-	
+
 	if (nheadn) {
 		LIB_addtail(&fd->headlist, nheadn);
 	}
-	
+
 	return nheadn;
 }
 
@@ -191,8 +191,6 @@ typedef struct RoseDataReader {
 	FileData *fd;
 } RoseDataReader;
 
-
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -202,16 +200,16 @@ typedef struct RoseDataReader {
 ROSE_STATIC void switch_endian_structs(const SDNA *sdna, RHead *head) {
 	void *data = head + 1;
 	size_t count = head->length, size = DNA_sdna_struct_size(sdna, head->dnatype);
-	while(count--) {
+	while (count--) {
 		DNA_struct_switch_endian(sdna, head->dnatype, data);
-		
+
 		data = POINTER_OFFSET(data, size);
 	}
 }
 
 ROSE_STATIC void *read_struct(FileData *fd, RHead *head, const char *blockname) {
 	void *temp = NULL;
-	
+
 	if (head->size) {
 		if (head->dnatype && (fd->flag & FD_FLAG_SWITCH_ENDIAN) != 0) {
 			switch_endian_structs(fd->f_dna, head);
@@ -219,10 +217,10 @@ ROSE_STATIC void *read_struct(FileData *fd, RHead *head, const char *blockname) 
 
 		temp = DNA_sdna_struct_reconstruct(fd->f_dna, fd->m_dna, head->dnatype, head + 1, blockname);
 	}
-	
+
 	return temp;
 }
- 
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -231,7 +229,7 @@ ROSE_STATIC void *read_struct(FileData *fd, RHead *head, const char *blockname) 
 
 ROSE_STATIC RHead *read_data_into_datamap(FileData *fd, RHead *head, const char *blockname) {
 	head = rlo_rhead_next(fd, head);
-	
+
 	while (head && head->filecode == RLO_CODE_DATA) {
 		void *data = read_struct(fd, head, blockname);
 		if (data) {
@@ -240,7 +238,7 @@ ROSE_STATIC RHead *read_data_into_datamap(FileData *fd, RHead *head, const char 
 		}
 		head = rlo_rhead_next(fd, head);
 	}
-	
+
 	return head;
 }
 
@@ -252,11 +250,11 @@ ROSE_STATIC RHead *read_data_into_datamap(FileData *fd, RHead *head, const char 
 
 ROSE_STATIC void do_versions_userdef(FileData *fd, RoseFileData *rfd) {
 	UserDef *user = rfd->user;
-	
+
 	if (user == NULL) {
 		return;
 	}
-	
+
 	rlo_do_versions_userdef(user);
 }
 
@@ -268,19 +266,19 @@ ROSE_STATIC void do_versions_userdef(FileData *fd, RoseFileData *rfd) {
 
 ROSE_STATIC RHead *read_userdef(RoseFileData *rfd, FileData *fd, RHead *head) {
 	UserDef *user;
-	
+
 	rfd->user = user = static_cast<UserDef *>(read_struct(fd, head, "UserDef"));
-	
+
 	head = read_data_into_datamap(fd, head, "UserDef::Data");
-	
+
 	RoseDataReader reader = {fd};
 	do {
 		/** Read all the data associated with #UserDef. */
 		RLO_read_struct_list(&reader, Theme, &user->themes);
-	} while(false);
-	
+	} while (false);
+
 	oldnewmap_clear(fd->map_data);
-	
+
 	return head;
 }
 
@@ -323,7 +321,7 @@ void RLO_read_struct_list_with_size(struct RoseDataReader *reader, size_t esize,
 	if (LIB_listbase_is_empty(list)) {
 		return;
 	}
-	
+
 	list->first = reinterpret_cast<Link *>(RLO_read_struct_array_with_size(reader, list->first, esize));
 	Link *ln = static_cast<Link *>(list->first);
 	Link *prev = NULL;
@@ -350,7 +348,7 @@ void RLO_read_uint8_array(RoseDataReader *reader, int array_size, uint8_t **ptr_
 
 void RLO_read_int32_array(RoseDataReader *reader, int array_size, int32_t **ptr_p) {
 	*ptr_p = reinterpret_cast<int32_t *>(RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(int32_t) * array_size));
-	
+
 	if (*ptr_p && RLO_read_requires_endian_switch(reader)) {
 		LIB_endian_switch_int32_array(*ptr_p, array_size);
 	}
@@ -358,7 +356,7 @@ void RLO_read_int32_array(RoseDataReader *reader, int array_size, int32_t **ptr_
 
 void RLO_read_uint32_array(RoseDataReader *reader, int array_size, uint32_t **ptr_p) {
 	*ptr_p = reinterpret_cast<uint32_t *>(RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(uint32_t) * array_size));
-	
+
 	if (*ptr_p && RLO_read_requires_endian_switch(reader)) {
 		LIB_endian_switch_uint32_array(*ptr_p, array_size);
 	}
@@ -366,7 +364,7 @@ void RLO_read_uint32_array(RoseDataReader *reader, int array_size, uint32_t **pt
 
 void RLO_read_float_array(RoseDataReader *reader, int array_size, float **ptr_p) {
 	*ptr_p = reinterpret_cast<float *>(RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(float) * array_size));
-	
+
 	if (*ptr_p && RLO_read_requires_endian_switch(reader)) {
 		LIB_endian_switch_float_array(*ptr_p, array_size);
 	}
@@ -374,7 +372,7 @@ void RLO_read_float_array(RoseDataReader *reader, int array_size, float **ptr_p)
 
 void RLO_read_double_array(RoseDataReader *reader, int array_size, double **ptr_p) {
 	*ptr_p = reinterpret_cast<double *>(RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(double) * array_size));
-	
+
 	if (*ptr_p && RLO_read_requires_endian_switch(reader)) {
 		LIB_endian_switch_double_array(*ptr_p, array_size);
 	}
@@ -388,16 +386,16 @@ void RLO_read_double_array(RoseDataReader *reader, int array_size, double **ptr_
 
 ROSE_STATIC FileData *filedata_new(void) {
 	FileData *fd = static_cast<FileData *>(MEM_mallocN(sizeof(FileData), "FileData"));
-	
+
 	LIB_listbase_clear(&fd->headlist);
-	
+
 	fd->f_dna = NULL;
 	fd->m_dna = DNA_sdna_new_current();
 	fd->flag = 0;
 
 	fd->map_data = oldnewmap_new();
 	fd->map_glob = oldnewmap_new();
-	
+
 	return fd;
 }
 
@@ -419,9 +417,9 @@ ROSE_STATIC void filedata_free(FileData *fd) {
 
 ROSE_STATIC void filedata_decode_rose_header(FileData *fd) {
 	char header[8];
-	
+
 	uint64_t readsize = fd->file->read(fd->file, header, sizeof(header));
-	
+
 	if (readsize == sizeof(header) && STREQLEN(header, "ROSE", 4)) {
 		/** The only reason we use two bytes for the endianess is to align everything into an 8byte string. */
 		if (STREQLEN(header + 4, "BG", 2) || STREQLEN(header + 4, "LT", 2)) {
@@ -430,7 +428,7 @@ ROSE_STATIC void filedata_decode_rose_header(FileData *fd) {
 			}
 		}
 	}
-	
+
 	if ((fd->flag & FD_FLAG_FILE_OK) != 0) {
 		SET_FLAG_FROM_TEST(fd->flag, header[6] == '4', FD_FLAG_FILE_POINTSIZE_IS_4);
 		if (header[6] != '0' + sizeof(void *)) {
@@ -448,7 +446,7 @@ ROSE_STATIC void filedata_decode_rose_header(FileData *fd) {
 
 ROSE_STATIC bool read_file_dna(FileData *fd) {
 	RHead *head;
-	
+
 	for (head = rlo_rhead_first(fd); head; head = rlo_rhead_next(fd, head)) {
 		if (head->filecode == RLO_CODE_DNA1) {
 			fd->f_dna = DNA_sdna_new_memory(&head[1], head->size);
@@ -459,27 +457,27 @@ ROSE_STATIC bool read_file_dna(FileData *fd) {
 			return true;
 		}
 	}
-	
+
 	fprintf(stderr, "Failed to read rose file '%s': %s\n", fd->relabase, "Missing DNA");
 	return false;
 }
 
 ROSE_STATIC FileData *rlo_decode_and_check(FileData *fd) {
 	filedata_decode_rose_header(fd);
-	
+
 	if ((fd->flag & FD_FLAG_FILE_OK) != 0) {
 		if (!read_file_dna(fd)) {
 			filedata_free(fd);
 			return NULL;
 		}
 	}
-	
+
 	return fd;
 }
 
 ROSE_STATIC FileData *rlo_filedata_from_file_descriptor(int descr) {
 	FileReader *rawfile = LIB_filereader_new_file(descr), *file = NULL;
-	
+
 	char header[4];
 	if (rawfile == NULL || rawfile->read(rawfile, header, sizeof(header)) != sizeof(header)) {
 		if (rawfile) {
@@ -490,24 +488,24 @@ ROSE_STATIC FileData *rlo_filedata_from_file_descriptor(int descr) {
 		}
 		return NULL;
 	}
-	
+
 	rawfile->seek(rawfile, 0, SEEK_SET);
-	
+
 	if (memcmp(header, "ROSE", sizeof(header)) == 0) {
 		SWAP(FileReader *, file, rawfile);
 	}
-	
+
 	if (rawfile) {
 		rawfile->close(rawfile);
 	}
-	
+
 	if (file == NULL) {
 		return NULL;
 	}
-	
+
 	FileData *fd = filedata_new();
 	fd->file = file;
-	
+
 	return fd;
 }
 
@@ -523,7 +521,7 @@ ROSE_STATIC FileData *rlo_filedata_from_file(const char *filepath) {
 	FileData *fd = rlo_filedata_from_file_open(filepath);
 	if (fd != NULL) {
 		LIB_strcpy(fd->relabase, ARRAY_SIZE(fd->relabase), filepath);
-		
+
 		return rlo_decode_and_check(fd);
 	}
 	return NULL;
@@ -543,16 +541,16 @@ void RLO_rosefile_data_free(RoseFileData *rfd) {
 
 bool RLO_read_file(struct Main *main, const char *filepath, int flag) {
 	FileData *fd = rlo_filedata_from_file(filepath);
-	
+
 	if (!fd) {
 		return false;
 	}
-	
+
 	RoseFileData *rfd = static_cast<RoseFileData *>(MEM_callocN(sizeof(RoseFileData), "RoseFileData"));
-	
+
 	RHead *head = rlo_rhead_first(fd);
-	
-	while(head) {
+
+	while (head) {
 		switch (head->filecode) {
 			case RLO_CODE_USER: {
 				head = read_userdef(rfd, fd, head);
@@ -562,11 +560,11 @@ bool RLO_read_file(struct Main *main, const char *filepath, int flag) {
 			} break;
 		}
 	}
-	
+
 	do_versions_userdef(fd, rfd);
 	KER_rosefile_read_setup(rfd);
 	RLO_rosefile_data_free(rfd);
-	
+
 	filedata_free(fd);
 	return true;
 }

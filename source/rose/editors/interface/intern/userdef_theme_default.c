@@ -2,10 +2,8 @@
 
 #include "LIB_utildefines.h"
 
-#define RGBA(c) \
-	{ ((c) >> 24) & 0xff, ((c) >> 16) & 0xff, ((c) >> 8) & 0xff, (c) & 0xff }
-#define RGB(c) \
-	{ ((c) >> 16) & 0xff, ((c) >> 8) & 0xff, (c) & 0xff }
+#define RGBA(c) {((c) >> 24) & 0xff, ((c) >> 16) & 0xff, ((c) >> 8) & 0xff, (c) & 0xff}
+#define RGB(c) {((c) >> 16) & 0xff, ((c) >> 8) & 0xff, (c) & 0xff}
 
 /* clang-format off */
 

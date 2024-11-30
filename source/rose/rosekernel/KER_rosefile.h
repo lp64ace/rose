@@ -22,4 +22,4 @@ void KER_rosefile_read_setup(RoseFileData *rfd);
 }
 #endif
 
-#endif // KER_ROSEFILE_H
+#endif	// KER_ROSEFILE_H

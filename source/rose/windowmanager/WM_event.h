@@ -187,7 +187,7 @@ enum {
 	EVT_F22KEY = 0x0141, /* 321 */
 	EVT_F23KEY = 0x0142, /* 322 */
 	EVT_F24KEY = 0x0143, /* 323 */
-	
+
 	WINDEACTIVATE = 0x0104, /* Window is deactivated, focus lost, (260). */
 };
 

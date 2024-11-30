@@ -1,8 +1,8 @@
-#include "GPU_context.h"
 #include "GPU_batch.h"
-#include "GPU_vertex_format.h"
-#include "GPU_vertex_buffer.h"
 #include "GPU_batch_presets.h"
+#include "GPU_context.h"
+#include "GPU_vertex_buffer.h"
+#include "GPU_vertex_format.h"
 
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
@@ -31,11 +31,11 @@ static struct {
 } g_ui_batch_cache;
 
 static GPUVertFormat *vflag_format() {
-    if (g_ui_batch_cache.format.attr_len == 0) {
-        GPUVertFormat *format = &g_ui_batch_cache.format;
+	if (g_ui_batch_cache.format.attr_len == 0) {
+		GPUVertFormat *format = &g_ui_batch_cache.format;
 		g_ui_batch_cache.vflag_id = GPU_vertformat_add(format, "vflag", GPU_COMP_U32, 1, GPU_FETCH_INT);
-    }
-    return &g_ui_batch_cache.format;
+	}
+	return &g_ui_batch_cache.format;
 }
 
 #define INNER 0
@@ -44,8 +44,8 @@ static GPUVertFormat *vflag_format() {
 #define NO_AA 0
 
 static void set_roundbox_vertex_data(GPUVertBufRaw *vflag_step, uint32_t d) {
-    uint32_t *data = GPU_vertbuf_raw_step(vflag_step);
-    *data = d;
+	uint32_t *data = GPU_vertbuf_raw_step(vflag_step);
+	*data = d;
 }
 
 static uint32_t set_roundbox_vertex(GPUVertBufRaw *vflag_step, int corner_id, int corner_v, int jit_v, bool inner, bool emboss, int color) {

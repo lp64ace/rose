@@ -89,7 +89,7 @@ wmWindow *WM_window_open(struct rContext *C, wmWindow *parent, const char *name,
  * This is achieved by calling #WM_window_screen_set and setting the screen to NULL.
  *
  * Attempting to delete a #Main database while it is in use by an active window will fail.
- * Deleting data blocks with active windows is prohibited because draw buffers, owned by the windows, 
+ * Deleting data blocks with active windows is prohibited because draw buffers, owned by the windows,
  * require active graphics contexts to be properly released.
  *
  * Note: Kernel code does not handle GPU contexts, #WM_window_free does not handle draw buffers either.
@@ -100,17 +100,17 @@ void WM_window_close(struct rContext *C, wmWindow *window) {
 	CTX_wm_window_set(C, window);
 	WM_event_remove_handlers(C, &window->handlers);
 	WM_event_remove_handlers(C, &window->modalhandlers);
-	
+
 	LISTBASE_FOREACH_MUTABLE(wmWindow *, iter, &wm->windows) {
-		if(iter->parent == window) {
+		if (iter->parent == window) {
 			WM_window_close(C, iter);
 		}
 	}
-	
+
 	WM_window_screen_set(C, window, NULL);
 	WM_window_free(wm, window);
 	CTX_wm_window_set(C, NULL);
-	
+
 	if (LIB_listbase_is_empty(&wm->windows)) {
 		WM_exit(C);
 	}

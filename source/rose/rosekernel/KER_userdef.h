@@ -21,4 +21,4 @@ void KER_userdef_free(struct UserDef *userdef);
 }
 #endif
 
-#endif // KER_USERDEF_H
+#endif	// KER_USERDEF_H

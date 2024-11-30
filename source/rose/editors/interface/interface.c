@@ -1,8 +1,8 @@
 #include "MEM_guardedalloc.h"
 
 #include "DNA_screen_types.h"
-#include "DNA_vector_types.h"
 #include "DNA_userdef_types.h"
+#include "DNA_vector_types.h"
 #include "DNA_windowmanager_types.h"
 
 #include "ED_screen.h"
@@ -16,11 +16,11 @@
 #include "GPU_matrix.h"
 #include "GPU_state.h"
 
-#include "LIB_listbase.h"
 #include "LIB_ghash.h"
+#include "LIB_listbase.h"
 #include "LIB_math_vector.h"
-#include "LIB_string.h"
 #include "LIB_rect.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"
@@ -55,7 +55,7 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 
 ROSE_INLINE uiBut *ui_but_find_old(uiBlock *block_old, const uiBut *but_new) {
 	LISTBASE_FOREACH(uiBut *, but, &block_old->buttons) {
-		if(ui_but_equals_old(but_new, but)) {
+		if (ui_but_equals_old(but_new, but)) {
 			return but;
 		}
 	}
@@ -64,8 +64,8 @@ ROSE_INLINE uiBut *ui_but_find_old(uiBlock *block_old, const uiBut *but_new) {
 
 ROSE_INLINE void ui_but_update_old_active_from_new(uiBut *old, uiBut *but) {
 	memcpy(&old->rect, &but->rect, sizeof(rctf));
-	
-	switch(old->type) {
+
+	switch (old->type) {
 		default: {
 			/** Nothing to do here, this is button specific updates. */
 		} break;
@@ -74,19 +74,19 @@ ROSE_INLINE void ui_but_update_old_active_from_new(uiBut *old, uiBut *but) {
 
 ROSE_STATIC bool ui_but_update_from_old_block(struct rContext *C, uiBlock *block, uiBut **but_p, uiBut **old_p) {
 	uiBlock *oldblock = block->oldblock;
-	
+
 	uiBut *but = *but_p;
 	uiBut *old = *old_p;
-	
-	if(old == NULL || !ui_but_equals_old(but, old)) {
+
+	if (old == NULL || !ui_but_equals_old(but, old)) {
 		old = ui_but_find_old(oldblock, but);
 	}
 	*old_p = (old) ? old->next : NULL;
-	
-	if(!old) {
+
+	if (!old) {
 		return false;
 	}
-	
+
 	bool was_active = old->active;
 	LIB_remlink(&oldblock->buttons, old);
 	LIB_insertlinkafter(&block->buttons, but, old);
@@ -182,9 +182,9 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 
 ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
 	ROSE_assert(w >= 0 && h >= 0 || (type == UI_BTYPE_SEPR));
-	
+
 	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
-	
+
 	but->name = LIB_strdupN(name);
 	if (ELEM(type, UI_BTYPE_BUT, UI_BTYPE_EDIT, UI_BTYPE_MENU, UI_BTYPE_TXT)) {
 		but->str = LIB_strdupN(name);
@@ -195,34 +195,34 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	but->rect.ymax = but->rect.ymin + h;
 	but->type = type;
 	but->flag = 0;
-	
-	if(block->layout) {
+
+	if (block->layout) {
 		ui_layout_add_but(block->layout, but);
 	}
 	but->block = block;
-	
+
 	LIB_addtail(&block->buttons, but);
-	
+
 	return but;
 }
 
 uiBut *uiDefSepr(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
 	ROSE_assert(ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSEPR, UI_BTYPE_VSEPR));
-	
+
 	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
 	return but;
 }
 
 uiBut *uiDefText(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
 	ROSE_assert(ELEM(type, UI_BTYPE_TXT));
-	
+
 	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
 	return but;
 }
 
 uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiButHandleFunc handle) {
 	ROSE_assert(ELEM(type, UI_BTYPE_BUT, UI_BTYPE_EDIT));
-	
+
 	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
 	if (but) {
 		but->handle_func = handle;
@@ -232,7 +232,7 @@ uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w,
 
 uiBut *uiDefMenu(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiBlockCreateFunc create) {
 	ROSE_assert(ELEM(type, UI_BTYPE_MENU));
-	
+
 	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
 	if (but) {
 		but->menu_create_func = create;
@@ -276,7 +276,6 @@ void ui_but_update(uiBut *but) {
 	switch (but->type) {
 		case UI_BTYPE_EDIT: {
 			if (ui_but_is_editing(but)) {
-				
 			}
 			else {
 				but->hscroll = 0;
@@ -286,7 +285,7 @@ void ui_but_update(uiBut *but) {
 }
 
 uiBut *ui_block_active_but_get(const uiBlock *block) {
-	LISTBASE_FOREACH (uiBut *, but, &block->buttons) {
+	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 		if (but->active) {
 			return but;
 		}
@@ -298,7 +297,7 @@ uiBut *ui_block_active_but_get(const uiBlock *block) {
 uiBut *ui_region_find_active_but(const ARegion *region) {
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		uiBut *but = ui_block_active_but_get(block);
-		if(but) {
+		if (but) {
 			return but;
 		}
 	}
@@ -325,7 +324,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
  * \{ */
 
 ROSE_INLINE void ui_update_window_matrix(wmWindow *window, ARegion *region, uiBlock *block) {
-	if(region && region->visible) {
+	if (region && region->visible) {
 		GPU_matrix_projection_get(block->winmat);
 	}
 	else {
@@ -343,38 +342,38 @@ ROSE_INLINE void ui_update_window_matrix(wmWindow *window, ARegion *region, uiBl
 
 uiBlock *UI_block_begin(struct rContext *C, ARegion *region, const char *name) {
 	wmWindow *window = CTX_wm_window(C);
-	
+
 	uiBlock *block = MEM_callocN(sizeof(uiBlock), "uiBlock");
 	block->oldblock = NULL;
-	
+
 	block->name = LIB_strdupN(name);
 	block->active = true;
 
 	block->layout = NULL;
 	LIB_listbase_clear(&block->buttons);
 	LIB_listbase_clear(&block->layouts);
-	
-	if(region) {
+
+	if (region) {
 		UI_block_region_set(block, region);
 	}
-	
+
 	ui_update_window_matrix(window, region, block);
 	return block;
 }
 
 void UI_block_update_from_old(struct rContext *C, uiBlock *block) {
-	if(!block->oldblock) {
+	if (!block->oldblock) {
 		return;
 	}
-	
+
 	uiBut *but_old = (uiBut *)block->oldblock->buttons.first;
-	
+
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
-		if(ui_but_update_from_old_block(C, block, &but, &but_old)) {
+		if (ui_but_update_from_old_block(C, block, &but, &but_old)) {
 			ui_but_update(but);
 		}
 	}
-	
+
 	block->oldblock = NULL;
 }
 
@@ -397,10 +396,10 @@ ROSE_INLINE void ui_block_bounds_calc(uiBlock *block) {
 void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_xy[2]) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = CTX_wm_region(C);
-	
+
 	ROSE_assert(block->active);
-	
-	if(block->layouts.first) {
+
+	if (block->layouts.first) {
 		UI_block_layout_resolve(block, NULL, NULL);
 	}
 	UI_block_update_from_old(C, block);
@@ -410,7 +409,7 @@ void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_
 
 void UI_block_end(struct rContext *C, uiBlock *block) {
 	wmWindow *window = CTX_wm_window(C);
-	
+
 	UI_block_end_ex(C, block, window->event_state->mouse_xy, NULL);
 }
 
@@ -430,7 +429,7 @@ void UI_block_draw(const struct rContext *C, uiBlock *block) {
 
 	rcti rect;
 	ui_but_to_pixelrect(&rect, region, block, NULL);
-	
+
 	ui_draw_menu_back(region, block, &rect);
 
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
@@ -449,13 +448,13 @@ void UI_block_draw(const struct rContext *C, uiBlock *block) {
 void UI_block_region_set(uiBlock *block, ARegion *region) {
 	ListBase *lb = &region->uiblocks;
 	uiBlock *oldblock = NULL;
-	if(lb) {
-		if(region->runtime.block_name_map == NULL) {
+	if (lb) {
+		if (region->runtime.block_name_map == NULL) {
 			region->runtime.block_name_map = LIB_ghash_str_new(__func__);
 		}
 		oldblock = (uiBlock *)LIB_ghash_lookup(region->runtime.block_name_map, block->name);
 
-		if(oldblock) {
+		if (oldblock) {
 			oldblock->active = false;
 		}
 
@@ -487,7 +486,7 @@ void UI_blocklist_free(struct rContext *C, ARegion *region) {
 	for (uiBlock *block; block = (uiBlock *)LIB_pophead(lb);) {
 		UI_block_free(C, block);
 	}
-	if(region->runtime.block_name_map != NULL) {
+	if (region->runtime.block_name_map != NULL) {
 		LIB_ghash_free(region->runtime.block_name_map, NULL, NULL);
 		region->runtime.block_name_map = NULL;
 	}
@@ -506,15 +505,15 @@ void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
 
 void UI_blocklist_free_inactive(struct rContext *C, ARegion *region) {
 	ListBase *lb = &region->uiblocks;
-	
+
 	LISTBASE_FOREACH_MUTABLE(uiBlock *, block, lb) {
-		if(block->active) {
+		if (block->active) {
 			block->active = false;
 		}
 		else {
-			if(region->runtime.block_name_map != NULL) {
+			if (region->runtime.block_name_map != NULL) {
 				uiBlock *b = (uiBlock *)LIB_ghash_lookup(region->runtime.block_name_map, block->name);
-				if(b == block) {
+				if (b == block) {
 					LIB_ghash_remove(region->runtime.block_name_map, block->name, NULL, NULL);
 				}
 			}
@@ -528,7 +527,7 @@ void UI_block_free(struct rContext *C, uiBlock *block) {
 	for (uiBut *but; but = (uiBut *)LIB_pophead(&block->buttons);) {
 		ui_but_free(C, but);
 	}
-	
+
 	MEM_freeN(block->name);
 	MEM_freeN(block);
 }

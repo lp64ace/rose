@@ -64,14 +64,11 @@ void *RLO_read_get_new_data_address_no_user(struct RoseDataReader *reader, const
 #define RLO_read_data_address(reader, ptr_p) *((void **)ptr_p) = RLO_read_get_new_data_address((reader), *(ptr_p))
 
 void *RLO_read_struct_array_with_size(struct RoseDataReader *reader, const void *old_address, size_t size);
-#define RLO_read_struct(reader, struct_name, ptr_p) \
-	*((void **)ptr_p) = RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(struct_name))
-#define RLO_read_struct_array(reader, struct_name, array_size, ptr_p) \
-	*((void **)ptr_p) = RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(struct_name) * (array_size))
+#define RLO_read_struct(reader, struct_name, ptr_p) *((void **)ptr_p) = RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(struct_name))
+#define RLO_read_struct_array(reader, struct_name, array_size, ptr_p) *((void **)ptr_p) = RLO_read_struct_array_with_size(reader, *((void **)ptr_p), sizeof(struct_name) * (array_size))
 
 void RLO_read_struct_list_with_size(struct RoseDataReader *reader, size_t esize, ListBase *list);
-#define RLO_read_struct_list(reader, struct_name, list) \
-	RLO_read_struct_list_with_size(reader, sizeof(struct_name), list)
+#define RLO_read_struct_list(reader, struct_name, list) RLO_read_struct_list_with_size(reader, sizeof(struct_name), list)
 
 /* Update data pointers and correct byte-order if necessary. */
 
@@ -98,4 +95,4 @@ void rlo_do_versions_userdef(struct UserDef *user);
 }
 #endif
 
-#endif // RLO_READ_WRITE_H
+#endif	// RLO_READ_WRITE_H

@@ -146,7 +146,7 @@ bool tWindowManager::GetClipboard(char **r_buffer, unsigned int *r_length, bool 
 
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -1018,7 +1018,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 					manager->ActivateEvent(window, false);
 				}
 				window->active_ = false;
-			} else {
+			}
+			else {
 				if (manager->ActivateEvent) {
 					manager->ActivateEvent(window, true);
 				}
@@ -1029,10 +1030,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			manager->keyboard_layout_ = (HKL)lparam;
 		} break;
 		case WM_INPUT: {
-			if(!window->active_) {
+			if (!window->active_) {
 				break;
 			}
-			
+
 			RAWINPUT raw;
 			UINT raw_size = sizeof(RAWINPUT);
 
@@ -1089,10 +1090,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONDOWN:
 		case WM_MBUTTONDOWN:
 		case WM_RBUTTONDOWN: {
-			if(!window->active_) {
+			if (!window->active_) {
 				break;
 			}
-			
+
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1117,10 +1118,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 		case WM_LBUTTONUP:
 		case WM_MBUTTONUP:
 		case WM_RBUTTONUP: {
-			if(!window->active_) {
+			if (!window->active_) {
 				break;
 			}
-			
+
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1151,13 +1152,12 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			::GetCursorPos(&xy);
 			::ScreenToClient(hwnd, &xy);
 
-
 			if (manager->MouseEvent) {
 				manager->MouseEvent(window, xy.x, xy.y, time);
 			}
 		} break;
 		case WM_MOUSEMOVE: {
-			if(!window->active_) {
+			if (!window->active_) {
 				break;
 			}
 
@@ -1167,7 +1167,7 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			track.hwndTrack = hwnd;
 			track.dwHoverTime = HOVER_DEFAULT;
 			::TrackMouseEvent(&track);
-			
+
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1176,10 +1176,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			}
 		} break;
 		case WM_MOUSEWHEEL: {
-			if(!window->active_) {
+			if (!window->active_) {
 				break;
 			}
-			
+
 			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
 
 			if (manager->WheelEvent) {
