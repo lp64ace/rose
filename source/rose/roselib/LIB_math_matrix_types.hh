@@ -705,39 +705,39 @@ template<typename T, int A_NumCol, int A_NumRow, int B_NumCol, int B_NumRow, int
 	return detail::matrix_mul_impl<T, A_NumCol, A_NumRow, B_NumCol, B_NumRow>(a, b);
 }
 
-using float2x2 = MatBase<float, 2, 2>;
-using float2x3 = MatBase<float, 2, 3>;
-using float2x4 = MatBase<float, 2, 4>;
-using float3x2 = MatBase<float, 3, 2>;
-using float3x3 = MatBase<float, 3, 3>;
-using float3x4 = MatBase<float, 3, 4>;
-using float4x2 = MatBase<float, 4, 2>;
-using float4x3 = MatBase<float, 4, 3>;
-using float4x4 = MatBase<float, 4, 4>;
+}  // namespace rose
+
+using float2x2 = rose::MatBase<float, 2, 2>;
+using float2x3 = rose::MatBase<float, 2, 3>;
+using float2x4 = rose::MatBase<float, 2, 4>;
+using float3x2 = rose::MatBase<float, 3, 2>;
+using float3x3 = rose::MatBase<float, 3, 3>;
+using float3x4 = rose::MatBase<float, 3, 4>;
+using float4x2 = rose::MatBase<float, 4, 2>;
+using float4x3 = rose::MatBase<float, 4, 3>;
+using float4x4 = rose::MatBase<float, 4, 4>;
 
 /* These types are reserved to wrap C matrices without copy. Note the un-alignment. */
 /* TODO: It would be preferable to align all C matrices inside DNA structs. */
-using float4x4_view = MatView<float, 4, 4, 4, 4, 0, 0, alignof(float)>;
-using float4x4_mutableview = MutableMatView<float, 4, 4, 4, 4, 0, 0, alignof(float)>;
+using float4x4_view = rose::MatView<float, 4, 4, 4, 4, 0, 0, alignof(float)>;
+using float4x4_mutableview = rose::MutableMatView<float, 4, 4, 4, 4, 0, 0, alignof(float)>;
 
-using double2x2 = MatBase<double, 2, 2>;
-using double2x3 = MatBase<double, 2, 3>;
-using double2x4 = MatBase<double, 2, 4>;
-using double3x2 = MatBase<double, 3, 2>;
-using double3x3 = MatBase<double, 3, 3>;
-using double3x4 = MatBase<double, 3, 4>;
-using double4x2 = MatBase<double, 4, 2>;
-using double4x3 = MatBase<double, 4, 3>;
-using double4x4 = MatBase<double, 4, 4>;
+using double2x2 = rose::MatBase<double, 2, 2>;
+using double2x3 = rose::MatBase<double, 2, 3>;
+using double2x4 = rose::MatBase<double, 2, 4>;
+using double3x2 = rose::MatBase<double, 3, 2>;
+using double3x3 = rose::MatBase<double, 3, 3>;
+using double3x4 = rose::MatBase<double, 3, 4>;
+using double4x2 = rose::MatBase<double, 4, 2>;
+using double4x3 = rose::MatBase<double, 4, 3>;
+using double4x4 = rose::MatBase<double, 4, 4>;
 
-template<> float4x4 operator*(const float4x4 &a, const float4x4 &b);
-template<> float3x3 operator*(const float3x3 &a, const float3x3 &b);
+template<> float4x4 rose::operator*(const float4x4 &a, const float4x4 &b);
+template<> float3x3 rose::operator*(const float3x3 &a, const float3x3 &b);
 
-extern template float2x2 operator*(const float2x2 &a, const float2x2 &b);
-extern template double2x2 operator*(const double2x2 &a, const double2x2 &b);
-extern template double3x3 operator*(const double3x3 &a, const double3x3 &b);
-extern template double4x4 operator*(const double4x4 &a, const double4x4 &b);
-
-}  // namespace rose
+extern template float2x2 rose::operator*(const float2x2 &a, const float2x2 &b);
+extern template double2x2 rose::operator*(const double2x2 &a, const double2x2 &b);
+extern template double3x3 rose::operator*(const double3x3 &a, const double3x3 &b);
+extern template double4x4 rose::operator*(const double4x4 &a, const double4x4 &b);
 
 #endif	// LIB_MATH_MATRIX_TYPES_HH

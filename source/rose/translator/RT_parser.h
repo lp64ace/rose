@@ -15,7 +15,7 @@ extern "C" {
 /** \name Data Structures
  * \{ */
 
-typedef struct RCCState RCCState;
+typedef struct RTState RTState;
 
 typedef struct DeclInfo {
 	bool is_typedef;
@@ -26,28 +26,28 @@ typedef struct DeclInfo {
 	int align;
 } DeclInfo;
 
-typedef struct RCConfiguration {
-	const struct RCCType *tp_size;
-	const struct RCCType *tp_enum;
+typedef struct RTConfiguration {
+	const struct RTType *tp_size;
+	const struct RTType *tp_enum;
 
 	int align;
-} RCConfiguration;
+} RTConfiguration;
 
-typedef struct RCCParser {
-	const struct RCCFile *file;
+typedef struct RTParser {
+	const struct RTFile *file;
 
 	/**
 	 * The tokens extracted in the order they appear in the source.
 	 */
 	ListBase tokens;
 
-	struct RCContext *context;
-	struct RCCState *state;
+	struct RTContext *context;
+	struct RTState *state;
 
-	RCConfiguration configuration;
+	RTConfiguration configuration;
 
 	ListBase nodes;
-} RCCParser;
+} RTCParser;
 
 /** \} */
 
@@ -55,7 +55,7 @@ typedef struct RCCParser {
 /** \name Create Methods
  * \{ */
 
-struct RCCParser *RT_parser_new(const struct RCCFile *file);
+struct RTParser *RT_parser_new(const struct RTFile *file);
 
 /** \} */
 
@@ -63,7 +63,7 @@ struct RCCParser *RT_parser_new(const struct RCCFile *file);
 /** \name Delete Methods
  * \{ */
 
-void RT_parser_free(struct RCCParser *parser);
+void RT_parser_free(struct RTParser *parser);
 
 /** \} */
 
@@ -71,7 +71,7 @@ void RT_parser_free(struct RCCParser *parser);
 /** \name Main Methods
  * \{ */
 
-bool RT_parser_do(struct RCCParser *parser);
+bool RT_parser_do(struct RTParser *parser);
 
 /** \} */
 
@@ -79,42 +79,42 @@ bool RT_parser_do(struct RCCParser *parser);
 /** \name Util Methods
  * \{ */
 
-const struct RCCNode *RT_parser_conditional(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
+const struct RTNode *RT_parser_conditional(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
 
-const struct RCCType *RT_parser_struct(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCType *RT_parser_enum(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
+const struct RTType *RT_parser_struct(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTType *RT_parser_enum(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
 
-const struct RCCType *RT_parser_declspec(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, DeclInfo *info);
-const struct RCCType *RT_parser_typename(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCType *RT_parser_pointers(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *source);
-const struct RCCType *RT_parser_abstract(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *source);
-const struct RCCType *RT_parser_funcparams(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *result);
-const struct RCCType *RT_parser_dimensions(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const RCCType *element);
+const struct RTType *RT_parser_declspec(struct RTParser *P, struct RTToken **rest, struct RTToken *token, DeclInfo *info);
+const struct RTType *RT_parser_typename(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTType *RT_parser_pointers(struct RTParser *P, struct RTToken **rest, struct RTToken *token, const RTType *source);
+const struct RTType *RT_parser_abstract(struct RTParser *P, struct RTToken **rest, struct RTToken *token, const RTType *source);
+const struct RTType *RT_parser_funcparams(struct RTParser *P, struct RTToken **rest, struct RTToken *token, const RTType *result);
+const struct RTType *RT_parser_dimensions(struct RTParser *P, struct RTToken **rest, struct RTToken *token, const RTType *element);
 
-struct RCCObject *RT_parser_declarator(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token, const struct RCCType *source);
+struct RTObject *RT_parser_declarator(struct RTParser *P, struct RTToken **rest, struct RTToken *token, const struct RTType *source);
 
-const struct RCCNode *RT_parser_assign(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_cast(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_unary(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_postfix(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_mul(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_add(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_shift(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_relational(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_equality(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_bitand(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_bitxor(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_bitor(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_logand(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_logor(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_expr(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
-const struct RCCNode *RT_parser_stmt(struct RCCParser *P, struct RCCToken **rest, struct RCCToken *token);
+const struct RTNode *RT_parser_assign(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_cast(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_unary(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_postfix(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_mul(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_add(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_shift(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_relational(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_equality(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_bitand(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_bitxor(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_bitor(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_logand(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_logor(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_expr(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
+const struct RTNode *RT_parser_stmt(struct RTParser *P, struct RTToken **rest, struct RTToken *token);
 
-unsigned long long RT_parser_alignof(struct RCCParser *P, const struct RCCType *type);
-unsigned long long RT_parser_size(struct RCCParser *P, const struct RCCType *type);
-unsigned long long RT_parser_offsetof(struct RCCParser *P, const struct RCCType *type, const struct RCCField *field);
+unsigned long long RT_parser_alignof(struct RTParser *P, const struct RTType *type);
+unsigned long long RT_parser_size(struct RTParser *P, const struct RTType *type);
+unsigned long long RT_parser_offsetof(struct RTParser *P, const struct RTType *type, const struct RTField *field);
 
-void RT_parser_tokenize(struct RCContext *C, struct ListBase *lb, const struct RCCFile *file);
+void RT_parser_tokenize(struct RTContext *C, struct ListBase *lb, const struct RTFile *file);
 
 /** \} */
 

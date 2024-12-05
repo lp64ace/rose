@@ -3,22 +3,22 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeUnary {
-	RCCNode base;
+typedef struct RTNodeUnary {
+	RTNode base;
 
-	const struct RCCNode *expr;
-} RCCNodeUnary;
+	const struct RTNode *expr;
+} RTNodeUnary;
 
 /* -------------------------------------------------------------------- */
 /** \name Create Unary Node
  * \{ */
 
-RCCNode *RT_node_new_unary(RCContext *C, const RCCToken *token, int type, const RCCNode *expr) {
-	RCCNodeUnary *node = RT_node_new(C, token, expr->cast, NODE_UNARY, type, sizeof(RCCNodeUnary));
+RTNode *RT_node_new_unary(RTContext *C, const RTToken *token, int type, const RTNode *expr) {
+	RTNodeUnary *node = RT_node_new(C, token, expr->cast, NODE_UNARY, type, sizeof(RTNodeUnary));
 
 	node->expr = expr;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
 /** \} */
@@ -27,10 +27,10 @@ RCCNode *RT_node_new_unary(RCContext *C, const RCCToken *token, int type, const 
 /** \name Unary Node Utils
  * \{ */
 
-const struct RCCNode *RT_node_expr(const struct RCCNode *node) {
+const struct RTNode *RT_node_expr(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_UNARY);
 
-	return ((struct RCCNodeUnary *)node)->expr;
+	return ((struct RTNodeUnary *)node)->expr;
 }
 
 /** \} */

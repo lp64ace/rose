@@ -130,7 +130,7 @@ bool screen_geom_vertices_scale_pass(wmWindow *window, Screen *screen, rcti *scr
 			CLAMP(vert->vec.y, screen_rect->ymin, screen_rect->ymax);
 		}
 
-		int headery = PIXELSIZE * UI_UNIT_Y;
+		int headery = UI_UNIT_Y;
 
 		if (facy < 1) {
 			/** make each window at least a single header size high. */

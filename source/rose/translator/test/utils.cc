@@ -12,19 +12,19 @@
 namespace {
 
 TEST(Utils, TypeName) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "const volatile int (*(*)(unsigned long x, short y))[0xff];", 58);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "const volatile int (*(*)(unsigned long x, short y))[0xff];", 58);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
-			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
-			const RCCType *type = RT_parser_typename(parser, &token, token);
+			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
+			const RTType *type = RT_parser_typename(parser, &token, token);
 
 			EXPECT_STREQ(RT_token_string(token), ";");
 
-			RCContext *C = parser->context;
+			RTContext *C = parser->context;
 
-			RCCType *expected;
+			RTType *expected;
 			{
 				expected = Tp_Int;
 				expected = RT_type_new_qualified(C, expected);
@@ -36,8 +36,8 @@ TEST(Utils, TypeName) {
 				expected = RT_type_new_pointer(C, expected);
 				expected = RT_type_new_function(C, expected);
 				{
-					RCCToken *x = RT_token_new_virtual_identifier(C, "x");
-					RCCToken *y = RT_token_new_virtual_identifier(C, "y");
+					RTToken *x = RT_token_new_virtual_identifier(C, "x");
+					RTToken *y = RT_token_new_virtual_identifier(C, "y");
 					RT_type_function_add_named_parameter(C, expected, Tp_ULong, x);
 					RT_type_function_add_named_parameter(C, expected, Tp_Short, y);
 					RT_type_function_finalize(C, expected);
@@ -53,21 +53,21 @@ TEST(Utils, TypeName) {
 }
 
 TEST(Utils, EnumType) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "enum e { eVal1 = 1, eVal2 = 2, eVal3 = 3, eVal, };", 50);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "enum e { eVal1 = 1, eVal2 = 2, eVal3 = 3, eVal, };", 50);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
-			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
-			const RCCType *type = RT_parser_typename(parser, &token, token);
+			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
+			const RTType *type = RT_parser_typename(parser, &token, token);
 
 			EXPECT_STREQ(RT_token_string(token), ";");
 
-			RCContext *C = parser->context;
+			RTContext *C = parser->context;
 
-			RCCType *expected;
+			RTType *expected;
 			{
-				RCCToken *e = RT_token_new_virtual_identifier(C, "e");
+				RTToken *e = RT_token_new_virtual_identifier(C, "e");
 				expected = RT_type_new_enum(C, e, Tp_Int);
 				{
 					RT_type_enum_add_constant_expr(C, expected, RT_token_new_virtual_identifier(C, "eVal1"), RT_node_new_constant_value(C, 1));
@@ -79,7 +79,7 @@ TEST(Utils, EnumType) {
 			}
 			EXPECT_TRUE(RT_type_same(type, expected));
 
-			EnumItem *item = reinterpret_cast<EnumItem *>(type->tp_enum.items.first);
+			RTEnumItem *item = reinterpret_cast<RTEnumItem *>(type->tp_enum.items.first);
 			for (long long value = 1LL; item; item = item->next) {
 				EXPECT_EQ(RT_node_evaluate_integer(item->value), value++);
 			}
@@ -91,21 +91,21 @@ TEST(Utils, EnumType) {
 }
 
 TEST(Utils, StructType) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "struct s { int f1 : 16; int f2 : 16; int f3 : 16; int x; };", 59);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "struct s { int f1 : 16; int f2 : 16; int f3 : 16; int x; };", 59);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
-			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
-			const RCCType *type = RT_parser_typename(parser, &token, token);
+			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
+			const RTType *type = RT_parser_typename(parser, &token, token);
 
 			EXPECT_STREQ(RT_token_string(token), ";");
 
-			RCContext *C = parser->context;
+			RTContext *C = parser->context;
 
-			RCCType *expected;
+			RTType *expected;
 			{
-				RCCToken *s = RT_token_new_virtual_identifier(C, "s");
+				RTToken *s = RT_token_new_virtual_identifier(C, "s");
 				expected = RT_type_new_struct(C, s);
 				{
 					RT_type_struct_add_bitfield(C, expected, RT_token_new_virtual_identifier(C, "f1"), Tp_Int, 0, 16);
@@ -133,13 +133,13 @@ TEST(Utils, StructType) {
 }
 
 TEST(Utils, Expr1) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "1 << 0;", 7);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "1 << 0;", 7);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
-			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
-			const RCCNode *expr = RT_parser_conditional(parser, &token, token);
+			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
+			const RTNode *expr = RT_parser_conditional(parser, &token, token);
 
 			EXPECT_STREQ(RT_token_string(token), ";");
 			EXPECT_EQ(RT_node_evaluate_integer(expr), 1LL << 0);
@@ -151,13 +151,13 @@ TEST(Utils, Expr1) {
 }
 
 TEST(Utils, Expr2) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "(1 == 1) ? 0x3fLL : 01771LL;", 28);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "(1 == 1) ? 0x3fLL : 01771LL;", 28);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
-			RCCToken *token = reinterpret_cast<RCCToken *>(parser->tokens.first);
-			const RCCNode *expr = RT_parser_conditional(parser, &token, token);
+			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
+			const RTNode *expr = RT_parser_conditional(parser, &token, token);
 
 			EXPECT_STREQ(RT_token_string(token), ";");
 			EXPECT_EQ(RT_node_evaluate_integer(expr), (1 == 1) ? 0x3fLL : 01771LL);
@@ -169,19 +169,19 @@ TEST(Utils, Expr2) {
 }
 
 TEST(Utils, Parser1) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c", "int main() { return 0; }", 24);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "int main() { return 0; }", 24);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
 			EXPECT_TRUE(RT_parser_do(parser));
 
-			RCContext *C = parser->context;
-			RCCNode *node = reinterpret_cast<RCCNode *>(parser->nodes.first);
+			RTContext *C = parser->context;
+			RTNode *node = reinterpret_cast<RTNode *>(parser->nodes.first);
 
 			{
 				EXPECT_TRUE(node->kind == NODE_OBJECT && node->type == OBJ_FUNCTION);
-				RCCType *expected = NULL;
+				RTType *expected = NULL;
 				{
 					expected = RT_type_new_function(C, Tp_Int);
 					{
@@ -191,12 +191,12 @@ TEST(Utils, Parser1) {
 				EXPECT_TRUE(RT_type_same(RT_node_object(node)->type, expected));
 				EXPECT_TRUE(RT_token_match(RT_node_object(node)->identifier, RT_token_new_virtual_identifier(C, "main")));
 				{
-					const RCCNode *stmt = RT_node_block_first(RT_node_object(node)->body);
+					const RTNode *stmt = RT_node_block_first(RT_node_object(node)->body);
 					{
 						EXPECT_EQ(stmt->kind, NODE_UNARY);
 						EXPECT_EQ(stmt->type, UNARY_RETURN);
 
-						const RCCNode *expr = RT_node_expr(stmt);
+						const RTNode *expr = RT_node_expr(stmt);
 						{
 							EXPECT_EQ(expr->kind, NODE_CONSTANT);
 							EXPECT_TRUE(RT_token_match(expr->token, RT_token_new_virtual_int(C, 0)));
@@ -216,7 +216,7 @@ TEST(Utils, Parser1) {
 }
 
 TEST(Utils, Parser2) {
-	RCCFileCache *cache = RT_fcache_new("D:/test/test.c",
+	RTFileCache *cache = RT_fcache_new("D:/test/test.c",
 										"typedef struct something {\n"
 										"    int x;\n"
 										"    int y;\n"
@@ -228,16 +228,16 @@ TEST(Utils, Parser2) {
 										"    };\n"
 										"} different;\n",
 										154);
-	RCCFile *file = RT_file_new("test.c", cache);
+	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RCCParser *parser = RT_parser_new(file);
+		RTParser *parser = RT_parser_new(file);
 		{
 			EXPECT_TRUE(RT_parser_do(parser));
 
-			RCContext *C = parser->context;
-			RCCNode *node = reinterpret_cast<RCCNode *>(parser->nodes.first);
+			RTContext *C = parser->context;
+			RTNode *node = reinterpret_cast<RTNode *>(parser->nodes.first);
 
-			RCCType *something = NULL;
+			RTType *something = NULL;
 			{
 				EXPECT_TRUE(node->kind == NODE_OBJECT && node->type == OBJ_TYPEDEF);
 				{
@@ -251,14 +251,14 @@ TEST(Utils, Parser2) {
 				EXPECT_TRUE(RT_type_same(RT_node_object(node)->type, something));
 				node = node->next;
 			}
-			RCCType *different = NULL;
+			RTType *different = NULL;
 			{
 				EXPECT_TRUE(node->kind == NODE_OBJECT && node->type == OBJ_TYPEDEF);
 				{
 					different = RT_type_new_struct(C, RT_token_new_virtual_identifier(C, "different"));
 					{
 						RT_type_struct_add_field(C, different, RT_token_new_virtual_identifier(C, "x"), something, 0);
-						RCCType *unnamed = RT_type_new_struct(C, NULL);
+						RTType *unnamed = RT_type_new_struct(C, NULL);
 						{
 							RT_type_struct_add_field(C, unnamed, RT_token_new_virtual_identifier(C, "y"), Tp_Int, 0);
 							RT_type_struct_finalize(unnamed);

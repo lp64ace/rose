@@ -313,6 +313,10 @@ void WM_do_handlers(struct rContext *C) {
 				}
 			}
 
+			if (evt->type == WINQUIT) {
+				WM_window_close(C, window, false);
+			}
+
 			if (CTX_wm_window(C) == NULL) {
 				wm_event_free_and_remove_from_queue_if_valid(evt);
 				break;
@@ -324,6 +328,16 @@ void WM_do_handlers(struct rContext *C) {
 		CTX_wm_screen_set(C, NULL);
 		CTX_wm_window_set(C, NULL);
 	}
+}
+
+void WM_window_post_quit_event(wmWindow *window) {
+	wmEvent evt;
+	memcpy(&evt, window->event_state, sizeof(wmEvent));
+	
+	evt.type = WINQUIT;
+	evt.value = KM_NOTHING;
+
+	wm_event_add(window, &evt);
 }
 
 /** \} */

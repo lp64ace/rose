@@ -14,14 +14,14 @@ extern "C" {
 
 #define TOKEN_MAX_PAYLOAD 256
 
-typedef struct RCCToken {
-	struct RCCToken *prev, *next;
+typedef struct RTToken {
+	struct RTToken *prev, *next;
 
 	int kind;
 
-	RCCSLoc location;
-	const struct RCCFile *file;
-	const struct RCCType *type;
+	RTSLoc location;
+	const struct RTFile *file;
+	const struct RTType *type;
 
 	bool has_leading_space;
 	bool beginning_of_line;
@@ -29,7 +29,7 @@ typedef struct RCCToken {
 	size_t length;
 
 	char payload[TOKEN_MAX_PAYLOAD];
-} RCCToken;
+} RTToken;
 
 enum {
 	TOK_IDENTIFIER,
@@ -46,21 +46,21 @@ enum {
 /** \name Create Methods
  * \{ */
 
-struct RCCToken *RT_token_new_identifier(struct RCContext *, const struct RCCFile *f, const RCCSLoc *loc, size_t length);
-struct RCCToken *RT_token_new_keyword(struct RCContext *, const struct RCCFile *f, const RCCSLoc *loc, size_t length);
-struct RCCToken *RT_token_new_punctuator(struct RCContext *, const struct RCCFile *f, const RCCSLoc *loc, size_t length);
-struct RCCToken *RT_token_new_number(struct RCContext *, const struct RCCFile *f, const RCCSLoc *loc, size_t length);
-struct RCCToken *RT_token_new_string(struct RCContext *, const struct RCCFile *f, const RCCSLoc *loc, size_t length);
-struct RCCToken *RT_token_new_eof(struct RCContext *);
+struct RTToken *RT_token_new_identifier(struct RTContext *, const struct RTFile *f, const RTSLoc *loc, size_t length);
+struct RTToken *RT_token_new_keyword(struct RTContext *, const struct RTFile *f, const RTSLoc *loc, size_t length);
+struct RTToken *RT_token_new_punctuator(struct RTContext *, const struct RTFile *f, const RTSLoc *loc, size_t length);
+struct RTToken *RT_token_new_number(struct RTContext *, const struct RTFile *f, const RTSLoc *loc, size_t length);
+struct RTToken *RT_token_new_string(struct RTContext *, const struct RTFile *f, const RTSLoc *loc, size_t length);
+struct RTToken *RT_token_new_eof(struct RTContext *);
 
-struct RCCToken *RT_token_new_virtual_keyword(struct RCContext *, const char *keyword);
-struct RCCToken *RT_token_new_virtual_identifier(struct RCContext *, const char *name);
-struct RCCToken *RT_token_new_virtual_punctuator(struct RCContext *, const char *punc);
-struct RCCToken *RT_token_new_virtual_size(struct RCContext *, unsigned long long size);
-struct RCCToken *RT_token_new_virtual_int(struct RCContext *, int value);
-struct RCCToken *RT_token_new_virtual_llong(struct RCContext *, long long value);
+struct RTToken *RT_token_new_virtual_keyword(struct RTContext *, const char *keyword);
+struct RTToken *RT_token_new_virtual_identifier(struct RTContext *, const char *name);
+struct RTToken *RT_token_new_virtual_punctuator(struct RTContext *, const char *punc);
+struct RTToken *RT_token_new_virtual_size(struct RTContext *, unsigned long long size);
+struct RTToken *RT_token_new_virtual_int(struct RTContext *, int value);
+struct RTToken *RT_token_new_virtual_llong(struct RTContext *, long long value);
 
-struct RCCToken *RT_token_duplicate(struct RCContext *, const struct RCCToken *token);
+struct RTToken *RT_token_duplicate(struct RTContext *, const struct RTToken *token);
 
 /** \} */
 
@@ -68,19 +68,19 @@ struct RCCToken *RT_token_duplicate(struct RCContext *, const struct RCCToken *t
 /** \name Common Methods
  * \{ */
 
-bool RT_token_match(const struct RCCToken *, const struct RCCToken *);
+bool RT_token_match(const struct RTToken *, const struct RTToken *);
 
-bool RT_token_is_identifier(const struct RCCToken *tok);
-bool RT_token_is_keyword(const struct RCCToken *tok);
-bool RT_token_is_punctuator(const struct RCCToken *tok);
-bool RT_token_is_number(const struct RCCToken *tok);
-bool RT_token_is_string(const struct RCCToken *tok);
+bool RT_token_is_identifier(const struct RTToken *tok);
+bool RT_token_is_keyword(const struct RTToken *tok);
+bool RT_token_is_punctuator(const struct RTToken *tok);
+bool RT_token_is_number(const struct RTToken *tok);
+bool RT_token_is_string(const struct RTToken *tok);
 
 /**
  * Returns the string representing the token, this is only valid for;
  * identifiers, keywrords, punctuators.
  */
-const char *RT_token_as_string(const struct RCCToken *tok);
+const char *RT_token_as_string(const struct RTToken *tok);
 
 /** \} */
 
@@ -89,7 +89,7 @@ const char *RT_token_as_string(const struct RCCToken *tok);
  * \{ */
 
 /** Returns the escaped string representing the token. */
-const char *RT_token_string(const RCCToken *tok);
+const char *RT_token_string(const RTToken *tok);
 
 /** \} */
 
@@ -97,26 +97,26 @@ const char *RT_token_string(const RCCToken *tok);
 /** \name Number Methods
  * \{ */
 
-bool RT_token_is_unsigned(const RCCToken *tok);
-bool RT_token_is_signed(const RCCToken *tok);
-bool RT_token_is_integer(const RCCToken *tok);
-bool RT_token_is_floating(const RCCToken *tok);
+bool RT_token_is_unsigned(const RTToken *tok);
+bool RT_token_is_signed(const RTToken *tok);
+bool RT_token_is_integer(const RTToken *tok);
+bool RT_token_is_floating(const RTToken *tok);
 
-long long RT_token_as_integer(const RCCToken *tok);
+long long RT_token_as_integer(const RTToken *tok);
 
-int RT_token_as_int(const RCCToken *tok);
-long RT_token_as_long(const RCCToken *tok);
-long long RT_token_as_llong(const RCCToken *tok);
+int RT_token_as_int(const RTToken *tok);
+long RT_token_as_long(const RTToken *tok);
+long long RT_token_as_llong(const RTToken *tok);
 
-unsigned int RT_token_as_uint(const RCCToken *tok);
-unsigned long RT_token_as_ulong(const RCCToken *tok);
-unsigned long long RT_token_as_ullong(const RCCToken *tok);
+unsigned int RT_token_as_uint(const RTToken *tok);
+unsigned long RT_token_as_ulong(const RTToken *tok);
+unsigned long long RT_token_as_ullong(const RTToken *tok);
 
-long double RT_token_as_scalar(const RCCToken *tok);
+long double RT_token_as_scalar(const RTToken *tok);
 
-float RT_token_as_float(const RCCToken *tok);
-double RT_token_as_double(const RCCToken *tok);
-long double RT_token_as_ldouble(const RCCToken *tok);
+float RT_token_as_float(const RTToken *tok);
+double RT_token_as_double(const RTToken *tok);
+long double RT_token_as_ldouble(const RTToken *tok);
 
 /** \} */
 
@@ -124,7 +124,7 @@ long double RT_token_as_ldouble(const RCCToken *tok);
 /** \name Util Methods
  * \{ */
 
-const char *RT_token_working_directory(const RCCToken *tok);
+const char *RT_token_working_directory(const RTToken *tok);
 
 /** \} */
 

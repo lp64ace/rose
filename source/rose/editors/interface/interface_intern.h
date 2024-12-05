@@ -146,7 +146,7 @@ struct uiBut *ui_region_find_active_but(const struct ARegion *region);
 
 struct uiBut *ui_but_find_mouse_over_ex(const struct ARegion *region, const int xy[2]);
 
-void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but);
+void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but, int state);
 void ui_do_but_activate_exit(struct rContext *C, struct ARegion *region, struct uiBut *but);
 void ui_but_active_free(struct rContext *C, struct uiBut *but);
 

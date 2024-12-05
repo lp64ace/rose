@@ -5,15 +5,15 @@
 extern "C" {
 #endif
 
-struct RCContext;
+struct RTContext;
 
 /* -------------------------------------------------------------------- */
 /** \name Creation Methods
  * \{ */
 
-struct RCCType *RT_type_new_empty_pointer(struct RCContext *);
+struct RTType *RT_type_new_empty_pointer(struct RTContext *);
 
-struct RCCType *RT_type_new_pointer(struct RCContext *, const struct RCCType *base);
+struct RTType *RT_type_new_pointer(struct RTContext *, const struct RTType *base);
 
 /** \} */
 
@@ -21,7 +21,7 @@ struct RCCType *RT_type_new_pointer(struct RCContext *, const struct RCCType *ba
 /** \name Util Methods
  * \{ */
 
-bool RT_type_is_pointer(const struct RCCType *type);
+bool RT_type_is_pointer(const struct RTType *type);
 
 /** \} */
 

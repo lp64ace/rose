@@ -94,18 +94,18 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 	fprintf(file, "\n");
 	fprintf(file, "#include \"LIB_utildefines.h\"\n");
 
-	RCCParser *parser = RT_parser_new(NULL);
+	RTCParser *parser = RT_parser_new(NULL);
 	{
 		SDNA *ndna = DNA_sdna_new_memory(sdna->data, sdna->length);
 
 		const void *ptr = POINTER_OFFSET(ndna->data, 8);
 		while (ptr < POINTER_OFFSET(ndna->data, ndna->length)) {
-			const RCCToken *token;
+			const RTToken *token;
 			if (!DNA_sdna_read_token(ndna, &ptr, ptr, &token)) {
 				RT_parser_free(parser);
 				return false;
 			}
-			const RCCType *type;
+			const RTType *type;
 			if (!DNA_sdna_read_type(ndna, &ptr, ptr, &type)) {
 				RT_parser_free(parser);
 				return false;
@@ -120,7 +120,7 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 			fprintf(file, "sizeof(%s) == %llu, ", RT_token_as_string(token), RT_parser_size(parser, type));
 			fprintf(file, "\"DNA type size verify\");\n");
 
-			for (const RCCField *field = RT_type_struct_field_first(type); field; field = field->next) {
+			for (const RTField *field = RT_type_struct_field_first(type); field; field = field->next) {
 				fprintf(file, "ROSE_STATIC_ASSERT(");
 				fprintf(file, "offsetof(%s, %s) == %llu, ", RT_token_as_string(token), RT_token_as_string(field->identifier), RT_parser_offsetof(parser, type, field));
 				fprintf(file, "\"DNA field offset verify\");\n");
@@ -135,8 +135,8 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 	return true;
 }
 
-RCCFileCache *build_virtual_source(const char *virtual_path) {
-	RCCFileCache *cache = NULL;
+RTFileCache *build_virtual_source(const char *virtual_path) {
+	RTFileCache *cache = NULL;
 
 	char *includes[ARRAY_SIZE(header_typedef)], *content;
 	for (size_t index = 0; index < ARRAY_SIZE(header_typedef); index++) {
@@ -176,21 +176,21 @@ int main(int argc, char **argv) {
 	LIB_strcat(path, ARRAY_SIZE(path), "/");
 	LIB_strcat(path, ARRAY_SIZE(path), "include_all.c");
 
-	RCCFileCache *cache = build_virtual_source(path);
-	RCCFile *file = RT_file_new(path, cache);
-	RCCParser *parser = RT_parser_new(file);
+	RTFileCache *cache = build_virtual_source(path);
+	RTFile *file = RT_file_new(path, cache);
+	RTCParser *parser = RT_parser_new(file);
 
-	RCCToken *conf_tp_size = RT_token_new_virtual_identifier(parser->context, "conf::tp_size");
+	RTToken *conf_tp_size = RT_token_new_virtual_identifier(parser->context, "conf::tp_size");
 	status |= (!DNA_sdna_write_token(sdna, &ptr, ptr, conf_tp_size)) ? 0xe0 : 0x00;
 	status |= (!DNA_sdna_write_type(sdna, &ptr, ptr, parser->configuration.tp_size)) ? 0xe0 : 0x00;
-	RCCToken *conf_tp_enum = RT_token_new_virtual_identifier(parser->context, "conf::tp_enum");
+	RTToken *conf_tp_enum = RT_token_new_virtual_identifier(parser->context, "conf::tp_enum");
 	status |= (!DNA_sdna_write_token(sdna, &ptr, ptr, conf_tp_enum)) ? 0xe0 : 0x00;
 	status |= (!DNA_sdna_write_type(sdna, &ptr, ptr, parser->configuration.tp_enum)) ? 0xe0 : 0x00;
 
 	if (RT_parser_do(parser)) {
-		LISTBASE_FOREACH(const RCCNode *, node, &parser->nodes) {
+		LISTBASE_FOREACH(const RTNode *, node, &parser->nodes) {
 			if (ELEM(node->kind, NODE_OBJECT) && ELEM(node->type, OBJ_TYPEDEF)) {
-				const RCCObject *object = RT_node_object(node);
+				const RTObject *object = RT_node_object(node);
 
 				if (object->type->kind != TP_STRUCT) {
 					continue;

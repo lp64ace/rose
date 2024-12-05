@@ -48,6 +48,7 @@ typedef struct Theme {
 	ThemeSpace space_view3d;
 	ThemeSpace space_topbar;
 	ThemeSpace space_statusbar;
+	ThemeSpace space_userpref;
 } Theme;
 
 typedef struct UserDef {

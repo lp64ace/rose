@@ -12,12 +12,12 @@ const Theme U_theme_default = {
 	.tui = {
 		/** The colors that will be used for separator buttons. */
 		.wcol_sepr = {
-			.outline = RGBA(0x444444ff),
-			.inner = RGBA(0x444444ff),
+			.outline = RGBA(0x00000000),
+			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0x00000000),
-			.text = RGBA(0x00000000),
+			.text = RGBA(0x444444aa),
 			.text_sel = RGBA(0x00000000),
-			.roundness = 3,
+			.roundness = 0.2f,
 		},
 		/** The colors that will be used for regural buttons. */
 		.wcol_but = {
@@ -26,25 +26,25 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0,
+			.roundness = 0.2f,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
-			.inner_sel = RGBA(0x00000000),
+			.inner_sel = RGBA(0x00000055),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
-            .roundness = 0,
+			.roundness = 0.2f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
 			.outline = RGB(0x222222ff),
-			.inner = RGBA(0x222222ff),
+			.inner = RGBA(0x0a0a0aff),
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xc0c0c0ff),
 			.text_sel = RGBA(0x2222e0ee),
-            .roundness = 0,
+			.roundness = 0.2f,
 		},
 		.text_cur = RGBA(0xffffffff),
 	},
@@ -79,6 +79,14 @@ const Theme U_theme_default = {
 		.text_hi = RGBA(0x00ffccff),
 		.header = RGBA(0x1a1a1aff),
 		.header_hi = RGBA(0x333333ff),
+	},
+	/** The colors that will be used for the UserPref space. */
+	.space_userpref = {
+		.back = RGBA(0x101010ff),
+		.text = RGBA(0xe0e0e0ff),
+		.text_hi = RGBA(0xffffffff),
+		.header = RGBA(0x1a1a1aff),
+		.header_hi = RGBA(0x2a2a2aff),
 	},
 };
 

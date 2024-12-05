@@ -4,6 +4,8 @@
 
 #include "UI_interface.h"
 
+#include "LIB_array.hh"
+
 #include "interface_intern.h"
 
 /* -------------------------------------------------------------------- */
@@ -55,6 +57,19 @@ struct uiLayout : public uiItem {
 	ListBase items;
 };
 
+struct uiLayoutItemGridFlow : uiLayout {
+	/**
+	 * When positive, absolute fixed number of columns.
+	 * When zero, fully automatic number of columns (based on available width).
+	 * When negative, automatic number of columns (multiple of given absolute value).
+	 */
+	int columns;
+	
+	int totitems;
+	int totrow;
+	int totcol;
+};
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -67,7 +82,7 @@ ROSE_INLINE void ui_layout_add_padding_button(uiLayoutRoot *root) {
 		uiLayout *prev_layout = block->layout;
 
 		block->layout = root->layout;
-		uiDefSepr(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding);
+		uiDefBut(block, UI_BTYPE_SEPR, "", root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0);
 		block->layout = prev_layout;
 	}
 }
@@ -117,18 +132,30 @@ ROSE_INLINE void ui_item_init_from_parent(uiLayout *layout, uiLayout *parent) {
 }
 
 uiLayout *UI_layout_row(uiLayout *parent, int space) {
-	uiLayout *layout = static_cast<uiLayout *>(MEM_callocN(sizeof(uiLayout), "uiLayout"));
+	uiLayout *layout = MEM_cnew<uiLayout>("uiLayout");
 	ui_item_init_from_parent(layout, parent);
 	layout->type = ITEM_LAYOUT_ROW;
 	layout->space = space;
 	UI_block_layout_set_current(layout->root->block, layout);
 	return layout;
 }
+
 uiLayout *UI_layout_col(uiLayout *parent, int space) {
-	uiLayout *layout = static_cast<uiLayout *>(MEM_callocN(sizeof(uiLayout), "uiLayout"));
+	uiLayout *layout = MEM_cnew<uiLayout>("uiLayout");
 	ui_item_init_from_parent(layout, parent);
 	layout->type = ITEM_LAYOUT_COL;
 	layout->space = space;
+	UI_block_layout_set_current(layout->root->block, layout);
+	return layout;
+}
+
+uiLayout *UI_layout_grid(uiLayout *parent, int columns) {
+	uiLayoutItemGridFlow *layout = MEM_cnew<uiLayoutItemGridFlow>("uiLayoutItemGridFlow");
+	ui_item_init_from_parent(layout, parent);
+	
+	layout->type = ITEM_LAYOUT_GRID;
+	layout->columns = columns;
+	
 	UI_block_layout_set_current(layout->root->block, layout);
 	return layout;
 }
@@ -179,6 +206,144 @@ ROSE_INLINE void ui_item_offset(const uiItem *vitem, int *r_x, int *r_y) {
 		if (r_y) {
 			*r_y = 0;
 		}
+	}
+}
+
+struct UILayoutGridFlowInput {
+	int litem_w;
+	int litem_x;
+	int litem_y;
+	int space_x;
+	int space_y;
+	
+	int totcol;
+	int totrow;
+};
+
+struct UILayoutGridFlowOutput {
+	int *totitem; // The number of items in the grid layout.
+	float *maxitem;	 // The maximum height of a single item in the grid layout.
+	float *avgitem; // The average width of each column.
+	
+	int *x_array; // The x coordinate of each column.
+	int *w_array; // The width of each column.
+	int *w; // Total width.
+	
+	int *y_array;
+	int *h_array;
+	int *h; // Total height;
+};
+
+ROSE_INLINE void ui_layout_grid_flow_compute(ListBase *lb, const UILayoutGridFlowInput *in, UILayoutGridFlowOutput *out) {
+	float tot_w = 0.0f;
+	float tot_h = 0.0f;
+	float val_avg_w = 0.0f;
+	float val_tot_w = 0.0f;
+	float val_max_h = 0.0f;
+	
+	ROSE_assert(in->totcol != 0 || (out->x_array == NULL && out->w_array == NULL));
+	ROSE_assert(in->totrow != 0 || (out->y_array == NULL && out->h_array == NULL));
+	
+	if (out->totitem) {
+		*out->totitem = 0;
+	}
+	
+	if (LIB_listbase_is_empty(lb)) {
+		if (out->avgitem) {
+			*out->avgitem = 0.0f;
+		}
+		if (out->maxitem) {
+			*out->maxitem = 0.0f;
+		}
+		return;
+	}
+	
+	rose::Array<float, 64> arr_avg_w(in->totcol, 0.0f);
+	rose::Array<float, 64> arr_tot_w(in->totcol, 0.0f);
+	rose::Array<int, 64> arr_max_h(in->totrow, 0.0f);
+	
+	int i;
+	LISTBASE_FOREACH_INDEX(uiItem *, vitem, lb, i) {
+		int w, h;
+		ui_item_size(vitem, &w, &h);
+		
+		val_avg_w += w * w;
+		val_tot_w += w;
+		val_max_h = ROSE_MAX(val_max_h, h);
+		
+		if (in->totrow != 0 && in->totcol != 0) {
+			const int r = i / in->totcol;
+			const int c = i % in->totcol;
+			
+			arr_avg_w[c] += w * w;
+			arr_tot_w[c] += w;
+			arr_max_h[r] = ROSE_MAX(arr_max_h[r], h);
+		}
+		
+		if (out->totitem) {
+			(*out->totitem)++;
+		}
+	}
+	
+	val_avg_w /= val_tot_w;
+	if (in->totcol != 0) {
+		for (int i = 0; i < in->totcol; i++) {
+			arr_avg_w[i] /= arr_tot_w[i];
+			tot_w += arr_avg_w[i];
+		}
+		if (false /** even_columns */) {
+			tot_w = ceilf(val_avg_w) * in->totcol;
+		}
+	}
+	if (in->totrow != 0) {
+		for (int i = 0; i < in->totrow; i++) {
+			tot_h += arr_max_h[i];
+		}
+		if (true /** even_rows */) {
+			tot_h = ceilf(val_avg_w) * in->totrow;
+		}
+	}
+	
+	if (out->x_array != NULL && out->w_array != NULL) {
+		/** We enlarge/narrow columns evenly to match available width. */
+		const float wfac = float(in->litem_w - (in->totcol - 1) * in->space_x) / tot_w;
+		
+		for (int col = 0; col < in->totcol; col++) {
+			out->x_array[col] = col ? out->x_array[col - 1] + out->w_array[col - 1] + in->space_x : in->litem_x;
+			if (false /** even_columns */) {
+				out->w_array[col] = ((in->litem_w - (out->x_array[col] - in->litem_x)) - (in->totcol - col - 1) * in->space_x) / (in->totcol - col);
+			}
+			else if (col == in->totcol - 1) {
+				out->w_array[col] = in->litem_w - (out->x_array[col] - in->litem_x);
+			}
+			else {
+				out->w_array[col] = arr_avg_w[col] * wfac;
+			}
+		}
+	}
+	if (out->y_array != NULL && out->h_array != NULL) {
+		for (int row = 0; row < in->totrow; row++) {
+			if (true /** even_rows */) {
+				out->h_array[row] = val_max_h;
+			}
+			else {
+				out->h_array[row] = arr_max_h[row];
+			}
+			out->y_array[row] = (row) ? out->y_array[row - 1] - in->space_y - out->h_array[row] : in->litem_y - out->h_array[row];
+		}
+	}
+	
+	if (out->avgitem) {
+		*out->avgitem = val_avg_w;
+	}
+	if (out->maxitem) {
+		*out->maxitem = val_max_h;
+	}
+	if (out->w) {
+		*out->w = tot_w + (in->totcol - 1) * in->space_x;
+	}
+	if (out->h) {
+		*out->h = tot_h + (in->totrow - 1) * in->space_y;
 	}
 }
 
@@ -346,6 +511,77 @@ ROSE_INLINE void ui_item_estimate_row(uiLayout *layout) {
 	}
 }
 
+ROSE_INLINE void ui_item_estimate_grid(uiLayout *layout) {
+	uiLayoutItemGridFlow *grid = static_cast<uiLayoutItemGridFlow *>(layout);
+	
+	{
+		float avg_w;
+		float max_h;
+		
+		UILayoutGridFlowInput input{};
+		input.litem_w = layout->w;
+		input.litem_x = layout->x;
+		input.litem_y = layout->y;
+		input.space_x = 0;
+		input.space_y = 0;
+		
+		UILayoutGridFlowOutput output{};
+		output.totitem = &grid->totitems;
+		output.h = &grid->totrow;
+		output.w = &grid->totcol;
+		output.avgitem = &avg_w;
+		output.maxitem = &max_h;
+		ui_layout_grid_flow_compute(&layout->items, &input, &output);
+		
+		if (grid->totitems == 0) {
+			layout->w = layout->h = 0;
+			grid->totcol = grid->totrow = 0;
+			return;
+		}
+		
+		if (grid->columns > 0) {
+			grid->totcol = grid->columns;
+		}
+		else {
+			if (avg_w == 0.0f) {
+				grid->totcol = 1;
+			}
+			else {
+				grid->totcol = ROSE_MIN(ROSE_MAX(layout->w / avg_w, 1), grid->totitems);
+			}
+		}
+		grid->totrow = ceilf(((float)grid->totitems) / grid->totcol);
+		
+		const int modulo = (grid->columns < -1) ? -grid->columns : 0;
+		const int step = modulo ? modulo : 1;
+		
+		/* Adjust number of columns to be multiple of given modulo. */
+		if (modulo && grid->totcol % modulo != 0 && grid->totcol > modulo) {
+			grid->totcol = grid->totcol - (grid->totcol % modulo);
+		}
+		
+		grid->totrow = ceilf(float(grid->totitems) / grid->totcol);
+		while ((grid->totcol - step) > 0 && ceilf(float(grid->totitems) / (grid->totcol - step)) <= grid->totrow) {
+			grid->totcol -= step;
+		}
+	}
+	
+	{
+		UILayoutGridFlowInput input{};
+		input.litem_w = layout->w;
+		input.litem_x = layout->x;
+		input.litem_y = layout->y;
+		input.space_x = 0;
+		input.space_y = 0;
+		input.totcol = grid->totcol;
+		input.totrow = grid->totrow;
+		UILayoutGridFlowOutput output{};
+		output.w = &layout->w;
+		output.h = &layout->h;
+		ui_layout_grid_flow_compute(&layout->items, &input, &output);
+	}
+}
+
 ROSE_INLINE void ui_item_estimate_root(uiLayout *layout) {
 	ui_item_estimate_column(layout);
 }
@@ -376,6 +612,7 @@ ROSE_STATIC void ui_item_estimate(uiItem *vitem) {
 		switch (item->type) {
 			ESTIMATE(ITEM_LAYOUT_ROW, ui_item_estimate_row(item));
 			ESTIMATE(ITEM_LAYOUT_COL, ui_item_estimate_column(item));
+			ESTIMATE(ITEM_LAYOUT_GRID, ui_item_estimate_grid(item));
 			ESTIMATE(ITEM_LAYOUT_ROOT, ui_item_estimate_root(item));
 		}
 
@@ -425,6 +662,63 @@ ROSE_INLINE void ui_item_layout_row(uiLayout *layout) {
 	layout->y = y;
 }
 
+ROSE_STATIC void ui_item_layout_grid_postfix(uiItem *item, int r, int c) {
+	ROSE_assert(item->type == ITEM_BUTTON);
+	uiButtonItem *ibut = static_cast<uiButtonItem *>(item);
+	uiBut *but = ibut->but;
+	
+	/** They are denoted by rows, since we want to select full rows! */
+	but->draw = DRAW_FLAG(but->draw | UI_BUT_GRID) | DRAW_INDX(r);
+}
+
+ROSE_INLINE void ui_item_layout_grid(uiLayout *layout) {
+	uiLayoutItemGridFlow *grid = static_cast<uiLayoutItemGridFlow *>(layout);
+
+	if (grid->totitems == 0) {
+		layout->w = layout->h = 0;
+		return;
+	}
+
+	rose::Array<int, 64> widths(grid->totcol);
+	rose::Array<int, 64> heights(grid->totrow);
+	rose::Array<int, 64> x(grid->totcol);
+	rose::Array<int, 64> y(grid->totrow);
+
+	UILayoutGridFlowInput input{};
+	input.litem_x = layout->x;
+	input.litem_y = layout->y;
+	input.litem_w = layout->w;
+	input.totcol = grid->totcol;
+	input.totrow = grid->totrow;
+	
+	UILayoutGridFlowOutput output{};
+	output.x_array = x.data();
+	output.y_array = y.data();
+	output.w_array = widths.data();
+	output.h_array = heights.data();
+	ui_layout_grid_flow_compute(&layout->items, &input, &output);
+
+	int i;
+	LISTBASE_FOREACH_INDEX(uiItem *, vitem, &layout->items, i) {
+		const int r = i / grid->totcol;
+		const int c = i % grid->totcol;
+
+		const int w = widths[c];
+		const int h = heights[r];
+
+		ui_item_position(vitem, x[c], y[r], w, h);
+		
+		if (grid->columns > 0) {
+			/** Update the index of the button so multiple buttons can be grouped together! */
+			ui_item_layout_grid_postfix(vitem, r, c);
+		}
+	}
+
+	layout->h = layout->y - y[grid->totrow - 1];
+	layout->x = x[grid->totcol - 1] - layout->x + widths[grid->totcol - 1];
+	layout->y = layout->y - layout->h;
+}
+
 ROSE_INLINE void ui_item_layout_root(uiLayout *layout) {
 	ui_item_layout_column(layout);	// default
 }
@@ -445,6 +739,7 @@ ROSE_STATIC void ui_item_layout(uiItem *vitem) {
 		switch (item->type) {
 			LAYOUT(ITEM_LAYOUT_ROW, ui_item_layout_row(item));
 			LAYOUT(ITEM_LAYOUT_COL, ui_item_layout_column(item));
+			LAYOUT(ITEM_LAYOUT_GRID, ui_item_layout_grid(item));
 			LAYOUT(ITEM_LAYOUT_ROOT, ui_item_layout_root(item));
 		}
 

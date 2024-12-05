@@ -4,35 +4,35 @@
 #include "RT_object.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeObject {
-	RCCNode base;
+typedef struct RTNodeObject {
+	RTNode base;
 
-	const struct RCCObject *object;
-} RCCNodeObject;
+	const struct RTObject *object;
+} RTNodeObject;
 
 /* -------------------------------------------------------------------- */
 /** \name Create Object Node
  * \{ */
 
-ROSE_INLINE RCCNode *RT_node_new_obj(RCContext *C, int type, const RCCObject *object) {
-	RCCNodeObject *node = RT_node_new(C, object->identifier, object->type, NODE_OBJECT, type, sizeof(RCCNodeObject));
+ROSE_INLINE RTNode *RT_node_new_obj(RTContext *C, int type, const RTObject *object) {
+	RTNodeObject *node = RT_node_new(C, object->identifier, object->type, NODE_OBJECT, type, sizeof(RTNodeObject));
 
 	node->object = object;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
-RCCNode *RT_node_new_variable(RCContext *C, const RCCObject *object) {
+RTNode *RT_node_new_variable(RTContext *C, const RTObject *object) {
 	ROSE_assert(object->kind == OBJ_VARIABLE);
 
 	return RT_node_new_obj(C, object->kind, object);
 }
-RCCNode *RT_node_new_typedef(RCContext *C, const RCCObject *object) {
+RTNode *RT_node_new_typedef(RTContext *C, const RTObject *object) {
 	ROSE_assert(object->kind == OBJ_TYPEDEF);
 
 	return RT_node_new_obj(C, object->kind, object);
 }
-RCCNode *RT_node_new_function(RCContext *C, const RCCObject *object) {
+RTNode *RT_node_new_function(RTContext *C, const RTObject *object) {
 	ROSE_assert(object->kind == OBJ_FUNCTION);
 
 	return RT_node_new_obj(C, object->kind, object);
@@ -44,10 +44,10 @@ RCCNode *RT_node_new_function(RCContext *C, const RCCObject *object) {
 /** \name Object Node Utils
  * \{ */
 
-const struct RCCObject *RT_node_object(const struct RCCNode *node) {
+const struct RTObject *RT_node_object(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_OBJECT);
 
-	return ((const struct RCCNodeObject *)node)->object;
+	return ((const struct RTNodeObject *)node)->object;
 }
 
 /** \} */

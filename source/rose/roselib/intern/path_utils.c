@@ -55,7 +55,7 @@ bool LIB_path_is_absolute_from_cwd(const char *path) {
 	}
 #endif
 
-	return false;
+	return is_abs;
 }
 
 bool LIB_path_current_working_directory(char *buffer, size_t maxncpy) {
@@ -111,6 +111,18 @@ bool LIB_path_absolute(char *buffer, size_t maxncpy, const char *original) {
 /* -------------------------------------------------------------------- */
 /** \name Path Join
  * \{ */
+
+size_t LIB_path_parent_dir(char *path, const size_t maxncpy) {
+	size_t length = LIB_strnlen(path, maxncpy);
+	if (length > 1) {
+		length--;
+		do {
+			length--;
+		} while (length && !LIB_path_slash_is_native_compat(path[length]));
+		path[length] = '\0';
+	}
+	return length;
+}
 
 size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[], size_t length) {
 	ROSE_assert(length > 0);

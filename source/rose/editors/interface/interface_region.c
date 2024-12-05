@@ -30,6 +30,8 @@ ARegion *ui_region_temp_add(Screen *screen) {
 	region->regiontype = RGN_TYPE_TEMPORARY;
 	region->alignment = RGN_ALIGN_FLOAT;
 
+	ED_region_tag_redraw(region);
+
 	return region;
 }
 

@@ -41,9 +41,16 @@ void ED_region_do_draw(struct rContext *C, struct ARegion *region);
 
 void ED_region_update_rect(struct ARegion *region);
 
+void ED_region_tag_redraw(struct ARegion *region);
+void ED_region_tag_redraw_no_rebuild(struct ARegion *region);
+
 void ED_region_header_init(struct ARegion *region);
 void ED_region_header_exit(struct ARegion *region);
 void ED_region_header_draw(struct rContext *C, struct ARegion *region);
+
+void ED_region_default_init(struct ARegion *region);
+void ED_region_default_exit(struct ARegion *region);
+void ED_region_default_draw(struct rContext *C, struct ARegion *region);
 
 /**
  * \note This may return true for multiple overlapping regions.
@@ -65,8 +72,14 @@ struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int re
 /** \name Area
  * \{ */
 
+struct ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const rcti *rect, int space_type);
+
+void ED_area_newspace(struct rContext *C, struct ScrArea *area, int space_type);
 void ED_area_init(struct WindowManager *wm, struct wmWindow *window, struct ScrArea *area);
 void ED_area_exit(struct rContext *C, struct ScrArea *area);
+
+void ED_area_tag_redraw(struct ScrArea *area);
+void ED_area_tag_redraw_no_rebuild(struct ScrArea *area);
 
 bool ED_area_is_global(const struct ScrArea *area);
 int ED_area_global_size_y(const struct ScrArea *area);
@@ -104,7 +117,7 @@ void ED_area_update_region_sizes(struct WindowManager *wm, struct wmWindow *wind
 void ED_screen_set_active_region(struct rContext *C, struct wmWindow *window, const int xy[2]);
 void ED_screen_exit(struct rContext *C, struct wmWindow *window, struct Screen *screen);
 
-void ED_screen_refresh(struct rContext *C, struct WindowManager *wm, struct wmWindow *window);
+void ED_screen_refresh(struct WindowManager *wm, struct wmWindow *window);
 void ED_screen_global_areas_refresh(struct wmWindow *window);
 
 /** \} */

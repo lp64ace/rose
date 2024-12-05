@@ -16,37 +16,37 @@
 #include <ctype.h>
 #include <string.h>
 
-struct RCCScope;
+struct RTScope;
 
-ROSE_INLINE struct RCCScope *RT_scope_push(struct RCContext *C, struct RCCState *state);
-ROSE_INLINE void RT_scope_pop(struct RCCState *state);
-ROSE_INLINE void RT_scope_free(struct RCCScope *scope);
+ROSE_INLINE struct RTScope *RT_scope_push(struct RTContext *C, struct RTState *state);
+ROSE_INLINE void RT_scope_pop(struct RTState *state);
+ROSE_INLINE void RT_scope_free(struct RTScope *scope);
 
 /* -------------------------------------------------------------------- */
 /** \name State
  * \{ */
 
-typedef struct RCCState {
+typedef struct RTState {
 	/** The current scope of the parser, or the global scope! */
-	struct RCCScope *scope;
+	struct RTScope *scope;
 
 	ListBase scopes;
 
-	const struct RCCToken *on_continue;
-	const struct RCCToken *on_break;
+	const struct RTToken *on_continue;
+	const struct RTToken *on_break;
 
 	size_t errors;
 	size_t warnings;
-} RCCState;
+} RTState;
 
-ROSE_INLINE void RT_state_init(struct RCCParser *parser) {
-	parser->state = MEM_callocN(sizeof(RCCState), "RCCParserState");
+ROSE_INLINE void RT_state_init(struct RTParser *parser) {
+	parser->state = MEM_callocN(sizeof(RTState), "RTParserState");
 
 	/** Create the global state for this parser, will always be alive until `RT_state_free` is called. */
 	RT_scope_push(parser->context, parser->state);
 }
 
-ROSE_INLINE void RT_state_exit(struct RCCParser *parser) {
+ROSE_INLINE void RT_state_exit(struct RTParser *parser) {
 	while (parser->state->scope) {
 		/**
 		 * Under normal circumstances this will only be called once to delete the global scope,
@@ -55,7 +55,7 @@ ROSE_INLINE void RT_state_exit(struct RCCParser *parser) {
 		RT_scope_pop(parser->state);
 	}
 
-	LISTBASE_FOREACH_MUTABLE(struct RCCScope *, scope, &parser->state->scopes) {
+	LISTBASE_FOREACH_MUTABLE(struct RTScope *, scope, &parser->state->scopes) {
 		RT_scope_free(scope);
 	}
 
@@ -69,42 +69,42 @@ ROSE_INLINE void RT_state_exit(struct RCCParser *parser) {
 /** \name Scope
  * \{ */
 
-typedef struct RCCScope {
-	struct RCCScope *prev, *next;
-	struct RCCScope *parent;
+typedef struct RTScope {
+	struct RTScope *prev, *next;
+	struct RTScope *parent;
 
 	GHash *tags;
 	GHash *vars;
-} RCCScope;
+} RTScope;
 
-ROSE_INLINE bool RT_scope_is_global(struct RCCScope *scope) {
+ROSE_INLINE bool RT_scope_is_global(struct RTScope *scope) {
 	/** If we have no parent scope, then this is the global scope! */
 	return scope->parent == NULL;
 }
 
-ROSE_INLINE RCCScope *RT_scope_push(struct RCContext *C, struct RCCState *state) {
-	RCCScope *scope = RT_context_calloc(C, sizeof(RCCScope));
+ROSE_INLINE RTScope *RT_scope_push(struct RTContext *C, struct RTState *state) {
+	RTScope *scope = RT_context_calloc(C, sizeof(RTScope));
 
 	scope->parent = state->scope;
-	scope->tags = LIB_ghash_str_new("RCCScope::tags");
-	scope->vars = LIB_ghash_str_new("RCCScope::vars");
+	scope->tags = LIB_ghash_str_new("RTScope::tags");
+	scope->vars = LIB_ghash_str_new("RTScope::vars");
 	state->scope = scope;
 
 	LIB_addtail(&state->scopes, scope);
 
 	return scope;
 }
-ROSE_INLINE void RT_scope_pop(struct RCCState *state) {
+ROSE_INLINE void RT_scope_pop(struct RTState *state) {
 	if (state->scope) {
 		state->scope = state->scope->parent;
 	}
 }
-ROSE_INLINE void RT_scope_free(struct RCCScope *scope) {
+ROSE_INLINE void RT_scope_free(struct RTScope *scope) {
 	LIB_ghash_free(scope->vars, NULL, NULL);
 	LIB_ghash_free(scope->tags, NULL, NULL);
 }
 
-ROSE_INLINE bool RT_scope_has_tag(struct RCCScope *scope, const struct RCCToken *name) {
+ROSE_INLINE bool RT_scope_has_tag(struct RTScope *scope, const struct RTToken *name) {
 	// NOTE: names can only be identifier, keywords are not allowed!
 	ROSE_assert(RT_token_is_identifier(name));
 	while (scope) {
@@ -115,7 +115,7 @@ ROSE_INLINE bool RT_scope_has_tag(struct RCCScope *scope, const struct RCCToken 
 	}
 	return false;
 }
-ROSE_INLINE bool RT_scope_has_var(struct RCCScope *scope, const struct RCCToken *name) {
+ROSE_INLINE bool RT_scope_has_var(struct RTScope *scope, const struct RTToken *name) {
 	// NOTE: names can only be identifier, keywords are not allowed!
 	ROSE_assert(RT_token_is_identifier(name));
 	while (scope) {
@@ -127,7 +127,7 @@ ROSE_INLINE bool RT_scope_has_var(struct RCCScope *scope, const struct RCCToken 
 	return false;
 }
 
-ROSE_INLINE bool RT_scope_new_tag(struct RCCScope *scope, const struct RCCToken *name, void *ptr) {
+ROSE_INLINE bool RT_scope_new_tag(struct RTScope *scope, const struct RTToken *name, void *ptr) {
 	ROSE_assert(ptr != NULL);
 	if (RT_scope_has_tag(scope, name)) {
 		RT_source_error(name->file, &name->location, "tag already exists in this scope");
@@ -136,7 +136,7 @@ ROSE_INLINE bool RT_scope_new_tag(struct RCCScope *scope, const struct RCCToken 
 	LIB_ghash_insert(scope->tags, (void *)RT_token_as_string(name), (void *)ptr);
 	return true;
 }
-ROSE_INLINE bool RT_scope_new_var(struct RCCScope *scope, const struct RCCToken *name, void *ptr) {
+ROSE_INLINE bool RT_scope_new_var(struct RTScope *scope, const struct RTToken *name, void *ptr) {
 	ROSE_assert(ptr != NULL);
 	if (RT_scope_has_var(scope, name)) {
 		RT_source_error(name->file, &name->location, "var already exists in this scope");
@@ -146,7 +146,7 @@ ROSE_INLINE bool RT_scope_new_var(struct RCCScope *scope, const struct RCCToken 
 	return true;
 }
 
-ROSE_INLINE void *RT_scope_tag(struct RCCScope *scope, const struct RCCToken *name) {
+ROSE_INLINE void *RT_scope_tag(struct RTScope *scope, const struct RTToken *name) {
 	// NOTE: names can only be identifier, keywords are not allowed!
 	ROSE_assert(RT_token_is_identifier(name));
 	while (scope) {
@@ -157,7 +157,7 @@ ROSE_INLINE void *RT_scope_tag(struct RCCScope *scope, const struct RCCToken *na
 	}
 	return NULL;
 }
-ROSE_INLINE void *RT_scope_var(struct RCCScope *scope, const struct RCCToken *name) {
+ROSE_INLINE void *RT_scope_var(struct RTScope *scope, const struct RTToken *name) {
 	// NOTE: names can only be identifier, keywords are not allowed!
 	ROSE_assert(RT_token_is_identifier(name));
 	while (scope) {
@@ -211,7 +211,7 @@ ROSE_INLINE size_t parse_keyword(const char *p) {
 	return 0;
 }
 
-ROSE_INLINE void parse_token(ListBase *lb, RCCToken *token, bool *bol, bool *hsl) {
+ROSE_INLINE void parse_token(ListBase *lb, RTToken *token, bool *bol, bool *hsl) {
 	ROSE_assert(bol && hsl);
 	token->beginning_of_line = *bol;
 	token->has_leading_space = *hsl;
@@ -222,12 +222,12 @@ ROSE_INLINE void parse_token(ListBase *lb, RCCToken *token, bool *bol, bool *hsl
 	LIB_addtail(lb, token);
 }
 
-void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
+void RT_parser_tokenize(RTContext *context, ListBase *lb, const RTFile *file) {
 	if (!file) {
 		return;
 	}
 
-	RCCSLoc location = {
+	RTSLoc location = {
 		.p = RT_file_content(file),
 		.line = 1,
 		.column = 0,
@@ -286,7 +286,7 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 					break;
 				}
 			}
-			RCCToken *tok = RT_token_new_number(context, file, &location, end - location.p);
+			RTToken *tok = RT_token_new_number(context, file, &location, end - location.p);
 			if (!tok) {
 				RT_source_error(file, &location, "invalid number literal");
 				break;
@@ -307,7 +307,7 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 				RT_source_error(file, &location, "unclosed string literal");
 				break;
 			}
-			RCCToken *tok = RT_token_new_string(context, file, &location, end - location.p + 1);
+			RTToken *tok = RT_token_new_string(context, file, &location, end - location.p + 1);
 			if (!tok) {
 				RT_source_error(file, &location, "invalid string literal");
 				break;
@@ -327,7 +327,7 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 			if (!*end) {
 				RT_source_error(file, &location, "unclosed charachter literal");
 			}
-			RCCToken *tok = RT_token_new_number(context, file, &location, end - location.p + 1);
+			RTToken *tok = RT_token_new_number(context, file, &location, end - location.p + 1);
 			if (!tok) {
 				RT_source_error(file, &location, "invalid charachter literal");
 				break;
@@ -341,7 +341,7 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 		size_t length;
 
 		if ((length = parse_keyword(location.p))) {
-			RCCToken *tok = RT_token_new_keyword(context, file, &location, length);
+			RTToken *tok = RT_token_new_keyword(context, file, &location, length);
 			if (!tok) {
 				RT_source_error(file, &location, "invalid keyword token");
 				break;
@@ -354,7 +354,7 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 			continue;
 		}
 		if ((length = parse_identifier(location.p))) {
-			RCCToken *tok = RT_token_new_identifier(context, file, &location, length);
+			RTToken *tok = RT_token_new_identifier(context, file, &location, length);
 			if (!tok) {
 				RT_source_error(file, &location, "invalid identifier token");
 				break;
@@ -364,7 +364,7 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 			continue;
 		}
 		if ((length = parse_punctuator(location.p))) {
-			RCCToken *tok = RT_token_new_punctuator(context, file, &location, length);
+			RTToken *tok = RT_token_new_punctuator(context, file, &location, length);
 			if (!tok) {
 				RT_source_error(file, &location, "invalid punctuator token");
 				break;
@@ -379,8 +379,8 @@ void RT_parser_tokenize(RCContext *context, ListBase *lb, const RCCFile *file) {
 	}
 }
 
-ROSE_INLINE void configure(RCCParser *P) {
-	RCConfiguration *config = &P->configuration;
+ROSE_INLINE void configure(RTCParser *P) {
+	RTConfiguration *config = &P->configuration;
 
 	if (sizeof(void *) == 2) {
 		config->tp_size = Tp_UShort;
@@ -395,8 +395,8 @@ ROSE_INLINE void configure(RCCParser *P) {
 	config->align = 0;
 }
 
-RCCParser *RT_parser_new(const RCCFile *file) {
-	RCCParser *parser = MEM_callocN(sizeof(RCCParser), "RCCParser");
+RTCParser *RT_parser_new(const RTFile *file) {
+	RTCParser *parser = MEM_callocN(sizeof(RTCParser), "RTParser");
 	parser->context = RT_context_new();
 	parser->file = file;
 
@@ -418,7 +418,7 @@ RCCParser *RT_parser_new(const RCCFile *file) {
 /** \name Delete Methods
  * \{ */
 
-void RT_parser_free(struct RCCParser *parser) {
+void RT_parser_free(struct RTParser *parser) {
 	RT_state_exit(parser);
 	RT_context_free(parser->context);
 	MEM_freeN(parser);
@@ -430,14 +430,14 @@ void RT_parser_free(struct RCCParser *parser) {
 /** \name Util Methods
  * \{ */
 
-ROSE_INLINE unsigned long long align(RCConfiguration *config, unsigned long long alignment, unsigned long long size) {
+ROSE_INLINE unsigned long long align(RTConfiguration *config, unsigned long long alignment, unsigned long long size) {
 	if (alignment) {
 		return (size + alignment - 1) & ~(alignment - 1);
 	}
 	return size;
 }
 
-unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
+unsigned long long RT_parser_alignof(RTCParser *P, const RTType *type) {
 	if (type->is_basic) {
 		// Basic types: just return their rank as size.
 		return (unsigned long long)type->tp_basic.rank;
@@ -454,8 +454,8 @@ unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
 	if (type->kind == TP_STRUCT) {
 		unsigned long long alignment = 0;
 
-		const RCCTypeStruct *s = &type->tp_struct;
-		LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+		const RTTypeStruct *s = &type->tp_struct;
+		LISTBASE_FOREACH(const RTField *, field, &s->fields) {
 			unsigned long long field_alignment = field->alignment;
 
 			if (field_alignment == 0) {
@@ -471,7 +471,7 @@ unsigned long long RT_parser_alignof(RCCParser *P, const RCCType *type) {
 	return 0;
 }
 
-unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
+unsigned long long RT_parser_size(RTCParser *P, const RTType *type) {
 	if (type->is_basic) {
 		// Basic types: just return their rank as size.
 		return (unsigned long long)type->tp_basic.rank;
@@ -495,8 +495,8 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 		unsigned long long bitfield = 0;
 		unsigned long long alignment = 0;
 
-		const RCCTypeStruct *s = &type->tp_struct;
-		LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+		const RTTypeStruct *s = &type->tp_struct;
+		LISTBASE_FOREACH(const RTField *, field, &s->fields) {
 			unsigned long long field_size = RT_parser_size(P, field->type);
 			unsigned long long field_alignment = field->alignment;
 
@@ -540,15 +540,15 @@ unsigned long long RT_parser_size(RCCParser *P, const RCCType *type) {
 	return 0;
 }
 
-unsigned long long RT_parser_offsetof(RCCParser *P, const RCCType *type, const RCCField *query) {
+unsigned long long RT_parser_offsetof(RTCParser *P, const RTType *type, const RTField *query) {
 	ROSE_assert(type->kind == TP_STRUCT);
 
 	unsigned long long offset = 0;
 	unsigned long long bitfield = 0;
 	unsigned long long alignment = 0;
 
-	const RCCTypeStruct *s = &type->tp_struct;
-	LISTBASE_FOREACH(const RCCField *, field, &s->fields) {
+	const RTTypeStruct *s = &type->tp_struct;
+	LISTBASE_FOREACH(const RTField *, field, &s->fields) {
 		unsigned long long field_size = RT_parser_size(P, field->type);
 		unsigned long long field_alignment = field->alignment;
 
@@ -592,15 +592,15 @@ unsigned long long RT_parser_offsetof(RCCParser *P, const RCCType *type, const R
 	return offset;
 }
 
-const RCCNode *RT_parser_conditional(RCCParser *P, RCCToken **rest, RCCToken *token);
+const RTNode *RT_parser_conditional(RTCParser *P, RTToken **rest, RTToken *token);
 
-const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token, DeclInfo *info);
-const RCCType *RT_parser_pointers(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *source);
-const RCCType *RT_parser_abstract(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *source);
-const RCCType *RT_parser_funcparams(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *result);
-const RCCType *RT_parser_dimensions(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *element);
+const RTType *RT_parser_declspec(RTCParser *P, RTToken **rest, RTToken *token, DeclInfo *info);
+const RTType *RT_parser_pointers(RTCParser *P, RTToken **rest, RTToken *token, const RTType *source);
+const RTType *RT_parser_abstract(RTCParser *P, RTToken **rest, RTToken *token, const RTType *source);
+const RTType *RT_parser_funcparams(RTCParser *P, RTToken **rest, RTToken *token, const RTType *result);
+const RTType *RT_parser_dimensions(RTCParser *P, RTToken **rest, RTToken *token, const RTType *element);
 
-RCCObject *RT_parser_declarator(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *source);
+RTObject *RT_parser_declarator(RTCParser *P, RTToken **rest, RTToken *token, const RTType *source);
 
 #define ERROR(parser, token, ...)                                                                      \
 	{                                                                                                  \
@@ -615,22 +615,22 @@ RCCObject *RT_parser_declarator(RCCParser *P, RCCToken **rest, RCCToken *token, 
 	}                                                                                                    \
 	(void)0
 
-ROSE_INLINE bool is_typedef(RCCParser *P, RCCToken *token) {
+ROSE_INLINE bool is_typedef(RTCParser *P, RTToken *token) {
 	if (RT_token_is_identifier(token)) {
-		RCCObject *object = RT_scope_var(P->state->scope, token);
+		RTObject *object = RT_scope_var(P->state->scope, token);
 		if (object) {
 			return RT_object_is_typedef(object);
 		}
 	}
 	return false;
 }
-ROSE_INLINE bool is_typename(RCCParser *P, RCCToken *token) {
+ROSE_INLINE bool is_typename(RTCParser *P, RTToken *token) {
 	if (RT_token_is_keyword(token)) {
 		return true;
 	}
 	return is_typedef(P, token);
 }
-ROSE_INLINE bool is(RCCToken *token, const char *what) {
+ROSE_INLINE bool is(RTToken *token, const char *what) {
 	if (RT_token_is_keyword(token) || RT_token_is_identifier(token) || RT_token_is_punctuator(token)) {
 		if (STREQ(RT_token_as_string(token), what)) {
 			return true;
@@ -638,7 +638,7 @@ ROSE_INLINE bool is(RCCToken *token, const char *what) {
 	}
 	return false;
 }
-ROSE_INLINE bool skip(RCCParser *P, RCCToken **rest, RCCToken *token, const char *what) {
+ROSE_INLINE bool skip(RTCParser *P, RTToken **rest, RTToken *token, const char *what) {
 	if (is(token, what)) {
 		*rest = token->next;
 		return true;
@@ -646,7 +646,7 @@ ROSE_INLINE bool skip(RCCParser *P, RCCToken **rest, RCCToken *token, const char
 	ERROR(P, token, "expected %s", what);
 	return false;
 }
-ROSE_INLINE bool consume(RCCToken **rest, RCCToken *token, const char *what) {
+ROSE_INLINE bool consume(RTToken **rest, RTToken *token, const char *what) {
 	if (is(token, what)) {
 		*rest = token->next;
 		return true;
@@ -655,7 +655,7 @@ ROSE_INLINE bool consume(RCCToken **rest, RCCToken *token, const char *what) {
 }
 
 /** Note that errors are not handled in this function. */
-ROSE_INLINE bool parse_storagespec(RCCParser *P, RCCToken **rest, RCCToken *token, DeclInfo *info) {
+ROSE_INLINE bool parse_storagespec(RTCParser *P, RTToken **rest, RTToken *token, DeclInfo *info) {
 	if (is(token, "typedef") || is(token, "static") || is(token, "extern") || is(token, "inline")) {
 		if (!info) {
 			// We were supposed to handle this but we can't, so skip it for now!
@@ -678,7 +678,7 @@ ROSE_INLINE bool parse_storagespec(RCCParser *P, RCCToken **rest, RCCToken *toke
 	return false;
 }
 /** Note that errors are not handled in this function. */
-ROSE_INLINE bool parse_qualifier(RCCParser *P, RCCToken **rest, RCCToken *token, RCCTypeQualification *qual) {
+ROSE_INLINE bool parse_qualifier(RTCParser *P, RTToken **rest, RTToken *token, RTTypeQualification *qual) {
 	if (is(token, "const") || is(token, "restricted") || is(token, "volatile") || is(token, "atomic")) {
 		if (consume(rest, token, "const")) {
 			return qual->is_constant = true;
@@ -693,7 +693,7 @@ ROSE_INLINE bool parse_qualifier(RCCParser *P, RCCToken **rest, RCCToken *token,
 	return false;
 }
 
-ROSE_INLINE const RCCType *parse_suffix(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *type) {
+ROSE_INLINE const RTType *parse_suffix(RTCParser *P, RTToken **rest, RTToken *token, const RTType *type) {
 	if (consume(&token, token, "(")) {
 		return RT_parser_funcparams(P, rest, token, type);
 	}
@@ -704,8 +704,8 @@ ROSE_INLINE const RCCType *parse_suffix(RCCParser *P, RCCToken **rest, RCCToken 
 	return type;
 }
 
-const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token, DeclInfo *info) {
-	RCCTypeQualification qual;
+const RTType *RT_parser_declspec(RTCParser *P, RTToken **rest, RTToken *token, DeclInfo *info) {
+	RTTypeQualification qual;
 	int flag = 0;
 
 	enum {
@@ -728,7 +728,7 @@ const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token
 		memset(info, 0, sizeof(DeclInfo));
 	}
 
-	const RCCType *type = NULL;
+	const RTType *type = NULL;
 	while (is_typename(P, token)) {
 		if (parse_storagespec(P, &token, token, info)) {
 			if (!info) {
@@ -762,7 +762,7 @@ const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token
 					ROSE_assert_unreachable();
 				}
 				else {
-					const RCCNode *expr = RT_parser_conditional(P, &token, token);
+					const RTNode *expr = RT_parser_conditional(P, &token, token);
 					if (!RT_node_is_constexpr(expr)) {
 						ERROR(P, token, "expected a constant expression");
 						return NULL;
@@ -796,7 +796,7 @@ const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token
 			continue;
 		}
 		else if (is_typedef(P, token)) {
-			RCCObject *object = RT_scope_var(P->state->scope, token);
+			RTObject *object = RT_scope_var(P->state->scope, token);
 			if (!RT_object_is_typedef(object)) {
 				ROSE_assert_unreachable();
 			}
@@ -903,8 +903,8 @@ const RCCType *RT_parser_declspec(RCCParser *P, RCCToken **rest, RCCToken *token
 	return type;
 }
 // ("*" ("const" | "volatile" | "restrict")*)*
-const RCCType *RT_parser_pointers(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *type) {
-	RCCTypeQualification qual;
+const RTType *RT_parser_pointers(RTCParser *P, RTToken **rest, RTToken *token, const RTType *type) {
+	RTTypeQualification qual;
 	while (consume(&token, token, "*")) {
 		type = RT_type_new_pointer(P->context, type);
 
@@ -918,11 +918,11 @@ const RCCType *RT_parser_pointers(RCCParser *P, RCCToken **rest, RCCToken *token
 	return type;
 }
 // pointers ("(" identifier ")" | "(" declarator ")" | identifier) type-suffix
-RCCObject *RT_parser_declarator(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *source) {
+RTObject *RT_parser_declarator(RTCParser *P, RTToken **rest, RTToken *token, const RTType *source) {
 	source = RT_parser_pointers(P, &token, token, source);
 
 	if (consume(&token, token, "(")) {
-		RCCToken *start = token;
+		RTToken *start = token;
 		RT_parser_declarator(P, &token, token, NULL);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
@@ -931,20 +931,20 @@ RCCObject *RT_parser_declarator(RCCParser *P, RCCToken **rest, RCCToken *token, 
 		return RT_parser_declarator(P, &token, start, source);
 	}
 
-	RCCToken *name = NULL;
+	RTToken *name = NULL;
 	if (RT_token_is_identifier(token)) {
 		name = token;
 		token = token->next;
 	}
 
 	source = parse_suffix(P, rest, token, source);
-	RCCObject *object = RT_object_new_variable(P->context, source, name);
+	RTObject *object = RT_object_new_variable(P->context, source, name);
 
 	return object;
 }
 // declaration = declspec (declarator ("=" expr)? ("," declarator ("=" expr)?)*)? ";"
-RCCNode *RT_parser_declaration(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *source, const DeclInfo *info) {
-	RCCNode *block = RT_node_new_block(P->context, P->state->scope);
+RTNode *RT_parser_declaration(RTCParser *P, RTToken **rest, RTToken *token, const RTType *source, const DeclInfo *info) {
+	RTNode *block = RT_node_new_block(P->context, P->state->scope);
 
 	for (int index = 0; !is(token, ";"); index++) {
 		if (index++ > 0) {
@@ -953,7 +953,7 @@ RCCNode *RT_parser_declaration(RCCParser *P, RCCToken **rest, RCCToken *token, c
 			}
 		}
 
-		RCCObject *var = RT_parser_declarator(P, &token, token, source);
+		RTObject *var = RT_parser_declarator(P, &token, token, source);
 		if (var->type == Tp_Void) {
 			ERROR(P, token, "variable declared as void");
 			return NULL;
@@ -969,7 +969,7 @@ RCCNode *RT_parser_declaration(RCCParser *P, RCCToken **rest, RCCToken *token, c
 			continue;
 		}
 
-		RCCNode *node = RT_node_new_variable(P->context, var);
+		RTNode *node = RT_node_new_variable(P->context, var);
 		if (is(token, "=")) {
 			// TODO: Handle variable initialization.
 			ROSE_assert_unreachable();
@@ -982,11 +982,11 @@ RCCNode *RT_parser_declaration(RCCParser *P, RCCToken **rest, RCCToken *token, c
 	return block;
 }
 // pointers ("(" abstract-declarators ")")? type-suffix
-const RCCType *RT_parser_abstract(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *source) {
+const RTType *RT_parser_abstract(RTCParser *P, RTToken **rest, RTToken *token, const RTType *source) {
 	source = RT_parser_pointers(P, &token, token, source);
 
 	if (consume(&token, token, "(")) {
-		RCCToken *start = token;
+		RTToken *start = token;
 		RT_parser_abstract(P, &token, token, NULL);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
@@ -998,15 +998,15 @@ const RCCType *RT_parser_abstract(RCCParser *P, RCCToken **rest, RCCToken *token
 	return parse_suffix(P, rest, token, source);
 }
 // ("void" | param ("," param)* ("," "...")?)?) ")"
-const RCCType *RT_parser_funcparams(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *result) {
-	RCCType *type = RT_type_new_function(P->context, result);
+const RTType *RT_parser_funcparams(RTCParser *P, RTToken **rest, RTToken *token, const RTType *result) {
+	RTType *type = RT_type_new_function(P->context, result);
 
 	if (is(token, "void") && is(token->next, ")")) {
 		*rest = token->next->next;
 		return type;
 	}
 
-	RCCTypeFunction *func = &type->tp_function;
+	RTTypeFunction *func = &type->tp_function;
 	while (!is(token, ")")) {
 		if (!LIB_listbase_is_empty(&func->parameters)) {
 			if (!skip(P, &token, token, ",")) {
@@ -1023,12 +1023,12 @@ const RCCType *RT_parser_funcparams(RCCParser *P, RCCToken **rest, RCCToken *tok
 			func->is_variadic = true;
 		}
 
-		const RCCType *arg = RT_parser_declspec(P, &token, token, NULL);
+		const RTType *arg = RT_parser_declspec(P, &token, token, NULL);
 		if (!arg) {
 			ERROR(P, token, "expected a declspec");
 			return NULL;
 		}
-		const RCCObject *var = RT_parser_declarator(P, &token, token, arg);
+		const RTObject *var = RT_parser_declarator(P, &token, token, arg);
 
 		RT_type_function_add_named_parameter(P->context, type, var->type, var->identifier);
 	}
@@ -1038,8 +1038,8 @@ const RCCType *RT_parser_funcparams(RCCParser *P, RCCToken **rest, RCCToken *tok
 	return type;
 }
 // ("static" | "restrict")* const-expr "]" type-suffix
-const RCCType *RT_parser_dimensions(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *element) {
-	RCCTypeQualification qual;
+const RTType *RT_parser_dimensions(RTCParser *P, RTToken **rest, RTToken *token, const RTType *element) {
+	RTTypeQualification qual;
 
 	bool is_static = false;
 
@@ -1060,7 +1060,7 @@ const RCCType *RT_parser_dimensions(RCCParser *P, RCCToken **rest, RCCToken *tok
 		}
 		return RT_type_new_unbounded_array(P->context, parse_suffix(P, rest, token, element), &qual);
 	}
-	const RCCNode *expr = RT_parser_conditional(P, &token, token);
+	const RTNode *expr = RT_parser_conditional(P, &token, token);
 	if (!skip(P, &token, token, "]")) {
 		return NULL;
 	}
@@ -1078,8 +1078,8 @@ const RCCType *RT_parser_dimensions(RCCParser *P, RCCToken **rest, RCCToken *tok
 	return RT_type_new_vla_array(P->context, parse_suffix(P, rest, token, element), expr, &qual);
 }
 // declspec abstract-declarator
-const RCCType *RT_parser_typename(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCType *type;
+const RTType *RT_parser_typename(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTType *type;
 
 	type = RT_parser_declspec(P, &token, token, NULL);
 	if (!type) {
@@ -1094,10 +1094,10 @@ const RCCType *RT_parser_typename(RCCParser *P, RCCToken **rest, RCCToken *token
 	return type;
 }
 
-ROSE_INLINE bool is_end(RCCToken *token) {
+ROSE_INLINE bool is_end(RTToken *token) {
 	return is(token, "}") || (is(token, ",") && is(token->next, "}"));
 }
-ROSE_INLINE bool consume_end(RCCToken **rest, RCCToken *token) {
+ROSE_INLINE bool consume_end(RTToken **rest, RTToken *token) {
 	if (is(token, "}")) {
 		*rest = token->next;
 		return true;
@@ -1109,14 +1109,14 @@ ROSE_INLINE bool consume_end(RCCToken **rest, RCCToken *token) {
 	return false;
 }
 
-const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	RCCToken *tag = NULL;
+const RTType *RT_parser_enum(RTCParser *P, RTToken **rest, RTToken *token) {
+	RTToken *tag = NULL;
 	if (RT_token_is_identifier(token)) {
 		tag = token;
 		token = token->next;
 	}
 	if (tag && !is(token, "{")) {
-		RCCType *type = RT_scope_tag(P->state->scope, tag);
+		RTType *type = RT_scope_tag(P->state->scope, tag);
 		if (!type) {
 			ERROR(P, token, "undefined enum type");
 			return NULL;
@@ -1132,7 +1132,7 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return NULL;
 	}
 
-	RCCType *type = RT_type_new_enum(P->context, tag, P->configuration.tp_enum);
+	RTType *type = RT_type_new_enum(P->context, tag, P->configuration.tp_enum);
 
 	for (int index = 0; !consume_end(&token, token); index++) {
 		if (index > 0) {
@@ -1144,13 +1144,13 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 			ERROR(P, token, "expected identifier");
 			return NULL;
 		}
-		RCCToken *identifier = token;
+		RTToken *identifier = token;
 		token = token->next;
 
 		/** Note that since we add them as `var` in the scope errors will be handled there. */
 
 		if (consume(&token, token, "=")) {
-			const RCCNode *expr = RT_parser_conditional(P, &token, token);
+			const RTNode *expr = RT_parser_conditional(P, &token, token);
 			if (!RT_node_is_constexpr(expr)) {
 				ERROR(P, token, "expected a constant expression");
 				return NULL;
@@ -1165,8 +1165,8 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	RT_type_enum_finalize(P->context, type);
 
 	/** Enum values are finalized in #RT_type_enum_finalize so we add them in the scope now. */
-	LISTBASE_FOREACH(EnumItem *, item, &type->tp_enum.items) {
-		RCCObject *object = RT_object_new_enum(P->context, type, item->identifier, item->value);
+	LISTBASE_FOREACH(RTEnumItem *, item, &type->tp_enum.items) {
+		RTObject *object = RT_object_new_enum(P->context, type, item->identifier, item->value);
 		if (!RT_scope_new_var(P->state->scope, item->identifier, (void *)object)) {
 			return NULL;
 		}
@@ -1179,17 +1179,17 @@ const RCCType *RT_parser_enum(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	return type;
 }
 
-const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	RCCToken *tag = NULL;
+const RTType *RT_parser_struct(RTCParser *P, RTToken **rest, RTToken *token) {
+	RTToken *tag = NULL;
 	if (RT_token_is_identifier(token)) {
 		tag = token;
 		token = token->next;
 	}
 
-	RCCType *type = RT_type_new_struct(P->context, tag);
+	RTType *type = RT_type_new_struct(P->context, tag);
 
 	if (tag && !is(token, "{")) {
-		RCCType *old = RT_scope_tag(P->state->scope, tag);
+		RTType *old = RT_scope_tag(P->state->scope, tag);
 		*rest = token;
 		return (old) ? old : type;
 	}
@@ -1198,10 +1198,10 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 		return NULL;
 	}
 
-	const RCCObject *field = NULL;
+	const RTObject *field = NULL;
 	for (int index = 0; !consume(&token, token, "}"); index++) {
 		if (index > 0) {
-			const RCCType *last = field->type;
+			const RTType *last = field->type;
 			if (last->kind == TP_ARRAY) {
 				if (!ELEM(last->tp_array.boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC)) {
 					ERROR(P, field->identifier, "unbounded arrays are only allowed as the last field of a struct");
@@ -1211,7 +1211,7 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 		}
 
 		DeclInfo info;
-		const RCCType *base = RT_parser_declspec(P, &token, token, &info);
+		const RTType *base = RT_parser_declspec(P, &token, token, &info);
 		if (!base) {
 			ERROR(P, token, "expected a declspec");
 			return NULL;
@@ -1238,7 +1238,7 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 				return NULL;
 			}
 
-			const RCCType *now = field->type;
+			const RTType *now = field->type;
 			if (now->kind == TP_ARRAY) {
 				if (ELEM(now->tp_array.boundary, ARRAY_VLA, ARRAY_VLA_STATIC)) {
 					ERROR(P, field->identifier, "vla arrays are not allowed within a struct");
@@ -1247,7 +1247,7 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 			}
 
 			if (consume(&token, token, ":")) {
-				const RCCNode *expr = RT_parser_conditional(P, &token, token);
+				const RTNode *expr = RT_parser_conditional(P, &token, token);
 				if (!RT_node_is_constexpr(expr)) {
 					ERROR(P, token, "expected a constant expression");
 					return NULL;
@@ -1285,27 +1285,27 @@ const RCCType *RT_parser_struct(RCCParser *P, RCCToken **rest, RCCToken *token) 
 }
 
 /** Handles `A op= B`, by translating it to `tmp = &A, *tmp = *tmp op B`. */
-ROSE_INLINE const RCCNode *to_assign(RCCParser *P, const RCCNode *binary) {
-	const RCCNode *lhs = RT_node_lhs(binary);
-	const RCCNode *rhs = RT_node_rhs(binary);
-	const RCCToken *token = binary->token;
+ROSE_INLINE const RTNode *to_assign(RTCParser *P, const RTNode *binary) {
+	const RTNode *lhs = RT_node_lhs(binary);
+	const RTNode *rhs = RT_node_rhs(binary);
+	const RTToken *token = binary->token;
 
-	RCCType *type = RT_type_new_pointer(P->context, binary->cast);
-	RCCObject *var = RT_object_new_variable(P->context, type, NULL);
+	RTType *type = RT_type_new_pointer(P->context, binary->cast);
+	RTObject *var = RT_object_new_variable(P->context, type, NULL);
 
 	// tmp = &A
-	RCCNode *expr1_lhs = RT_node_new_variable(P->context, var);
-	RCCNode *expr1_rhs = RT_node_new_unary(P->context, NULL, UNARY_ADDR, lhs);
-	RCCNode *expr1 = RT_node_new_binary(P->context, NULL, BINARY_ASSIGN, expr1_lhs, expr1_rhs);
+	RTNode *expr1_lhs = RT_node_new_variable(P->context, var);
+	RTNode *expr1_rhs = RT_node_new_unary(P->context, NULL, UNARY_ADDR, lhs);
+	RTNode *expr1 = RT_node_new_binary(P->context, NULL, BINARY_ASSIGN, expr1_lhs, expr1_rhs);
 	// *tmp = *tmp op B
-	RCCNode *expr2_lhs = RT_node_new_unary(P->context, NULL, UNARY_DEREF, RT_node_new_variable(P->context, var));
-	RCCNode *expr2_rhs = RT_node_new_unary(P->context, NULL, UNARY_DEREF, RT_node_new_variable(P->context, var));
+	RTNode *expr2_lhs = RT_node_new_unary(P->context, NULL, UNARY_DEREF, RT_node_new_variable(P->context, var));
+	RTNode *expr2_rhs = RT_node_new_unary(P->context, NULL, UNARY_DEREF, RT_node_new_variable(P->context, var));
 	expr2_rhs = RT_node_new_binary(P->context, token, binary->type, expr2_rhs, rhs);
-	RCCNode *expr2 = RT_node_new_binary(P->context, NULL, BINARY_ASSIGN, expr1_lhs, expr1_rhs);
+	RTNode *expr2 = RT_node_new_binary(P->context, NULL, BINARY_ASSIGN, expr1_lhs, expr1_rhs);
 
 	return RT_node_new_binary(P->context, NULL, BINARY_COMMA, expr1, expr2);
 }
-ROSE_INLINE RCCNode *new_add(RCCParser *P, RCCToken *token, const RCCNode *lhs, const RCCNode *rhs) {
+ROSE_INLINE RTNode *new_add(RTCParser *P, RTToken *token, const RTNode *lhs, const RTNode *rhs) {
 	if (RT_type_is_numeric(lhs->cast) && RT_type_is_numeric(rhs->cast)) {
 		return RT_node_new_binary(P->context, token, BINARY_ADD, lhs, rhs);
 	}
@@ -1315,7 +1315,7 @@ ROSE_INLINE RCCNode *new_add(RCCParser *P, RCCToken *token, const RCCNode *lhs, 
 	}
 	// Canonicalize `num + ptr` to `ptr + num`.
 	if (RT_type_is_numeric(lhs->cast) && RT_type_is_pointer(rhs->cast)) {
-		SWAP(const RCCNode *, lhs, rhs);
+		SWAP(const RTNode *, lhs, rhs);
 	}
 	if (RT_type_is_pointer(lhs->cast) && RT_type_is_numeric(rhs->cast)) {
 		/** If `lhs` is a pointer, `lhs`+n adds not n but sizeof(*`lhs`)*n to the value of `lhs`. */
@@ -1323,7 +1323,7 @@ ROSE_INLINE RCCNode *new_add(RCCParser *P, RCCToken *token, const RCCNode *lhs, 
 			ERROR(P, token, "invalid size of type, void is not allowed");
 			return NULL;
 		}
-		RCCNode *size = RT_node_new_constant_size(P->context, RT_parser_size(P, lhs->cast->tp_base));
+		RTNode *size = RT_node_new_constant_size(P->context, RT_parser_size(P, lhs->cast->tp_base));
 
 		rhs = RT_node_new_binary(P->context, token, BINARY_MUL, rhs, size);
 		return RT_node_new_binary(P->context, token, BINARY_ADD, lhs, rhs);
@@ -1331,7 +1331,7 @@ ROSE_INLINE RCCNode *new_add(RCCParser *P, RCCToken *token, const RCCNode *lhs, 
 	ERROR(P, token, "invalid operands");
 	return NULL;
 }
-ROSE_INLINE RCCNode *new_sub(RCCParser *P, RCCToken *token, const RCCNode *lhs, const RCCNode *rhs) {
+ROSE_INLINE RTNode *new_sub(RTCParser *P, RTToken *token, const RTNode *lhs, const RTNode *rhs) {
 	if (RT_type_is_numeric(lhs->cast) && RT_type_is_numeric(rhs->cast)) {
 		return RT_node_new_binary(P->context, token, BINARY_SUB, lhs, rhs);
 	}
@@ -1341,14 +1341,14 @@ ROSE_INLINE RCCNode *new_sub(RCCParser *P, RCCToken *token, const RCCNode *lhs, 
 			ERROR(P, token, "invalid size of type, void is not allowed");
 			return NULL;
 		}
-		RCCNode *size = RT_node_new_constant_size(P->context, RT_parser_size(P, lhs->cast->tp_base));
-		RCCNode *diff = RT_node_new_binary(P->context, token, BINARY_SUB, lhs, rhs);
+		RTNode *size = RT_node_new_constant_size(P->context, RT_parser_size(P, lhs->cast->tp_base));
+		RTNode *diff = RT_node_new_binary(P->context, token, BINARY_SUB, lhs, rhs);
 
 		return RT_node_new_binary(P->context, token, BINARY_DIV, size, diff);
 	}
 	// Canonicalize `num + ptr` to `ptr + num`.
 	if (RT_type_is_numeric(lhs->cast) && RT_type_is_pointer(rhs->cast)) {
-		SWAP(const RCCNode *, lhs, rhs);
+		SWAP(const RTNode *, lhs, rhs);
 	}
 	if (RT_type_is_pointer(lhs->cast) && RT_type_is_numeric(rhs->cast)) {
 		/** If `lhs` is a pointer, `lhs`+n adds not n but sizeof(*`lhs`)*n to the value of `lhs`. */
@@ -1356,7 +1356,7 @@ ROSE_INLINE RCCNode *new_sub(RCCParser *P, RCCToken *token, const RCCNode *lhs, 
 			ERROR(P, token, "invalid size of type, void is not allowed");
 			return NULL;
 		}
-		RCCNode *size = RT_node_new_constant_size(P->context, RT_parser_size(P, lhs->cast->tp_base));
+		RTNode *size = RT_node_new_constant_size(P->context, RT_parser_size(P, lhs->cast->tp_base));
 
 		rhs = RT_node_new_binary(P->context, token, BINARY_MUL, rhs, size);
 		return RT_node_new_binary(P->context, token, BINARY_SUB, lhs, rhs);
@@ -1364,13 +1364,13 @@ ROSE_INLINE RCCNode *new_sub(RCCParser *P, RCCToken *token, const RCCNode *lhs, 
 	ERROR(P, token, "invalid operands");
 	return NULL;
 }
-ROSE_STATIC const RCCField *struct_mem(RCCParser *P, RCCToken *token, const RCCType *type) {
+ROSE_STATIC const RTField *struct_mem(RTCParser *P, RTToken *token, const RTType *type) {
 	if (type->kind != TP_STRUCT) {
 		ERROR(P, token, "not a struct nor a union");
 		return NULL;
 	}
 
-	LISTBASE_FOREACH(const RCCField *, field, &type->tp_struct.fields) {
+	LISTBASE_FOREACH(const RTField *, field, &type->tp_struct.fields) {
 		if (!field->identifier) {
 			if (struct_mem(P, token, field->type)) {
 				return field;
@@ -1384,16 +1384,16 @@ ROSE_STATIC const RCCField *struct_mem(RCCParser *P, RCCToken *token, const RCCT
 
 	return NULL;
 }
-ROSE_INLINE const RCCNode *struct_ref(RCCParser *P, RCCToken *token, const RCCNode *node) {
+ROSE_INLINE const RTNode *struct_ref(RTCParser *P, RTToken *token, const RTNode *node) {
 	if (node->cast->kind != TP_STRUCT) {
 		ERROR(P, token, "not a struct nor a union");
 		return NULL;
 	}
 
-	const RCCType *type = node->cast;
+	const RTType *type = node->cast;
 
 	for (;;) {
-		const RCCField *field = struct_mem(P, token, type);
+		const RTField *field = struct_mem(P, token, type);
 		if (!field) {
 			ERROR(P, token, "%s is not a member of the struct", RT_token_as_string(token));
 			return NULL;
@@ -1409,25 +1409,25 @@ ROSE_INLINE const RCCNode *struct_ref(RCCParser *P, RCCToken *token, const RCCNo
 	return node;
 }
 
-const RCCNode *RT_parser_assign(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_cast(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_unary(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_mul(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_add(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_shift(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_relational(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_equality(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_bitand(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_bitxor(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_bitor(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_logand(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_logor(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_expr(RCCParser *P, RCCToken **rest, RCCToken *token);
-const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token);
+const RTNode *RT_parser_assign(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_cast(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_unary(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_postfix(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_mul(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_add(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_shift(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_relational(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_equality(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_bitand(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_bitxor(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_bitor(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_logand(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_logor(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_expr(RTCParser *P, RTToken **rest, RTToken *token);
+const RTNode *RT_parser_stmt(RTCParser *P, RTToken **rest, RTToken *token);
 
-const RCCNode *RT_parser_assign(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_conditional(P, &token, token);
+const RTNode *RT_parser_assign(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_conditional(P, &token, token);
 
 	if (is(token, "=")) {
 		return RT_node_new_binary(P->context, token, BINARY_ASSIGN, node, RT_parser_assign(P, rest, token->next));
@@ -1439,44 +1439,44 @@ const RCCNode *RT_parser_assign(RCCParser *P, RCCToken **rest, RCCToken *token) 
 		return to_assign(P, new_add(P, token, node, RT_parser_assign(P, rest, token->next)));
 	}
 	if (is(token, "*=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_MUL, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_MUL, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, "/=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_DIV, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_DIV, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, "%=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_MOD, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_MOD, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, "&=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_BITAND, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_BITAND, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, "|=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_BITOR, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_BITOR, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, "^=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_BITXOR, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_BITXOR, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, "<<=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_LSHIFT, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_LSHIFT, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	if (is(token, ">>=")) {
-		RCCNode *binary = RT_node_new_binary(P->context, token, BINARY_RSHIFT, node, RT_parser_assign(P, rest, token->next));
+		RTNode *binary = RT_node_new_binary(P->context, token, BINARY_RSHIFT, node, RT_parser_assign(P, rest, token->next));
 		return to_assign(P, binary);
 	}
 	*rest = token;
 	return node;
 }
-const RCCNode *RT_parser_cast(RCCParser *P, RCCToken **rest, RCCToken *token) {
+const RTNode *RT_parser_cast(RTCParser *P, RTToken **rest, RTToken *token) {
 	if (is(token, "(") && is_typename(P, token->next)) {
-		RCCToken *start = token;
-		const RCCType *type = RT_parser_typename(P, &token, token->next);
+		RTToken *start = token;
+		const RTType *type = RT_parser_typename(P, &token, token->next);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
 		}
@@ -1487,18 +1487,18 @@ const RCCNode *RT_parser_cast(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		}
 
 		// type cast
-		const RCCNode *node = RT_node_new_cast(P->context, start, type, RT_parser_cast(P, rest, token));
+		const RTNode *node = RT_node_new_cast(P->context, start, type, RT_parser_cast(P, rest, token));
 		return node;
 	}
 
 	return RT_parser_unary(P, rest, token);
 }
-const RCCNode *RT_parser_unary(RCCParser *P, RCCToken **rest, RCCToken *token) {
+const RTNode *RT_parser_unary(RTCParser *P, RTToken **rest, RTToken *token) {
 	if (consume(&token, token, "+")) {
 		return RT_parser_cast(P, rest, token);
 	}
 	if (is(token, "-")) {
-		const RCCNode *expr = RT_parser_cast(P, rest, token->next);
+		const RTNode *expr = RT_parser_cast(P, rest, token->next);
 		if (!expr) {
 			return NULL;
 		}
@@ -1506,7 +1506,7 @@ const RCCNode *RT_parser_unary(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return RT_node_new_unary(P->context, token, UNARY_NEG, expr);
 	}
 	if (is(token, "&")) {
-		const RCCNode *expr = RT_parser_cast(P, rest, token->next);
+		const RTNode *expr = RT_parser_cast(P, rest, token->next);
 		if (RT_node_is_member(expr) && RT_node_is_bitfield(expr)) {
 			ERROR(P, token, "cannot take address of bitfield");
 			return NULL;
@@ -1515,7 +1515,7 @@ const RCCNode *RT_parser_unary(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return RT_node_new_unary(P->context, token, UNARY_ADDR, expr);
 	}
 	if (is(token, "*")) {
-		const RCCNode *expr = RT_parser_cast(P, rest, token->next);
+		const RTNode *expr = RT_parser_cast(P, rest, token->next);
 		if (RT_node_is_member(expr) && RT_node_is_bitfield(expr)) {
 			ERROR(P, token, "cannot take address of bitfield");
 			return NULL;
@@ -1527,22 +1527,22 @@ const RCCNode *RT_parser_unary(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return RT_node_new_unary(P->context, token, UNARY_ADDR, RT_parser_cast(P, rest, token->next));
 	}
 	if (is(token, "!")) {
-		const RCCNode *expr = RT_parser_cast(P, rest, token->next);
+		const RTNode *expr = RT_parser_cast(P, rest, token->next);
 		return RT_node_new_unary(P->context, token, UNARY_NOT, expr);
 	}
 	if (is(token, "~")) {
-		const RCCNode *expr = RT_parser_cast(P, rest, token->next);
+		const RTNode *expr = RT_parser_cast(P, rest, token->next);
 		return RT_node_new_unary(P->context, token, UNARY_BITNOT, expr);
 	}
 	// translate `++i` to `i += 1`.
 	if (is(token, "++")) {
-		RCCNode *one = RT_node_new_constant_size(P->context, 1);
+		RTNode *one = RT_node_new_constant_size(P->context, 1);
 
 		return to_assign(P, new_add(P, token, RT_parser_unary(P, rest, token->next), one));
 	}
 	// translate `--i` to `i -= 1`.
 	if (is(token, "--")) {
-		RCCNode *one = RT_node_new_constant_size(P->context, 1);
+		RTNode *one = RT_node_new_constant_size(P->context, 1);
 
 		return to_assign(P, new_sub(P, token, RT_parser_unary(P, rest, token->next), one));
 	}
@@ -1552,11 +1552,11 @@ const RCCNode *RT_parser_unary(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	}
 	return RT_parser_postfix(P, rest, token);
 }
-const RCCNode *RT_parser_mul(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_cast(P, &token, token);
+const RTNode *RT_parser_mul(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_cast(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "*")) {
 			node = RT_node_new_binary(P->context, start, BINARY_MUL, node, RT_parser_cast(P, &token, token->next));
@@ -1577,11 +1577,11 @@ const RCCNode *RT_parser_mul(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return node;
 	}
 }
-const RCCNode *RT_parser_add(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_mul(P, &token, token);
+const RTNode *RT_parser_add(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_mul(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "+")) {
 			node = new_add(P, start, node, RT_parser_mul(P, &token, token->next));
@@ -1597,11 +1597,11 @@ const RCCNode *RT_parser_add(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return node;
 	}
 }
-const RCCNode *RT_parser_shift(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_add(P, &token, token);
+const RTNode *RT_parser_shift(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_add(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "<<")) {
 			node = RT_node_new_binary(P->context, start, BINARY_LSHIFT, node, RT_parser_add(P, &token, token->next));
@@ -1617,11 +1617,11 @@ const RCCNode *RT_parser_shift(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return node;
 	}
 }
-const RCCNode *RT_parser_relational(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_shift(P, &token, token);
+const RTNode *RT_parser_relational(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_shift(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "<")) {
 			node = RT_node_new_binary(P->context, start, BINARY_LESS, node, RT_parser_shift(P, &token, token->next));
@@ -1647,11 +1647,11 @@ const RCCNode *RT_parser_relational(RCCParser *P, RCCToken **rest, RCCToken *tok
 		return node;
 	}
 }
-const RCCNode *RT_parser_equality(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_relational(P, &token, token);
+const RTNode *RT_parser_equality(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_relational(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "==")) {
 			node = RT_node_new_binary(P->context, start, BINARY_EQUAL, node, RT_parser_relational(P, &token, token->next));
@@ -1667,11 +1667,11 @@ const RCCNode *RT_parser_equality(RCCParser *P, RCCToken **rest, RCCToken *token
 		return node;
 	}
 }
-const RCCNode *RT_parser_bitand(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_equality(P, &token, token);
+const RTNode *RT_parser_bitand(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_equality(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "&")) {
 			node = RT_node_new_binary(P->context, start, BINARY_BITAND, node, RT_parser_equality(P, &token, token->next));
@@ -1682,11 +1682,11 @@ const RCCNode *RT_parser_bitand(RCCParser *P, RCCToken **rest, RCCToken *token) 
 		return node;
 	}
 }
-const RCCNode *RT_parser_bitxor(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_bitand(P, &token, token);
+const RTNode *RT_parser_bitxor(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_bitand(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "^")) {
 			node = RT_node_new_binary(P->context, start, BINARY_BITXOR, node, RT_parser_bitand(P, &token, token->next));
@@ -1697,11 +1697,11 @@ const RCCNode *RT_parser_bitxor(RCCParser *P, RCCToken **rest, RCCToken *token) 
 		return node;
 	}
 }
-const RCCNode *RT_parser_bitor(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_bitxor(P, &token, token);
+const RTNode *RT_parser_bitor(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_bitxor(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "|")) {
 			node = RT_node_new_binary(P->context, start, BINARY_BITOR, node, RT_parser_bitxor(P, &token, token->next));
@@ -1712,11 +1712,11 @@ const RCCNode *RT_parser_bitor(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return node;
 	}
 }
-const RCCNode *RT_parser_logand(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_bitor(P, &token, token);
+const RTNode *RT_parser_logand(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_bitor(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "&&")) {
 			node = RT_node_new_binary(P->context, start, BINARY_BITOR, node, RT_parser_bitor(P, &token, token->next));
@@ -1727,11 +1727,11 @@ const RCCNode *RT_parser_logand(RCCParser *P, RCCToken **rest, RCCToken *token) 
 		return node;
 	}
 }
-const RCCNode *RT_parser_logor(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_logand(P, &token, token);
+const RTNode *RT_parser_logor(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_logand(P, &token, token);
 
 	for (;;) {
-		RCCToken *start = token;
+		RTToken *start = token;
 
 		if (is(token, "||")) {
 			node = RT_node_new_binary(P->context, start, BINARY_BITOR, node, RT_parser_logand(P, &token, token->next));
@@ -1742,8 +1742,8 @@ const RCCNode *RT_parser_logor(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		return node;
 	}
 }
-const RCCNode *RT_parser_expr(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_assign(P, &token, token);
+const RTNode *RT_parser_expr(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_assign(P, &token, token);
 
 	if (is(token, ",")) {
 		return RT_node_new_binary(P->context, token, BINARY_COMMA, node, RT_parser_expr(P, rest, token->next));
@@ -1752,15 +1752,15 @@ const RCCNode *RT_parser_expr(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	*rest = token;
 	return node;
 }
-const RCCNode *RT_parser_conditional(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	const RCCNode *node = RT_parser_logor(P, &token, token);
+const RTNode *RT_parser_conditional(RTCParser *P, RTToken **rest, RTToken *token) {
+	const RTNode *node = RT_parser_logor(P, &token, token);
 
 	if (consume(&token, token, "?")) {
-		const RCCNode *then = RT_parser_expr(P, &token, token);
+		const RTNode *then = RT_parser_expr(P, &token, token);
 		if (!skip(P, &token, token, ":")) {
 			return NULL;
 		}
-		const RCCNode *otherwise = RT_parser_conditional(P, rest, token);
+		const RTNode *otherwise = RT_parser_conditional(P, rest, token);
 
 		return RT_node_new_conditional(P->context, node, then, otherwise);
 	}
@@ -1769,19 +1769,19 @@ const RCCNode *RT_parser_conditional(RCCParser *P, RCCToken **rest, RCCToken *to
 	return node;
 }
 
-const RCCNode *RT_parser_funcall(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCNode *node) {
+const RTNode *RT_parser_funcall(RTCParser *P, RTToken **rest, RTToken *token, const RTNode *node) {
 	if (!(node->cast->kind == TP_FUNC) && !(node->cast->kind == TP_PTR && node->cast->tp_base->kind == TP_FUNC)) {
 		ERROR(P, token, "not a function");
 		return NULL;
 	}
 
-	const RCCTypeFunction *fn = (node->cast->kind == TP_FUNC) ? &node->cast->tp_function : &node->cast->tp_base->tp_function;
-	const RCCTypeParameter *param = (const RCCTypeParameter *)fn->parameters.first;
+	const RTTypeFunction *fn = (node->cast->kind == TP_FUNC) ? &node->cast->tp_function : &node->cast->tp_base->tp_function;
+	const RTTypeParameter *param = (const RTTypeParameter *)fn->parameters.first;
 
-	RCCNode *funcall = RT_node_new_funcall(P->context, node);
+	RTNode *funcall = RT_node_new_funcall(P->context, node);
 
 	while (!is(token, ")")) {
-		const RCCNode *arg = RT_parser_assign(P, &token, token);
+		const RTNode *arg = RT_parser_assign(P, &token, token);
 
 		if (!param && !fn->is_variadic) {
 			ERROR(P, token, "too may arguments");
@@ -1789,7 +1789,7 @@ const RCCNode *RT_parser_funcall(RCCParser *P, RCCToken **rest, RCCToken *token,
 		}
 
 		if (param) {
-			const RCCType *composite = RT_type_composite(P->context, param->type, arg->cast);
+			const RTType *composite = RT_type_composite(P->context, param->type, arg->cast);
 			if (composite) {
 				arg = RT_node_new_cast(P->context, NULL, composite, arg);
 			}
@@ -1813,11 +1813,11 @@ const RCCNode *RT_parser_funcall(RCCParser *P, RCCToken **rest, RCCToken *token,
 	return funcall;
 }
 
-const RCCNode *RT_parser_primary(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	RCCToken *start = token;
+const RTNode *RT_parser_primary(RTCParser *P, RTToken **rest, RTToken *token) {
+	RTToken *start = token;
 
 	if (is(token, "(")) {
-		const RCCNode *node = RT_parser_expr(P, &token, token->next);
+		const RTNode *node = RT_parser_expr(P, &token, token->next);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
 		}
@@ -1826,7 +1826,7 @@ const RCCNode *RT_parser_primary(RCCParser *P, RCCToken **rest, RCCToken *token)
 	}
 
 	if (is(token, "sizeof") && is(token->next, "(") && is_typename(P, token->next->next)) {
-		const RCCType *type = RT_parser_typename(P, &token, token->next->next);
+		const RTType *type = RT_parser_typename(P, &token, token->next->next);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
 		}
@@ -1834,13 +1834,13 @@ const RCCNode *RT_parser_primary(RCCParser *P, RCCToken **rest, RCCToken *token)
 		return RT_node_new_constant_size(P->context, RT_parser_size(P, type));
 	}
 	if (is(token, "sizeof")) {
-		const RCCNode *node = RT_parser_unary(P, rest, token->next);
+		const RTNode *node = RT_parser_unary(P, rest, token->next);
 
 		return RT_node_new_constant_size(P->context, RT_parser_size(P, node->cast));
 	}
 
 	if (RT_token_is_identifier(token)) {
-		RCCObject *object = RT_scope_var(P->state->scope, token);
+		RTObject *object = RT_scope_var(P->state->scope, token);
 		*rest = token->next;
 
 		if (object) {
@@ -1868,7 +1868,7 @@ const RCCNode *RT_parser_primary(RCCParser *P, RCCToken **rest, RCCToken *token)
 		ROSE_assert_unreachable();
 	}
 	if (RT_token_is_number(token)) {
-		RCCNode *node = RT_node_new_constant(P->context, token);
+		RTNode *node = RT_node_new_constant(P->context, token);
 		*rest = token->next;
 		return node;
 	}
@@ -1876,10 +1876,10 @@ const RCCNode *RT_parser_primary(RCCParser *P, RCCToken **rest, RCCToken *token)
 	ERROR(P, token, "expected an expression");
 	return NULL;
 }
-const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token) {
+const RTNode *RT_parser_postfix(RTCParser *P, RTToken **rest, RTToken *token) {
 	if (is(token, "(") && is_typename(P, token->next)) {
-		RCCToken *start = token;
-		const RCCType *type = RT_parser_typename(P, &token, token->next);
+		RTToken *start = token;
+		const RTType *type = RT_parser_typename(P, &token, token->next);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
 		}
@@ -1892,7 +1892,7 @@ const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token)
 		}
 	}
 
-	const RCCNode *node = RT_parser_primary(P, &token, token);
+	const RTNode *node = RT_parser_primary(P, &token, token);
 
 	for (;;) {
 		if (is(token, "(")) {
@@ -1903,8 +1903,8 @@ const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token)
 			continue;
 		}
 		if (is(token, "[")) {
-			RCCToken *start = token;
-			const RCCNode *expr = RT_parser_expr(P, &token, token->next);
+			RTToken *start = token;
+			const RTNode *expr = RT_parser_expr(P, &token, token->next);
 			if (!skip(P, &token, token, "]")) {
 				return NULL;
 			}
@@ -1924,9 +1924,9 @@ const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token)
 		}
 		if (is(token, "++")) {
 			// (typeof A)((A += 1) - 1
-			const RCCType *type = node->cast;
-			const RCCNode *pre = RT_node_new_constant_value(P->context, 1);
-			const RCCNode *post = RT_node_new_constant_value(P->context, -1);
+			const RTType *type = node->cast;
+			const RTNode *pre = RT_node_new_constant_value(P->context, 1);
+			const RTNode *post = RT_node_new_constant_value(P->context, -1);
 
 			node = to_assign(P, new_add(P, token, node, pre));
 			node = new_add(P, token, node, post);
@@ -1936,9 +1936,9 @@ const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token)
 		}
 		if (is(token, "--")) {
 			// (typeof A)((A -= 1) + 1
-			const RCCType *type = node->cast;
-			const RCCNode *pre = RT_node_new_constant_value(P->context, -1);
-			const RCCNode *post = RT_node_new_constant_value(P->context, 1);
+			const RTType *type = node->cast;
+			const RTNode *pre = RT_node_new_constant_value(P->context, -1);
+			const RTNode *post = RT_node_new_constant_value(P->context, 1);
 
 			node = to_assign(P, new_add(P, token, node, pre));
 			node = new_add(P, token, node, post);
@@ -1952,10 +1952,10 @@ const RCCNode *RT_parser_postfix(RCCParser *P, RCCToken **rest, RCCToken *token)
 	}
 }
 
-const RCCNode *RT_parser_typedef(RCCParser *P, RCCToken **rest, RCCToken *token, const RCCType *base) {
-	RCCNode *node = NULL;
+const RTNode *RT_parser_typedef(RTCParser *P, RTToken **rest, RTToken *token, const RTType *base) {
+	RTNode *node = NULL;
 	for (int index = 0; !consume(&token, token, ";"); index++) {
-		RCCToken *start = token;
+		RTToken *start = token;
 		if (index > 0) {
 			if (!skip(P, &token, token, ",")) {
 				break;
@@ -1964,14 +1964,14 @@ const RCCNode *RT_parser_typedef(RCCParser *P, RCCToken **rest, RCCToken *token,
 
 		ROSE_assert(base);
 
-		RCCObject *object = RT_parser_declarator(P, &token, token, base);
+		RTObject *object = RT_parser_declarator(P, &token, token, base);
 		if (!object->identifier) {
 			ERROR(P, token, "typedef name omitted");
 			break;
 		}
 		object->kind = OBJ_TYPEDEF;
 
-		RCCNode *expr = RT_node_new_typedef(P->context, object);
+		RTNode *expr = RT_node_new_typedef(P->context, object);
 		if (node) {
 			node = RT_node_new_binary(P->context, start, BINARY_COMMA, node, expr);
 		}
@@ -1985,24 +1985,24 @@ const RCCNode *RT_parser_typedef(RCCParser *P, RCCToken **rest, RCCToken *token,
 	return node;
 }
 
-RCCNode *RT_parser_compound(RCCParser *P, RCCToken **rest, RCCToken *token) {
+RTNode *RT_parser_compound(RTCParser *P, RTToken **rest, RTToken *token) {
 	if (!skip(P, &token, token, "{")) {
 		return NULL;
 	}
 
 	RT_scope_push(P->context, P->state);
 
-	RCCNode *block = RT_node_new_block(P->context, P->state->scope);
+	RTNode *block = RT_node_new_block(P->context, P->state->scope);
 
 	while (!is(token, "}")) {
-		const RCCNode *node = NULL;
+		const RTNode *node = NULL;
 
 		if ((node = RT_parser_stmt(P, &token, token))) {
 			RT_node_block_add(block, node);
 		}
 		else if (is_typename(P, token) && !is(token->next, ":")) {
 			DeclInfo info;
-			const RCCType *base = RT_parser_declspec(P, &token, token, &info);
+			const RTType *base = RT_parser_declspec(P, &token, token, &info);
 
 			if (info.is_typedef) {
 				node = RT_parser_typedef(P, &token, token, base);
@@ -2013,7 +2013,7 @@ RCCNode *RT_parser_compound(RCCParser *P, RCCToken **rest, RCCToken *token) {
 				ROSE_assert_unreachable();
 			}
 			else {
-				const RCCObject *var = RT_parser_declarator(P, &token, token, base);
+				const RTObject *var = RT_parser_declarator(P, &token, token, base);
 
 				node = RT_node_new_variable(P->context, var);
 				RT_node_block_add(block, node);
@@ -2034,10 +2034,10 @@ RCCNode *RT_parser_compound(RCCParser *P, RCCToken **rest, RCCToken *token) {
 	return block;
 }
 
-const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token) {
-	RCCToken *start = token;
+const RTNode *RT_parser_stmt(RTCParser *P, RTToken **rest, RTToken *token) {
+	RTToken *start = token;
 	if (consume(&token, token, "return")) {
-		const RCCNode *expr = NULL;
+		const RTNode *expr = NULL;
 		if (consume(&token, token, ";")) {
 			expr = NULL;
 		}
@@ -2048,7 +2048,7 @@ const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token) {
 			}
 		}
 
-		RCCNode *node = RT_node_new_unary(P->context, start, UNARY_RETURN, expr);
+		RTNode *node = RT_node_new_unary(P->context, start, UNARY_RETURN, expr);
 		*rest = token;
 		return node;
 	}
@@ -2056,18 +2056,18 @@ const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token) {
 		if (!skip(P, &token, token, "(")) {
 			return NULL;
 		}
-		const RCCNode *expr = RT_parser_expr(P, &token, token);
+		const RTNode *expr = RT_parser_expr(P, &token, token);
 		if (!skip(P, &token, token, ")")) {
 			return NULL;
 		}
-		const RCCNode *then = RT_parser_stmt(P, &token, token);
+		const RTNode *then = RT_parser_stmt(P, &token, token);
 
-		const RCCNode *otherwise = NULL;
+		const RTNode *otherwise = NULL;
 		if (consume(&token, token, "else")) {
 			otherwise = RT_parser_stmt(P, &token, token);
 		}
 
-		RCCNode *node = RT_node_new_conditional(P->context, expr, then, otherwise);
+		RTNode *node = RT_node_new_conditional(P->context, expr, then, otherwise);
 		*rest = token;
 		return node;
 	}
@@ -2097,19 +2097,19 @@ const RCCNode *RT_parser_stmt(RCCParser *P, RCCToken **rest, RCCToken *token) {
 /** \name Main Methods
  * \{ */
 
-ROSE_INLINE bool funcvars(RCCParser *P, RCCObject *func) {
+ROSE_INLINE bool funcvars(RTCParser *P, RTObject *func) {
 	if (!RT_object_is_function(func)) {
 		return false;
 	}
 
-	const RCCTypeFunction *type = &func->type->tp_function;
-	LISTBASE_FOREACH(const RCCTypeParameter *, param, &type->parameters) {
+	const RTTypeFunction *type = &func->type->tp_function;
+	LISTBASE_FOREACH(const RTTypeParameter *, param, &type->parameters) {
 		if (!param->identifier) {
 			ERROR(P, func->identifier, "parameter name omitted");
 			return false;
 		}
 
-		RCCObject *var = RT_object_new_variable(P->context, param->type, param->identifier);
+		RTObject *var = RT_object_new_variable(P->context, param->type, param->identifier);
 
 		if (!RT_scope_new_var(P->state->scope, param->identifier, var)) {
 			return false;
@@ -2119,21 +2119,21 @@ ROSE_INLINE bool funcvars(RCCParser *P, RCCObject *func) {
 	return true;
 }
 
-bool RT_parser_do(RCCParser *P) {
+bool RT_parser_do(RTCParser *P) {
 	RT_pp_do(P->context, P->file, &P->tokens);
 
-	RCCToken *token = (RCCToken *)P->tokens.first;
+	RTToken *token = (RTToken *)P->tokens.first;
 	while (token->kind != TOK_EOF && P->state->errors < 0xff) {
 		DeclInfo info;
-		const RCCType *type = RT_parser_declspec(P, &token, token, &info);
+		const RTType *type = RT_parser_declspec(P, &token, token, &info);
 
 		if (info.is_typedef) {
-			const RCCNode *node = RT_parser_typedef(P, &token, token, type);
+			const RTNode *node = RT_parser_typedef(P, &token, token, type);
 
 			LIB_addtail(&P->nodes, (void *)node);
 			continue;
 		}
-		RCCObject *cur = RT_parser_declarator(P, &token, token, type);
+		RTObject *cur = RT_parser_declarator(P, &token, token, type);
 		if (cur->type && ELEM(cur->type->kind, TP_FUNC)) {
 			cur->kind = OBJ_FUNCTION;
 			if (!cur->identifier) {
@@ -2141,7 +2141,7 @@ bool RT_parser_do(RCCParser *P) {
 				break;
 			}
 
-			RCCObject *old = RT_scope_var(P->state->scope, cur->identifier);
+			RTObject *old = RT_scope_var(P->state->scope, cur->identifier);
 			if (old) {
 				if (old->kind != OBJ_FUNCTION) {
 					ERROR(P, cur->identifier, "redeclared as a different kind of symbol");
@@ -2166,7 +2166,7 @@ bool RT_parser_do(RCCParser *P) {
 					ERROR(P, cur->identifier, "function definition is only allowed in global scope");
 					break;
 				}
-				const RCCTypeFunction *type = &cur->type->tp_function;
+				const RTTypeFunction *type = &cur->type->tp_function;
 
 				RT_scope_push(P->context, P->state);
 				if (funcvars(P, cur)) {

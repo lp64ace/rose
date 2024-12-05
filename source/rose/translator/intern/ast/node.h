@@ -7,31 +7,31 @@
 extern "C" {
 #endif
 
-struct RCContext;
-struct RCCNode;
-struct RCCField;
-struct RCCObject;
-struct RCCScope;
-struct RCCToken;
-struct RCCType;
+struct RTContext;
+struct RTNode;
+struct RTField;
+struct RTObject;
+struct RTScope;
+struct RTToken;
+struct RTType;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
  * \{ */
 
-typedef struct RCCNode {
-	struct RCCNode *prev, *next;
+typedef struct RTNode {
+	struct RTNode *prev, *next;
 
 	struct {
 		unsigned int kind : 16;
 		unsigned int type : 16;
 	};
 
-	const struct RCCToken *token;
-	const struct RCCType *cast;
-} RCCNode;
+	const struct RTToken *token;
+	const struct RTType *cast;
+} RTNode;
 
-/** RCCNode->kind */
+/** RTNode->kind */
 enum {
 	NODE_BINARY,
 	NODE_BLOCK,
@@ -43,7 +43,7 @@ enum {
 	NODE_UNARY,
 };
 
-/** RCCNode->type */
+/** RTNode->type */
 enum {
 	BINARY_ADD,
 	BINARY_SUB,
@@ -80,32 +80,32 @@ enum {
 /** \name Create Methods
  * \{ */
 
-struct RCCNode *RT_node_new_block(struct RCContext *, const struct RCCScope *scope);
-struct RCCNode *RT_node_new_variable(struct RCContext *, const struct RCCObject *object);
-struct RCCNode *RT_node_new_typedef(struct RCContext *, const struct RCCObject *object);
-struct RCCNode *RT_node_new_function(struct RCContext *, const struct RCCObject *object);
-struct RCCNode *RT_node_new_constant(struct RCContext *, const struct RCCToken *token);
-struct RCCNode *RT_node_new_funcall(struct RCContext *, const struct RCCNode *func);
+struct RTNode *RT_node_new_block(struct RTContext *, const struct RTScope *scope);
+struct RTNode *RT_node_new_variable(struct RTContext *, const struct RTObject *object);
+struct RTNode *RT_node_new_typedef(struct RTContext *, const struct RTObject *object);
+struct RTNode *RT_node_new_function(struct RTContext *, const struct RTObject *object);
+struct RTNode *RT_node_new_constant(struct RTContext *, const struct RTToken *token);
+struct RTNode *RT_node_new_funcall(struct RTContext *, const struct RTNode *func);
 
-struct RCCNode *RT_node_new_binary(struct RCContext *, const struct RCCToken *token, int type, const struct RCCNode *lhs, const struct RCCNode *rhs);
-struct RCCNode *RT_node_new_cast(struct RCContext *, const struct RCCToken *token, const struct RCCType *type, const struct RCCNode *expr);
-struct RCCNode *RT_node_new_unary(struct RCContext *, const struct RCCToken *token, int type, const struct RCCNode *expr);
+struct RTNode *RT_node_new_binary(struct RTContext *, const struct RTToken *token, int type, const struct RTNode *lhs, const struct RTNode *rhs);
+struct RTNode *RT_node_new_cast(struct RTContext *, const struct RTToken *token, const struct RTType *type, const struct RTNode *expr);
+struct RTNode *RT_node_new_unary(struct RTContext *, const struct RTToken *token, int type, const struct RTNode *expr);
 
-struct RCCNode *RT_node_new_conditional(struct RCContext *, const struct RCCNode *cond, const struct RCCNode *then, const struct RCCNode *otherwise);
-struct RCCNode *RT_node_new_member(struct RCContext *, const struct RCCNode *owner, const struct RCCField *field);
+struct RTNode *RT_node_new_conditional(struct RTContext *, const struct RTNode *cond, const struct RTNode *then, const struct RTNode *otherwise);
+struct RTNode *RT_node_new_member(struct RTContext *, const struct RTNode *owner, const struct RTField *field);
 
-struct RCCNode *RT_node_new_constant_size(struct RCContext *, unsigned long long size);
-struct RCCNode *RT_node_new_constant_value(struct RCContext *, long long value);
+struct RTNode *RT_node_new_constant_size(struct RTContext *, unsigned long long size);
+struct RTNode *RT_node_new_constant_value(struct RTContext *, long long value);
 
 /* -------------------------------------------------------------------- */
 /** \name Block Nodes
  * \{ */
 
-void RT_node_block_add(struct RCCNode *block, const struct RCCNode *node);
+void RT_node_block_add(struct RTNode *block, const struct RTNode *node);
 
-const struct RCCNode *RT_node_block_first(const struct RCCNode *node);
-const struct RCCNode *RT_node_block_last(const struct RCCNode *node);
-const struct RCCScope *RT_node_block_scope(const struct RCCNode *node);
+const struct RTNode *RT_node_block_first(const struct RTNode *node);
+const struct RTNode *RT_node_block_last(const struct RTNode *node);
+const struct RTScope *RT_node_block_scope(const struct RTNode *node);
 
 /** \} */
 
@@ -113,7 +113,7 @@ const struct RCCScope *RT_node_block_scope(const struct RCCNode *node);
 /** \name Object Nodes
  * \{ */
 
-const struct RCCObject *RT_node_object(const struct RCCNode *node);
+const struct RTObject *RT_node_object(const struct RTNode *node);
 
 /** \} */
 
@@ -121,8 +121,8 @@ const struct RCCObject *RT_node_object(const struct RCCNode *node);
 /** \name Constant Nodes
  * \{ */
 
-bool RT_node_is_integer(const struct RCCNode *node);
-bool RT_node_is_floating(const struct RCCNode *node);
+bool RT_node_is_integer(const struct RTNode *node);
+bool RT_node_is_floating(const struct RTNode *node);
 
 /** \} */
 
@@ -130,8 +130,8 @@ bool RT_node_is_floating(const struct RCCNode *node);
 /** \name Binary Nodes
  * \{ */
 
-const struct RCCNode *RT_node_lhs(const struct RCCNode *node);
-const struct RCCNode *RT_node_rhs(const struct RCCNode *node);
+const struct RTNode *RT_node_lhs(const struct RTNode *node);
+const struct RTNode *RT_node_rhs(const struct RTNode *node);
 
 /** \} */
 
@@ -139,7 +139,7 @@ const struct RCCNode *RT_node_rhs(const struct RCCNode *node);
 /** \name Unary Nodes
  * \{ */
 
-const struct RCCNode *RT_node_expr(const struct RCCNode *node);
+const struct RTNode *RT_node_expr(const struct RTNode *node);
 
 /** \} */
 
@@ -147,7 +147,7 @@ const struct RCCNode *RT_node_expr(const struct RCCNode *node);
 /** \name Member Nodes
  * \{ */
 
-bool RT_node_is_bitfield(const struct RCCNode *node);
+bool RT_node_is_bitfield(const struct RTNode *node);
 
 /** \} */
 
@@ -155,10 +155,10 @@ bool RT_node_is_bitfield(const struct RCCNode *node);
 /** \name Funcall Nodes
  * \{ */
 
-void RT_node_funcall_add(struct RCCNode *funcall, const struct RCCNode *argument);
+void RT_node_funcall_add(struct RTNode *funcall, const struct RTNode *argument);
 
-const struct RCCNode *RT_node_funcall_first(const struct RCCNode *node);
-const struct RCCNode *RT_node_funcall_last(const struct RCCNode *node);
+const struct RTNode *RT_node_funcall_first(const struct RTNode *node);
+const struct RTNode *RT_node_funcall_last(const struct RTNode *node);
 
 /** \} */
 
@@ -166,9 +166,9 @@ const struct RCCNode *RT_node_funcall_last(const struct RCCNode *node);
 /** \name Conditional Nodes
  * \{ */
 
-const struct RCCNode *RT_node_condition(const struct RCCNode *node);
-const struct RCCNode *RT_node_then(const struct RCCNode *node);
-const struct RCCNode *RT_node_otherwise(const struct RCCNode *node);
+const struct RTNode *RT_node_condition(const struct RTNode *node);
+const struct RTNode *RT_node_then(const struct RTNode *node);
+const struct RTNode *RT_node_otherwise(const struct RTNode *node);
 
 /** \} */
 
@@ -176,18 +176,18 @@ const struct RCCNode *RT_node_otherwise(const struct RCCNode *node);
 /** \name Util Methods
  * \{ */
 
-bool RT_node_is_constexpr(const struct RCCNode *expr);
+bool RT_node_is_constexpr(const struct RTNode *expr);
 
-long double RT_node_evaluate_scalar(const struct RCCNode *expr);
-long long RT_node_evaluate_integer(const struct RCCNode *expr);
+long double RT_node_evaluate_scalar(const struct RTNode *expr);
+long long RT_node_evaluate_integer(const struct RTNode *expr);
 
-ROSE_INLINE bool RT_node_is_binary(const struct RCCNode *expr);
-ROSE_INLINE bool RT_node_is_block(const struct RCCNode *expr);
-ROSE_INLINE bool RT_node_is_conditional(const struct RCCNode *expr);
-ROSE_INLINE bool RT_node_is_constant(const struct RCCNode *expr);
-ROSE_INLINE bool RT_node_is_unary(const struct RCCNode *expr);
-ROSE_INLINE bool RT_node_is_object(const struct RCCNode *expr);
-ROSE_INLINE bool RT_node_is_member(const struct RCCNode *expr);
+ROSE_INLINE bool RT_node_is_binary(const struct RTNode *expr);
+ROSE_INLINE bool RT_node_is_block(const struct RTNode *expr);
+ROSE_INLINE bool RT_node_is_conditional(const struct RTNode *expr);
+ROSE_INLINE bool RT_node_is_constant(const struct RTNode *expr);
+ROSE_INLINE bool RT_node_is_unary(const struct RTNode *expr);
+ROSE_INLINE bool RT_node_is_object(const struct RTNode *expr);
+ROSE_INLINE bool RT_node_is_member(const struct RTNode *expr);
 
 /** \} */
 

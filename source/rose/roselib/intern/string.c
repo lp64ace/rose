@@ -365,6 +365,19 @@ char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 	return buffer;
 }
 
+size_t LIB_strnformat_byte_size(char *buffer, size_t maxncpy, uint64_t bytes, int decimal) {
+	const char metric[] = " KMGTPEZY";
+	
+	double value = bytes;
+	
+	int i = 0;
+	while (value >= 1000.0 && i++ < ARRAY_SIZE(metric) - 1) {
+		value /= 1024.0;
+	}
+	
+	return LIB_strnformat(buffer, maxncpy, "%5.*f %cB", decimal, value, metric[i]);
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

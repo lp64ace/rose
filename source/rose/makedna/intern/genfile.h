@@ -14,7 +14,7 @@ struct SDNA;
  * \{ */
 
 typedef struct SDNA {
-	struct RCContext *context;
+	struct RTContext *context;
 
 	struct GHash *types;
 	struct GHash *visit;
@@ -61,8 +61,8 @@ bool DNA_sdna_write_ull(struct SDNA *sdna, void **rest, void *ptr, unsigned long
 bool DNA_sdna_write_bool(struct SDNA *sdna, void **rest, void *ptr, bool word);
 bool DNA_sdna_write_str(struct SDNA *sdna, void **rest, void *ptr, const char *word);
 
-bool DNA_sdna_write_type(struct SDNA *sdna, void **rest, void *ptr, const RCCType *tp);
-bool DNA_sdna_write_token(struct SDNA *sdna, void **rest, void *ptr, const RCCToken *tok);
+bool DNA_sdna_write_type(struct SDNA *sdna, void **rest, void *ptr, const RTType *tp);
+bool DNA_sdna_write_token(struct SDNA *sdna, void **rest, void *ptr, const RTToken *tok);
 
 /** \} */
 
@@ -82,8 +82,8 @@ bool DNA_sdna_read_ull(const struct SDNA *sdna, const void **rest, const void *p
 bool DNA_sdna_read_bool(const struct SDNA *sdna, const void **rest, const void *ptr, bool *word);
 bool DNA_sdna_read_str(const struct SDNA *sdna, const void **rest, const void *ptr, char *word);
 
-bool DNA_sdna_read_type(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCType **tp);
-bool DNA_sdna_read_token(const struct SDNA *sdna, const void **rest, const void *ptr, const RCCToken **tok);
+bool DNA_sdna_read_type(const struct SDNA *sdna, const void **rest, const void *ptr, const RTType **tp);
+bool DNA_sdna_read_token(const struct SDNA *sdna, const void **rest, const void *ptr, const RTToken **tok);
 
 /** \} */
 
@@ -102,7 +102,7 @@ ptrdiff_t DNA_sdna_field_offset(const struct SDNA *sdna, uint64_t struct_nr, con
  * Returns the unique identifier for the struct within the specified SDNA,
  * not unique across different (possibly completely same) SDNA configurations!
  */
-uint64_t DNA_sdna_struct_ex(const struct SDNA *sdna, const struct RCCType *type);
+uint64_t DNA_sdna_struct_ex(const struct SDNA *sdna, const struct RTType *type);
 uint64_t DNA_sdna_struct_id(const struct SDNA *sdna, const char *name);
 
 /** \} */

@@ -35,6 +35,9 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 			case SPACE_STATUSBAR: {
 				ts = &theme->space_statusbar;
 			} break;
+			case SPACE_USERPREF: {
+				ts = &theme->space_userpref;
+			} break;
 			default: {
 				ROSE_assert_unreachable();
 			} break;
@@ -45,7 +48,7 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW, RGN_TYPE_TEMPORARY)) {
 					cp = ts->back;
 				}
-				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER)) {
+				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 					cp = ts->header;
 				}
 				else {
@@ -56,7 +59,7 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
 					cp = ts->back;
 				}
-				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER)) {
+				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 					cp = ts->header_hi;
 				}
 				else {

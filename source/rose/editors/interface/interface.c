@@ -31,6 +31,9 @@
 
 #include "interface_intern.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name UI Button
  * \{ */
@@ -41,10 +44,13 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->type != but_old->type) {
 		return false;
 	}
-	if (but_new->handle_func != but_old->handle_func) {
+	if (but_new->handle_func != but_old->handle_func || but_new->arg1 != but_old->arg1 || but_new->arg2 != but_old->arg2) {
 		return false;
 	}
-	if (but_new->menu_create_func != but_old->menu_create_func) {
+	if (but_new->menu_create_func != but_old->menu_create_func || but_new->arg != but_old->arg) {
+		return false;
+	}
+	if (but_new->pointer != but_old->pointer || but_new->pointype != but_old->pointype) {
 		return false;
 	}
 	if (!STREQ(but_new->name, but_old->name)) {
@@ -64,11 +70,23 @@ ROSE_INLINE uiBut *ui_but_find_old(uiBlock *block_old, const uiBut *but_new) {
 
 ROSE_INLINE void ui_but_update_old_active_from_new(uiBut *old, uiBut *but) {
 	memcpy(&old->rect, &but->rect, sizeof(rctf));
-
+	
 	switch (old->type) {
 		default: {
 			/** Nothing to do here, this is button specific updates. */
 		} break;
+	}
+}
+
+ROSE_INLINE void ui_but_update_new_from_old_inactive(uiBut *but, uiBut *old) {
+	/**
+	 * Even though most of the times we are supposed to keep the button updated from 
+	 * the pointer, we are keeping the old text for buttons that do not use pointer data.
+	 * Thus allowing text gathering straight from the button buffers (even though it is not 
+	 * recommended).
+	 */
+	if (!but->pointer) {
+		SWAP(char *, but->drawstr, old->drawstr);
 	}
 }
 
@@ -88,22 +106,30 @@ ROSE_STATIC bool ui_but_update_from_old_block(struct rContext *C, uiBlock *block
 	}
 
 	bool was_active = old->active;
-	LIB_remlink(&oldblock->buttons, old);
-	LIB_insertlinkafter(&block->buttons, but, old);
-	old->block = block;
+	if (was_active) {
+		LIB_remlink(&oldblock->buttons, old);
+		LIB_insertlinkafter(&block->buttons, but, old);
+		old->block = block;
 
-	*but_p = old;
+		*but_p = old;
 
-	ui_but_update_old_active_from_new(old, but);
+		ui_but_update_old_active_from_new(old, but);
 
-	LIB_remlink(&block->buttons, but);
-	ui_but_free(C, but);
+		LIB_remlink(&block->buttons, but);
+		ui_but_free(C, but);
+	}
+	else {
+		LIB_remlink(&oldblock->buttons, old);
+		
+		ui_but_update_new_from_old_inactive(but, old);
+
+		ui_but_free(C, old);
+	}
 	return was_active;
 }
 
 ROSE_STATIC void ui_but_mem_delete(uiBut *but) {
-	MEM_freeN(but->name);
-	MEM_SAFE_FREE(but->str);
+	MEM_SAFE_FREE(but->name);
 	MEM_SAFE_FREE(but->drawstr);
 	MEM_freeN(but);
 }
@@ -180,15 +206,25 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 	memcpy(rect, &recti, sizeof(recti));
 }
 
-ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
+ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, int maxlen) {
 	ROSE_assert(w >= 0 && h >= 0 || (type == UI_BTYPE_SEPR));
 
 	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
 
 	but->name = LIB_strdupN(name);
-	if (ELEM(type, UI_BTYPE_BUT, UI_BTYPE_EDIT, UI_BTYPE_MENU, UI_BTYPE_TXT)) {
-		but->str = LIB_strdupN(name);
+	but->pointer = pointer;
+	/** We only care about maxlength for string buffers. */
+	if (pointer && but->pointype == UI_POINTER_STR) {
+		but->maxlength = maxlen;
 	}
+	else {
+		but->pointype = pointer ? pointype : UI_POINTER_NIL;
+		but->maxlength = 64;
+	}
+	
+	but->drawstr = MEM_mallocN(but->maxlength + 1, "uiBut::DrawStr");
+	LIB_strcpy(but->drawstr, but->maxlength, but->name);
+
 	but->rect.xmin = x;
 	but->rect.ymin = y;
 	but->rect.xmax = but->rect.xmin + w;
@@ -206,38 +242,28 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	return but;
 }
 
-uiBut *uiDefSepr(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
-	ROSE_assert(ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSEPR, UI_BTYPE_VSEPR));
-
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
+uiBut *uiDefBut(uiBlock *block, int type, const char *name, int w, int h, void *pointer, int pointype, int maxlen, int draw) {
+	uiBut *but = ui_def_but(block, type, name, 0, 0, w, h, pointer, pointype, maxlen);
+	but->draw = draw;
 	return but;
 }
 
-uiBut *uiDefText(uiBlock *block, int type, const char *name, int x, int y, int w, int h) {
-	ROSE_assert(ELEM(type, UI_BTYPE_TXT));
-
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
-	return but;
+void uiButEnableFlag(uiBut *but, int flag) {
+	but->flag |= flag;
+}
+void uiButDisableFlag(uiBut *but, int flag) {
+	but->flag &= flag;
 }
 
-uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiButHandleFunc handle) {
-	ROSE_assert(ELEM(type, UI_BTYPE_BUT, UI_BTYPE_EDIT));
-
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
-	if (but) {
-		but->handle_func = handle;
-	}
-	return but;
+void UI_but_func_set(uiBut *but, uiButHandleFunc func, void *arg1, void *arg2) {
+	but->handle_func = func;
+	but->arg1 = arg1;
+	but->arg2 = arg2;
 }
 
-uiBut *uiDefMenu(uiBlock *block, int type, const char *name, int x, int y, int w, int h, uiBlockCreateFunc create) {
-	ROSE_assert(ELEM(type, UI_BTYPE_MENU));
-
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h);
-	if (but) {
-		but->menu_create_func = create;
-	}
-	return but;
+void UI_but_menu_set(uiBut *but, uiBlockCreateFunc func, void *arg) {
+	but->menu_create_func = func;
+	but->arg = arg;
 }
 
 bool ui_region_contains_point_px(const ARegion *region, const int xy[2]) {
@@ -273,14 +299,48 @@ bool ui_but_contains_rect(const uiBut *but, const rctf *rect) {
 }
 
 void ui_but_update(uiBut *but) {
-	switch (but->type) {
-		case UI_BTYPE_EDIT: {
-			if (ui_but_is_editing(but)) {
-			}
-			else {
-				but->hscroll = 0;
-			}
-		} break;
+	if (!ui_but_is_editing(but)) {
+		but->scroll = 0;
+	}
+
+	if (but->pointer) {
+		but->drawstr = MEM_reallocN(but->drawstr, but->maxlength + 1);
+		switch (but->pointype) {
+			case UI_POINTER_STR:
+				if (!ui_but_is_editing(but)) {
+					/** Update the draw sting from the pointer data. */
+					LIB_strcpy(but->drawstr, but->maxlength, but->pointer);
+				}
+				else {
+					/** Update the pointer data from the draw string. */
+					LIB_strcpy(but->pointer, but->maxlength, but->drawstr);
+				}
+				break;
+			case UI_POINTER_INT:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, "%d", *(int *)but->pointer);
+				}
+				else {
+					*(int *)but->pointer = atoi(but->drawstr);
+				}
+				break;
+			case UI_POINTER_FLT:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, "%f", *(float *)but->pointer);
+				}
+				else {
+					*(float *)but->pointer = atof(but->drawstr);
+				}
+				break;
+			case UI_POINTER_DBL:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, "%lf", *(double *)but->pointer);
+				}
+				else {
+					*(double *)but->pointer = atof(but->drawstr);
+				}
+				break;
+		}
 	}
 }
 
@@ -290,7 +350,6 @@ uiBut *ui_block_active_but_get(const uiBlock *block) {
 			return but;
 		}
 	}
-
 	return NULL;
 }
 
@@ -309,6 +368,9 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 		float x = xy[0], y = xy[1];
 		ui_window_to_block_fl(region, block, &x, &y);
 		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+			if (but->flag & UI_DISABLED) {
+				continue;
+			}
 			if (ui_but_contains_pt(but, x, y)) {
 				return but;
 			}

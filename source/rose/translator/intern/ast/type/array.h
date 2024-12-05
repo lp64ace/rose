@@ -25,20 +25,20 @@ extern "C" {
  * strategies are followed.
  * \{ */
 
-typedef struct RCCTypeArray {
-	const struct RCCType *element_type;
+typedef struct RTTypeArray {
+	const struct RTType *element_type;
 	int boundary;
 
-	struct RCCTypeQualification qualification;
+	struct RTTypeQualification qualification;
 
 	union {
-		const struct RCCNode *const_length;
-		const struct RCCNode *vla_length;
+		const struct RTNode *const_length;
+		const struct RTNode *vla_length;
 	};
 
 	/** This is the evaluate size of the constexpr length if applicable. */
 	unsigned long long length;
-} RCCTypeArray;
+} RTTypeArray;
 
 enum {
 	ARRAY_UNBOUNDED,
@@ -54,13 +54,13 @@ enum {
 /** \name Creation Methods
  * \{ */
 
-struct RCCType *RT_type_new_empty_array(struct RCContext *);
+struct RTType *RT_type_new_empty_array(struct RTContext *);
 
-struct RCCType *RT_type_new_unbounded_array(struct RCContext *, const struct RCCType *elem, const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_array(struct RCContext *, const struct RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_array_static(struct RCContext *, const struct RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_vla_array(struct RCContext *, const struct RCCType *elem, const struct RCCNode *vla, const RCCTypeQualification *qual);
-struct RCCType *RT_type_new_vla_array_static(struct RCContext *, const struct RCCType *elem, const struct RCCNode *vla, const RCCTypeQualification *qual);
+struct RTType *RT_type_new_unbounded_array(struct RTContext *, const struct RTType *elem, const RTTypeQualification *qual);
+struct RTType *RT_type_new_array(struct RTContext *, const struct RTType *elem, const struct RTNode *length, const RTTypeQualification *qual);
+struct RTType *RT_type_new_array_static(struct RTContext *, const struct RTType *elem, const struct RTNode *length, const RTTypeQualification *qual);
+struct RTType *RT_type_new_vla_array(struct RTContext *, const struct RTType *elem, const struct RTNode *vla, const RTTypeQualification *qual);
+struct RTType *RT_type_new_vla_array_static(struct RTContext *, const struct RTType *elem, const struct RTNode *vla, const RTTypeQualification *qual);
 
 /** \} */
 
@@ -68,10 +68,10 @@ struct RCCType *RT_type_new_vla_array_static(struct RCContext *, const struct RC
 /** \name Utils
  * \{ */
 
-int RT_type_array_boundary(const struct RCCType *arr);
+int RT_type_array_boundary(const struct RTType *arr);
 
-const struct RCCType *RT_type_array_element(const struct RCCType *arr);
-unsigned long long RT_type_array_length(const struct RCCType *arr);
+const struct RTType *RT_type_array_element(const struct RTType *arr);
+unsigned long long RT_type_array_length(const struct RTType *arr);
 
 /** \} */
 

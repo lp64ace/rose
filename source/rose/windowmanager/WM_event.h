@@ -189,6 +189,7 @@ enum {
 	EVT_F24KEY = 0x0143, /* 323 */
 
 	WINDEACTIVATE = 0x0104, /* Window is deactivated, focus lost, (260). */
+	WINQUIT = 0x0105,
 };
 
 /* clang-format off */

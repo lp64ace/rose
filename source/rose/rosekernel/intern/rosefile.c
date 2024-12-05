@@ -17,8 +17,16 @@ ROSE_STATIC void setup_app_userdef(RoseFileData *rfd) {
 	}
 }
 
+ROSE_STATIC void setup_app_main(RoseFileData *rfd) {
+	if (rfd->main) {
+		// Handle new main data-block(s) here!
+		rfd->main = NULL;
+	}
+}
+
 ROSE_STATIC void setup_app_rose_file_data(RoseFileData *rfd) {
 	setup_app_userdef(rfd);
+	setup_app_main(rfd);
 }
 
 void KER_rosefile_read_setup(RoseFileData *rfd) {

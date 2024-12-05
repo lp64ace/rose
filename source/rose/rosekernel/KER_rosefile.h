@@ -14,7 +14,7 @@ typedef struct RoseFileData {
 /** \name Util Methods
  * \{ */
 
-void KER_rosefile_read_setup(RoseFileData *rfd);
+void KER_rosefile_read_setup(struct RoseFileData *rfd);
 
 /** \} */
 

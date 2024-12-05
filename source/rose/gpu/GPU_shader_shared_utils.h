@@ -1,5 +1,4 @@
 #ifdef GPU_SHADER
-
 #	define ROSE_STATIC_ASSERT(cond, msg)
 #	define ROSE_STATIC_ASSERT_ALIGN(type_, align_)
 #	define ROSE_STATIC_ASSERT_SIZE(type_, size_)
@@ -36,33 +35,18 @@
 #		define packed_float3 vec3
 #		define packed_int3 int3
 #	endif
-
 #else /* C / C++ */
-
 #	pragma once
-
 #	include "LIB_assert.h"
-
 #	ifdef __cplusplus
 #		include "LIB_math_matrix_types.hh"
 #		include "LIB_math_vector_types.hh"
-using rose::float2;
-using rose::float3;
-using rose::float3x4;
-using rose::float4;
-using rose::float4x4;
-using rose::int2;
-using rose::int3;
-using rose::int4;
-using rose::uint2;
-using rose::uint3;
-using rose::uint4;
 using bool1 = int;
-using bool2 = rose::int2;
-using bool3 = rose::int3;
-using bool4 = rose::int4;
-using packed_float3 = rose::float3;
-using packed_int3 = rose::int3;
+using bool2 = int2;
+using bool3 = int3;
+using bool4 = int4;
+using packed_float3 = float3;
+using packed_int3 = int3;
 #	else /* C */
 typedef float float2[2];
 typedef float float3[3];
@@ -82,5 +66,4 @@ typedef int bool4[4];
 typedef float3 packed_float3;
 typedef int3 packed_int3;
 #	endif
-
 #endif

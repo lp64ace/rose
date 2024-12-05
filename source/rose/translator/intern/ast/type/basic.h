@@ -23,7 +23,7 @@ extern "C" {
  * strategies are followed.
  * \{ */
 
-typedef struct RCCTypeBasic {
+typedef struct RTTypeBasic {
 	/**
 	 * By default every trivial type is considered to be signed,
 	 * so unless this value is set then the type can be considered to be signed.
@@ -34,7 +34,7 @@ typedef struct RCCTypeBasic {
 	bool is_unsigned;
 
 	int rank;
-} RCCTypeBasic;
+} RTTypeBasic;
 
 /** \} */
 
@@ -42,10 +42,10 @@ typedef struct RCCTypeBasic {
 /** \name Utils
  * \{ */
 
-struct RCCType *RT_type_new_empty_basic(struct RCContext *);
+struct RTType *RT_type_new_empty_basic(struct RTContext *);
 
-bool RT_type_is_numeric(const struct RCCType *tp);
-bool RT_type_is_unsigned(const struct RCCType *tp);
+bool RT_type_is_numeric(const struct RTType *tp);
+bool RT_type_is_unsigned(const struct RTType *tp);
 
 /** \} */
 

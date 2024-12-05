@@ -237,6 +237,8 @@ const char *LIB_strprev(const char *begin, const char *end, const char *itr, int
 size_t LIB_strnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const char *fmt, ...);
 size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const char *fmt, va_list args);
 
+size_t LIB_strnformat_byte_size(char *buffer, size_t maxncpy, uint64_t bytes, int decimal);
+
 char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...);
 
 /** \} */

@@ -11,6 +11,7 @@
 #include "LIB_utildefines.h"
 
 #include "KER_lib_id.h"
+#include "KER_main.h"
 #include "KER_screen.h"
 
 #include "WM_api.h"
@@ -40,13 +41,13 @@ ScrArea *screen_addarea(Screen *screen, ScrVert *v1, ScrVert *v2, ScrVert *v3, S
 	return screen_addarea_ex(AREAMAP_FROM_SCREEN(screen), v1, v2, v3, v4, spacetype);
 }
 
-struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *rect) {
+Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, int space_type) {
 	Screen *screen = KER_libblock_alloc(main, ID_SCR, name, 0);
 
 	ScrVert *sv1 = screen_geom_vertex_add(screen, rect->xmin, rect->ymin);
 	ScrVert *sv2 = screen_geom_vertex_add(screen, rect->xmin, rect->ymax);
 
-	const int cnt = 2;
+	const int cnt = 1; // Mostly for debug purposes to test more aras!
 	for (int i = 1; i <= cnt; i++) {
 		ScrVert *sv3 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymax);
 		ScrVert *sv4 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymin);
@@ -56,7 +57,7 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 		screen_geom_edge_add(screen, sv3, sv4);
 		screen_geom_edge_add(screen, sv4, sv1);
 
-		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, SPACE_EMPTY);
+		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, space_type);
 
 		sv1 = sv4;
 		sv2 = sv3;
@@ -66,6 +67,10 @@ struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *re
 	KER_screen_remove_double_scredges(screen);
 
 	return screen;
+}
+
+Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
+	return ED_screen_add_ex(main, name, rect, SPACE_EMPTY);
 }
 
 /** \} */
@@ -141,7 +146,6 @@ void ED_screen_exit(struct rContext *C, wmWindow *window, Screen *screen) {
 	LISTBASE_FOREACH(ScrArea *, area, &window->global_areas.areabase) {
 		ED_area_exit(C, area);
 	}
-	screen->winid = 0;
 
 	CTX_wm_window_set(C, prevwin);
 }

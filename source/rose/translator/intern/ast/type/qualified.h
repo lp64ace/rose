@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-struct RCContext;
-struct RCCType;
+struct RTContext;
+struct RTType;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -28,11 +28,11 @@ struct RCCType;
  * strategies are followed.
  * \{ */
 
-typedef struct RCCTypeQualified {
-	const struct RCCType *base;
+typedef struct RTTypeQualified {
+	const struct RTType *base;
 
-	struct RCCTypeQualification qualification;
-} RCCTypeQualified;
+	struct RTTypeQualification qualification;
+} RTTypeQualified;
 
 /** \} */
 
@@ -40,8 +40,8 @@ typedef struct RCCTypeQualified {
 /** \name Creation Methods
  * \{ */
 
-struct RCCType *RT_type_new_qualified(struct RCContext *, const struct RCCType *type);
-struct RCCType *RT_type_new_qualified_ex(struct RCContext *, const struct RCCType *type, const RCCTypeQualification *qualification);
+struct RTType *RT_type_new_qualified(struct RTContext *, const struct RTType *type);
+struct RTType *RT_type_new_qualified_ex(struct RTContext *, const struct RTType *type, const RTTypeQualification *qualification);
 
 /** \} */
 
@@ -49,20 +49,20 @@ struct RCCType *RT_type_new_qualified_ex(struct RCContext *, const struct RCCTyp
 /** \name Util Methods
  * \{ */
 
-void RT_type_qualified_const(struct RCCType *qual);
-void RT_type_qualified_restrict(struct RCCType *qual);
-void RT_type_qualified_volatile(struct RCCType *qual);
-void RT_type_qualified_atomic(struct RCCType *qual);
+void RT_type_qualified_const(struct RTType *qual);
+void RT_type_qualified_restrict(struct RTType *qual);
+void RT_type_qualified_volatile(struct RTType *qual);
+void RT_type_qualified_atomic(struct RTType *qual);
 
-bool RT_type_qualified_is_const(const struct RCCType *qual);
-bool RT_type_qualified_is_restrict(const struct RCCType *qual);
-bool RT_type_qualified_is_volatile(const struct RCCType *qual);
-bool RT_type_qualified_is_atomic(const struct RCCType *qual);
+bool RT_type_qualified_is_const(const struct RTType *qual);
+bool RT_type_qualified_is_restrict(const struct RTType *qual);
+bool RT_type_qualified_is_volatile(const struct RTType *qual);
+bool RT_type_qualified_is_atomic(const struct RTType *qual);
 
-const struct RCCType *RT_type_unqualified(const struct RCCType *type);
-const struct RCCTypeQualification *RT_type_qualification(const struct RCCType *type);
+const struct RTType *RT_type_unqualified(const struct RTType *type);
+const struct RTTypeQualification *RT_type_qualification(const struct RTType *type);
 
-bool RT_type_is_zero_qualified(const struct RCCType *type);
+bool RT_type_is_zero_qualified(const struct RTType *type);
 
 /** \} */
 

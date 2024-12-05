@@ -19,6 +19,11 @@ ROSE_INLINE void LIB_listbase_clear(ListBase *listbase) {
 	listbase->first = listbase->last = NULL;
 }
 
+ROSE_INLINE void LIB_listbase_swap(ListBase *lb1, ListBase *lb2) {
+	SWAP(Link *, lb1->first, lb2->first);
+	SWAP(Link *, lb1->last, lb2->last);
+}
+
 #ifdef __cplusplus
 }
 #endif

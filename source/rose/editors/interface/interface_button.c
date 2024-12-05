@@ -13,8 +13,10 @@
 #include "KER_context.h"
 
 #include "GPU_framebuffer.h"
+#include "GPU_immediate.h"
 #include "GPU_matrix.h"
 #include "GPU_state.h"
+#include "GPU_vertex_format.h"
 
 #include "LIB_ghash.h"
 #include "LIB_listbase.h"
@@ -40,14 +42,14 @@ ROSE_INLINE uiWidgetColors *widget_colors(int type) {
 	Theme *theme = UI_GetTheme();
 
 	switch (type) {
-		case UI_BTYPE_HSEPR:
-		case UI_BTYPE_VSEPR: {
+		case UI_BTYPE_HSPR:
+		case UI_BTYPE_VSPR: {
 			return &theme->tui.wcol_sepr;
 		} break;
-		case UI_BTYPE_BUT: {
+		case UI_BTYPE_PUSH: {
 			return &theme->tui.wcol_but;
 		} break;
-		case UI_BTYPE_TXT: {
+		case UI_BTYPE_TEXT: {
 			return &theme->tui.wcol_txt;
 		} break;
 		case UI_BTYPE_EDIT: {
@@ -56,13 +58,6 @@ ROSE_INLINE uiWidgetColors *widget_colors(int type) {
 	}
 
 	return &theme->tui.wcol_but;
-}
-
-ROSE_INLINE void copy_f4_u4(float a[4], const unsigned char b[4]) {
-	a[0] = b[0] / 255.0f;
-	a[1] = b[1] / 255.0f;
-	a[2] = b[2] / 255.0f;
-	a[3] = b[3] / 255.0f;
 }
 
 int ui_but_text_font(uiBut *but) {
@@ -78,42 +73,21 @@ ROSE_INLINE void ui_but_text_rect(uiBut *but, const rcti *rect, rcti *client) {
 }
 
 ROSE_INLINE const char *ui_but_text(uiBut *but) {
-	return (but->drawstr) ? but->drawstr : but->str;
-}
-
-/** Returns false if clipping had to be done to fit the text inside! */
-ROSE_INLINE bool ui_but_text_bounds(uiBut *but, const rcti *rect, rcti *content, int offset) {
-	int font = ui_but_text_font(but);
-
-	rcti client;
-	ui_but_text_rect(but, rect, &client);
-
-	RFT_boundbox(font, ui_but_text(but) + but->hscroll, offset, content);
-
-	content->xmin += client.xmin;
-	content->xmax += client.xmin;
-	content->ymin = client.ymin;
-	content->ymax = client.ymax;
-
-	if (!LIB_rcti_inside_rcti(&client, content)) {
-		LIB_rcti_isect(&client, content, content);
-		return false;
-	}
-	return true;
+	return (but->drawstr) ? but->drawstr : "(null)";
 }
 
 ROSE_STATIC void ui_text_clip_give_prev_off(uiBut *but, const char *str) {
-	const char *prev_utf8 = LIB_str_find_prev_char_utf8(str + but->hscroll, str);
-	const int bytes = str + but->hscroll - prev_utf8;
+	const char *prev_utf8 = LIB_str_find_prev_char_utf8(str + but->scroll, str);
+	const int bytes = str + but->scroll - prev_utf8;
 
-	but->hscroll -= bytes;
+	but->scroll -= bytes;
 }
 
 ROSE_STATIC void ui_text_clip_give_next_off(uiBut *but, const char *str, const char *str_end) {
-	const char *next_utf8 = LIB_str_find_next_char_utf8(str + but->hscroll, str_end);
-	const int bytes = next_utf8 - (str + but->hscroll);
+	const char *next_utf8 = LIB_str_find_next_char_utf8(str + but->scroll, str_end);
+	const int bytes = next_utf8 - (str + but->scroll);
 
-	but->hscroll += bytes;
+	but->scroll += bytes;
 }
 
 ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
@@ -122,40 +96,40 @@ ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 	const int cwidth = ROSE_MAX(0, LIB_rcti_size_x(&client));
 
 	const char *str = ui_but_text(but);
-	if (!str) {
+	if (!str || cwidth <= 20) {
 		return;
 	}
 
-	if (but->hscroll > but->offset) {
-		but->hscroll = but->offset;
+	if (but->scroll > but->offset) {
+		but->scroll = but->offset;
 	}
 
 	int font = ui_but_text_font(but);
 
 	if (RFT_width(font, str, INT_MAX) <= cwidth) {
-		but->hscroll = 0;
+		but->scroll = 0;
 	}
 
-	but->strwidth = RFT_width(font, str + but->hscroll, INT_MAX);
+	but->strwidth = RFT_width(font, str + but->scroll, INT_MAX);
 
 	if (but->strwidth > cwidth) {
 		unsigned int length = LIB_strlen(str);
 		unsigned int adjusted = length;
 
 		while (but->strwidth > cwidth) {
-			float width = RFT_width(font, str + but->hscroll, but->offset - but->hscroll);
+			float width = RFT_width(font, str + but->scroll, but->offset - but->scroll);
 
 			if (width > cwidth - 20) {
 				ui_text_clip_give_next_off(but, str, str + length);
 			}
 			else {
-				if (width < 20 && but->hscroll > 0) {
+				if (width < 20 && but->scroll > 0) {
 					ui_text_clip_give_prev_off(but, str);
 				}
 				adjusted -= LIB_str_utf8_size_safe(LIB_str_find_prev_char_utf8(str + adjusted, str));
 			}
 
-			but->strwidth = RFT_width(font, str + but->hscroll, adjusted - but->hscroll);
+			but->strwidth = RFT_width(font, str + but->scroll, adjusted - but->scroll);
 
 			if (but->strwidth < 10) {
 				break;
@@ -164,117 +138,175 @@ ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 	}
 }
 
-ROSE_INLINE void ui_draw_but_back(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	ARegion *region = CTX_wm_region(C);
+ROSE_STATIC void ui_draw_separator_ex(const rcti *rect, bool vertical, const unsigned char color[4]) {
+	const int mid = vertical ? LIB_rcti_cent_x(rect) : LIB_rcti_cent_y(rect);
 
-	float fill[4];
-	float border[4];
-
-	copy_f4_u4(fill, (but->flag & UI_HOVER) ? colors->inner_sel : colors->inner);
-
-	if (fill[3] < 1e-3f) {
-		return;
-	}
-
-	copy_f4_u4(border, colors->outline);
-
-	rctf rectf;
-	LIB_rctf_rcti_copy(&rectf, rect);
-
-	if (but->type == UI_BTYPE_HSEPR) {
-		rectf.ymin = rectf.ymax = LIB_rctf_cent_y(&rectf);
-	}
-	else if (but->type == UI_BTYPE_VSEPR) {
-		rectf.xmin = rectf.xmax = LIB_rctf_cent_x(&rectf);
-	}
-
-	UI_draw_roundbox_4fv_ex(&rectf, fill, fill, 0, border, 1, colors->roundness);
-}
-
-ROSE_INLINE bool ui_draw_but_text_sel(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	if (but->selend - but->selsta <= 0) {
-		return false;
-	}
-
-	float fill[4];
-	copy_f4_u4(fill, colors->text_sel);
-
-	if (fill[3] < 1e-3f) {
-		return false;
-	}
-
-	int font = ui_but_text_font(but);
-
-	rcti selection, a, b;
-	ui_but_text_bounds(but, rect, &a, ROSE_MAX(0, but->selsta - but->hscroll));
-	ui_but_text_bounds(but, rect, &b, ROSE_MAX(0, but->selend - but->hscroll));
-	selection.xmin = ROSE_MIN(a.xmax, b.xmax);
-	selection.xmax = ROSE_MAX(a.xmax, b.xmax);
-
-	int cy = LIB_rcti_cent_y(&a);
-
-	selection.ymin = cy - RFT_height_max(font) / 2;
-	selection.ymax = cy + RFT_height_max(font) / 2;
-
-	rctf self;
-	LIB_rctf_rcti_copy(&self, &selection);
-	UI_draw_roundbox_4fv_ex(&self, fill, fill, 0, NULL, 1, 0);
-
-	return true;
-}
-
-ROSE_INLINE void ui_draw_but_text(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	rcti client;
-	ui_but_text_rect(but, rect, &client);
-
-	float text[4];
-	copy_f4_u4(text, colors->text);
-
-	if (text[3] < 1e-3f) {
-		return;
-	}
-
-	int font = ui_but_text_font(but);
-	RFT_clipping(font, client.xmin, client.ymin, client.xmax, client.ymax);
-	RFT_color4f(font, text[0], text[1], text[2], text[3]);
-	RFT_enable(font, RFT_CLIPPING);
+	const unsigned int pos = GPU_vertformat_add(immVertexFormat(), "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+	immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);
 
 	GPU_blend(GPU_BLEND_ALPHA);
+	immUniformColor4ubv(color);
+	GPU_line_width(1.0f);
+	immBegin(GPU_PRIM_LINES, 2);
+	if (vertical) {
+		immVertex2f(pos, mid, rect->ymin);
+		immVertex2f(pos, mid, rect->ymax);
+	}
+	else {
+		immVertex2f(pos, rect->xmin, mid);
+		immVertex2f(pos, rect->xmax, mid);
+	}
+	immEnd();
+	GPU_blend(GPU_BLEND_NONE);
 
-	ui_draw_but_text_sel(C, but, colors, rect);
-	int x = client.xmin;
-	int y = LIB_rcti_cent_y(&client) - RFT_height_max(font) / 3;
-	RFT_position(font, x, y, 0.0f);
-
-	RFT_draw(font, ui_but_text(but) + but->hscroll, INT_MAX);
+	immUnbindProgram();
 }
 
-ROSE_INLINE void ui_draw_but_cursor(const struct rContext *C, uiBut *but, uiWidgetColors *colors, const rcti *rect) {
-	if (!ui_but_is_editing(but)) {
-		return;
+ROSE_STATIC void ui_draw_separator(const uiWidgetColors *colors, uiBut *but, const rcti *rect) {
+	ui_draw_separator_ex(rect, but->type == UI_BTYPE_VSPR, colors->text);
+}
+
+ROSE_STATIC float ui_widget_roundness(uiWidgetColors *wcol, const rcti *rect) {
+	return wcol->roundness * ROSE_MIN(LIB_rcti_size_x(rect), LIB_rcti_size_y(rect));
+}
+
+ROSE_STATIC bool ui_draw_but_row_extended_left(uiBut *but) {
+	if (but->draw & UI_BUT_GRID) {
+		uiBut *left = but->prev;
+		return left && left->draw & UI_BUT_GRID && DRAW_INDX(left->draw) == DRAW_INDX(but->draw);
+	}
+	return false;
+}
+
+ROSE_STATIC bool ui_draw_but_row_extended_right(uiBut *but) {
+	if (but->draw & UI_BUT_GRID) {
+		uiBut *right = but->next;
+		return right && right->draw & UI_BUT_GRID && DRAW_INDX(right->draw) == DRAW_INDX(but->draw);
+	}
+	return false;
+}
+
+ROSE_STATIC bool ui_draw_but_row_hovered(uiBut *but) {
+	if (but->draw & UI_BUT_GRID) {
+		int row = DRAW_INDX(but->draw);
+		for (uiBut *l = but->prev; l && ui_draw_but_row_extended_left(l->next); l = l->prev) {
+			if (l->flag & UI_HOVER) {
+				return true;
+			}
+		}
+		for (uiBut *r = but->next; r && ui_draw_but_row_extended_right(r->prev); r = r->next) {
+			if (r->flag & UI_HOVER) {
+				return true;
+			}
+		}
+		return but->flag & UI_HOVER;
+	}
+	return false;
+}
+
+ROSE_STATIC void ui_draw_text_back(uiWidgetColors *wcol, uiBut *but, const rcti *recti, bool selected) {
+	selected |= ui_draw_but_row_hovered(but);
+	/** Remove the left or right roundbox if we are rendering a list. */
+	if (but->draw & UI_BUT_GRID) {
+		int lcorner = selected && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
+		int rcorner = selected && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
+		UI_draw_roundbox_corner_set(lcorner | rcorner);
+	}
+	const unsigned char *inner = selected ? wcol->inner_sel : wcol->inner;
+
+	unsigned char alpha = inner[3];
+	/** Add a little background for items that are in a list. */
+	if (!selected && (but->draw & UI_BUT_GRID) != 0) {
+		alpha = (wcol->inner_sel[3] + wcol->inner[3]) / (2 + DRAW_INDX(but->draw) % 2);
 	}
 
-	int font = ui_but_text_font(but);
+	if (alpha > 1e-3f) {
+		rctf rect;
+		LIB_rctf_rcti_copy(&rect, recti);
+		UI_draw_roundbox_3ub_alpha(&rect, true, ui_widget_roundness(wcol, recti), inner, alpha);
+	}
+	
+	UI_draw_roundbox_corner_set(UI_CNR_ALL);
+}
 
-	rcti bounds;
-	if (ui_but_text_bounds(but, rect, &bounds, but->offset - but->hscroll)) {
-		bounds.xmin = bounds.xmax;
-		bounds.xmax = bounds.xmin + 1;
+ROSE_STATIC void ui_draw_text_font_clip_begin(int font, const rcti *rect) {
+	RFT_enable(font, RFT_CLIPPING);
+	RFT_clipping(font, rect->xmin, rect->ymin, rect->xmax, rect->ymax);
+}
 
-		int cy = LIB_rcti_cent_y(&bounds);
+ROSE_STATIC void ui_draw_text_font_clip_end(int font) {
+	RFT_disable(font, RFT_CLIPPING);
+}
 
-		bounds.ymin = cy - RFT_height_max(font) / 2;
-		bounds.ymax = cy + RFT_height_max(font) / 2;
+ROSE_STATIC void ui_draw_text_font_position(uiBut *but, int font, const rcti *rect, const char *text, int *r_x, int *r_y) {
+	if (ELEM(but->type, UI_BTYPE_TEXT, UI_BTYPE_PUSH, UI_BTYPE_MENU, UI_BTYPE_EDIT)) {
+		*r_y = LIB_rcti_cent_y(rect) - RFT_height_max(font) / 3;
+	}
+	else {
+		*r_y = rect->ymax - RFT_height_max(font);
+	}
+	if (but->draw & UI_BUT_TEXT_LEFT) {
+		*r_x = rect->xmin;
+	}
+	else {
+		float width = ROSE_MIN(RFT_width(font, text, -1), LIB_rcti_size_x(rect));
+		*r_x = (but->draw & UI_BUT_TEXT_RIGHT) ? rect->xmax - width : LIB_rcti_cent_x(rect) - width / 2;
+	}
+	RFT_position(font, *r_x, *r_y, 0);
+}
 
+ROSE_STATIC void ui_draw_text_font_caret(uiBut *but, const rcti *recti, int font, const char *text, int x, int y) {
+	if (ui_but_is_editing(but)) {
 		Theme *theme = UI_GetTheme();
 
-		float cur[4];
-		copy_f4_u4(cur, theme->tui.text_cur);
-
-		rctf rectf;
-		LIB_rctf_rcti_copy(&rectf, &bounds);
-		UI_draw_roundbox_4fv_ex(&rectf, cur, cur, 0, NULL, 1, 0);
+		rcti rect;
+		rect.xmin = rect.xmax = x + RFT_width(font, text, but->offset - but->scroll);
+		rect.ymin = y - (RFT_height_max(font) * 1) / 4;
+		rect.ymax = y + (RFT_height_max(font) * 3.25) / 4;
+		
+		ui_draw_separator_ex(&rect, true, theme->tui.text_cur);
 	}
+}
+
+ROSE_STATIC void ui_draw_text_font_draw(uiWidgetColors *wcol, uiBut *but, const rcti *recti, int font, const char *text, int x, int y) {
+	if (but->type == UI_BTYPE_EDIT) {
+		rctf rect;
+		rect.xmin = x + ROSE_MIN(recti->xmax, RFT_width(font, text, ROSE_MAX(0, but->selsta - but->scroll)));
+		rect.xmax = x + ROSE_MIN(recti->xmax, RFT_width(font, text, ROSE_MAX(0, but->selend - but->scroll)));
+		rect.ymin = y - (RFT_height_max(font) * 1) / 4;
+		rect.ymax = y + (RFT_height_max(font) * 3) / 4;
+		UI_draw_roundbox_3ub_alpha(&rect, true, 0, wcol->text_sel, wcol->text_sel[3]);
+	}
+
+	RFT_color4ubv(font, wcol->text);
+	RFT_draw(font, text, -1);
+}
+
+ROSE_STATIC void ui_draw_text_font(uiWidgetColors *wcol, uiBut *but, const rcti *recti, int font, const char *text) {
+	rcti rect;
+	ui_text_clip_cursor(but, recti);
+	ui_but_text_rect(but, recti, &rect);
+
+	int x, y;
+	ui_draw_text_font_clip_begin(font, &rect);
+	ui_draw_text_font_position(but, font, &rect, text + but->scroll, &x, &y);
+	ui_draw_text_font_draw(wcol, but, &rect, font, text + but->scroll, x, y);
+	ui_draw_text_font_caret(but, &rect, font, text + but->scroll, x, y);
+	ui_draw_text_font_clip_end(font);
+}
+
+ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
+	ui_draw_text_back(wcol, but, recti, ui_but_is_editing(but));
+	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
+}
+
+ROSE_STATIC void ui_draw_widget(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
+	bool in_menu = but->block->handle != NULL;
+	/** menu items do not get a background when not hovered! */
+	if (!in_menu || (but->flag & UI_HOVER) != 0) {
+		ui_draw_text_back(wcol, but, recti, (but->flag & UI_HOVER) != 0);
+	}
+	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
 }
 
 void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
@@ -288,11 +320,19 @@ void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rc
 		return;
 	}
 
-	ui_text_clip_cursor(but, rect);
-
-	ui_draw_but_back(C, but, colors, rect);
-	ui_draw_but_text(C, but, colors, rect);
-	ui_draw_but_cursor(C, but, colors, rect);
+	switch (but->type) {
+		case UI_BTYPE_HSPR:
+		case UI_BTYPE_VSPR: {
+			ui_draw_separator(colors, but, rect);
+		} break;
+		case UI_BTYPE_TEXT:
+		case UI_BTYPE_EDIT: {
+			ui_draw_text(colors, but, rect);
+		} break;
+		default: {
+			ui_draw_widget(colors, but, rect);
+		} break;
+	}
 }
 
 /** \} */

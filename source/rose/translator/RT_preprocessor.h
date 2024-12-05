@@ -7,13 +7,13 @@
 extern "C" {
 #endif
 
-struct RCContext;
+struct RTContext;
 
 /* -------------------------------------------------------------------- */
 /** \name Util Methods
  * \{ */
 
-void RT_pp_do(struct RCContext *, const struct RCCFile *file, ListBase *tokens);
+void RT_pp_do(struct RTContext *, const struct RTFile *file, ListBase *tokens);
 
 /** \} */
 

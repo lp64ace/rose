@@ -63,7 +63,7 @@ ROSE_INLINE bool sdna_read(const SDNA *sdna, const void **rest, const void *ptr,
 	return false;
 }
 
-ROSE_INLINE bool sdna_write_type_array(SDNA *sdna, void **rest, void *ptr, const RCCTypeArray *array) {
+ROSE_INLINE bool sdna_write_type_array(SDNA *sdna, void **rest, void *ptr, const RTTypeArray *array) {
 	bool status = true;
 	status &= DNA_sdna_write_type(sdna, &ptr, ptr, array->element_type);
 	status &= DNA_sdna_write_i32(sdna, &ptr, ptr, array->boundary);
@@ -77,7 +77,7 @@ ROSE_INLINE bool sdna_write_type_array(SDNA *sdna, void **rest, void *ptr, const
 	}
 	return status;
 }
-ROSE_INLINE bool sdna_read_type_array(const SDNA *sdna, const void **rest, const void *ptr, RCCTypeArray *array) {
+ROSE_INLINE bool sdna_read_type_array(const SDNA *sdna, const void **rest, const void *ptr, RTTypeArray *array) {
 	bool status = true;
 	status &= DNA_sdna_read_type(sdna, &ptr, ptr, &array->element_type);
 	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &array->boundary);
@@ -92,7 +92,7 @@ ROSE_INLINE bool sdna_read_type_array(const SDNA *sdna, const void **rest, const
 	return status;
 }
 
-ROSE_INLINE bool sdna_write_type_basic(SDNA *sdna, void **rest, void *ptr, const RCCTypeBasic *basic) {
+ROSE_INLINE bool sdna_write_type_basic(SDNA *sdna, void **rest, void *ptr, const RTTypeBasic *basic) {
 	bool status = true;
 	status &= DNA_sdna_write_bool(sdna, &ptr, ptr, basic->is_unsigned);
 	status &= DNA_sdna_write_i32(sdna, &ptr, ptr, basic->rank);
@@ -101,7 +101,7 @@ ROSE_INLINE bool sdna_write_type_basic(SDNA *sdna, void **rest, void *ptr, const
 	}
 	return status;
 }
-ROSE_INLINE bool sdna_read_type_basic(const SDNA *sdna, const void **rest, const void *ptr, RCCTypeBasic *basic) {
+ROSE_INLINE bool sdna_read_type_basic(const SDNA *sdna, const void **rest, const void *ptr, RTTypeBasic *basic) {
 	bool status = true;
 	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &basic->is_unsigned);
 	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &basic->rank);
@@ -111,14 +111,14 @@ ROSE_INLINE bool sdna_read_type_basic(const SDNA *sdna, const void **rest, const
 	return status;
 }
 
-ROSE_INLINE bool sdna_write_type_ptr(SDNA *sdna, void **rest, void *ptr, const RCCType *base) {
+ROSE_INLINE bool sdna_write_type_ptr(SDNA *sdna, void **rest, void *ptr, const RTType *base) {
 	return DNA_sdna_write_type(sdna, rest, ptr, base);
 }
-ROSE_INLINE bool sdna_read_type_ptr(const SDNA *sdna, const void **rest, const void *ptr, const RCCType **base) {
+ROSE_INLINE bool sdna_read_type_ptr(const SDNA *sdna, const void **rest, const void *ptr, const RTType **base) {
 	return DNA_sdna_read_type(sdna, rest, ptr, base);
 }
 
-ROSE_INLINE bool sdna_write_type_qual(SDNA *sdna, void **rest, void *ptr, const RCCTypeQualified *qual) {
+ROSE_INLINE bool sdna_write_type_qual(SDNA *sdna, void **rest, void *ptr, const RTTypeQualified *qual) {
 	bool status = true;
 	status &= DNA_sdna_write_type(sdna, &ptr, ptr, qual->base);
 	status &= DNA_sdna_write_bool(sdna, &ptr, ptr, qual->qualification.is_constant);
@@ -130,7 +130,7 @@ ROSE_INLINE bool sdna_write_type_qual(SDNA *sdna, void **rest, void *ptr, const 
 	}
 	return status;
 }
-ROSE_INLINE bool sdna_read_type_qual(const SDNA *sdna, const void **rest, const void *ptr, RCCTypeQualified *qual) {
+ROSE_INLINE bool sdna_read_type_qual(const SDNA *sdna, const void **rest, const void *ptr, RTTypeQualified *qual) {
 	bool status = true;
 	status &= DNA_sdna_read_type(sdna, &ptr, ptr, &qual->base);
 	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &qual->qualification.is_constant);
@@ -143,14 +143,14 @@ ROSE_INLINE bool sdna_read_type_qual(const SDNA *sdna, const void **rest, const 
 	return status;
 }
 
-ROSE_INLINE bool sdna_write_type_struct(SDNA *sdna, void **rest, void *ptr, const RCCTypeStruct *strct) {
+ROSE_INLINE bool sdna_write_type_struct(SDNA *sdna, void **rest, void *ptr, const RTTypeStruct *strct) {
 	bool status = true;
 
 	int length = (int)LIB_listbase_count(&strct->fields);
 	status &= DNA_sdna_write_token(sdna, &ptr, ptr, strct->identifier);
 	status &= DNA_sdna_write_bool(sdna, &ptr, ptr, strct->is_complete);
 	status &= DNA_sdna_write_i32(sdna, &ptr, ptr, length);
-	LISTBASE_FOREACH(const RCCField *, field, &strct->fields) {
+	LISTBASE_FOREACH(const RTField *, field, &strct->fields) {
 		status &= DNA_sdna_write_token(sdna, &ptr, ptr, field->identifier);
 		status &= DNA_sdna_write_type(sdna, &ptr, ptr, field->type);
 		status &= DNA_sdna_write_i32(sdna, &ptr, ptr, field->alignment);
@@ -162,7 +162,7 @@ ROSE_INLINE bool sdna_write_type_struct(SDNA *sdna, void **rest, void *ptr, cons
 	}
 	return status;
 }
-ROSE_INLINE bool sdna_read_type_struct(const SDNA *sdna, const void **rest, const void *ptr, RCCTypeStruct *strct) {
+ROSE_INLINE bool sdna_read_type_struct(const SDNA *sdna, const void **rest, const void *ptr, RTTypeStruct *strct) {
 	bool status = true;
 
 	int length;
@@ -170,7 +170,7 @@ ROSE_INLINE bool sdna_read_type_struct(const SDNA *sdna, const void **rest, cons
 	status &= DNA_sdna_read_bool(sdna, &ptr, ptr, &strct->is_complete);
 	status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &length);
 	while (length--) {
-		RCCField *field = RT_context_calloc(sdna->context, sizeof(RCCField));
+		RTField *field = RT_context_calloc(sdna->context, sizeof(RTField));
 
 		status &= DNA_sdna_read_token(sdna, &ptr, ptr, &field->identifier);
 		status &= DNA_sdna_read_type(sdna, &ptr, ptr, &field->type);
@@ -295,7 +295,7 @@ bool DNA_sdna_write_str(SDNA *sdna, void **rest, void *ptr, const char *word) {
 	return false;
 }
 
-bool DNA_sdna_write_type(SDNA *sdna, void **rest, void *ptr, const RCCType *tp) {
+bool DNA_sdna_write_type(SDNA *sdna, void **rest, void *ptr, const RTType *tp) {
 	bool status = true;
 
 	uint64_t addr = (uint64_t)tp;
@@ -336,7 +336,7 @@ bool DNA_sdna_write_type(SDNA *sdna, void **rest, void *ptr, const RCCType *tp) 
 	}
 	return status;
 }
-bool DNA_sdna_write_token(SDNA *sdna, void **rest, void *ptr, const RCCToken *tok) {
+bool DNA_sdna_write_token(SDNA *sdna, void **rest, void *ptr, const RTToken *tok) {
 	bool status = true;
 
 	{
@@ -406,7 +406,7 @@ bool DNA_sdna_read_str(const SDNA *sdna, const void **rest, const void *ptr, cha
 	return false;
 }
 
-bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, const RCCType **tp) {
+bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, const RTType **tp) {
 	bool status = true;
 
 	uint64_t addr = (uint64_t)NULL;
@@ -416,7 +416,7 @@ bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, co
 		*tp = LIB_ghash_lookup(sdna->visit, (void *)addr);
 	}
 	else {
-		RCCType *ntp = NULL;
+		RTType *ntp = NULL;
 
 		int kind;
 		status &= DNA_sdna_read_i32(sdna, &ptr, ptr, &kind);
@@ -470,7 +470,7 @@ bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, co
 	}
 	return status;
 }
-bool DNA_sdna_read_token(const SDNA *sdna, const void **rest, const void *ptr, const RCCToken **tok) {
+bool DNA_sdna_read_token(const SDNA *sdna, const void **rest, const void *ptr, const RTToken **tok) {
 	bool status = true;
 
 	{
@@ -496,12 +496,12 @@ bool DNA_sdna_build_struct_list(const SDNA *sdna) {
 
 	const void *ptr = POINTER_OFFSET(sdna->data, 8);
 	while (POINTER_OFFSET(ptr, 4) < POINTER_OFFSET(sdna->data, sdna->length)) {
-		const RCCToken *token;
+		const RTToken *token;
 		if (!DNA_sdna_read_token(sdna, &ptr, ptr, &token)) {
 			status &= false;
 			break;
 		}
-		const RCCType *type;
+		const RTType *type;
 		if (!DNA_sdna_read_type(sdna, &ptr, ptr, &type)) {
 			status &= false;
 			break;
@@ -532,7 +532,7 @@ bool DNA_sdna_needs_endian_swap(const SDNA *sdna) {
 #endif
 }
 
-ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RCCType *type, void *data) {
+ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RTType *type, void *data) {
 	if (type->is_basic) {
 		LIB_endian_switch_rank(data, type->tp_basic.rank);
 		return;
@@ -540,14 +540,14 @@ ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RCCType *ty
 
 	switch (type->kind) {
 		case TP_ENUM: {
-			const RCCType *tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_size");
+			const RTType *tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_size");
 			if (type->tp_enum.underlying_type) {
 				tp_enum = type->tp_enum.underlying_type;
 			}
 			dna_struct_switch_endian_ex(sdna, tp_enum, data);
 		} break;
 		case TP_PTR: {
-			const RCCType *tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
+			const RTType *tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
 			ROSE_assert(tp_size->is_basic);
 			LIB_endian_switch_rank(data, type->tp_basic.rank);
 		} break;
@@ -557,11 +557,11 @@ ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RCCType *ty
 			}
 		} break;
 		case TP_STRUCT: {
-			RCCParser *parser = RT_parser_new(NULL);
+			RTCParser *parser = RT_parser_new(NULL);
 			parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
 			parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 
-			LISTBASE_FOREACH(RCCField *, field, &type->tp_struct.fields) {
+			LISTBASE_FOREACH(RTField *, field, &type->tp_struct.fields) {
 				size_t offset = RT_parser_offsetof(parser, type, field);
 
 				dna_struct_switch_endian_ex(sdna, type, POINTER_OFFSET(data, offset));
@@ -576,7 +576,7 @@ ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RCCType *ty
 }
 
 void DNA_struct_switch_endian(const SDNA *sdna, uint64_t struct_nr, void *data) {
-	const RCCType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
+	const RTType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
 	if (!type) {
 		return;
 	}
@@ -584,8 +584,8 @@ void DNA_struct_switch_endian(const SDNA *sdna, uint64_t struct_nr, void *data) 
 	dna_struct_switch_endian_ex(sdna, type, data);
 }
 
-ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RCCType *type, const RCCField *field) {
-	RCCParser *parser = RT_parser_new(NULL);
+ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RTType *type, const RTField *field) {
+	RTCParser *parser = RT_parser_new(NULL);
 	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
 	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 	ptrdiff_t offset = (ptrdiff_t)RT_parser_offsetof(parser, type, field);
@@ -594,8 +594,8 @@ ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RCCType *ty
 	return offset;
 }
 
-ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RCCType *type) {
-	RCCParser *parser = RT_parser_new(NULL);
+ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RTType *type) {
+	RTCParser *parser = RT_parser_new(NULL);
 	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
 	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 	size_t size = (size_t)RT_parser_size(parser, type);
@@ -605,7 +605,7 @@ ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RCCType *type) {
 }
 
 size_t DNA_sdna_struct_size(const SDNA *sdna, uint64_t struct_nr) {
-	const RCCType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
+	const RTType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
 	if (!type) {
 		return 0;
 	}
@@ -614,13 +614,13 @@ size_t DNA_sdna_struct_size(const SDNA *sdna, uint64_t struct_nr) {
 }
 
 ptrdiff_t DNA_sdna_field_offset(const struct SDNA *sdna, uint64_t struct_nr, const char *fieldname) {
-	const RCCType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
+	const RTType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
 	if (!type || type->kind != TP_STRUCT) {
 		ROSE_assert_msg(0, "Invalid struct provided for #DNA_sdna_field_offset.");
 		return 0;
 	}
 
-	LISTBASE_FOREACH(RCCField *, field, &type->tp_struct.fields) {
+	LISTBASE_FOREACH(RTField *, field, &type->tp_struct.fields) {
 		if (STREQ(RT_token_as_string(field->identifier), fieldname)) {
 			return dna_find_member_offset(sdna, type, field);
 		}
@@ -630,7 +630,7 @@ ptrdiff_t DNA_sdna_field_offset(const struct SDNA *sdna, uint64_t struct_nr, con
 	return 0;
 }
 
-uint64_t DNA_sdna_struct_ex(const SDNA *sdna, const struct RCCType *type) {
+uint64_t DNA_sdna_struct_ex(const SDNA *sdna, const struct RTType *type) {
 	GHashIterator iter;
 	GHASH_ITER(iter, sdna->visit) {
 		if (LIB_ghashIterator_getValue(&iter) == type) {
@@ -641,7 +641,7 @@ uint64_t DNA_sdna_struct_ex(const SDNA *sdna, const struct RCCType *type) {
 }
 
 uint64_t DNA_sdna_struct_id(const SDNA *sdna, const char *name) {
-	const RCCType *type = LIB_ghash_lookup(sdna->types, name);
+	const RTType *type = LIB_ghash_lookup(sdna->types, name);
 	if (type) {
 		return DNA_sdna_struct_ex(sdna, type);
 	}
@@ -664,8 +664,8 @@ typedef struct ReconstructStep {
 		} memcpy;
 		struct {
 			size_t length;
-			const RCCType *type_old;
-			const RCCType *type_new;
+			const RTType *type_old;
+			const RTType *type_new;
 		} cast;
 		struct {
 			size_t size_old;
@@ -684,16 +684,16 @@ enum {
 	RECONSTRUCT_STEP_RECONSTRUCT,
 };
 
-ROSE_STATIC const RCCType *dna_find_struct_with_matching_name(const SDNA *sdna, const char *name) {
-	const RCCType *match = LIB_ghash_lookup(sdna->types, (void *)name);
+ROSE_STATIC const RTType *dna_find_struct_with_matching_name(const SDNA *sdna, const char *name) {
+	const RTType *match = LIB_ghash_lookup(sdna->types, (void *)name);
 	if (match->kind == TP_STRUCT) {
 		return match;
 	}
 	return NULL;
 }
 
-ROSE_STATIC const RCCField *dna_find_member_with_matching_name(const SDNA *sdna, const RCCType *type, const char *name) {
-	LISTBASE_FOREACH(RCCField *, field, &type->tp_struct.fields) {
+ROSE_STATIC const RTField *dna_find_member_with_matching_name(const SDNA *sdna, const RTType *type, const char *name) {
+	LISTBASE_FOREACH(RTField *, field, &type->tp_struct.fields) {
 		if (STREQ(RT_token_as_string(field->identifier), name)) {
 			return field;
 		}
@@ -701,9 +701,9 @@ ROSE_STATIC const RCCField *dna_find_member_with_matching_name(const SDNA *sdna,
 	return NULL;
 }
 
-ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const SDNA *dna_new, const RCCType *struct_old, const RCCField *field_new, ReconstructStep *r_step) {
-	const RCCType *struct_new = dna_find_struct_with_matching_name(dna_new, RT_token_as_string(struct_old->tp_struct.identifier));
-	const RCCField *field_old = dna_find_member_with_matching_name(dna_old, struct_old, RT_token_as_string(field_new->identifier));
+ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const SDNA *dna_new, const RTType *struct_old, const RTField *field_new, ReconstructStep *r_step) {
+	const RTType *struct_new = dna_find_struct_with_matching_name(dna_new, RT_token_as_string(struct_old->tp_struct.identifier));
+	const RTField *field_old = dna_find_member_with_matching_name(dna_old, struct_old, RT_token_as_string(field_new->identifier));
 
 	fprintf(stdout, "reconstruct info | struct: %s(new), %s(old) | ", RT_token_as_string(struct_new->tp_struct.identifier), RT_token_as_string(struct_old->tp_struct.identifier));
 	fprintf(stdout, "field: %s(new), %s(old) | ", RT_token_as_string(field_new->identifier), (field_old) ? RT_token_as_string(field_old->identifier) : "(null)");
@@ -715,8 +715,8 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 		return;
 	}
 
-	const RCCType *type_old = RT_type_unqualified(field_old->type);
-	const RCCType *type_new = RT_type_unqualified(field_new->type);
+	const RTType *type_old = RT_type_unqualified(field_old->type);
+	const RTType *type_new = RT_type_unqualified(field_new->type);
 
 	const size_t narr_len = (type_new->kind == TP_ARRAY) ? RT_type_array_length(type_new) : 1;
 	const size_t oarr_len = (type_old->kind == TP_ARRAY) ? RT_type_array_length(type_old) : 1;
@@ -775,7 +775,7 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 		fprintf(stdout, "reconstruct [%zd <- %zd x %zu]\n", r_step->offset_new, r_step->offset_old, carr_len);
 
 		size_t index;
-		LISTBASE_FOREACH_INDEX(RCCField *, field, &type_new->tp_struct.fields, index) {
+		LISTBASE_FOREACH_INDEX(RTField *, field, &type_new->tp_struct.fields, index) {
 			dna_init_reconstruct_step_for_member(dna_old, dna_new, type_old, field, &r_step->reconstruct.info[index]);
 		}
 		return;
@@ -786,7 +786,7 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 }
 
 /** TODO: Add a lookup table that stores all the reconstruction steps for each struct so this doesn't run every time! */
-ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *dna_old, const SDNA *dna_new, const RCCType *struct_old, const RCCType *struct_new) {
+ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *dna_old, const SDNA *dna_new, const RTType *struct_old, const RTType *struct_new) {
 	size_t nfields = LIB_listbase_count(&struct_new->tp_struct.fields);
 	ReconstructStep *r_step = MEM_mallocN(sizeof(ReconstructStep), "ReconstructStep");
 
@@ -807,7 +807,7 @@ ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *
 		r_step->reconstruct.info = MEM_mallocN(sizeof(ReconstructStep) * nfields, "ReconstructStep[]");
 
 		size_t index;
-		LISTBASE_FOREACH_INDEX(RCCField *, field, &struct_new->tp_struct.fields, index) {
+		LISTBASE_FOREACH_INDEX(RTField *, field, &struct_new->tp_struct.fields, index) {
 			dna_init_reconstruct_step_for_member(dna_old, dna_new, struct_old, field, &r_step->reconstruct.info[index]);
 		}
 	}
@@ -815,7 +815,7 @@ ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *
 	return r_step;
 }
 
-ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RCCType *told, const RCCType *tnew) {
+ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RTType *told, const RTType *tnew) {
 #define CAST(cast_new, cast_old)                                                                  \
 	do {                                                                                          \
 		if (tnew->tp_basic.rank == sizeof(cast_new) && told->tp_basic.rank == sizeof(cast_old)) { \
@@ -939,8 +939,8 @@ ROSE_STATIC void dna_reconstruct_struct(void *data_new, const void *data_old, Re
 			 * so I didn't bother remaking this file in C++ as it would probably require a huge amount of effort to make this cleaner...,
 			 * I will probably revisit this implementation in order to fix it at some point...!
 			 */
-			const RCCType *told = step->cast.type_old;
-			const RCCType *tnew = step->cast.type_new;
+			const RTType *told = step->cast.type_old;
+			const RTType *tnew = step->cast.type_new;
 			memcast(POINTER_OFFSET(data_new, step->offset_new), POINTER_OFFSET(data_old, step->offset_old), step->cast.length, told, tnew);
 		} break;
 		case RECONSTRUCT_STEP_RECONSTRUCT: {
@@ -970,12 +970,12 @@ ROSE_STATIC void dna_reconstruct_free_step(ReconstructStep *step) {
 }
 
 void *DNA_sdna_struct_reconstruct(const SDNA *dna_old, const SDNA *dna_new, uint64_t struct_nr, const void *data_old, const char *blockname) {
-	const RCCType *struct_old = LIB_ghash_lookup(dna_old->visit, (void *)struct_nr);
+	const RTType *struct_old = LIB_ghash_lookup(dna_old->visit, (void *)struct_nr);
 	if (!struct_old) {
 		fprintf(stderr, "Invalid reconstruct for struct %p.\n", (void *)struct_nr);
 		return NULL;
 	}
-	const RCCType *struct_new = dna_find_struct_with_matching_name(dna_new, RT_token_as_string(struct_old->tp_struct.identifier));
+	const RTType *struct_new = dna_find_struct_with_matching_name(dna_new, RT_token_as_string(struct_old->tp_struct.identifier));
 	if (!struct_old) {
 		fprintf(stderr, "Invalid reconstruct for struct %s, missing equivalent.\n", RT_token_as_string(struct_old->tp_struct.identifier));
 		return NULL;

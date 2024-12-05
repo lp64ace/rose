@@ -44,6 +44,7 @@ ROSE_INLINE SpaceLink *topbar_create(const ScrArea *area) {
 		LIB_addtail(&topbar->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
 	}
+	topbar->spacetype = SPACE_TOPBAR;
 
 	return (SpaceLink *)topbar;
 }
@@ -63,34 +64,44 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name TopBar Header Region Methods
  * \{ */
 
-ROSE_INLINE void topbar_header_file_menu_but(struct rContext *C, void *vbut, void *unused) {
-	uiBut *but = (uiBut *)vbut;
+ROSE_INLINE void topbar_header_file_edit_settings_but(struct rContext *C, void *unused1, void *unused2) {
+	ED_screen_temp_space_open(C, "Settings", NULL, SPACE_USERPREF);
+}
 
-	if (STREQ(but->name, "Quit")) {
-		wmWindow *window = CTX_wm_window(C);
+ROSE_INLINE uiBlock *topbar_header_edit_menu(struct rContext *C, ARegion *region, void *arg) {
+	const int isize_x = 6 * UI_UNIT_X;
+	const int isize_y = 1 * UI_UNIT_Y;
 
-		/** Close the window and any child windows and potentially exit the application. */
-		WM_window_close(C, window);
+	uiBlock *block;
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Opt 1", isize_x, isize_y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Opt 2", isize_x, isize_y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_HSPR, "", isize_x, PIXELSIZE, NULL, UI_POINTER_NIL, 64, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Settings", isize_x, isize_y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_edit_settings_but, NULL, NULL);
+		block->direction = UI_DIR_DOWN;
+		UI_block_end(C, block);
 	}
+	return block;
+}
+
+ROSE_INLINE void topbar_header_file_menu_quit_but(struct rContext *C, void *unused1, void *unused2) {
+	WM_window_post_quit_event(CTX_wm_window(C));
 }
 
 ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, void *arg) {
-	const int isize_x = 6 * PIXELSIZE * UI_UNIT_X;
-	const int isize_y = 1 * PIXELSIZE * UI_UNIT_Y;
+	const int isize_x = 6 * UI_UNIT_X;
+	const int isize_y = 1 * UI_UNIT_Y;
 
 	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "file"))) {
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
-		uiDefBut(block, UI_BTYPE_BUT, "New", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
-		uiDefBut(block, UI_BTYPE_BUT, "Open", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
-		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
-
-		uiDefBut(block, UI_BTYPE_BUT, "Save", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
-		uiDefBut(block, UI_BTYPE_BUT, "Save As...", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
-		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
-
-		uiDefBut(block, UI_BTYPE_BUT, "Quit", 0, 0, isize_x, isize_y, topbar_header_file_menu_but);
-		uiDefSepr(block, UI_BTYPE_HSEPR, "", 0, 0, isize_x, 1);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", isize_x, isize_y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_quit_but, NULL, NULL);
+		block->direction = UI_DIR_DOWN;
 		UI_block_end(C, block);
 	}
 	return block;
@@ -98,10 +109,14 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region
 
 ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region) {
 	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "topbar"))) {
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "TOPBAR_menu"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, 1);
-		uiDefMenu(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, region->sizey, topbar_header_file_menu);
+		but = uiDefBut(block, UI_BTYPE_MENU, "File", 2 * UI_UNIT_X, region->sizey, NULL, UI_POINTER_NIL, 64, 0);
+		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_file_menu, NULL);
+		but = uiDefBut(block, UI_BTYPE_MENU, "Edit", 2 * UI_UNIT_X, region->sizey, NULL, UI_POINTER_NIL, 64, 0);
+		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_edit_menu, NULL);
 		UI_block_end(C, block);
 	}
 }

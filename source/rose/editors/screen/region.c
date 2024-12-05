@@ -62,6 +62,10 @@ void ED_region_update_rect(ARegion *region) {
 }
 
 void ED_region_do_layout(struct rContext *C, ARegion *region) {
+	if ((region->flag & (RGN_FLAG_LAYOUT | RGN_FLAG_ALWAYS_REBUILD)) == 0) {
+		return;
+	}
+
 	GPU_matrix_push();
 	GPU_matrix_push_projection();
 	GPU_matrix_identity_set();
@@ -72,11 +76,34 @@ void ED_region_do_layout(struct rContext *C, ARegion *region) {
 		region->type->layout(C, region);
 	}
 
+	UI_blocklist_free_inactive(C, region);
+
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
+
+	region->flag &= ~RGN_FLAG_LAYOUT;
+}
+
+ROSE_STATIC void region_clear(struct rContext *C, ARegion *region) {
+	ScrArea *area = CTX_wm_area(C);
+	
+	float back[4];
+	
+	if (area && ED_area_is_global(area)) {
+		UI_GetThemeColor4fv(TH_BACK_HI, back);
+	}
+	else {
+		UI_GetThemeColor4fv(TH_BACK, back);
+	}
+	
+	GPU_clear_color(back[0], back[1], back[2], back[3]);
 }
 
 void ED_region_do_draw(struct rContext *C, ARegion *region) {
+	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REBUILD)) == 0) {
+		return;
+	}
+
 	ScrArea *area = CTX_wm_area(C);
 
 	UI_SetTheme((area) ? area->spacetype : SPACE_EMPTY, region->regiontype);
@@ -85,14 +112,13 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 	GPU_matrix_push_projection();
 	GPU_matrix_identity_set();
 
+	region_clear(C, region);
+	
 	ED_region_pixelspace(region);
 
 	if (region->type && region->type->draw) {
 		region->type->draw(C, region);
 	}
-
-	/** Before we draw we delete the inactive blocks, so that they do not appear on screen. */
-	UI_blocklist_free_inactive(C, region);
 
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		UI_block_draw(C, block);
@@ -100,6 +126,8 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
+
+	region->flag &= ~RGN_FLAG_REDRAW;
 }
 
 void ED_region_header_init(ARegion *region) {
@@ -109,17 +137,15 @@ void ED_region_header_exit(ARegion *region) {
 }
 
 void ED_region_header_draw(struct rContext *C, ARegion *region) {
-	float back[4];
+}
 
-	ScrArea *area = CTX_wm_area(C);
-	if (ED_area_is_global(area)) {
-		UI_GetThemeColor4fv(TH_BACK_HI, back);
-	}
-	else {
-		UI_GetThemeColor4fv(TH_BACK, back);
-	}
+void ED_region_default_init(struct ARegion *region) {
+}
 
-	GPU_clear_color(back[0], back[1], back[2], back[3]);
+void ED_region_default_exit(struct ARegion *region) {
+}
+
+void ED_region_default_draw(struct rContext *C, ARegion *region) {
 }
 
 bool ED_region_contains_xy(const ARegion *region, const int event_xy[2]) {
@@ -158,6 +184,15 @@ struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int re
 		}
 	}
 	return NULL;
+}
+
+void ED_region_tag_redraw(ARegion *region) {
+	region->flag |= RGN_FLAG_LAYOUT;
+	region->flag |= RGN_FLAG_REDRAW;
+}
+
+void ED_region_tag_redraw_no_rebuild(ARegion *region) {
+	region->flag |= RGN_FLAG_REDRAW;
 }
 
 /** \} */

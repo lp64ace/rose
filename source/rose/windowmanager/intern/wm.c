@@ -1,5 +1,7 @@
 #include "MEM_guardedalloc.h"
 
+#include "DNA_space_types.h"
+
 #include "KER_context.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
@@ -75,7 +77,7 @@ ROSE_INLINE void wm_handle_destroy_event(struct WTKWindow *handle, void *userdat
 	}
 
 	CTX_wm_window_set(C, window);
-	WM_window_close(C, window);
+	WM_window_close(C, window, false);
 	CTX_wm_window_set(C, NULL);
 }
 
@@ -95,7 +97,7 @@ ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, 
 
 	if (wm_window_update_size(window, x, y)) {
 		/** Resize events block the main loop so we need to manually draw the window. */
-		ED_screen_refresh(C, wm, window);
+		ED_screen_refresh(wm, window);
 		WM_do_draw(C);
 	}
 }
@@ -116,7 +118,7 @@ ROSE_INLINE void wm_handle_move_event(struct WTKWindow *handle, int x, int y, vo
 
 	if (wm_window_update_pos(window, x, y)) {
 		/** Move events block the main loop so we need to manually draw the window. */
-		ED_screen_refresh(C, wm, window);
+		ED_screen_refresh(wm, window);
 		WM_do_draw(C);
 	}
 }
@@ -244,8 +246,8 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
 
-	wmWindow *window = WM_window_open(C, NULL, "Rose", 1280, 800);
-	if (!window) {
+	wmWindow *window1 = WM_window_open(C, "Rose", SPACE_EMPTY, false);
+	if (!window1) {
 		return;
 	}
 }

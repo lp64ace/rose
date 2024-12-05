@@ -10,14 +10,14 @@
 namespace {
 
 TEST(Token, Identifier) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "identifier1 identifier2";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_identifier(C, NULL, &loc, ARRAY_SIZE("identifier1") - 1);
+		RTToken *tok = RT_token_new_identifier(C, NULL, &loc, ARRAY_SIZE("identifier1") - 1);
 
 		ASSERT_TRUE(RT_token_is_identifier(tok));
 		ASSERT_TRUE(STREQ(RT_token_as_string(tok), "identifier1"));
@@ -26,14 +26,14 @@ TEST(Token, Identifier) {
 }
 
 TEST(Token, Keyword) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "if identifier1 identifier2";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_keyword(C, NULL, &loc, ARRAY_SIZE("if") - 1);
+		RTToken *tok = RT_token_new_keyword(C, NULL, &loc, ARRAY_SIZE("if") - 1);
 
 		ASSERT_TRUE(RT_token_is_keyword(tok));
 		ASSERT_TRUE(STREQ(RT_token_as_string(tok), "if"));
@@ -42,14 +42,14 @@ TEST(Token, Keyword) {
 }
 
 TEST(Token, DecNumber) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "162U";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
+		RTToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
 
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_unsigned(tok));
@@ -61,14 +61,14 @@ TEST(Token, DecNumber) {
 }
 
 TEST(Token, OctNumber) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "0162";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
+		RTToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
 
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_signed(tok));
@@ -80,14 +80,14 @@ TEST(Token, OctNumber) {
 }
 
 TEST(Token, HexNumber) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "0x162LL";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
+		RTToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
 
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_signed(tok));
@@ -99,14 +99,14 @@ TEST(Token, HexNumber) {
 }
 
 TEST(Token, ChrNumber) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "'X'";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
+		RTToken *tok = RT_token_new_number(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
 
 		ASSERT_TRUE(RT_token_is_number(tok));
 		ASSERT_TRUE(RT_token_is_signed(tok));
@@ -118,14 +118,14 @@ TEST(Token, ChrNumber) {
 }
 
 TEST(Token, StrLiteral) {
-	RCContext *C = RT_context_new();
+	RTContext *C = RT_context_new();
 	{
 		const char expr[] = "\"Hello World\n\"";
-		RCCSLoc loc = {
+		RTSLoc loc = {
 			expr,
 		};
 
-		RCCToken *tok = RT_token_new_string(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
+		RTToken *tok = RT_token_new_string(C, NULL, &loc, ARRAY_SIZE(expr) - 1);
 
 		ASSERT_TRUE(RT_token_is_string(tok));
 

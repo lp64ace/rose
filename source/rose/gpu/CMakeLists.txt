@@ -2,6 +2,9 @@
 # Builtin Shaders
 
 set(GLSL_SRC
+	GPU_shader_shared.h
+	GPU_shader_shared_utils.h
+	
 	shaders/common/gpu_shader_common_color_ramp.glsl
 	shaders/common/gpu_shader_common_color_utils.glsl
 	shaders/common/gpu_shader_common_curves.glsl
@@ -26,6 +29,9 @@ set(GLSL_SRC
 	shaders/gpu_shader_2D_widget_base_vert.glsl
 	shaders/gpu_shader_2D_widget_shadow_frag.glsl
 	shaders/gpu_shader_2D_widget_shadow_vert.glsl
+	shaders/gpu_shader_3D_clipped_uniform_color_vert.glsl
+	shaders/gpu_shader_3D_vert.glsl
+	shaders/gpu_shader_cfg_world_clip_lib.glsl
 	shaders/gpu_shader_colorspace_lib.glsl
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
@@ -34,6 +40,7 @@ set(GLSL_SRC
 	shaders/gpu_shader_test_vert.glsl
 	shaders/gpu_shader_text_frag.glsl
 	shaders/gpu_shader_text_vert.glsl
+	shaders/gpu_shader_uniform_color_frag.glsl
 	
 	shaders/test/gpu_compute_1d_test.glsl
 	shaders/test/gpu_compute_2d_test.glsl
@@ -116,6 +123,7 @@ set(SRC
 	GPU_select.h
 	GPU_shader.h
 	GPU_shader_builtin.h
+	GPU_shader_shared.h
 	GPU_shader_shared_utils.h
 	GPU_state.h
 	GPU_storage_buffer.h
@@ -232,11 +240,13 @@ set(OPENGL_SRC
 list(APPEND SRC ${OPENGL_SRC})
 
 set(INFO_SRC
+	infos/gpu_clip_planes_info.hh
 	infos/gpu_interface_info.hh
 	infos/gpu_shader_2D_image_overlays_merge_info.hh
 	infos/gpu_shader_2D_image_overlays_stereo_merge_info.hh
 	infos/gpu_shader_2D_image_rect_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
+	infos/gpu_shader_3D_uniform_color_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh
 	

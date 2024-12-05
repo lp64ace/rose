@@ -159,7 +159,7 @@ ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, boo
 	GPU_context_active_set(window->context);
 }
 
-ROSE_INLINE void wm_window_clear_drawable(WindowManager *wm) {
+void wm_window_clear_drawable(WindowManager *wm) {
 	wm->windrawable = NULL;
 }
 
@@ -230,15 +230,13 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 		wm_draw_region_unbind(region);
 	}
 	CTX_wm_region_set(C, NULL);
-
 	CTX_wm_screen_set(C, NULL);
+
+	screen->do_draw = false;
 }
 
 ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, int view) {
 	Screen *screen = WM_window_screen_get(window);
-
-	GPU_clear_color(0.45f, 0.45f, 0.45f, 1.0f);
-	GPU_clear_depth(1.0f);
 
 	/** A #ED_screen_areas_iter gives us the global areas first! */
 	LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
@@ -282,10 +280,8 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 }
 
 void wm_window_draw(struct rContext *C, wmWindow *window) {
-	Screen *screen = WM_window_screen_get(window);
 	wm_draw_window_offscreen(C, window);
 	wm_draw_window_onscreen(C, window, -1);
-	screen->do_draw = false;
 }
 
 void WM_do_draw(struct rContext *C) {
@@ -295,7 +291,7 @@ void WM_do_draw(struct rContext *C) {
 
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
 		/** Do not render windows that are not visible. */
-		if (WTK_window_is_minimized(window->handle)) {
+		if (!window->handle || WTK_window_is_minimized(window->handle)) {
 			continue;
 		}
 
@@ -303,6 +299,7 @@ void WM_do_draw(struct rContext *C) {
 		do {
 			wm_window_make_drawable(wm, window);
 			window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
+			window->frames = 1.0 / window->delta_time;
 
 			wm_window_draw(C, window);
 

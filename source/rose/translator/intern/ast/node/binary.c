@@ -5,25 +5,25 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeBinary {
-	RCCNode base;
+typedef struct RTNodeBinary {
+	RTNode base;
 
-	const struct RCCNode *lhs;
-	const struct RCCNode *rhs;
-} RCCNodeBinary;
+	const struct RTNode *lhs;
+	const struct RTNode *rhs;
+} RTNodeBinary;
 
 /* -------------------------------------------------------------------- */
 /** \name Create Binary Node
  * \{ */
 
-RCCNode *RT_node_new_binary(RCContext *C, const RCCToken *token, int type, const RCCNode *lhs, const RCCNode *rhs) {
-	const RCCType *cast = RT_type_composite(C, lhs->cast, rhs->cast);
-	RCCNodeBinary *node = RT_node_new(C, token, cast, NODE_BINARY, type, sizeof(RCCNodeBinary));
+RTNode *RT_node_new_binary(RTContext *C, const RTToken *token, int type, const RTNode *lhs, const RTNode *rhs) {
+	const RTType *cast = RT_type_composite(C, lhs->cast, rhs->cast);
+	RTNodeBinary *node = RT_node_new(C, token, cast, NODE_BINARY, type, sizeof(RTNodeBinary));
 
 	node->lhs = lhs;
 	node->rhs = rhs;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
 /** \} */
@@ -32,15 +32,15 @@ RCCNode *RT_node_new_binary(RCContext *C, const RCCToken *token, int type, const
 /** \name Binary Node Utils
  * \{ */
 
-const struct RCCNode *RT_node_lhs(const struct RCCNode *node) {
+const struct RTNode *RT_node_lhs(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_BINARY);
 
-	return ((const struct RCCNodeBinary *)node)->lhs;
+	return ((const struct RTNodeBinary *)node)->lhs;
 }
-const struct RCCNode *RT_node_rhs(const struct RCCNode *node) {
+const struct RTNode *RT_node_rhs(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_BINARY);
 
-	return ((const struct RCCNodeBinary *)node)->rhs;
+	return ((const struct RTNodeBinary *)node)->rhs;
 }
 
 /** \} */

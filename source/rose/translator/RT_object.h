@@ -5,25 +5,25 @@
 extern "C" {
 #endif
 
-struct RCContext;
-struct RCCNode;
-struct RCCToken;
-struct RCCType;
+struct RTContext;
+struct RTNode;
+struct RTToken;
+struct RTType;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
  * \{ */
 
-typedef struct RCCObject {
-	struct RCCObject *prev, *next;
+typedef struct RTObject {
+	struct RTObject *prev, *next;
 
 	int kind;
 
-	const struct RCCType *type;
+	const struct RTType *type;
 
-	const struct RCCToken *identifier;
-	const struct RCCNode *body;
-} RCCObject;
+	const struct RTToken *identifier;
+	const struct RTNode *body;
+} RTObject;
 
 enum {
 	OBJ_VARIABLE,
@@ -38,10 +38,10 @@ enum {
 /** \name Create Methods
  * \{ */
 
-struct RCCObject *RT_object_new_variable(struct RCContext *, const struct RCCType *type, const struct RCCToken *token);
-struct RCCObject *RT_object_new_typedef(struct RCContext *, const struct RCCType *type, const struct RCCToken *token);
-struct RCCObject *RT_object_new_function(struct RCContext *, const struct RCCType *type, const struct RCCToken *token, const struct RCCNode *node);
-struct RCCObject *RT_object_new_enum(struct RCContext *, const struct RCCType *type, const struct RCCToken *identifier, const struct RCCNode *value);
+struct RTObject *RT_object_new_variable(struct RTContext *, const struct RTType *type, const struct RTToken *token);
+struct RTObject *RT_object_new_typedef(struct RTContext *, const struct RTType *type, const struct RTToken *token);
+struct RTObject *RT_object_new_function(struct RTContext *, const struct RTType *type, const struct RTToken *token, const struct RTNode *node);
+struct RTObject *RT_object_new_enum(struct RTContext *, const struct RTType *type, const struct RTToken *identifier, const struct RTNode *value);
 
 /** \} */
 
@@ -49,10 +49,10 @@ struct RCCObject *RT_object_new_enum(struct RCContext *, const struct RCCType *t
 /** \name Util Methods
  * \{ */
 
-bool RT_object_is_variable(const struct RCCObject *object);
-bool RT_object_is_typedef(const struct RCCObject *object);
-bool RT_object_is_function(const struct RCCObject *object);
-bool RT_object_is_enum(const struct RCCObject *object);
+bool RT_object_is_variable(const struct RTObject *object);
+bool RT_object_is_typedef(const struct RTObject *object);
+bool RT_object_is_function(const struct RTObject *object);
+bool RT_object_is_enum(const struct RTObject *object);
 
 /** \} */
 

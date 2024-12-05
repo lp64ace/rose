@@ -9,6 +9,10 @@
 extern "C" {
 #endif
 
+struct GPUBatch;
+struct GPUUniformBuf;
+struct GPUVertFormat;
+
 /** Returns a cleared vertex format, ready to add attributes. */
 struct GPUVertFormat *immVertexFormat(void);
 
