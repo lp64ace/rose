@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-struct RCContext;
-struct RCCToken;
-struct RCCType;
+struct RTContext;
+struct RTToken;
+struct RTType;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -27,22 +27,22 @@ struct RCCType;
  * strategies are followed.
  * \{ */
 
-typedef struct RCCTypeParameter {
-	struct RCCTypeParameter *prev, *next;
+typedef struct RTTypeParameter {
+	struct RTTypeParameter *prev, *next;
 
-	const struct RCCToken *identifier;
-	const struct RCCType *type;
-	const struct RCCType *adjusted;
-} RCCTypeParameter;
+	const struct RTToken *identifier;
+	const struct RTType *type;
+	const struct RTType *adjusted;
+} RTTypeParameter;
 
-typedef struct RCCTypeFunction {
-	const struct RCCType *return_type;
+typedef struct RTTypeFunction {
+	const struct RTType *return_type;
 
 	bool is_complete;
 	bool is_variadic;
 
 	ListBase parameters;
-} RCCTypeFunction;
+} RTTypeFunction;
 
 /** \} */
 
@@ -50,7 +50,7 @@ typedef struct RCCTypeFunction {
 /** \name Create Methods
  * \{ */
 
-struct RCCType *RT_type_new_function(struct RCContext *, const struct RCCType *ret);
+struct RTType *RT_type_new_function(struct RTContext *, const struct RTType *ret);
 
 /** \} */
 
@@ -58,11 +58,11 @@ struct RCCType *RT_type_new_function(struct RCContext *, const struct RCCType *r
 /** \name Util Methods
  * \{ */
 
-void RT_type_function_add_named_parameter(struct RCContext *, struct RCCType *f, const struct RCCType *type, const struct RCCToken *identifier);
-void RT_type_function_add_parameter(struct RCContext *, struct RCCType *f, const struct RCCType *type);
-void RT_type_function_add_ellipsis_parameter(struct RCContext *, struct RCCType *f);
+void RT_type_function_add_named_parameter(struct RTContext *, struct RTType *f, const struct RTType *type, const struct RTToken *identifier);
+void RT_type_function_add_parameter(struct RTContext *, struct RTType *f, const struct RTType *type);
+void RT_type_function_add_ellipsis_parameter(struct RTContext *, struct RTType *f);
 
-void RT_type_function_finalize(struct RCContext *, struct RCCType *f);
+void RT_type_function_finalize(struct RTContext *, struct RTType *f);
 
 /** \} */
 

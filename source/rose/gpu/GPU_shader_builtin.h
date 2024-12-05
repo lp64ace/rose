@@ -18,11 +18,17 @@ typedef enum BuiltinShader {
 	GPU_SHADER_2D_WIDGET_BASE,
 	GPU_SHADER_2D_WIDGET_BASE_INST,
 	GPU_SHADER_2D_WIDGET_SHADOW,
+	/**
+	 * Take a single color for all the vertices and a 3D position for each vertex.
+	 * \param color: uniform vec4
+	 * \param pos: in vec3
+	 */
+	GPU_SHADER_3D_UNIFORM_COLOR,
 
 	GPU_SHADER_TEST,
 } BuiltinShader;
 
-#define GPU_SHADER_BUILTIN_LEN (GPU_SHADER_2D_WIDGET_SHADOW + 1)
+#define GPU_SHADER_BUILTIN_LEN (GPU_SHADER_TEST + 1)
 
 typedef enum ShaderConfig {
 	GPU_SHADER_CFG_DEFAULT = 0,

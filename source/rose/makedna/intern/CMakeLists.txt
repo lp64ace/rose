@@ -111,6 +111,10 @@ set(SRC
 	${CMAKE_CURRENT_BINARY_DIR}/dna.c
 	${CMAKE_CURRENT_BINARY_DIR}/verify.c
 	
+	genfile.c
+	genfile.h
+	utils.c
+	
 	${DNA_HEADER_INC_FILE}
 	${DNA_HEADER_STR_FILE}
 )
@@ -120,7 +124,9 @@ set(SRC
 
 set(LIB
 	# Internal Library Dependencies
-	rose::source::roselib
+	PUBLIC rose::intern::guardedalloc
+	PUBLIC rose::source::roselib
+	PUBLIC rose::source::translator
 	
 	# External Library Dependencies
 )

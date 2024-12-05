@@ -3,11 +3,11 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-ROSE_INLINE bool same_function_type(const RCCType *a, const RCCType *b) {
+ROSE_INLINE bool same_function_type(const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_FUNC && b->kind == TP_FUNC)) {
 		return false;
 	}
-	const RCCTypeFunction *f1 = &a->tp_function, *f2 = &b->tp_function;
+	const RTTypeFunction *f1 = &a->tp_function, *f2 = &b->tp_function;
 	if (!RT_type_same(f1->return_type, f2->return_type)) {
 		return false;
 	}
@@ -15,8 +15,8 @@ ROSE_INLINE bool same_function_type(const RCCType *a, const RCCType *b) {
 		return false;
 	}
 	if (f1->is_complete) {
-		const RCCTypeParameter *iter1 = (const RCCTypeParameter *)f1->parameters.first;
-		const RCCTypeParameter *iter2 = (const RCCTypeParameter *)f2->parameters.first;
+		const RTTypeParameter *iter1 = (const RTTypeParameter *)f1->parameters.first;
+		const RTTypeParameter *iter2 = (const RTTypeParameter *)f2->parameters.first;
 		while (iter1 && iter2) {
 			if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 				return false;
@@ -32,11 +32,11 @@ ROSE_INLINE bool same_function_type(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE bool compatible_function_type(const RCCType *a, const RCCType *b) {
+ROSE_INLINE bool compatible_function_type(const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_FUNC && b->kind == TP_FUNC)) {
 		return false;
 	}
-	const RCCTypeFunction *f1 = &a->tp_function, *f2 = &b->tp_function;
+	const RTTypeFunction *f1 = &a->tp_function, *f2 = &b->tp_function;
 	if (!RT_type_compatible(f1->return_type, f2->return_type)) {
 		return false;
 	}
@@ -44,11 +44,11 @@ ROSE_INLINE bool compatible_function_type(const RCCType *a, const RCCType *b) {
 		return false;
 	}
 	if (f1->is_complete) {
-		const RCCTypeParameter *iter1 = (const RCCTypeParameter *)f1->parameters.first;
-		const RCCTypeParameter *iter2 = (const RCCTypeParameter *)f2->parameters.first;
+		const RTTypeParameter *iter1 = (const RTTypeParameter *)f1->parameters.first;
+		const RTTypeParameter *iter2 = (const RTTypeParameter *)f2->parameters.first;
 		while (iter1 && iter2) {
-			const RCCType *unqualified1 = RT_type_unqualified(iter1->adjusted);
-			const RCCType *unqualified2 = RT_type_unqualified(iter2->adjusted);
+			const RTType *unqualified1 = RT_type_unqualified(iter1->adjusted);
+			const RTType *unqualified2 = RT_type_unqualified(iter2->adjusted);
 			if (!RT_type_compatible(unqualified1, unqualified2)) {
 				return false;
 			}
@@ -60,26 +60,26 @@ ROSE_INLINE bool compatible_function_type(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE const RCCType *composite_function_type(RCContext *C, const RCCType *a, const RCCType *b) {
+ROSE_INLINE const RTType *composite_function_type(RTContext *C, const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_FUNC && b->kind == TP_FUNC)) {
 		return NULL;
 	}
 	if (!RT_type_compatible(a, b)) {
 		return NULL;
 	}
-	const RCCTypeFunction *f1 = &a->tp_function, *f2 = &b->tp_function;
+	const RTTypeFunction *f1 = &a->tp_function, *f2 = &b->tp_function;
 
-	struct RCCType *composite = RT_type_new_function(C, RT_type_composite(C, f1->return_type, f2->return_type));
-	const RCCTypeParameter *iter1 = (const RCCTypeParameter *)f1->parameters.first;
-	const RCCTypeParameter *iter2 = (const RCCTypeParameter *)f2->parameters.first;
+	struct RTType *composite = RT_type_new_function(C, RT_type_composite(C, f1->return_type, f2->return_type));
+	const RTTypeParameter *iter1 = (const RTTypeParameter *)f1->parameters.first;
+	const RTTypeParameter *iter2 = (const RTTypeParameter *)f2->parameters.first;
 	while (iter1 && iter2) {
 		if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 			return false;
 		}
-		const RCCType *unqualified1 = RT_type_unqualified(iter1->adjusted);
-		const RCCType *unqualified2 = RT_type_unqualified(iter2->adjusted);
+		const RTType *unqualified1 = RT_type_unqualified(iter1->adjusted);
+		const RTType *unqualified2 = RT_type_unqualified(iter2->adjusted);
 		/** Try to create a parameter from the unqualified adjusted parameter types. */
-		const RCCType *type = RT_type_composite(C, unqualified1, unqualified2);
+		const RTType *type = RT_type_composite(C, unqualified1, unqualified2);
 		ROSE_assert(type != NULL);
 
 		if (!RT_token_match(iter1->identifier, iter2->identifier)) {
@@ -100,8 +100,8 @@ ROSE_INLINE const RCCType *composite_function_type(RCContext *C, const RCCType *
 /** \name Create Methods
  * \{ */
 
-RCCType *RT_type_new_function(RCContext *C, const RCCType *type) {
-	RCCType *f = RT_context_calloc(C, sizeof(RCCType));
+RTType *RT_type_new_function(RTContext *C, const RTType *type) {
+	RTType *f = RT_context_calloc(C, sizeof(RTType));
 
 	f->kind = TP_FUNC;
 	f->tp_function.return_type = type;
@@ -119,9 +119,9 @@ RCCType *RT_type_new_function(RCContext *C, const RCCType *type) {
 /** \name Util Methods
  * \{ */
 
-ROSE_INLINE const RCCType *adjust_function_parameter(RCContext *C, const RCCType *type) {
-	const RCCType *unqualified = RT_type_unqualified(type);
-	const RCCType *adjusted = NULL;
+ROSE_INLINE const RTType *adjust_function_parameter(RTContext *C, const RTType *type) {
+	const RTType *unqualified = RT_type_unqualified(type);
+	const RTType *adjusted = NULL;
 
 	switch (unqualified->kind) {
 		case TP_FUNC: {
@@ -152,16 +152,16 @@ ROSE_INLINE const RCCType *adjust_function_parameter(RCContext *C, const RCCType
 	return adjusted;
 }
 
-void RT_type_function_add_named_parameter(RCContext *C, RCCType *t, const RCCType *type, const RCCToken *identifier) {
+void RT_type_function_add_named_parameter(RTContext *C, RTType *t, const RTType *type, const RTToken *identifier) {
 	ROSE_assert(t->kind == TP_FUNC);
-	RCCTypeFunction *f = &t->tp_function;
-	RCCTypeParameter *param = RT_context_calloc(C, sizeof(RCCTypeParameter));
+	RTTypeFunction *f = &t->tp_function;
+	RTTypeParameter *param = RT_context_calloc(C, sizeof(RTTypeParameter));
 
 	param->identifier = identifier;
 	param->type = type;
 	param->adjusted = adjust_function_parameter(C, type);
 
-	const RCCTypeParameter *last = (const RCCTypeParameter *)f->parameters.last;
+	const RTTypeParameter *last = (const RTTypeParameter *)f->parameters.last;
 	if (last && RT_type_same(last->type, Tp_Ellipsis)) {
 		/**
 		 * Only one ellispis is allowed and it has to be the last argument of a function!
@@ -172,14 +172,14 @@ void RT_type_function_add_named_parameter(RCContext *C, RCCType *t, const RCCTyp
 	}
 	LIB_addtail(&f->parameters, param);
 }
-void RT_type_function_add_parameter(RCContext *C, RCCType *f, const RCCType *type) {
+void RT_type_function_add_parameter(RTContext *C, RTType *f, const RTType *type) {
 	RT_type_function_add_named_parameter(C, f, type, NULL);
 }
-void RT_type_function_add_ellipsis_parameter(RCContext *C, RCCType *f) {
+void RT_type_function_add_ellipsis_parameter(RTContext *C, RTType *f) {
 	RT_type_function_add_parameter(C, f, Tp_Ellipsis);
 }
 
-void RT_type_function_finalize(RCContext *C, RCCType *f) {
+void RT_type_function_finalize(RTContext *C, RTType *f) {
 	ROSE_assert(f->kind == TP_FUNC);
 
 	if (LIB_listbase_is_empty(&f->tp_function.parameters)) {

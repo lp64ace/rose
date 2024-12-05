@@ -40,10 +40,15 @@ bool LIB_path_current_working_directory(char *buffer, size_t maxcpy);
 /** Converts a file path to an absolute path with a max length limit. */
 bool LIB_path_absolute(char *buffer, size_t maxcpy, const char *original);
 
+bool LIB_path_is_win32_drive(const char *path);
+bool LIB_path_is_win32_drive_only(const char *path);
+bool LIB_path_is_win32_drive_with_slash(const char *path);
+
 /* -------------------------------------------------------------------- */
 /** \name Path Join
  * \{ */
 
+size_t LIB_path_parent_dir(char *dst, const size_t maxncpy);
 size_t LIB_path_join_array(char *dst, const size_t maxncpy, const char *paths[], size_t length);
 
 /**

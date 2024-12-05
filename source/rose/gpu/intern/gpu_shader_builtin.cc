@@ -24,6 +24,9 @@ static const char *builtin_shader_create_info_name(BuiltinShader shader) {
 		case GPU_SHADER_2D_WIDGET_SHADOW:
 			return "gpu_shader_2D_widget_shadow";
 
+		case GPU_SHADER_3D_UNIFORM_COLOR:
+			return "gpu_shader_3D_uniform_color";
+
 		case GPU_SHADER_TEST:
 			return "gpu_shader_test";
 

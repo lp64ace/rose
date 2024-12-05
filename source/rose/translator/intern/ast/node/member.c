@@ -5,24 +5,24 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeMember {
-	RCCNode base;
+typedef struct RTNodeMember {
+	RTNode base;
 
-	const RCCNode *owner;
-	const RCCField *field;
-} RCCNodeMember;
+	const RTNode *owner;
+	const RTField *field;
+} RTNodeMember;
 
 /* -------------------------------------------------------------------- */
 /** \name Member Nodes
  * \{ */
 
-RCCNode *RT_node_new_member(RCContext *C, const RCCNode *owner, const RCCField *field) {
-	RCCNodeMember *node = RT_node_new(C, owner->token, field->type, NODE_MEMBER, 0, sizeof(RCCNodeMember));
+RTNode *RT_node_new_member(RTContext *C, const RTNode *owner, const RTField *field) {
+	RTNodeMember *node = RT_node_new(C, owner->token, field->type, NODE_MEMBER, 0, sizeof(RTNodeMember));
 
 	node->owner = owner;
 	node->field = field;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
 /** \} */
@@ -31,10 +31,10 @@ RCCNode *RT_node_new_member(RCContext *C, const RCCNode *owner, const RCCField *
 /** \name Member Node Utils
  * \{ */
 
-bool RT_node_is_bitfield(const RCCNode *node) {
+bool RT_node_is_bitfield(const RTNode *node) {
 	ROSE_assert(node->kind == NODE_MEMBER);
 
-	return ((const RCCNodeMember *)node)->field->properties.is_bitfield;
+	return ((const RTNodeMember *)node)->field->properties.is_bitfield;
 }
 
 /** \} */

@@ -16,13 +16,16 @@ static ThemeState theme_state = {
 
 const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color) {
 	ThemeSpace *ts = NULL;
-	
+
 	static unsigned char error[4] = {240, 0, 240, 255};
-	
-	if(theme) {
+
+	if (theme) {
 		const unsigned char *cp = error;
-		
-		switch(spacetype) {
+
+		switch (spacetype) {
+			case SPACE_EMPTY: {
+				ts = &theme->space_empty;
+			} break;
 			case SPACE_VIEW3D: {
 				ts = &theme->space_view3d;
 			} break;
@@ -32,17 +35,20 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 			case SPACE_STATUSBAR: {
 				ts = &theme->space_statusbar;
 			} break;
+			case SPACE_USERPREF: {
+				ts = &theme->space_userpref;
+			} break;
 			default: {
 				ROSE_assert_unreachable();
 			} break;
 		}
-		
-		switch(color) {
+
+		switch (color) {
 			case TH_BACK: {
-				if(ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
+				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW, RGN_TYPE_TEMPORARY)) {
 					cp = ts->back;
 				}
-				else if(ELEM(theme_state.regionid, RGN_TYPE_HEADER)) {
+				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 					cp = ts->header;
 				}
 				else {
@@ -50,10 +56,10 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 				}
 			} break;
 			case TH_BACK_HI: {
-				if(ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
+				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
 					cp = ts->back;
 				}
-				else if(ELEM(theme_state.regionid, RGN_TYPE_HEADER)) {
+				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 					cp = ts->header_hi;
 				}
 				else {
@@ -67,10 +73,10 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 				cp = ts->text_hi;
 			} break;
 		}
-		
+
 		return cp;
 	}
-	
+
 	return NULL;
 }
 
@@ -79,7 +85,7 @@ Theme *UI_GetTheme() {
 }
 
 void UI_SetTheme(int spacetype, int regionid) {
-	if(spacetype) {
+	if (spacetype) {
 		theme_state.theme = (Theme *)U.themes.first;
 		theme_state.spacetype = spacetype;
 		theme_state.regionid = regionid;
@@ -94,14 +100,14 @@ void UI_SetTheme(int spacetype, int regionid) {
 
 void UI_GetThemeColor3fv(int colorid, float col[3]) {
 	const unsigned char *cp = UI_GetThemeColorPtr(theme_state.theme, theme_state.spacetype, colorid);
-    col[0] = ((float)cp[0]) / 255.0f;
-    col[1] = ((float)cp[1]) / 255.0f;
-    col[2] = ((float)cp[2]) / 255.0f;
+	col[0] = ((float)cp[0]) / 255.0f;
+	col[1] = ((float)cp[1]) / 255.0f;
+	col[2] = ((float)cp[2]) / 255.0f;
 }
 void UI_GetThemeColor4fv(int colorid, float col[4]) {
 	const unsigned char *cp = UI_GetThemeColorPtr(theme_state.theme, theme_state.spacetype, colorid);
 	col[0] = ((float)cp[0]) / 255.0f;
-    col[1] = ((float)cp[1]) / 255.0f;
-    col[2] = ((float)cp[2]) / 255.0f;
-    col[3] = ((float)cp[3]) / 255.0f;
+	col[1] = ((float)cp[1]) / 255.0f;
+	col[2] = ((float)cp[2]) / 255.0f;
+	col[3] = ((float)cp[3]) / 255.0f;
 }

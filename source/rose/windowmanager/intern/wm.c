@@ -1,5 +1,7 @@
 #include "MEM_guardedalloc.h"
 
+#include "DNA_space_types.h"
+
 #include "KER_context.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
@@ -25,6 +27,7 @@
 #include "RFT_api.h"
 
 #include <oswin.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
@@ -74,12 +77,8 @@ ROSE_INLINE void wm_handle_destroy_event(struct WTKWindow *handle, void *userdat
 	}
 
 	CTX_wm_window_set(C, window);
-	WM_window_close(C, window);
+	WM_window_close(C, window, false);
 	CTX_wm_window_set(C, NULL);
-
-	if (LIB_listbase_is_empty(&wm->windows)) {
-		WM_exit(C);
-	}
 }
 
 ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, unsigned int y, void *userdata) {
@@ -98,7 +97,7 @@ ROSE_INLINE void wm_handle_size_event(struct WTKWindow *handle, unsigned int x, 
 
 	if (wm_window_update_size(window, x, y)) {
 		/** Resize events block the main loop so we need to manually draw the window. */
-		ED_screen_refresh(C, wm, window);
+		ED_screen_refresh(wm, window);
 		WM_do_draw(C);
 	}
 }
@@ -119,7 +118,7 @@ ROSE_INLINE void wm_handle_move_event(struct WTKWindow *handle, int x, int y, vo
 
 	if (wm_window_update_pos(window, x, y)) {
 		/** Move events block the main loop so we need to manually draw the window. */
-		ED_screen_refresh(C, wm, window);
+		ED_screen_refresh(wm, window);
 		WM_do_draw(C);
 	}
 }
@@ -227,8 +226,14 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
+	CTX_data_main_set(C, main);
+	CTX_wm_manager_set(C, wm);
+
 	wm->handle = WTK_window_manager_new();
-	ROSE_assert(wm->handle);
+	if (!wm->handle) {
+		printf("[WindowManager] Suitable backend was not found, running headless...\n");
+		return;
+	}
 
 	WTK_window_manager_destroy_callback(wm->handle, wm_handle_destroy_event, C);
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
@@ -241,11 +246,8 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
 
-	CTX_data_main_set(C, main);
-	CTX_wm_manager_set(C, wm);
-
-	wmWindow *window = WM_window_open(C, NULL, "Rose", 1280, 800);
-	if (!window) {
+	wmWindow *window1 = WM_window_open(C, "Rose", SPACE_EMPTY, false);
+	if (!window1) {
 		return;
 	}
 }
@@ -254,6 +256,7 @@ void WM_init(struct rContext *C) {
 	KER_idtype_init();
 
 	Main *main = KER_main_new();
+	KER_rose_userdef_init();
 	KER_rose_globals_init();
 	KER_rose_globals_main_replace(main);
 
@@ -269,7 +272,7 @@ void WM_main(struct rContext *C) {
 
 	while (true) {
 		bool poll = false;
-		if ((poll = WTK_window_manager_has_events(wm->handle))) {
+		if ((poll = (wm->handle && WTK_window_manager_has_events(wm->handle)))) {
 			/** Handle all pending operating system events. */
 			WTK_window_manager_poll(wm->handle);
 		}
@@ -280,6 +283,7 @@ void WM_main(struct rContext *C) {
 
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
+	KER_rose_userdef_clear();
 
 	ED_spacetypes_exit();
 
@@ -342,8 +346,10 @@ ROSE_INLINE void window_manager_free_data(struct ID *id) {
 		WM_window_free(wm, (wmWindow *)wm->windows.first);
 	}
 
-	WTK_window_manager_free(wm->handle);
-	wm->handle = NULL;
+	if (wm->handle) {
+		WTK_window_manager_free(wm->handle);
+		wm->handle = NULL;
+	}
 }
 
 ROSE_INLINE void window_manager_foreach_id(struct ID *id, struct LibraryForeachIDData *data) {

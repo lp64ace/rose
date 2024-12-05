@@ -32,28 +32,28 @@ extern "C" {
  * strategies are followed.
  * \{ */
 
-typedef struct RCCType {
+typedef struct RTType {
 	int kind;
 
 	/** This flag is very similar to the std::is_trivial<Tp> template. */
 	bool is_basic;
 
 	union {
-		const struct RCCType *tp_base;
-		struct RCCTypeArray tp_array;
-		struct RCCTypeBasic tp_basic;
-		struct RCCTypeEnum tp_enum;
-		struct RCCTypeFunction tp_function;
-		struct RCCTypeQualified tp_qualified;
-		struct RCCTypeStruct tp_struct;
-		// struct RCCTypeUnion tp_union;
+		const struct RTType *tp_base;
+		struct RTTypeArray tp_array;
+		struct RTTypeBasic tp_basic;
+		struct RTTypeEnum tp_enum;
+		struct RTTypeFunction tp_function;
+		struct RTTypeQualified tp_qualified;
+		struct RTTypeStruct tp_struct;
+		// struct RTTypeUnion tp_union;
 	};
 
-	bool (*same)(const struct RCCType *, const struct RCCType *);
-	bool (*compatible)(const struct RCCType *, const struct RCCType *);
+	bool (*same)(const struct RTType *, const struct RTType *);
+	bool (*compatible)(const struct RTType *, const struct RTType *);
 
-	const struct RCCType *(*composite)(struct RCContext *, const struct RCCType *, const struct RCCType *);
-} RCCType;
+	const struct RTType *(*composite)(struct RTContext *, const struct RTType *, const struct RTType *);
+} RTType;
 
 enum {
 	TP_VOID,
@@ -83,10 +83,10 @@ enum {
 /** \name Util Methods (type/base.c)
  * \{ */
 
-bool RT_type_same(const RCCType *a, const RCCType *b);
-bool RT_type_compatible(const RCCType *a, const RCCType *b);
+bool RT_type_same(const RTType *a, const RTType *b);
+bool RT_type_compatible(const RTType *a, const RTType *b);
 
-const RCCType *RT_type_composite(struct RCContext *, const RCCType *a, const RCCType *b);
+const RTType *RT_type_composite(struct RTContext *, const RTType *a, const RTType *b);
 
 /** \} */
 
@@ -96,23 +96,23 @@ const RCCType *RT_type_composite(struct RCContext *, const RCCType *a, const RCC
  * this is because they can be overriden based on the compiler architecture we choose.
  * \{ */
 
-extern RCCType *Tp_Void;
-extern RCCType *Tp_Bool;
-extern RCCType *Tp_Char;
-extern RCCType *Tp_UChar;
-extern RCCType *Tp_Short;
-extern RCCType *Tp_UShort;
-extern RCCType *Tp_Int;
-extern RCCType *Tp_UInt;
-extern RCCType *Tp_Long;
-extern RCCType *Tp_ULong;
-extern RCCType *Tp_LLong;
-extern RCCType *Tp_ULLong;
-extern RCCType *Tp_Float;
-extern RCCType *Tp_Double;
-extern RCCType *Tp_LDouble;
-extern RCCType *Tp_Variadic;
-extern RCCType *Tp_Ellipsis;
+extern RTType *Tp_Void;
+extern RTType *Tp_Bool;
+extern RTType *Tp_Char;
+extern RTType *Tp_UChar;
+extern RTType *Tp_Short;
+extern RTType *Tp_UShort;
+extern RTType *Tp_Int;
+extern RTType *Tp_UInt;
+extern RTType *Tp_Long;
+extern RTType *Tp_ULong;
+extern RTType *Tp_LLong;
+extern RTType *Tp_ULLong;
+extern RTType *Tp_Float;
+extern RTType *Tp_Double;
+extern RTType *Tp_LDouble;
+extern RTType *Tp_Variadic;
+extern RTType *Tp_Ellipsis;
 
 /** \} */
 

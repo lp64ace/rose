@@ -10,14 +10,17 @@
 /** \name Evaluate Constant Node
  * \{ */
 
-ROSE_INLINE bool isscalar(const RCCNode *expr) {
+ROSE_INLINE bool isscalar(const RTNode *expr) {
 	if (expr->type) {
 		return ELEM(expr->cast->kind, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE);
 	}
 	return false;
 }
-ROSE_INLINE bool isint(const RCCNode *expr) {
-	return ELEM(expr->cast->kind, TP_BOOL, TP_DOUBLE, TP_CHAR, TP_SHORT, TP_INT, TP_LONG, TP_LLONG, TP_PTR);
+ROSE_INLINE bool isint(const RTNode *expr) {
+	if (expr) {
+		return ELEM(expr->cast->kind, TP_BOOL, TP_DOUBLE, TP_CHAR, TP_SHORT, TP_INT, TP_LONG, TP_LLONG, TP_PTR);
+	}
+	return false;
 }
 
 #define MANAGE_BINARY(cast, left, right, op)                                                  \
@@ -45,15 +48,15 @@ ROSE_INLINE bool isint(const RCCNode *expr) {
 		}                                                     \
 	}
 
-long double RT_node_evaluate_scalar(const RCCNode *expr) {
+long double RT_node_evaluate_scalar(const RTNode *expr) {
 	if (isscalar(expr)) {
 		if (ELEM(expr->kind, NODE_CONSTANT)) {
 			/** This is a simple constant token node that evaluates to scalar. */
 			return RT_token_as_scalar(expr->token);
 		}
 		if (ELEM(expr->kind, NODE_BINARY)) {
-			const RCCNode *lhs = RT_node_lhs(expr);
-			const RCCNode *rhs = RT_node_rhs(expr);
+			const RTNode *lhs = RT_node_lhs(expr);
+			const RTNode *rhs = RT_node_rhs(expr);
 
 			switch (expr->type) {
 				case BINARY_ADD: {
@@ -94,7 +97,7 @@ long double RT_node_evaluate_scalar(const RCCNode *expr) {
 			}
 		}
 		if (ELEM(expr->kind, NODE_UNARY)) {
-			const RCCNode *node = RT_node_expr(expr);
+			const RTNode *node = RT_node_expr(expr);
 
 			switch (expr->type) {
 				case UNARY_RETURN: {
@@ -109,9 +112,9 @@ long double RT_node_evaluate_scalar(const RCCNode *expr) {
 			}
 		}
 		if (ELEM(expr->kind, NODE_COND)) {
-			const RCCNode *condition = RT_node_condition(expr);
-			const RCCNode *then = RT_node_then(expr);
-			const RCCNode *otherwise = RT_node_otherwise(expr);
+			const RTNode *condition = RT_node_condition(expr);
+			const RTNode *then = RT_node_then(expr);
+			const RTNode *otherwise = RT_node_otherwise(expr);
 
 			if (isint(condition)) {
 				bool path = RT_node_evaluate_integer(condition);
@@ -129,15 +132,15 @@ long double RT_node_evaluate_scalar(const RCCNode *expr) {
 	}
 	return (long double)(isint(expr) ? RT_node_evaluate_integer(expr) : 0);
 }
-long long RT_node_evaluate_integer(const RCCNode *expr) {
+long long RT_node_evaluate_integer(const RTNode *expr) {
 	if (isint(expr)) {
 		if (ELEM(expr->kind, NODE_CONSTANT)) {
 			/** This is a simple constant token node that evaluates to integer. */
 			return (long long)RT_token_as_integer(expr->token);
 		}
 		if (ELEM(expr->kind, NODE_BINARY)) {
-			const RCCNode *lhs = RT_node_lhs(expr);
-			const RCCNode *rhs = RT_node_rhs(expr);
+			const RTNode *lhs = RT_node_lhs(expr);
+			const RTNode *rhs = RT_node_rhs(expr);
 
 			switch (expr->type) {
 				case BINARY_ADD: {
@@ -196,7 +199,7 @@ long long RT_node_evaluate_integer(const RCCNode *expr) {
 			}
 		}
 		if (ELEM(expr->kind, NODE_UNARY)) {
-			const RCCNode *node = RT_node_expr(expr);
+			const RTNode *node = RT_node_expr(expr);
 
 			switch (expr->type) {
 				case UNARY_RETURN: {
@@ -211,9 +214,9 @@ long long RT_node_evaluate_integer(const RCCNode *expr) {
 			}
 		}
 		if (ELEM(expr->kind, NODE_COND)) {
-			const RCCNode *condition = RT_node_condition(expr);
-			const RCCNode *then = RT_node_then(expr);
-			const RCCNode *otherwise = RT_node_otherwise(expr);
+			const RTNode *condition = RT_node_condition(expr);
+			const RTNode *then = RT_node_then(expr);
+			const RTNode *otherwise = RT_node_otherwise(expr);
 
 			if (isint(condition)) {
 				bool path = RT_node_evaluate_integer(condition);

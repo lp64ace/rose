@@ -31,6 +31,7 @@ ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 		LIB_addtail(&view3d->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
 	}
+	view3d->spacetype = SPACE_VIEW3D;
 
 	return (SpaceLink *)view3d;
 }
@@ -50,34 +51,7 @@ ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
 /** \name View3D Main Region Methods
  * \{ */
 
-void view3d_main_region_draw(struct rContext *C, ARegion *region) {
-	float back[4];
-	UI_GetThemeColor4fv(TH_BACK, back);
-	
-	GPU_clear_color(back[0], back[1], back[2], back[3]);
-
-	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "block-left"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
-		{
-			uiLayout *layout = UI_layout_row(root, 1);
-			uiDefBut(block, UI_BTYPE_BUT, "Button", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-			uiDefBut(block, UI_BTYPE_TXT, "Text", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-			uiDefBut(block, UI_BTYPE_EDIT, "Edit", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-		}
-		{
-			uiLayout *layout = UI_layout_row(root, 1);
-			uiDefBut(block, UI_BTYPE_EDIT, "Edit", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-			uiDefBut(block, UI_BTYPE_TXT, "Text", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-			uiDefBut(block, UI_BTYPE_BUT, "Button", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y);
-		}
-		UI_block_end(C, block);
-	}
-}
-
-void view3d_main_region_init(ARegion *region) {
-}
-void view3d_main_region_exit(ARegion *region) {
+ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) {
 }
 
 /** \} */
@@ -107,9 +81,10 @@ void ED_spacetype_view3d() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = view3d_main_region_draw;
-		art->init = view3d_main_region_init;
-		art->exit = view3d_main_region_exit;
+		art->layout = view3d_main_region_layout;
+		art->draw = ED_region_default_draw;
+		art->init = ED_region_default_init;
+		art->exit = ED_region_default_exit;
 	}
 
 	KER_spacetype_register(st);

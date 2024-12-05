@@ -11,15 +11,15 @@ extern "C" {
 /** \name Data Structures
  * \{ */
 
-typedef struct RCCFileCache RCCFileCache;
-typedef struct RCCFile RCCFile;
+typedef struct RTFileCache RTFileCache;
+typedef struct RTFile RTFile;
 
-typedef struct RCCSLoc {
+typedef struct RTSLoc {
 	const char *p;
 
 	unsigned int line;
 	unsigned int column;
-} RCCSLoc;
+} RTSLoc;
 
 /** \} */
 
@@ -27,13 +27,13 @@ typedef struct RCCSLoc {
 /** \name File Cache
  * \{ */
 
-RCCFileCache *RT_fcache_new_ex(struct RCContext *, const char *path, const char *content, size_t length);
-RCCFileCache *RT_fcache_new(const char *path, const char *content, size_t length);
+RTFileCache *RT_fcache_new_ex(struct RTContext *, const char *path, const char *content, size_t length);
+RTFileCache *RT_fcache_new(const char *path, const char *content, size_t length);
 
-RCCFileCache *RT_fcache_read_ex(struct RCContext *, const char *path);
-RCCFileCache *RT_fcache_read(const char *path);
+RTFileCache *RT_fcache_read_ex(struct RTContext *, const char *path);
+RTFileCache *RT_fcache_read(const char *path);
 
-void RT_fcache_free(RCCFileCache *cache);
+void RT_fcache_free(RTFileCache *cache);
 
 /** \} */
 
@@ -41,15 +41,15 @@ void RT_fcache_free(RCCFileCache *cache);
 /** \name Main Functions
  * \{ */
 
-RCCFile *RT_file_new_ex(struct RCContext *, const char *name, const RCCFileCache *cache);
-RCCFile *RT_file_new(const char *name, const RCCFileCache *cache);
+RTFile *RT_file_new_ex(struct RTContext *, const char *name, const RTFileCache *cache);
+RTFile *RT_file_new(const char *name, const RTFileCache *cache);
 
-const char *RT_file_name(const RCCFile *file);
-const char *RT_file_fname(const RCCFile *file);
-const char *RT_file_path(const RCCFile *file);
-const char *RT_file_content(const RCCFile *file);
+const char *RT_file_name(const RTFile *file);
+const char *RT_file_fname(const RTFile *file);
+const char *RT_file_path(const RTFile *file);
+const char *RT_file_content(const RTFile *file);
 
-void RT_file_free(RCCFile *file);
+void RT_file_free(RTFile *file);
 
 /** \} */
 
@@ -57,7 +57,7 @@ void RT_file_free(RCCFile *file);
 /** \name Error Methods
  * \{ */
 
-void RT_source_error(const RCCFile *file, const RCCSLoc *location, const char *fmt, ...);
+void RT_source_error(const RTFile *file, const RTSLoc *location, const char *fmt, ...);
 
 /** \} */
 
@@ -65,7 +65,7 @@ void RT_source_error(const RCCFile *file, const RCCSLoc *location, const char *f
 /** \name Source Location
  * \{ */
 
-void RT_sloc_copy(RCCSLoc *dst, const RCCSLoc *src);
+void RT_sloc_copy(RTSLoc *dst, const RTSLoc *src);
 
 /** \} */
 

@@ -7,6 +7,7 @@
 
 #ifndef NDEBUG
 /** Use guarded allocator on Debug. */
+size_t (*MEM_allocN_length)(const void *vptr) = MEM_guarded_allocN_length;
 void *(*MEM_mallocN)(size_t size, char const *identity) = MEM_guarded_mallocN;
 void *(*MEM_mallocN_aligned)(size_t size, size_t align, char const *identity) = MEM_guarded_mallocN_aligned;
 void *(*MEM_callocN)(size_t size, char const *identity) = MEM_guarded_callocN;
@@ -18,6 +19,7 @@ void (*MEM_freeN)(void *vptr) = MEM_guarded_freeN;
 void (*MEM_print_memlist)() = MEM_guarded_print_memlist;
 #else
 /** Use lockfree allocator on Release. */
+size_t (*MEM_allocN_length)(const void *vptr) = MEM_lockfree_allocN_length;
 void *(*MEM_mallocN)(size_t size, char const *identity) = MEM_lockfree_mallocN;
 void *(*MEM_mallocN_aligned)(size_t size, size_t align, char const *identity) = MEM_lockfree_mallocN_aligned;
 void *(*MEM_callocN)(size_t size, char const *identity) = MEM_lockfree_callocN;
@@ -60,6 +62,8 @@ void MEM_use_lockfree_allocator(void) {
 
 	assert_for_allocator_change();
 
+	MEM_allocN_length = MEM_lockfree_allocN_length;
+
 	MEM_mallocN = MEM_lockfree_mallocN;
 	MEM_mallocN_aligned = MEM_lockfree_mallocN_aligned;
 	MEM_callocN = MEM_lockfree_callocN;
@@ -79,6 +83,8 @@ void MEM_use_guarded_allocator(void) {
 	/* NOTE: Keep in sync with static initialization of the variables. */
 
 	assert_for_allocator_change();
+
+	MEM_allocN_length = MEM_guarded_allocN_length;
 
 	MEM_mallocN = MEM_guarded_mallocN;
 	MEM_mallocN_aligned = MEM_guarded_mallocN_aligned;

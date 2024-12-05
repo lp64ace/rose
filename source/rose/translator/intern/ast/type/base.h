@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-struct RCContext;
+struct RTContext;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -25,18 +25,18 @@ struct RCContext;
  * strategies are followed.
  * \{ */
 
-typedef struct RCCTypeQualification {
+typedef struct RTTypeQualification {
 	bool is_constant;
 	bool is_restricted;
 	bool is_volatile;
 	bool is_atomic;
-} RCCTypeQualification;
+} RTTypeQualification;
 
-typedef struct RCCTypeBitfiledProperties {
+typedef struct RTTypeBitfiledProperties {
 	bool is_bitfield;
 
 	int width;
-} RCCTypeBitfiledProperties;
+} RTTypeBitfiledProperties;
 
 /** \} */
 
@@ -44,9 +44,9 @@ typedef struct RCCTypeBitfiledProperties {
 /** \name Util Methods
  * \{ */
 
-bool RT_qual_is_empty(const struct RCCTypeQualification *qual);
+bool RT_qual_is_empty(const struct RTTypeQualification *qual);
 
-void RT_qual_clear(struct RCCTypeQualification *qual);
+void RT_qual_clear(struct RTTypeQualification *qual);
 
 /** \} */
 

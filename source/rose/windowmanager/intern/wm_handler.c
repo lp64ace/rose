@@ -18,7 +18,7 @@
 
 wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, int flag) {
 	wmEventHandler_UI *handler = MEM_callocN(sizeof(wmEventHandler_UI), "wmEventHandler_UI");
-	
+
 	handler->head.type = WM_HANDLER_TYPE_UI;
 	handler->handle_fn = handle_fn;
 	handler->remove_fn = remove_fn;
@@ -31,7 +31,7 @@ wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *h
 		handler->context.area = NULL;
 		handler->context.region = NULL;
 	}
-	
+
 	ROSE_assert((flag & WM_HANDLER_DO_FREE) == 0);
 	handler->head.flag = flag;
 	LIB_addhead(handlers, handler);
@@ -40,7 +40,7 @@ wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *h
 
 void WM_event_remove_ui_handler(ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, bool postpone) {
 	LISTBASE_FOREACH(wmEventHandler *, handler_base, handlers) {
-		if(handler_base->type == WM_HANDLER_TYPE_UI) {
+		if (handler_base->type == WM_HANDLER_TYPE_UI) {
 			wmEventHandler_UI *handler = (wmEventHandler_UI *)handler_base;
 			if ((handler->handle_fn == handle_fn) && (handler->remove_fn == remove_fn) && (handler->user_data == user_data)) {
 				if (postpone) {
@@ -58,10 +58,10 @@ void WM_event_remove_ui_handler(ListBase *handlers, wmUIHandlerFunc handle_fn, w
 
 void WM_event_free_ui_handler_all(struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn) {
 	LISTBASE_FOREACH_MUTABLE(wmEventHandler *, handler_base, handlers) {
-		if(handler_base->type == WM_HANDLER_TYPE_UI) {
+		if (handler_base->type == WM_HANDLER_TYPE_UI) {
 			wmEventHandler_UI *handler = (wmEventHandler_UI *)handler_base;
 			if (handler->handle_fn == handle_fn && handler->remove_fn == remove_fn) {
-				if(handler->remove_fn) {
+				if (handler->remove_fn) {
 					handler->remove_fn(C, handler->user_data);
 				}
 				LIB_remlink(handlers, handler);
@@ -79,7 +79,7 @@ void WM_event_free_ui_handler_all(struct rContext *C, ListBase *handlers, wmUIHa
 
 void WM_event_remove_handlers(struct rContext *C, ListBase *handlers) {
 	WindowManager *wm = CTX_wm_manager(C);
-	
+
 	for (wmEventHandler *handler_base; handler_base = LIB_pophead(handlers);) {
 		ROSE_assert(handler_base->type != 0);
 		if (handler_base->type == WM_HANDLER_TYPE_UI) {
@@ -123,7 +123,7 @@ void WM_event_modal_handler_area_replace(wmWindow *win, const ScrArea *old_area,
 }
 
 void WM_event_modal_handler_region_replace(wmWindow *win, const ARegion *old_region, ARegion *new_region) {
-	LISTBASE_FOREACH (wmEventHandler *, handler_base, &win->modalhandlers) {
+	LISTBASE_FOREACH(wmEventHandler *, handler_base, &win->modalhandlers) {
 		if (handler_base->type == WM_HANDLER_TYPE_UI) {
 			wmEventHandler_UI *handler = (wmEventHandler_UI *)handler_base;
 			/**

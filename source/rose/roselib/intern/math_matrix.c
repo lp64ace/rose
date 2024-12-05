@@ -599,7 +599,6 @@ float determinant_m4(const float m[4][4]) {
 
 /** \} */
 
-
 /* -------------------------------------------------------------------- */
 /** \name Comparison
  * \{ */
@@ -642,7 +641,7 @@ void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float 
 	Ydelta = ymax - ymin;
 	Zdelta = zmax - zmin;
 	if (Xdelta == 0.0f || Ydelta == 0.0f || Zdelta == 0.0f) {
-	return;
+		return;
 	}
 	unit_m4(mat);
 	mat[0][0] = 2.0f / Xdelta;

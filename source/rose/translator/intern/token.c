@@ -10,14 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-ROSE_INLINE bool token_strhas(RCCToken *t, const char *str) {
+ROSE_INLINE bool token_strhas(RTToken *t, const char *str) {
 	if (LIB_strfind(t->location.p, t->location.p + t->length, str)) {
 		return true;
 	}
 	return false;
 }
 
-ROSE_INLINE bool token_chrhas(RCCToken *t, char c) {
+ROSE_INLINE bool token_chrhas(RTToken *t, char c) {
 	for (const char *itr = t->location.p; itr != t->location.p + t->length; itr++) {
 		if (*itr == c) {
 			return true;
@@ -72,7 +72,7 @@ ROSE_INLINE int translate_escaped_sequence(const char **rest, const char *p) {
  * single charachter literals are also considered to be numbers, e.g. 'abc'
  * \{ */
 
-ROSE_INLINE const char *translate_number_from_charachter_literal_type(RCCToken *t, const char *p) {
+ROSE_INLINE const char *translate_number_from_charachter_literal_type(RTToken *t, const char *p) {
 	if (ELEM(p[0], 'u')) {
 		t->type = Tp_Short;	 // UTF-16 character literal
 		return p + 1;
@@ -90,7 +90,7 @@ ROSE_INLINE const char *translate_number_from_charachter_literal_type(RCCToken *
 	return p;
 }
 
-ROSE_INLINE bool translate_number_from_charachter_literal(RCCToken *t) {
+ROSE_INLINE bool translate_number_from_charachter_literal(RTToken *t) {
 	const char *p = translate_number_from_charachter_literal_type(t, t->location.p) + 1;
 
 	// Everything is either `long long` or `unsigned long long` (there are no unsigned types for charachter literals)
@@ -111,7 +111,7 @@ ROSE_INLINE bool translate_number_from_charachter_literal(RCCToken *t) {
 	return true;
 }
 
-ROSE_INLINE bool translate_number_from_floating_point_literal_type(RCCToken *t, const char *p) {
+ROSE_INLINE bool translate_number_from_floating_point_literal_type(RTToken *t, const char *p) {
 	if (ELEM(p[0], 'f', 'F')) {
 		t->type = Tp_Float;
 		return p + 1 == t->location.p + t->length;
@@ -124,7 +124,7 @@ ROSE_INLINE bool translate_number_from_floating_point_literal_type(RCCToken *t, 
 	return p == t->location.p + t->length;
 }
 
-ROSE_INLINE bool translate_number_from_floating_point_literal(RCCToken *t) {
+ROSE_INLINE bool translate_number_from_floating_point_literal(RTToken *t) {
 	const char *p = t->location.p;
 
 	// Everything is stored as `long double` since it can fit everything
@@ -136,7 +136,7 @@ ROSE_INLINE bool translate_number_from_floating_point_literal(RCCToken *t) {
 	return translate_number_from_floating_point_literal_type(t, p);
 }
 
-ROSE_INLINE const char *translate_number_from_integer_literal_base(RCCToken *t, int *base) {
+ROSE_INLINE const char *translate_number_from_integer_literal_base(RTToken *t, int *base) {
 	if (ELEM(t->location.p[0], '0') && ELEM(t->location.p[1], 'x', 'X')) {
 		*base = 16;
 		return t->location.p + 2;
@@ -149,7 +149,7 @@ ROSE_INLINE const char *translate_number_from_integer_literal_base(RCCToken *t, 
 	return t->location.p;
 }
 
-ROSE_INLINE bool translate_number_from_integer_literal_type(RCCToken *t, const char *p) {
+ROSE_INLINE bool translate_number_from_integer_literal_type(RTToken *t, const char *p) {
 	int l = 0, u = 0;
 	for (const char *i = p; i != t->location.p + t->length; i++) {
 		if (!ELEM(*i, 'l', 'L', 'u', 'U') || u > 1 || l > 2) {
@@ -175,7 +175,7 @@ ROSE_INLINE bool translate_number_from_integer_literal_type(RCCToken *t, const c
 	return false;
 }
 
-ROSE_INLINE bool translate_number_from_integer_literal(RCCToken *t) {
+ROSE_INLINE bool translate_number_from_integer_literal(RTToken *t) {
 	int base;
 
 	/** Determine the base of the number and skip the first specifiers. */
@@ -205,7 +205,7 @@ ROSE_INLINE bool translate_number_from_integer_literal(RCCToken *t) {
 	return false;
 }
 
-ROSE_INLINE bool translate_number(RCCToken *t) {
+ROSE_INLINE bool translate_number(RTToken *t) {
 	if (token_chrhas(t, '\'')) {
 		return translate_number_from_charachter_literal(t);
 	}
@@ -221,7 +221,7 @@ ROSE_INLINE bool translate_number(RCCToken *t) {
 /** \name String Decode Methods
  * \{ */
 
-ROSE_INLINE const char *translate_string_type(RCCToken *t, const char *p) {
+ROSE_INLINE const char *translate_string_type(RTToken *t, const char *p) {
 	if (ELEM(p[0], 'L')) {
 		t->type = Tp_Short;
 		return p + 1;
@@ -230,7 +230,7 @@ ROSE_INLINE const char *translate_string_type(RCCToken *t, const char *p) {
 	return p;
 }
 
-ROSE_INLINE bool translate_string(RCCToken *t) {
+ROSE_INLINE bool translate_string(RTToken *t) {
 	const char *p = translate_string_type(t, t->location.p) + 1;
 
 	size_t index;
@@ -258,12 +258,12 @@ ROSE_INLINE bool translate_string(RCCToken *t) {
 /** \name Create Methods
  * \{ */
 
-ROSE_INLINE RCCToken *token_new(RCContext *C, int kind, const RCCFile *f, const RCCSLoc *loc, size_t length) {
+ROSE_INLINE RTToken *token_new(RTContext *C, int kind, const RTFile *f, const RTSLoc *loc, size_t length) {
 	/**
 	 * We keep the payload zero-initialized,
 	 * this way we can do comparisons with the full extend of the payload in `RT_token_match`.
 	 */
-	RCCToken *t = RT_context_calloc(C, sizeof(RCCToken));
+	RTToken *t = RT_context_calloc(C, sizeof(RTToken));
 
 	t->kind = kind;
 	t->file = f;
@@ -279,18 +279,18 @@ ROSE_INLINE RCCToken *token_new(RCContext *C, int kind, const RCCFile *f, const 
 	return t;
 }
 
-RCCToken *RT_token_new_identifier(RCContext *C, const RCCFile *f, const RCCSLoc *loc, size_t length) {
+RTToken *RT_token_new_identifier(RTContext *C, const RTFile *f, const RTSLoc *loc, size_t length) {
 	return token_new(C, TOK_IDENTIFIER, f, loc, length);
 }
-RCCToken *RT_token_new_keyword(RCContext *C, const RCCFile *f, const RCCSLoc *loc, size_t length) {
+RTToken *RT_token_new_keyword(RTContext *C, const RTFile *f, const RTSLoc *loc, size_t length) {
 	return token_new(C, TOK_KEYWORD, f, loc, length);
 }
-RCCToken *RT_token_new_punctuator(RCContext *C, const RCCFile *f, const RCCSLoc *loc, size_t length) {
+RTToken *RT_token_new_punctuator(RTContext *C, const RTFile *f, const RTSLoc *loc, size_t length) {
 	return token_new(C, TOK_PUNCTUATOR, f, loc, length);
 }
 
-RCCToken *RT_token_new_number(RCContext *C, const RCCFile *f, const RCCSLoc *loc, size_t length) {
-	RCCToken *t = token_new(C, TOK_NUMBER, f, loc, length);
+RTToken *RT_token_new_number(RTContext *C, const RTFile *f, const RTSLoc *loc, size_t length) {
+	RTToken *t = token_new(C, TOK_NUMBER, f, loc, length);
 
 	if (!translate_number(t)) {
 		t = NULL;  // No deallocations, just ignore this pointer!
@@ -298,8 +298,8 @@ RCCToken *RT_token_new_number(RCContext *C, const RCCFile *f, const RCCSLoc *loc
 
 	return t;
 }
-RCCToken *RT_token_new_string(RCContext *C, const RCCFile *f, const RCCSLoc *loc, size_t length) {
-	RCCToken *t = token_new(C, TOK_STRING, f, loc, length);
+RTToken *RT_token_new_string(RTContext *C, const RTFile *f, const RTSLoc *loc, size_t length) {
+	RTToken *t = token_new(C, TOK_STRING, f, loc, length);
 
 	if (!translate_string(t)) {
 		t = NULL;  // No deallocations, just ignore this pointer!
@@ -307,55 +307,62 @@ RCCToken *RT_token_new_string(RCContext *C, const RCCFile *f, const RCCSLoc *loc
 
 	return t;
 }
-RCCToken *RT_token_new_eof(RCContext *C) {
-	RCCToken *t = token_new(C, TOK_EOF, NULL, NULL, 0);
+RTToken *RT_token_new_eof(RTContext *C) {
+	RTToken *t = token_new(C, TOK_EOF, NULL, NULL, 0);
 
 	return t;
 }
 
-RCCToken *RT_token_new_name(RCContext *C, const char *name) {
-	RCCToken *t = token_new(C, TOK_IDENTIFIER, NULL, NULL, 0);
+RTToken *RT_token_new_virtual_keyword(RTContext *C, const char *keyword) {
+	RTToken *t = token_new(C, TOK_KEYWORD, NULL, NULL, 0);
+	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), keyword);
+	t->beginning_of_line = true;
+	return t;
+}
 
+RTToken *RT_token_new_virtual_identifier(RTContext *C, const char *name) {
+	RTToken *t = token_new(C, TOK_IDENTIFIER, NULL, NULL, 0);
 	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), name);
-
+	t->beginning_of_line = true;
 	return t;
 }
-RCCToken *RT_token_new_size(RCContext *C, unsigned long long size) {
-	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 
+RTToken *RT_token_new_virtual_punctuator(RTContext *C, const char *punc) {
+	RTToken *t = token_new(C, TOK_PUNCTUATOR, NULL, NULL, 0);
+	LIB_strcpy(t->payload, ARRAY_SIZE(t->payload), punc);
+	t->beginning_of_line = true;
+	return t;
+}
+
+RTToken *RT_token_new_virtual_size(RTContext *C, unsigned long long size) {
+	RTToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 	*(unsigned long long *)t->payload = size;
-
 	t->type = Tp_ULLong;
-
 	return t;
 }
-RCCToken *RT_token_new_int(RCContext *C, int value) {
-	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 
+RTToken *RT_token_new_virtual_int(RTContext *C, int value) {
+	RTToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 	*(long long *)t->payload = (long long)value;
-
 	t->type = Tp_Int;
-
 	return t;
 }
-RCCToken *RT_token_new_llong(RCContext *C, long long value) {
-	RCCToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 
+RTToken *RT_token_new_virtual_llong(RTContext *C, long long value) {
+	RTToken *t = token_new(C, TOK_NUMBER, NULL, NULL, 0);
 	*(long long *)t->payload = (long long)value;
-
 	t->type = Tp_LLong;
-
 	return t;
 }
 
-RCCToken *RT_token_duplicate(RCContext *C, const RCCToken *token) {
+RTToken *RT_token_duplicate(RTContext *C, const RTToken *token) {
 	/**
 	 * We keep the payload zero-initialized,
 	 * this way we can do comparisons with the full extend of the payload in `RT_token_match`.
 	 */
-	RCCToken *t = RT_context_calloc(C, sizeof(RCCToken));
+	RTToken *t = RT_context_calloc(C, sizeof(RTToken));
 
-	memcpy(t, token, sizeof(RCCToken));
+	memcpy(t, token, sizeof(RTToken));
 
 	t->prev = NULL;
 	t->next = NULL;
@@ -369,7 +376,7 @@ RCCToken *RT_token_duplicate(RCContext *C, const RCCToken *token) {
 /** \name Common Methods
  * \{ */
 
-bool RT_token_match(const RCCToken *a, const RCCToken *b) {
+bool RT_token_match(const RTToken *a, const RTToken *b) {
 	if (a == b) {
 		// This also handles the case where both `a` and `b` are NULL.
 		return true;
@@ -391,23 +398,23 @@ bool RT_token_match(const RCCToken *a, const RCCToken *b) {
 	return false;
 }
 
-bool RT_token_is_identifier(const RCCToken *tok) {
+bool RT_token_is_identifier(const RTToken *tok) {
 	return tok->kind == TOK_IDENTIFIER;
 }
-bool RT_token_is_keyword(const RCCToken *tok) {
+bool RT_token_is_keyword(const RTToken *tok) {
 	return tok->kind == TOK_KEYWORD;
 }
-bool RT_token_is_punctuator(const RCCToken *tok) {
+bool RT_token_is_punctuator(const RTToken *tok) {
 	return tok->kind == TOK_PUNCTUATOR;
 }
-bool RT_token_is_number(const RCCToken *tok) {
+bool RT_token_is_number(const RTToken *tok) {
 	return tok->kind == TOK_NUMBER;
 }
-bool RT_token_is_string(const RCCToken *tok) {
+bool RT_token_is_string(const RTToken *tok) {
 	return tok->kind == TOK_STRING;
 }
 
-const char *RT_token_as_string(const RCCToken *tok) {
+const char *RT_token_as_string(const RTToken *tok) {
 	ROSE_assert(ELEM(tok->kind, TOK_IDENTIFIER, TOK_KEYWORD, TOK_PUNCTUATOR));
 
 	if (ELEM(tok->kind, TOK_IDENTIFIER, TOK_KEYWORD, TOK_PUNCTUATOR)) {
@@ -423,7 +430,7 @@ const char *RT_token_as_string(const RCCToken *tok) {
 /** \name String Methods
  * \{ */
 
-const char *RT_token_string(const RCCToken *tok) {
+const char *RT_token_string(const RTToken *tok) {
 	return tok->payload;
 }
 
@@ -433,7 +440,7 @@ const char *RT_token_string(const RCCToken *tok) {
 /** \name Number Methods
  * \{ */
 
-bool RT_token_is_unsigned(const RCCToken *tok) {
+bool RT_token_is_unsigned(const RTToken *tok) {
 	ROSE_assert(RT_token_is_number(tok) && tok->type && tok->type->is_basic);
 
 	if (tok->type->is_basic) {
@@ -441,7 +448,7 @@ bool RT_token_is_unsigned(const RCCToken *tok) {
 	}
 	return false;
 }
-bool RT_token_is_signed(const RCCToken *tok) {
+bool RT_token_is_signed(const RTToken *tok) {
 	ROSE_assert(RT_token_is_number(tok) && tok->type && tok->type->is_basic);
 
 	if (tok->type->is_basic) {
@@ -449,18 +456,18 @@ bool RT_token_is_signed(const RCCToken *tok) {
 	}
 	return false;
 }
-bool RT_token_is_integer(const RCCToken *tok) {
+bool RT_token_is_integer(const RTToken *tok) {
 	ROSE_assert(RT_token_is_number(tok) && tok->type && tok->type->is_basic);
 
 	return ELEM(tok->type->kind, TP_BOOL, TP_CHAR, TP_SHORT, TP_INT, TP_LONG, TP_LLONG);
 }
-bool RT_token_is_floating(const RCCToken *tok) {
+bool RT_token_is_floating(const RTToken *tok) {
 	ROSE_assert(RT_token_is_number(tok) && tok->type && tok->type->is_basic);
 
 	return ELEM(tok->type->kind, TP_FLOAT, TP_DOUBLE, TP_LDOUBLE);
 }
 
-long long RT_token_as_integer(const RCCToken *tok) {
+long long RT_token_as_integer(const RTToken *tok) {
 	/**
 	 * Everything is eventually translated to unsigned long long since there are no negative values.
 	 * \note We translate the negative values after the unary expression '-'.
@@ -472,63 +479,63 @@ long long RT_token_as_integer(const RCCToken *tok) {
 	return payload;
 }
 
-int RT_token_as_int(const RCCToken *tok) {
+int RT_token_as_int(const RTToken *tok) {
 	ROSE_assert(RT_token_is_integer(tok) && RT_token_is_signed(tok) && tok->type->kind == TP_INT);
 
 	int payload = *(const long long *)tok->payload;
 
 	return (int)payload;
 }
-long RT_token_as_long(const RCCToken *tok) {
+long RT_token_as_long(const RTToken *tok) {
 	ROSE_assert(RT_token_is_integer(tok) && RT_token_is_signed(tok) && tok->type->kind == TP_LONG);
 
 	long long payload = *(const long long *)tok->payload;
 
 	return (long)payload;
 }
-long long RT_token_as_llong(const RCCToken *tok) {
+long long RT_token_as_llong(const RTToken *tok) {
 	ROSE_assert(RT_token_is_integer(tok) && RT_token_is_signed(tok) && tok->type->kind == TP_LLONG);
 
 	return *(const long long *)tok->payload;
 }
 
-unsigned int RT_token_as_uint(const RCCToken *tok) {
+unsigned int RT_token_as_uint(const RTToken *tok) {
 	ROSE_assert(RT_token_is_integer(tok) && RT_token_is_unsigned(tok) && tok->type->kind == TP_INT);
 
 	unsigned long long payload = *(const unsigned long long *)tok->payload;
 
 	return (unsigned int)payload;
 }
-unsigned long RT_token_as_ulong(const RCCToken *tok) {
+unsigned long RT_token_as_ulong(const RTToken *tok) {
 	ROSE_assert(RT_token_is_integer(tok) && RT_token_is_unsigned(tok) && tok->type->kind == TP_LONG);
 
 	unsigned long long payload = *(const unsigned long long *)tok->payload;
 
 	return (unsigned long)payload;
 }
-unsigned long long RT_token_as_ullong(const RCCToken *tok) {
+unsigned long long RT_token_as_ullong(const RTToken *tok) {
 	ROSE_assert(RT_token_is_integer(tok) && RT_token_is_unsigned(tok) && tok->type->kind == TP_LLONG);
 
 	return *(const unsigned long long *)tok->payload;
 }
 
-long double RT_token_as_scalar(const RCCToken *tok) {
+long double RT_token_as_scalar(const RTToken *tok) {
 	ROSE_assert(RT_token_is_floating(tok));
 
 	return *(const long double *)tok->payload;
 }
 
-float RT_token_as_float(const RCCToken *tok) {
+float RT_token_as_float(const RTToken *tok) {
 	ROSE_assert(RT_token_is_floating(tok) && tok->type->kind == TP_FLOAT);
 
 	return (float)RT_token_as_scalar(tok);
 }
-double RT_token_as_double(const RCCToken *tok) {
+double RT_token_as_double(const RTToken *tok) {
 	ROSE_assert(RT_token_is_floating(tok) && tok->type->kind == TP_DOUBLE);
 
 	return (double)RT_token_as_scalar(tok);
 }
-long double RT_token_as_ldouble(const RCCToken *tok) {
+long double RT_token_as_ldouble(const RTToken *tok) {
 	ROSE_assert(RT_token_is_floating(tok) && tok->type->kind == TP_LDOUBLE);
 
 	return (long double)RT_token_as_scalar(tok);
@@ -540,7 +547,7 @@ long double RT_token_as_ldouble(const RCCToken *tok) {
 /** \name Util Methods
  * \{ */
 
-const char *RT_token_working_directory(const RCCToken *tok) {
+const char *RT_token_working_directory(const RTToken *tok) {
 	if (tok->file) {
 		return RT_file_path(tok->file);
 	}

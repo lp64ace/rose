@@ -3,11 +3,11 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-ROSE_INLINE bool same_type_struct(const RCCType *a, const RCCType *b) {
+ROSE_INLINE bool same_type_struct(const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_STRUCT && b->kind == TP_STRUCT)) {
 		return false;
 	}
-	const RCCTypeStruct *s1 = &a->tp_struct, *s2 = &b->tp_struct;
+	const RTTypeStruct *s1 = &a->tp_struct, *s2 = &b->tp_struct;
 	if (!RT_token_match(s1->identifier, s2->identifier)) {
 		return false;
 	}
@@ -15,8 +15,8 @@ ROSE_INLINE bool same_type_struct(const RCCType *a, const RCCType *b) {
 		return false;
 	}
 	if (s1->is_complete) {
-		const RCCField *iter1 = (const RCCField *)s1->fields.first;
-		const RCCField *iter2 = (const RCCField *)s2->fields.first;
+		const RTField *iter1 = (const RTField *)s1->fields.first;
+		const RTField *iter2 = (const RTField *)s2->fields.first;
 		while (iter1 && iter2) {
 			if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 				return false;
@@ -43,11 +43,11 @@ ROSE_INLINE bool same_type_struct(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE bool compatible_type_struct(const RCCType *a, const RCCType *b) {
+ROSE_INLINE bool compatible_type_struct(const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_STRUCT && b->kind == TP_STRUCT)) {
 		return false;
 	}
-	const RCCTypeStruct *s1 = &a->tp_struct, *s2 = &b->tp_struct;
+	const RTTypeStruct *s1 = &a->tp_struct, *s2 = &b->tp_struct;
 	if (!RT_token_match(s1->identifier, s2->identifier)) {
 		return false;
 	}
@@ -55,8 +55,8 @@ ROSE_INLINE bool compatible_type_struct(const RCCType *a, const RCCType *b) {
 		return false;
 	}
 	if (s1->is_complete) {
-		const RCCField *iter1 = (const RCCField *)s1->fields.first;
-		const RCCField *iter2 = (const RCCField *)s2->fields.first;
+		const RTField *iter1 = (const RTField *)s1->fields.first;
+		const RTField *iter2 = (const RTField *)s2->fields.first;
 		while (iter1 && iter2) {
 			if (!RT_token_match(iter1->identifier, iter2->identifier)) {
 				return false;
@@ -83,23 +83,23 @@ ROSE_INLINE bool compatible_type_struct(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE const RCCType *composite_type_struct(RCContext *C, const RCCType *a, const RCCType *b) {
+ROSE_INLINE const RTType *composite_type_struct(RTContext *C, const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_STRUCT && b->kind == TP_STRUCT)) {
 		return NULL;
 	}
 	if (!RT_type_compatible(a, b)) {
 		return NULL;
 	}
-	const RCCTypeStruct *s1 = &a->tp_struct, *s2 = &b->tp_struct;
+	const RTTypeStruct *s1 = &a->tp_struct, *s2 = &b->tp_struct;
 	if (s1->is_complete) {
-		RCCType *tp = RT_type_new_struct(C, s1->identifier);
+		RTType *tp = RT_type_new_struct(C, s1->identifier);
 
-		const RCCField *iter1 = (const RCCField *)s1->fields.first;
-		const RCCField *iter2 = (const RCCField *)s2->fields.first;
+		const RTField *iter1 = (const RTField *)s1->fields.first;
+		const RTField *iter2 = (const RTField *)s2->fields.first;
 		while (iter1 && iter2) {
-			RCCField *field = RT_context_calloc(C, sizeof(RCCField));
+			RTField *field = RT_context_calloc(C, sizeof(RTField));
 
-			memcpy(field, iter1, sizeof(RCCField));
+			memcpy(field, iter1, sizeof(RTField));
 			/** Override the type so that we have composite types for each field. */
 			field->type = RT_type_composite(C, iter1->type, iter2->type);
 
@@ -118,8 +118,8 @@ ROSE_INLINE const RCCType *composite_type_struct(RCContext *C, const RCCType *a,
 /** \name Creation Methods
  * \{ */
 
-RCCType *RT_type_new_struct(RCContext *C, const RCCToken *identifier) {
-	RCCType *s = RT_context_calloc(C, sizeof(RCCType));
+RTType *RT_type_new_struct(RTContext *C, const RTToken *identifier) {
+	RTType *s = RT_context_calloc(C, sizeof(RTType));
 
 	s->kind = TP_STRUCT;
 	s->tp_struct.is_complete = false;
@@ -140,27 +140,27 @@ RCCType *RT_type_new_struct(RCContext *C, const RCCToken *identifier) {
 /** \name Util Methods
  * \{ */
 
-const RCCField *RT_type_struct_field_first(const RCCType *s) {
+const RTField *RT_type_struct_field_first(const RTType *s) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == true);
 
-	return (const RCCField *)s->tp_struct.fields.first;
+	return (const RTField *)s->tp_struct.fields.first;
 }
-const RCCField *RT_type_struct_field_last(const RCCType *s) {
+const RTField *RT_type_struct_field_last(const RTType *s) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == true);
 
-	return (const RCCField *)s->tp_struct.fields.last;
+	return (const RTField *)s->tp_struct.fields.last;
 }
 
-bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, int alignment) {
+bool RT_type_struct_add_field(RTContext *C, RTType *s, const RTToken *tag, const RTType *type, int alignment) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
-	LISTBASE_FOREACH(RCCField *, field, &s->tp_struct.fields) {
+	LISTBASE_FOREACH(RTField *, field, &s->tp_struct.fields) {
 		if (tag && RT_token_match(field->identifier, tag)) {
 			return false;
 		}
 	}
 
-	RCCField *field = RT_context_calloc(C, sizeof(RCCField));
+	RTField *field = RT_context_calloc(C, sizeof(RTField));
 
 	field->identifier = tag;
 	field->type = type;
@@ -173,16 +173,16 @@ bool RT_type_struct_add_field(RCContext *C, RCCType *s, const RCCToken *tag, con
 	return true;
 }
 
-bool RT_type_struct_add_bitfield(RCContext *C, RCCType *s, const RCCToken *tag, const RCCType *type, int alignment, int width) {
+bool RT_type_struct_add_bitfield(RTContext *C, RTType *s, const RTToken *tag, const RTType *type, int alignment, int width) {
 	ROSE_assert(s->kind == TP_STRUCT && s->tp_struct.is_complete == false);
 
-	LISTBASE_FOREACH(RCCField *, field, &s->tp_struct.fields) {
+	LISTBASE_FOREACH(RTField *, field, &s->tp_struct.fields) {
 		if (RT_token_match(field->identifier, tag)) {
 			return false;
 		}
 	}
 
-	RCCField *field = RT_context_calloc(C, sizeof(RCCField));
+	RTField *field = RT_context_calloc(C, sizeof(RTField));
 
 	field->identifier = tag;
 	field->type = type;
@@ -195,13 +195,13 @@ bool RT_type_struct_add_bitfield(RCContext *C, RCCType *s, const RCCToken *tag, 
 	return true;
 }
 
-void RT_type_struct_finalize(RCCType *type) {
+void RT_type_struct_finalize(RTType *type) {
 	ROSE_assert(type->kind == TP_STRUCT);
 
 	type->tp_struct.is_complete = true;
 }
 
-bool RT_field_is_bitfield(const struct RCCField *field) {
+bool RT_field_is_bitfield(const struct RTField *field) {
 	return field->properties.is_bitfield;
 }
 

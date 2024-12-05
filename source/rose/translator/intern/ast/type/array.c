@@ -6,12 +6,12 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-ROSE_INLINE bool same_array_type(const struct RCCType *a, const struct RCCType *b) {
+ROSE_INLINE bool same_array_type(const struct RTType *a, const struct RTType *b) {
 	if (!(a->kind == TP_ARRAY && b->kind == TP_ARRAY)) {
 		return false;
 	}
 
-	const RCCTypeArray *arr1 = &a->tp_array, *arr2 = &b->tp_array;
+	const RTTypeArray *arr1 = &a->tp_array, *arr2 = &b->tp_array;
 
 	if (!(arr1->boundary == arr2->boundary)) {
 		return false;
@@ -35,12 +35,12 @@ ROSE_INLINE bool same_array_type(const struct RCCType *a, const struct RCCType *
 	return RT_type_same(arr1->element_type, arr2->element_type);
 }
 
-ROSE_INLINE bool compatible_array_type(const struct RCCType *a, const struct RCCType *b) {
+ROSE_INLINE bool compatible_array_type(const struct RTType *a, const struct RTType *b) {
 	if (!(a->kind == TP_ARRAY && b->kind == TP_ARRAY)) {
 		return false;
 	}
 
-	const RCCTypeArray *arr1 = &a->tp_array, *arr2 = &b->tp_array;
+	const RTTypeArray *arr1 = &a->tp_array, *arr2 = &b->tp_array;
 
 	if (!RT_type_compatible(arr1->element_type, arr2->element_type)) {
 		return false;
@@ -53,38 +53,38 @@ ROSE_INLINE bool compatible_array_type(const struct RCCType *a, const struct RCC
 	return true;
 }
 
-ROSE_INLINE const struct RCCType *composite_array_type(struct RCContext *C, const struct RCCType *a, const struct RCCType *b) {
+ROSE_INLINE const struct RTType *composite_array_type(struct RTContext *C, const struct RTType *a, const struct RTType *b) {
 	if (!(a->kind == TP_ARRAY && b->kind == TP_ARRAY)) {
 		return NULL;
 	}
 
-	const RCCTypeArray *arr1 = &a->tp_array, *arr2 = &b->tp_array;
+	const RTTypeArray *arr1 = &a->tp_array, *arr2 = &b->tp_array;
 
 	if (!RT_type_compatible(a, b)) {
 		return false;
 	}
 	// Constant Length Array
 	if (ELEM(arr1->boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC)) {
-		const struct RCCType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
+		const struct RTType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
 		return RT_type_new_array(C, element_type, arr1->const_length, NULL);
 	}
 	if (ELEM(arr2->boundary, ARRAY_BOUNDED, ARRAY_BOUNDED_STATIC)) {
-		const struct RCCType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
+		const struct RTType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
 		return RT_type_new_array(C, element_type, arr2->const_length, NULL);
 	}
 	// Variable Length Array
 	if (ELEM(arr1->boundary, ARRAY_VLA, ARRAY_VLA_STATIC)) {
-		const struct RCCType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
-		const struct RCCNode *vla_length = arr1->vla_length;
+		const struct RTType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
+		const struct RTNode *vla_length = arr1->vla_length;
 		return RT_type_new_vla_array(C, element_type, vla_length, NULL);
 	}
 	if (ELEM(arr2->boundary, ARRAY_VLA, ARRAY_VLA_STATIC)) {
-		const struct RCCType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
-		const struct RCCNode *vla_length = arr2->vla_length;
+		const struct RTType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
+		const struct RTNode *vla_length = arr2->vla_length;
 		return RT_type_new_vla_array(C, element_type, vla_length, NULL);
 	}
 	// Unbounded Array
-	const struct RCCType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
+	const struct RTType *element_type = RT_type_composite(C, arr1->element_type, arr2->element_type);
 	return RT_type_new_unbounded_array(C, element_type, NULL);
 }
 
@@ -92,8 +92,8 @@ ROSE_INLINE const struct RCCType *composite_array_type(struct RCContext *C, cons
 /** \name Creation Methods
  * \{ */
 
-ROSE_INLINE RCCType *array_new(struct RCContext *C, int boundary, const RCCType *elem, const RCCTypeQualification *qual) {
-	RCCType *a = RT_context_calloc(C, sizeof(RCCType));
+ROSE_INLINE RTType *array_new(struct RTContext *C, int boundary, const RTType *elem, const RTTypeQualification *qual) {
+	RTType *a = RT_context_calloc(C, sizeof(RTType));
 
 	a->kind = TP_ARRAY;
 	a->same = same_array_type;
@@ -104,7 +104,7 @@ ROSE_INLINE RCCType *array_new(struct RCContext *C, int boundary, const RCCType 
 	a->tp_array.element_type = elem;
 
 	if (qual) {
-		memcpy(&a->tp_array.qualification, qual, sizeof(RCCTypeQualification));
+		memcpy(&a->tp_array.qualification, qual, sizeof(RTTypeQualification));
 	}
 	else {
 		RT_qual_clear(&a->tp_array.qualification);
@@ -113,39 +113,43 @@ ROSE_INLINE RCCType *array_new(struct RCContext *C, int boundary, const RCCType 
 	return a;
 }
 
-RCCType *RT_type_new_unbounded_array(struct RCContext *C, const RCCType *elem, const RCCTypeQualification *qual) {
-	RCCType *a = array_new(C, ARRAY_UNBOUNDED, elem, qual);
+RTType *RT_type_new_empty_array(RTContext *C) {
+	return array_new(C, 0, NULL, NULL);
+}
+
+RTType *RT_type_new_unbounded_array(struct RTContext *C, const RTType *elem, const RTTypeQualification *qual) {
+	RTType *a = array_new(C, ARRAY_UNBOUNDED, elem, qual);
 
 	a->tp_array.length = 0;
 
 	return a;
 }
-RCCType *RT_type_new_array(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
-	RCCType *a = array_new(C, ARRAY_BOUNDED, elem, qual);
+RTType *RT_type_new_array(struct RTContext *C, const RTType *elem, const struct RTNode *length, const RTTypeQualification *qual) {
+	RTType *a = array_new(C, ARRAY_BOUNDED, elem, qual);
 
 	a->tp_array.const_length = length;
 	a->tp_array.length = RT_node_evaluate_integer(length);
 
 	return a;
 }
-RCCType *RT_type_new_array_static(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
-	RCCType *a = array_new(C, ARRAY_BOUNDED_STATIC, elem, qual);
+RTType *RT_type_new_array_static(struct RTContext *C, const RTType *elem, const struct RTNode *length, const RTTypeQualification *qual) {
+	RTType *a = array_new(C, ARRAY_BOUNDED_STATIC, elem, qual);
 
 	a->tp_array.const_length = length;
 	a->tp_array.length = RT_node_evaluate_integer(length);
 
 	return a;
 }
-RCCType *RT_type_new_vla_array(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
-	RCCType *a = array_new(C, ARRAY_VLA, elem, qual);
+RTType *RT_type_new_vla_array(struct RTContext *C, const RTType *elem, const struct RTNode *length, const RTTypeQualification *qual) {
+	RTType *a = array_new(C, ARRAY_VLA, elem, qual);
 
 	a->tp_array.vla_length = length;
 	a->tp_array.length = -1;
 
 	return a;
 }
-RCCType *RT_type_new_vla_array_static(struct RCContext *C, const RCCType *elem, const struct RCCNode *length, const RCCTypeQualification *qual) {
-	RCCType *a = array_new(C, ARRAY_VLA_STATIC, elem, qual);
+RTType *RT_type_new_vla_array_static(struct RTContext *C, const RTType *elem, const struct RTNode *length, const RTTypeQualification *qual) {
+	RTType *a = array_new(C, ARRAY_VLA_STATIC, elem, qual);
 
 	a->tp_array.vla_length = length;
 	a->tp_array.length = -1;
@@ -159,16 +163,16 @@ RCCType *RT_type_new_vla_array_static(struct RCContext *C, const RCCType *elem, 
 /** \name Utils
  * \{ */
 
-int RT_type_array_boundary(const struct RCCType *arr) {
+int RT_type_array_boundary(const struct RTType *arr) {
 	ROSE_assert(arr->kind == TP_ARRAY);
 	return arr->tp_array.boundary;
 }
 
-const struct RCCType *RT_type_array_element(const struct RCCType *arr) {
+const struct RTType *RT_type_array_element(const struct RTType *arr) {
 	ROSE_assert(arr->kind == TP_ARRAY);
 	return arr->tp_array.element_type;
 }
-unsigned long long RT_type_array_length(const RCCType *arr) {
+unsigned long long RT_type_array_length(const RTType *arr) {
 	ROSE_assert(arr->kind == TP_ARRAY);
 	return arr->tp_array.length;
 }

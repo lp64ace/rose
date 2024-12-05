@@ -330,7 +330,7 @@ void MEM_guarded_freeN(void *vptr) {
 
 	head--;
 	if (head->tag1 == MEMFREE && head->tag2 == MEMFREE) {
-		fprintf(stderr, "Double free.\n");
+		fprintf(stderr, "Double free %p.\n", vptr);
 		abort();
 		return;
 	}
@@ -378,6 +378,34 @@ void MEM_guarded_freeN(void *vptr) {
 	mem_unlock_thread();
 	abort();
 	return;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Query Methods
+ * \{ */
+
+size_t MEM_guarded_allocN_length(const void *vptr) {
+	if (vptr) {
+		const GMemoryHead *head = vptr;
+
+		head--;
+		if (head->tag1 == MEMFREE && head->tag2 == MEMFREE) {
+			return 0;
+		}
+
+		if ((head->tag1 == MEMTAG1) && (head->tag2 == MEMTAG2)) {
+			GMemoryTail *tail = (GMemoryTail *)((char *)(head + 1) + head->size);
+
+			if (tail->tag3 == MEMTAG3) {
+				return head->size;
+			}
+		}
+
+		return 0;
+	}
+	return 0;
 }
 
 /** \} */

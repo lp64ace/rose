@@ -119,7 +119,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	}
 
 	if (region->sizex == 0 && region->type->prefsizex == 0) {
-		region->type->prefsizex = AREAMINX;
+		region->type->prefsizex = PIXELSIZE * AREAMINX;
 	}
 	if (region->sizey == 0 && region->type->prefsizey == 0) {
 		region->type->prefsizey = UI_UNIT_Y;
@@ -128,7 +128,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 0.5f : region->type->prefsizex);
 	int prefsizey;
 
-	if (region->regiontype == RGN_TYPE_HEADER) {
+	if (ELEM(region->regiontype, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 		prefsizey = UI_UNIT_Y;
 	}
 	else {
@@ -335,6 +335,74 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	region_rect_recursive(area, region->next, remainder, overlap_remainder, quad);
 }
 
+ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const rcti *rect, int space_type) {
+	ScrArea *area = NULL;
+
+	wmWindow *window;
+	if ((window = WM_window_open(C, title, space_type, true))) {
+		Screen *screen = WM_window_screen_get(window);
+		area = (ScrArea *)screen->areabase.first;
+		ROSE_assert(area && area->spacetype == space_type);
+	}
+	return area;
+}
+
+void ED_area_newspace(struct rContext *C, ScrArea *area, int space_type) {
+	wmWindow *win = CTX_wm_window(C);
+	SpaceType *st = KER_spacetype_from_id(space_type);
+	
+	if (area->spacetype != space_type) {
+		SpaceLink *slold = (SpaceLink *)(area->spacedata.first);
+		
+		ED_area_exit(C, area);
+		
+		area->spacetype = space_type;
+		area->type = st;
+		
+		SpaceLink *sl = NULL;
+		LISTBASE_FOREACH (SpaceLink *, sl_iter, &area->spacedata) {
+			if (sl_iter->spacetype == space_type) {
+				sl = sl_iter;
+				break;
+			}
+		}
+		
+		if (sl && LIB_listbase_is_empty(&sl->regionbase)) {
+			st->free(sl);
+			LIB_remlink(&area->spacedata, sl);
+			MEM_freeN(sl);
+			if (slold == sl) {
+				slold = NULL;
+			}
+			sl = NULL;
+		}
+		
+		if (sl) {
+			/* swap regions */
+			slold->regionbase = area->regionbase;
+			area->regionbase = sl->regionbase;
+			LIB_listbase_clear(&sl->regionbase);
+			LIB_remlink(&area->spacedata, sl);
+			LIB_addhead(&area->spacedata, sl);
+		}
+		else {
+			/* new space */
+			if (st) {
+				sl = st->create(area);
+				LIB_addhead(&area->spacedata, sl);
+				
+				if (slold) {
+					slold->regionbase = area->regionbase;
+				}
+				area->regionbase = sl->regionbase;
+				LIB_listbase_clear(&sl->regionbase);
+			}
+		}
+	}
+
+	ED_area_init(CTX_wm_manager(C), win, area);
+}
+
 void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	Screen *screem = WM_window_screen_get(window);
 
@@ -365,7 +433,7 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	memcpy(&overlap_rect, &area->totrct, sizeof(rcti));
 	region_rect_recursive(area, (ARegion *)area->regionbase.first, &rect, &overlap_rect, 0);
 	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
-	
+
 	if (area->type->init) {
 		area->type->init(wm, area);
 	}
@@ -377,7 +445,9 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 			if (region->type->init) {
 				region->type->init(region);
 			}
-			
+
+			ED_region_tag_redraw(region);
+
 			UI_region_handlers_add(&region->handlers);
 		}
 		else {
@@ -400,11 +470,23 @@ void ED_area_exit(struct rContext *C, ScrArea *area) {
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		ED_region_exit(C, region);
 	}
-	
+
 	WM_event_remove_handlers(C, &area->handlers);
 	WM_event_modal_handler_area_replace(window, area, NULL);
 
 	CTX_wm_area_set(C, prevsa);
+}
+
+void ED_area_tag_redraw(ScrArea *area) {
+	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		ED_region_tag_redraw(region);
+	}
+}
+
+void ED_area_tag_redraw_no_rebuild(ScrArea *area) {
+	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		ED_region_tag_redraw_no_rebuild(region);
+	}
 }
 
 bool ED_area_is_global(const ScrArea *area) {
@@ -413,7 +495,7 @@ bool ED_area_is_global(const ScrArea *area) {
 
 int ED_area_global_size_y(const ScrArea *area) {
 	ROSE_assert(ED_area_is_global(area));
-	return PIXELSIZE * area->global->height;
+	return area->global->height;
 }
 
 void screen_area_spacelink_add(ScrArea *area, int spacetype) {

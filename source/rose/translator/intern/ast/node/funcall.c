@@ -5,24 +5,24 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeFuncall {
-	RCCNode base;
+typedef struct RTNodeFuncall {
+	RTNode base;
 
-	const RCCNode *func;
+	const RTNode *func;
 
 	ListBase arguments;
-} RCCNodeFuncall;
+} RTNodeFuncall;
 
 /* -------------------------------------------------------------------- */
 /** \name Funcall Nodes
  * \{ */
 
-RCCNode *RT_node_new_funcall(RCContext *C, const RCCNode *func) {
-	RCCNodeFuncall *node = RT_node_new(C, func->token, func->cast, NODE_FUNCALL, 0, sizeof(RCCNodeFuncall));
+RTNode *RT_node_new_funcall(RTContext *C, const RTNode *func) {
+	RTNodeFuncall *node = RT_node_new(C, func->token, func->cast, NODE_FUNCALL, 0, sizeof(RTNodeFuncall));
 
 	node->func = func;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
 /** \} */
@@ -31,21 +31,21 @@ RCCNode *RT_node_new_funcall(RCContext *C, const RCCNode *func) {
 /** \name Funcall Node Utils
  * \{ */
 
-void RT_node_funcall_add(RCCNode *funcall, const RCCNode *argument) {
-	RCCNodeFuncall *node = (RCCNodeFuncall *)funcall;
+void RT_node_funcall_add(RTNode *funcall, const RTNode *argument) {
+	RTNodeFuncall *node = (RTNodeFuncall *)funcall;
 
 	LIB_addtail(&node->arguments, (void *)argument);
 }
 
-const RCCNode *RT_node_funcall_first(const RCCNode *node) {
+const RTNode *RT_node_funcall_first(const RTNode *node) {
 	ROSE_assert(node->kind == NODE_FUNCALL);
 
-	return (const RCCNode *)(((const RCCNodeFuncall *)node)->arguments.first);
+	return (const RTNode *)(((const RTNodeFuncall *)node)->arguments.first);
 }
-const RCCNode *RT_node_funcall_last(const RCCNode *node) {
+const RTNode *RT_node_funcall_last(const RTNode *node) {
 	ROSE_assert(node->kind == NODE_FUNCALL);
 
-	return (const RCCNode *)(((const RCCNodeFuncall *)node)->arguments.last);
+	return (const RTNode *)(((const RTNodeFuncall *)node)->arguments.last);
 }
 
 /** \} */

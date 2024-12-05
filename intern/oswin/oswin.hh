@@ -235,7 +235,7 @@ public:
 
 	bool SetClipboard(const char *buffer, unsigned int length, bool selection) const;
 	bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
-	
+
 	static void Sleep(int ms);
 
 private:
@@ -276,8 +276,8 @@ private:
 	static LRESULT CALLBACK WindowProcedure(HWND windowHandle, unsigned int winMessage, WPARAM wordParam, LPARAM longParam);
 #endif
 #if defined(LINUX)
-	Display *display_;
-	XkbDescRec *xkb_descr_;
+	Display *display_ = nullptr;
+	XkbDescRec *xkb_descr_ = nullptr;
 
 	int keycode_last_repeat_key_ = -1;
 
@@ -289,7 +289,7 @@ private:
 	void EventProcedure(XEvent *evt);
 #endif
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-	XIM xim_;
+	XIM xim_ = {};
 
 	bool InitXIM();
 #endif
@@ -462,7 +462,7 @@ private:
 	XSetWindowAttributes window_attributes_ = {};
 
 	int *visual_attribs_ = nullptr;
-	
+
 	char *clipboard_[2] = {nullptr, nullptr};
 
 	/** These atoms are needed to change window states via the extended window manager */

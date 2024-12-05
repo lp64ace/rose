@@ -210,6 +210,7 @@ ROSE_INLINE bool LIB_listbase_is_single(const ListBase *listbase);
 
 /** Clears all Links from a ListBase, resetting it to an empty state. */
 ROSE_INLINE void LIB_listbase_clear(ListBase *listbase);
+ROSE_INLINE void LIB_listbase_swap(ListBase *lb1, ListBase *lb2);
 
 /** \} */
 

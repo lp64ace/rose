@@ -284,4 +284,4 @@ enum {
 }
 #endif
 
-#endif // RFT_API_H
+#endif	// RFT_API_H

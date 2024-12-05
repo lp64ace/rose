@@ -42,6 +42,22 @@ typedef struct View3D {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name UserPref Space
+ * \{ */
+
+typedef struct SpaceUser {
+	struct SpaceLink *prev, *next;
+
+	int spacetype;
+	int flag;
+
+	ListBase regionbase;
+	/** End of 'SpaceLink' header. */
+} SpaceUser;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Space Defines
  * \{ */
 
@@ -50,6 +66,7 @@ enum {
 	SPACE_STATUSBAR,
 	SPACE_TOPBAR,
 	SPACE_VIEW3D,
+	SPACE_USERPREF,
 };
 
 /** \} */

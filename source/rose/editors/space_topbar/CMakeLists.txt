@@ -32,7 +32,9 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::source::rosekernel
+	rose::source::roseloader
 	rose::source::dna
+	rose::source::windowmanager
 	rose::source::editors::screen
 	
 	# External Library Dependencies

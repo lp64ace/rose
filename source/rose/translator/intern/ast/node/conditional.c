@@ -5,27 +5,27 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeConditional {
-	RCCNode base;
+typedef struct RTNodeConditional {
+	RTNode base;
 
-	const struct RCCNode *condition;
-	const struct RCCNode *then;
-	const struct RCCNode *otherwise;
-} RCCNodeConditional;
+	const struct RTNode *condition;
+	const struct RTNode *then;
+	const struct RTNode *otherwise;
+} RTNodeConditional;
 
 /* -------------------------------------------------------------------- */
 /** \name Conditional Nodes
  * \{ */
 
-RCCNode *RT_node_new_conditional(RCContext *C, const RCCNode *condition, const RCCNode *then, const RCCNode *otherwise) {
-	const RCCType *cast = RT_type_composite(C, then->cast, otherwise->cast);
-	RCCNodeConditional *node = RT_node_new(C, NULL, cast, NODE_COND, 0, sizeof(RCCNodeConditional));
+RTNode *RT_node_new_conditional(RTContext *C, const RTNode *condition, const RTNode *then, const RTNode *otherwise) {
+	const RTType *cast = RT_type_composite(C, then->cast, otherwise->cast);
+	RTNodeConditional *node = RT_node_new(C, NULL, cast, NODE_COND, 0, sizeof(RTNodeConditional));
 
 	node->condition = condition;
 	node->then = then;
 	node->otherwise = otherwise;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
 /** \} */
@@ -34,20 +34,20 @@ RCCNode *RT_node_new_conditional(RCContext *C, const RCCNode *condition, const R
 /** \name Conditional Node Utils
  * \{ */
 
-const struct RCCNode *RT_node_condition(const struct RCCNode *node) {
+const struct RTNode *RT_node_condition(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_COND);
 
-	return ((const RCCNodeConditional *)node)->condition;
+	return ((const RTNodeConditional *)node)->condition;
 }
-const struct RCCNode *RT_node_then(const struct RCCNode *node) {
+const struct RTNode *RT_node_then(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_COND);
 
-	return ((const RCCNodeConditional *)node)->then;
+	return ((const RTNodeConditional *)node)->then;
 }
-const struct RCCNode *RT_node_otherwise(const struct RCCNode *node) {
+const struct RTNode *RT_node_otherwise(const struct RTNode *node) {
 	ROSE_assert(node->kind == NODE_COND);
 
-	return ((const RCCNodeConditional *)node)->otherwise;
+	return ((const RTNodeConditional *)node)->otherwise;
 }
 
 /** \} */

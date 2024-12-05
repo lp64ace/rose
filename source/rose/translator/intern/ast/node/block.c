@@ -5,24 +5,24 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-typedef struct RCCNodeBlock {
-	RCCNode base;
+typedef struct RTNodeBlock {
+	RTNode base;
 
-	const struct RCCScope *scope;
+	const struct RTScope *scope;
 
 	ListBase nodes;
-} RCCNodeBlock;
+} RTNodeBlock;
 
 /* -------------------------------------------------------------------- */
 /** \name Block Nodes
  * \{ */
 
-RCCNode *RT_node_new_block(RCContext *C, const struct RCCScope *scope) {
-	RCCNodeBlock *node = RT_node_new(C, NULL, NULL, NODE_BLOCK, 0, sizeof(RCCNodeBlock));
+RTNode *RT_node_new_block(RTContext *C, const struct RTScope *scope) {
+	RTNodeBlock *node = RT_node_new(C, NULL, NULL, NODE_BLOCK, 0, sizeof(RTNodeBlock));
 
 	node->scope = scope;
 
-	return (RCCNode *)node;
+	return (RTNode *)node;
 }
 
 /** \} */
@@ -31,25 +31,25 @@ RCCNode *RT_node_new_block(RCContext *C, const struct RCCScope *scope) {
 /** \name Block Node Utils
  * \{ */
 
-void RT_node_block_add(RCCNode *node, const RCCNode *expr) {
-	RCCNodeBlock *block = (RCCNodeBlock *)node;
+void RT_node_block_add(RTNode *node, const RTNode *expr) {
+	RTNodeBlock *block = (RTNodeBlock *)node;
 
 	LIB_addtail(&block->nodes, (void *)expr);
 }
-const RCCNode *RT_node_block_first(const RCCNode *node) {
+const RTNode *RT_node_block_first(const RTNode *node) {
 	ROSE_assert(node->kind == NODE_BLOCK);
 
-	return (const RCCNode *)(((const RCCNodeBlock *)node)->nodes.first);
+	return (const RTNode *)(((const RTNodeBlock *)node)->nodes.first);
 }
-const RCCNode *RT_node_block_last(const RCCNode *node) {
+const RTNode *RT_node_block_last(const RTNode *node) {
 	ROSE_assert(node->kind == NODE_BLOCK);
 
-	return (const RCCNode *)(((const RCCNodeBlock *)node)->nodes.last);
+	return (const RTNode *)(((const RTNodeBlock *)node)->nodes.last);
 }
-const struct RCCScope *RT_node_block_scope(const RCCNode *node) {
+const struct RTScope *RT_node_block_scope(const RTNode *node) {
 	ROSE_assert(node->kind == NODE_BLOCK);
 
-	return ((const RCCNodeBlock *)node)->scope;
+	return ((const RTNodeBlock *)node)->scope;
 }
 
 /** \} */

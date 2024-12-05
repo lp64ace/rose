@@ -1,28 +1,35 @@
+#include "MEM_guardedalloc.h"
+
 #include "DNA_userdef_types.h"
 
 #include "KER_global.h"
 #include "KER_main.h"
 #include "KER_rose.h"
+#include "KER_userdef.h"
 
 #include <string.h>
 
 Global G;
-
-extern const Theme U_theme_default;
-
-UserDef U = {
-	.themes = {
-		.first = (Link *)&U_theme_default,
-		.last = (Link *)&U_theme_default,
-	},
-};
+UserDef U;
 
 /* -------------------------------------------------------------------- */
 /** \name Global Main Methods
  * \{ */
 
+extern const Theme U_theme_default;
+
 void KER_rose_free() {
 	KER_rose_globals_clear();
+}
+
+void KER_rose_userdef_init() {
+	Theme *theme = MEM_mallocN(sizeof(Theme), "DefaultTheme");
+	memcpy(theme, &U_theme_default, sizeof(Theme));
+
+	LIB_addtail(&U.themes, theme);
+}
+void KER_rose_userdef_clear() {
+	KER_userdef_clear(&U);
 }
 
 void KER_rose_globals_init() {

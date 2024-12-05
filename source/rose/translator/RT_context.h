@@ -12,7 +12,7 @@ extern "C" {
 /** \name Data Structures
  * \{ */
 
-typedef struct RCContext {
+typedef struct RTContext {
 	/**
 	 * Every object is allocated using this allocator and everything is deleted when
 	 * the lifetime of this context expires.
@@ -21,7 +21,7 @@ typedef struct RCContext {
 	 * the compilation of a source bundle.
 	 */
 	struct MemArena *alloc;
-} RCContext;
+} RTContext;
 
 /** \} */
 
@@ -29,7 +29,7 @@ typedef struct RCContext {
 /** \name Create Methods
  * \{ */
 
-RCContext *RT_context_new();
+RTContext *RT_context_new();
 
 /** \} */
 
@@ -37,7 +37,7 @@ RCContext *RT_context_new();
 /** \name Delete Methods
  * \{ */
 
-void RT_context_free(RCContext *);
+void RT_context_free(RTContext *);
 
 /** \} */
 
@@ -45,8 +45,8 @@ void RT_context_free(RCContext *);
 /** \name Util Methods
  * \{ */
 
-void *RT_context_malloc(RCContext *, size_t length);
-void *RT_context_calloc(RCContext *, size_t length);
+void *RT_context_malloc(RTContext *, size_t length);
+void *RT_context_calloc(RTContext *, size_t length);
 
 /** \} */
 

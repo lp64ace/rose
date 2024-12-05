@@ -9,8 +9,8 @@
 /** \name Create Methods
  * \{ */
 
-ROSE_INLINE RCCObject *object_new(RCContext *C, int kind, const RCCType *type, const RCCToken *token) {
-	RCCObject *object = RT_context_calloc(C, sizeof(RCCObject));
+ROSE_INLINE RTObject *object_new(RTContext *C, int kind, const RTType *type, const RTToken *token) {
+	RTObject *object = RT_context_calloc(C, sizeof(RTObject));
 
 	object->kind = kind;
 	object->type = type;
@@ -20,21 +20,21 @@ ROSE_INLINE RCCObject *object_new(RCContext *C, int kind, const RCCType *type, c
 	return object;
 }
 
-RCCObject *RT_object_new_variable(RCContext *C, const RCCType *type, const RCCToken *token) {
-	RCCObject *object = object_new(C, OBJ_VARIABLE, type, token);
+RTObject *RT_object_new_variable(RTContext *C, const RTType *type, const RTToken *token) {
+	RTObject *object = object_new(C, OBJ_VARIABLE, type, token);
 	return object;
 }
-RCCObject *RT_object_new_typedef(RCContext *C, const RCCType *type, const RCCToken *token) {
-	RCCObject *object = object_new(C, OBJ_TYPEDEF, type, token);
+RTObject *RT_object_new_typedef(RTContext *C, const RTType *type, const RTToken *token) {
+	RTObject *object = object_new(C, OBJ_TYPEDEF, type, token);
 	return object;
 }
-RCCObject *RT_object_new_function(RCContext *C, const RCCType *type, const RCCToken *token, const RCCNode *node) {
-	RCCObject *object = object_new(C, OBJ_FUNCTION, type, token);
+RTObject *RT_object_new_function(RTContext *C, const RTType *type, const RTToken *token, const RTNode *node) {
+	RTObject *object = object_new(C, OBJ_FUNCTION, type, token);
 	object->body = node;
 	return object;
 }
-RCCObject *RT_object_new_enum(RCContext *C, const RCCType *type, const RCCToken *token, const RCCNode *value) {
-	RCCObject *object = object_new(C, OBJ_ENUM, type, token);
+RTObject *RT_object_new_enum(RTContext *C, const RTType *type, const RTToken *token, const RTNode *value) {
+	RTObject *object = object_new(C, OBJ_ENUM, type, token);
 	object->body = value;
 	return object;
 }
@@ -45,16 +45,16 @@ RCCObject *RT_object_new_enum(RCContext *C, const RCCType *type, const RCCToken 
 /** \name Util Methods
  * \{ */
 
-bool RT_object_is_variable(const RCCObject *object) {
+bool RT_object_is_variable(const RTObject *object) {
 	return object->kind == OBJ_VARIABLE;
 }
-bool RT_object_is_typedef(const RCCObject *object) {
+bool RT_object_is_typedef(const RTObject *object) {
 	return object->kind == OBJ_TYPEDEF;
 }
-bool RT_object_is_function(const RCCObject *object) {
+bool RT_object_is_function(const RTObject *object) {
 	return object->kind == OBJ_FUNCTION;
 }
-bool RT_object_is_enum(const RCCObject *object) {
+bool RT_object_is_enum(const RTObject *object) {
 	return object->kind == OBJ_ENUM;
 }
 

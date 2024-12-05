@@ -4,12 +4,12 @@
 #include "RT_context.h"
 #include "RT_token.h"
 
-ROSE_INLINE bool same_enum_type(const RCCType *a, const RCCType *b) {
+ROSE_INLINE bool same_enum_type(const RTType *a, const RTType *b) {
 	if (!(a->kind == TP_ENUM && b->kind == TP_ENUM)) {
 		return false;
 	}
 
-	const RCCTypeEnum *e1 = &a->tp_enum, *e2 = &a->tp_enum;
+	const RTTypeEnum *e1 = &a->tp_enum, *e2 = &a->tp_enum;
 
 	if (!(e1->is_complete == e2->is_complete)) {
 		return false;
@@ -23,7 +23,7 @@ ROSE_INLINE bool same_enum_type(const RCCType *a, const RCCType *b) {
 
 	// Redundant check, since we know that they are the same value, see above.
 	if (e1->is_complete && e2->is_complete) {
-		const EnumItem *iter1 = (const EnumItem *)e1->items.first, *iter2 = (const EnumItem *)e2->items.first;
+		const RTEnumItem *iter1 = (const RTEnumItem *)e1->items.first, *iter2 = (const RTEnumItem *)e2->items.first;
 		while (iter1 && iter2) {
 			if (!(RT_token_match(iter1->identifier, iter2->identifier))) {
 				return false;
@@ -40,7 +40,7 @@ ROSE_INLINE bool same_enum_type(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE bool compatible_enum_type(const RCCType *a, const RCCType *b) {
+ROSE_INLINE bool compatible_enum_type(const RTType *a, const RTType *b) {
 	if (a->kind == TP_ENUM && RT_type_same(a->tp_enum.underlying_type, b)) {
 		/**
 		 * It is not enough that the underlying types are compatible, they have to be the same.
@@ -59,7 +59,7 @@ ROSE_INLINE bool compatible_enum_type(const RCCType *a, const RCCType *b) {
 		return false;
 	}
 
-	const RCCTypeEnum *e1 = &a->tp_enum, *e2 = &a->tp_enum;
+	const RTTypeEnum *e1 = &a->tp_enum, *e2 = &a->tp_enum;
 
 	if (!(e1->is_complete == e2->is_complete)) {
 		return false;
@@ -73,7 +73,7 @@ ROSE_INLINE bool compatible_enum_type(const RCCType *a, const RCCType *b) {
 
 	// Redundant check, since we know that they are the same value, see above.
 	if (e1->is_complete && e2->is_complete) {
-		const EnumItem *iter1 = (const EnumItem *)e1->items.first, *iter2 = (const EnumItem *)e2->items.first;
+		const RTEnumItem *iter1 = (const RTEnumItem *)e1->items.first, *iter2 = (const RTEnumItem *)e2->items.first;
 		while (iter1 && iter2) {
 			if (!(RT_token_match(iter1->identifier, iter2->identifier))) {
 				return false;
@@ -92,7 +92,7 @@ ROSE_INLINE bool compatible_enum_type(const RCCType *a, const RCCType *b) {
 	return true;
 }
 
-ROSE_INLINE const RCCType *composite_enum_type(struct RCContext *c, const RCCType *a, const RCCType *b) {
+ROSE_INLINE const RTType *composite_enum_type(struct RTContext *c, const RTType *a, const RTType *b) {
 	if (!RT_type_compatible(a, b)) {
 		return NULL;
 	}
@@ -103,8 +103,8 @@ ROSE_INLINE const RCCType *composite_enum_type(struct RCContext *c, const RCCTyp
 /** \name Creation Methods
  * \{ */
 
-RCCType *RT_type_new_enum(RCContext *C, RCCToken *identifier, const RCCType *underlying_type) {
-	RCCType *e = RT_context_calloc(C, sizeof(RCCType));
+RTType *RT_type_new_enum(RTContext *C, RTToken *identifier, const RTType *underlying_type) {
+	RTType *e = RT_context_calloc(C, sizeof(RTType));
 
 	e->kind = TP_ENUM;
 	e->same = same_enum_type;
@@ -124,20 +124,20 @@ RCCType *RT_type_new_enum(RCContext *C, RCCToken *identifier, const RCCType *und
 /** \name Util Methods
  * \{ */
 
-void RT_type_enum_add_constant_expr(RCContext *C, RCCType *e, const RCCToken *identifier, const RCCNode *expr) {
+void RT_type_enum_add_constant_expr(RTContext *C, RTType *e, const RTToken *identifier, const RTNode *expr) {
 	ROSE_assert_msg(RT_type_enum_has(e, identifier) == false, "Duplicate enumerator items are not allowed");
 	ROSE_assert(e->kind == TP_ENUM && e->tp_enum.is_complete == false);
-	EnumItem *i = RT_context_calloc(C, sizeof(EnumItem));
+	RTEnumItem *i = RT_context_calloc(C, sizeof(RTEnumItem));
 
 	i->identifier = identifier;
 	i->value = expr;
 
 	LIB_addtail(&e->tp_enum.items, i);
 }
-void RT_type_enum_add_constant_auto(RCContext *C, RCCType *e, const RCCToken *identifier) {
+void RT_type_enum_add_constant_auto(RTContext *C, RTType *e, const RTToken *identifier) {
 	ROSE_assert_msg(RT_type_enum_has(e, identifier) == false, "Duplicate enumerator items are not allowed");
 	ROSE_assert(e->kind == TP_ENUM && e->tp_enum.is_complete == false);
-	EnumItem *i = RT_context_calloc(C, sizeof(EnumItem));
+	RTEnumItem *i = RT_context_calloc(C, sizeof(RTEnumItem));
 
 	i->identifier = identifier;
 	i->value = NULL;
@@ -145,16 +145,16 @@ void RT_type_enum_add_constant_auto(RCContext *C, RCCType *e, const RCCToken *id
 	LIB_addtail(&e->tp_enum.items, i);
 }
 
-bool RT_type_enum_has(const RCCType *e, const RCCToken *identifier) {
-	LISTBASE_FOREACH(const EnumItem *, item, &e->tp_enum.items) {
+bool RT_type_enum_has(const RTType *e, const RTToken *identifier) {
+	LISTBASE_FOREACH(const RTEnumItem *, item, &e->tp_enum.items) {
 		if (RT_token_match(item->identifier, identifier)) {
 			return true;
 		}
 	}
 	return false;
 }
-bool RT_type_enum_has_value(const RCCType *e, long long value) {
-	LISTBASE_FOREACH(const EnumItem *, item, &e->tp_enum.items) {
+bool RT_type_enum_has_value(const RTType *e, long long value) {
+	LISTBASE_FOREACH(const RTEnumItem *, item, &e->tp_enum.items) {
 		if (item->value && RT_node_evaluate_integer(item->value) == value) {
 			return true;
 		}
@@ -162,8 +162,8 @@ bool RT_type_enum_has_value(const RCCType *e, long long value) {
 	return false;
 }
 
-const struct RCCNode *RT_type_enum_value(const RCCType *e, const RCCToken *identifier) {
-	LISTBASE_FOREACH(const EnumItem *, item, &e->tp_enum.items) {
+const struct RTNode *RT_type_enum_value(const RTType *e, const RTToken *identifier) {
+	LISTBASE_FOREACH(const RTEnumItem *, item, &e->tp_enum.items) {
 		if (RT_token_match(item->identifier, identifier)) {
 			return item->value;
 		}
@@ -171,11 +171,11 @@ const struct RCCNode *RT_type_enum_value(const RCCType *e, const RCCToken *ident
 	return NULL;
 }
 
-void RT_type_enum_finalize(RCContext *C, RCCType *e) {
+void RT_type_enum_finalize(RTContext *C, RTType *e) {
 	ROSE_assert(e->kind == TP_ENUM);
 
 	long long value = 0;
-	LISTBASE_FOREACH(EnumItem *, item, &e->tp_enum.items) {
+	LISTBASE_FOREACH(RTEnumItem *, item, &e->tp_enum.items) {
 		if (item->value) {
 			value = RT_node_evaluate_integer(item->value) + 1;
 		}

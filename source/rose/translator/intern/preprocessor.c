@@ -15,8 +15,8 @@
 /** \name Conditional Include
  * \{ */
 
-typedef struct RCCConditionalInclude {
-	struct RCCConditionalInclude *parent;
+typedef struct RTConditionalInclude {
+	struct RTConditionalInclude *parent;
 
 	enum {
 		IN_THEN,
@@ -24,13 +24,13 @@ typedef struct RCCConditionalInclude {
 		IN_ELSE,
 	} kind;
 
-	RCCToken *token;
+	RTToken *token;
 
 	bool included;
-} RCCConditionalInclude;
+} RTConditionalInclude;
 
-ROSE_INLINE void push_conditional(RCContext *C, RCCConditionalInclude **conditional, RCCToken *token, bool included) {
-	RCCConditionalInclude *nconditional = RT_context_calloc(C, sizeof(RCCConditionalInclude));
+ROSE_INLINE void push_conditional(RTContext *C, RTConditionalInclude **conditional, RTToken *token, bool included) {
+	RTConditionalInclude *nconditional = RT_context_calloc(C, sizeof(RTConditionalInclude));
 	{
 		nconditional->parent = *conditional;
 		nconditional->kind = IN_THEN;
@@ -39,7 +39,7 @@ ROSE_INLINE void push_conditional(RCContext *C, RCCConditionalInclude **conditio
 	}
 	*conditional = nconditional;
 }
-ROSE_INLINE void pop_conditional(RCCConditionalInclude **conditional) {
+ROSE_INLINE void pop_conditional(RTConditionalInclude **conditional) {
 	*conditional = (*conditional)->parent;
 }
 
@@ -49,22 +49,22 @@ ROSE_INLINE void pop_conditional(RCCConditionalInclude **conditional) {
 /** \name Macro
  * \{ */
 
-typedef struct RCCMacroParameter {
-	struct RCCMacroParameter *prev, *next;
+typedef struct RTMacroParameter {
+	struct RTMacroParameter *prev, *next;
 
-	RCCToken *token;
-} RCCMacroParameter;
+	RTToken *token;
+} RTMacroParameter;
 
-ROSE_INLINE RCCMacroParameter *make_param(RCContext *C, RCCToken *token) {
-	RCCMacroParameter *p = RT_context_calloc(C, sizeof(RCCMacroParameter));
+ROSE_INLINE RTMacroParameter *make_param(RTContext *C, RTToken *token) {
+	RTMacroParameter *p = RT_context_calloc(C, sizeof(RTMacroParameter));
 
 	p->token = token;
 
 	return p;
 }
 
-typedef struct RCCMacro {
-	RCCToken *token;
+typedef struct RTMacro {
+	RTToken *token;
 
 	enum {
 		MACRO_NORMAL,
@@ -75,7 +75,7 @@ typedef struct RCCMacro {
 
 	ListBase parameters;
 	ListBase body;
-} RCCMacro;
+} RTMacro;
 
 /** \} */
 
@@ -83,14 +83,17 @@ typedef struct RCCMacro {
 /** \name Data Structures
  * \{ */
 
-typedef struct RCCPreprocessor {
-	const struct RCCFile *file;
+typedef struct RTPreprocessor {
+	const struct RTFile *file;
 
 	GHash *defines;
 
-	RCContext *context;
-	RCCConditionalInclude *conditional;
-} RCCPreprocessor;
+	RTContext *context;
+	RTConditionalInclude *conditional;
+
+	/** Internal headers single include lock variable! */
+	unsigned int included_stdint : 1;
+} RTPreprocessor;
 
 /** \} */
 
@@ -109,7 +112,7 @@ typedef struct RCCPreprocessor {
 	}                                                                                                      \
 	(void)0
 
-ROSE_INLINE bool is(RCCToken *token, const char *what) {
+ROSE_INLINE bool is(RTToken *token, const char *what) {
 	if (RT_token_is_keyword(token) || RT_token_is_identifier(token) || RT_token_is_punctuator(token)) {
 		if (STREQ(RT_token_as_string(token), what)) {
 			return true;
@@ -117,7 +120,7 @@ ROSE_INLINE bool is(RCCToken *token, const char *what) {
 	}
 	return false;
 }
-ROSE_INLINE bool skip(RCCPreprocessor *P, RCCToken **rest, RCCToken *token, const char *what) {
+ROSE_INLINE bool skip(RTPreprocessor *P, RTToken **rest, RTToken *token, const char *what) {
 	if (is(token, what)) {
 		*rest = token->next;
 		return true;
@@ -125,24 +128,24 @@ ROSE_INLINE bool skip(RCCPreprocessor *P, RCCToken **rest, RCCToken *token, cons
 	ERROR(P, token, "expected %s", what);
 	return false;
 }
-ROSE_INLINE bool consume(RCCToken **rest, RCCToken *token, const char *what) {
+ROSE_INLINE bool consume(RTToken **rest, RTToken *token, const char *what) {
 	if (is(token, what)) {
 		*rest = token->next;
 		return true;
 	}
 	return false;
 }
-ROSE_INLINE bool directive(RCCToken *token) {
+ROSE_INLINE bool directive(RTToken *token) {
 	return is(token, "#") && token->beginning_of_line;
 }
 
-ROSE_INLINE RCCToken *next_line(RCCToken *token) {
+ROSE_INLINE RTToken *next_line(RTToken *token) {
 	while (token->kind != TOK_EOF && (token->beginning_of_line == false || is(token->prev, "\\"))) {
 		token = token->next;
 	}
 	return token;
 }
-ROSE_INLINE RCCToken *copy_line(RCContext *C, ListBase *line, RCCToken *token) {
+ROSE_INLINE RTToken *copy_line(RTContext *C, ListBase *line, RTToken *token) {
 	while (token->kind != TOK_EOF && (token->beginning_of_line == false || is(token->prev, "\\"))) {
 		if (!is(token, "\\") || token->next->beginning_of_line == false) {
 			LIB_addtail(line, RT_token_duplicate(C, token));
@@ -152,56 +155,56 @@ ROSE_INLINE RCCToken *copy_line(RCContext *C, ListBase *line, RCCToken *token) {
 	LIB_addtail(line, RT_token_new_eof(C));
 	return token;
 }
-ROSE_INLINE RCCMacro *macro_find(RCCPreprocessor *P, RCCToken *token) {
+ROSE_INLINE RTMacro *macro_find(RTPreprocessor *P, RTToken *token) {
 	if (!RT_token_is_identifier(token)) {
 		return NULL;
 	}
 	return LIB_ghash_lookup(P->defines, RT_token_as_string(token));
 }
 
-ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken);
+ROSE_STATIC bool macro_expand(RTPreprocessor *P, ListBase *tokens, RTToken **prest, RTToken *ptoken);
 
-ROSE_STATIC void paste_normal(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro) {
-	for (RCCToken *itr = (RCCToken *)macro->body.first; itr->kind != TOK_EOF; itr = itr->next) {
+ROSE_STATIC void paste_normal(RTPreprocessor *P, ListBase *tokens, RTMacro *macro) {
+	for (RTToken *itr = (RTToken *)macro->body.first; itr->kind != TOK_EOF; itr = itr->next) {
 		if (!macro_expand(P, tokens, &itr, itr)) {
-			RCCToken *now = RT_token_duplicate(P->context, itr);
+			RTToken *now = RT_token_duplicate(P->context, itr);
 
 			LIB_addtail(tokens, now);
 		}
 	}
 }
 
-ROSE_STATIC void paste_fnlike(RCCPreprocessor *P, ListBase *tokens, RCCMacro *macro, RCCToken *params[64]) {
-	for (RCCToken *token = (RCCToken *)macro->body.first; token->kind != TOK_EOF; token = token->next) {
+ROSE_STATIC void paste_fnlike(RTPreprocessor *P, ListBase *tokens, RTMacro *macro, RTToken *params[64]) {
+	for (RTToken *token = (RTToken *)macro->body.first; token->kind != TOK_EOF; token = token->next) {
 		size_t index = 0;
-		LISTBASE_FOREACH_INDEX(RCCMacroParameter *, parameter, &macro->parameters, index) {
+		LISTBASE_FOREACH_INDEX(RTMacroParameter *, parameter, &macro->parameters, index) {
 			if (RT_token_match(parameter->token, token)) {
 				break;
 			}
 		}
 
 		if (params[index]) {
-			RCCToken *now = RT_token_duplicate(P->context, params[index]);
+			RTToken *now = RT_token_duplicate(P->context, params[index]);
 
 			LIB_addtail(tokens, now);
 		}
 		else if (is(token, "__VA_ARG__")) {
 			while (params[index]) {
-				RCCToken *now = RT_token_duplicate(P->context, params[index++]);
+				RTToken *now = RT_token_duplicate(P->context, params[index++]);
 				// This will also paste the preserved commas from the macro params, see #macro_expand.
 				LIB_addtail(tokens, now);
 			}
 		}
 		else if (!macro_expand(P, tokens, &token, token)) {
-			RCCToken *now = RT_token_duplicate(P->context, token);
+			RTToken *now = RT_token_duplicate(P->context, token);
 
 			LIB_addtail(tokens, now);
 		}
 	}
 }
 
-ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **prest, RCCToken *ptoken) {
-	RCCMacro *macro = macro_find(P, ptoken);
+ROSE_STATIC bool macro_expand(RTPreprocessor *P, ListBase *tokens, RTToken **prest, RTToken *ptoken) {
+	RTMacro *macro = macro_find(P, ptoken);
 	if (!macro) {
 		return false;
 	}
@@ -222,7 +225,7 @@ ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **p
 		*prest = ptoken;
 	}
 	else if (skip(P, &ptoken, ptoken, "(")) {
-		RCCToken *params[64] = {NULL};
+		RTToken *params[64] = {NULL};
 
 		for (size_t total = 0; !consume(&ptoken, ptoken, ")"); total++) {
 			// Extra parameters get to keep the comma, see #paste_fnlike.
@@ -245,14 +248,14 @@ ROSE_STATIC bool macro_expand(RCCPreprocessor *P, ListBase *tokens, RCCToken **p
 	return true;
 }
 
-ROSE_INLINE void macro_undef(RCCPreprocessor *P, RCCToken *token) {
+ROSE_INLINE void macro_undef(RTPreprocessor *P, RTToken *token) {
 	ROSE_assert(RT_token_is_identifier(token));
 
 	LIB_ghash_remove(P->defines, RT_token_as_string(token), NULL, NULL);
 }
 
-ROSE_INLINE RCCMacro *macro_new(RCCPreprocessor *P, int kind, RCCToken *identifier) {
-	RCCMacro *macro = RT_context_calloc(P->context, sizeof(RCCMacro));
+ROSE_INLINE RTMacro *macro_new(RTPreprocessor *P, int kind, RTToken *identifier) {
+	RTMacro *macro = RT_context_calloc(P->context, sizeof(RTMacro));
 
 	macro->kind = kind;
 	macro->token = identifier;
@@ -262,7 +265,7 @@ ROSE_INLINE RCCMacro *macro_new(RCCPreprocessor *P, int kind, RCCToken *identifi
 	return macro;
 }
 
-ROSE_INLINE void macro_do_fnlike(RCCPreprocessor *P, RCCMacro *macro, RCCToken **rest, RCCToken *token) {
+ROSE_INLINE void macro_do_fnlike(RTPreprocessor *P, RTMacro *macro, RTToken **rest, RTToken *token) {
 	for (int index = 0; !consume(&token, token, ")"); index++) {
 		if (index > 0) {
 			if (!skip(P, &token, token, ",")) {
@@ -285,12 +288,12 @@ ROSE_INLINE void macro_do_fnlike(RCCPreprocessor *P, RCCMacro *macro, RCCToken *
 	*rest = copy_line(P->context, &macro->body, token);
 }
 
-ROSE_INLINE void macro_do_normal(RCCPreprocessor *P, RCCMacro *macro, RCCToken **rest, RCCToken *token) {
+ROSE_INLINE void macro_do_normal(RTPreprocessor *P, RTMacro *macro, RTToken **rest, RTToken *token) {
 	*rest = copy_line(P->context, &macro->body, token);
 }
 
-ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *token) {
-	RCCToken *identifier = token;
+ROSE_INLINE void macro_dodef(RTPreprocessor *P, RTToken **rest, RTToken *token) {
+	RTToken *identifier = token;
 	if (!RT_token_is_identifier(identifier)) {
 		ERROR(P, identifier, "macro name must be an identifier");
 		*rest = next_line(identifier);
@@ -300,26 +303,97 @@ ROSE_INLINE void macro_dodef(RCCPreprocessor *P, RCCToken **rest, RCCToken *toke
 	token = token->next;
 
 	if (token->has_leading_space == false && consume(&token, token, "(")) {
-		RCCMacro *macro = macro_new(P, MACRO_FNLIKE, identifier);
+		RTMacro *macro = macro_new(P, MACRO_FNLIKE, identifier);
 		macro_do_fnlike(P, macro, rest, token);
 	}
 	else {
-		RCCMacro *macro = macro_new(P, MACRO_NORMAL, identifier);
+		RTMacro *macro = macro_new(P, MACRO_NORMAL, identifier);
 		macro_do_normal(P, macro, rest, token);
 	}
 }
 
-ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
+ROSE_INLINE void include_do_stdint(RTPreprocessor *P, ListBase *ntokens, bool local) {
+	if (P->included_stdint) {
+		return;
+	}
+
+	RTType *types[] = {
+		Tp_Void,
+		Tp_Char,
+		Tp_Short,
+		Tp_Int,
+		Tp_Long,
+		Tp_LLong,
+	};
+
+	const char *names[] = {
+		"void",
+		"char",
+		"short",
+		"int",
+		"long",
+		"long",
+	};
+
+	/** Only 0 (void), 1 (char), 2 (short), 4 (int), 8 (long/long long), 16 (long long) will be used! */
+	size_t primwidth[64];
+	memset(primwidth, 0, sizeof(primwidth));
+
+	for (size_t i = 1; i < ARRAY_SIZE(types); i++) {
+		RTType *primitive = types[i];
+		if (primitive->tp_basic.is_unsigned == false && primwidth[primitive->tp_basic.rank] == 0) {
+			primwidth[primitive->tp_basic.rank] = i;
+		}
+	}
+
+	LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));
+
+#define DEFINE_FIXED_WIDTH(width)                                                                        \
+	do {                                                                                                 \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, "typedef"));                       \
+		if (types[primwidth[width / 8]] == Tp_LLong) {                                                   \
+			/** Special case the keyword 'long' needs to be inserted twice for long long. */             \
+			LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]])); \
+		}                                                                                                \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]]));     \
+		LIB_addtail(ntokens, RT_token_new_virtual_identifier(P->context, "int" #width "_t"));            \
+		LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));                          \
+	} while (false);                                                                                     \
+	do {                                                                                                 \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, "typedef"));                       \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, "unsigned"));                      \
+		if (types[primwidth[width / 8]] == Tp_LLong) {                                                   \
+			/** Special case the keyword 'long' needs to be inserted twice for long long. */             \
+			LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]])); \
+		}                                                                                                \
+		LIB_addtail(ntokens, RT_token_new_virtual_keyword(P->context, names[primwidth[width / 8]]));     \
+		LIB_addtail(ntokens, RT_token_new_virtual_identifier(P->context, "uint" #width "_t"));           \
+		LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));                          \
+	} while (false);
+
+	DEFINE_FIXED_WIDTH(8);
+	DEFINE_FIXED_WIDTH(16);	 // int16_t, uint16_t
+	DEFINE_FIXED_WIDTH(32);	 // int32_t, uint32_t
+	DEFINE_FIXED_WIDTH(64);	 // int64_t, uint64_t
+
+	LIB_addtail(ntokens, RT_token_new_virtual_punctuator(P->context, ";"));
+
+#undef DEFINE_FIXED_WIDTH
+
+	P->included_stdint = true;
+}
+
+ROSE_INLINE void include_do(RTPreprocessor *P, RTToken *token, bool local) {
 	if (local) {
-		RCCToken *fname = token;
+		RTToken *fname = token;
 
 		char path[512] = {'\0'};
 
 		LIB_strcat(path, ARRAY_SIZE(path), RT_token_working_directory(token));
 		LIB_strcat(path, ARRAY_SIZE(path), RT_token_string(fname));
 
-		RCCFileCache *cache = RT_fcache_read_ex(P->context, path);
-		RCCFile *file = RT_file_new_ex(P->context, NULL, cache);
+		RTFileCache *cache = RT_fcache_read_ex(P->context, path);
+		RTFile *file = RT_file_new_ex(P->context, NULL, cache);
 
 		ListBase ntokens;
 		LIB_listbase_clear(&ntokens);
@@ -327,7 +401,7 @@ ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
 
 		token = next_line(token->next);
 
-		RCCToken *ntoken;
+		RTToken *ntoken;
 		while ((ntoken = LIB_pophead(&ntokens))) {
 			token->prev->next = ntoken;
 			ntoken->prev = token->prev;
@@ -336,19 +410,34 @@ ROSE_INLINE void include_do(RCCPreprocessor *P, RCCToken *token, bool local) {
 		}
 	}
 	else {
+		ListBase ntokens = {
+			.first = NULL,
+			.last = NULL,
+		};
+
 		if (!skip(P, &token, token, "<")) {
 			return;
 		}
 
-		ROSE_assert_unreachable();
+		if (skip(P, &token, token, "stdint") && skip(P, &token, token, ".") && skip(P, &token, token, "h")) {
+			include_do_stdint(P, &ntokens, local);
+		}
 
 		if (!skip(P, &token, token, ">")) {
 			return;
 		}
+
+		RTToken *ntoken;
+		while ((ntoken = LIB_pophead(&ntokens))) {
+			token->prev->next = ntoken;
+			ntoken->prev = token->prev;
+			ntoken->next = token;
+			token->prev = ntoken;
+		}
 	}
 }
 
-ROSE_STATIC RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *token) {
+ROSE_STATIC RTToken *skip_conditional_nested(RTPreprocessor *P, RTToken *token) {
 	while (token->kind != TOK_EOF) {
 		if (directive(token)) {
 			if (is(token->next, "if") || is(token->next, "ifdef") || is(token->next, "ifndef")) {
@@ -364,7 +453,7 @@ ROSE_STATIC RCCToken *skip_conditional_nested(RCCPreprocessor *P, RCCToken *toke
 	return token;
 }
 
-ROSE_STATIC RCCToken *skip_conditional(RCCPreprocessor *P, RCCToken *token) {
+ROSE_STATIC RTToken *skip_conditional(RTPreprocessor *P, RTToken *token) {
 	while (token->kind != TOK_EOF) {
 		if (directive(token)) {
 			if (is(token->next, "if") || is(token->next, "ifdef") || is(token->next, "ifndef")) {
@@ -380,15 +469,17 @@ ROSE_STATIC RCCToken *skip_conditional(RCCPreprocessor *P, RCCToken *token) {
 	return token;
 }
 
-void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
-	RCCPreprocessor *preprocessor = MEM_mallocN(sizeof(RCCPreprocessor), "RCCPreprocessor");
+void RT_pp_do(RTContext *context, const RTFile *file, ListBase *tokens) {
+	RTPreprocessor *preprocessor = MEM_mallocN(sizeof(RTPreprocessor), "RTPreprocessor");
 
 	preprocessor->context = context;
 	preprocessor->file = file;
 	preprocessor->conditional = NULL;
-	preprocessor->defines = LIB_ghash_str_new("RCCPreprocessor::defines");
+	preprocessor->defines = LIB_ghash_str_new("RTPreprocessor::defines");
 
-	RCCToken *itr = (RCCToken *)tokens->first;
+	preprocessor->included_stdint = false;
+
+	RTToken *itr = (RTToken *)tokens->first;
 
 	LIB_listbase_clear(tokens);
 
@@ -398,13 +489,13 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 		}
 
 		if (!directive(itr)) {
-			RCCToken *next = itr->next;
+			RTToken *next = itr->next;
 			LIB_addtail(tokens, itr);
 			itr = next;
 			continue;
 		}
 
-		RCCToken *start = itr;
+		RTToken *start = itr;
 		if (!skip(preprocessor, &itr, itr, "#")) {
 			ROSE_assert_unreachable();
 			break;
@@ -437,7 +528,7 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 			continue;
 		}
 		if (is(itr, "ifdef")) {
-			RCCToken *post = next_line(itr->next);
+			RTToken *post = next_line(itr->next);
 			if (macro_find(preprocessor, itr->next)) {
 				push_conditional(preprocessor->context, &preprocessor->conditional, start, true);
 				itr = post;
@@ -449,7 +540,7 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 			continue;
 		}
 		if (is(itr, "ifndef")) {
-			RCCToken *post = next_line(itr->next);
+			RTToken *post = next_line(itr->next);
 			if (!macro_find(preprocessor, itr->next)) {
 				push_conditional(preprocessor->context, &preprocessor->conditional, start, true);
 				itr = post;
@@ -497,7 +588,7 @@ void RT_pp_do(RCContext *context, const RCCFile *file, ListBase *tokens) {
 		/**
 		 * TODO:
 		 *
-		 * Handle #include, #if, #elif, #elifdef, #error
+		 * Handle #if, #elif, #elifdef, #error
 		 */
 
 		ERROR(preprocessor, itr, "invalid preprocessor directive");

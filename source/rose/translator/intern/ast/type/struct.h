@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-struct RCContext;
-struct RCCToken;
+struct RTContext;
+struct RTToken;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -28,24 +28,24 @@ struct RCCToken;
  * strategies are followed.
  * \{ */
 
-typedef struct RCCField {
-	struct RCCField *prev, *next;
+typedef struct RTField {
+	struct RTField *prev, *next;
 
-	const struct RCCToken *identifier;
-	const struct RCCType *type;
+	const struct RTToken *identifier;
+	const struct RTType *type;
 
 	int alignment;
 
-	struct RCCTypeBitfiledProperties properties;
-} RCCField;
+	struct RTTypeBitfiledProperties properties;
+} RTField;
 
-typedef struct RCCTypeStruct {
+typedef struct RTTypeStruct {
 	bool is_complete;
 
-	const struct RCCToken *identifier;
+	const struct RTToken *identifier;
 
 	ListBase fields;
-} RCCTypeStruct;
+} RTTypeStruct;
 
 /** \} */
 
@@ -53,7 +53,7 @@ typedef struct RCCTypeStruct {
 /** \name Creation Methods
  * \{ */
 
-struct RCCType *RT_type_new_struct(struct RCContext *, const struct RCCToken *identifier);
+struct RTType *RT_type_new_struct(struct RTContext *, const struct RTToken *identifier);
 
 /** \} */
 
@@ -61,15 +61,15 @@ struct RCCType *RT_type_new_struct(struct RCContext *, const struct RCCToken *id
 /** \name Util Methods
  * \{ */
 
-const struct RCCField *RT_type_struct_field_first(const struct RCCType *);
-const struct RCCField *RT_type_struct_field_last(const struct RCCType *);
+const struct RTField *RT_type_struct_field_first(const struct RTType *);
+const struct RTField *RT_type_struct_field_last(const struct RTType *);
 
-bool RT_type_struct_add_field(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment);
-bool RT_type_struct_add_bitfield(struct RCContext *, struct RCCType *, const struct RCCToken *tag, const struct RCCType *type, int alignment, int width);
+bool RT_type_struct_add_field(struct RTContext *, struct RTType *, const struct RTToken *tag, const struct RTType *type, int alignment);
+bool RT_type_struct_add_bitfield(struct RTContext *, struct RTType *, const struct RTToken *tag, const struct RTType *type, int alignment, int width);
 
-void RT_type_struct_finalize(struct RCCType *type);
+void RT_type_struct_finalize(struct RTType *type);
 
-bool RT_field_is_bitfield(const struct RCCField *field);
+bool RT_field_is_bitfield(const struct RTField *field);
 
 /** \} */
 

@@ -59,6 +59,15 @@ typedef struct GMemoryTail {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Query Methods
+ * \{ */
+
+/** Returns the size of the allocated memory block. */
+size_t MEM_guarded_allocN_length(const void *vptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Allocation Methods
  * \{ */
 

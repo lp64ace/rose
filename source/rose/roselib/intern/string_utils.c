@@ -300,7 +300,7 @@ static eStrCursorDelimType cursor_delim_type_unicode(const unsigned int uch) {
 		case 0xFF0C: /* CJK full width comma. */
 		case 0xFF61: /* CJK half width full stop. */
 			return STRCUR_DELIM_PUNCT;
-	
+
 		case '{':
 		case '}':
 		case '[':
@@ -312,7 +312,7 @@ static eStrCursorDelimType cursor_delim_type_unicode(const unsigned int uch) {
 		case 0xFF08: /* CJK full width left parenthesis. */
 		case 0xFF09: /* CJK full width right parenthesis. */
 			return STRCUR_DELIM_BRACE;
-	
+
 		case '+':
 		case '-':
 		case '=':
@@ -331,22 +331,22 @@ static eStrCursorDelimType cursor_delim_type_unicode(const unsigned int uch) {
 		case 0xFF0F: /* CJK full width solidus (forward slash). */
 		case 0xFF5E: /* CJK full width tilde. */
 			return STRCUR_DELIM_OPERATOR;
-	
+
 		case '\'':
 		case '\"':
 		case '`':
-		case 0xB4:   /* Acute accent. */
+		case 0xB4:	 /* Acute accent. */
 		case 0x2018: /* Left single quotation mark. */
 		case 0x2019: /* Right single quotation mark. */
 		case 0x201C: /* Left double quotation mark. */
 		case 0x201D: /* Right double quotation mark. */
 			return STRCUR_DELIM_QUOTE;
-	
+
 		case ' ':
 		case '\t':
 		case '\n':
 			return STRCUR_DELIM_WHITESPACE;
-	
+
 		case '\\':
 		case '@':
 		case '#':
@@ -355,18 +355,18 @@ static eStrCursorDelimType cursor_delim_type_unicode(const unsigned int uch) {
 		case ';':
 		case '?':
 		case '!':
-		case 0xA3:        /* Pound sign. */
-		case 0x80:        /* Euro sign. */
-		case 0x3001:      /* CJK ideographic comma. */
-		case 0xFF01:      /* CJK full width exclamation mark. */
-		case 0xFF64:      /* CJK half width ideographic comma. */
-		case 0xFF65:      /* Katakana half width middle dot. */
-		case 0xFF1A:      /* CJK full width colon. */
-		case 0xFF1B:      /* CJK full width semicolon. */
-		case 0xFF1F:      /* CJK full width question mark. */
+		case 0xA3:			/* Pound sign. */
+		case 0x80:			/* Euro sign. */
+		case 0x3001:		/* CJK ideographic comma. */
+		case 0xFF01:		/* CJK full width exclamation mark. */
+		case 0xFF64:		/* CJK half width ideographic comma. */
+		case 0xFF65:		/* Katakana half width middle dot. */
+		case 0xFF1A:		/* CJK full width colon. */
+		case 0xFF1B:		/* CJK full width semicolon. */
+		case 0xFF1F:		/* CJK full width question mark. */
 			/* case '_': */ /* special case, for python */
 			return STRCUR_DELIM_OTHER;
-	
+
 		default:
 			break;
 	}
@@ -383,14 +383,14 @@ ROSE_STATIC eStrCursorDelimType cursor_delim_type_utf8(const char *ch_utf8, cons
 void LIB_str_cursor_step_bounds_utf8(const char *p, int n, int pos, int *l, int *r) {
 	ROSE_assert(n >= 0);
 	ROSE_assert(pos >= 0 && pos <= n);
-	
+
 	eStrCursorDelimType prev = (pos > 0) ? cursor_delim_type_utf8(p, n, pos - 1) : STRCUR_DELIM_NONE;
 	eStrCursorDelimType next = (pos < n) ? cursor_delim_type_utf8(p, n, pos + 0) : STRCUR_DELIM_NONE;
-	
+
 	*l = pos;
 	*r = pos;
-	
-	if(prev != STRCUR_DELIM_NONE) {
+
+	if (prev != STRCUR_DELIM_NONE) {
 		while (*l > 0 && ((prev <= next) || (next == STRCUR_DELIM_NONE))) {
 			LIB_str_cursor_step_prev_utf8(p, n, l);
 			if (*l > 0) {
@@ -398,7 +398,7 @@ void LIB_str_cursor_step_bounds_utf8(const char *p, int n, int pos, int *l, int 
 			}
 		}
 	}
-	if(next != STRCUR_DELIM_NONE) {
+	if (next != STRCUR_DELIM_NONE) {
 		while (*r < n && ((next <= prev) || (prev == STRCUR_DELIM_NONE))) {
 			LIB_str_cursor_step_next_utf8(p, n, r);
 			if (*r < n) {

@@ -3,6 +3,8 @@
 
 #include "DNA_vector_types.h"
 
+#include "UI_interface.h"
+
 #include "LIB_utildefines.h"
 
 #include <limits.h>
@@ -12,11 +14,14 @@ extern "C" {
 #endif
 
 struct ARegion;
+struct Screen;
 struct GPUBatch;
 struct rContext;
 struct uiBlock;
 struct uiBut;
 struct uiLayout;
+struct uiPopupBlockCreate;
+struct uiPopupBlockHandle;
 struct uiUndoStack_Text;
 
 /* -------------------------------------------------------------------- */
@@ -38,9 +43,9 @@ typedef struct uiWidgetBaseParameters {
 	float tria1_size, tria2_size;
 	float shade_dir;
 	/* We pack alpha check and discard factor in alpha_discard.
-	* If the value is negative then we do alpha check.
-	* The absolute value itself is the discard factor.
-	* Initialize value to 1.0f if you don't want discard. */
+	 * If the value is negative then we do alpha check.
+	 * The absolute value itself is the discard factor.
+	 * Initialize value to 1.0f if you don't want discard. */
 	float alpha_discard;
 	float tria_type;
 	float _pad[3];
@@ -70,6 +75,56 @@ struct GPUBatch *ui_batch_roundbox_shadow_get();
 void ui_block_to_window_fl(const struct ARegion *region, const struct uiBlock *block, float *x, float *y);
 void ui_window_to_block_fl(const struct ARegion *region, const struct uiBlock *block, float *x, float *y);
 
+void ui_block_to_window_rctf(const struct ARegion *region, const struct uiBlock *block, rctf *dst, const rctf *src);
+void ui_window_to_block_rctf(const struct ARegion *region, const struct uiBlock *block, rctf *dst, const rctf *src);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Region
+ * \{ */
+
+/** Creates a new temporary region that can be used to show popups. */
+struct ARegion *ui_region_temp_add(struct Screen *screen);
+void ui_region_temp_remove(struct rContext *C, struct Screen *screen, struct ARegion *region);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Popup
+ * \{ */
+
+typedef struct uiBlock *(*uiBlockHandleCreateFunc)(struct rContext *C, struct uiPopupBlockHandle *handle, void *arg);
+
+typedef struct uiPopupBlockCreate {
+	uiBlockCreateFunc block_create_func;
+	uiBlockHandleCreateFunc handle_create_func;
+	void *arg;
+
+	int event_xy[2];
+
+	/** Set when popup is initialized from a button. */
+	struct ARegion *butregion;
+	struct uiBut *but;
+} uiPopupBlockCreate;
+
+typedef struct uiPopupBlockHandle {
+	struct ARegion *region;
+
+	uiPopupBlockCreate popup_create_vars;
+
+	int max_size_x;
+	int max_size_y;
+
+	struct {
+		struct ScrArea *area;
+		struct ARegion *region;
+	} context;
+} uiPopupBlockHandle;
+
+struct uiPopupBlockHandle *ui_popup_block_create(struct rContext *C, struct ARegion *butregion, struct uiBut *but, uiBlockCreateFunc block_create_fn, uiBlockHandleCreateFunc handle_create_fn, void *arg);
+void ui_popup_block_free(struct rContext *C, struct uiPopupBlockHandle *handle);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -91,7 +146,7 @@ struct uiBut *ui_region_find_active_but(const struct ARegion *region);
 
 struct uiBut *ui_but_find_mouse_over_ex(const struct ARegion *region, const int xy[2]);
 
-void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but);
+void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but, int state);
 void ui_do_but_activate_exit(struct rContext *C, struct ARegion *region, struct uiBut *but);
 void ui_but_active_free(struct rContext *C, struct uiBut *but);
 
@@ -126,4 +181,4 @@ void ui_layout_free(struct uiLayout *layout);
 }
 #endif
 
-#endif // INTERFACE_INTERN_H
+#endif	// INTERFACE_INTERN_H

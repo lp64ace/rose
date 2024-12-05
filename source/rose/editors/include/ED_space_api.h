@@ -16,6 +16,7 @@ void ED_spacetypes_exit();
 
 void ED_spacetype_statusbar();
 void ED_spacetype_topbar();
+void ED_spacetype_userpref();
 void ED_spacetype_view3d();
 
 /** \} */

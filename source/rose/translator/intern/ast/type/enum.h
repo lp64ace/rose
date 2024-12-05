@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-struct RCCType;
-struct RCCNode;
+struct RTType;
+struct RTNode;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -27,34 +27,34 @@ struct RCCNode;
  * strategies are followed.
  * \{ */
 
-typedef struct EnumItem {
-	struct EnumItem *prev, *next;
+typedef struct RTEnumItem {
+	struct RTEnumItem *prev, *next;
 
 	/** The identifier that describes the name of this enumerator item. */
-	const struct RCCToken *identifier;
+	const struct RTToken *identifier;
 	/**
 	 * The expression that describes the value of this enumerator item,
 	 * this has to be a constant expression and should always evaluate to an integer.
 	 */
-	const struct RCCNode *value;
-} EnumItem;
+	const struct RTNode *value;
+} RTEnumItem;
 
-typedef struct RCCTypeEnum {
+typedef struct RTTypeEnum {
 	bool is_complete;
 
 	/** The identifier that describes the typename of this enumerator type. */
-	struct RCCToken *identifier;
+	struct RTToken *identifier;
 	/**
 	 * The type that is used when accessing a value of this enumerator type,
 	 * by default we use the language specified but the user can override this.
 	 *
 	 * e.g. The underlying type for `enum : unsigned char { ... };` would be `Tp_UChar`.
 	 */
-	const struct RCCType *underlying_type;
+	const struct RTType *underlying_type;
 
 	/** A double linked list of all the items, `EnumItem`, that are defined within this enum. */
 	ListBase items;
-} RCCTypeEnum;
+} RTTypeEnum;
 
 /** \} */
 
@@ -62,7 +62,7 @@ typedef struct RCCTypeEnum {
 /** \name Creation Methods
  * \{ */
 
-struct RCCType *RT_type_new_enum(struct RCContext *, struct RCCToken *identifier, const struct RCCType *underlying_type);
+struct RTType *RT_type_new_enum(struct RTContext *, struct RTToken *identifier, const struct RTType *underlying_type);
 
 /** \} */
 
@@ -70,16 +70,16 @@ struct RCCType *RT_type_new_enum(struct RCContext *, struct RCCToken *identifier
 /** \name Util Methods
  * \{ */
 
-void RT_type_enum_add_constant_expr(struct RCContext *, struct RCCType *e, const struct RCCToken *identifier, const struct RCCNode *expr);
-void RT_type_enum_add_constant_auto(struct RCContext *, struct RCCType *e, const struct RCCToken *identifier);
+void RT_type_enum_add_constant_expr(struct RTContext *, struct RTType *e, const struct RTToken *identifier, const struct RTNode *expr);
+void RT_type_enum_add_constant_auto(struct RTContext *, struct RTType *e, const struct RTToken *identifier);
 
 /** Returns if the specified enumerator type has the specified item or not. */
-bool RT_type_enum_has(const struct RCCType *e, const struct RCCToken *identifier);
-bool RT_type_enum_has_value(const struct RCCType *e, long long value);
+bool RT_type_enum_has(const struct RTType *e, const struct RTToken *identifier);
+bool RT_type_enum_has_value(const struct RTType *e, long long value);
 /** Returns the constant expression that describes the value of the specified item. */
-const struct RCCNode *RT_type_enum_value(const struct RCCType *e, const struct RCCToken *identifier);
+const struct RTNode *RT_type_enum_value(const struct RTType *e, const struct RTToken *identifier);
 
-void RT_type_enum_finalize(struct RCContext *, struct RCCType *e);
+void RT_type_enum_finalize(struct RTContext *, struct RTType *e);
 
 /** \} */
 

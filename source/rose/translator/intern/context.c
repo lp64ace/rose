@@ -9,9 +9,9 @@
 /** \name Create Methods
  * \{ */
 
-RCContext *RT_context_new() {
-	RCContext *c = MEM_callocN(sizeof(RCContext), "RCContext");
-	c->alloc = LIB_memory_arena_create(MEMARENA_ALLOCATION_BLOCK, "RCCItem");
+RTContext *RT_context_new() {
+	RTContext *c = MEM_callocN(sizeof(RTContext), "RTContext");
+	c->alloc = LIB_memory_arena_create(MEMARENA_ALLOCATION_BLOCK, "RTItem");
 	return c;
 }
 
@@ -21,7 +21,7 @@ RCContext *RT_context_new() {
 /** \name Delete Methods
  * \{ */
 
-void RT_context_free(RCContext *c) {
+void RT_context_free(RTContext *c) {
 	LIB_memory_arena_destroy(c->alloc);
 	MEM_freeN(c);
 }
@@ -32,10 +32,10 @@ void RT_context_free(RCContext *c) {
 /** \name Util Methods
  * \{ */
 
-void *RT_context_malloc(RCContext *cc, size_t length) {
+void *RT_context_malloc(RTContext *cc, size_t length) {
 	return LIB_memory_arena_malloc(cc->alloc, length);
 }
-void *RT_context_calloc(RCContext *cc, size_t length) {
+void *RT_context_calloc(RTContext *cc, size_t length) {
 	return LIB_memory_arena_calloc(cc->alloc, length);
 }
 

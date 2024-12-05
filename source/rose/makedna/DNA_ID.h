@@ -157,6 +157,7 @@ enum {
 typedef enum eID_Index {
 	/* Special case: Library, should never ever depend on any other type. */
 	INDEX_ID_LI = 0,
+	
 	INDEX_ID_SCR,
 	INDEX_ID_WM,
 

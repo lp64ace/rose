@@ -159,8 +159,9 @@ typedef struct ARegion {
 	struct wmDrawBuffer *draw_buffer;
 
 	ListBase uiblocks;
+	ListBase uilists;
 	ListBase handlers;
-	
+
 	ARegionRuntime runtime;
 } ARegion;
 
@@ -196,6 +197,9 @@ enum {
 	RGN_TYPE_ANY = -1,
 	RGN_TYPE_WINDOW,
 	RGN_TYPE_HEADER,
+	RGN_TYPE_FOOTER,
+	/** Use for temporary regions, for example pop-ups! */
+	RGN_TYPE_TEMPORARY,
 };
 
 /** #ARegion->flag */
@@ -204,19 +208,23 @@ enum {
 	RGN_FLAG_HIDDEN_BY_USER = 1 << 1,
 	RGN_FLAG_TOO_SMALL = 1 << 2,
 	RGN_FLAG_DYNAMIC_SIZE = 1 << 3,
-	RGN_FLAG_TEMP_REGIONDATA = 1 << 4,
-	RGN_FLAG_NO_USER_RESIZE = 1 << 5,
-	RGN_FLAG_SIZE_CLAMP_X = 1 << 6,
-	RGN_FLAG_SIZE_CLAMP_Y = 1 << 7,
+	RGN_FLAG_ALWAYS_REBUILD = 1 << 4,
+	RGN_FLAG_REDRAW = 1 << 5,
+	RGN_FLAG_LAYOUT = 1 << 6,
+	RGN_FLAG_TEMP_REGIONDATA = 1 << 7,
+	RGN_FLAG_NO_USER_RESIZE = 1 << 8,
+	RGN_FLAG_SIZE_CLAMP_X = 1 << 9,
+	RGN_FLAG_SIZE_CLAMP_Y = 1 << 10,
 };
 
 #define AREAMINX 32
 #define PIXELSIZE 1
-#define WIDGET_UNIT 26
+#define WIDGET_UNIT 24
 
-#define UI_UNIT_X WIDGET_UNIT
-#define UI_UNIT_Y WIDGET_UNIT
-#define UI_TEXT_MARGIN_X 8
+#define UI_UNIT_X (PIXELSIZE * WIDGET_UNIT)
+#define UI_UNIT_Y (PIXELSIZE * WIDGET_UNIT)
+#define UI_TEXT_MARGIN_X 4
+#define UI_MENU_PADDING 0
 
 #ifdef __cplusplus
 }

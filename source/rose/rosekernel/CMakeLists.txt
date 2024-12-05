@@ -32,7 +32,9 @@ set(SRC
 	KER_library.h
 	KER_main.h
 	KER_rose.h
+	KER_rosefile.h
 	KER_screen.h
+	KER_userdef.h
 
 	intern/context.c
 	intern/idprop.c
@@ -43,7 +45,10 @@ set(SRC
 	intern/library.c
 	intern/main.c
 	intern/rose.c
+	intern/rosefile.c
 	intern/screen.c
+	intern/userdef.c
+	
 )
 
 # -----------------------------------------------------------------------------

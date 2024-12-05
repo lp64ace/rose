@@ -46,6 +46,7 @@ set(LIB
 
 if(ROSE_BUILD_WIN32)
 	list(APPEND SRC intern/oswin_win32.cc)
+	list(APPEND LIB dwmapi.lib)
 endif()
 if(ROSE_BUILD_X11)
 	list(APPEND INC ${X11_INCLUDE_DIR})

@@ -13,23 +13,23 @@
 /** \name Data Structures
  * \{ */
 
-typedef struct RCCFileCache {
+typedef struct RTFileCache {
 	char *content;
 
 	size_t length;
 
 	char *filepath;
 	char *filename;
-} RCCFileCache;
+} RTFileCache;
 
-typedef struct RCCFile {
-	const RCCFileCache *cache;
+typedef struct RTFile {
+	const RTFileCache *cache;
 
 	char name[64];
 
 	// This is used for #line directive!
 	int line;
-} RCCFile;
+} RTFile;
 
 /** \} */
 
@@ -64,7 +64,7 @@ ROSE_INLINE void *fcache_content_molest(void *content, size_t *length) {
 	return content;
 }
 
-ROSE_INLINE char *strndup_ex(RCContext *C, const char *str, size_t length) {
+ROSE_INLINE char *strndup_ex(RTContext *C, const char *str, size_t length) {
 	if (C) {
 		char *dup = RT_context_malloc(C, length + 1);
 		memcpy(dup, str, length);
@@ -74,12 +74,12 @@ ROSE_INLINE char *strndup_ex(RCContext *C, const char *str, size_t length) {
 	return LIB_strndupN(str, length);
 }
 
-ROSE_INLINE char *strdup_ex(RCContext *C, const char *str) {
+ROSE_INLINE char *strdup_ex(RTContext *C, const char *str) {
 	return strndup_ex(C, str, LIB_strlen(str));
 }
 
-RCCFileCache *RT_fcache_new_ex(RCContext *C, const char *path, const char *content, size_t length) {
-	RCCFileCache *cache = RT_context_calloc(C, sizeof(RCCFileCache));
+RTFileCache *RT_fcache_new_ex(RTContext *C, const char *path, const char *content, size_t length) {
+	RTFileCache *cache = RT_context_calloc(C, sizeof(RTFileCache));
 
 	const size_t plength = LIB_strlen(path);
 
@@ -98,8 +98,8 @@ RCCFileCache *RT_fcache_new_ex(RCContext *C, const char *path, const char *conte
 
 	return cache;
 }
-RCCFileCache *RT_fcache_new(const char *path, const char *content, size_t length) {
-	RCCFileCache *cache = MEM_callocN(sizeof(RCCFileCache), "RCCFileCache");
+RTFileCache *RT_fcache_new(const char *path, const char *content, size_t length) {
+	RTFileCache *cache = MEM_callocN(sizeof(RTFileCache), "RTFileCache");
 
 	const size_t plength = LIB_strlen(path);
 
@@ -119,8 +119,8 @@ RCCFileCache *RT_fcache_new(const char *path, const char *content, size_t length
 	return cache;
 }
 
-RCCFileCache *RT_fcache_read_ex(RCContext *C, const char *path) {
-	RCCFileCache *cache = NULL;
+RTFileCache *RT_fcache_read_ex(RTContext *C, const char *path) {
+	RTFileCache *cache = NULL;
 
 	FILE *file = fopen(path, "rb");
 	if (file) {
@@ -132,7 +132,7 @@ RCCFileCache *RT_fcache_read_ex(RCContext *C, const char *path) {
 		size_t length = (size_t)ftell(file);
 		fseek(file, 0, SEEK_SET);
 
-		void *content = MEM_mallocN(length + 1, "RCCFileCache::content");
+		void *content = MEM_mallocN(length + 1, "RTFileCache::content");
 		if (content) {
 			size_t actual;
 			if ((actual = fread(content, 1, length, file)) != length) {
@@ -147,8 +147,8 @@ RCCFileCache *RT_fcache_read_ex(RCContext *C, const char *path) {
 
 	return cache;
 }
-RCCFileCache *RT_fcache_read(const char *path) {
-	RCCFileCache *cache = NULL;
+RTFileCache *RT_fcache_read(const char *path) {
+	RTFileCache *cache = NULL;
 
 	FILE *file = fopen(path, "rb");
 	if (file) {
@@ -160,7 +160,7 @@ RCCFileCache *RT_fcache_read(const char *path) {
 		size_t length = (size_t)ftell(file);
 		fseek(file, 0, SEEK_SET);
 
-		void *content = MEM_mallocN(length + 1, "RCCFileCache::content");
+		void *content = MEM_mallocN(length + 1, "RTFileCache::content");
 		if (content) {
 			size_t actual;
 			if ((actual = fread(content, 1, length, file)) != length) {
@@ -176,7 +176,7 @@ RCCFileCache *RT_fcache_read(const char *path) {
 	return cache;
 }
 
-void RT_fcache_free(RCCFileCache *cache) {
+void RT_fcache_free(RTFileCache *cache) {
 	MEM_SAFE_FREE(cache->filepath);
 	MEM_SAFE_FREE(cache->filename);
 	MEM_SAFE_FREE(cache->content);
@@ -189,8 +189,8 @@ void RT_fcache_free(RCCFileCache *cache) {
 /** \name Main Functions
  * \{ */
 
-RCCFile *RT_file_new_ex(RCContext *C, const char *name, const RCCFileCache *cache) {
-	RCCFile *file = RT_context_calloc(C, sizeof(RCCFile));
+RTFile *RT_file_new_ex(RTContext *C, const char *name, const RTFileCache *cache) {
+	RTFile *file = RT_context_calloc(C, sizeof(RTFile));
 	file->cache = cache;
 	if (name && *name != '\0') {
 		LIB_strcpy(file->name, ARRAY_SIZE(file->name), name);
@@ -200,8 +200,8 @@ RCCFile *RT_file_new_ex(RCContext *C, const char *name, const RCCFileCache *cach
 	}
 	return file;
 }
-RCCFile *RT_file_new(const char *name, const RCCFileCache *cache) {
-	RCCFile *file = MEM_callocN(sizeof(RCCFile), "RCCFile");
+RTFile *RT_file_new(const char *name, const RTFileCache *cache) {
+	RTFile *file = MEM_callocN(sizeof(RTFile), "RTFile");
 	file->cache = cache;
 	if (name && *name != '\0') {
 		LIB_strcpy(file->name, ARRAY_SIZE(file->name), name);
@@ -212,20 +212,20 @@ RCCFile *RT_file_new(const char *name, const RCCFileCache *cache) {
 	return file;
 }
 
-const char *RT_file_name(const RCCFile *file) {
+const char *RT_file_name(const RTFile *file) {
 	return file->name;
 }
-const char *RT_file_fname(const RCCFile *file) {
+const char *RT_file_fname(const RTFile *file) {
 	return (file->cache) ? file->cache->filename : file->name;
 }
-const char *RT_file_path(const RCCFile *file) {
+const char *RT_file_path(const RTFile *file) {
 	return (file->cache) ? file->cache->filepath : "";
 }
-const char *RT_file_content(const RCCFile *file) {
+const char *RT_file_content(const RTFile *file) {
 	return (file->cache) ? file->cache->content : "";
 }
 
-void RT_file_free(RCCFile *file) {
+void RT_file_free(RTFile *file) {
 	MEM_freeN(file);
 }
 
@@ -235,7 +235,7 @@ void RT_file_free(RCCFile *file) {
 /** \name Error Methods
  * \{ */
 
-void RT_source_error(const RCCFile *file, const RCCSLoc *location, const char *fmt, ...) {
+void RT_source_error(const RTFile *file, const RTSLoc *location, const char *fmt, ...) {
 	const char *input = file ? RT_file_content(file) : NULL;
 	const char *begin = (location->p) ? location->p : "unkown source";
 	while (input < begin && begin[-1] != '\n') {
@@ -264,12 +264,12 @@ void RT_source_error(const RCCFile *file, const RCCSLoc *location, const char *f
 /** \name Source Location
  * \{ */
 
-void RT_sloc_copy(RCCSLoc *dst, const RCCSLoc *src) {
+void RT_sloc_copy(RTSLoc *dst, const RTSLoc *src) {
 	if (src) {
-		memcpy(dst, src, sizeof(RCCSLoc));
+		memcpy(dst, src, sizeof(RTSLoc));
 	}
 	else {
-		memset(dst, 0, sizeof(RCCSLoc));
+		memset(dst, 0, sizeof(RTSLoc));
 	}
 }
 

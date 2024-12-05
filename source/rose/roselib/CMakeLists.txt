@@ -28,6 +28,7 @@ set(SRC
 	LIB_assert.h
 	LIB_bitmap.h
 	LIB_endian_switch.h
+	LIB_filereader.h
 	LIB_ghash.h
 	LIB_hash.h
 	LIB_hash.hh
@@ -71,6 +72,8 @@ set(SRC
 	intern/assert.c
 	intern/bitmap.c
 	intern/endian_switch.c
+	intern/fileops.c
+	intern/filereader.c
 	intern/ghash.c
 	intern/ghash_utils.c
 	intern/hash_mm2a.c

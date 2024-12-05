@@ -32,6 +32,15 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------- */
+/** \name Query Methods
+ * \{ */
+
+/** Returns the size of the allocated memory block. */
+extern size_t (*MEM_allocN_length)(const void *vptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Allocation Methods
  * \{ */
 
