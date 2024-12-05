@@ -90,6 +90,7 @@ ROSE_STATIC void ui_text_clip_give_next_off(uiBut *but, const char *str, const c
 	but->scroll += bytes;
 }
 
+/** Updates the scrolling of the edit-button so that the cursor is visible. */
 ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 	rcti client;
 	ui_but_text_rect(but, rect, &client);
@@ -131,7 +132,7 @@ ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 
 			but->strwidth = RFT_width(font, str + but->scroll, adjusted - but->scroll);
 
-			if (but->strwidth < 10) {
+			if (but->strwidth < 20) {
 				break;
 			}
 		}
@@ -145,8 +146,9 @@ ROSE_STATIC void ui_draw_separator_ex(const rcti *rect, bool vertical, const uns
 	immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);
 
 	GPU_blend(GPU_BLEND_ALPHA);
-	immUniformColor4ubv(color);
 	GPU_line_width(1.0f);
+	
+	immUniformColor4ubv(color);
 	immBegin(GPU_PRIM_LINES, 2);
 	if (vertical) {
 		immVertex2f(pos, mid, rect->ymin);
@@ -157,6 +159,7 @@ ROSE_STATIC void ui_draw_separator_ex(const rcti *rect, bool vertical, const uns
 		immVertex2f(pos, rect->xmax, mid);
 	}
 	immEnd();
+	
 	GPU_blend(GPU_BLEND_NONE);
 
 	immUnbindProgram();
@@ -173,7 +176,22 @@ ROSE_STATIC float ui_widget_roundness(uiWidgetColors *wcol, const rcti *rect) {
 ROSE_STATIC bool ui_draw_but_row_extended_left(uiBut *but) {
 	if (but->draw & UI_BUT_GRID) {
 		uiBut *left = but->prev;
-		return left && left->draw & UI_BUT_GRID && DRAW_INDX(left->draw) == DRAW_INDX(but->draw);
+		if (left && left->draw & UI_BUT_GRID && DRAW_INDX(left->draw) == DRAW_INDX(but->draw)) {
+			/**
+			 * There is a case where the previous button will belong to a different list but have the same index, 
+			 * for example when both button are in the first row and both lists have a single row.
+			 * The following is a temporary solution to tackle that issue since it only works for lists that are 
+			 * not next to each other, for example the following layout would still have issues:
+			 * > LST1/ROW1 LST2/ROW1
+			 * But the following will work:
+			 * > LST1/ROW1
+			 * > LST2/ROW1
+			 *
+			 * Later on lists will probably have a separate pointer a special list structure that will handle list events, 
+			 * such as move/resize/rename/select/deselect/scroll items.
+			 */
+			return left->rect.ymin == but->rect.ymin && left->rect.ymax == but->rect.ymax;
+		}
 	}
 	return false;
 }
@@ -181,7 +199,22 @@ ROSE_STATIC bool ui_draw_but_row_extended_left(uiBut *but) {
 ROSE_STATIC bool ui_draw_but_row_extended_right(uiBut *but) {
 	if (but->draw & UI_BUT_GRID) {
 		uiBut *right = but->next;
-		return right && right->draw & UI_BUT_GRID && DRAW_INDX(right->draw) == DRAW_INDX(but->draw);
+		if (right && right->draw & UI_BUT_GRID && DRAW_INDX(right->draw) == DRAW_INDX(but->draw)) {
+			/**
+			 * There is a case where the previous button will belong to a different list but have the same index, 
+			 * for example when both button are in the first row and both lists have a single row.
+			 * The following is a temporary solution to tackle that issue since it only works for lists that are 
+			 * not next to each other, for example the following layout would still have issues:
+			 * > LST1/ROW1 LST2/ROW1
+			 * But the following will work:
+			 * > LST1/ROW1
+			 * > LST2/ROW1
+			 *
+			 * Later on lists will probably have a separate pointer a special list structure that will handle list events, 
+			 * such as move/resize/rename/select/deselect/scroll items.
+			 */
+			return right->rect.ymin == but->rect.ymin && right->rect.ymax == but->rect.ymax;
+		}
 	}
 	return false;
 }
