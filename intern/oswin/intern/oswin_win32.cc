@@ -2,6 +2,7 @@
 #include "oswin.hh"
 
 #include <assert.h>
+#include <dwmapi.h>
 #include <windowsx.h>
 
 #define SET_FLAG_FROM_TEST(value, test, flag) \
@@ -16,6 +17,9 @@
 	((void)0)
 
 namespace rose::tiny_window {
+
+static HGLRC SharedContextHandle = nullptr;
+static INT SharedContextCounter = 0;
 
 static int convert_key(short win32_key, short scan_code, short extend);
 
@@ -398,6 +402,7 @@ bool tWindowManager::InitDummy() {
 
 	return true;
 }
+
 void tWindowManager::ClearDummy() {
 	if (dummy.rendering_handle_) {
 		wglDeleteContext(dummy.rendering_handle_);
@@ -455,6 +460,7 @@ bool tWindowManager::InitExtensions() {
 	wglGetPixelFormatAttribivEXT = (PFNWGLGETPIXELFORMATATTRIBIVEXTPROC)wglGetProcAddress("wglGetPixelFormatAttribivEXT");
 	return true;
 }
+
 void tWindowManager::ClearExtensions() {
 }
 
@@ -472,6 +478,7 @@ bool tWindowManager::InitGamepad() {
 	}
 	return true;
 }
+
 void tWindowManager::ClearGamepad() {
 }
 
@@ -557,6 +564,7 @@ void tWindow::Hide() {
 bool tWindow::MakeContextCurrent() {
 	return wglMakeCurrent(this->device_handle_, this->rendering_handle_);
 }
+
 bool tWindow::SetSwapInterval(int interval) {
 	tWindowManager *manager = (tWindowManager *)GetWindowLongPtr(this->window_handle_, GWLP_USERDATA);
 	if (!manager) {
@@ -573,6 +581,7 @@ bool tWindow::SetSwapInterval(int interval) {
 	}
 	return false;
 }
+
 bool tWindow::GetSwapInterval(int *interval) {
 	tWindowManager *manager = (tWindowManager *)GetWindowLongPtr(this->window_handle_, GWLP_USERDATA);
 	if (!manager) {
@@ -589,6 +598,7 @@ bool tWindow::GetSwapInterval(int *interval) {
 	}
 	return false;
 }
+
 bool tWindow::SwapBuffers() {
 	return ::SwapBuffers(this->device_handle_);
 }
@@ -599,6 +609,18 @@ bool tWindow::SwapBuffers() {
 /** \name [Window] Win32 Private Methods
  * \{ */
 
+void ThemeRefresh(HWND hwnd) {
+	DWORD lightMode;
+	DWORD pcbData = sizeof(lightMode);
+	if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\\", L"AppsUseLightTheme", RRF_RT_REG_DWORD, NULL, &lightMode, &pcbData) == ERROR_SUCCESS) {
+		BOOL DarkMode = !lightMode;
+		/* `20 == DWMWA_USE_IMMERSIVE_DARK_MODE` in Windows 11 SDK.
+		 * This value was undocumented for Windows 10 versions 2004 and later,
+		 * supported for Windows 11 Build 22000 and later. */
+		DwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &DarkMode, sizeof(DarkMode));
+	}
+}
+
 tWindow::tWindow(WindowSetting settings) : settings(settings) {
 }
 
@@ -606,18 +628,18 @@ tWindow::~tWindow() {
 	SetWindowLongPtr(this->window_handle_, GWLP_USERDATA, (LONG_PTR)NULL);
 
 	if (this->rendering_handle_) {
-		wglDeleteContext(this->rendering_handle_);
+		if (SharedContextHandle != this->rendering_handle_ || SharedContextCounter == 1) {
+			if (--SharedContextCounter == 0) {
+				SharedContextHandle = NULL;
+			}
+			wglDeleteContext(this->rendering_handle_);
+		}
 	}
 	if (this->device_handle_) {
 		ReleaseDC(this->window_handle_, this->device_handle_);
 	}
 	if (this->window_handle_) {
-		/**
-		 * Calling #DestroyWindow would send an message to WindowProcedure,
-		 * that message would be sent to the user, if the user called this
-		 * then that message should not be sent back to the user again!
-		 */
-		DefWindowProc(this->window_handle_, WM_DESTROY, NULL, NULL);
+		::DestroyWindow(this->window_handle_);
 	}
 	UnregisterClass(this->window_class_.lpszClassName, this->window_class_.hInstance);
 }
@@ -650,6 +672,8 @@ bool tWindow::Init(tWindowManager *manager) {
 	if (!(this->context_created_ = InitContext(manager))) {
 		return false;
 	}
+
+	ThemeRefresh(this->window_handle_);
 
 	RECT tempRect;
 	::GetWindowRect(this->window_handle_, &tempRect);
@@ -692,6 +716,15 @@ bool tWindow::InitContext(tWindowManager *manager) {
 		/* Problem: glewInit failed, something is seriously wrong. */
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 		return false;
+	}
+
+	SharedContextCounter++;
+
+	if (!SharedContextHandle) {
+		SharedContextHandle = this->rendering_handle_;
+	}
+	else {
+		wglShareLists(SharedContextHandle, this->rendering_handle_);
 	}
 
 	return this->context_created_ = true;
@@ -978,6 +1011,10 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			if (manager->DestroyEvent) {
 				manager->DestroyEvent(window);
 			}
+		} break;
+		case WM_SETTINGCHANGE:
+		case WM_SYSCOLORCHANGE: {
+			ThemeRefresh(hwnd);
 		} break;
 		case WM_SIZE: {
 			window->clientx = LOWORD(lparam);

@@ -18,6 +18,9 @@
 
 namespace rose::tiny_window {
 
+static GLXContext SharedContextHandle = {};
+static int SharedContextCounter = {};
+
 static int convert_key(const KeySym x11_key);
 static int convert_key_ex(const KeySym x11_key, XkbDescPtr xkb_descr, const KeyCode x11_code);
 
@@ -354,6 +357,13 @@ tWindow::~tWindow() {
 	if (this->visual_info_) {
 		// Do we need to free this?
 	}
+	if (this->rendering_handle_) {
+		if (SharedContextHandle != this->rendering_handle_ || SharedContextCounter == 1) {
+			if (--SharedContextCounter == 0) {
+				SharedContextHandle = {};
+			}
+		}
+	}
 	if (this->window_handle_) {
 		XDestroyWindow(this->display_, this->window_handle_);
 	}
@@ -482,10 +492,16 @@ bool tWindow::InitContext(tWindowManager *manager) {
 		None
 	};
 	
-	this->rendering_handle_ = manager->glxCreateContextAttribsARB(this->display_, this->pixel_config_, NULL, true, attribs);
+	this->rendering_handle_ = manager->glxCreateContextAttribsARB(this->display_, this->pixel_config_, SharedContextHandle, true, attribs);
 	
 	if (!this->rendering_handle_) {
 		return false;
+	}
+	
+	SharedContextCounter++;
+	
+	if (!SharedContextHandle) {
+		SharedContextHandle = this->rendering_handle_;
 	}
 	
 	glXMakeCurrent(this->display_, this->window_handle_, this->rendering_handle_);
