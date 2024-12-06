@@ -68,6 +68,7 @@ void user_main_region_layout(struct rContext *C, ARegion *region) {
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "statusbar"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
+
 		UI_layout_grid(root, 3);
 
 		uiBut *but;

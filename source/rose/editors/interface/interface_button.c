@@ -329,7 +329,10 @@ ROSE_STATIC void ui_draw_text_font(uiWidgetColors *wcol, uiBut *but, const rcti 
 }
 
 ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
-	bool selected = (but->flag & UI_HOVER) != 0 || ui_but_is_editing(but);
+	bool selected = ui_but_is_editing(but);
+	if (ELEM(but->type, UI_BTYPE_EDIT)) {
+		selected |= (but->flag & UI_HOVER) != 0;
+	}
 	ui_draw_text_back(wcol, but, recti, selected);
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
 }
