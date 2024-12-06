@@ -304,8 +304,8 @@ ROSE_STATIC void ui_draw_text_font_caret(uiBut *but, const rcti *recti, int font
 ROSE_STATIC void ui_draw_text_font_draw(uiWidgetColors *wcol, uiBut *but, const rcti *recti, int font, const char *text, int x, int y) {
 	if (but->type == UI_BTYPE_EDIT) {
 		rctf rect;
-		rect.xmin = x + ROSE_MIN(recti->xmax, RFT_width(font, text, ROSE_MAX(0, but->selsta - but->scroll)));
-		rect.xmax = x + ROSE_MIN(recti->xmax, RFT_width(font, text, ROSE_MAX(0, but->selend - but->scroll)));
+		rect.xmin = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selsta - but->scroll)));
+		rect.xmax = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selend - but->scroll)));
 		rect.ymin = y - (RFT_height_max(font) * 1) / 4;
 		rect.ymax = y + (RFT_height_max(font) * 3) / 4;
 		UI_draw_roundbox_3ub_alpha(&rect, true, 0, wcol->text_sel, wcol->text_sel[3]);
@@ -329,7 +329,8 @@ ROSE_STATIC void ui_draw_text_font(uiWidgetColors *wcol, uiBut *but, const rcti 
 }
 
 ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
-	ui_draw_text_back(wcol, but, recti, ui_but_is_editing(but));
+	bool selected = (but->flag & UI_HOVER) != 0 || ui_but_is_editing(but);
+	ui_draw_text_back(wcol, but, recti, selected);
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
 }
 

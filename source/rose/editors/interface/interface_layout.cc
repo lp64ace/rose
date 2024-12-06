@@ -300,7 +300,7 @@ ROSE_INLINE void ui_layout_grid_flow_compute(ListBase *lb, const UILayoutGridFlo
 			tot_h += arr_max_h[i];
 		}
 		if (true /** even_rows */) {
-			tot_h = ceilf(val_avg_w) * in->totrow;
+			tot_h = val_max_h * in->totrow;
 		}
 	}
 	

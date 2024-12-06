@@ -326,14 +326,10 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	 * character. If an encoding error occurs, a negative number is returned. Notice that only when this returned value is
 	 * non-negative and less than n, the string has been completely written.
 	 */
-	size_t n = vsnprintf(NULL, 0, fmt, args);
+	int n = vsnprintf(buffer, maxncpy, fmt, args);
 
 	/** Resulting string has to be null-terminated. */
-	if (n < maxncpy) {
-		/** Format the buffer and then make sure that it is null-terminated, see below! */
-		n = vsnprintf(buffer, maxncpy, fmt, args);
-	}
-	else {
+	if (n < 0 || n >= maxncpy) {
 		n = 0;
 	}
 

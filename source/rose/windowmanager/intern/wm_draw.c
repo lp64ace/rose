@@ -143,6 +143,18 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 	}
 }
 
+GPUTexture *WM_draw_region_texture(ARegion *region, int view) {
+	if (!region->draw_buffer) {
+		return NULL;
+	}
+
+	GPUViewport *viewport = region->draw_buffer->viewport;
+	if (viewport) {
+		return GPU_viewport_color_texture(viewport, view);
+	}
+	return GPU_offscreen_color_texture(region->draw_buffer->offscreen);
+}
+
 void WM_draw_region_free(ARegion *region) {
 	wm_draw_region_buffer_free(region);
 }

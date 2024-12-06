@@ -4,7 +4,12 @@
 #include "DNA_space_types.h"
 #include "DNA_windowmanager_types.h"
 
+#include "GPU_compute.h"
 #include "GPU_framebuffer.h"
+#include "GPU_texture.h"
+#include "GPU_state.h"
+#include "GPU_shader.h"
+#include "GPU_shader_builtin.h"
 
 #include "ED_screen.h"
 #include "ED_space_api.h"
@@ -15,6 +20,8 @@
 #include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
+
+#include "WM_draw.h"
 
 #include "KER_screen.h"
 
@@ -30,6 +37,8 @@ ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Main");
 		LIB_addtail(&view3d->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
+
+		region->flag |= RGN_FLAG_ALWAYS_REBUILD;
 	}
 	view3d->spacetype = SPACE_VIEW3D;
 
@@ -52,6 +61,23 @@ ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
  * \{ */
 
 ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) {
+}
+
+ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
+	GPUShader *shader = GPU_shader_create_from_info_name("gpu_shader_mandelbrot");
+	GPUTexture *texture = WM_draw_region_texture(region, -1);
+
+	GPU_shader_bind(shader);
+	GPU_texture_image_bind(texture, GPU_shader_get_sampler_binding(shader, "canvas"));
+
+	/* Dispatch compute task. */
+	GPU_compute_dispatch(shader, region->sizex, region->sizey, 1);
+
+	GPU_memory_barrier(GPU_BARRIER_TEXTURE_UPDATE);
+
+	GPU_shader_unbind();
+	GPU_texture_unbind(texture);
+	GPU_shader_free(shader);
 }
 
 /** \} */
@@ -82,7 +108,7 @@ void ED_spacetype_view3d() {
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
 		art->layout = view3d_main_region_layout;
-		art->draw = ED_region_default_draw;
+		art->draw = view3d_main_region_draw;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
 	}

@@ -153,7 +153,7 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, in
 			data->undo_stack = ui_textedit_undo_stack_create();
 			if (state == BUTTON_STATE_TEXT_EDITING) {
 				but->selsta = 0;
-				but->selend = but->offset = LIB_strlen(but->pointer);
+				but->selend = but->offset = LIB_strlen(but->drawstr);
 			}
 			ui_textedit_undo_push(data->undo_stack, but->drawstr, LIB_strlen(but->drawstr));
 		} break;
