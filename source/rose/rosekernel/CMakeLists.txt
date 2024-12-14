@@ -33,6 +33,8 @@ set(SRC
 	KER_lib_query.h
 	KER_lib_remap.h
 	KER_main.h
+	KER_mesh.h
+	KER_mesh_types.hh
 	KER_rose.h
 	KER_rosefile.h
 	KER_screen.h
@@ -50,8 +52,9 @@ set(SRC
 	intern/main.c
 	intern/mesh.c
 	intern/mesh.cc
-	intern/mesh_normals.c
-	intern/mesh_runtime.c
+	intern/mesh_normals.cc
+	intern/mesh_runtime.cc
+	intern/mesh_tessellate.cc
 	intern/rose.c
 	intern/rosefile.c
 	intern/screen.c

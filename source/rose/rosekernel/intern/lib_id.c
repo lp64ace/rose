@@ -96,6 +96,19 @@ void KER_libblock_init_empty(ID *id) {
 	ROSE_assert_msg(0, "IDType missing IDTypeInfo");
 }
 
+void *KER_id_new(struct Main *main, short type, const char *name) {
+	ROSE_assert(main != NULL);
+
+	if (name == NULL) {
+		name = KER_idtype_idcode_to_name(type);
+	}
+
+	ID *id = KER_libblock_alloc(main, type, name, 0);
+	KER_libblock_init_empty(id);
+
+	return id;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

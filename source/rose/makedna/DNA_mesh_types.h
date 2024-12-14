@@ -9,42 +9,17 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-namespace rose {
-class ImplicitSharingInfo;
-}  // namespace rose
-using ImplicitSharingInfoHandle = rose::ImplicitSharingInfo;
+namespace rose::kernel {
+struct MeshRuntime;
+}  // namespace rose::kernel
+using MeshRuntime = rose::kernel::MeshRuntime;
 #else
-typedef struct ImplicitSharingInfoHandle ImplicitSharingInfoHandle;
+typedef struct MeshRuntime MeshRuntime;
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct MLoopTri_Store {
-	struct MLoopTri *array;
-	struct MLoopTri *array_wip;
-	int len;
-	int len_alloc;
-} MLoopTri_Store;
-
-typedef struct MeshRuntime {
-	void *normals_mutex;
-	
-	const ImplicitSharingInfoHandle *poly_offsets_sharing_info;
-	
-	/**
-	 * Caches for lazily computed vertex and polygon normals. These are stored here rather than in 
-	 * #CustomData because they can be calculated on a const mesh, and adding custom data layers on a 
-	 * const mesh is not thread-safe.
-	 */
-	char vert_normals_dirty;
-	char poly_normals_dirty;
-	float (*vert_normals)[3];
-	float (*poly_normals)[3];
-	
-	MLoopTri_Store looptris;
-} MeshRuntime;
 
 typedef struct Mesh {
 	ID id;
@@ -82,7 +57,7 @@ typedef struct Mesh {
 	 * without null checks, with the exception of some temporary meshes which should allocate and
 	 * free the data if they are passed to functions that expect run-time data.
 	 */
-	MeshRuntime runtime;
+	MeshRuntime *runtime;
 } Mesh;
 
 #define MESH_MAX_VERTS 16777216

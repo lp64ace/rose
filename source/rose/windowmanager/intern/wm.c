@@ -23,6 +23,7 @@
 
 #include "GPU_init_exit.h"
 
+#include "LIB_math_geom.h"
 #include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
@@ -261,7 +262,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	Mesh *me_cube = KER_libblock_alloc(main, ID_ME, "Cube", 0);
+	Mesh *me_cube = KER_id_new(main, ID_ME, "Cube");
 	if (!me_cube) {
 		ROSE_assert_unreachable();
 		return;

@@ -52,6 +52,13 @@ void *KER_libblock_alloc(struct Main *main, short type, const char *name, int fl
  */
 void KER_libblock_init_empty(struct ID *id);
 
+/**
+ * Generic helper to create a new empty data-block of given type in given \a main database.
+ *
+ * \param name: can be NULL, in which case we get default name for this ID type.
+ */
+void *KER_id_new(struct Main *main, short type, const char *name);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

@@ -27,8 +27,8 @@ ROSE_STATIC void mesh_init_data(ID *id) {
 ROSE_STATIC void mesh_free_data(ID *id) {
 	Mesh *mesh = (Mesh *)id;
 	
-	KER_mesh_runtime_free_data(mesh);
 	KER_mesh_geometry_clear(mesh);
+	KER_mesh_runtime_free_data(mesh);
 }
 
 IDTypeInfo IDType_ID_ME = {
