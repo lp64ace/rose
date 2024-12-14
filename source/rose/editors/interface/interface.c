@@ -481,6 +481,11 @@ ROSE_INLINE void ui_draw_menu_back(ARegion *region, uiBlock *block, const rcti *
 void UI_block_draw(const struct rContext *C, uiBlock *block) {
 	ARegion *region = CTX_wm_region(C);
 
+	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+		/** Before drawing we update the buttons so that all the content is curernt. */
+		ui_but_update(but);
+	}
+
 	GPU_blend(GPU_BLEND_ALPHA);
 
 	GPU_matrix_push_projection();

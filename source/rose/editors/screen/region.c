@@ -100,7 +100,7 @@ ROSE_STATIC void region_clear(struct rContext *C, ARegion *region) {
 }
 
 void ED_region_do_draw(struct rContext *C, ARegion *region) {
-	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REBUILD)) == 0) {
+	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REDRAW)) == 0) {
 		return;
 	}
 
