@@ -24,7 +24,7 @@ static INT SharedContextCounter = 0;
 static int convert_key(short win32_key, short scan_code, short extend);
 
 tWindowManager::tWindowManager() {
-	this->start_ = std::chrono::high_resolution_clock::now();
+	this->start_ = std::chrono::system_clock::now();
 }
 
 tWindowManager::~tWindowManager() {

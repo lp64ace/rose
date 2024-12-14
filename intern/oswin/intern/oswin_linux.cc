@@ -25,7 +25,7 @@ static int convert_key(const KeySym x11_key);
 static int convert_key_ex(const KeySym x11_key, XkbDescPtr xkb_descr, const KeyCode x11_code);
 
 tWindowManager::tWindowManager() {
-	this->start_ = std::chrono::high_resolution_clock::now();
+	this->start_ = std::chrono::system_clock::now();
 }
 
 tWindowManager::~tWindowManager() {

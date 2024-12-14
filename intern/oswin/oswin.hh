@@ -243,7 +243,7 @@ private:
 	std::vector<tMonitor *> monitors_;
 	std::vector<FormatSetting *> formats_;
 
-	std::chrono::high_resolution_clock::time_point start_;
+	std::chrono::system_clock::time_point start_;
 
 	std::vector<Gamepad> gamepads_;
 
