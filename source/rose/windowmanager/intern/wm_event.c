@@ -501,7 +501,12 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 			evt->mouse_xy[1] = y;
 			wm_cursor_position_to_ghost_screen_coords(window, &evt->mouse_xy[0], &evt->mouse_xy[1]);
 
-			evt->type = MOUSEMOVE;
+			if (0 <= x < window->sizex && 0 <= y && y < window->sizey) {
+				evt->type = MOUSEMOVE;
+			}
+			else {
+				evt->type = MOUSELEAVE;
+			}
 			evt->value = KM_NOTHING;
 			{
 				wmEvent *event_new = wm_event_add_mousemove(window, evt);

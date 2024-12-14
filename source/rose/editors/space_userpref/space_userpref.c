@@ -65,39 +65,6 @@ ROSE_INLINE void user_exit(WindowManager *wm, ScrArea *area) {
  * \{ */
 
 void user_main_region_layout(struct rContext *C, ARegion *region) {
-	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "statusbar"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
-
-		UI_layout_grid(root, 3);
-
-		uiBut *but;
-		but = uiDefBut(block, UI_BTYPE_TEXT, "First", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiButEnableFlag(but, UI_DISABLED);
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Last", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiButEnableFlag(but, UI_DISABLED);
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Email", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiButEnableFlag(but, UI_DISABLED);
-
-		uiDefBut(block, UI_BTYPE_TEXT, "Dimitris", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_TEXT, "Bokis", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_TEXT, "bokisdimitris@gmail.com", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-
-		uiDefBut(block, UI_BTYPE_TEXT, "George", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_TEXT, "Ypsilantis", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_TEXT, "unkown@gmail.com", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-
-		UI_block_layout_set_current(block, root);
-
-		uiDefBut(block, UI_BTYPE_SEPR, "Hidden", 1 * UI_UNIT_X, 8 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-
-		uiDefBut(block, UI_BTYPE_TEXT, "Static", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_PUSH, "Button", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_EDIT, "Edit 1", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_EDIT, "Edit 2", 8 * UI_UNIT_X, 1 * UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-
-		UI_block_end(C, block);
-	}
 }
 
 /** \} */

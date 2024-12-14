@@ -2,6 +2,7 @@
 #define LIB_HASH_TABLES_HH
 
 #include <algorithm>
+#include <iostream>
 #include <cmath>
 
 #include "LIB_allocator.hh"
@@ -253,7 +254,23 @@ public:
 		removed_load_factor_ = (float)removed_amount_ / (float)capacity_;
 	}
 
-	void print(const char *name) const;
+	void print(const rose::StringRef name) const {
+		std::cout << "Hash Table Stats: " << name << "\n";
+		std::cout << "  Address: " << address_ << "\n";
+		std::cout << "  Total Slots: " << capacity_ << "\n";
+		std::cout << "  Occupied Slots:  " << size_ << " (" << load_factor_ * 100.0f << " %)\n";
+		std::cout << "  Removed Slots: " << removed_amount_ << " (" << removed_load_factor_ * 100.0f << " %)\n";
+
+		char memory_size_str[64];
+		LIB_strnformat_byte_size(memory_size_str, ARRAY_SIZE(memory_size_str), size_in_bytes_, 3);
+		std::cout << "  Size: ~" << memory_size_str << "\n";
+		std::cout << "  Size per Slot: " << size_per_element_ << " bytes\n";
+
+		std::cout << "  Average Collisions: " << average_collisions_ << "\n";
+		for (size_t collision_count : keys_by_collision_count_.index_range()) {
+			std::cout << "  " << collision_count << " Collisions: " << keys_by_collision_count_[collision_count] << "\n";
+		}
+	}
 };
 
 /** \} */

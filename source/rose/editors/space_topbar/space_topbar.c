@@ -112,7 +112,7 @@ ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
-		uiLayout *layout = UI_layout_row(root, 1);
+		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
 		but = uiDefBut(block, UI_BTYPE_MENU, "File", 2 * UI_UNIT_X, region->sizey, NULL, UI_POINTER_NIL, 64, 0);
 		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_file_menu, NULL);
 		but = uiDefBut(block, UI_BTYPE_MENU, "Edit", 2 * UI_UNIT_X, region->sizey, NULL, UI_POINTER_NIL, 64, 0);

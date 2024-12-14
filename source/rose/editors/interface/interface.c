@@ -219,10 +219,10 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	}
 	else {
 		but->pointype = pointer ? pointype : UI_POINTER_NIL;
-		but->maxlength = 64;
+		but->maxlength = maxlen ? maxlen : 64;
 	}
 	
-	but->drawstr = MEM_mallocN(but->maxlength + 1, "uiBut::DrawStr");
+	but->drawstr = MEM_mallocN(but->maxlength, "uiBut::DrawStr");
 	LIB_strcpy(but->drawstr, but->maxlength, but->name);
 
 	but->rect.xmin = x;

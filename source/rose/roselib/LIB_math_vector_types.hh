@@ -514,6 +514,15 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 #undef ROSE_INT_OP
 };
 
+namespace math {
+
+template<typename T> struct AssertUnitEpsilon {
+	/** \note Copy of BLI_ASSERT_UNIT_EPSILON_DB to avoid dragging the entire header. */
+	static constexpr T value = T(0.0002);
+};
+
+}  // namespace math
+
 }  // namespace rose
 
 using char2 = rose::VecBase<int8_t, 2>;

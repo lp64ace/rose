@@ -14,6 +14,7 @@
 #include "GPU_viewport.h"
 
 #include "LIB_listbase.h"
+#include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"

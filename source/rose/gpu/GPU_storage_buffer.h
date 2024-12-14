@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-/** Opaque type hiding blender::gpu::StorageBuf. */
+/** Opaque type hiding rose::gpu::StorageBuf. */
 typedef struct GPUStorageBuf GPUStorageBuf;
 
 /* -------------------------------------------------------------------- */

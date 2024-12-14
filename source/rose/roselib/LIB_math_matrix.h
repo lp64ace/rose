@@ -26,6 +26,10 @@ void copy_m4_m4(float m1[4][4], const float m2[4][4]);
 void copy_m3_m4(float m1[3][3], const float m2[4][4]);
 void copy_m4_m3(float m1[4][4], const float m2[3][3]);
 
+void copy_m2d_m2(double m1[2][2], const float m2[2][2]);
+void copy_m3d_m3(double m1[3][3], const float m2[3][3]);
+void copy_m4d_m4(double m1[4][4], const float m2[4][4]);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -37,6 +41,9 @@ void add_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]);
 
 void sub_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]);
 void sub_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]);
+
+void mul_m3_fl(float R[3][3], float f);
+void mul_m4_fl(float R[4][4], float f);
 
 void mul_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]);
 void mul_m4_m3m4(float R[4][4], const float A[3][3], const float B[4][4]);
@@ -69,6 +76,13 @@ void mul_m3_m3_post(float R[3][3], const float B[3][3]);
 void mul_m4_m4_pre(float R[4][4], const float A[4][4]);
 void mul_m4_m4_post(float R[4][4], const float B[4][4]);
 
+void mul_v2_m3v2(float r[2], const float M[3][3], const float a[2]);
+void mul_v2_m3v3(float r[2], const float M[3][3], const float a[3]);
+void mul_v3_m3v3(float r[3], const float M[3][3], const float a[3]);
+
+void mul_m3_v2(const float m[3][3], float r[2]);
+void mul_m3_v3(const float M[3][3], float r[3]);
+
 bool invert_m2(float mat[2][2]);
 bool invert_m2_m2(float inverse[2][2], const float mat[2][2]);
 bool invert_m3(float mat[3][3]);
@@ -97,6 +111,10 @@ float determinant_m3(float a1, float a2, float a3, float b1, float b2, float b3,
 float determinant_m3_array(const float m[3][3]);
 float determinant_m4(const float m[4][4]);
 
+bool is_negative_m2(const float m[2][2]);
+bool is_negative_m3(const float m[3][3]);
+bool is_negative_m4(const float m[4][4]);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -116,7 +134,6 @@ bool equals_m4_m4(const float a[4][4], const float b[4][4]);
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);
 
-void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float ymax, float zmin, float zmax);
 void translate_m4(float mat[4][4], float Tx, float Ty, float Tz);
 
 /**

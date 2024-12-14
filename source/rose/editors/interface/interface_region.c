@@ -12,7 +12,7 @@
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
 #include "LIB_string.h"
-#include "LIB_string_utils.h"
+#include "LIB_string_utf.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"

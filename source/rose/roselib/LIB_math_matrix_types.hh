@@ -185,7 +185,7 @@ template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow)
 		return reinterpret_cast<col_type *>(this)[index];
 	}
 
-	/** Access helpers. Using Blender coordinate system. */
+	/** Access helpers. Using Rose coordinate system. */
 
 	vec3_type &x_axis() {
 		ROSE_STATIC_ASSERT(NumCol >= 1, "Wrong Matrix dimension");
@@ -214,25 +214,25 @@ template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow)
 	const vec3_type &x_axis() const {
 		ROSE_STATIC_ASSERT(NumCol >= 1, "Wrong Matrix dimension");
 		ROSE_STATIC_ASSERT(NumRow >= 3, "Wrong Matrix dimension");
-		return *reinterpret_cast<vec3_type *>(&(*this)[0]);
+		return *reinterpret_cast<const vec3_type *>(&(*this)[0]);
 	}
 
 	const vec3_type &y_axis() const {
 		ROSE_STATIC_ASSERT(NumCol >= 2, "Wrong Matrix dimension");
 		ROSE_STATIC_ASSERT(NumRow >= 3, "Wrong Matrix dimension");
-		return *reinterpret_cast<vec3_type *>(&(*this)[1]);
+		return *reinterpret_cast<const vec3_type *>(&(*this)[1]);
 	}
 
 	const vec3_type &z_axis() const {
 		ROSE_STATIC_ASSERT(NumCol >= 3, "Wrong Matrix dimension");
 		ROSE_STATIC_ASSERT(NumRow >= 3, "Wrong Matrix dimension");
-		return *reinterpret_cast<vec3_type *>(&(*this)[2]);
+		return *reinterpret_cast<const vec3_type *>(&(*this)[2]);
 	}
 
 	const loc_type &location() const {
 		ROSE_STATIC_ASSERT(NumCol >= 3, "Wrong Matrix dimension");
 		ROSE_STATIC_ASSERT(NumRow >= 2, "Wrong Matrix dimension");
-		return *reinterpret_cast<loc_type *>(&(*this)[NumCol - 1]);
+		return *reinterpret_cast<const loc_type *>(&(*this)[NumCol - 1]);
 	}
 
 	/** Matrix operators. */
@@ -389,6 +389,28 @@ template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow)
 			h = h * 33 + *reinterpret_cast<const as_uint_type<T> *>(&value);
 		});
 		return h;
+	}
+
+	friend std::ostream &operator<<(std::ostream &stream, const MatBase &mat) {
+		stream << "(\n";
+		for (int i = 0; i < NumRow; i++) {
+			stream << "(";
+			for (int j = 0; j < NumCol; j++) {
+				/** NOTE: j and i are swapped to follow mathematical convention. */
+				stream << mat[j][i];
+				if (j < NumCol - 1) {
+					stream << ", ";
+				}
+			}
+			stream << ")";
+			if (i < NumRow - 1) {
+				stream << ",";
+			}
+			stream << "\n";
+		}
+
+		stream << ")\n";
+		return stream;
 	}
 };
 

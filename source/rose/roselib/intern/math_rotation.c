@@ -59,4 +59,81 @@ void axis_angle_to_mat4(float R[4][4], const float axis[3], float angle) {
 	copy_m4_m3(R, tmat);
 }
 
+void axis_angle_to_mat3_single(float R[3][3], char axis, float angle) {
+	const float angle_cos = cosf(angle);
+	const float angle_sin = sinf(angle);
+
+	switch (axis) {
+		case 'X': /* rotation around X */
+			R[0][0] = 1.0f;
+			R[0][1] = 0.0f;
+			R[0][2] = 0.0f;
+			R[1][0] = 0.0f;
+			R[1][1] = angle_cos;
+			R[1][2] = angle_sin;
+			R[2][0] = 0.0f;
+			R[2][1] = -angle_sin;
+			R[2][2] = angle_cos;
+			break;
+		case 'Y': /* rotation around Y */
+			R[0][0] = angle_cos;
+			R[0][1] = 0.0f;
+			R[0][2] = -angle_sin;
+			R[1][0] = 0.0f;
+			R[1][1] = 1.0f;
+			R[1][2] = 0.0f;
+			R[2][0] = angle_sin;
+			R[2][1] = 0.0f;
+			R[2][2] = angle_cos;
+			break;
+		case 'Z': /* rotation around Z */
+			R[0][0] = angle_cos;
+			R[0][1] = angle_sin;
+			R[0][2] = 0.0f;
+			R[1][0] = -angle_sin;
+			R[1][1] = angle_cos;
+			R[1][2] = 0.0f;
+			R[2][0] = 0.0f;
+			R[2][1] = 0.0f;
+			R[2][2] = 1.0f;
+			break;
+		default:
+			ROSE_assert_unreachable();
+			break;
+	}
+}
+
+void axis_angle_to_mat4_single(float R[4][4], char axis, float angle) {
+	float mat3[3][3];
+	axis_angle_to_mat3_single(mat3, axis, angle);
+	copy_m4_m3(R, mat3);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Interpolation
+ * \{ */
+
+void interp_dot_slerp(float t, float cosom, float r_w[2]) {
+	const float eps = 1e-4f;
+
+	ROSE_assert(IN_RANGE_INCL(cosom, -1.0f - FLT_EPSILON, 1.0f + FLT_EPSILON));
+
+	/* within [-1..1] range, avoid aligned axis */
+	if (fabsf(cosom) < (1.0f - eps)) {
+		float omega, sinom;
+
+		omega = acosf(cosom);
+		sinom = sinf(omega);
+		r_w[0] = sinf((1.0f - t) * omega) / sinom;
+		r_w[1] = sinf(t * omega) / sinom;
+	}
+	else {
+		/* fallback to lerp */
+		r_w[0] = 1.0f - t;
+		r_w[1] = t;
+	}
+}
+
 /** \} */

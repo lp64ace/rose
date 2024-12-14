@@ -20,12 +20,12 @@ ROSE_INLINE void LIB_listbase_clear(ListBase *listbase) {
 }
 
 ROSE_INLINE void LIB_listbase_swap(ListBase *lb1, ListBase *lb2) {
-	SWAP(Link *, lb1->first, lb2->first);
-	SWAP(Link *, lb1->last, lb2->last);
+	SWAP(void *, lb1->first, lb2->first);
+	SWAP(void *, lb1->last, lb2->last);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // LIB_LISTBASE_INLINE_C
+#endif	// LIB_LISTBASE_INLINE_C

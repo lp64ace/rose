@@ -887,7 +887,7 @@ bool RFT_get_vfont_metrics(int fontid, float *ascend_ratio, float *em_ratio, flo
 
 	/* Copied without change from vfontdata_freetype.cc to ensure consistent sizing. */
 
-	/* Blender default BFont is not "complete". */
+	/* Rose default BFont is not "complete". */
 	const bool complete_font = (font->face->ascender != 0) && (font->face->descender != 0) && (font->face->ascender != font->face->descender);
 
 	if (complete_font) {

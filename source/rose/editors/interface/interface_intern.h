@@ -131,19 +131,18 @@ void ui_popup_block_free(struct rContext *C, struct uiPopupBlockHandle *handle);
 /** \name UI Button
  * \{ */
 
+/** Returns a handle to the font that the button is using. */
 int ui_but_text_font(struct uiBut *but);
 
 void ui_but_update(struct uiBut *but);
 void ui_draw_but(const struct rContext *C, struct ARegion *region, struct uiBut *but, const rcti *rect);
 
 bool ui_but_contains_px(const struct uiBut *but, const struct ARegion *region, const int xy[2]);
-
 bool ui_but_contains_pt(const struct uiBut *but, float mx, float my);
 bool ui_but_contains_rect(const struct uiBut *but, const rctf *rect);
 
 struct uiBut *ui_block_active_but_get(const struct uiBlock *block);
 struct uiBut *ui_region_find_active_but(const struct ARegion *region);
-
 struct uiBut *ui_but_find_mouse_over_ex(const struct ARegion *region, const int xy[2]);
 
 void ui_do_but_activate_init(struct rContext *C, struct ARegion *region, struct uiBut *but, int state);

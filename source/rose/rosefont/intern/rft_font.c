@@ -17,7 +17,7 @@
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
 #include "LIB_string.h"
-#include "LIB_string_utils.h"
+#include "LIB_string_utf.h"
 #include "LIB_thread.h"
 
 #include "RFT_api.h"

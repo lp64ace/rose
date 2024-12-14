@@ -1,3 +1,4 @@
+
 #ifndef LIB_INDEX_RANGE_HH
 #define LIB_INDEX_RANGE_HH
 
@@ -97,6 +98,17 @@ public:
 		return size_ == 0;
 	}
 
+	/**
+	 * Creates a new index range with the same beginning but a different end.
+	 */
+	constexpr IndexRange with_new_end(const size_t new_end) const {
+		return IndexRange::from_begin_end(start_, new_end);
+	}
+
+	constexpr size_t one_before_first() const {
+		ROSE_assert(size_ > 0);
+		return start_ - 1;
+	}
 	constexpr size_t first() const {
 		ROSE_assert(size_ > 0);
 		return start_;
@@ -104,6 +116,9 @@ public:
 	constexpr size_t last(const size_t n = 0) const {
 		ROSE_assert(size_ > n);
 		return start_ + size_ - 1 - n;
+	}
+	constexpr size_t one_after_last() const {
+		return start_ + size_;
 	}
 
 	constexpr bool contains(size_t value) const {
@@ -147,6 +162,21 @@ public:
 		return IndexRange(start_ + n, size_);
 	}
 };
+
+struct AlignedIndexRanges {
+	IndexRange prefix;
+	IndexRange aligned;
+	IndexRange suffix;
+};
+
+/**
+ * Split a range into three parts so that the boundaries of the middle part are aligned to some
+ * power of two.
+ *
+ * This can be used when an algorithm can be optimized on aligned indices/memory. The algorithm
+ * then needs a slow path for the beginning and end, and a fast path for the aligned elements.
+ */
+AlignedIndexRanges split_index_range_by_alignment(const IndexRange range, const size_t alignment);
 
 }  // namespace rose
 

@@ -37,6 +37,7 @@ typedef struct Main {
 
 	struct Library *curlib;
 	struct ListBase libraries;
+	struct ListBase meshes;
 	struct ListBase screens;
 	struct ListBase wm; /* Singleton (exception). */
 

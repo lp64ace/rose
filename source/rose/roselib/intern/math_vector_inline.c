@@ -1,6 +1,8 @@
 #ifndef LIB_MATH_VECTOR_INLINE_C
 #define LIB_MATH_VECTOR_INLINE_C
 
+#include "LIB_utildefines.h"
+
 #include <math.h>
 
 #ifdef __cplusplus
@@ -73,6 +75,38 @@ ROSE_INLINE void swap_v4_v2(float a[4], float b[4]) {
 	a[1] = b[1];
 	a[2] = b[2];
 	a[3] = b[3];
+}
+
+ROSE_INLINE void negate_v2(float v[2]) {
+	v[0] = -v[0];
+	v[1] = -v[1];
+}
+ROSE_INLINE void negate_v3(float v[3]) {
+	v[0] = -v[0];
+	v[1] = -v[1];
+	v[2] = -v[2];
+}
+ROSE_INLINE void negate_v4(float v[4]) {
+	v[0] = -v[0];
+	v[1] = -v[1];
+	v[2] = -v[2];
+	v[3] = -v[3];
+}
+
+ROSE_INLINE void negate_v2_v2(float v[2], const float a[2]) {
+	v[0] = -a[0];
+	v[1] = -a[1];
+}
+ROSE_INLINE void negate_v3_v3(float v[3], const float a[3]) {
+	v[0] = -a[0];
+	v[1] = -a[1];
+	v[2] = -a[2];
+}
+ROSE_INLINE void negate_v4_v4(float v[4], const float a[4]) {
+	v[0] = -a[0];
+	v[1] = -a[1];
+	v[2] = -a[2];
+	v[3] = -a[3];
 }
 
 // unsigned char
@@ -213,16 +247,16 @@ ROSE_INLINE void copy_v4_short(short v[4], const short a) {
 
 // unsigned int
 
-ROSE_INLINE void copy_v2_v2_uint(unsigned int v[2], const unsigned int a[2]){
+ROSE_INLINE void copy_v2_v2_uint(unsigned int v[2], const unsigned int a[2]) {
 	v[0] = a[0];
 	v[1] = a[1];
 }
-ROSE_INLINE void copy_v3_v3_uint(unsigned int v[3], const unsigned int a[3]){
+ROSE_INLINE void copy_v3_v3_uint(unsigned int v[3], const unsigned int a[3]) {
 	v[0] = a[0];
 	v[1] = a[1];
 	v[2] = a[2];
 }
-ROSE_INLINE void copy_v4_v4_uint(unsigned int v[4], const unsigned int a[4]){
+ROSE_INLINE void copy_v4_v4_uint(unsigned int v[4], const unsigned int a[4]) {
 	v[0] = a[0];
 	v[1] = a[1];
 	v[2] = a[2];
@@ -428,6 +462,47 @@ ROSE_INLINE void sub_v4_v4v4(float r[4], const float a[4], const float b[4]) {
 	r[2] = a[2] - b[2];
 	r[3] = a[3] - b[3];
 }
+ROSE_INLINE void sub_v2_v2v2_db(double r[2], const double a[2], const double b[2]) {
+	r[0] = a[0] - b[0];
+	r[1] = a[1] - b[1];
+}
+ROSE_INLINE void sub_v3_v3v3_db(double r[3], const double a[3], const double b[3]) {
+	r[0] = a[0] - b[0];
+	r[1] = a[1] - b[1];
+	r[2] = a[2] - b[2];
+}
+ROSE_INLINE void sub_v4_v4v4_db(double r[4], const double a[4], const double b[4]) {
+	r[0] = a[0] - b[0];
+	r[1] = a[1] - b[1];
+	r[2] = a[2] - b[2];
+	r[3] = a[3] - b[3];
+}
+
+ROSE_INLINE void sub_v2db_v2fl_v2fl(double r[2], const float a[2], const float b[2]) {
+	r[0] = (double)a[0] - (double)b[0];
+	r[1] = (double)a[1] - (double)b[1];
+}
+ROSE_INLINE void sub_v3db_v3fl_v3fl(double r[3], const float a[3], const float b[3]) {
+	r[0] = (double)a[0] - (double)b[0];
+	r[1] = (double)a[1] - (double)b[1];
+	r[2] = (double)a[2] - (double)b[2];
+}
+
+ROSE_INLINE void mul_v2_v2(float r[2], const float v[2]) {
+	r[0] *= v[0];
+	r[1] *= v[1];
+}
+ROSE_INLINE void mul_v3_v3(float r[3], const float v[3]) {
+	r[0] *= v[0];
+	r[1] *= v[1];
+	r[2] *= v[2];
+}
+ROSE_INLINE void mul_v4_v4(float r[4], const float v[4]) {
+	r[0] *= v[0];
+	r[1] *= v[1];
+	r[2] *= v[2];
+	r[3] *= v[3];
+}
 
 ROSE_INLINE void mul_v2_fl(float r[2], float f) {
 	r[0] *= f;
@@ -459,6 +534,21 @@ ROSE_INLINE void mul_v4_v4fl(float r[4], const float a[4], float f) {
 	r[2] = a[2] * f;
 	r[3] = a[3] * f;
 }
+ROSE_INLINE void mul_v2_v2v2(float r[2], const float a[2], const float b[2]) {
+	r[0] = a[0] * b[0];
+	r[1] = a[1] * b[1];
+}
+ROSE_INLINE void mul_v3_v3v3(float r[3], const float a[3], const float b[3]) {
+	r[0] = a[0] * b[0];
+	r[1] = a[1] * b[1];
+	r[2] = a[2] * b[2];
+}
+ROSE_INLINE void mul_v4_v4v4(float r[4], const float a[4], const float b[4]) {
+	r[0] = a[0] * b[0];
+	r[1] = a[1] * b[1];
+	r[2] = a[2] * b[2];
+	r[3] = a[3] * b[3];
+}
 
 ROSE_INLINE float dot_v2v2(const float a[2], const float b[2]) {
 	return a[0] * b[0] + a[1] * b[1];
@@ -470,11 +560,97 @@ ROSE_INLINE float dot_v4v4(const float a[4], const float b[4]) {
 	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
 }
 
+ROSE_INLINE double dot_v2v2_db(const double a[2], const double b[2]) {
+	return a[0] * b[0] + a[1] * b[1];
+}
+ROSE_INLINE double dot_v3v3_db(const double a[3], const double b[3]) {
+	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+ROSE_INLINE double dot_v4v4_db(const double a[4], const double b[4]) {
+	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+}
+
+ROSE_INLINE float mul_project_m4_v3_zfac(const float mat[4][4], const float co[3]) {
+	return (mat[0][3] * co[0]) + (mat[1][3] * co[1]) + (mat[2][3] * co[2]) + mat[3][3];
+}
+
+ROSE_INLINE float dot_m3_v3_row_x(const float M[3][3], const float a[3]) {
+	return M[0][0] * a[0] + M[1][0] * a[1] + M[2][0] * a[2];
+}
+ROSE_INLINE float dot_m3_v3_row_y(const float M[3][3], const float a[3]) {
+	return M[0][1] * a[0] + M[1][1] * a[1] + M[2][1] * a[2];
+}
+ROSE_INLINE float dot_m3_v3_row_z(const float M[3][3], const float a[3]) {
+	return M[0][2] * a[0] + M[1][2] * a[1] + M[2][2] * a[2];
+}
+
+ROSE_INLINE float dot_m4_v3_row_x(const float M[4][4], const float a[3]) {
+	return M[0][0] * a[0] + M[1][0] * a[1] + M[2][0] * a[2];
+}
+ROSE_INLINE float dot_m4_v3_row_y(const float M[4][4], const float a[3]) {
+	return M[0][1] * a[0] + M[1][1] * a[1] + M[2][1] * a[2];
+}
+ROSE_INLINE float dot_m4_v3_row_z(const float M[4][4], const float a[3]) {
+	return M[0][2] * a[0] + M[1][2] * a[1] + M[2][2] * a[2];
+}
+
+ROSE_INLINE void madd_v2_v2fl(float r[2], const float a[2], float f) {
+	r[0] += a[0] * f;
+	r[1] += a[1] * f;
+}
+ROSE_INLINE void madd_v3_v3fl(float r[3], const float a[3], float f) {
+	r[0] += a[0] * f;
+	r[1] += a[1] * f;
+	r[2] += a[2] * f;
+}
+ROSE_INLINE void madd_v4_v4fl(float r[4], const float a[4], float f) {
+	r[0] += a[0] * f;
+	r[1] += a[1] * f;
+	r[2] += a[2] * f;
+	r[3] += a[3] * f;
+}
+
+ROSE_INLINE void madd_v2_v2v2fl(float r[2], const float a[2], const float b[2], float f) {
+	r[0] = a[0] + b[0] * f;
+	r[1] = a[1] + b[1] * f;
+}
+ROSE_INLINE void madd_v3_v3v3fl(float r[3], const float a[3], const float b[3], float f) {
+	r[0] = a[0] + b[0] * f;
+	r[1] = a[1] + b[1] * f;
+	r[2] = a[2] + b[2] * f;
+}
+ROSE_INLINE void madd_v4_v4v4fl(float r[4], const float a[4], const float b[4], float f) {
+	r[0] = a[0] + b[0] * f;
+	r[1] = a[1] + b[1] * f;
+	r[2] = a[2] + b[2] * f;
+	r[3] = a[3] + b[3] * f;
+}
+
+ROSE_INLINE float cross_v2v2(const float a[2], const float b[2]) {
+	return a[0] * b[1] - a[1] * b[0];
+}
+
 ROSE_INLINE void cross_v3_v3v3(float r[3], const float a[3], const float b[3]) {
 	ROSE_assert(r != a && r != b);
 	r[0] = a[1] * b[2] - a[2] * b[1];
 	r[1] = a[2] * b[0] - a[0] * b[2];
 	r[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+ROSE_INLINE double cross_v2v2_db(const double a[2], const double b[2]) {
+	return a[0] * b[1] - a[1] * b[0];
+}
+ROSE_INLINE void cross_v3_v3v3_db(double r[3], const double a[3], const double b[3]) {
+	ROSE_assert(r != a && r != b);
+	r[0] = a[1] * b[2] - a[2] * b[1];
+	r[1] = a[2] * b[0] - a[0] * b[2];
+	r[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+ROSE_INLINE void add_newell_cross_v3_v3v3(float n[3], const float v_prev[3], const float v_curr[3]) {
+	n[0] += (v_prev[1] - v_curr[1]) * (v_prev[2] + v_curr[2]);
+	n[1] += (v_prev[2] - v_curr[2]) * (v_prev[0] + v_curr[0]);
+	n[2] += (v_prev[0] - v_curr[0]) * (v_prev[1] + v_curr[1]);
 }
 
 /** \} */
@@ -525,11 +701,31 @@ ROSE_INLINE bool equals_v4_v4_int(const int v1[4], const int v2[4]) {
 	return (v1[0] == v2[0] && v1[1] == v2[1] && v1[2] == v2[2] && v1[3] == v2[3]);
 }
 
+ROSE_INLINE float line_point_side_v2(const float l1[2], const float l2[2], const float pt[2]) {
+	return (((l1[0] - pt[0]) * (l2[1] - pt[1])) - ((l2[0] - pt[0]) * (l1[1] - pt[1])));
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Length
  * \{ */
+
+ROSE_INLINE float len_v2v2(const float a[2], const float b[2]) {
+	float d[2];
+	sub_v2_v2v2(d, b, a);
+	return len_v2(d);
+}
+ROSE_INLINE float len_v3v3(const float a[3], const float b[3]) {
+	float d[3];
+	sub_v3_v3v3(d, b, a);
+	return len_v3(d);
+}
+ROSE_INLINE float len_v4v4(const float a[4], const float b[4]) {
+	float d[4];
+	sub_v4_v4v4(d, b, a);
+	return len_v4(d);
+}
 
 ROSE_INLINE float len_v2(const float v[2]) {
 	return sqrtf(v[0] * v[0] + v[1] * v[1]);
@@ -539,6 +735,42 @@ ROSE_INLINE float len_v3(const float v[3]) {
 }
 ROSE_INLINE float len_v4(const float v[4]) {
 	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
+}
+
+ROSE_INLINE double len_v2_db(const double v[2]) {
+	return sqrt(v[0] * v[0] + v[1] * v[1]);
+}
+ROSE_INLINE double len_v3_db(const double v[3]) {
+	return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+ROSE_INLINE double len_v4_db(const double v[4]) {
+	return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
+}
+
+ROSE_INLINE float len_squared_v2(const float v[2]) {
+	return v[0] * v[0] + v[1] * v[1];
+}
+ROSE_INLINE float len_squared_v3(const float v[3]) {
+	return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+}
+ROSE_INLINE float len_squared_v4(const float v[4]) {
+	return v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3];
+}
+
+ROSE_INLINE float len_squared_v2v2(const float a[2], const float b[2]) {
+	float d[2];
+	sub_v2_v2v2(d, b, a);
+	return len_squared_v2(d);
+}
+ROSE_INLINE float len_squared_v3v3(const float a[3], const float b[3]) {
+	float d[3];
+	sub_v3_v3v3(d, b, a);
+	return len_squared_v3(d);
+}
+ROSE_INLINE float len_squared_v4v4(const float a[4], const float b[4]) {
+	float d[4];
+	sub_v4_v4v4(d, b, a);
+	return len_squared_v4(d);
 }
 
 ROSE_INLINE float normalize_v2_v2(float r[2], const float v[2]) {
@@ -552,7 +784,7 @@ ROSE_INLINE float normalize_v2_v2(float r[2], const float v[2]) {
 		zero_v2(r);
 		d = 0.0f;
 	}
-	
+
 	return d;
 }
 ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
@@ -566,7 +798,7 @@ ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
 		zero_v2(r);
 		d = 0.0f;
 	}
-	
+
 	return d;
 }
 ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
@@ -580,7 +812,7 @@ ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 		zero_v2(r);
 		d = 0.0f;
 	}
-	
+
 	return d;
 }
 
@@ -600,4 +832,4 @@ ROSE_INLINE float normalize_v4(float r[4]) {
 }
 #endif
 
-#endif // LIB_MATH_VECTOR_INLINE_C
+#endif	// LIB_MATH_VECTOR_INLINE_C

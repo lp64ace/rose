@@ -15,7 +15,7 @@
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
 #include "LIB_string.h"
-#include "LIB_string_utils.h"
+#include "LIB_string_utf.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"
@@ -446,6 +446,7 @@ ROSE_STATIC bool ui_textedit_set(uiBut *but, const char *text) {
 		MEM_freeN(but->drawstr);
 		but->drawstr = LIB_strdupN(text);
 		but->selsta = but->selend = but->offset = LIB_strlen(but->drawstr);
+		ui_but_tag_redraw(but);
 		return true;
 	}
 	return false;
@@ -462,6 +463,10 @@ ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 				}
 			}
+			retval |= WM_UI_HANDLER_BREAK;
+		} break;
+		case MOUSELEAVE: {
+			button_activate_state(C, but, BUTTON_STATE_EXIT);
 			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 		case LEFTMOUSE: {

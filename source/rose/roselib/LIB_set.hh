@@ -20,7 +20,7 @@ template<
 	 * allocation. This is useful when you expect to have many small sets. However, keep in mind
 	 * that (unlike vector) initializing a set has a O(n) cost in the number of slots.
 	 */
-	int64_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key)),
+	size_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(Key)),
 	/**
 	 * The strategy used to deal with collisions. They are defined in ROSE_probing_strategies.hh.
 	 */

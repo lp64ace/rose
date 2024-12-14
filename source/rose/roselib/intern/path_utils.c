@@ -1,6 +1,6 @@
 #include "LIB_path_utils.h"
 #include "LIB_string.h"
-#include "LIB_string_utils.h"
+#include "LIB_string_utf.h"
 
 #include <ctype.h>
 #include <limits.h>

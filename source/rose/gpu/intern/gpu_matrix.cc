@@ -6,6 +6,7 @@
 #include "GPU_matrix.h"
 #include "GPU_shader.h"
 
+#include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
 #include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"

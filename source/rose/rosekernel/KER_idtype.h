@@ -122,6 +122,7 @@ enum {
  * \{ */
 
 extern IDTypeInfo IDType_ID_LI;
+extern IDTypeInfo IDType_ID_ME;
 extern IDTypeInfo IDType_ID_SCR;
 extern IDTypeInfo IDType_ID_WM;
 

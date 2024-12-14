@@ -2,8 +2,8 @@
 
 #include "LIB_assert.h"
 #include "LIB_fileops.h"
-#include "LIB_string.h"
 #include "LIB_path_utils.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include <limits.h>
@@ -107,41 +107,43 @@ ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATA *e) {
 ROSE_STATIC size_t lib_filelist_dir_contents_win32(const char *dirname, DirEntry **r_list) {
 	char absolute[MAX_PATH];
 	lib_filelist_path(absolute, dirname);
-	
+
 	WIN32_FIND_DATA e;
-	
+
 	HANDLE hFind = FindFirstFile(absolute, &e);
 	if (hFind == INVALID_HANDLE_VALUE) {
 		return -1;
 	}
-	
+
 	char full[MAX_PATH];
-	
+
 	size_t count = 0;
 	do {
 		size_t index = count++;
 		(*r_list) = MEM_recallocN_id(*r_list, sizeof(DirEntry) * count, "DirEntryArray");
-		
+
 		(*r_list)[index].type = lib_filelist_type(&e);
 		if ((*r_list)[index].type == RDT_REG) {
 			LIB_path_join(full, MAX_PATH, dirname, SEP_STR, e.cFileName);
 			LIB_stat(full, &(*r_list)[index].info);
 		}
 		LIB_strcpy((*r_list)[index].name, ARRAY_SIZE((*r_list)[index].name), e.cFileName);
-	} while(FindNextFile(hFind, &e));
-	
+	} while (FindNextFile(hFind, &e));
+
 	return count;
 }
 #else
 ROSE_STATIC int lib_filelist_type(struct dirent *e) {
-#define MAP(unix, rose) case unix: return rose;
+#	define MAP(unix, rose) \
+		case unix:          \
+			return rose;
 	switch (e->d_type) {
 		MAP(DT_REG, RDT_REG);
 		MAP(DT_DIR, RDT_DIR);
 		MAP(DT_LNK, RDT_LNK);
 	}
-	
-#undef MAP
+
+#	undef MAP
 
 	return 0;
 }
@@ -151,14 +153,14 @@ ROSE_STATIC size_t lib_filelist_dir_contents_unix(const char *dirname, DirEntry 
 	if (!DirFindData) {
 		return -1;
 	}
-	
+
 	char full[MAX_PATH];
-	
+
 	size_t count = 0;
-	for(struct dirent *e = NULL; e = readdir(DirFindData); ) {
+	for (struct dirent *e = NULL; e = readdir(DirFindData);) {
 		size_t index = count++;
 		(*r_list) = MEM_reallocN_id(*r_list, sizeof(DirEntry) * count, "DirEntryArray");
-		
+
 		(*r_list)[index].type = lib_filelist_type(e);
 		if ((*r_list)[index].type == RDT_REG) {
 			LIB_path_join(full, MAX_PATH, dirname, SEP_STR, e->d_name);

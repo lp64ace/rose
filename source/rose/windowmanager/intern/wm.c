@@ -1,12 +1,15 @@
 #include "MEM_guardedalloc.h"
 
+#include "DNA_mesh_types.h"
 #include "DNA_space_types.h"
 
 #include "KER_context.h"
+#include "KER_cpp_types.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_mesh.h"
 #include "KER_rose.h"
 
 #include "WM_api.h"
@@ -25,6 +28,8 @@
 #include "LIB_utildefines.h"
 
 #include "RFT_api.h"
+
+#include "RM_include.h"
 
 #include <oswin.h>
 #include <stdio.h>
@@ -246,13 +251,32 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
 
-	wmWindow *window1 = WM_window_open(C, "Rose", SPACE_EMPTY, false);
-	if (!window1) {
+	wmWindow *window = WM_window_open(C, "Rose", SPACE_EMPTY, false);
+	if (!window) {
 		return;
 	}
+
+	RMesh *rm_cube = RM_preset_cube_create((const float[3]){1.0f, 1.0f, 1.0f});
+	if (!rm_cube) {
+		return;
+	}
+
+	Mesh *me_cube = KER_libblock_alloc(main, ID_ME, "Cube", 0);
+	if (!me_cube) {
+		ROSE_assert_unreachable();
+		return;
+	}
+
+	RMeshToMeshParams params = {
+		.cd_mask_extra = 0,
+	};
+	RM_mesh_rm_to_me(main, rm_cube, me_cube, &params);
+	
+	RM_mesh_free(rm_cube);
 }
 
 void WM_init(struct rContext *C) {
+	KER_cpp_types_init();
 	KER_idtype_init();
 
 	Main *main = KER_main_new();

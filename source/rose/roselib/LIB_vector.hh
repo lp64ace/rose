@@ -259,8 +259,8 @@ public:
 	 * destructed. If new_size is larger than the old size, the new elements at the end are default
 	 * constructed. If T is trivially constructible, the memory is not touched by this function.
 	 */
-	void resize(const int64_t new_size) {
-		const int64_t old_size = this->size();
+	void resize(const size_t new_size) {
+		const size_t old_size = this->size();
 		if (new_size > old_size) {
 			this->reserve(new_size);
 			default_construct_n(begin_ + old_size, new_size - old_size);
@@ -658,10 +658,10 @@ public:
 	 * Do a linear search to find the value in the vector.
 	 * When found, return the first index, otherwise return -1.
 	 */
-	int64_t first_index_of_try(const T &value) const {
+	size_t first_index_of_try(const T &value) const {
 		for (const T *current = begin_; current != end_; current++) {
 			if (*current == value) {
-				return int64_t(current - begin_);
+				return size_t(current - begin_);
 			}
 		}
 		return not_found;
@@ -671,7 +671,7 @@ public:
 	 * Do a linear search to find the value in the vector and return the found index. This invokes
 	 * undefined behavior when the value is not in the vector.
 	 */
-	int64_t first_index_of(const T &value) const {
+	size_t first_index_of(const T &value) const {
 		const size_t index = this->first_index_of_try(value);
 		return index;
 	}
@@ -750,7 +750,7 @@ public:
 	 * Obviously, this should only be used when you actually need the index in the loop.
 	 *
 	 * Example:
-	 *  for (int64_t i : myvector.index_range()) {
+	 *  for (size_t i : myvector.index_range()) {
 	 *    do_something(i, my_vector[i]);
 	 *  }
 	 */
@@ -815,6 +815,12 @@ private:
 		capacity_end_ = begin_ + new_capacity;
 	}
 };
+
+/**
+ * Same as a normal Vector, but does not use Rose's guarded allocator. This is useful when
+ * allocating memory with static storage duration.
+ */
+template<typename T, int64_t InlineBufferCapacity = default_inline_buffer_capacity(sizeof(T))> using RawVector = Vector<T, InlineBufferCapacity, RawAllocator>;
 
 }  // namespace rose
 

@@ -29,6 +29,23 @@ void axis_angle_to_mat3(float R[3][3], const float axis[3], const float angle);
  */
 void axis_angle_to_mat4(float R[4][4], const float axis[3], float angle);
 
+/**
+ * Create a 3x3 rotation matrix from a single axis.
+ */
+void axis_angle_to_mat3_single(float R[3][3], char axis, float angle);
+/**
+ * Create a 4x4 rotation matrix from a single axis.
+ */
+void axis_angle_to_mat4_single(float R[4][4], char axis, float angle);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Interpolation
+ * \{ */
+
+void interp_dot_slerp(float t, float cosom, float r_w[2]);
+
 /** \} */
 
 #ifdef __cplusplus

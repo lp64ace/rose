@@ -73,4 +73,4 @@ ROSE_INLINE void LIB_endian_switch_rank(void *vmem, size_t rank) {
 }
 #endif
 
-#endif // LIB_ENDIAN_SWITCH_INLINE_C
+#endif	// LIB_ENDIAN_SWITCH_INLINE_C

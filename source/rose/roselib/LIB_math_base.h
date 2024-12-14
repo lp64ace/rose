@@ -1,7 +1,7 @@
 #ifndef LIB_MATH_BASE_H
 #define LIB_MATH_BASE_H
 
-#include "LIB_sys_types.h"
+#include "LIB_utildefines.h"
 
 #include <math.h>
 
@@ -49,6 +49,14 @@
 extern "C" {
 #endif
 
+int32_t divide_ceil_i32(int32_t a, int32_t b);
+int32_t divide_round_i32(int32_t a, int32_t b);
+int32_t ceil_to_multiple_i32(int32_t a, int32_t b);
+
+int64_t divide_ceil_i64(int64_t a, int64_t b);
+int64_t divide_round_i64(int64_t a, int64_t b);
+int64_t ceil_to_multiple_i64(int64_t a, int64_t b);
+
 uint32_t divide_ceil_u32(uint32_t a, uint32_t b);
 uint32_t divide_round_u32(uint32_t a, uint32_t b);
 uint32_t ceil_to_multiple_u32(uint32_t a, uint32_t b);
@@ -59,8 +67,41 @@ uint64_t ceil_to_multiple_u64(uint64_t a, uint64_t b);
 
 float clampf(float x, float low, float high);
 
+ROSE_INLINE signed char round_fl_to_char(float a);
+ROSE_INLINE unsigned char round_fl_to_uchar(float a);
+ROSE_INLINE short round_fl_to_short(float a);
+ROSE_INLINE unsigned short round_fl_to_ushort(float a);
+ROSE_INLINE int round_fl_to_int(float a);
+ROSE_INLINE unsigned int round_fl_to_uint(float a);
+
+ROSE_INLINE signed char round_db_to_char(double a);
+ROSE_INLINE unsigned char round_db_to_uchar(double a);
+ROSE_INLINE short round_db_to_short(double a);
+ROSE_INLINE unsigned short round_db_to_ushort(double a);
+ROSE_INLINE int round_db_to_int(double a);
+ROSE_INLINE unsigned int round_db_to_uint(double a);
+
+ROSE_INLINE signed char round_fl_to_char_clamp(float a);
+ROSE_INLINE unsigned char round_fl_to_uchar_clamp(float a);
+ROSE_INLINE short round_fl_to_short_clamp(float a);
+ROSE_INLINE unsigned short round_fl_to_ushort_clamp(float a);
+ROSE_INLINE int round_fl_to_int_clamp(float a);
+ROSE_INLINE unsigned int round_fl_to_uint_clamp(float a);
+
+ROSE_INLINE signed char round_db_to_char_clamp(double a);
+ROSE_INLINE unsigned char round_db_to_uchar_clamp(double a);
+ROSE_INLINE short round_db_to_short_clamp(double a);
+ROSE_INLINE unsigned short round_db_to_ushort_clamp(double a);
+ROSE_INLINE int round_db_to_int_clamp(double a);
+ROSE_INLINE unsigned int round_db_to_uint_clamp(double a);
+
+ROSE_INLINE float saacos(float fac);
+ROSE_INLINE float saasin(float fac);
+
 #ifdef __cplusplus
 }
 #endif
+
+#include "intern/math_base_inline.c"
 
 #endif	// LIB_MATH_BASE_H

@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-/** Opaque type hiding blender::gpu::UniformBuf. */
+/** Opaque type hiding rose::gpu::UniformBuf. */
 typedef struct GPUUniformBuf GPUUniformBuf;
 
 /* -------------------------------------------------------------------- */

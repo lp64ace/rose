@@ -5,9 +5,44 @@
 
 #include "LIB_sys_types.h"
 
+#define ROSE_MAX_THREADS 1024
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct ListBase;
+
+/* -------------------------------------------------------------------- */
+/** \name Thread Pool
+ * \{ */
+
+void LIB_threadapi_init(void);
+void LIB_threadapi_exit(void);
+
+/**
+ * \param tot: When 0 only initializes malloc mutex in a safe way (see sequence.c)
+ * problem otherwise: scene render will kill of the mutex!
+ */
+void LIB_threadpool_init(struct ListBase *threadbase, void *(*do_thread)(void *), int tot);
+
+/**
+ * Amount of available threads.
+ */
+int LIB_available_threads(struct ListBase *threadbase);
+
+/**
+ * Returns thread number, for sample paters or threadsafe tables.
+ */
+int LIB_threadpool_available_thread_index(struct ListBase *threadbase);
+void LIB_threadpool_insert(struct ListBase *threadbase, void *callerdata);
+void LIB_threadpool_remove(struct ListBase *threadbase, void *callerdata);
+void LIB_threadpool_remove_index(struct ListBase *threadbase, int index);
+void LIB_threadpool_clear(struct ListBase *threadbase);
+void LIB_threadpool_end(struct ListBase *threadbase);
+int LIB_thread_is_main(void);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Mutex Lock
@@ -96,6 +131,34 @@ void LIB_spin_unlock(SpinLock *spin);
  * such as memory, are properly freed.
  */
 void LIB_spin_end(SpinLock *spin);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Thread Queue
+ * \{ */
+
+typedef struct ThreadQueue ThreadQueue;
+
+ThreadQueue *LIB_thread_queue_init(void);
+void LIB_thread_queue_free(ThreadQueue *queue);
+
+void LIB_thread_queue_push(ThreadQueue *queue, void *work);
+void *LIB_thread_queue_pop(ThreadQueue *queue);
+void *LIB_thread_queue_pop_timeout(ThreadQueue *queue, int ms);
+int LIB_thread_queue_len(ThreadQueue *queue);
+bool LIB_thread_queue_is_empty(ThreadQueue *queue);
+
+void LIB_thread_queue_wait_finish(ThreadQueue *queue);
+void LIB_thread_queue_nowait(ThreadQueue *queue);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name System Information
+ * \{ */
+
+size_t LIB_system_thread_count();
 
 /** \} */
 

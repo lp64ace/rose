@@ -135,6 +135,9 @@ void ED_screen_global_areas_refresh(wmWindow *window) {
 		return;
 	}
 
+	/**
+	 * This will not be called for temporary screens but it is nice to have this condition here.
+	 */
 	if (!screen->temp) {
 		/**
 		 * We add the status bar first so that when drawing them the topbar will be on top in case of collision.

@@ -1134,6 +1134,7 @@ const RTType *RT_parser_enum(RTCParser *P, RTToken **rest, RTToken *token) {
 
 	RTType *type = RT_type_new_enum(P->context, tag, P->configuration.tp_enum);
 
+	long long value = 0;
 	for (int index = 0; !consume_end(&token, token); index++) {
 		if (index > 0) {
 			if (!skip(P, &token, token, ",")) {
@@ -1148,6 +1149,7 @@ const RTType *RT_parser_enum(RTCParser *P, RTToken **rest, RTToken *token) {
 		token = token->next;
 
 		/** Note that since we add them as `var` in the scope errors will be handled there. */
+		RTObject *object = NULL;
 
 		if (consume(&token, token, "=")) {
 			const RTNode *expr = RT_parser_conditional(P, &token, token);
@@ -1156,21 +1158,27 @@ const RTType *RT_parser_enum(RTCParser *P, RTToken **rest, RTToken *token) {
 				return NULL;
 			}
 			RT_type_enum_add_constant_expr(P->context, type, identifier, expr);
+			value = RT_node_evaluate_integer(expr) + 1;
+
+			object = RT_object_new_enum(P->context, type, identifier, expr);
 		}
 		else {
-			RT_type_enum_add_constant_auto(P->context, type, identifier);
+			while (RT_type_enum_has_value(type, value)) {
+				value++;
+			}
+
+			RTNode *expr = RT_node_new_constant_value(P->context, value++);
+			RT_type_enum_add_constant_expr(P->context, type, identifier, expr);
+
+			object = RT_object_new_enum(P->context, type, identifier, expr);
+		}
+
+		if (!RT_scope_new_var(P->state->scope, identifier, (void *)object)) {
+			return NULL;
 		}
 	}
 
 	RT_type_enum_finalize(P->context, type);
-
-	/** Enum values are finalized in #RT_type_enum_finalize so we add them in the scope now. */
-	LISTBASE_FOREACH(RTEnumItem *, item, &type->tp_enum.items) {
-		RTObject *object = RT_object_new_enum(P->context, type, item->identifier, item->value);
-		if (!RT_scope_new_var(P->state->scope, item->identifier, (void *)object)) {
-			return NULL;
-		}
-	}
 	if (tag) {
 		RT_scope_new_tag(P->state->scope, tag, (void *)type);
 	}
@@ -1961,8 +1969,6 @@ const RTNode *RT_parser_typedef(RTCParser *P, RTToken **rest, RTToken *token, co
 				break;
 			}
 		}
-
-		ROSE_assert(base);
 
 		RTObject *object = RT_parser_declarator(P, &token, token, base);
 		if (!object->identifier) {

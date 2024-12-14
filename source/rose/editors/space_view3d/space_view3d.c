@@ -62,20 +62,6 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 }
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
-	GPUShader *shader = GPU_shader_create_from_info_name("gpu_shader_mandelbrot");
-	GPUTexture *texture = WM_draw_region_texture(region, -1);
-
-	GPU_shader_bind(shader);
-	GPU_texture_image_bind(texture, GPU_shader_get_sampler_binding(shader, "canvas"));
-
-	/* Dispatch compute task. */
-	GPU_compute_dispatch(shader, region->sizex, region->sizey, 1);
-
-	GPU_memory_barrier(GPU_BARRIER_TEXTURE_UPDATE);
-
-	GPU_shader_unbind();
-	GPU_texture_unbind(texture);
-	GPU_shader_free(shader);
 }
 
 /** \} */

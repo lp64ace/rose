@@ -67,3 +67,5 @@ set(GLEW_BINARIES ${LIBDIR}/glew/bin/glew32.dll)
 
 set(FREETYPE_INCLUDE_DIRS ${LIBDIR}/freetype/include ${LIBDIR}/freetype/include/freetype2)
 set(FREETYPE_LIBRARIES ${LIBDIR}/freetype/lib/freetype.lib)
+
+set(EIGEN3_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/Eigen3)

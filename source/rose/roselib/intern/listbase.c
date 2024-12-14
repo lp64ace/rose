@@ -34,7 +34,7 @@ void LIB_addtail(struct ListBase *lb, void *vlink) {
 	link->next = NULL;
 
 	if (lb->last) {
-		lb->last->next = link;
+		((Link *)lb->last)->next = link;
 	}
 	if (lb->first == NULL) {
 		lb->first = link;
@@ -53,7 +53,7 @@ void LIB_addhead(struct ListBase *lb, void *vlink) {
 	link->next = lb->first;
 
 	if (lb->first) {
-		lb->first->prev = link;
+		((Link *)lb->first)->prev = link;
 	}
 	if (lb->last == NULL) {
 		lb->last = link;
