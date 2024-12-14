@@ -33,7 +33,7 @@ void KER_mesh_poly_offsets_ensure_alloc(Mesh *mesh) {
 	if (mesh->totpoly == 0) {
 		return;
 	}
-	mesh->poly_offset_indices = static_cast<int *>(MEM_mallocN(sizeof(int) * mesh->totpoly + 1, "Mesh::poly_offset_indices"));
+	mesh->poly_offset_indices = static_cast<int *>(MEM_mallocN(sizeof(int) * (mesh->totpoly + 1), "Mesh::poly_offset_indices"));
 	mesh->runtime.poly_offsets_sharing_info = rose::implicit_sharing::info_for_mem_free(mesh->poly_offset_indices);
 	/** Set common values for convenience. */
 	mesh->poly_offset_indices[0] = 0;
