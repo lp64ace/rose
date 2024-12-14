@@ -309,16 +309,16 @@ void WM_do_draw(struct rContext *C) {
 		}
 
 		CTX_wm_window_set(C, window);
-		do {
-			wm_window_make_drawable(wm, window);
-			window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
-			window->frames = 1.0 / window->delta_time;
+		window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
+		window->fps = 1.0 / window->delta_time;
 
-			wm_window_draw(C, window);
+		wm_window_make_drawable(wm, window);
 
-			window->last_draw += window->delta_time;
-			WTK_window_swap_buffers(window->handle);
-		} while (false);
+		wm_window_draw(C, window);
+
+		WTK_window_swap_buffers(window->handle);
+
+		window->last_draw += window->delta_time;
 		CTX_wm_window_set(C, NULL);
 	}
 

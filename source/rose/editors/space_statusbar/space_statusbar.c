@@ -32,7 +32,7 @@ ROSE_INLINE SpaceLink *statusbar_create(const ScrArea *area) {
 		region->regiontype = RGN_TYPE_HEADER;
 		region->alignment = RGN_ALIGN_BOTTOM;
 
-		region->flag |= RGN_FLAG_ALWAYS_REBUILD;
+		region->flag |= RGN_FLAG_ALWAYS_REDRAW;
 	}
 	// Main Region
 	{
@@ -66,9 +66,13 @@ ROSE_STATIC void statusbar_header_region_layout(struct rContext *C, ARegion *reg
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "statusbar"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
-		uiDefBut(block, UI_BTYPE_TEXT, "Frames", 6 * UI_UNIT_X, 1 * UI_UNIT_Y, &window->frames, UI_POINTER_DBL, 32, UI_BUT_TEXT_LEFT);
+		uiDefBut(block, UI_BTYPE_TEXT, "Frames", 6 * UI_UNIT_X, 1 * UI_UNIT_Y, &window->fps, UI_POINTER_DBL, 32, UI_BUT_TEXT_LEFT);
 		UI_block_end(C, block);
 	}
+}
+
+ROSE_STATIC void statusbar_header_region_draw(struct rContext *C, ARegion *region) {
+	ED_region_header_draw(C, region);
 }
 
 /** \} */
@@ -96,7 +100,7 @@ void ED_spacetype_statusbar() {
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
 		art->layout = statusbar_header_region_layout;
-		art->draw = ED_region_header_draw;
+		art->draw = statusbar_header_region_draw;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 	}
