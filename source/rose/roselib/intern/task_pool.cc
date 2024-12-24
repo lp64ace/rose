@@ -4,7 +4,7 @@
 
 #include "MEM_guardedalloc.h"
 
-#include "DNA_listBase.h"
+#include "DNA_listbase.h"
 
 #include "LIB_gsqueue.h"
 #include "LIB_math_base.h"
