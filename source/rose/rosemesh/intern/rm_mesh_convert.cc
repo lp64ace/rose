@@ -126,11 +126,15 @@ ROSE_STATIC void rm_to_mesh_polys(const RMesh *rm, const rose::Array<RMFace *>& 
 	
 	rose::MutableSpan<int> dst_poly_offsets = rose::MutableSpan<int>{
 		KER_mesh_poly_offsets_for_write(mesh),
-		(size_t)mesh->totpoly,
+		(size_t)mesh->totpoly + 1,
 	};
 	
-	/** The last offset is already set by #KER_mesh_poly_offsets_ensure_alloc, handy! */
-	rose::threading::parallel_for(dst_poly_offsets.index_range(), 1024, [&](const rose::IndexRange range) {
+	/**
+	 * The last offset is already set by #KER_mesh_poly_offsets_ensure_alloc, handy!
+	 * The reason we use #rm_polys.index_range() here is because #mesh->totpoly + 1 will lead to an out-of-bounds.
+	 * As said above #dst_poly_offsets's last index will already be initialized by #KER_mesh_poly_offsets_ensure_alloc.
+	 */
+	rose::threading::parallel_for(rm_polys.index_range(), 1024, [&](const rose::IndexRange range) {
 		for (const int index : range) {
 			const RMFace *src_poly = rm_polys[index];
 			

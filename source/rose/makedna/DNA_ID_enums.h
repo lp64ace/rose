@@ -24,6 +24,7 @@ extern "C" {
 typedef enum ID_Type {
 	ID_LI = MAKE_ID2('I', 'D'),
 	ID_ME = MAKE_ID2('M', 'E'),
+	ID_OB = MAKE_ID2('O', 'B'),
 	ID_SCR = MAKE_ID2('S', 'R'),
 	ID_WM = MAKE_ID2('W', 'M'),
 } ID_Type;

@@ -144,8 +144,9 @@ enum {
 
 #define FILTER_ID_LI (1 << 0)
 #define FILTER_ID_ME (1 << 1)
-#define FILTER_ID_SCR (1 << 2)
-#define FILTER_ID_WM (1 << 3)
+#define FILTER_ID_OB (1 << 2)
+#define FILTER_ID_SCR (1 << 3)
+#define FILTER_ID_WM (1 << 4)
 
 /**
  * This enum defines the index assigned to each type of IDs in the array returned by
@@ -181,6 +182,7 @@ typedef enum eID_Index {
 	INDEX_ID_LI = 0,
 	
 	INDEX_ID_ME,
+	INDEX_ID_OB,
 	
 	INDEX_ID_SCR,
 	INDEX_ID_WM,

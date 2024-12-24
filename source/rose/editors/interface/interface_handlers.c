@@ -721,8 +721,8 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 					break;
 				}
+				/** Menu was triggered open the menu! */
 				else if (but->type == UI_BTYPE_MENU) {
-					/** Menu was triggered open the menu! */
 					button_activate_state(C, but, BUTTON_STATE_MENU_OPEN);
 				}
 				else {
@@ -733,6 +733,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 			}
 		} break;
 		case BUTTON_STATE_MENU_OPEN: {
+			/** Right mouse anywhere cancels the popup. */
 			if (evt->type == RIGHTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				button_activate_state(C, but, BUTTON_STATE_EXIT);
 				retval |= WM_UI_HANDLER_BREAK;
@@ -742,19 +743,35 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 				retval |= WM_UI_HANDLER_BREAK;
 				break;
 			}
-			if (data->menu && data->menu->region) {
-				if (ED_region_contains_xy(data->menu->region, evt->mouse_xy)) {
-					retval |= WM_UI_HANDLER_BREAK;
-					break;
+			/** Left mouse outside of the region cancels the popup. */
+			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				ARegion *menuregion = NULL;
+				if (data->menu && data->menu->region) {
+					if (ED_region_contains_xy(data->menu->region, evt->mouse_xy)) {
+						retval |= WM_UI_HANDLER_BREAK;
+						break;
+					}
+					uiBut *sub = ui_block_active_but_get((uiBlock *)data->menu->region->uiblocks.first);
+					if (sub) {
+						retval |= WM_UI_HANDLER_BREAK;
+						break;
+					}
+					menuregion = data->region;
 				}
-				uiBut *sub = ui_block_active_but_get((uiBlock *)data->menu->region->uiblocks.first);
-				if (sub) {
-					retval |= WM_UI_HANDLER_BREAK;
-					break;
-				}
+				button_activate_state(C, but, BUTTON_STATE_EXIT);
+				/**
+				 * A popup was closed because the current popup receive a left-mouse click event, 
+				 * even though the popup was not able to handle it parent pop-ups may be able to instead!
+				 * 
+				 * The parent region has priority, send the event to the active in there, 
+				 * if that doesn't find a hovered-button either the chain keeps going up, 
+				 * until eventually all the popup regions close or one of them is triggered!
+				 * 
+				 * NOTE: We do not update the active button since it may no longer has the focus, 
+				 * we try to find the hovered one instead!
+				 */
+				retval |= ui_handle_button_over(C, evt, menuregion);
 			}
-			/** The cursor has left the region of the popup! */
-			button_activate_state(C, but, BUTTON_STATE_EXIT);
 		} break;
 	}
 

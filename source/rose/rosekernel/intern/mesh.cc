@@ -1,10 +1,21 @@
 #include "MEM_guardedalloc.h"
 
 #include "KER_idtype.h"
+#include "KER_lib_id.h"
 #include "KER_mesh_types.hh"
 #include "KER_mesh.h"
 
 #include "LIB_implicit_sharing.hh"
+
+/* -------------------------------------------------------------------- */
+/** \name Mesh Creation
+ * \{ */
+
+Mesh *KER_mesh_add(Main *main, const char *name) {
+	return (Mesh *)KER_id_new(main, ID_ME, name);
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Mesh Geometry

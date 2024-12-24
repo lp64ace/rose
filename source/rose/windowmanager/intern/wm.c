@@ -11,6 +11,7 @@
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_rose.h"
+#include "KER_object.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -262,9 +263,9 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	Mesh *me_cube = KER_id_new(main, ID_ME, "Cube");
+	Mesh *me_cube = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "Cube");
 	if (!me_cube) {
-		ROSE_assert_unreachable();
+		fprintf(stderr, "[WindowManager] Failed to create a cube mesh.\n");
 		return;
 	}
 
@@ -272,8 +273,13 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		.cd_mask_extra = 0,
 	};
 	RM_mesh_rm_to_me(main, rm_cube, me_cube, &params);
-	
 	RM_mesh_free(rm_cube);
+
+	Object *ob_cube = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me_cube);
+	if (!ob_cube) {
+		fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
+		return;
+	}
 }
 
 void WM_init(struct rContext *C) {

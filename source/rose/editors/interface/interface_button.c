@@ -140,7 +140,7 @@ ROSE_STATIC void ui_text_clip_cursor(uiBut *but, const rcti *rect) {
 }
 
 ROSE_STATIC void ui_draw_separator_ex(const rcti *rect, bool vertical, const unsigned char color[4]) {
-	const int mid = vertical ? LIB_rcti_cent_x(rect) : LIB_rcti_cent_y(rect);
+	const int mid = vertical ? LIB_rcti_cent_x(rect) : LIB_rcti_cent_y(rect) + 1;
 
 	const unsigned int pos = GPU_vertformat_add(immVertexFormat(), "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
 	immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);

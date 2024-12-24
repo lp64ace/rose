@@ -21,6 +21,7 @@ RMesh *RM_preset_cube_create(const float dim[3]) {
 
 		RM_face_create_verts(mesh, verts, ARRAY_SIZE(verts), NULL, RM_CREATE_NOP, true);
 	} while (false);
+
 	// +X
 	do {
 		int vert_i = 0;
@@ -42,6 +43,7 @@ RMesh *RM_preset_cube_create(const float dim[3]) {
 
 		RM_face_create_verts(mesh, verts, ARRAY_SIZE(verts), NULL, RM_CREATE_NOP, true);
 	} while (false);
+
 	// +Y
 	do {
 		int vert_i = 0;
@@ -63,6 +65,7 @@ RMesh *RM_preset_cube_create(const float dim[3]) {
 
 		RM_face_create_verts(mesh, verts, ARRAY_SIZE(verts), NULL, RM_CREATE_NOP, true);
 	} while (false);
+
 	// +Z
 	do {
 		int vert_i = 0;

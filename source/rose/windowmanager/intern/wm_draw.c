@@ -144,6 +144,16 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 	}
 }
 
+struct GPUViewport *WM_draw_region_get_bound_viewport(struct ARegion *region) {
+	if (!region->draw_buffer) {
+		return NULL;
+	}
+
+	/** Since we are rendering the viewport should be used instead of the offscreen drawing. */
+	ROSE_assert(region->draw_buffer->viewport);
+	return region->draw_buffer->viewport;
+}
+
 GPUTexture *WM_draw_region_texture(ARegion *region, int view) {
 	if (!region->draw_buffer) {
 		return NULL;

@@ -15,6 +15,14 @@ extern "C" {
 struct Mesh;
 
 /* -------------------------------------------------------------------- */
+/** \name Mesh Creation
+ * \{ */
+
+struct Mesh *KER_mesh_add(struct Main *main, const char *name);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Mesh Geometry
  * \{ */
 
@@ -97,6 +105,9 @@ void KER_mesh_runtime_clear_geometry(struct Mesh *mesh);
 /** \name Mesh Tesselation
  * \{ */
 
+/**
+ * Returns an array of indices that can be used for corner vertices.
+ */
 const MLoopTri *KER_mesh_looptris(const struct Mesh *mesh);
 
 /** \} */
