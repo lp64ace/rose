@@ -92,7 +92,7 @@ void tWindowManager::Poll() {
 	PollGamepads();
 }
 
-bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) const {
+bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) {
 	if (selection || !buffer) {
 		return false;
 	}

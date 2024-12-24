@@ -65,6 +65,13 @@ ROSE_INLINE void user_exit(WindowManager *wm, ScrArea *area) {
  * \{ */
 
 void user_main_region_layout(struct rContext *C, ARegion *region) {
+	uiBlock *block;
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "USERPREF_main"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "Edit", 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		UI_block_end(C, block);
+	}
 }
 
 /** \} */
