@@ -744,7 +744,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 				break;
 			}
 			/** Left mouse outside of the region cancels the popup. */
-			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_RELEASE)) {
 				ARegion *menuregion = NULL;
 				if (data->menu && data->menu->region) {
 					if (ED_region_contains_xy(data->menu->region, evt->mouse_xy)) {
