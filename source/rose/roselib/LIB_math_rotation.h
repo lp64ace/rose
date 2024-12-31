@@ -33,7 +33,7 @@ float dot_qtqt(const float a[4], const float b[4]);
 void quat_to_mat3(float mat[3][3], const float q[4]);
 void quat_to_mat4(float mat[4][4], const float q[4]);
 
-float normalize_qt(const float q[4]);
+float normalize_qt(float q[4]);
 float normalize_qt_qt(float r[4], const float q[4]);
 
 /** \} */
