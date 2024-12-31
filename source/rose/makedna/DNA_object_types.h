@@ -47,6 +47,8 @@ typedef struct Object {
 	struct Object *track;
 	
 	int type;
+	int partype;
+	int rotmode;
 	
 	/** Pointer to objects data - an 'ID' or NULL. */
 	void *data;
@@ -78,6 +80,40 @@ typedef struct Object {
 enum {
 	OB_EMPTY,
 	OB_MESH,
+	OB_ARMATURE,
+};
+
+/** #Object->partype, first 4 bits are the type. */
+enum {
+	PARTYPE = (1 << 4) - 1,
+	PAROBJECT = 0,
+	PARSKEL = 4,
+	PARBONE = 7,
+};
+
+/* #object->rotmode */
+enum {
+	/* quaternion rotations (default, and for older Rose versions) */
+	ROT_MODE_QUAT = 0,
+
+	/* euler rotations - keep in sync with enum in LIB_math.h */
+	/** Rose 'default' (classic) - must be as 1 to sync with LIB_math_rotation.h defines */
+	ROT_MODE_EUL = 1,
+	ROT_MODE_XYZ = 1,
+	ROT_MODE_XZY = 2,
+	ROT_MODE_YXZ = 3,
+	ROT_MODE_YZX = 4,
+	ROT_MODE_ZXY = 5,
+	ROT_MODE_ZYX = 6,
+	/**
+	 * NOTE: space is reserved here for 18 other possible
+	 * euler rotation orders not implemented.
+	 */
+	/* axis angle rotations */
+	ROT_MODE_AXISANGLE = -1,
+
+	ROT_MODE_MIN = ROT_MODE_AXISANGLE, /* sentinel for negative value. */
+	ROT_MODE_MAX = ROT_MODE_ZYX,
 };
 
 #ifdef __cplusplus
