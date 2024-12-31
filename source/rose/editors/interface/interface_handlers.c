@@ -690,6 +690,28 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 	return retval;
 }
 
+ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but);
+
+ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, ARegion *region) {
+	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
+	if (but) {
+		switch (but->type) {
+			case UI_BTYPE_EDIT: {
+				ui_but_activate(C, region, but, BUTTON_STATE_TEXT_SELECTING);
+			} break;
+			default: {
+				ui_but_activate(C, region, but, BUTTON_STATE_HIGHLIGHT);
+			} break;
+		}
+		return ui_handle_button_event(C, evt, but);
+	}
+	else {
+		
+	}
+
+	return WM_UI_HANDLER_CONTINUE;
+}
+
 ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 
@@ -786,26 +808,6 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 	}
 
 	return retval;
-}
-
-ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, ARegion *region) {
-	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
-	if (but) {
-		switch (but->type) {
-			case UI_BTYPE_EDIT: {
-				ui_but_activate(C, region, but, BUTTON_STATE_TEXT_SELECTING);
-			} break;
-			default: {
-				ui_but_activate(C, region, but, BUTTON_STATE_HIGHLIGHT);
-			} break;
-		}
-		return ui_handle_button_event(C, evt, but);
-	}
-	else {
-		
-	}
-
-	return WM_UI_HANDLER_CONTINUE;
 }
 
 ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data) {
