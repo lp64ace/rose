@@ -722,6 +722,36 @@ bool equals_m4_m4(const float a[4][4], const float b[4][4]) {
 /** \name Transformations
  * \{ */
 
+void size_to_mat3(float R[3][3], const float size[3]) {
+	R[0][0] = size[0];
+	R[0][1] = 0.0f;
+	R[0][2] = 0.0f;
+	R[1][1] = size[1];
+	R[1][0] = 0.0f;
+	R[1][2] = 0.0f;
+	R[2][2] = size[2];
+	R[2][1] = 0.0f;
+	R[2][0] = 0.0f;
+}
+void size_to_mat4(float R[4][4], const float size[3]) {
+	R[0][0] = size[0];
+	R[0][1] = 0.0f;
+	R[0][2] = 0.0f;
+	R[0][3] = 0.0f;
+	R[1][0] = 0.0f;
+	R[1][1] = size[1];
+	R[1][2] = 0.0f;
+	R[1][3] = 0.0f;
+	R[2][0] = 0.0f;
+	R[2][1] = 0.0f;
+	R[2][2] = size[2];
+	R[2][3] = 0.0f;
+	R[3][0] = 0.0f;
+	R[3][1] = 0.0f;
+	R[3][2] = 0.0f;
+	R[3][3] = 1.0f;
+}
+
 void scale_m3_fl(float R[3][3], float scale) {
 	R[0][0] = R[1][1] = R[2][2] = scale;
 	R[0][1] = R[0][2] = 0.0f;

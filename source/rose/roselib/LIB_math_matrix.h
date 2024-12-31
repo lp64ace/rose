@@ -131,6 +131,9 @@ bool equals_m4_m4(const float a[4][4], const float b[4][4]);
 /** \name Transformations
  * \{ */
 
+void size_to_mat3(float R[3][3], const float size[3]);
+void size_to_mat4(float R[4][4], const float size[3]);
+
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);
 
