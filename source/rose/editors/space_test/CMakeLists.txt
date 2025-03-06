@@ -21,7 +21,7 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	space_api.c
+	space_test.c
 	
 )
 
@@ -32,12 +32,10 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::source::rosekernel
+	rose::source::roseloader
 	rose::source::dna
-	rose::source::editors::space_statusbar
-	rose::source::editors::space_topbar
-	rose::source::editors::space_view3d
-	rose::source::editors::space_userpref
-	rose::source::editors::space_test
+	rose::source::windowmanager
+	rose::source::editors::screen
 	
 	# External Library Dependencies
 	
@@ -46,5 +44,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(space_api "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::editors::space_api ALIAS space_api)
+rose_add_lib(space_test "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::source::editors::space_test ALIAS space_test)

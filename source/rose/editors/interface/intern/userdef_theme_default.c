@@ -88,6 +88,14 @@ const Theme U_theme_default = {
 		.header = RGBA(0x1a1a1aff),
 		.header_hi = RGBA(0x2a2a2aff),
 	},
+	/** The colors that will be used for the Test/Demo space. */
+	.space_test = {
+		.back = RGBA(0x101010ff),
+		.text = RGBA(0xe0e0e0ff),
+		.text_hi = RGBA(0xffffffff),
+		.header = RGBA(0x1a1a1aff),
+		.header_hi = RGBA(0x2a2a2aff),
+	},
 };
 
 /* clang-format on */
