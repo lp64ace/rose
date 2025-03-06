@@ -275,6 +275,15 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	RM_mesh_rm_to_me(main, rm_cube, me_cube, &params);
 	RM_mesh_free(rm_cube);
 
+	const float (*vert)[3] = KER_mesh_vert_positions(me_cube);
+	const float (*norm)[3] = KER_mesh_vert_normals_ensure(me_cube);
+	const MLoopTri *tris = KER_mesh_looptris(me_cube);
+	for (int i = 0; i < poly_to_tri_count(me_cube->totpoly, me_cube->totloop); i++) {
+		const unsigned int *idx = tris[i].tri;
+		fprintf(stdout, "Triangle [%u, %u, %u], v(%4.1f %4.1f %4.1f), n(%4.1f %4.1f %4.1f)\n",
+			idx[0], idx[1], idx[2], vert[idx[0]][0], vert[idx[0]][1], vert[idx[0]][2], norm[idx[0]][0], norm[idx[0]][1], norm[idx[0]][2]);
+	}
+
 	Object *ob_cube = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me_cube, false);
 	if (!ob_cube) {
 		fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");

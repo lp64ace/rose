@@ -111,6 +111,7 @@ set(INC_SYS
 set(TEST
 	test/lib_id_free.cc
 	test/lib_remap.cc
+	test/mesh.cc
 )
 
 # -----------------------------------------------------------------------------
@@ -121,6 +122,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::roselib
 	rose::source::dna
+	rose::source::rosemesh
 	rose::source::rosekernel
 	rose::source::windowmanager
 	
