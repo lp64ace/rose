@@ -3,7 +3,7 @@
 
 #include "DNA_collection_types.h"
 
-#ifndef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -26,7 +26,7 @@ bool KER_collection_child_rem(struct Main *main, struct Collection *collection, 
 
 bool KER_collection_is_empty(const struct Collection *collection);
 
-#ifndef __cplusplus
+#ifdef __cplusplus
 }
 #endif
 
