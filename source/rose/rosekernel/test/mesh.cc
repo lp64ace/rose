@@ -31,7 +31,7 @@ TEST(Mesh, Tesselation) {
         EXPECT_NE(me_cube, nullptr);
     
         RMeshToMeshParams params = {
-		    /* .cd_mask_extra = */ 0,
+		    0,
 	    };
 	    RM_mesh_rm_to_me(main, rm_cube, me_cube, &params);
 
