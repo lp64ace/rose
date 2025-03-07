@@ -91,6 +91,7 @@ int set_listbasepointers(Main *main, ListBase *lb[]) {
 	lb[INDEX_ID_LI] = &(main->libraries);
 	lb[INDEX_ID_ME] = &(main->meshes);
 	lb[INDEX_ID_OB] = &(main->objects);
+	lb[INDEX_ID_SCE] = &(main->scenes);
 	lb[INDEX_ID_SCR] = &(main->screens);
 	lb[INDEX_ID_WM] = &(main->wm);
 
@@ -113,6 +114,8 @@ ListBase *which_libbase(Main *main, short type) {
 			return &(main->meshes);
 		case ID_OB:
 			return &(main->objects);
+		case ID_SCE:
+			return &(main->scenes);
 		case ID_SCR:
 			return &(main->screens);
 		case ID_WM:

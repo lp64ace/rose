@@ -38,6 +38,7 @@ set(SRC
 	KER_object.h
 	KER_rose.h
 	KER_rosefile.h
+	KER_scene.h
 	KER_screen.h
 	KER_userdef.h
 
@@ -59,6 +60,7 @@ set(SRC
 	intern/object.c
 	intern/rose.c
 	intern/rosefile.c
+	intern/scene.c
 	intern/screen.c
 	intern/userdef.c
 	

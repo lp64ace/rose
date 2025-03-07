@@ -164,6 +164,7 @@ void screen_geom_vertices_scale(wmWindow *window, Screen *screen) {
 	WM_window_screen_rect_calc(window, &screen_rect);
 
 	if (LIB_rcti_size_x(&window_rect) <= PIXELSIZE || LIB_rcti_size_y(&window_rect) <= PIXELSIZE) {
+		/** Avoid zero size screen since that would scale everything to zero and lose the aspect ratio. */
 		return;
 	}
 

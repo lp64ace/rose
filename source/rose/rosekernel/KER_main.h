@@ -39,6 +39,7 @@ typedef struct Main {
 	struct ListBase libraries;
 	struct ListBase meshes;
 	struct ListBase objects;
+	struct ListBase scenes;
 	struct ListBase screens;
 	struct ListBase wm; /* Singleton (exception). */
 
