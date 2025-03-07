@@ -24,14 +24,14 @@ TEST(Mesh, Tesselation) {
     
     Main *main = KER_main_new();
     do {
-        RMesh *rm_cube = RM_preset_cube_create((const float[3]){1.0f, 1.0f, 1.0f});
+        RMesh *rm_cube = RM_preset_cube_create((const float *)float3(1.0f, 1.0f, 1.0f));
 	    EXPECT_NE(rm_cube, nullptr);
 
         Mesh *me_cube = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "Cube");
         EXPECT_NE(me_cube, nullptr);
     
         RMeshToMeshParams params = {
-		    .cd_mask_extra = 0,
+		    /* .cd_mask_extra = */ 0,
 	    };
 	    RM_mesh_rm_to_me(main, rm_cube, me_cube, &params);
 
