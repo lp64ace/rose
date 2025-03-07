@@ -1,20 +1,20 @@
 #include "KER_idtype.h"
-#include "KER_scene.h"
+#include "KER_collection.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Scene Data-block Definition
  * \{ */
 
- IDTypeInfo IDType_ID_SCE = {
-	.idcode = ID_SCE,
+ IDTypeInfo IDType_ID_GR = {
+	.idcode = ID_GR,
 
-	.filter = FILTER_ID_SCE,
+	.filter = FILTER_ID_GR,
 	.depends = 0,
-	.index = INDEX_ID_SCE,
-	.size = sizeof(Scene),
+	.index = INDEX_ID_GR,
+	.size = sizeof(Collection),
 
-	.name = "Scene",
-	.name_plural = "Scenes",
+	.name = "Collection",
+	.name_plural = "Collections",
 
 	.flag = IDTYPE_FLAGS_NO_COPY,
 
@@ -29,4 +29,3 @@
 };
 
 /** \} */
-

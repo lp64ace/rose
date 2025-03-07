@@ -24,6 +24,7 @@ set(INC_SYS
 set(SRC
 	KER_context.h
 	KER_cpp_types.h
+	KER_collection.h
 	KER_customdata.h
 	KER_global.h
 	KER_idprop.h
@@ -44,6 +45,7 @@ set(SRC
 
 	intern/context.c
 	intern/cpp_types.cc
+	intern/collection.c
 	intern/customdata.cc
 	intern/idprop.c
 	intern/idtype.c
