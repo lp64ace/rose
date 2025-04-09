@@ -1,4 +1,5 @@
 #include "LIB_alloca.h"
+#include "LIB_listbase.h"
 #include "LIB_string_utf.h"
 #include "LIB_string_utils.h"
 
@@ -69,6 +70,43 @@ void LIB_uniquename_cb(UniquenameCheckCallback unique_check, void *arg, const ch
 
 		LIB_strcpy(name, maxncpy, tempname);
 	}
+}
+
+typedef struct ListBaseUniqueNameData {
+	ListBase *lb;
+	ptrdiff_t offset;
+	uintptr_t vlink;
+} ListBaseUniqueNameData;
+
+ROSE_INLINE bool uniquename_find_dupe(ListBase *lb, void *vlink, const char *name, ptrdiff_t offset) {
+	for (Link *link = lb->first; link; link = link->next) {
+		if (link != vlink) {
+			if (STREQ(POINTER_OFFSET((const char *)link, offset), name)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+ROSE_INLINE bool uniquename_unique_check(void *arg, const char *name) {
+	return uniquename_find_dupe(((ListBaseUniqueNameData *)arg)->lb, ((ListBaseUniqueNameData *)arg)->vlink, name, ((ListBaseUniqueNameData *)arg)->offset);
+}
+
+void LIB_uniquename(struct ListBase *lb, void *vlink, const char *defname, char delim, ptrdiff_t offset, size_t maxncpy) {
+	ListBaseUniqueNameData data = {
+		.lb = lb,
+		.offset = offset,
+		.vlink = vlink,
+	};
+
+	ROSE_assert(maxncpy > 1);
+
+	if (ELEM(NULL, vlink, defname)) {
+		return;
+	}
+
+	return LIB_uniquename_cb(uniquename_unique_check, &data, defname, delim, POINTER_OFFSET(vlink, offset), maxncpy);
 }
 
 /** \} */

@@ -23,6 +23,12 @@ typedef bool (*UniquenameCheckCallback)(void *arg, const char *name);
 
 void LIB_uniquename_cb(UniquenameCheckCallback unique_check, void *arg, const char *defname, char delim, char *name, size_t maxncpy);
 
+/**
+ * Ensures that the specified block has a unique name within the containing list,
+ * incrementing its numeric suffix as necessary.
+ */
+void LIB_uniquename(struct ListBase *lb, void *vlink, const char *defname, char delim, ptrdiff_t offset, size_t maxncpy);
+
 /** \} */
 
 #ifdef __cplusplus
