@@ -29,6 +29,7 @@ set(SRC
 	KER_global.h
 	KER_idprop.h
 	KER_idtype.h
+	KER_layer.h
 	KER_library.h
 	KER_lib_id.h
 	KER_lib_query.h
@@ -49,6 +50,7 @@ set(SRC
 	intern/customdata.cc
 	intern/idprop.c
 	intern/idtype.c
+	intern/layer.c
 	intern/library.c
 	intern/lib_id.c
 	intern/lib_query.c
