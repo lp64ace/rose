@@ -51,7 +51,7 @@ int main(void) {
         fprintf(stdout, "Triangle %u\n", i);
         for (int j = 0; j < ARRAY_SIZE(tris[i].tri); j++) {
             const float *v = vert[idx[j]];
-            const float *n = vert[idx[j]];
+            const float *n = norm[idx[j]];
             fprintf(stdout, "\tv(%4.1f %4.1f %4.1f)\tn(%4.1f %4.1f %4.1f)\n", v[0], v[1], v[2], n[0], n[1], n[2]);
         }
 	}
