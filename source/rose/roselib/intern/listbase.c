@@ -206,6 +206,15 @@ void LIB_freelistN(ListBase *listbase) {
 	LIB_listbase_clear(listbase);
 }
 
+void LIB_freelinkN(ListBase *lb, void *vlink) {
+	Link *link = vlink;
+
+	if (link) {
+		LIB_remlink(lb, link);
+		MEM_freeN(link);
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -283,6 +292,23 @@ void *LIB_rfindbytes(const ListBase *lb, const void *bytes, const size_t length,
 	}
 
 	return NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Utility Methods
+ * \{ */
+
+void LIB_duplicatelist(ListBase *dst, const ListBase *src) {
+	struct Link *dst_link;
+
+	dst->first = dst->last = NULL;
+
+	for (const struct Link *src_link = src->first; src_link; src_link = src_link->next) {
+		dst_link = MEM_dupallocN(src_link);
+		LIB_addtail(dst, dst_link);
+	}
 }
 
 /** \} */
