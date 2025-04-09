@@ -2,9 +2,11 @@
 # Declare DNA Files
 
 set(DNA_TYPEDEF_HEADERS
+	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_collection_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_customdata_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_ID.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_ID_enums.h
+	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_layer_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_listbase.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_mesh_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_meshdata_types.h
