@@ -38,6 +38,8 @@ enum {
 typedef struct ObjectRuntime {
 	/** Axis aligned bound-box (in local-space). */
 	struct BoundBox *bb;
+
+	int local_collections_bits;
 } ObjectRuntime;
 
 typedef struct Object {
@@ -46,9 +48,13 @@ typedef struct Object {
 	struct Object *parent;
 	struct Object *track;
 	
+	int flag_visibility;
+	int flag;
 	int type;
 	int partype;
 	int rotmode;
+
+	struct Collection *instance_collection;
 	
 	/** Pointer to objects data - an 'ID' or NULL. */
 	void *data;
@@ -75,6 +81,18 @@ typedef struct Object {
 	
 	ObjectRuntime runtime;
 } Object;
+
+/** #Object->flag_visibility */
+enum {
+	OB_HIDE_VIEWPORT = (1 << 0),
+	OB_HIDE_RENDER = (1 << 1),
+	OB_HIDE_SELECT = (1 << 2),
+};
+
+/** #Object->flag */
+enum {
+	OBJECT_SELECTED = (1 << 0),
+};
 
 /** #Object->type */
 enum {

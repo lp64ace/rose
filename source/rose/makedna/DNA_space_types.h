@@ -37,7 +37,14 @@ typedef struct View3D {
 
 	ListBase regionbase;
 	/** End of 'SpaceLink' header. */
+
+	unsigned int local_collections_uuid;
 } View3D;
+
+/** #View3D->flag */
+enum {
+	V3D_LOCAL_COLLECTIONS = 1 << 0,
+};
 
 /** \} */
 
