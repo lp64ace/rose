@@ -94,6 +94,10 @@ void KER_libblock_free_data(struct ID *id, bool do_id_user);
  * \param use_flag_from_idtag Still use freeing info flags from given #ID data-block.
  */
 void KER_id_free_ex(struct Main *main, void *idv, int flag, bool use_flag_from_idtag);
+void KER_id_free_us(struct Main *main, void *idv);
+
+/** Complete and safe way to free ID. */
+void KER_id_free(struct Main *main, void *idv);
 
 /** \} */
 

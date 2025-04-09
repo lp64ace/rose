@@ -191,6 +191,20 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 void KER_id_free_ex(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
 	id_free(main, idv, flag, use_flag_from_idtag);
 }
+void KER_id_free_us(struct Main *main, void *idv) {
+	ID *id = (ID *)idv;
+
+	id_us_min(id);
+
+	if (id->user == 0) {
+		KER_libblock_unlink(main, id);
+		KER_id_free_ex(main, idv, 0, true);
+	}
+}
+
+void KER_id_free(struct Main *main, void *idv) {
+	id_free(main, idv, 0, true);
+}
 
 /** \} */
 
