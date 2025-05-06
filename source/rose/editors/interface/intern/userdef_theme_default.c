@@ -46,6 +46,15 @@ const Theme U_theme_default = {
 			.text_sel = RGBA(0x2222e0ee),
 			.roundness = 0.15f,
 		},
+		/** The colors that will be used for scrollbar buttons. */
+		.wcol_scroll = {
+			.outline = RGB(0x222222ff),
+			.inner = RGBA(0x0a0a0aff),
+			.inner_sel = RGBA(0x444444ff),
+			.text = RGBA(0xc0c0c0ff),
+			.text_sel = RGBA(0x2222e0ee),
+			.roundness = 0.15f,
+		},
 		.text_cur = RGBA(0xffffffff),
 	},
 	/** The colors that will be used for the PopUp space. */

@@ -28,7 +28,6 @@
 
 #include <ctype.h>
 #include <limits.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 /* -------------------------------------------------------------------- */
@@ -58,6 +57,7 @@ enum {
 	BUTTON_STATE_TEXT_SELECTING,
 	BUTTON_STATE_WAIT_RELEASE,
 	BUTTON_STATE_MENU_OPEN,
+	BUTTON_STATE_SCROLL,
 	BUTTON_STATE_EXIT,
 #define _BUTTON_STATE_END BUTTON_STATE_EXIT
 };
@@ -226,6 +226,60 @@ ROSE_STATIC void ui_apply_but_func(struct rContext *C, uiBut *but, void *arg1, v
 	}
 }
 
+ROSE_STATIC bool ui_scroll_set_thumb_pos(uiBut *but, const ARegion *region, const int xy[2]) {
+	float mx = xy[0], my = xy[1];
+	ui_window_to_block_fl(region, but->block, &mx, &my);
+
+	float mv = 0;
+	switch (but->type) {
+		case UI_BTYPE_SCROLL: {
+			mv = ((but->rect.ymax - my) / LIB_rctf_size_y(&but->rect));
+		} break;
+		default: {
+			ROSE_assert_unreachable();
+		} break;
+	}
+
+	double prev = ui_but_get_value(but), next = ui_but_set_value(but, but->softmin + mv * (but->softmax - but->softmin));
+	return prev != next;
+}
+
+ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const wmEvent *evt) {
+	int retval = WM_UI_HANDLER_CONTINUE;
+
+	ARegion *region = CTX_wm_region(C);
+	if (but->active && ((uiHandleButtonData *)but->active)->region) {
+		region = ((uiHandleButtonData *)but->active)->region;
+	}
+
+	switch (but->type) {
+		case UI_BTYPE_SCROLL: {
+			if (ELEM(evt->type, WHEELDOWNMOUSE, WHEELUPMOUSE, EVT_PAGEDOWNKEY, EVT_PAGEUPKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				int direction = ELEM(evt->type, WHEELUPMOUSE, EVT_PAGEUPKEY) ? -1 : 1;
+
+				double prev = ui_but_get_value(but), next = ui_but_set_value(but, prev + direction);
+				if (prev != next) {
+					ED_region_tag_redraw_no_rebuild(CTX_wm_region(C));
+				}
+
+				retval |= WM_UI_HANDLER_BREAK;
+			}
+			if (ELEM(evt->type, EVT_ENDKEY, EVT_HOMEKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				int value = ELEM(evt->type, EVT_HOMEKEY) ? but->softmin : but->softmax;
+
+				double prev = ui_but_get_value(but), next = ui_but_set_value(but, value);
+				if (prev != next) {
+					ED_region_tag_redraw_no_rebuild(CTX_wm_region(C));
+				}
+
+				retval |= WM_UI_HANDLER_BREAK;
+			}
+		} break;
+	}
+
+	return retval;
+}
+
 ROSE_STATIC void ui_textedit_set_cursor_pos(uiBut *but, const ARegion *region, const float x) {
 	int font = RFT_set_default();
 
@@ -380,7 +434,7 @@ ROSE_STATIC bool ui_textedit_delete(uiBut *but, const wmEvent *evt) {
 	return changed;
 }
 
-ROSE_STATIC bool ui_textedit_insert_buf(uiBut *but, const char *input, unsigned int step) {
+ROSE_STATIC bool ui_textedit_insert_buf(struct rContext *C, uiBut *but, const char *input, unsigned int step) {
 	unsigned int length = (unsigned int)LIB_strlen(but->drawstr);
 	unsigned int cpy = length - (but->selend - but->selsta) + 1;
 
@@ -396,11 +450,13 @@ ROSE_STATIC bool ui_textedit_insert_buf(uiBut *but, const char *input, unsigned 
 
 		if (step && (length + step < maxlength)) {
 			char *nbuf = LIB_strformat_allocN("%.*s%.*s%s", but->offset, but->drawstr, step, input, but->drawstr + but->offset);
-			MEM_freeN(but->drawstr);
-			but->drawstr = nbuf;
+			if (but->handle_text_func == NULL || but->handle_text_func(C, but, nbuf)) {
+				SWAP(char *, but->drawstr, nbuf);
 
-			but->offset += step;
-			changed |= true;
+				but->offset += step;
+				changed |= true;
+			}
+			MEM_freeN(nbuf);
 		}
 	}
 
@@ -421,7 +477,7 @@ ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int
 		case UI_TEXTEDIT_PASTE: {
 			char *nbuf = WM_clipboard_text_get_firstline(C, false, &length);
 			if (nbuf) {
-				changed |= ui_textedit_insert_buf(but, nbuf, length);
+				changed |= ui_textedit_insert_buf(C, but, nbuf, length);
 				MEM_freeN(nbuf);
 			}
 		} break;
@@ -676,7 +732,7 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 
 	if (retval == WM_UI_HANDLER_CONTINUE) {
 		if (evt->input[0]) {
-			changed |= ui_textedit_insert_buf(but, evt->input, LIB_str_utf8_size_or_error(evt->input));
+			changed |= ui_textedit_insert_buf(C, but, evt->input, LIB_str_utf8_size_or_error(evt->input));
 		}
 	}
 
@@ -732,7 +788,12 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				/** This type of buttons only activate when double-clicked! */
 				if (!ELEM(but->type, UI_BTYPE_TEXT) || ELEM(evt->value, KM_DBL_CLICK)) {
-					button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
+					if (ELEM(but->type, UI_BTYPE_SCROLL)) {
+						button_activate_state(C, but, BUTTON_STATE_SCROLL);
+					}
+					else {
+						button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
+					}
 					retval |= WM_UI_HANDLER_BREAK;
 				}
 			}
@@ -795,11 +856,24 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 				retval |= ui_handle_button_over(C, evt, menuregion);
 			}
 		} break;
+		case BUTTON_STATE_SCROLL: {
+			if (ui_scroll_set_thumb_pos(but, data->region, evt->mouse_xy)) {
+				ED_region_tag_redraw_no_rebuild(data->region);
+			}
+
+			retval |= WM_UI_HANDLER_BREAK;
+
+			if (evt->type == LEFTMOUSE && evt->value == KM_RELEASE) {
+				button_activate_state(C, but, BUTTON_STATE_EXIT);
+			}
+		} break;
 	}
 
 	if (retval != WM_UI_HANDLER_CONTINUE) {
 		return retval;
 	}
+
+	retval |= ui_do_but(C, but->block, but, evt);
 
 	switch (evt->type) {
 		case WINDEACTIVATE: {
@@ -833,13 +907,30 @@ ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *
 		return retval;
 	}
 
-	uiBut *but = ui_region_find_active_but(region);
+	uiBut *but;
+
+	but = ui_region_find_active_but(region);
 
 	if (but) {
 		retval |= ui_handle_button_event(C, evt, but);
 	}
 	else {
 		retval |= ui_handle_button_over(C, evt, region);
+	}
+
+	if (retval != WM_UI_HANDLER_CONTINUE) {
+		return retval;
+	}
+
+	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+			if (but->flag & UI_BUT_DEFAULT) {
+				retval |= ui_do_but(C, block, but, evt);
+			}
+			if (retval != WM_UI_HANDLER_CONTINUE) {
+				return retval;
+			}
+		}
 	}
 
 	return retval;

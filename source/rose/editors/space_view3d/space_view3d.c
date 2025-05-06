@@ -59,6 +59,16 @@ ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
  * \{ */
 
 ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) {
+	uiBlock *block;
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "VIEW3D_block"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, PIXELSIZE);
+
+		but = uiDefButEx(block, UI_BTYPE_SCROLL, "", 2 * PIXELSIZE, region->sizey, &region->hscroll, UI_POINTER_FLT, 0, 8, 0, 0);
+		uiButEnableFlag(but, UI_BUT_DEFAULT);
+		
+		UI_block_end(C, block);
+	}
 }
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {

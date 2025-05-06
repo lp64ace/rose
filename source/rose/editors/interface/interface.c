@@ -32,6 +32,7 @@
 #include "interface_intern.h"
 
 #include <stdlib.h>
+#include <ctype.h>
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
@@ -42,6 +43,9 @@ ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but);
 
 ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->type != but_old->type) {
+		return false;
+	}
+	if (but_new->flag != but_old->flag) {
 		return false;
 	}
 	if (but_new->handle_func != but_old->handle_func || but_new->arg1 != but_old->arg1 || but_new->arg2 != but_old->arg2) {
@@ -221,6 +225,35 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 		but->pointype = pointer ? pointype : UI_POINTER_NIL;
 		but->maxlength = maxlen ? maxlen : 64;
 	}
+
+	switch (but->pointype) {
+		case UI_POINTER_INT: {
+			but->hardmin = INT_MIN;
+			but->hardmax = INT_MAX;
+		} break;
+		case UI_POINTER_FLT: {
+			but->hardmin = -FLT_MAX;
+			but->hardmax = FLT_MAX;
+		} break;
+		case UI_POINTER_DBL: {
+			but->hardmin = DBL_MIN;
+			but->hardmax = DBL_MAX;
+		} break;
+		case UI_POINTER_UINT: {
+			but->hardmin = 0;
+			but->hardmax = UINT_MAX;
+		} break;
+		default: {
+			/**
+			 * Fallback limits for unsupported or unknown pointer types.
+			 * These are used for text input validation (e.g. integer parsing) and scroll values.
+			 * INT_MIN/INT_MAX are chosen because they safely cover all reasonable UI use cases.
+			 * No display is known to exceed the pixel range of a 32-bit int.
+			 */
+			but->hardmin = INT_MIN;
+			but->hardmax = INT_MAX;
+		} break;
+	}
 	
 	but->drawstr = MEM_mallocN(but->maxlength, "uiBut::DrawStr");
 	LIB_strcpy(but->drawstr, but->maxlength, but->name);
@@ -248,11 +281,27 @@ uiBut *uiDefBut(uiBlock *block, int type, const char *name, int w, int h, void *
 	return but;
 }
 
+uiBut *uiDefButEx(uiBlock *block, int type, const char *name, int w, int h, void *pointer, int pointype, double softmin, double softmax, int maxlen, int draw) {
+	uiBut *but = ui_def_but(block, type, name, 0, 0, w, h, pointer, pointype, maxlen);
+	but->draw = draw;
+	but->softmin = softmin;
+	but->softmax = softmax;
+	return but;
+}
+
 void uiButEnableFlag(uiBut *but, int flag) {
 	but->flag |= flag;
 }
 void uiButDisableFlag(uiBut *but, int flag) {
 	but->flag &= flag;
+}
+
+void UI_but_func_text_set(uiBut *but, uiButHandleTextFunc func, double softmin, double softmax) {
+	ROSE_assert(but->hardmin <= but->softmin && but->softmax <= but->hardmax);
+
+	but->handle_text_func = func;
+	but->softmin = ROSE_MAX(softmin, but->hardmin);
+	but->softmax = ROSE_MIN(softmax, but->hardmax);
 }
 
 void UI_but_func_set(uiBut *but, uiButHandleFunc func, void *arg1, void *arg2) {
@@ -318,10 +367,20 @@ void ui_but_update(uiBut *but) {
 				break;
 			case UI_POINTER_INT:
 				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, "%d", *(int *)but->pointer);
+					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%08x" : "%d", *(int *)but->pointer);
 				}
 				else {
-					*(int *)but->pointer = atoi(but->drawstr);
+					char *itr = but->drawstr;
+					*(int *)but->pointer = strtol(itr, &itr, 0);
+				}
+				break;
+			case UI_POINTER_UINT:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%08x" : "%d", *(int *)but->pointer);
+				}
+				else {
+					char *itr = but->drawstr;
+					*(int *)but->pointer = strtoul(itr, &itr, 0);
 				}
 				break;
 			case UI_POINTER_FLT:
@@ -377,6 +436,84 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 		}
 	}
 	return NULL;
+}
+
+double ui_but_get_value(struct uiBut *but) {
+	if (but->pointer == NULL && but->drawstr == NULL) {
+		return 0;
+	}
+
+	char *end = NULL;
+
+	switch (but->pointype) {
+		case UI_POINTER_INT:
+			return (but->drawstr) ? (double)strtol(but->drawstr, &end, but->flag & UI_BUT_HEX ? 16 : 0) : (double)*(const int *)but->pointer;
+		case UI_POINTER_FLT:
+			return (but->drawstr) ? (double)strtof(but->drawstr, &end) : (double)*(const float *)but->pointer;
+		case UI_POINTER_DBL:
+			return (but->drawstr) ? (double)strtod(but->drawstr, &end) : (double)*(const double *)but->pointer;
+		case UI_POINTER_UINT:
+			return (but->drawstr) ? (double)strtoul(but->drawstr, &end, but->flag & UI_BUT_HEX ? 16 : 0) : (double)*(const unsigned int *)but->pointer;
+	}
+
+	return 0;
+}
+
+double ui_but_set_value(struct uiBut *but, double nvalue) {
+	ROSE_assert(but->hardmin <= but->softmin && but->softmax <= but->hardmax);
+
+	nvalue = ROSE_MAX(but->softmin, ROSE_MIN(nvalue, but->softmax));
+
+	switch (but->pointype) {
+		case UI_POINTER_INT: {
+			*(int *)but->pointer = (int)round(nvalue);
+		} break;
+		case UI_POINTER_FLT: {
+			*(float *)but->pointer = (float)nvalue;
+		} break;
+		case UI_POINTER_DBL: {
+			*(double *)but->pointer = (double)nvalue;
+		} break;
+		case UI_POINTER_UINT: {
+			*(unsigned int *)but->pointer = (unsigned int)round(nvalue);
+		} break;
+		default:
+			ROSE_assert_unreachable();
+	}
+
+	return nvalue;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Builtin UI Functions
+ * \{ */
+
+bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const char *edit) {
+	if (but->hardmin < 0) {
+		long long value = strtoll(edit, &edit, (but->flag & UI_BUT_HEX) ? 16 : 0);
+		while (isspace((unsigned char)*edit)) {
+			edit++;
+		}
+		return ELEM(*edit, '\0') && (value >= (long long)but->softmin && value <= (long long)but->softmax);
+	}
+	else {
+		unsigned long long value = strtoull(edit, &edit, (but->flag & UI_BUT_HEX) ? 16 : 0);
+		while (isspace((unsigned char)*edit)) {
+			edit++;
+		}
+		return ELEM(*edit, '\0') && (value >= (unsigned long long)but->softmin && value <= (unsigned long long)but->softmax);
+	}
+	return false;
+}
+
+bool uiButHandleTextFunc_Decimal(struct rContext *C, struct uiBut *but, const char *edit) {
+	long double value = strtold(edit, &edit);
+	while (isspace((unsigned char)*edit)) {
+		edit++;
+	}
+	return ELEM(*edit, '\0') && (value >= (double)but->softmin && value <= (double)but->softmax);
 }
 
 /** \} */

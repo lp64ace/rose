@@ -35,6 +35,7 @@ set(SRC
 	resources.c
 	
 	intern/userdef_theme_default.c
+	intern/userdef_theme_light.c
 	
 )
 

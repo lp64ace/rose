@@ -55,6 +55,9 @@ ROSE_INLINE uiWidgetColors *widget_colors(int type) {
 		case UI_BTYPE_EDIT: {
 			return &theme->tui.wcol_edit;
 		} break;
+		case UI_BTYPE_SCROLL: {
+			return &theme->tui.wcol_scroll;
+		} break;
 	}
 
 	return &theme->tui.wcol_but;
@@ -243,7 +246,7 @@ ROSE_STATIC void ui_draw_text_back(uiWidgetColors *wcol, uiBut *but, const rcti 
 	if (but->draw & UI_BUT_GRID) {
 		int lcorner = selected && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
 		int rcorner = selected && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
-		UI_draw_roundbox_corner_set(lcorner | rcorner);
+		UI_draw_roundbox_corner_set(/* lcorner | rcorner */ UI_CNR_NONE);
 	}
 	const unsigned char *inner = selected ? wcol->inner_sel : wcol->inner;
 
@@ -328,6 +331,38 @@ ROSE_STATIC void ui_draw_text_font(uiWidgetColors *wcol, uiBut *but, const rcti 
 	ui_draw_text_font_clip_end(font);
 }
 
+ROSE_STATIC void ui_draw_scroll_thumb(uiWidgetColors *wcol, uiBut *but, const rcti *recti, bool selected) {
+	selected |= ui_draw_but_row_hovered(but);
+	/** Remove the left or right roundbox if we are rendering a list. */
+	if (but->draw & UI_BUT_GRID) {
+		int lcorner = selected && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
+		int rcorner = selected && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
+		UI_draw_roundbox_corner_set(/* lcorner | rcorner */ UI_CNR_NONE);
+	}
+	const unsigned char *inner = selected ? wcol->text_sel : wcol->text;
+
+	unsigned char alpha = inner[3];
+	/** Add a little background for items that are in a list. */
+	if (!selected && (but->draw & UI_BUT_GRID) != 0) {
+		alpha = (wcol->text_sel[3] + wcol->text[3]) / (2 + DRAW_INDX(but->draw) % 2);
+	}
+
+	if (alpha > 1e-3f) {
+		double thumby = (but->softmax - ui_but_get_value(but)) / (but->softmax - but->softmin + 1);
+		double thumbr = 1.0 / (but->softmax - but->softmin + 1);
+
+		rctf rect;
+		LIB_rctf_rcti_copy(&rect, recti);
+
+		rect.ymin = recti->ymin + (thumby + 0.0) * LIB_rcti_size_y(recti);
+		rect.ymax = recti->ymin + (thumby + thumbr) * LIB_rcti_size_y(recti);
+
+		UI_draw_roundbox_3ub_alpha(&rect, true, ui_widget_roundness(wcol, recti), inner, alpha);
+	}
+
+	UI_draw_roundbox_corner_set(UI_CNR_ALL);
+}
+
 ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
 	bool selected = ui_but_is_editing(but);
 	if (ELEM(but->type, UI_BTYPE_EDIT)) {
@@ -335,6 +370,15 @@ ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *rect
 	}
 	ui_draw_text_back(wcol, but, recti, selected);
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
+}
+
+ROSE_STATIC void ui_draw_scroll(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
+	bool in_menu = but->block->handle != NULL;
+	/** menu items do not get a background when not hovered! */
+	if (!in_menu || (but->flag & UI_HOVER) != 0) {
+		ui_draw_text_back(wcol, but, recti, (but->flag & UI_HOVER) != 0);
+	}
+	ui_draw_scroll_thumb(wcol, but, recti, (but->flag & UI_HOVER) != 0);
 }
 
 ROSE_STATIC void ui_draw_widget(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
@@ -357,17 +401,28 @@ void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rc
 		return;
 	}
 
+	uiWidgetColors mcolors;
+	memcpy(&mcolors, colors, sizeof(uiWidgetColors));
+
+	if (but->flag & UI_DISABLED) {
+		mcolors.inner[3] = mcolors.inner[3] * 2 / 3;
+		mcolors.text[3] = mcolors.text[3] * 2 / 3;
+	}
+
 	switch (but->type) {
 		case UI_BTYPE_HSPR:
 		case UI_BTYPE_VSPR: {
-			ui_draw_separator(colors, but, rect);
+			ui_draw_separator(&mcolors, but, rect);
 		} break;
 		case UI_BTYPE_TEXT:
 		case UI_BTYPE_EDIT: {
-			ui_draw_text(colors, but, rect);
+			ui_draw_text(&mcolors, but, rect);
+		} break;
+		case UI_BTYPE_SCROLL: {
+			ui_draw_scroll(&mcolors, but, rect);
 		} break;
 		default: {
-			ui_draw_widget(colors, but, rect);
+			ui_draw_widget(&mcolors, but, rect);
 		} break;
 	}
 }

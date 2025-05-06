@@ -151,6 +151,10 @@ void ui_but_active_free(struct rContext *C, struct uiBut *but);
 
 bool ui_but_is_editing(struct uiBut *but);
 
+double ui_but_get_value(struct uiBut *but);
+/** Returns the new value that is stored in the button. */
+double ui_but_set_value(struct uiBut *but, double nvalue);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

@@ -230,9 +230,10 @@ ROSE_STATIC void ui_popup_block_remove(struct rContext *C, uiPopupBlockHandle *h
 	ScrArea *ctx_area = CTX_wm_area(C);
 	ARegion *ctx_region = CTX_wm_region(C);
 
+	Screen *screen = WM_window_screen_get(ctx_win);
+
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *win = ctx_win;
-	Screen *screen = CTX_wm_screen(C);
 
 	if (!LIB_haslink(&screen->regionbase, handle->region)) {
 		LISTBASE_FOREACH(wmWindow *, win_iter, &wm->windows) {
