@@ -106,7 +106,7 @@ void LIB_uniquename(struct ListBase *lb, void *vlink, const char *defname, char 
 		return;
 	}
 
-	return LIB_uniquename_cb(uniquename_unique_check, &data, defname, delim, POINTER_OFFSET(vlink, offset), maxncpy);
+	LIB_uniquename_cb(uniquename_unique_check, &data, defname, delim, POINTER_OFFSET(vlink, offset), maxncpy);
 }
 
 /** \} */
