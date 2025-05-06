@@ -260,6 +260,7 @@ ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const 
 				double prev = ui_but_get_value(but), next = ui_but_set_value(but, prev + direction);
 				if (prev != next) {
 					ED_region_tag_redraw_no_rebuild(CTX_wm_region(C));
+					ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
 
 				retval |= WM_UI_HANDLER_BREAK;
@@ -270,9 +271,15 @@ ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const 
 				double prev = ui_but_get_value(but), next = ui_but_set_value(but, value);
 				if (prev != next) {
 					ED_region_tag_redraw_no_rebuild(CTX_wm_region(C));
+					ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
 
 				retval |= WM_UI_HANDLER_BREAK;
+			}
+		} break;
+		case UI_BTYPE_PUSH: {
+			if (ELEM(evt->type, EVT_RETKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				ui_apply_but_func(C, but, but->arg1, but->arg2);
 			}
 		} break;
 	}
@@ -859,6 +866,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 		case BUTTON_STATE_SCROLL: {
 			if (ui_scroll_set_thumb_pos(but, data->region, evt->mouse_xy)) {
 				ED_region_tag_redraw_no_rebuild(data->region);
+				ui_apply_but_func(C, but, but->arg1, but->arg2);
 			}
 
 			retval |= WM_UI_HANDLER_BREAK;
