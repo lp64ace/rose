@@ -75,7 +75,7 @@ void LIB_uniquename_cb(UniquenameCheckCallback unique_check, void *arg, const ch
 typedef struct ListBaseUniqueNameData {
 	ListBase *lb;
 	ptrdiff_t offset;
-	uintptr_t vlink;
+	void *vlink;
 } ListBaseUniqueNameData;
 
 ROSE_INLINE bool uniquename_find_dupe(ListBase *lb, void *vlink, const char *name, ptrdiff_t offset) {
