@@ -62,6 +62,12 @@ typedef struct SpaceUser {
 	/** End of 'SpaceLink' header. */
 } SpaceUser;
 
+/** #SpaceUser->tab */
+enum {
+	USERPREF_TAB_VIDEO = 0,
+	USERPREF_TAB_THEME = 1,
+};
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

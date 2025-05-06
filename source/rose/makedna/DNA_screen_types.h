@@ -147,6 +147,9 @@ typedef struct ARegion {
 	int sizex;
 	int sizey;
 
+	float hscroll;
+	float vscroll;
+
 	int alignment;
 	int regiontype;
 	int flag;
