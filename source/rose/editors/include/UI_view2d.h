@@ -66,4 +66,4 @@ void UI_view2d_view_ortho(const struct View2D *v2d);
 }
 #endif
 
-#endif UI_VIEW2D_H
+#endif // UI_VIEW2D_H
