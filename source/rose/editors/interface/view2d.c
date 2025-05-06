@@ -1,6 +1,7 @@
 #include "DNA_view2d_types.h"
 
 #include "LIB_assert.h"
+#include "LIB_math_base.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
@@ -9,6 +10,7 @@
 #include "UI_view2d.h"
 
 ROSE_STATIC void ui_view2d_cur_rect_validate_resize(View2D *v2d, bool resize);
+ROSE_STATIC int view2d_scroll_mapped(int scroll);
 ROSE_STATIC void view2d_masks(View2D *v2d, const rcti *mask_scroll);
 
 /* -------------------------------------------------------------------- */
@@ -159,78 +161,6 @@ void UI_view2d_mask_from_win(const View2D *v2d, rcti *r_mask) {
 	r_mask->ymin = 0;
 	r_mask->xmax = v2d->winx - 1; /* -1 yes! masks are pixels */
 	r_mask->ymax = v2d->winy - 1;
-}
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name View2D Matrix Setup
- * \{ */
-
-ROSE_STATIC void view2d_map_cur_using_mask(const View2D *v2d, rctf *r_curmasked) {
-	*r_curmasked = v2d->cur;
-
-	if (view2d_scroll_mapped(v2d->scroll)) {
-		const float sizex = LIB_rcti_size_x(&v2d->mask);
-		const float sizey = LIB_rcti_size_y(&v2d->mask);
-
-		/**
-		 * Prevent tiny or narrow regions to get
-		 * invalid coordinates - mask can get negative even...
-		 */
-		if (sizex > 0.0f && sizey > 0.0f) {
-			const float dx = LIB_rctf_size_x(&v2d->cur) / (sizex + 1);
-			const float dy = LIB_rctf_size_y(&v2d->cur) / (sizey + 1);
-
-			if (v2d->mask.xmin != 0) {
-				r_curmasked->xmin -= dx * (float)v2d->mask.xmin;
-			}
-			if (v2d->mask.xmax + 1 != v2d->winx) {
-				r_curmasked->xmax += dx * (float)(v2d->winx - v2d->mask.xmax - 1);
-			}
-
-			if (v2d->mask.ymin != 0) {
-				r_curmasked->ymin -= dy * (float)v2d->mask.ymin;
-			}
-			if (v2d->mask.ymax + 1 != v2d->winy) {
-				r_curmasked->ymax += dy * (float)(v2d->winy - v2d->mask.ymax - 1);
-			}
-		}
-	}
-}
-
-void UI_view2d_view_ortho(const View2D *v2d) {
-	rctf curmasked;
-	const int sizex = LIB_rcti_size_x(&v2d->mask);
-	const int sizey = LIB_rcti_size_y(&v2d->mask);
-	const float eps = 0.001f;
-	float xofs = 0.0f, yofs = 0.0f;
-
-	if (sizex > 0) {
-		xofs = eps * LIB_rctf_size_x(&v2d->cur) / sizex;
-	}
-	if (sizey > 0) {
-		yofs = eps * LIB_rctf_size_y(&v2d->cur) / sizey;
-	}
-
-	/* apply mask-based adjustments to cur rect (due to scrollers),
-	 * to eliminate scaling artifacts */
-	view2d_map_cur_using_mask(v2d, &curmasked);
-
-	LIB_rctf_translate(&curmasked, -xofs, -yofs);
-
-	/* XXX ton: this flag set by outliner, for icons */
-	if (v2d->flag & V2D_PIXELOFS_X) {
-		curmasked.xmin = floorf(curmasked.xmin) - (eps + xofs);
-		curmasked.xmax = floorf(curmasked.xmax) - (eps + xofs);
-	}
-	if (v2d->flag & V2D_PIXELOFS_Y) {
-		curmasked.ymin = floorf(curmasked.ymin) - (eps + yofs);
-		curmasked.ymax = floorf(curmasked.ymax) - (eps + yofs);
-	}
-
-	/* set matrix on all appropriate axes */
-	GPU_matrix_ortho_set(curmasked.xmin, curmasked.xmax, curmasked.ymin, curmasked.ymax, GPU_MATRIX_ORTHO_CLIP_NEAR_DEFAULT, GPU_MATRIX_ORTHO_CLIP_FAR_DEFAULT);
 }
 
 /** \} */
@@ -741,6 +671,78 @@ ROSE_STATIC void view2d_masks(View2D *v2d, const rcti *mask_scroll) {
 			v2d->hor.ymin = v2d->hor.ymax - scroll_height;
 		}
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name View2D Matrix Setup
+ * \{ */
+
+ROSE_STATIC void view2d_map_cur_using_mask(const View2D *v2d, rctf *r_curmasked) {
+	*r_curmasked = v2d->cur;
+
+	if (view2d_scroll_mapped(v2d->scroll)) {
+		const float sizex = LIB_rcti_size_x(&v2d->mask);
+		const float sizey = LIB_rcti_size_y(&v2d->mask);
+
+		/**
+		 * Prevent tiny or narrow regions to get
+		 * invalid coordinates - mask can get negative even...
+		 */
+		if (sizex > 0.0f && sizey > 0.0f) {
+			const float dx = LIB_rctf_size_x(&v2d->cur) / (sizex + 1);
+			const float dy = LIB_rctf_size_y(&v2d->cur) / (sizey + 1);
+
+			if (v2d->mask.xmin != 0) {
+				r_curmasked->xmin -= dx * (float)v2d->mask.xmin;
+			}
+			if (v2d->mask.xmax + 1 != v2d->winx) {
+				r_curmasked->xmax += dx * (float)(v2d->winx - v2d->mask.xmax - 1);
+			}
+
+			if (v2d->mask.ymin != 0) {
+				r_curmasked->ymin -= dy * (float)v2d->mask.ymin;
+			}
+			if (v2d->mask.ymax + 1 != v2d->winy) {
+				r_curmasked->ymax += dy * (float)(v2d->winy - v2d->mask.ymax - 1);
+			}
+		}
+	}
+}
+
+void UI_view2d_view_ortho(const View2D *v2d) {
+	rctf curmasked;
+	const int sizex = LIB_rcti_size_x(&v2d->mask);
+	const int sizey = LIB_rcti_size_y(&v2d->mask);
+	const float eps = 0.001f;
+	float xofs = 0.0f, yofs = 0.0f;
+
+	if (sizex > 0) {
+		xofs = eps * LIB_rctf_size_x(&v2d->cur) / sizex;
+	}
+	if (sizey > 0) {
+		yofs = eps * LIB_rctf_size_y(&v2d->cur) / sizey;
+	}
+
+	/* apply mask-based adjustments to cur rect (due to scrollers),
+	 * to eliminate scaling artifacts */
+	view2d_map_cur_using_mask(v2d, &curmasked);
+
+	LIB_rctf_translate(&curmasked, -xofs, -yofs);
+
+	/* XXX ton: this flag set by outliner, for icons */
+	if (v2d->flag & V2D_PIXELOFS_X) {
+		curmasked.xmin = floorf(curmasked.xmin) - (eps + xofs);
+		curmasked.xmax = floorf(curmasked.xmax) - (eps + xofs);
+	}
+	if (v2d->flag & V2D_PIXELOFS_Y) {
+		curmasked.ymin = floorf(curmasked.ymin) - (eps + yofs);
+		curmasked.ymax = floorf(curmasked.ymax) - (eps + yofs);
+	}
+
+	/* set matrix on all appropriate axes */
+	GPU_matrix_ortho_set(curmasked.xmin, curmasked.xmax, curmasked.ymin, curmasked.ymax, GPU_MATRIX_ORTHO_CLIP_NEAR_DEFAULT, GPU_MATRIX_ORTHO_CLIP_FAR_DEFAULT);
 }
 
 /** \} */

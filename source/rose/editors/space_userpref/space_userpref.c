@@ -82,14 +82,16 @@ enum {
 	THEME_DOWN,
 };
 
-void userpref_main_theme_update(struct rContext *C, uiBut *but, Theme *theme, int op) {
-	if (ELEM(op, THEME_UP, THEME_DOWN) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
+void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, void *vop) {
+	Theme *theme = (Theme *)vtheme;
+
+	if (ELEM((int)vop, THEME_UP, THEME_DOWN) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
 		return;
 	}
 
 	WindowManager *wm = CTX_wm_manager(C);
 
-	switch (op) {
+	switch ((int)vop) {
 		case THEME_ADD: {
 			theme = MEM_mallocN(sizeof(Theme), "Theme");
 			memcpy(theme, U.themes.first, sizeof(Theme));
@@ -135,10 +137,10 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 			uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Name", 0, 0, region->sizex - 3 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
 			but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
 			but = uiDefBut(block, UI_BTYPE_PUSH, "x", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-			UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_DEL);
+			UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_DEL);
 			but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
 			but = uiDefBut(block, UI_BTYPE_PUSH, "+", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-			UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_ADD);
+			UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_ADD);
 			but = uiDefBut(block, UI_BTYPE_SEPR, "(null)", 0, 0, V2D_SCROLL_WIDTH, PIXELSIZE, NULL, 0, 0, 0);
 
 			LISTBASE_FOREACH(Theme *, theme, &U.themes) {
@@ -147,12 +149,12 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
 				but = uiDefBut(block, UI_BTYPE_PUSH, theme->next ? "\xE2\x86\x93" : "", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
 				if (theme->next) {
-					UI_but_func_set(but, userpref_main_theme_update, theme, THEME_DOWN);
+					UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_DOWN);
 				}
 				but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
 				but = uiDefBut(block, UI_BTYPE_PUSH, theme->prev ? "\xE2\x86\x91" : "", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
 				if (theme->prev) {
-					UI_but_func_set(but, userpref_main_theme_update, theme, THEME_UP);
+					UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_UP);
 				}
 				but = uiDefBut(block, UI_BTYPE_SEPR, "(null)", 0, 0, V2D_SCROLL_WIDTH, PIXELSIZE, NULL, 0, 0, 0);
 			}
@@ -188,31 +190,31 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Outline", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->outline, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Outline Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Inner1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->inner, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Inner2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->inner_sel, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background Color (Hovered)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->text, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Roundness", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->roundness, UI_POINTER_FLT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Decimal, 0.0, 0.1);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Corner Roundness 0.0 - 1.0", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -229,31 +231,31 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Outline", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->outline, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Outline Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Inner1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->inner, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Inner2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->inner_sel, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background Color (Pushed)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->text, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Roundness", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->roundness, UI_POINTER_FLT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Decimal, 0.0, 0.1);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Corner Roundness 0.0 - 1.0", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -270,37 +272,37 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Outline", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->outline, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Outline Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Inner1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->inner, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Inner2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->inner_sel, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background Color (Active)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->text, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->text_sel, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text Color (Selected)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Roundness", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->roundness, UI_POINTER_FLT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Decimal, 0.0, 0.1);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Corner Roundness 0.0 - 1.0", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -317,13 +319,13 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Line", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->text, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Separator Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Roundness", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &wcol->roundness, UI_POINTER_FLT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Decimal, 0.0, 0.1);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Corner Roundness 0.0 - 1.0", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -341,7 +343,7 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Caret", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &tui->text_cur, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Text Cursror Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -360,19 +362,19 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header_hi, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color (Highlighted)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->back, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Main Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -389,19 +391,19 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header_hi, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color (Highlighted)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->back, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Main Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -418,19 +420,19 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header_hi, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color (Highlighted)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->back, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Main Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -447,19 +449,19 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header_hi, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color (Highlighted)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->back, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Main Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);
@@ -476,19 +478,19 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header1", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header2", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->header_hi, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Header Region Color (Highlighted)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Background", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, &ts->back, UI_POINTER_UINT, 0, UI_BUT_TEXT_LEFT | UI_BUT_HEX);
 				UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-				UI_but_func_set(but, userpref_main_theme_update, NULL, THEME_NONE);
+				UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
 				but = uiDefBut(block, UI_BTYPE_TEXT, "Main Region Color", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
 
 				UI_block_layout_set_current(block, root);

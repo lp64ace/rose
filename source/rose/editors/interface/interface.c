@@ -447,17 +447,18 @@ double ui_but_get_value(struct uiBut *but) {
 		return 0;
 	}
 
-	const char *end = NULL;
+	char *end = NULL;
+	const int base = but->flag & UI_BUT_HEX ? 16 : 0;
 
 	switch (but->pointype) {
 		case UI_POINTER_INT:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, but->flag & UI_BUT_HEX ? 16 : 0) : (double)*(const int *)but->pointer;
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const int *)but->pointer;
 		case UI_POINTER_FLT:
 			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtof(but->drawstr, &end) : (double)*(const float *)but->pointer;
 		case UI_POINTER_DBL:
 			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtod(but->drawstr, &end) : (double)*(const double *)but->pointer;
 		case UI_POINTER_UINT:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtoul(but->drawstr, &end, but->flag & UI_BUT_HEX ? 16 : 0) : (double)*(const unsigned int *)but->pointer;
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtoul(but->drawstr, &end, base) : (double)*(const unsigned int *)but->pointer;
 	}
 
 	return 0;
