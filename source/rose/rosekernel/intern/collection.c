@@ -349,7 +349,7 @@ bool KER_collection_is_empty(const Collection *collection) {
 /** \name Object List Cache
  * \{ */
 
-ROSE_STATIC collection_object_cache_fill(ListBase *lb, Collection *collection, int parent_restrict, bool instances) {
+ROSE_STATIC void collection_object_cache_fill(ListBase *lb, Collection *collection, int parent_restrict, bool instances) {
 	int child_restrict = collection->flag | parent_restrict;
 
 	LISTBASE_FOREACH(CollectionObject *, cobj, &collection->objects) {
