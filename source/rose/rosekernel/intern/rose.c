@@ -17,16 +17,20 @@ UserDef U;
  * \{ */
 
 extern const Theme U_theme_default;
+extern const Theme U_theme_xp;
 
 void KER_rose_free() {
 	KER_rose_globals_clear();
 }
 
 void KER_rose_userdef_init() {
-	Theme *theme = MEM_mallocN(sizeof(Theme), "DefaultTheme");
-	memcpy(theme, &U_theme_default, sizeof(Theme));
+	Theme *const themes[] = {&U_theme_default, &U_theme_xp};
 
-	LIB_addtail(&U.themes, theme);
+	for (size_t index = 0; index < ARRAY_SIZE(themes); index++) {
+		Theme *theme = MEM_mallocN(sizeof(Theme), "DefaultTheme");
+		memcpy(theme, themes[index], sizeof(Theme));
+		LIB_addtail(&U.themes, theme);
+	}
 }
 void KER_rose_userdef_clear() {
 	KER_userdef_clear(&U);

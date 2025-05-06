@@ -258,25 +258,28 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	RMesh *rm_cube = RM_preset_cube_create((const float[3]){1.0f, 1.0f, 1.0f});
-	if (!rm_cube) {
+	/* Demo Scene */
+
+	Mesh *me = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "Cube");
+	if (!me) {
+		fprintf(stderr, "[WindowManager] Failed to create mesh.\n");
 		return;
 	}
 
-	Mesh *me_cube = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "Cube");
-	if (!me_cube) {
-		fprintf(stderr, "[WindowManager] Failed to create a cube mesh.\n");
+	RMesh *rm = RM_preset_cube_create((const float[3]){1.0f, 1.0f, 1.0f});
+	if (!rm) {
+		fprintf(stderr, "[WindowManager] Failed to create preset mesh.\n");
 		return;
 	}
 
 	RMeshToMeshParams params = {
 		.cd_mask_extra = 0,
 	};
-	RM_mesh_rm_to_me(main, rm_cube, me_cube, &params);
-	RM_mesh_free(rm_cube);
+	RM_mesh_rm_to_me(main, rm, me, &params);
+	RM_mesh_free(rm);
 
-	Object *ob_cube = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me_cube, false);
-	if (!ob_cube) {
+	Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, false);
+	if (!ob) {
 		fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
 		return;
 	}

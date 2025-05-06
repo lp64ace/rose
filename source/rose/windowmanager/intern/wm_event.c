@@ -539,7 +539,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 		} break;
 		case WTK_EVT_MOUSESCROLL: {
 			evt->mouse_xy[0] = evt->prev_xy[0];
-			evt->mouse_xy[0] = evt->prev_xy[1];
+			evt->mouse_xy[1] = evt->prev_xy[1];
 
 			if (y > 0) {
 				evt->type = WHEELUPMOUSE;

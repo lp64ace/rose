@@ -14,9 +14,11 @@ void KER_mesh_runtime_init_data(Mesh *mesh) {
 }
 
 void KER_mesh_runtime_free_data(Mesh *mesh) {
-	KER_mesh_runtime_clear_cache(mesh);
+	if (mesh->runtime) {
+		KER_mesh_runtime_clear_cache(mesh);
 
-	MEM_delete<rose::kernel::MeshRuntime>(mesh->runtime);
+		MEM_delete<rose::kernel::MeshRuntime>(mesh->runtime);
+	}
 }
 
 void KER_mesh_runtime_clear_cache(Mesh *mesh) {
