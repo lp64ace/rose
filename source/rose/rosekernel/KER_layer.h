@@ -11,6 +11,8 @@
 extern "C" {
 #endif
 
+struct Scene;
+
 /** Returns the default view layer to view in work-spaces if there is none liked to the workspace yet. */
 struct ViewLayer *KER_view_layer_default_view(const struct Scene *scene);
 /** Returns the default view lauyer to render if we need to render just one. */
