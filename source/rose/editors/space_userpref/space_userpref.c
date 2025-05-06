@@ -85,13 +85,13 @@ enum {
 void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, void *vop) {
 	Theme *theme = (Theme *)vtheme;
 
-	if (ELEM((int)vop, THEME_UP, THEME_DOWN) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
+	if (ELEM(POINTER_AS_INT(vop), THEME_UP, THEME_DOWN) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
 		return;
 	}
 
 	WindowManager *wm = CTX_wm_manager(C);
 
-	switch ((int)vop) {
+	switch (POINTER_AS_INT(vop)) {
 		case THEME_ADD: {
 			theme = MEM_mallocN(sizeof(Theme), "Theme");
 			memcpy(theme, U.themes.first, sizeof(Theme));
