@@ -9,6 +9,7 @@
 
 #include "UI_interface.h"
 #include "UI_resource.h"
+#include "UI_view2d.h"
 
 #include "KER_context.h"
 
@@ -32,6 +33,7 @@
 #include "interface_intern.h"
 
 #include <stdlib.h>
+#include <ctype.h>
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
@@ -42,6 +44,10 @@ ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but);
 
 ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->type != but_old->type) {
+		return false;
+	}
+	const int runtime = UI_HOVER | UI_SELECT;
+	if ((but_new->flag & ~(runtime)) != (but_old->flag & ~(runtime))) {
 		return false;
 	}
 	if (but_new->handle_func != but_old->handle_func || but_new->arg1 != but_old->arg1 || but_new->arg2 != but_old->arg2) {
@@ -219,10 +225,39 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	}
 	else {
 		but->pointype = pointer ? pointype : UI_POINTER_NIL;
-		but->maxlength = 64;
+		but->maxlength = maxlen ? maxlen : 64;
+	}
+
+	switch (but->pointype) {
+		case UI_POINTER_INT: {
+			but->hardmin = INT_MIN;
+			but->hardmax = INT_MAX;
+		} break;
+		case UI_POINTER_FLT: {
+			but->hardmin = -FLT_MAX;
+			but->hardmax = FLT_MAX;
+		} break;
+		case UI_POINTER_DBL: {
+			but->hardmin = DBL_MIN;
+			but->hardmax = DBL_MAX;
+		} break;
+		case UI_POINTER_UINT: {
+			but->hardmin = 0;
+			but->hardmax = UINT_MAX;
+		} break;
+		default: {
+			/**
+			 * Fallback limits for unsupported or unknown pointer types.
+			 * These are used for text input validation (e.g. integer parsing) and scroll values.
+			 * INT_MIN/INT_MAX are chosen because they safely cover all reasonable UI use cases.
+			 * No display is known to exceed the pixel range of a 32-bit int.
+			 */
+			but->hardmin = INT_MIN;
+			but->hardmax = INT_MAX;
+		} break;
 	}
 	
-	but->drawstr = MEM_mallocN(but->maxlength + 1, "uiBut::DrawStr");
+	but->drawstr = MEM_mallocN(but->maxlength, "uiBut::DrawStr");
 	LIB_strcpy(but->drawstr, but->maxlength, but->name);
 
 	but->rect.xmin = x;
@@ -236,15 +271,25 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 		ui_layout_add_but(block->layout, but);
 	}
 	but->block = block;
-
 	LIB_addtail(&block->buttons, but);
 
 	return but;
 }
 
-uiBut *uiDefBut(uiBlock *block, int type, const char *name, int w, int h, void *pointer, int pointype, int maxlen, int draw) {
-	uiBut *but = ui_def_but(block, type, name, 0, 0, w, h, pointer, pointype, maxlen);
+uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, int maxlen, int draw) {
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h, pointer, pointype, maxlen);
 	but->draw = draw;
+	return but;
+}
+
+uiBut *uiDefButEx(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, double softmin, double softmax, int maxlen, int draw) {
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h, pointer, pointype, maxlen);
+	but->draw = draw;
+	but->softmin = softmin;
+	but->softmax = softmax;
+	if (!ELEM(pointype, UI_POINTER_NIL)) {
+		ui_but_set_value(but, ui_but_get_value(but));
+	}
 	return but;
 }
 
@@ -253,6 +298,14 @@ void uiButEnableFlag(uiBut *but, int flag) {
 }
 void uiButDisableFlag(uiBut *but, int flag) {
 	but->flag &= flag;
+}
+
+void UI_but_func_text_set(uiBut *but, uiButHandleTextFunc func, double softmin, double softmax) {
+	ROSE_assert(but->hardmin <= but->softmin && but->softmax <= but->hardmax);
+
+	but->handle_text_func = func;
+	but->softmin = ROSE_MAX(softmin, but->hardmin);
+	but->softmax = ROSE_MIN(softmax, but->hardmax);
 }
 
 void UI_but_func_set(uiBut *but, uiButHandleFunc func, void *arg1, void *arg2) {
@@ -318,10 +371,20 @@ void ui_but_update(uiBut *but) {
 				break;
 			case UI_POINTER_INT:
 				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, "%d", *(int *)but->pointer);
+					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%08x" : "%d", *(int *)but->pointer);
 				}
 				else {
-					*(int *)but->pointer = atoi(but->drawstr);
+					char *itr = but->drawstr;
+					*(int *)but->pointer = strtol(itr, &itr, 0);
+				}
+				break;
+			case UI_POINTER_UINT:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%08x" : "%d", *(int *)but->pointer);
+				}
+				else {
+					char *itr = but->drawstr;
+					*(int *)but->pointer = strtoul(itr, &itr, 0);
 				}
 				break;
 			case UI_POINTER_FLT:
@@ -367,7 +430,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		float x = xy[0], y = xy[1];
 		ui_window_to_block_fl(region, block, &x, &y);
-		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+		LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
 			if (but->flag & UI_DISABLED) {
 				continue;
 			}
@@ -377,6 +440,87 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 		}
 	}
 	return NULL;
+}
+
+double ui_but_get_value(struct uiBut *but) {
+	if (but->pointer == NULL && !(but->drawstr && ui_but_is_editing(but))) {
+		return 0;
+	}
+
+	char *end = NULL;
+	const int base = but->flag & UI_BUT_HEX ? 16 : 0;
+
+	switch (but->pointype) {
+		case UI_POINTER_INT:
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const int *)but->pointer;
+		case UI_POINTER_FLT:
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtof(but->drawstr, &end) : (double)*(const float *)but->pointer;
+		case UI_POINTER_DBL:
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtod(but->drawstr, &end) : (double)*(const double *)but->pointer;
+		case UI_POINTER_UINT:
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtoul(but->drawstr, &end, base) : (double)*(const unsigned int *)but->pointer;
+	}
+
+	return 0;
+}
+
+double ui_but_set_value(struct uiBut *but, double nvalue) {
+	ROSE_assert(but->hardmin <= but->softmin && but->softmax <= but->hardmax);
+
+	nvalue = ROSE_MAX(but->softmin, ROSE_MIN(nvalue, but->softmax));
+
+	switch (but->pointype) {
+		case UI_POINTER_INT: {
+			*(int *)but->pointer = (int)round(nvalue);
+		} break;
+		case UI_POINTER_FLT: {
+			*(float *)but->pointer = (float)nvalue;
+		} break;
+		case UI_POINTER_DBL: {
+			*(double *)but->pointer = (double)nvalue;
+		} break;
+		case UI_POINTER_UINT: {
+			*(unsigned int *)but->pointer = (unsigned int)round(nvalue);
+		} break;
+		default:
+			ROSE_assert_unreachable();
+	}
+
+	return nvalue;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Builtin UI Functions
+ * \{ */
+
+bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const char *edit) {
+	char *end;
+	if (but->hardmin < 0) {
+		long long value = strtoll(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
+		while (isspace((unsigned char)*end)) {
+			end++;
+		}
+		return ELEM(*end, '\0') && (value >= (long long)but->softmin && value <= (long long)but->softmax);
+	}
+	else {
+		unsigned long long value = strtoull(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
+		while (isspace((unsigned char)*end)) {
+			end++;
+		}
+		return ELEM(*end, '\0') && (value >= (unsigned long long)but->softmin && value <= (unsigned long long)but->softmax);
+	}
+	return false;
+}
+
+bool uiButHandleTextFunc_Decimal(struct rContext *C, struct uiBut *but, const char *edit) {
+	char *end;
+	long double value = strtold(edit, &end);
+	while (isspace((unsigned char)*end)) {
+		end++;
+	}
+	return ELEM(*end, '\0') && (value >= (double)but->softmin && value <= (double)but->softmax);
 }
 
 /** \} */
@@ -481,6 +625,11 @@ ROSE_INLINE void ui_draw_menu_back(ARegion *region, uiBlock *block, const rcti *
 void UI_block_draw(const struct rContext *C, uiBlock *block) {
 	ARegion *region = CTX_wm_region(C);
 
+	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+		/** Before drawing we update the buttons so that all the content is curernt. */
+		ui_but_update(but);
+	}
+
 	GPU_blend(GPU_BLEND_ALPHA);
 
 	GPU_matrix_push_projection();
@@ -531,6 +680,37 @@ void UI_block_translate(uiBlock *block, float dx, float dy) {
 		LIB_rctf_translate(&but->rect, dx, dy);
 	}
 	LIB_rctf_translate(&block->rect, dx, dy);
+}
+
+void UI_block_scroll(ARegion *region, uiBlock *block, uiLayout *layout) {
+	uiBut *but;
+
+	int w, h;
+	UI_layout_estimate(layout, &w, &h);
+	UI_block_layout_set_current(block, NULL);
+
+	/* clang-format off */
+
+	if (((float)h / (float)region->sizey) > 1) {
+		but = uiDefButEx(
+			block,
+			UI_BTYPE_SCROLL,
+			"",
+			region->sizex - V2D_SCROLL_WIDTH,
+			0,
+			V2D_SCROLL_WIDTH,
+			region->sizey,
+			&region->vscroll,
+			UI_POINTER_FLT,
+			1,
+			ROSE_MAX(((float)h / (float)region->sizey), 1),
+			0,
+			UI_BUT_TEXT_LEFT
+		);
+		uiButEnableFlag(but, UI_BUT_DEFAULT);
+	}
+
+	/* clang-format on */
 }
 
 void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {

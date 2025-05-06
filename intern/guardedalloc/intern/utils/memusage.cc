@@ -25,7 +25,7 @@ struct alignas(128) Local {
 	bool destructed = false;
 	/**
 	 * This is the first created #Local and on the main thread. When the main
-	 * local data is destructed, we know that Blender is quitting and that we
+	 * local data is destructed, we know that Rose is quitting and that we
 	 * can't rely on thread locals being available still.
 	 */
 	bool is_main = false;

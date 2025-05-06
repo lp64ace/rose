@@ -24,6 +24,7 @@ typedef struct ThemeUI {
 	uiWidgetColors wcol_but;
 	uiWidgetColors wcol_txt;
 	uiWidgetColors wcol_edit;
+	uiWidgetColors wcol_scroll;
 
 	/** The color that will be used for the text cursor. */
 	unsigned char text_cur[4];

@@ -47,7 +47,6 @@ ROSE_INLINE uint64_t _lib_nextpow2_u64(uint64_t n) {
 
 /** \} */
 
-
 /* -------------------------------------------------------------------- */
 /** \name Conversion
  * \{ */
@@ -76,21 +75,31 @@ ROSE_INLINE int float_as_int(float f) {
  * \{ */
 
 ROSE_INLINE unsigned int _lib_software_popcount_u32(uint32_t n) {
-	n = (n & 0x55555555) + ((n >>  1) & 0x55555555);
-    n = (n & 0x33333333) + ((n >>  2) & 0x33333333);
-    n = (n & 0x0f0f0f0f) + ((n >>  4) & 0x0f0f0f0f);
-    n = (n & 0x00ff00ff) + ((n >>  8) & 0x00ff00ff);
-    n = (n & 0x0000ffff) + ((n >> 16) & 0x0000ffff);
+	n = (n & 0x55555555) + ((n >> 1) & 0x55555555);
+	n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+	n = (n & 0x0f0f0f0f) + ((n >> 4) & 0x0f0f0f0f);
+	n = (n & 0x00ff00ff) + ((n >> 8) & 0x00ff00ff);
+	n = (n & 0x0000ffff) + ((n >> 16) & 0x0000ffff);
 	return (unsigned int)n;
 }
 ROSE_INLINE unsigned int _lib_software_popcount_u64(uint64_t n) {
-    n = (n & 0x5555555555555555) + ((n >>  1) & 0x5555555555555555);
-    n = (n & 0x3333333333333333) + ((n >>  2) & 0x3333333333333333);
-    n = (n & 0x0f0f0f0f0f0f0f0f) + ((n >>  4) & 0x0f0f0f0f0f0f0f0f);
-    n = (n & 0x00ff00ff00ff00ff) + ((n >>  8) & 0x00ff00ff00ff00ff);
-    n = (n & 0x0000ffff0000ffff) + ((n >> 16) & 0x0000ffff0000ffff);
-    n = (n & 0x00000000ffffffff) + ((n >> 32) & 0x00000000ffffffff);
-    return (unsigned int)n;
+	n = (n & 0x5555555555555555) + ((n >> 1) & 0x5555555555555555);
+	n = (n & 0x3333333333333333) + ((n >> 2) & 0x3333333333333333);
+	n = (n & 0x0f0f0f0f0f0f0f0f) + ((n >> 4) & 0x0f0f0f0f0f0f0f0f);
+	n = (n & 0x00ff00ff00ff00ff) + ((n >> 8) & 0x00ff00ff00ff00ff);
+	n = (n & 0x0000ffff0000ffff) + ((n >> 16) & 0x0000ffff0000ffff);
+	n = (n & 0x00000000ffffffff) + ((n >> 32) & 0x00000000ffffffff);
+	return (unsigned int)n;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Float
+ * \{ */
+
+ROSE_INLINE float xor_fl(float x, int y) {
+	return int_as_float(float_as_int(x) ^ y);
 }
 
 /** \} */
@@ -99,4 +108,4 @@ ROSE_INLINE unsigned int _lib_software_popcount_u64(uint64_t n) {
 }
 #endif
 
-#endif // MATH_BIT_INLINE_C
+#endif	// MATH_BIT_INLINE_C

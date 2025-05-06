@@ -85,6 +85,7 @@ char *LIB_strncat(char *dst, size_t dst_maxncpy, const char *src, size_t length)
 /** \name String Queries
  * \{ */
 
+#ifndef LIB_strlen
 size_t LIB_strlen(const char *str) {
 	const char *char_ptr;
 	const size_t *longword_ptr;
@@ -153,7 +154,9 @@ size_t LIB_strlen(const char *str) {
 
 	ROSE_assert_unreachable();
 }
+#endif
 
+#ifndef LIB_strnlen
 size_t LIB_strnlen(const char *str, const size_t maxlen) {
 	const char *char_ptr;
 	const size_t *longword_ptr;
@@ -228,6 +231,7 @@ size_t LIB_strnlen(const char *str, const size_t maxlen) {
 
 	return maxlen;
 }
+#endif
 
 bool LIB_str_starts_with(const char *text, const char *prefix) {
 	return STREQLEN(text, prefix, LIB_strlen(prefix));
@@ -326,14 +330,10 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	 * character. If an encoding error occurs, a negative number is returned. Notice that only when this returned value is
 	 * non-negative and less than n, the string has been completely written.
 	 */
-	size_t n = vsnprintf(NULL, 0, fmt, args);
+	int n = vsnprintf(buffer, maxncpy, fmt, args);
 
 	/** Resulting string has to be null-terminated. */
-	if (n < maxncpy) {
-		/** Format the buffer and then make sure that it is null-terminated, see below! */
-		n = vsnprintf(buffer, maxncpy, fmt, args);
-	}
-	else {
+	if (n < 0 || n >= maxncpy) {
 		n = 0;
 	}
 
@@ -367,14 +367,14 @@ char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 
 size_t LIB_strnformat_byte_size(char *buffer, size_t maxncpy, uint64_t bytes, int decimal) {
 	const char metric[] = " KMGTPEZY";
-	
+
 	double value = bytes;
-	
+
 	int i = 0;
 	while (value >= 1000.0 && i++ < ARRAY_SIZE(metric) - 1) {
 		value /= 1024.0;
 	}
-	
+
 	return LIB_strnformat(buffer, maxncpy, "%5.*f %cB", decimal, value, metric[i]);
 }
 

@@ -15,7 +15,7 @@
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
 #include "LIB_string.h"
-#include "LIB_string_utils.h"
+#include "LIB_string_utf.h"
 #include "LIB_utildefines.h"
 
 #include "WM_api.h"
@@ -28,8 +28,8 @@
 
 #include <ctype.h>
 #include <limits.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name UI Event Handlers
@@ -54,10 +54,13 @@ typedef struct uiHandleButtonData {
 enum {
 #define _BUTTON_STATE_BEGIN BUTTON_STATE_HIGHLIGHT
 	BUTTON_STATE_HIGHLIGHT = 1,
-	BUTTON_STATE_TEXT_EDITING,
+#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_TEXT_SELECTING
 	BUTTON_STATE_TEXT_SELECTING,
+	BUTTON_STATE_TEXT_EDITING,
 	BUTTON_STATE_WAIT_RELEASE,
 	BUTTON_STATE_MENU_OPEN,
+	BUTTON_STATE_SCROLL,
+#define _BUTTON_MODAL_STATE_END BUTTON_STATE_SCROLL
 	BUTTON_STATE_EXIT,
 #define _BUTTON_STATE_END BUTTON_STATE_EXIT
 };
@@ -68,7 +71,17 @@ bool ui_but_is_editing(uiBut *but) {
 }
 
 ROSE_INLINE bool button_modal_state(int state) {
-	return IN_RANGE_INCL(state, _BUTTON_STATE_BEGIN, _BUTTON_STATE_END);
+	return IN_RANGE_INCL(state, _BUTTON_MODAL_STATE_BEGIN, _BUTTON_MODAL_STATE_END);
+}
+ROSE_INLINE bool ui_button_modal_state(uiBut *but) {
+	if (!but) {
+		return false;
+	}
+	uiHandleButtonData *data = but->active;
+	if (!data) {
+		return false;
+	}
+	return button_modal_state(data->state);
 }
 
 ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data);
@@ -153,7 +166,7 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, in
 			data->undo_stack = ui_textedit_undo_stack_create();
 			if (state == BUTTON_STATE_TEXT_EDITING) {
 				but->selsta = 0;
-				but->selend = but->offset = LIB_strlen(but->pointer);
+				but->selend = but->offset = LIB_strlen(but->drawstr);
 			}
 			ui_textedit_undo_push(data->undo_stack, but->drawstr, LIB_strlen(but->drawstr));
 		} break;
@@ -224,6 +237,66 @@ ROSE_STATIC void ui_apply_but_func(struct rContext *C, uiBut *but, void *arg1, v
 	if (but->block && but->block->handle) {
 		ui_do_but_menu_exit(C, but);
 	}
+}
+
+ROSE_STATIC bool ui_scroll_set_thumb_pos(uiBut *but, const ARegion *region, const int xy[2]) {
+	float mx = xy[0], my = xy[1];
+	ui_window_to_block_fl(region, but->block, &mx, &my);
+
+	float mv = 0;
+	switch (but->type) {
+		case UI_BTYPE_SCROLL: {
+			mv = ((but->rect.ymax - my) / LIB_rctf_size_y(&but->rect));
+		} break;
+		default: {
+			ROSE_assert_unreachable();
+		} break;
+	}
+	mv = but->softmin + mv * (but->softmax - but->softmin + 1) - 0.5;
+
+	double prev = ui_but_get_value(but), next = ui_but_set_value(but, mv);
+	return prev != next;
+}
+
+ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const wmEvent *evt) {
+	int retval = WM_UI_HANDLER_CONTINUE;
+
+	ARegion *region = CTX_wm_region(C);
+	if (but->active && ((uiHandleButtonData *)but->active)->region) {
+		region = ((uiHandleButtonData *)but->active)->region;
+	}
+
+	switch (but->type) {
+		case UI_BTYPE_SCROLL: {
+			if (ELEM(evt->type, WHEELDOWNMOUSE, WHEELUPMOUSE, EVT_PAGEDOWNKEY, EVT_PAGEUPKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				double move = ELEM(evt->type, WHEELUPMOUSE, EVT_PAGEUPKEY) ? -15e-2f : 15e-2f;
+				double prev = ui_but_get_value(but), next = ui_but_set_value(but, prev + move);
+				if (prev != next) {
+					ED_region_tag_redraw(region);
+					ui_apply_but_func(C, but, but->arg1, but->arg2);
+				}
+
+				retval |= WM_UI_HANDLER_BREAK;
+			}
+			if (ELEM(evt->type, EVT_ENDKEY, EVT_HOMEKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				double nval = ELEM(evt->type, EVT_HOMEKEY) ? but->softmin : but->softmax;
+				double prev = ui_but_get_value(but), next = ui_but_set_value(but, nval);
+				if (prev != next) {
+					ED_region_tag_redraw(region);
+					ui_apply_but_func(C, but, but->arg1, but->arg2);
+				}
+
+				retval |= WM_UI_HANDLER_BREAK;
+			}
+		} break;
+		case UI_BTYPE_PUSH: {
+			if (ELEM(evt->type, EVT_RETKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
+				ui_apply_but_func(C, but, but->arg1, but->arg2);
+			}
+		} break;
+	}
+
+	return retval;
 }
 
 ROSE_STATIC void ui_textedit_set_cursor_pos(uiBut *but, const ARegion *region, const float x) {
@@ -380,7 +453,7 @@ ROSE_STATIC bool ui_textedit_delete(uiBut *but, const wmEvent *evt) {
 	return changed;
 }
 
-ROSE_STATIC bool ui_textedit_insert_buf(uiBut *but, const char *input, unsigned int step) {
+ROSE_STATIC bool ui_textedit_insert_buf(struct rContext *C, uiBut *but, const char *input, unsigned int step) {
 	unsigned int length = (unsigned int)LIB_strlen(but->drawstr);
 	unsigned int cpy = length - (but->selend - but->selsta) + 1;
 
@@ -396,11 +469,13 @@ ROSE_STATIC bool ui_textedit_insert_buf(uiBut *but, const char *input, unsigned 
 
 		if (step && (length + step < maxlength)) {
 			char *nbuf = LIB_strformat_allocN("%.*s%.*s%s", but->offset, but->drawstr, step, input, but->drawstr + but->offset);
-			MEM_freeN(but->drawstr);
-			but->drawstr = nbuf;
+			if (but->handle_text_func == NULL || but->handle_text_func(C, but, nbuf)) {
+				SWAP(char *, but->drawstr, nbuf);
 
-			but->offset += step;
-			changed |= true;
+				but->offset += step;
+				changed |= true;
+			}
+			MEM_freeN(nbuf);
 		}
 	}
 
@@ -421,7 +496,7 @@ ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int
 		case UI_TEXTEDIT_PASTE: {
 			char *nbuf = WM_clipboard_text_get_firstline(C, false, &length);
 			if (nbuf) {
-				changed |= ui_textedit_insert_buf(but, nbuf, length);
+				changed |= ui_textedit_insert_buf(C, but, nbuf, length);
 				MEM_freeN(nbuf);
 			}
 		} break;
@@ -446,6 +521,7 @@ ROSE_STATIC bool ui_textedit_set(uiBut *but, const char *text) {
 		MEM_freeN(but->drawstr);
 		but->drawstr = LIB_strdupN(text);
 		but->selsta = but->selend = but->offset = LIB_strlen(but->drawstr);
+		ui_but_tag_redraw(but);
 		return true;
 	}
 	return false;
@@ -462,6 +538,10 @@ ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 				}
 			}
+			retval |= WM_UI_HANDLER_BREAK;
+		} break;
+		case MOUSELEAVE: {
+			button_activate_state(C, but, BUTTON_STATE_EXIT);
 			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 		case LEFTMOUSE: {
@@ -585,7 +665,6 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 			int direction = (evt->type == EVT_LEFTARROWKEY) ? -1 : 1;
 
 			ui_textedit_move(but, direction, false, evt->modifier & KM_SHIFT);
-
 			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 		case EVT_HOMEKEY:
@@ -593,7 +672,6 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 			int direction = (evt->type == EVT_HOMEKEY) ? -1 : 1;
 
 			ui_textedit_move(but, direction, true, evt->modifier & KM_SHIFT);
-
 			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 	}
@@ -646,7 +724,6 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 					if (ui_textedit_set(but, text)) {
 						but->selsta = but->selend = but->offset = offset;
 					}
-
 					retval |= WM_UI_HANDLER_BREAK;
 				}
 			} break;
@@ -671,18 +748,33 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 
 	if (retval == WM_UI_HANDLER_CONTINUE) {
 		if (evt->input[0]) {
-			changed |= ui_textedit_insert_buf(but, evt->input, LIB_str_utf8_size_or_error(evt->input));
+			changed |= ui_textedit_insert_buf(C, but, evt->input, LIB_str_utf8_size_or_error(evt->input));
 		}
 	}
 
 	if (changed) {
 		ui_textedit_undo_push(data->undo_stack, but->drawstr, but->offset);
 		ui_but_tag_redraw(but);
-
 		retval |= WM_UI_HANDLER_BREAK;
 	}
 
 	return retval;
+}
+
+ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but);
+
+ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, ARegion *region) {
+	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
+	if (but) {
+		switch (but->type) {
+			default: {
+				ui_but_activate(C, region, but, BUTTON_STATE_HIGHLIGHT);
+			} break;
+		}
+		return ui_handle_button_event(C, evt, but);
+	}
+
+	return WM_UI_HANDLER_CONTINUE;
 }
 
 ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but) {
@@ -705,7 +797,17 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				/** This type of buttons only activate when double-clicked! */
 				if (!ELEM(but->type, UI_BTYPE_TEXT) || ELEM(evt->value, KM_DBL_CLICK)) {
-					button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
+					switch (but->type) {
+						case UI_BTYPE_SCROLL: {
+							button_activate_state(C, but, BUTTON_STATE_SCROLL);
+						} break;
+						case UI_BTYPE_EDIT: {
+							button_activate_state(C, but, BUTTON_STATE_TEXT_SELECTING);
+						} break;
+						default: {
+							button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
+						} break;
+					}
 					retval |= WM_UI_HANDLER_BREAK;
 				}
 			}
@@ -716,8 +818,8 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 					break;
 				}
+				/** Menu was triggered open the menu! */
 				else if (but->type == UI_BTYPE_MENU) {
-					/** Menu was triggered open the menu! */
 					button_activate_state(C, but, BUTTON_STATE_MENU_OPEN);
 				}
 				else {
@@ -728,6 +830,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 			}
 		} break;
 		case BUTTON_STATE_MENU_OPEN: {
+			/** Right mouse anywhere cancels the popup. */
 			if (evt->type == RIGHTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				button_activate_state(C, but, BUTTON_STATE_EXIT);
 				retval |= WM_UI_HANDLER_BREAK;
@@ -737,25 +840,55 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 				retval |= WM_UI_HANDLER_BREAK;
 				break;
 			}
-			if (data->menu && data->menu->region) {
-				if (ED_region_contains_xy(data->menu->region, evt->mouse_xy)) {
-					retval |= WM_UI_HANDLER_BREAK;
-					break;
+			/** Left mouse outside of the region cancels the popup. */
+			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_RELEASE)) {
+				ARegion *menuregion = NULL;
+				if (data->menu && data->menu->region) {
+					if (ED_region_contains_xy(data->menu->region, evt->mouse_xy)) {
+						retval |= WM_UI_HANDLER_BREAK;
+						break;
+					}
+					uiBut *sub = ui_block_active_but_get((uiBlock *)data->menu->region->uiblocks.first);
+					if (sub) {
+						retval |= WM_UI_HANDLER_BREAK;
+						break;
+					}
+					menuregion = data->region;
 				}
-				uiBut *sub = ui_block_active_but_get((uiBlock *)data->menu->region->uiblocks.first);
-				if (sub) {
-					retval |= WM_UI_HANDLER_BREAK;
-					break;
-				}
+				button_activate_state(C, but, BUTTON_STATE_EXIT);
+				/**
+				 * A popup was closed because the current popup receive a left-mouse click event, 
+				 * even though the popup was not able to handle it parent pop-ups may be able to instead!
+				 * 
+				 * The parent region has priority, send the event to the active in there, 
+				 * if that doesn't find a hovered-button either the chain keeps going up, 
+				 * until eventually all the popup regions close or one of them is triggered!
+				 * 
+				 * NOTE: We do not update the active button since it may no longer has the focus, 
+				 * we try to find the hovered one instead!
+				 */
+				retval |= ui_handle_button_over(C, evt, menuregion);
 			}
-			/** The cursor has left the region of the popup! */
-			button_activate_state(C, but, BUTTON_STATE_EXIT);
+		} break;
+		case BUTTON_STATE_SCROLL: {
+			if (ui_scroll_set_thumb_pos(but, data->region, evt->mouse_xy)) {
+				ED_region_tag_redraw(data->region);
+				ui_apply_but_func(C, but, but->arg1, but->arg2);
+			}
+
+			retval |= WM_UI_HANDLER_BREAK;
+
+			if (evt->type == LEFTMOUSE && evt->value == KM_RELEASE) {
+				button_activate_state(C, but, BUTTON_STATE_EXIT);
+			}
 		} break;
 	}
 
 	if (retval != WM_UI_HANDLER_CONTINUE) {
 		return retval;
 	}
+
+	retval |= ui_do_but(C, but->block, but, evt);
 
 	switch (evt->type) {
 		case WINDEACTIVATE: {
@@ -766,38 +899,19 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 	return retval;
 }
 
-ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, ARegion *region) {
-	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
-	if (but) {
-		switch (but->type) {
-			case UI_BTYPE_EDIT: {
-				ui_but_activate(C, region, but, BUTTON_STATE_TEXT_SELECTING);
-			} break;
-			default: {
-				ui_but_activate(C, region, but, BUTTON_STATE_HIGHLIGHT);
-			} break;
-		}
-		return ui_handle_button_event(C, evt, but);
-	}
-	else {
-		
-	}
-
-	return WM_UI_HANDLER_CONTINUE;
-}
-
 ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data) {
 	uiHandleButtonData *data = (uiHandleButtonData *)user_data;
+
+	int retval = WM_UI_HANDLER_CONTINUE;
 
 	if (data && data->region) {
 		uiBut *but = ui_region_find_active_but(data->region);
 		if (but) {
-			ui_handle_button_event(C, evt, but);
+			retval |= ui_handle_button_event(C, evt, but);
 		}
 	}
 
-	/** This is a modal handler don't allow anything to interfere with us! */
-	return WM_UI_HANDLER_BREAK;
+	return retval;
 }
 
 ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *user_data) {
@@ -809,13 +923,35 @@ ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *
 		return retval;
 	}
 
-	uiBut *but = ui_region_find_active_but(region);
+	uiBut *but;
+
+	but = ui_region_find_active_but(region);
 
 	if (but) {
 		retval |= ui_handle_button_event(C, evt, but);
 	}
-	else {
+
+	if (retval != WM_UI_HANDLER_CONTINUE) {
+		return retval;
+	}
+
+	if (!ui_button_modal_state(but)) {
 		retval |= ui_handle_button_over(C, evt, region);
+	}
+
+	if (retval != WM_UI_HANDLER_CONTINUE) {
+		return retval;
+	}
+
+	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+		LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
+			if (but->flag & UI_BUT_DEFAULT) {
+				retval |= ui_do_but(C, block, but, evt);
+			}
+			if (retval != WM_UI_HANDLER_CONTINUE) {
+				return retval;
+			}
+		}
 	}
 
 	return retval;

@@ -25,15 +25,6 @@ ROSE_INLINE uint64_t _lib_nextpow2_u64(uint64_t n);
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Conversion
- * \{ */
-
-ROSE_INLINE float int_as_float(int i);
-ROSE_INLINE int float_as_int(float f);
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Bitset
  * \{ */
 
@@ -63,6 +54,16 @@ unsigned int _lib_reverse_scan_u64(uint64_t n);
 
 unsigned int _lib_reverse_scan_clear_u32(uint32_t *n);
 unsigned int _lib_reverse_scan_clear_u64(uint64_t *n);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Float
+ * \{ */
+
+ROSE_INLINE int float_as_int(float f);
+ROSE_INLINE float int_as_float(int f);
+ROSE_INLINE float xor_fl(float x, int y);
 
 /** \} */
 

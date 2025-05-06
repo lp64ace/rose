@@ -6,6 +6,27 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------- */
+/** \name Draw Data Structures
+ * \{ */
+
+struct DrawData;
+typedef void (*DrawDataInitCb)(struct DrawData *engine_data);
+typedef void (*DrawDataFreeCb)(struct DrawData *engine_data);
+
+typedef struct DrawData {
+	struct DrawData *prev, *next;
+	struct DrawDataEngine *engine;
+	/** Only nested data, NOT the engine data itself. */
+	DrawDataFreeCb free;
+} DrawData;
+
+typedef struct DrawDataList {
+	struct DrawData *prev, *next;
+} DrawDataList;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Data Structures
  * \{ */
 
@@ -122,8 +143,12 @@ enum {
 };
 
 #define FILTER_ID_LI (1 << 0)
-#define FILTER_ID_SCR (1 << 1)
-#define FILTER_ID_WM (1 << 2)
+#define FILTER_ID_ME (1 << 1)
+#define FILTER_ID_OB (1 << 2)
+#define FILTER_ID_GR (1 << 3)
+#define FILTER_ID_SCE (1 << 4)
+#define FILTER_ID_SCR (1 << 5)
+#define FILTER_ID_WM (1 << 6)
 
 /**
  * This enum defines the index assigned to each type of IDs in the array returned by
@@ -157,6 +182,11 @@ enum {
 typedef enum eID_Index {
 	/* Special case: Library, should never ever depend on any other type. */
 	INDEX_ID_LI = 0,
+	
+	INDEX_ID_ME,
+	INDEX_ID_OB,
+	INDEX_ID_GR,
+	INDEX_ID_SCE,
 	
 	INDEX_ID_SCR,
 	INDEX_ID_WM,

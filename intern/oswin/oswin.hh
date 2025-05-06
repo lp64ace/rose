@@ -233,7 +233,7 @@ public:
 	int GetGamepadCount(void) const;
 	const Gamepad *GetGamepad(int index) const;
 
-	bool SetClipboard(const char *buffer, unsigned int length, bool selection) const;
+	bool SetClipboard(const char *buffer, unsigned int length, bool selection);
 	bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
 
 	static void Sleep(int ms);
@@ -243,7 +243,7 @@ private:
 	std::vector<tMonitor *> monitors_;
 	std::vector<FormatSetting *> formats_;
 
-	std::chrono::high_resolution_clock::time_point start_;
+	std::chrono::system_clock::time_point start_;
 
 	std::vector<Gamepad> gamepads_;
 
@@ -285,6 +285,8 @@ private:
 	PFNGLXMAKECONTEXTCURRENTPROC glxMakeContextCurrent;
 	PFNGLXSWAPINTERVALEXTPROC glxSwapIntervalEXT;
 	PFNGLXCHOOSEFBCONFIGPROC glxChooseFBConfig;
+
+	std::string clipboard_;
 
 	void EventProcedure(XEvent *evt);
 #endif

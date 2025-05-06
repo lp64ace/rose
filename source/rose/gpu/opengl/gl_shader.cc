@@ -538,7 +538,7 @@ static void print_resource_alias(std::ostream &os, const ShaderCreateInfo::Resou
 static void print_interface(std::ostream &os, const StringRefNull &prefix, const StageInterfaceInfo &iface, const StringRefNull &suffix = "") {
 	/* TODO(@fclem): Move that to interface check. */
 	// if (iface.instance_name.is_empty()) {
-	//   BLI_assert_msg(0, "Interfaces require an instance name for geometry shader.");
+	//   ROSE_assert_msg(0, "Interfaces require an instance name for geometry shader.");
 	//   std::cout << iface.name << ": Interfaces require an instance name for geometry shader.\n";
 	//   continue;
 	// }

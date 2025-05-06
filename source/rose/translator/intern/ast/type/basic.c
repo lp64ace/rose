@@ -128,8 +128,9 @@ ROSE_INLINE const RTType *composite_basic_types(struct RTContext *c, const RTTyp
 /** \name Utils
  * \{ */
 
-RTType *RT_type_new_empty_basic(RTContext *C) {
+RTType *RT_type_new_empty_basic(RTContext *C, int kind) {
 	RTType *type = RT_context_calloc(C, sizeof(RTType));
+	type->kind = kind;
 	type->is_basic = true;
 	type->same = same_basic_types;
 	type->compatible = compatible_basic_types;

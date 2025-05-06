@@ -34,7 +34,7 @@ typedef struct ListBase {
 	 * Note that items cannot be shared between multiple ListBase lists.
 	 * \note Default initialization is zero; use MEM_callocN for memory allocation.
 	 */
-	struct Link *first, *last;
+	void *first, *last;
 } ListBase;
 
 /** \} */

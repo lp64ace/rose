@@ -7,6 +7,10 @@
 
 #include "gpu_platform_private.hh"
 
+#ifndef NDEBUG
+#	include <stdio.h>
+#endif
+
 /* -------------------------------------------------------------------- */
 /** \name Global GPU Platform
  * \{ */
@@ -66,6 +70,10 @@ void GPUPlatformGlobal::init(DeviceType device, OperatingSystemType system, Supp
 
 	this->backend = backend;
 	this->architecture = architecture;
+
+#ifndef NDEBUG
+	fprintf(stdout, "[GPU] %s\n", this->gpu_name);
+#endif
 }
 
 void GPUPlatformGlobal::clear() {

@@ -115,6 +115,10 @@ ROSE_INLINE bool build_verify_c(const char *filepath, SDNA *sdna) {
 				continue;
 			}
 
+			if (RT_parser_size(parser, type) == 0) {
+				continue;
+			}
+
 			fprintf(file, "\n");
 			fprintf(file, "ROSE_STATIC_ASSERT(");
 			fprintf(file, "sizeof(%s) == %llu, ", RT_token_as_string(token), RT_parser_size(parser, type));
@@ -231,7 +235,6 @@ int main(int argc, char **argv) {
 
 /*
 
---src "C:/Users/Jim/source/repos/rose/source/rose/makedna"
---bin "C:/Users/Jim/source/build/rose/source/rose/makedna/intern"
+--src "C:/Users/Jim/source/repos/rose/source/rose/makedna" --bin "C:/Users/Jim/source/build/rose/source/rose/makedna/intern"
 
 */

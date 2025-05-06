@@ -469,15 +469,25 @@ ROSE_STATIC RTToken *skip_conditional(RTPreprocessor *P, RTToken *token) {
 	return token;
 }
 
+ROSE_STATIC RTPreprocessor *RT_pp_new(RTContext *C, const RTFile *file) {
+	RTPreprocessor *pp = MEM_callocN(sizeof(RTPreprocessor), "RTPreprocessor");
+
+	pp->context = C;
+	pp->file = file;
+	pp->conditional = NULL;
+	pp->defines = LIB_ghash_str_new("RTPreprocessor::defines");
+
+	return pp;
+}
+
+ROSE_STATIC void RT_pp_free(RTPreprocessor *pp) {
+	LIB_ghash_free(pp->defines, NULL, NULL);
+
+	MEM_freeN(pp);
+}
+
 void RT_pp_do(RTContext *context, const RTFile *file, ListBase *tokens) {
-	RTPreprocessor *preprocessor = MEM_mallocN(sizeof(RTPreprocessor), "RTPreprocessor");
-
-	preprocessor->context = context;
-	preprocessor->file = file;
-	preprocessor->conditional = NULL;
-	preprocessor->defines = LIB_ghash_str_new("RTPreprocessor::defines");
-
-	preprocessor->included_stdint = false;
+	RTPreprocessor *preprocessor = RT_pp_new(context, file);
 
 	RTToken *itr = (RTToken *)tokens->first;
 
@@ -596,9 +606,7 @@ void RT_pp_do(RTContext *context, const RTFile *file, ListBase *tokens) {
 	}
 	LIB_addtail(tokens, itr);
 
-	LIB_ghash_free(preprocessor->defines, NULL, NULL);
-
-	MEM_freeN(preprocessor);
+	RT_pp_free(preprocessor);
 }
 
 /** \} */

@@ -14,8 +14,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,12 +23,12 @@ extern "C" {
 
 #if defined(WIN32)
 #	if defined(_MSC_VER)
-		typedef struct _stat64 RoseFileStat;
+typedef struct _stat64 RoseFileStat;
 #	else
-		typedef struct _stat RoseFileStat;
+typedef struct _stat RoseFileStat;
 #	endif
 #else
-	typedef struct stat RoseFileStat;
+typedef struct stat RoseFileStat;
 #endif
 
 /* -------------------------------------------------------------------- */
@@ -49,7 +49,7 @@ uint64_t LIB_seek(int fd, size_t offset, int whence);
 
 typedef struct DirEntry {
 	RoseFileStat info;
-	
+
 	int type;
 	/** Null terminated string with the name of the directory. */
 	char name[256];
@@ -63,7 +63,7 @@ enum {
 };
 
 /**
- * Scans the contents of the directory #dirname, and allocates and fills an array 
+ * Scans the contents of the directory #dirname, and allocates and fills an array
  * of entries describing them.
  *
  * \return The length of the array in elements.

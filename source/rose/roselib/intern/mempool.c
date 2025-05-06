@@ -4,6 +4,8 @@
 #include "LIB_mempool.h"
 #include "LIB_utildefines.h"
 
+#include "atomic_ops.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,12 +45,11 @@ typedef struct MemPool {
 	PoolChunk *chunks_head;
 	PoolChunk *chunks_tail;
 
-	/** The size of each stored element, in bytes, specified on init. */
 	size_t esize;
-	/** The size of each stored chunk, in bytes, specified on init. */
 	size_t csize;
-	/** The length of each stored chunk, in elements, specified on init. */
 	size_t clength;
+
+	int flag;
 
 	FreeNode *free;
 
@@ -116,13 +117,24 @@ FreeNode *memory_pool_chunk_add(MemPool *pool, PoolChunk *chunk, FreeNode *last)
 	}
 
 	size_t i = pool->clength;
-	while (i--) {
-		FreeNode *next;
+	if (pool->flag & ROSE_MEMPOOL_ALLOW_ITER) {
+		while (i--) {
+			FreeNode *next;
 
-		node->next = next = NODE_STEP_NEXT(node);
-		node->freeword = FREEWORD;
+			node->next = next = NODE_STEP_NEXT(node);
+			node->freeword = FREEWORD;
 
-		node = next;
+			node = next;
+		}
+	}
+	else {
+		while (i--) {
+			FreeNode *next;
+
+			node->next = next = NODE_STEP_NEXT(node);
+
+			node = next;
+		}
 	}
 
 	node = NODE_STEP_PREV(node);
@@ -142,7 +154,7 @@ FreeNode *memory_pool_chunk_add(MemPool *pool, PoolChunk *chunk, FreeNode *last)
 /** \name Pool Creation
  * \{ */
 
-MemPool *LIB_memory_pool_create(size_t element, size_t perchunk, size_t reserve) {
+MemPool *LIB_memory_pool_create(size_t element, size_t perchunk, size_t reserve, int flag) {
 	MemPool *pool = MEM_mallocN(sizeof(MemPool), "mempool");
 
 	element = ROSE_MAX(element, MEMPOOL_ELEM_SIZE_MIN);
@@ -156,6 +168,7 @@ MemPool *LIB_memory_pool_create(size_t element, size_t perchunk, size_t reserve)
 
 	pool->free = NULL;
 
+	pool->flag = flag;
 	pool->length = 0;
 
 	if (reserve) {
@@ -300,6 +313,145 @@ void LIB_memory_pool_clear(MemPool *pool, size_t reserve) {
 
 size_t LIB_memory_pool_length(MemPool *pool) {
 	return pool->length;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Utils
+ * \{ */
+
+void *LIB_memory_pool_findelem(MemPool *pool, size_t index) {
+	ROSE_assert(pool->flag & ROSE_MEMPOOL_ALLOW_ITER);
+
+	if (index < pool->length) {
+		/* We could have some faster mem chunk stepping code inline. */
+		MemPoolIter iter;
+		void *elem;
+		LIB_memory_pool_iternew(pool, &iter);
+		for (elem = LIB_memory_pool_iterstep(&iter); index-- != 0; elem = LIB_memory_pool_iterstep(&iter)) {
+			/* pass */
+		}
+		return elem;
+	}
+	return NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Iterator
+ * \{ */
+
+void LIB_memory_pool_iternew(MemPool *pool, MemPoolIter *iter) {
+	ROSE_assert(pool->flag & ROSE_MEMPOOL_ALLOW_ITER);
+
+	iter->pool = pool;
+	iter->chunk = pool->chunks_head;
+	iter->index = 0;
+}
+
+void *LIB_memory_pool_iterstep(MemPoolIter *iter) {
+	if (iter->chunk == NULL) {
+		return NULL;
+	}
+
+	const uint esize = iter->pool->esize;
+	FreeNode *curnode = POINTER_OFFSET(CHUNK_DATA(iter->chunk), (esize * iter->index));
+	FreeNode *ret;
+	do {
+		ret = curnode;
+
+		if (++iter->index != iter->pool->clength) {
+			curnode = POINTER_OFFSET(curnode, esize);
+		}
+		else {
+			iter->index = 0;
+			iter->chunk = iter->chunk->next;
+			if (iter->chunk == NULL) {
+				void *ret2 = (ret->freeword == FREEWORD) ? NULL : ret;
+
+				return ret2;
+			}
+			curnode = CHUNK_DATA(iter->chunk);
+		}
+	} while (ret->freeword == FREEWORD);
+
+	return ret;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Thread-Safe Iterator
+ * \{ */
+
+static void mempool_threadsafe_iternew(MemPool *pool, MemPoolThreadSafeIter *ts_iter) {
+	LIB_memory_pool_iternew(pool, &ts_iter->iter);
+	ts_iter->curchunk_threaded_shared = NULL;
+}
+
+ParallelMempoolTaskData *mempool_iter_threadsafe_create(MemPool *pool, size_t iter_num) {
+	ROSE_assert(pool->flag & ROSE_MEMPOOL_ALLOW_ITER);
+
+	ParallelMempoolTaskData *iter_arr = MEM_mallocN(sizeof(*iter_arr) * iter_num, __func__);
+	PoolChunk **curchunk_threaded_shared = MEM_mallocN(sizeof(void *), __func__);
+
+	mempool_threadsafe_iternew(pool, &iter_arr->ts_iter);
+
+	*curchunk_threaded_shared = iter_arr->ts_iter.iter.chunk;
+	iter_arr->ts_iter.curchunk_threaded_shared = curchunk_threaded_shared;
+	for (size_t i = 1; i < iter_num; i++) {
+		iter_arr[i].ts_iter = iter_arr[0].ts_iter;
+		*curchunk_threaded_shared = iter_arr[i].ts_iter.iter.chunk = ((*curchunk_threaded_shared) ? (*curchunk_threaded_shared)->next : NULL);
+	}
+
+	return iter_arr;
+}
+
+void mempool_iter_threadsafe_destroy(ParallelMempoolTaskData *iter_arr) {
+	ROSE_assert(iter_arr->ts_iter.curchunk_threaded_shared != NULL);
+
+	MEM_freeN(iter_arr->ts_iter.curchunk_threaded_shared);
+	MEM_freeN(iter_arr);
+}
+
+void *mempool_iter_threadsafe_step(MemPoolThreadSafeIter *ts_iter) {
+	MemPoolIter *iter = &ts_iter->iter;
+	if (iter->chunk == NULL) {
+		return NULL;
+	}
+
+	const uint esize = iter->pool->esize;
+	FreeNode *curnode = POINTER_OFFSET(CHUNK_DATA(iter->chunk), (esize * iter->index));
+	FreeNode *ret;
+	do {
+		ret = curnode;
+
+		if (++iter->index != iter->pool->clength) {
+			curnode = POINTER_OFFSET(curnode, esize);
+		}
+		else {
+			iter->index = 0;
+
+			/* Begin unique to the `threadsafe` version of this function. */
+			for (iter->chunk = *ts_iter->curchunk_threaded_shared; (iter->chunk != NULL) && (atomic_cas_ptr((void **)ts_iter->curchunk_threaded_shared, iter->chunk, iter->chunk->next) != iter->chunk); iter->chunk = *ts_iter->curchunk_threaded_shared) {
+				/* pass. */
+			}
+			if (iter->chunk == NULL) {
+				return (ret->freeword == FREEWORD) ? NULL : ret;
+			}
+			/* End `threadsafe` exception. */
+
+			iter->chunk = iter->chunk->next;
+			if (iter->chunk == NULL) {
+				return (ret->freeword == FREEWORD) ? NULL : ret;
+			}
+			curnode = CHUNK_DATA(iter->chunk);
+		}
+	} while (ret->freeword == FREEWORD);
+
+	return ret;
 }
 
 /** \} */

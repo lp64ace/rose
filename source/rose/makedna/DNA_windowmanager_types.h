@@ -33,7 +33,7 @@ typedef struct wmWindow {
 
 	double last_draw;
 	double delta_time;
-	double frames;
+	double fps;
 
 	/** Internal window id, used for matching screens, greater than 0. */
 	int winid;

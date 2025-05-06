@@ -43,6 +43,7 @@ set(LIB
 	rose::intern::oswin
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::rosemesh
 	rose::source::rosefont
 	rose::source::gpu
 	rose::source::editors::space_api

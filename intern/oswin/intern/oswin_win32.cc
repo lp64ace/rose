@@ -24,7 +24,7 @@ static INT SharedContextCounter = 0;
 static int convert_key(short win32_key, short scan_code, short extend);
 
 tWindowManager::tWindowManager() {
-	this->start_ = std::chrono::high_resolution_clock::now();
+	this->start_ = std::chrono::system_clock::now();
 }
 
 tWindowManager::~tWindowManager() {
@@ -92,7 +92,7 @@ void tWindowManager::Poll() {
 	PollGamepads();
 }
 
-bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) const {
+bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) {
 	if (selection || !buffer) {
 		return false;
 	}
@@ -253,7 +253,6 @@ int tWindowManager::GetLegacyPFD(const FormatSetting *desired, HDC hdc) {
 		if (!(pfd.dwFlags & PFD_DRAW_TO_WINDOW) || !(pfd.dwFlags & PFD_SUPPORT_OPENGL)) {
 			continue;
 		}
-		// skip if the PFD does not have PFD_GENERIC_ACCELERATION and PFD_GENERIC FORMAT
 		if (!(pfd.dwFlags & PFD_GENERIC_ACCELERATED) && (pfd.dwFlags & PFD_GENERIC_FORMAT)) {
 			continue;
 		}
@@ -735,9 +734,29 @@ bool tWindow::InitPixelFormat() {
 		return false;
 	}
 
+	/* clang-format off */
+
 	unsigned int count = WGL_NUMBER_PIXEL_FORMATS_ARB;
 	int index = 0;
-	int attribs[] = {WGL_SUPPORT_OPENGL_ARB, 1, WGL_DRAW_TO_WINDOW_ARB, 1, WGL_DOUBLE_BUFFER_ARB, 1, WGL_RED_BITS_ARB, settings.color_bits, WGL_GREEN_BITS_ARB, settings.color_bits, WGL_BLUE_BITS_ARB, settings.color_bits, WGL_ALPHA_BITS_ARB, settings.color_bits, WGL_DEPTH_BITS_ARB, settings.depth_bits, WGL_STENCIL_BITS_ARB, settings.stencil_bits, WGL_ACCUM_RED_BITS_ARB, settings.accum_bits, WGL_ACCUM_GREEN_BITS_ARB, settings.accum_bits, WGL_ACCUM_BLUE_BITS_ARB, settings.accum_bits, WGL_ACCUM_ALPHA_BITS_ARB, settings.accum_bits, WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB, WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB};
+	int attribs[] = {
+		WGL_SUPPORT_OPENGL_ARB, 1,
+		WGL_DRAW_TO_WINDOW_ARB, 1,
+		WGL_DOUBLE_BUFFER_ARB, 1,
+		WGL_RED_BITS_ARB, settings.color_bits,
+		WGL_GREEN_BITS_ARB, settings.color_bits,
+		WGL_BLUE_BITS_ARB, settings.color_bits,
+		WGL_ALPHA_BITS_ARB, settings.color_bits,
+		WGL_DEPTH_BITS_ARB, settings.depth_bits,
+		WGL_STENCIL_BITS_ARB, settings.stencil_bits,
+		WGL_ACCUM_RED_BITS_ARB, settings.accum_bits,
+		WGL_ACCUM_GREEN_BITS_ARB, settings.accum_bits,
+		WGL_ACCUM_BLUE_BITS_ARB, settings.accum_bits,
+		WGL_ACCUM_ALPHA_BITS_ARB, settings.accum_bits,
+		WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+		WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB
+	};
+
+	/* clang-format on */
 
 	std::vector<int> attribList;
 	attribList.assign(attribs, attribs + std::size(attribs));
@@ -1131,6 +1150,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 				break;
 			}
 
+			SetCapture(hwnd);
+
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1158,6 +1179,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			if (!window->active_) {
 				break;
 			}
+
+			ReleaseCapture();
 
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));

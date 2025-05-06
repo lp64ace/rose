@@ -14,6 +14,7 @@
 #include "GPU_viewport.h"
 
 #include "LIB_listbase.h"
+#include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
@@ -141,6 +142,28 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 	else {
 		GPU_offscreen_draw_to_screen(region->draw_buffer->offscreen, region->winrct.xmin, region->winrct.ymin);
 	}
+}
+
+struct GPUViewport *WM_draw_region_get_bound_viewport(struct ARegion *region) {
+	if (!region->draw_buffer) {
+		return NULL;
+	}
+
+	/** Since we are rendering the viewport should be used instead of the offscreen drawing. */
+	ROSE_assert(region->draw_buffer->viewport);
+	return region->draw_buffer->viewport;
+}
+
+GPUTexture *WM_draw_region_texture(ARegion *region, int view) {
+	if (!region->draw_buffer) {
+		return NULL;
+	}
+
+	GPUViewport *viewport = region->draw_buffer->viewport;
+	if (viewport) {
+		return GPU_viewport_color_texture(viewport, view);
+	}
+	return GPU_offscreen_color_texture(region->draw_buffer->offscreen);
 }
 
 void WM_draw_region_free(ARegion *region) {
@@ -296,16 +319,16 @@ void WM_do_draw(struct rContext *C) {
 		}
 
 		CTX_wm_window_set(C, window);
-		do {
-			wm_window_make_drawable(wm, window);
-			window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
-			window->frames = 1.0 / window->delta_time;
+		window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
+		window->fps = 1.0 / window->delta_time;
 
-			wm_window_draw(C, window);
+		wm_window_make_drawable(wm, window);
 
-			window->last_draw += window->delta_time;
-			WTK_window_swap_buffers(window->handle);
-		} while (false);
+		wm_window_draw(C, window);
+
+		WTK_window_swap_buffers(window->handle);
+
+		window->last_draw += window->delta_time;
 		CTX_wm_window_set(C, NULL);
 	}
 

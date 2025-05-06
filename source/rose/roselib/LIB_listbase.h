@@ -107,6 +107,8 @@ void LIB_remlink(ListBase *lb, void *vlink);
  * \param listbase The ListBase whose contents will be freed.
  */
 void LIB_freelistN(ListBase *listbase);
+/** Removes and frees a single element from the list. */
+void LIB_freelinkN(ListBase *lb, void *vlink);
 
 /** \} */
 
@@ -193,6 +195,20 @@ void *LIB_rfindstr(const ListBase *lb, const char *str, const size_t offset);
  * \return A pointer to the found Link, or NULL if no match is found.
  */
 void *LIB_rfindbytes(const ListBase *lb, const void *bytes, const size_t length, const size_t offset);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Utility Methods
+ * \{ */
+
+/**
+ * Copy all elements from the srouce list to a destination list using #MEM_dupallocN.
+ * 
+ * \param dst The destination list, all previously elements will be removed.
+ * \param src The source list.
+ */
+void LIB_duplicatelist(ListBase *dst, const ListBase *src);
 
 /** \} */
 

@@ -13,7 +13,7 @@
 #include "LIB_listbase.h"
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
-#include "LIB_string_utils.h"
+#include "LIB_string_utf.h"
 #include "LIB_thread.h"
 
 #include "RFT_api.h"
@@ -794,7 +794,7 @@ static bool rft_glyph_render_bitmap(FontRFT *font, FT_GlyphSlot glyph) {
 		FT_Bitmap tempbitmap;
 		FT_Bitmap_New(&tempbitmap);
 
-		/* Does Blender use Pitch 1 always? It works so far */
+		/* Does Rose use Pitch 1 always? It works so far */
 		err += FT_Bitmap_Convert(font->ft_lib, &glyph->bitmap, &tempbitmap, 1);
 		err += FT_Bitmap_Copy(font->ft_lib, &tempbitmap, &glyph->bitmap);
 		err += FT_Bitmap_Done(font->ft_lib, &tempbitmap);

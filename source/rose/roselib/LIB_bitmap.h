@@ -29,7 +29,7 @@ typedef uint32_t BitMap;
 /** Clear the value of a single bit at '_index'. */
 #define ROSE_BITMAP_DISABLE(_bitmap, _index) ((_bitmap)[(_index) >> _BITMAP_POWER] &= ~(1u << ((_index) & _BITMAP_MASK)))
 /** Flip the value of a single bit at '_index'. */
-#define BLI_BITMAP_FLIP(_bitmap, _index) ((_bitmap)[(_index) >> _BITMAP_POWER] ^= (1u << ((_index) & _BITMAP_MASK)))
+#define ROSE_BITMAP_FLIP(_bitmap, _index) ((_bitmap)[(_index) >> _BITMAP_POWER] ^= (1u << ((_index) & _BITMAP_MASK)))
 
 /**
  * Set or clear the value of a single bit at '_index'.

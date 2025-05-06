@@ -4,6 +4,7 @@
 #include "DNA_ID.h"
 #include "DNA_listbase.h"
 #include "DNA_vector_types.h"
+#include "DNA_view2d_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -147,6 +148,11 @@ typedef struct ARegion {
 	int sizex;
 	int sizey;
 
+	float hscroll;
+	float vscroll;
+
+	View2D v2d;
+
 	int alignment;
 	int regiontype;
 	int flag;
@@ -208,7 +214,8 @@ enum {
 	RGN_FLAG_HIDDEN_BY_USER = 1 << 1,
 	RGN_FLAG_TOO_SMALL = 1 << 2,
 	RGN_FLAG_DYNAMIC_SIZE = 1 << 3,
-	RGN_FLAG_ALWAYS_REBUILD = 1 << 4,
+	RGN_FLAG_ALWAYS_REDRAW = 1 << 4,
+	RGN_FLAG_ALWAYS_REBUILD = (RGN_FLAG_ALWAYS_REDRAW | (1 << 4)),
 	RGN_FLAG_REDRAW = 1 << 5,
 	RGN_FLAG_LAYOUT = 1 << 6,
 	RGN_FLAG_TEMP_REGIONDATA = 1 << 7,
@@ -219,7 +226,7 @@ enum {
 
 #define AREAMINX 32
 #define PIXELSIZE 1
-#define WIDGET_UNIT 24
+#define WIDGET_UNIT 26
 
 #define UI_UNIT_X (PIXELSIZE * WIDGET_UNIT)
 #define UI_UNIT_Y (PIXELSIZE * WIDGET_UNIT)

@@ -17,7 +17,7 @@ void tWindowManager::Shutdown() {
 }
 
 double tWindowManager::GetElapsedTime() const {
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::system_clock::now();
 
 	return std::chrono::duration<double>(now - this->start_).count();
 }

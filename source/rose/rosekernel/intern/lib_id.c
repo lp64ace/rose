@@ -96,6 +96,19 @@ void KER_libblock_init_empty(ID *id) {
 	ROSE_assert_msg(0, "IDType missing IDTypeInfo");
 }
 
+void *KER_id_new(struct Main *main, short type, const char *name) {
+	ROSE_assert(main != NULL);
+
+	if (name == NULL) {
+		name = KER_idtype_idcode_to_name(type);
+	}
+
+	ID *id = KER_libblock_alloc(main, type, name, 0);
+	KER_libblock_init_empty(id);
+
+	return id;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -177,6 +190,20 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 
 void KER_id_free_ex(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
 	id_free(main, idv, flag, use_flag_from_idtag);
+}
+void KER_id_free_us(struct Main *main, void *idv) {
+	ID *id = (ID *)idv;
+
+	id_us_rem(id);
+
+	if (id->user == 0) {
+		KER_libblock_unlink(main, id);
+		KER_id_free_ex(main, idv, 0, true);
+	}
+}
+
+void KER_id_free(struct Main *main, void *idv) {
+	id_free(main, idv, 0, true);
 }
 
 /** \} */

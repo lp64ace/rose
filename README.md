@@ -59,7 +59,7 @@ This project requires **X11**, **GLEW**, and **MESA** development tools.
 Here is a little preview of the application running in its current state, this is simply a 
 showcase demo.
 
-![Demo](https://i.imgur.com/1Bv2jbk.png)
+![Demo](https://i.imgur.com/lu1nijY.png)
 
 # Authors
 

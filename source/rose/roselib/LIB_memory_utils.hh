@@ -5,6 +5,7 @@
 
 #include "LIB_utildefines.h"
 
+#include <algorithm>
 #include <memory>
 
 namespace rose {
@@ -327,5 +328,19 @@ template<typename Func> struct ScopedDeferHelper {
 };
 
 }  // namespace rose::detail
+
+#define ROSE_SCOPED_DEFER_NAME1(a, b) a##b
+#define ROSE_SCOPED_DEFER_NAME2(a, b) ROSE_SCOPED_DEFER_NAME1(a, b)
+#define ROSE_SCOPED_DEFER_NAME(a) ROSE_SCOPED_DEFER_NAME2(_scoped_defer_##a##_, __LINE__)
+
+/**
+ * Execute the given function when the current scope ends. This can be used to cheaply implement
+ * some RAII-like behavior for C types that don't support it. Long term, the types we want to use
+ * this with should either be converted to C++ or get a proper C++ API. Until then, this function
+ * can help avoid common resource leakages.
+ */
+#define ROSE_SCOPED_DEFER(function_to_defer)                 \
+	auto ROSE_SCOPED_DEFER_NAME(func) = (function_to_defer); \
+	rose::detail::ScopedDeferHelper<decltype(ROSE_SCOPED_DEFER_NAME(func))> ROSE_SCOPED_DEFER_NAME(helper){std::move(ROSE_SCOPED_DEFER_NAME(func))};
 
 #endif	// LIB_MEMORY_UTILS_HH

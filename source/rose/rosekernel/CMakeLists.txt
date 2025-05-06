@@ -23,29 +23,48 @@ set(INC_SYS
 
 set(SRC
 	KER_context.h
+	KER_cpp_types.h
+	KER_collection.h
+	KER_customdata.h
 	KER_global.h
 	KER_idprop.h
 	KER_idtype.h
+	KER_layer.h
+	KER_library.h
 	KER_lib_id.h
 	KER_lib_query.h
 	KER_lib_remap.h
-	KER_library.h
 	KER_main.h
+	KER_mesh.h
+	KER_mesh_types.hh
+	KER_object.h
 	KER_rose.h
 	KER_rosefile.h
+	KER_scene.h
 	KER_screen.h
 	KER_userdef.h
 
 	intern/context.c
+	intern/cpp_types.cc
+	intern/collection.c
+	intern/customdata.cc
 	intern/idprop.c
 	intern/idtype.c
+	intern/layer.c
+	intern/library.c
 	intern/lib_id.c
 	intern/lib_query.c
 	intern/lib_remap.c
-	intern/library.c
 	intern/main.c
+	intern/mesh.c
+	intern/mesh.cc
+	intern/mesh_normals.cc
+	intern/mesh_runtime.cc
+	intern/mesh_tessellate.cc
+	intern/object.c
 	intern/rose.c
 	intern/rosefile.c
+	intern/scene.c
 	intern/screen.c
 	intern/userdef.c
 	
@@ -57,8 +76,10 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::intern::atomic
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::dna
+	PUBLIC rose::source::functions
 	PUBLIC rose::source::editors::interface
 	
 	# External Library Dependencies
@@ -96,6 +117,7 @@ set(INC_SYS
 set(TEST
 	test/lib_id_free.cc
 	test/lib_remap.cc
+	test/mesh.cc
 )
 
 # -----------------------------------------------------------------------------
@@ -106,6 +128,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::roselib
 	rose::source::dna
+	rose::source::rosemesh
 	rose::source::rosekernel
 	rose::source::windowmanager
 	

@@ -1,6 +1,7 @@
 #ifndef LIB_MEMPOOL_H
 #define LIB_MEMPOOL_H
 
+#include "LIB_task.h"
 #include "LIB_utildefines.h"
 
 #ifdef __cplusplus
@@ -34,6 +35,11 @@ typedef struct MemPool MemPool;
 /** \name Pool Creation
  * \{ */
 
+enum {
+	ROSE_MEMPOOL_NOP = 0,
+	ROSE_MEMPOOL_ALLOW_ITER = 1 << 0,
+};
+
 /**
  * \brief Create a new memory pool.
  *
@@ -47,7 +53,7 @@ typedef struct MemPool MemPool;
  *
  * \return Pointer to the newly created memory pool, or NULL if creation fails.
  */
-MemPool *LIB_memory_pool_create(size_t element, size_t perchunk, size_t reserve);
+MemPool *LIB_memory_pool_create(size_t element, size_t perchunk, size_t reserve, int flag);
 
 /** \} */
 
@@ -138,6 +144,73 @@ void LIB_memory_pool_clear(MemPool *pool, size_t reserve);
  * \return The current number of allocated elements in the memory pool.
  */
 size_t LIB_memory_pool_length(MemPool *pool);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Utils
+ * \{ */
+
+/**
+ * Returns the element at the specified index.
+ */
+void *LIB_memory_pool_findelem(MemPool *pool, size_t index);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Iterator
+ * \{ */
+
+typedef struct MemPoolIter {
+	struct MemPool *pool;
+	struct PoolChunk *chunk;
+
+	size_t index;
+} MemPoolIter;
+
+void LIB_memory_pool_iternew(MemPool *pool, MemPoolIter *iter);
+void *LIB_memory_pool_iterstep(MemPoolIter *iter);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Thread-Safe Iterator
+ * \{ */
+
+typedef struct MemPoolThreadSafeIter {
+	MemPoolIter iter;
+	struct PoolChunk **curchunk_threaded_shared;
+} MemPoolThreadSafeIter;
+
+typedef struct ParallelMempoolTaskData {
+	MemPoolThreadSafeIter ts_iter;
+	TaskParallelTLS tls;
+} ParallelMempoolTaskData;
+
+/**
+ * Initialize an array of mempool iterators, #LIB_MEMPOOL_ALLOW_ITER flag must be set.
+ *
+ * This is used in threaded code, to generate as much iterators as needed
+ * (each task should have its own),
+ * such that each iterator goes over its own single chunk,
+ * and only getting the next chunk to iterate over has to be
+ * protected against concurrency (which can be done in a lock-less way).
+ *
+ * To be used when creating a task for each single item in the pool is totally overkill.
+ *
+ * See #LIB_task_parallel_mempool implementation for detailed usage example.
+ */
+ParallelMempoolTaskData *mempool_iter_threadsafe_create(MemPool *pool, size_t iter_num);
+
+void mempool_iter_threadsafe_destroy(ParallelMempoolTaskData *iter_arr);
+
+/**
+ * A version of #LIB_mempool_iterstep that uses
+ * #LIB_mempool_threadsafe_iter.curchunk_threaded_shared for threaded iteration support.
+ * (threaded section noted in comments).
+ */
+void *mempool_iter_threadsafe_step(MemPoolThreadSafeIter *iter);
 
 /** \} */
 

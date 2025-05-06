@@ -208,7 +208,7 @@ public:
 		ROSE_assert(size_ > 0);
 		return data_[0];
 	}
-	constexpr const T &last(const size_t n) const {
+	constexpr const T &last(const size_t n = 0) const {
 		ROSE_assert(n < size_);
 		return data_[size_ - 1 - n];
 	}
@@ -435,7 +435,7 @@ public:
 		ROSE_assert(size_ > 0);
 		return data_[0];
 	}
-	constexpr T &last(const size_t n) const {
+	constexpr T &last(const size_t n = 0) const {
 		ROSE_assert(n < size_);
 		return data_[size_ - 1 - n];
 	}
@@ -473,7 +473,7 @@ public:
 	 */
 	template<typename NewT> constexpr MutableSpan<NewT> cast() const {
 		ROSE_assert((size_ * sizeof(T)) % sizeof(NewT) == 0);
-		int64_t new_size = size_ * sizeof(T) / sizeof(NewT);
+		size_t new_size = size_ * sizeof(T) / sizeof(NewT);
 		return MutableSpan<NewT>(reinterpret_cast<NewT *>(data_), new_size);
 	}
 };

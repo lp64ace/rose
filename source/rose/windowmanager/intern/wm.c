@@ -1,13 +1,17 @@
 #include "MEM_guardedalloc.h"
 
+#include "DNA_mesh_types.h"
 #include "DNA_space_types.h"
 
 #include "KER_context.h"
+#include "KER_cpp_types.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_mesh.h"
 #include "KER_rose.h"
+#include "KER_object.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -20,11 +24,14 @@
 
 #include "GPU_init_exit.h"
 
+#include "LIB_math_geom.h"
 #include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "RFT_api.h"
+
+#include "RM_include.h"
 
 #include <oswin.h>
 #include <stdio.h>
@@ -246,13 +253,40 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	WTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
 
-	wmWindow *window1 = WM_window_open(C, "Rose", SPACE_EMPTY, false);
-	if (!window1) {
+	wmWindow *window = WM_window_open(C, "Rose", SPACE_EMPTY, false);
+	if (!window) {
+		return;
+	}
+
+	/* Demo Scene */
+
+	Mesh *me = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "Cube");
+	if (!me) {
+		fprintf(stderr, "[WindowManager] Failed to create mesh.\n");
+		return;
+	}
+
+	RMesh *rm = RM_preset_cube_create((const float[3]){1.0f, 1.0f, 1.0f});
+	if (!rm) {
+		fprintf(stderr, "[WindowManager] Failed to create preset mesh.\n");
+		return;
+	}
+
+	RMeshToMeshParams params = {
+		.cd_mask_extra = 0,
+	};
+	RM_mesh_rm_to_me(main, rm, me, &params);
+	RM_mesh_free(rm);
+
+	Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, false);
+	if (!ob) {
+		fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
 		return;
 	}
 }
 
 void WM_init(struct rContext *C) {
+	KER_cpp_types_init();
 	KER_idtype_init();
 
 	Main *main = KER_main_new();

@@ -15,9 +15,9 @@ const Theme U_theme_default = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0x00000000),
-			.text = RGBA(0x444444aa),
+			.text = RGBA(0x777777aa),
 			.text_sel = RGBA(0x00000000),
-			.roundness = 0.2f,
+			.roundness = 0.15f,
 		},
 		/** The colors that will be used for regural buttons. */
 		.wcol_but = {
@@ -26,16 +26,16 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0.2f,
+			.roundness = 0.15f,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
-			.inner_sel = RGBA(0x00000055),
+			.inner_sel = RGBA(0xe0e0e055),
 			.text = RGBA(0xe0e0e0ff),
 			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0.2f,
+			.roundness = 0.15f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
@@ -44,7 +44,16 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xc0c0c0ff),
 			.text_sel = RGBA(0x2222e0ee),
-			.roundness = 0.2f,
+			.roundness = 0.15f,
+		},
+		/** The colors that will be used for scrollbar buttons. */
+		.wcol_scroll = {
+			.outline = RGB(0x222222ff),
+			.inner = RGBA(0x1f1f1fff),
+			.inner_sel = RGBA(0x4f4f4fff),
+			.text = RGBA(0x3f3f3fee),
+			.text_sel = RGBA(0x7f7f7fee),
+			.roundness = 0.15f,
 		},
 		.text_cur = RGBA(0xffffffff),
 	},

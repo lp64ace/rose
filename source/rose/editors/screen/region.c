@@ -4,6 +4,7 @@
 
 #include "UI_interface.h"
 #include "UI_resource.h"
+#include "UI_view2d.h"
 
 #include "KER_screen.h"
 
@@ -100,7 +101,7 @@ ROSE_STATIC void region_clear(struct rContext *C, ARegion *region) {
 }
 
 void ED_region_do_draw(struct rContext *C, ARegion *region) {
-	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REBUILD)) == 0) {
+	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REDRAW)) == 0) {
 		return;
 	}
 
@@ -131,6 +132,7 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 }
 
 void ED_region_header_init(ARegion *region) {
+	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_HEADER, region->sizex, region->sizey);
 }
 
 void ED_region_header_exit(ARegion *region) {
@@ -139,10 +141,11 @@ void ED_region_header_exit(ARegion *region) {
 void ED_region_header_draw(struct rContext *C, ARegion *region) {
 }
 
-void ED_region_default_init(struct ARegion *region) {
+void ED_region_default_init(ARegion *region) {
+	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_STANDARD, region->sizex, region->sizey);
 }
 
-void ED_region_default_exit(struct ARegion *region) {
+void ED_region_default_exit(ARegion *region) {
 }
 
 void ED_region_default_draw(struct rContext *C, ARegion *region) {

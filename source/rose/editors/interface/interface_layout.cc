@@ -68,6 +68,9 @@ struct uiLayoutItemGridFlow : uiLayout {
 	int totitems;
 	int totrow;
 	int totcol;
+
+	bool evenr;
+	bool evenc;
 };
 
 /** \} */
@@ -82,7 +85,7 @@ ROSE_INLINE void ui_layout_add_padding_button(uiLayoutRoot *root) {
 		uiLayout *prev_layout = block->layout;
 
 		block->layout = root->layout;
-		uiDefBut(block, UI_BTYPE_SEPR, "", root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0);
 		block->layout = prev_layout;
 	}
 }
@@ -149,12 +152,14 @@ uiLayout *UI_layout_col(uiLayout *parent, int space) {
 	return layout;
 }
 
-uiLayout *UI_layout_grid(uiLayout *parent, int columns) {
+uiLayout *UI_layout_grid(uiLayout *parent, int columns, bool evenr, bool evenc) {
 	uiLayoutItemGridFlow *layout = MEM_cnew<uiLayoutItemGridFlow>("uiLayoutItemGridFlow");
 	ui_item_init_from_parent(layout, parent);
 	
 	layout->type = ITEM_LAYOUT_GRID;
 	layout->columns = columns;
+	layout->evenr = evenr;
+	layout->evenc = evenc;
 	
 	UI_block_layout_set_current(layout->root->block, layout);
 	return layout;
@@ -218,6 +223,9 @@ struct UILayoutGridFlowInput {
 	
 	int totcol;
 	int totrow;
+
+	bool even_row;
+	bool even_col;
 };
 
 struct UILayoutGridFlowOutput {
@@ -291,7 +299,7 @@ ROSE_INLINE void ui_layout_grid_flow_compute(ListBase *lb, const UILayoutGridFlo
 			arr_avg_w[i] /= arr_tot_w[i];
 			tot_w += arr_avg_w[i];
 		}
-		if (false /** even_columns */) {
+		if (in->even_col) {
 			tot_w = ceilf(val_avg_w) * in->totcol;
 		}
 	}
@@ -299,8 +307,8 @@ ROSE_INLINE void ui_layout_grid_flow_compute(ListBase *lb, const UILayoutGridFlo
 		for (int i = 0; i < in->totrow; i++) {
 			tot_h += arr_max_h[i];
 		}
-		if (true /** even_rows */) {
-			tot_h = ceilf(val_avg_w) * in->totrow;
+		if (in->even_row) {
+			tot_h = val_max_h * in->totrow;
 		}
 	}
 	
@@ -323,7 +331,7 @@ ROSE_INLINE void ui_layout_grid_flow_compute(ListBase *lb, const UILayoutGridFlo
 	}
 	if (out->y_array != NULL && out->h_array != NULL) {
 		for (int row = 0; row < in->totrow; row++) {
-			if (true /** even_rows */) {
+			if (in->even_row) {
 				out->h_array[row] = val_max_h;
 			}
 			else {
@@ -524,6 +532,8 @@ ROSE_INLINE void ui_item_estimate_grid(uiLayout *layout) {
 		input.litem_y = layout->y;
 		input.space_x = 0;
 		input.space_y = 0;
+		input.even_row = grid->evenr;
+		input.even_col = grid->evenc;
 		
 		UILayoutGridFlowOutput output{};
 		output.totitem = &grid->totitems;
@@ -575,6 +585,8 @@ ROSE_INLINE void ui_item_estimate_grid(uiLayout *layout) {
 		input.space_y = 0;
 		input.totcol = grid->totcol;
 		input.totrow = grid->totrow;
+		input.even_row = grid->evenr;
+		input.even_col = grid->evenc;
 		UILayoutGridFlowOutput output{};
 		output.w = &layout->w;
 		output.h = &layout->h;
@@ -663,7 +675,10 @@ ROSE_INLINE void ui_item_layout_row(uiLayout *layout) {
 }
 
 ROSE_STATIC void ui_item_layout_grid_postfix(uiItem *item, int r, int c) {
-	ROSE_assert(item->type == ITEM_BUTTON);
+	if (item->type != ITEM_BUTTON) {
+		return;
+	}
+
 	uiButtonItem *ibut = static_cast<uiButtonItem *>(item);
 	uiBut *but = ibut->but;
 	
@@ -690,6 +705,8 @@ ROSE_INLINE void ui_item_layout_grid(uiLayout *layout) {
 	input.litem_w = layout->w;
 	input.totcol = grid->totcol;
 	input.totrow = grid->totrow;
+	input.even_row = grid->evenr;
+	input.even_col = grid->evenc;
 	
 	UILayoutGridFlowOutput output{};
 	output.x_array = x.data();
@@ -784,6 +801,17 @@ void UI_block_layout_resolve(uiBlock *block, int *r_x, int *r_y) {
 	}
 
 	LIB_listbase_clear(&block->layouts);
+}
+
+void UI_layout_estimate(uiLayout *layout, int *r_w, int *r_h) {
+	ui_item_estimate(static_cast<uiItem *>(layout));
+
+	if (r_w) {
+		*r_w = layout->w;
+	}
+	if (r_h) {
+		*r_h = layout->h;
+	}
 }
 
 /** \} */

@@ -33,8 +33,10 @@ set(SRC
 	interface_undo.c
 	interface_widgets.c
 	resources.c
+	view2d.c
 	
 	intern/userdef_theme_default.c
+	intern/userdef_theme_light.c
 	
 )
 

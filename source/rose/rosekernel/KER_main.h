@@ -37,6 +37,10 @@ typedef struct Main {
 
 	struct Library *curlib;
 	struct ListBase libraries;
+	struct ListBase meshes;
+	struct ListBase objects;
+	struct ListBase collections;
+	struct ListBase scenes;
 	struct ListBase screens;
 	struct ListBase wm; /* Singleton (exception). */
 

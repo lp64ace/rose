@@ -34,7 +34,7 @@ void LIB_addtail(struct ListBase *lb, void *vlink) {
 	link->next = NULL;
 
 	if (lb->last) {
-		lb->last->next = link;
+		((Link *)lb->last)->next = link;
 	}
 	if (lb->first == NULL) {
 		lb->first = link;
@@ -53,7 +53,7 @@ void LIB_addhead(struct ListBase *lb, void *vlink) {
 	link->next = lb->first;
 
 	if (lb->first) {
-		lb->first->prev = link;
+		((Link *)lb->first)->prev = link;
 	}
 	if (lb->last == NULL) {
 		lb->last = link;
@@ -88,6 +88,7 @@ void LIB_insertlinkbefore(struct ListBase *lb, void *vnextlink, void *vnewlink) 
 
 	newlink->next = nextlink;
 	newlink->prev = nextlink->prev;
+	nextlink->prev = newlink;
 	if (newlink->prev) {
 		newlink->prev->next = newlink;
 	}
@@ -206,6 +207,15 @@ void LIB_freelistN(ListBase *listbase) {
 	LIB_listbase_clear(listbase);
 }
 
+void LIB_freelinkN(ListBase *lb, void *vlink) {
+	Link *link = vlink;
+
+	if (link) {
+		LIB_remlink(lb, link);
+		MEM_freeN(link);
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -283,6 +293,23 @@ void *LIB_rfindbytes(const ListBase *lb, const void *bytes, const size_t length,
 	}
 
 	return NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Utility Methods
+ * \{ */
+
+void LIB_duplicatelist(ListBase *dst, const ListBase *src) {
+	struct Link *dst_link;
+
+	dst->first = dst->last = NULL;
+
+	for (const struct Link *src_link = src->first; src_link; src_link = src_link->next) {
+		dst_link = MEM_dupallocN(src_link);
+		LIB_addtail(dst, dst_link);
+	}
 }
 
 /** \} */

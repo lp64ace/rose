@@ -82,6 +82,48 @@ void copy_m4_m3(float m1[4][4], const float m2[3][3]) {
 	m1[3][3] = 1.0f;
 }
 
+void copy_m2d_m2(double m1[2][2], const float m2[2][2]) {
+	m1[0][0] = m2[0][0];
+	m1[0][1] = m2[0][1];
+
+	m1[1][0] = m2[1][0];
+	m1[1][1] = m2[1][1];
+}
+void copy_m3d_m3(double m1[3][3], const float m2[3][3]) {
+	m1[0][0] = m2[0][0];
+	m1[0][1] = m2[0][1];
+	m1[0][2] = m2[0][2];
+
+	m1[1][0] = m2[1][0];
+	m1[1][1] = m2[1][1];
+	m1[1][2] = m2[1][2];
+
+	m1[2][0] = m2[2][0];
+	m1[2][1] = m2[2][1];
+	m1[2][2] = m2[2][2];
+}
+void copy_m4d_m4(double m1[4][4], const float m2[4][4]) {
+	m1[0][0] = m2[0][0];
+	m1[0][1] = m2[0][1];
+	m1[0][2] = m2[0][2];
+	m1[0][3] = m2[0][3];
+
+	m1[1][0] = m2[1][0];
+	m1[1][1] = m2[1][1];
+	m1[1][2] = m2[1][2];
+	m1[1][3] = m2[1][3];
+
+	m1[2][0] = m2[2][0];
+	m1[2][1] = m2[2][1];
+	m1[2][2] = m2[2][2];
+	m1[2][3] = m2[2][3];
+
+	m1[3][0] = m2[3][0];
+	m1[3][1] = m2[3][1];
+	m1[3][2] = m2[3][2];
+	m1[3][3] = m2[3][3];
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -114,6 +156,21 @@ void sub_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]) {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
 			R[i][j] = A[i][j] - B[i][j];
+		}
+	}
+}
+
+void mul_m3_fl(float R[3][3], float f) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			R[i][j] *= f;
+		}
+	}
+}
+void mul_m4_fl(float R[4][4], float f) {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			R[i][j] *= f;
 		}
 	}
 }
@@ -311,6 +368,42 @@ void mul_m4_m4_pre(float R[4][4], const float A[4][4]) {
 }
 void mul_m4_m4_post(float R[4][4], const float B[4][4]) {
 	mul_m4_m4m4(R, R, B);
+}
+
+void mul_v2_m3v2(float r[2], const float m[3][3], const float v[2]) {
+	float temp[3], warped[3];
+
+	copy_v2_v2(temp, v);
+	temp[2] = 1.0f;
+
+	mul_v3_m3v3(warped, m, temp);
+
+	r[0] = warped[0] / warped[2];
+	r[1] = warped[1] / warped[2];
+}
+
+void mul_v2_m3v3(float r[2], const float M[3][3], const float a[3]) {
+	float t[3];
+	copy_v3_v3(t, a);
+
+	r[0] = M[0][0] * t[0] + M[1][0] * t[1] + M[2][0] * t[2];
+	r[1] = M[0][1] * t[0] + M[1][1] * t[1] + M[2][1] * t[2];
+}
+
+void mul_v3_m3v3(float r[3], const float M[3][3], const float v[3]) {
+	float t[3];
+	copy_v3_v3(t, v);
+
+	r[0] = M[0][0] * t[0] + M[1][0] * t[1] + M[2][0] * t[2];
+	r[1] = M[0][1] * t[0] + M[1][1] * t[1] + M[2][1] * t[2];
+	r[2] = M[0][2] * t[0] + M[1][2] * t[1] + M[2][2] * t[2];
+}
+
+void mul_m3_v2(const float m[3][3], float r[2]) {
+	mul_v2_m3v2(r, m, r);
+}
+void mul_m3_v3(const float M[3][3], float r[3]) {
+	mul_v3_m3v3(r, M, r);
 }
 
 bool invert_m2(float mat[2][2]) {
@@ -597,6 +690,16 @@ float determinant_m4(const float m[4][4]) {
 	return ans;
 }
 
+bool is_negative_m2(const float m[2][2]) {
+	return determinant_m2_array(m) < 0.0f;
+}
+bool is_negative_m3(const float m[3][3]) {
+	return determinant_m3_array(m) < 0.0f;
+}
+bool is_negative_m4(const float m[4][4]) {
+	return determinant_m4(m) < 0.0f;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -619,6 +722,36 @@ bool equals_m4_m4(const float a[4][4], const float b[4][4]) {
 /** \name Transformations
  * \{ */
 
+void size_to_mat3(float R[3][3], const float size[3]) {
+	R[0][0] = size[0];
+	R[0][1] = 0.0f;
+	R[0][2] = 0.0f;
+	R[1][1] = size[1];
+	R[1][0] = 0.0f;
+	R[1][2] = 0.0f;
+	R[2][2] = size[2];
+	R[2][1] = 0.0f;
+	R[2][0] = 0.0f;
+}
+void size_to_mat4(float R[4][4], const float size[3]) {
+	R[0][0] = size[0];
+	R[0][1] = 0.0f;
+	R[0][2] = 0.0f;
+	R[0][3] = 0.0f;
+	R[1][0] = 0.0f;
+	R[1][1] = size[1];
+	R[1][2] = 0.0f;
+	R[1][3] = 0.0f;
+	R[2][0] = 0.0f;
+	R[2][1] = 0.0f;
+	R[2][2] = size[2];
+	R[2][3] = 0.0f;
+	R[3][0] = 0.0f;
+	R[3][1] = 0.0f;
+	R[3][2] = 0.0f;
+	R[3][3] = 1.0f;
+}
+
 void scale_m3_fl(float R[3][3], float scale) {
 	R[0][0] = R[1][1] = R[2][2] = scale;
 	R[0][1] = R[0][2] = 0.0f;
@@ -634,23 +767,6 @@ void scale_m4_fl(float R[4][4], float scale) {
 	R[3][0] = R[3][1] = R[3][2] = 0.0f;
 }
 
-void orthographic_m4(float mat[4][4], float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) {
-	float Xdelta, Ydelta, Zdelta;
-
-	Xdelta = xmax - xmin;
-	Ydelta = ymax - ymin;
-	Zdelta = zmax - zmin;
-	if (Xdelta == 0.0f || Ydelta == 0.0f || Zdelta == 0.0f) {
-		return;
-	}
-	unit_m4(mat);
-	mat[0][0] = 2.0f / Xdelta;
-	mat[3][0] = -(xmax + xmin) / Xdelta;
-	mat[1][1] = 2.0f / Ydelta;
-	mat[3][1] = -(ymax + ymin) / Ydelta;
-	mat[2][2] = -2.0f / Zdelta;
-	mat[3][2] = -(zmax + zmin) / Zdelta;
-}
 void translate_m4(float mat[4][4], float Tx, float Ty, float Tz) {
 	mat[3][0] += (Tx * mat[0][0] + Ty * mat[1][0] + Tz * mat[2][0]);
 	mat[3][1] += (Tx * mat[0][1] + Ty * mat[1][1] + Tz * mat[2][1]);

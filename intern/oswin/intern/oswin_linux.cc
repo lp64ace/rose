@@ -54,6 +54,10 @@ tWindowManager::~tWindowManager() {
 tWindowManager *tWindowManager::Init(const char *application) {
 	tWindowManager *manager = new tWindowManager;
 
+	if (setlocale(LC_ALL, "") == NULL) {
+		fprintf(stderr, "[Linux] Warning! Could not set default locale\n");
+	}
+
 	if (!(manager->display_ = XOpenDisplay(NULL))) {
 		delete manager;
 		return nullptr;
@@ -80,7 +84,7 @@ bool tWindowManager::HasEventsWaiting() {
 }
 void tWindowManager::Poll() {
 	XEvent evt;
-	while (XEventsQueued(this->display_, QueuedAfterReading)) {
+	while (XPending(this->display_)) {
 		XNextEvent(this->display_, &evt);
 		
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
@@ -130,6 +134,7 @@ void tWindowManager::Poll() {
 		 */
 		if (evt.type == FocusIn || evt.type == KeyPress) {
 			if (!this->xim_) {
+				// fprintf(stdout, "[Linux] Connected to XIM server.\n");
 				this->InitXIM();
 			}
 			if (this->xim_) {
@@ -141,17 +146,28 @@ void tWindowManager::Poll() {
 				}
 			}
 		}
+
+		if (XFilterEvent(&evt, (Window)NULL) == True) {
+			// Do nothing now, the event is consumed by XIM.
+			// fprintf(stdout, "[Linux/XIM] Event was consumed by XIM.\n");
+			continue;
+		}
 #endif
 		EventProcedure(&evt);
 	}
 }
 
-bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) const {
-	return false;
+bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool selection) {
+	this->clipboard_ = std::string(buffer, length);
+	return true;
 }
 
 bool tWindowManager::GetClipboard(char **buffer, unsigned int *length, bool selection) const {
-	return false;
+	*length = this->clipboard_.size();
+	*buffer = static_cast<char *>(MEM_mallocN(*length + 1, "oswin::Clipboard"));
+	memcpy(*buffer, this->clipboard_.data(), *length);
+	(*buffer)[*length] = '\0';
+	return true;
 }
 
 /** \} */
@@ -218,8 +234,8 @@ bool tWindowManager::InitXIM() {
 	this->xim_ = XOpenIM(
 		this->display_,
 		nullptr,
-		(char *)"TinyWindow",
-		(char *)"TinyWindow"
+		nullptr,
+		nullptr
 	);
 	if (!this->xim_) {
 		return false;
@@ -645,18 +661,10 @@ bool tWindow::InitXIC(tWindowManager *manager) {
 	destroy.client_data = (XPointer)&this->xic_;
 	this->xic_ = XCreateIC(
 		xim,
-		XNClientWindow,
-		this->window_handle_,
-		XNFocusWindow,
-		this->window_handle_,
-		XNInputStyle,
-		XIMPreeditNothing | XIMStatusNothing,
-		XNResourceName,
-		(this->settings.name) ? this->settings.name : "TinyWindow",
-		XNResourceClass,
-		(this->settings.name) ? this->settings.name : "TinyWindow",
-		XNDestroyCallback,
-		&destroy,
+		XNClientWindow, this->window_handle_,
+		XNFocusWindow, this->window_handle_,
+		XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+		XNDestroyCallback, &destroy,
 		nullptr
 	);
 	
@@ -777,6 +785,10 @@ static int convert_key(const KeySym x11_key) {
 			ASSOCIATE(key, XK_KP_Subtract, WTK_KEY_NUMPAD_MINUS);
 			ASSOCIATE(key, XK_KP_Multiply, WTK_KEY_NUMPAD_ASTERISK);
 			ASSOCIATE(key, XK_KP_Divide, WTK_KEY_NUMPAD_SLASH);
+
+			default: {
+				// fprintf(stdout, "[Linux/Key] Warning! Failed to associate %lu with any key.\n", x11_key);
+			} break;
 		}
 		
 #undef ASSOCIATE
@@ -787,7 +799,7 @@ static int convert_key(const KeySym x11_key) {
 static int convert_code(XkbDescPtr xkb_descr, const KeyCode x11_code) {
 	if (x11_code >= xkb_descr->min_key_code && x11_code <= xkb_descr->max_key_code) {
 		const char *id_str = xkb_descr->names->keys[x11_code].name;
-		// fprintf(stdout, "[Linux/Key] %s\n", id_str);
+		fprintf(stdout, "[Linux/Key] %s\n", id_str);
 	}
 	return WTK_KEY_UNKOWN;
 }
@@ -957,7 +969,7 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 			if (!XLookupString(xke, &ascii, 1, &key_sym_str, nullptr)) {
 				ascii = '\0';
 			}
-			
+	
 			int mkey = convert_key_ex(key_sym, this->xkb_descr_, xke->keycode);
 			switch (mkey) {
 				case WTK_KEY_LEFT_ALT:
@@ -1008,7 +1020,7 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 #endif
 
 			utf8_buf = utf8_array;
-
+			
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
 			if (xke->type == KeyPress) {
 				xic = window->xic_;
@@ -1040,7 +1052,7 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 						}
 					}
 					else if (status == XLookupKeySym) {
-						// This key doesn't have a text representation, it is a command key of some sort.
+						// The keycode does not have a UTF8 representation.
 					}
 					else {
 						fprintf(stderr, "Bad keycode lookup. KeySym 0x%x Status: %s\n",
@@ -1073,9 +1085,30 @@ void rose::tiny_window::tWindowManager::EventProcedure(XEvent *evt) {
 						}
 					}
 					this->keycode_last_repeat_key_ = xke->keycode;
-					
+
 					if (KeyDownEvent) {
 						KeyDownEvent(window, mkey, is_repeat_keycode, utf8_buf, time);
+					}
+
+					if (xic) {
+						int i = 0;
+						while (true) {
+							if (((unsigned char *)utf8_buf)[i++] > 0x7f) {
+								for (; i < len; i++) {
+									if (0xbf < ((unsigned char *)utf8_buf)[i] && ((unsigned char *)utf8_buf)[i] < 0x80) {
+										break;
+									}
+								}
+							}
+
+							if (i >= len) {
+								break;
+							}
+
+							if (KeyDownEvent) {
+								KeyDownEvent(window, mkey, is_repeat_keycode, &utf8_buf[i], time);
+							}
+						}
 					}
 				} break;
 				case KeyRelease: {

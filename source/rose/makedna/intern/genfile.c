@@ -324,6 +324,13 @@ bool DNA_sdna_write_type(SDNA *sdna, void **rest, void *ptr, const RTType *tp) {
 				case TP_STRUCT: {
 					status &= sdna_write_type_struct(sdna, &ptr, ptr, &tp->tp_struct);
 				} break;
+				case TP_QUALIFIED: {
+					status &= sdna_write_type_qual(sdna, &ptr, ptr, &tp->tp_qualified);
+				} break;
+				case TP_FUNC: {
+					/** Functions are treated as void pointers. */
+					status &= sdna_write_type_ptr(sdna, &ptr, ptr, Tp_Void);
+				} break;
 				default: {
 					ROSE_assert_unreachable();
 					status &= false;
@@ -425,6 +432,7 @@ bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, co
 			case TP_ARRAY: {
 				ntp = RT_type_new_empty_array(sdna->context);
 			} break;
+			case TP_FUNC:
 			case TP_PTR: {
 				ntp = RT_type_new_empty_pointer(sdna->context);
 			} break;
@@ -432,11 +440,9 @@ bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, co
 				ntp = RT_type_new_struct(sdna->context, NULL);
 			} break;
 			default: {
-				ntp = RT_type_new_empty_basic(sdna->context);
+				ntp = RT_type_new_empty_basic(sdna->context, kind);
 			} break;
 		}
-
-		ntp->kind = kind;
 
 		LIB_ghash_insert(sdna->visit, (void *)addr, ntp);
 
@@ -456,6 +462,9 @@ bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, co
 				case TP_STRUCT: {
 					status &= sdna_read_type_struct(sdna, &ptr, ptr, &ntp->tp_struct);
 					RT_type_struct_finalize(ntp);
+				} break;
+				case TP_QUALIFIED: {
+					status &= sdna_read_type_qual(sdna, &ptr, ptr, &ntp->tp_qualified);
 				} break;
 				default: {
 					status &= false;
@@ -490,6 +499,26 @@ bool DNA_sdna_read_token(const SDNA *sdna, const void **rest, const void *ptr, c
 /* -------------------------------------------------------------------- */
 /** \name Util Methods
  * \{ */
+
+ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RTType *type, const RTField *field) {
+	RTCParser *parser = RT_parser_new(NULL);
+	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
+	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
+	ptrdiff_t offset = (ptrdiff_t)RT_parser_offsetof(parser, type, field);
+	RT_parser_free(parser);
+
+	return offset;
+}
+
+ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RTType *type) {
+	RTCParser *parser = RT_parser_new(NULL);
+	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
+	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
+	size_t size = (size_t)RT_parser_size(parser, type);
+	RT_parser_free(parser);
+
+	return size;
+}
 
 bool DNA_sdna_build_struct_list(const SDNA *sdna) {
 	bool status = true;
@@ -540,7 +569,7 @@ ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RTType *typ
 
 	switch (type->kind) {
 		case TP_ENUM: {
-			const RTType *tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_size");
+			const RTType *tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 			if (type->tp_enum.underlying_type) {
 				tp_enum = type->tp_enum.underlying_type;
 			}
@@ -552,22 +581,16 @@ ROSE_STATIC void dna_struct_switch_endian_ex(const SDNA *sdna, const RTType *typ
 			LIB_endian_switch_rank(data, type->tp_basic.rank);
 		} break;
 		case TP_ARRAY: {
+			size_t stride = dna_find_type_size(sdna, type->tp_array.element_type);
 			for (size_t index = 0; index < type->tp_array.length; index++) {
-				dna_struct_switch_endian_ex(sdna, type->tp_array.element_type, data);
+				dna_struct_switch_endian_ex(sdna, type->tp_array.element_type, POINTER_OFFSET(data, stride * index));
 			}
 		} break;
 		case TP_STRUCT: {
-			RTCParser *parser = RT_parser_new(NULL);
-			parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
-			parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
-
 			LISTBASE_FOREACH(RTField *, field, &type->tp_struct.fields) {
-				size_t offset = RT_parser_offsetof(parser, type, field);
-
+				size_t offset = dna_find_member_offset(sdna, type, field);
 				dna_struct_switch_endian_ex(sdna, type, POINTER_OFFSET(data, offset));
 			}
-
-			RT_parser_free(parser);
 		} break;
 		default: {
 			ROSE_assert_unreachable();
@@ -582,26 +605,6 @@ void DNA_struct_switch_endian(const SDNA *sdna, uint64_t struct_nr, void *data) 
 	}
 
 	dna_struct_switch_endian_ex(sdna, type, data);
-}
-
-ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RTType *type, const RTField *field) {
-	RTCParser *parser = RT_parser_new(NULL);
-	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
-	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
-	ptrdiff_t offset = (ptrdiff_t)RT_parser_offsetof(parser, type, field);
-	RT_parser_free(parser);
-
-	return offset;
-}
-
-ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RTType *type) {
-	RTCParser *parser = RT_parser_new(NULL);
-	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
-	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
-	size_t size = (size_t)RT_parser_size(parser, type);
-	RT_parser_free(parser);
-
-	return size;
 }
 
 size_t DNA_sdna_struct_size(const SDNA *sdna, uint64_t struct_nr) {

@@ -363,7 +363,7 @@ static GHash *ghash_new(GHashHashFP hashfp, GHashCmpFP cmpfp, const char *info, 
 	cont->flag = flag;
 
 	ghash_buckets_reset(cont, nentries_reserve);
-	cont->entrypool = LIB_memory_pool_create(GHASH_ENTRY_SIZE(flag & GHASH_FLAG_IS_GSET), 64, 64);
+	cont->entrypool = LIB_memory_pool_create(GHASH_ENTRY_SIZE(flag & GHASH_FLAG_IS_GSET), 64, 64, ROSE_MEMPOOL_NOP);
 
 	return cont;
 }

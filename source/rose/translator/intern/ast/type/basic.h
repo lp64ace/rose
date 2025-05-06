@@ -42,7 +42,7 @@ typedef struct RTTypeBasic {
 /** \name Utils
  * \{ */
 
-struct RTType *RT_type_new_empty_basic(struct RTContext *);
+struct RTType *RT_type_new_empty_basic(struct RTContext *, int kind);
 
 bool RT_type_is_numeric(const struct RTType *tp);
 bool RT_type_is_unsigned(const struct RTType *tp);

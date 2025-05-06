@@ -31,6 +31,9 @@ typedef struct wmDrawBuffer {
 	int bound;
 } wmDrawBuffer;
 
+struct GPUViewport *WM_draw_region_get_bound_viewport(struct ARegion *region);
+struct GPUTexture *WM_draw_region_texture(struct ARegion *region, int view);
+
 void WM_draw_region_free(struct ARegion *region);
 
 /** \} */
