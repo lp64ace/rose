@@ -1150,6 +1150,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 				break;
 			}
 
+			SetCapture(hwnd);
+
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
 
@@ -1177,6 +1179,8 @@ LRESULT CALLBACK rose::tiny_window::tWindowManager::WindowProcedure(HWND hwnd, u
 			if (!window->active_) {
 				break;
 			}
+
+			ReleaseCapture();
 
 			int x = static_cast<int>(GET_X_LPARAM(lparam));
 			int y = static_cast<int>(GET_Y_LPARAM(lparam));
