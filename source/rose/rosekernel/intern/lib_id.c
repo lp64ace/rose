@@ -194,7 +194,7 @@ void KER_id_free_ex(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
 void KER_id_free_us(struct Main *main, void *idv) {
 	ID *id = (ID *)idv;
 
-	id_us_min(id);
+	id_us_rem(id);
 
 	if (id->user == 0) {
 		KER_libblock_unlink(main, id);
