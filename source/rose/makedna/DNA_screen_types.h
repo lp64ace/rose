@@ -4,6 +4,7 @@
 #include "DNA_ID.h"
 #include "DNA_listbase.h"
 #include "DNA_vector_types.h"
+#include "DNA_view2d_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -146,6 +147,11 @@ typedef struct ARegion {
 
 	int sizex;
 	int sizey;
+
+	float hscroll;
+	float vscroll;
+
+	View2D v2d;
 
 	int alignment;
 	int regiontype;

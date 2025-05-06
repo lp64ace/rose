@@ -93,6 +93,7 @@ void UI_block_draw(const struct rContext *C, struct uiBlock *block);
 void UI_block_region_set(struct uiBlock *block, struct ARegion *region);
 
 void UI_block_translate(struct uiBlock *block, float dx, float dy);
+void UI_block_scroll(struct ARegion *region, struct uiBlock *block, struct uiLayout *layout);
 
 void UI_blocklist_update_window_matrix(struct rContext *C, struct ARegion *region);
 void UI_blocklist_free(struct rContext *C, struct ARegion *region);
@@ -195,13 +196,14 @@ enum {
 	 * which means that a full rows should be displayed as hovered when a single item in that row is hovered.
 	 */
 	UI_BUT_GRID = 1 << 20,
+	UI_BUT_ROW = 1 << 21,
 };
 
 #define DRAW_FLAG(draw) ((draw) & 0xffff0000)
 #define DRAW_INDX(draw) ((draw) & 0x0000ffff)
 
-struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int w, int h, void *pointer, int ptype, int maxlen, int draw);
-struct uiBut *uiDefButEx(struct uiBlock *block, int type, const char *name, int w, int h, void *pointer, int ptype, double softmin, double softmax, int maxlen, int draw);
+struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int ptype, int maxlen, int draw);
+struct uiBut *uiDefButEx(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int ptype, double softmin, double softmax, int maxlen, int draw);
 
 void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double softmin, double softmax);
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
@@ -241,6 +243,7 @@ enum {
 	UI_LAYOUT_VERTICAL = 1,
 };
 
+void UI_layout_estimate(struct uiLayout *block, int *r_w, int *r_h);
 struct uiLayout *UI_block_layout(struct uiBlock *block, int dir, int type, int x, int y, int size, int padding);
 struct uiLayout *UI_layout_row(struct uiLayout *layout, int space);
 struct uiLayout *UI_layout_col(struct uiLayout *layout, int space);

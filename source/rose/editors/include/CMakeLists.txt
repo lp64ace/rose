@@ -6,6 +6,7 @@ set(SRC
 	ED_space_api.h
 	UI_interface.h
 	UI_resource.h
+	UI_view2d.h
 	
 )
 

@@ -96,8 +96,6 @@ enum {
 	SPACE_TOPBAR,
 	SPACE_VIEW3D,
 	SPACE_USERPREF,
-
-	SPACE_TEST = 0xff,
 };
 
 /** \} */

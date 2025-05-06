@@ -31,8 +31,8 @@ const Theme U_theme_xp = {
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
 			.outline = RGBA(0x808080ff),
-			.inner = RGBA(0xd4d0c8ff),
-			.inner_sel = RGBA(0x316ac580),
+			.inner = RGBA(0xd4d0c800),
+			.inner_sel = RGBA(0x316ac5ff),
 			.text = RGBA(0x000000ff),
 			.text_sel = RGBA(0xffffffff),
 			.roundness = 0.05f,
@@ -91,14 +91,6 @@ const Theme U_theme_xp = {
 	},
 	/** The colors that will be used for the UserPref space. */
 	.space_userpref = {
-		.back = RGBA(0xc0c0c0ff),
-		.text = RGBA(0x000000ff),
-		.text_hi = RGBA(0x316ac5ff),
-		.header = RGBA(0xb0b0b0ff),
-		.header_hi = RGBA(0x909090ff),
-	},
-	/** The colors that will be used for the Test/Demo space. */
-	.space_test = {
 		.back = RGBA(0xc0c0c0ff),
 		.text = RGBA(0x000000ff),
 		.text_hi = RGBA(0x316ac5ff),

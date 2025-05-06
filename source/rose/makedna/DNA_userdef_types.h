@@ -50,7 +50,6 @@ typedef struct Theme {
 	ThemeSpace space_topbar;
 	ThemeSpace space_statusbar;
 	ThemeSpace space_userpref;
-	ThemeSpace space_test;
 } Theme;
 
 typedef struct UserDef {

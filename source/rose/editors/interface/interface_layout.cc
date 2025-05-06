@@ -85,7 +85,7 @@ ROSE_INLINE void ui_layout_add_padding_button(uiLayoutRoot *root) {
 		uiLayout *prev_layout = block->layout;
 
 		block->layout = root->layout;
-		uiDefBut(block, UI_BTYPE_SEPR, "", root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0);
 		block->layout = prev_layout;
 	}
 }
@@ -801,6 +801,17 @@ void UI_block_layout_resolve(uiBlock *block, int *r_x, int *r_y) {
 	}
 
 	LIB_listbase_clear(&block->layouts);
+}
+
+void UI_layout_estimate(uiLayout *layout, int *r_w, int *r_h) {
+	ui_item_estimate(static_cast<uiItem *>(layout));
+
+	if (r_w) {
+		*r_w = layout->w;
+	}
+	if (r_h) {
+		*r_h = layout->h;
+	}
 }
 
 /** \} */

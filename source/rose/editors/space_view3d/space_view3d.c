@@ -69,6 +69,7 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 }
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
+	ED_region_default_draw(C, region);
 }
 
 /** \} */

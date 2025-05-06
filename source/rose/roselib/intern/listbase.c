@@ -88,6 +88,7 @@ void LIB_insertlinkbefore(struct ListBase *lb, void *vnextlink, void *vnewlink) 
 
 	newlink->next = nextlink;
 	newlink->prev = nextlink->prev;
+	nextlink->prev = newlink;
 	if (newlink->prev) {
 		newlink->prev->next = newlink;
 	}

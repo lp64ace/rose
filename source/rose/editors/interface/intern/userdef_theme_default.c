@@ -49,10 +49,10 @@ const Theme U_theme_default = {
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
 			.outline = RGB(0x222222ff),
-			.inner = RGBA(0x0a0a0aff),
-			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xc0c0c0ff),
-			.text_sel = RGBA(0x2222e0ee),
+			.inner = RGBA(0x1f1f1fff),
+			.inner_sel = RGBA(0x4f4f4fff),
+			.text = RGBA(0x3f3f3fee),
+			.text_sel = RGBA(0x7f7f7fee),
 			.roundness = 0.15f,
 		},
 		.text_cur = RGBA(0xffffffff),
@@ -91,14 +91,6 @@ const Theme U_theme_default = {
 	},
 	/** The colors that will be used for the UserPref space. */
 	.space_userpref = {
-		.back = RGBA(0x101010ff),
-		.text = RGBA(0xe0e0e0ff),
-		.text_hi = RGBA(0xffffffff),
-		.header = RGBA(0x1a1a1aff),
-		.header_hi = RGBA(0x2a2a2aff),
-	},
-	/** The colors that will be used for the Test/Demo space. */
-	.space_test = {
 		.back = RGBA(0x101010ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),

@@ -223,7 +223,7 @@ ROSE_STATIC bool ui_draw_but_row_extended_right(uiBut *but) {
 }
 
 ROSE_STATIC bool ui_draw_but_row_hovered(uiBut *but) {
-	if (but->draw & UI_BUT_GRID) {
+	if (but->draw & (UI_BUT_GRID & UI_BUT_ROW)) {
 		int row = DRAW_INDX(but->draw);
 		for (uiBut *l = but->prev; l && ui_draw_but_row_extended_left(l->next); l = l->prev) {
 			if (l->flag & UI_HOVER) {
