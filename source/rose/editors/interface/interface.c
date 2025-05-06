@@ -496,29 +496,31 @@ double ui_but_set_value(struct uiBut *but, double nvalue) {
  * \{ */
 
 bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const char *edit) {
+	char *end;
 	if (but->hardmin < 0) {
-		long long value = strtoll(edit, &edit, (but->flag & UI_BUT_HEX) ? 16 : 0);
-		while (isspace((unsigned char)*edit)) {
-			edit++;
+		long long value = strtoll(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
+		while (isspace((unsigned char)*end)) {
+			end++;
 		}
-		return ELEM(*edit, '\0') && (value >= (long long)but->softmin && value <= (long long)but->softmax);
+		return ELEM(*end, '\0') && (value >= (long long)but->softmin && value <= (long long)but->softmax);
 	}
 	else {
-		unsigned long long value = strtoull(edit, &edit, (but->flag & UI_BUT_HEX) ? 16 : 0);
-		while (isspace((unsigned char)*edit)) {
-			edit++;
+		unsigned long long value = strtoull(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
+		while (isspace((unsigned char)*end)) {
+			end++;
 		}
-		return ELEM(*edit, '\0') && (value >= (unsigned long long)but->softmin && value <= (unsigned long long)but->softmax);
+		return ELEM(*end, '\0') && (value >= (unsigned long long)but->softmin && value <= (unsigned long long)but->softmax);
 	}
 	return false;
 }
 
 bool uiButHandleTextFunc_Decimal(struct rContext *C, struct uiBut *but, const char *edit) {
-	long double value = strtold(edit, &edit);
-	while (isspace((unsigned char)*edit)) {
-		edit++;
+	char *end;
+	long double value = strtold(edit, &end);
+	while (isspace((unsigned char)*end)) {
+		end++;
 	}
-	return ELEM(*edit, '\0') && (value >= (double)but->softmin && value <= (double)but->softmax);
+	return ELEM(*end, '\0') && (value >= (double)but->softmin && value <= (double)but->softmax);
 }
 
 /** \} */
