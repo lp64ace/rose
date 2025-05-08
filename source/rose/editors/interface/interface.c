@@ -213,7 +213,7 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 }
 
 ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, int maxlen) {
-	ROSE_assert(w >= 0 && h >= 0 || (type == UI_BTYPE_SEPR));
+	ROSE_assert(w >= 0 && h >= 0 || (ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)));
 
 	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
 
