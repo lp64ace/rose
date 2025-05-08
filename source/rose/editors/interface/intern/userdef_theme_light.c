@@ -49,8 +49,8 @@ const Theme U_theme_xp = {
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
 			.outline = RGBA(0x808080ff),
-			.inner = RGBA(0xffffffcc),         // near white
-			.inner_sel = RGBA(0x316ac5ff),
+			.inner = RGBA(0xffffffcc),
+			.inner_sel = RGBA(0x000000ff),
 			.text = RGBA(0x000000ff),
 			.text_sel = RGBA(0xffffffff),
 			.roundness = 0.05f,
