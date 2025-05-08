@@ -148,4 +148,20 @@ void ED_screen_global_areas_refresh(wmWindow *window) {
 	}
 }
 
+bool ED_screen_area_active(struct rContext *C) {
+	wmWindow *window = CTX_wm_window(C);
+	Screen *screen = CTX_wm_screen(C);
+	ScrArea *area = CTX_wm_area(C);
+
+	if (window && screen && area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (region == screen->active_region) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 /** \} */

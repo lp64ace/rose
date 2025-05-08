@@ -120,6 +120,8 @@ void ED_screen_exit(struct rContext *C, struct wmWindow *window, struct Screen *
 void ED_screen_refresh(struct WindowManager *wm, struct wmWindow *window);
 void ED_screen_global_areas_refresh(struct wmWindow *window);
 
+bool ED_screen_area_active(struct rContext *C);
+
 /** \} */
 
 #ifdef __cplusplus
