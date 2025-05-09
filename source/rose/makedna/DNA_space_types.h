@@ -2,6 +2,7 @@
 #define DNA_SPACE_TYPES_H
 
 #include "DNA_listbase.h"
+#include "DNA_userdef_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,21 +61,17 @@ typedef struct SpaceUser {
 
 	ListBase regionbase;
 	/** End of 'SpaceLink' header. */
-} SpaceUser;
 
-/** #SpaceUser->tab */
-enum {
-	USERPREF_TAB_VIDEO = 0,
-	USERPREF_TAB_THEME = 1,
-};
+	Theme editing;
+} SpaceUser;
 
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Test Space
+/** \name File Space
  * \{ */
 
- typedef struct SpaceTest {
+ typedef struct SpaceFile {
 	struct SpaceLink *prev, *next;
 
 	int spacetype;
@@ -82,7 +79,18 @@ enum {
 
 	ListBase regionbase;
 	/** End of 'SpaceLink' header. */
-} SpaceTest;
+} SpaceFile;
+
+enum eFile_Types {
+	FILE_TYPE_ROSE = 1 << 0,
+	FILE_TYPE_IMAGE = 1 << 1,
+	FILE_TYPE_MOVIE = 1 << 2,
+	FILE_TYPE_SOUND = 1 << 3,
+	FILE_TYPE_ASSET = 1 << 4,
+	FILE_TYPE_FONT = 1 << 5,
+	FILE_TYPE_TEXT = 1 << 6,
+	FILE_TYPE_FOLDER = 1 << 7,
+};
 
 /** \} */
 
@@ -96,6 +104,7 @@ enum {
 	SPACE_TOPBAR,
 	SPACE_VIEW3D,
 	SPACE_USERPREF,
+	SPACE_FILE,
 };
 
 /** \} */

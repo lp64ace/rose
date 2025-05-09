@@ -24,9 +24,6 @@
 #include "WM_api.h"
 #include "WM_window.h"
 
-#include <limits.h>
-#include <stdio.h>
-
 /* -------------------------------------------------------------------- */
 /** \name UserPref SpaceType Methods
  * \{ */
@@ -49,6 +46,8 @@ ROSE_INLINE SpaceLink *user_create(const ScrArea *area) {
 		region->vscroll = 1;
 	}
 	user->spacetype = SPACE_USERPREF;
+
+	memcpy(&user->editing, U.themes.first, sizeof(Theme));
 
 	return (SpaceLink *)user;
 }
@@ -78,14 +77,15 @@ enum {
 	THEME_NONE,
 	THEME_DEL,
 	THEME_ADD,
-	THEME_UP,
-	THEME_DOWN,
+	THEME_SEL,
+	THEME_APPLY,
+	THEME_RESET,
 };
 
 void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, void *vop) {
 	Theme *theme = (Theme *)vtheme;
 
-	if (ELEM(POINTER_AS_INT(vop), THEME_UP, THEME_DOWN) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
+	if (ELEM(POINTER_AS_INT(vop), THEME_SEL, THEME_DEL) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
 		return;
 	}
 
@@ -95,283 +95,221 @@ void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, vo
 		case THEME_ADD: {
 			theme = MEM_mallocN(sizeof(Theme), "Theme");
 			memcpy(theme, U.themes.first, sizeof(Theme));
+			LIB_strcat(theme->name, ARRAY_SIZE(theme->name), " (copy)");
 			LIB_addhead(&U.themes, theme);
 		} break;
 		case THEME_DEL: {
 			if (!LIB_listbase_is_single(&U.themes)) {
-				theme = U.themes.first;
 				LIB_remlink(&U.themes, theme);
 				MEM_freeN(theme);
 			}
 		} break;
-		case THEME_UP: {
+		case THEME_SEL: {
 			LIB_remlink(&U.themes, theme);
-			LIB_insertlinkbefore(&U.themes, theme->prev, theme);
+			LIB_addhead(&U.themes, theme);
 		} break;
-		case THEME_DOWN: {
-			LIB_remlink(&U.themes, theme);
-			LIB_insertlinkafter(&U.themes, theme->next, theme);
+		case THEME_APPLY: {
+			memcpy(U.themes.first, theme, sizeof(Theme));
+		} break;
+		case THEME_RESET: {
+			memcpy(theme, U.themes.first, sizeof(Theme));
 		} break;
 	}
 
-	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
-		ED_screen_refresh(wm, window);
+	ScrArea *area = CTX_wm_area(C);
+	SpaceUser *user = (SpaceUser *)area->spacedata.first;
+
+	if (ELEM(POINTER_AS_INT(vop), THEME_APPLY, THEME_RESET)) {
+		ScrArea *area = CTX_wm_area(C);
+
+		ED_area_tag_redraw(area);
 	}
+	else {
+		LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
+			ED_screen_refresh(wm, window);
+		}
+	}
+
+	memcpy(&user->editing, U.themes.first, sizeof(Theme));
 }
 
-void userpref_main_color_row(struct uiBlock *block, struct uiLayout *parent, unsigned char *rgba, const char *name, const char *descr) {
-	uiLayout *layout = UI_layout_grid(parent, 3, true, false); // We use grid instead of row to expand where needed
-
-	uiBut *but = NULL;
-	but = uiDefBut(block, UI_BTYPE_TEXT, name, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
-	but = uiDefBut(block, UI_BTYPE_EDIT, "(null)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, rgba, UI_POINTER_UINT, 0, UI_BUT_HEX);
-	UI_but_func_text_set(but, uiButHandleTextFunc_Integer, 0x00000000u, 0xffffffffu);
-	UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
-	but = uiDefBut(block, UI_BTYPE_TEXT, descr, 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
-	uiButEnableFlag(but, UI_DISABLED);
-
-	UI_block_layout_set_current(block, parent);
+void userpref_main_region_padding(struct uiBlock *block, int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 4 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
 }
 
-void userpref_main_value_row(struct uiBlock *block, struct uiLayout *parent, float *value, const char *name, const char *descr) {
-	uiLayout *layout = UI_layout_grid(parent, 3, true, false); // We use grid instead of row to expand where needed
+void userpref_main_region_theme_header(struct uiBlock *block, struct uiLayout *global, int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	do {
+		uiLayout *local = UI_layout_grid(global, 4, true, false);
 
-	uiBut *but = NULL;
-	but = uiDefBut(block, UI_BTYPE_TEXT, name, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
-	but = uiDefBut(block, UI_BTYPE_EDIT, "(null)", 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, value, UI_POINTER_FLT, 0, 0);
-	UI_but_func_text_set(but, uiButHandleTextFunc_Decimal, 0, 1);
-	UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_NONE);
-	but = uiDefBut(block, UI_BTYPE_TEXT, descr, 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
-	uiButEnableFlag(but, UI_DISABLED);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2 * WIDGET_UNIT);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_TEXT, "Themes", 0, 0, 2 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "+", 0, 0, 1 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_ADD);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, 0);
 
-	UI_block_layout_set_current(block, parent);
+		UI_block_layout_set_current(block, global);
+	} while(false);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+}
+
+void userpref_main_region_theme_item(struct uiBlock *block, struct uiLayout *global, struct Theme *theme, int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	do {
+		uiLayout *local = UI_layout_grid(global, 4, true, false);
+
+		int flex = ROSE_MAX(WIDGET_UNIT, 4 * unit - 3 * WIDGET_UNIT);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(placeholder)", 0, 0, flex, WIDGET_UNIT, &theme->name, UI_POINTER_STR, ARRAY_SIZE(theme->name), UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2713", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_SEL);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2716", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_DEL);
+		if (LIB_listbase_is_single(&U.themes)) {
+			uiButEnableFlag(but, UI_DISABLED);
+		}
+
+		UI_block_layout_set_current(block, global);
+	} while(false);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+}
+
+void userpref_main_region_widget_header(struct uiBlock *block, struct uiLayout *global, const char *nwidget, int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_TEXT, nwidget, 0, 0, 4 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+}
+
+void userpref_main_region_widget_item_color(struct uiBlock *block, struct uiLayout *global, const char *iname, const char *idscr, unsigned char ptr[4], int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	do {
+		uiLayout *local = UI_layout_grid(global, 3, true, false);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2 * WIDGET_UNIT);
+		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 4 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
+		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
+		UI_block_layout_set_current(block, global);
+	} while(false);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+}
+
+void userpref_main_region_widget_item_float(struct uiBlock *block, struct uiLayout *global, const char *iname, const char *idscr, float *ptr, int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	do {
+		uiLayout *local = UI_layout_grid(global, 3, true, false);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2 * WIDGET_UNIT);
+		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 4 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_FLT, 0, UI_BUT_HEX);
+		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
+		UI_block_layout_set_current(block, global);
+	} while(false);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+}
+
+void userpref_main_region_theme_buttons(struct uiBlock *block, struct uiLayout *global, struct Theme *editing, int unit) {
+	uiBut *but;
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	do {
+		uiLayout *local = UI_layout_grid(global, 5, true, false);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2.5 * WIDGET_UNIT);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, 2 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_APPLY);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, 2 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_RESET);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
+		UI_block_layout_set_current(block, global);
+	} while(false);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_layout(struct rContext *C, ARegion *region) {
+	ScrArea *area = CTX_wm_area(C);
+	SpaceUser *user = (SpaceUser *)area->spacedata.first;
+
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "USERPREF_theme_order"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, region->sizex * region->hscroll, region->sizey * region->vscroll, 0, PIXELSIZE);
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, region->sizex * region->hscroll, region->sizey * region->vscroll, 0, 0);
 
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Themes", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_HSPR, "", 0, 0, region->sizex, PIXELSIZE, NULL, 0, 0, 0);
-
-		// Select Theme Grid
+		int unit = ROSE_MAX(WIDGET_UNIT, region->sizex / 6);
 
 		do {
-			uiLayout *grid = UI_layout_grid(root, 7, true, false);
+			uiLayout *global = UI_layout_grid(root, 3, true, false);
 
-			int column = ROSE_MAX(2 * WIDGET_UNIT, region->sizex - 2 * WIDGET_UNIT - V2D_SCROLL_WIDTH);
-			uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-			uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Name", 0, 0, column, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-			but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_PUSH, "x", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-			UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_DEL);
-			but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_PUSH, "+", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-			UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_ADD);
-			but = uiDefBut(block, UI_BTYPE_SEPR, "(null)", 0, 0, V2D_SCROLL_WIDTH, PIXELSIZE, NULL, 0, 0, 0);
+			but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+			but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 4 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+			but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
 
+			userpref_main_region_theme_header(block, global, unit);
+			userpref_main_region_padding(block, unit);
 			LISTBASE_FOREACH(Theme *, theme, &U.themes) {
-				but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
-				but = uiDefBut(block, UI_BTYPE_EDIT, "", 0, 0, column, WIDGET_UNIT, theme->name, UI_POINTER_STR, ARRAY_SIZE(theme->name), UI_BUT_TEXT_LEFT);
-				but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
-				but = uiDefBut(block, UI_BTYPE_PUSH, theme->next ? "\xE2\x86\x93" : "", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-				if (theme->next) {
-					UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_DOWN);
-				}
-				but = uiDefBut(block, UI_BTYPE_VSPR, "(null)", 0, 0, PIXELSIZE, PIXELSIZE, NULL, 0, 0, 0);
-				but = uiDefBut(block, UI_BTYPE_PUSH, theme->prev ? "\xE2\x86\x91" : "", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-				if (theme->prev) {
-					UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_UP);
-				}
-				but = uiDefBut(block, UI_BTYPE_SEPR, "(null)", 0, 0, V2D_SCROLL_WIDTH, PIXELSIZE, NULL, 0, 0, 0);
+				userpref_main_region_theme_item(block, global, theme, unit);
 			}
-			UI_block_layout_set_current(block, root);
-		} while (false);
-
-		but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
-		Theme *theme = U.themes.first;
-
-		do {
-			uiLayout *row = UI_layout_row(root, 0);
-
-			but = uiDefBut(block, UI_BTYPE_TEXT, "Theme: ", 0, 0, 4 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-			
-			UI_block_layout_set_current(block, root);
-
-			if (!theme) {
-				break;
-			}
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_TEXT, "Widgets", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
+			userpref_main_region_padding(block, unit);
+			userpref_main_region_widget_header(block, global, "Text", unit);
+			userpref_main_region_padding(block, unit);
 			do {
-				uiWidgetColors *wcol = &theme->tui.wcol_txt;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Text Widgets", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-				
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &wcol->outline, "Outline", "Outline border color.");
-				userpref_main_color_row(block, column, &wcol->inner, "Background", "Widget background color.");
-				userpref_main_color_row(block, column, &wcol->inner_sel, "Highlight", "Widget bkacground highlighted color.");
-				userpref_main_color_row(block, column, &wcol->text, "Text", "Text color.");
-
-				userpref_main_value_row(block, column, &wcol->roundness, "Roundness", "");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
+				uiWidgetColors *wc = &(&user->editing)->tui.wcol_txt;
+				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
+				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
+				userpref_main_region_widget_item_color(block, global, "Text", "Text foreground color", wc->text, unit);
+			} while(false);
+			userpref_main_region_padding(block, unit);
+			userpref_main_region_widget_header(block, global, "Push", unit);
+			userpref_main_region_padding(block, unit);
 			do {
-				uiWidgetColors *wcol = &theme->tui.wcol_but;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Push Widgets", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-				
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &wcol->outline, "Outline", "Outline border color.");
-				userpref_main_color_row(block, column, &wcol->inner, "Background", "Widget background color.");
-				userpref_main_color_row(block, column, &wcol->inner_sel, "Highlight", "Widget bkacground highlighted color.");
-				userpref_main_color_row(block, column, &wcol->text, "Text", "Text color.");
-
-				userpref_main_value_row(block, column, &wcol->roundness, "Roundness", "");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
+				uiWidgetColors *wc = &(&user->editing)->tui.wcol_but;
+				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
+				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
+				userpref_main_region_widget_item_color(block, global, "Text", "Text foreground color", wc->text, unit);
+			} while(false);
+			userpref_main_region_padding(block, unit);
+			userpref_main_region_widget_header(block, global, "Edit", unit);
+			userpref_main_region_padding(block, unit);
 			do {
-				uiWidgetColors *wcol = &theme->tui.wcol_edit;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Edit Widgets", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-				
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &wcol->outline, "Outline", "Outline border color.");
-				userpref_main_color_row(block, column, &wcol->inner, "Background", "Widget background color.");
-				userpref_main_color_row(block, column, &wcol->inner_sel, "Highlight", "Widget bkacground highlighted color.");
-				userpref_main_color_row(block, column, &wcol->text, "Text", "Text color.");
-				userpref_main_color_row(block, column, &wcol->text_sel, "Text Highlight", "Text highlighted color.");
-
-				userpref_main_value_row(block, column, &wcol->roundness, "Roundness", "");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
+				uiWidgetColors *wc = &(&user->editing)->tui.wcol_but;
+				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
+				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
+				userpref_main_region_widget_item_color(block, global, "Text1", "Default text foreground color", wc->text, unit);
+				userpref_main_region_widget_item_color(block, global, "Text2", "Hovered text foreground color", wc->text_sel, unit);
+			} while(false);
+			userpref_main_region_padding(block, unit);
+			userpref_main_region_widget_header(block, global, "Separator", unit);
+			userpref_main_region_padding(block, unit);
 			do {
-				uiWidgetColors *wcol = &theme->tui.wcol_sepr;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Separator Widgets", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &wcol->text, "Line", "Separtor line color.");
-
-				userpref_main_value_row(block, column, &wcol->roundness, "Roundness", "");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_TEXT, "Misc", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
+				uiWidgetColors *wc = &(&user->editing)->tui.wcol_sepr;
+				userpref_main_region_widget_item_color(block, global, "Line", "Default line foreground color", wc->text, unit);
+			} while(false);
+			userpref_main_region_padding(block, unit);
+			userpref_main_region_widget_header(block, global, "Scrollbar", unit);
+			userpref_main_region_padding(block, unit);
 			do {
-				ThemeUI *tui = &theme->tui;
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &tui->text_cur, "Caret", "The color of the text editing caret");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_TEXT, "Spaces", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
-			do {
-				ThemeSpace *ts = &theme->space_empty;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Space::Empty", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &ts->header, "Header", "Header background color.");
-				userpref_main_color_row(block, column, &ts->header_hi, "Active header", "Activated header background color.");
-				userpref_main_color_row(block, column, &ts->back, "Main", "Main background color.");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
-			do {
-				ThemeSpace *ts = &theme->space_view3d;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Space::View3D", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &ts->header, "Header", "Header background color.");
-				userpref_main_color_row(block, column, &ts->header_hi, "Active header", "Activated header background color.");
-				userpref_main_color_row(block, column, &ts->back, "Main", "Main background color.");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
-			do {
-				ThemeSpace *ts = &theme->space_topbar;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Space::TopBar", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &ts->header, "Header", "Header background color.");
-				userpref_main_color_row(block, column, &ts->header_hi, "Active header", "Activated header background color.");
-				userpref_main_color_row(block, column, &ts->back, "Main", "Main background color.");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
-			do {
-				ThemeSpace *ts = &theme->space_statusbar;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Space::StatusBar", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &ts->header, "Header", "Header background color.");
-				userpref_main_color_row(block, column, &ts->header_hi, "Active header", "Activated header background color.");
-				userpref_main_color_row(block, column, &ts->back, "Main", "Main background color.");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-
-			but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, WIDGET_UNIT, NULL, 0, 0, 0);
-
-			do {
-				ThemeSpace *ts = &theme->space_userpref;
-				uiButEnableFlag(but = uiDefBut(block, UI_BTYPE_TEXT, "Space::UserPref", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT), UI_DISABLED);
-
-				uiLayout *column = UI_layout_col(root, 0);
-
-				userpref_main_color_row(block, column, &ts->header, "Header", "Header background color.");
-				userpref_main_color_row(block, column, &ts->header_hi, "Active header", "Activated header background color.");
-				userpref_main_color_row(block, column, &ts->back, "Main", "Main background color.");
-
-				UI_block_layout_set_current(block, root);
-			} while (false);
-		} while (false);
+				uiWidgetColors *wc = &(&user->editing)->tui.wcol_scroll;
+				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
+				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
+				userpref_main_region_widget_item_color(block, global, "Thumb1", "Default thumb color", wc->text, unit);
+				userpref_main_region_widget_item_color(block, global, "Thumb2", "Hovered thumb color", wc->text_sel, unit);
+			} while(false);
+			userpref_main_region_padding(block, unit);
+			userpref_main_region_theme_buttons(block, global, &user->editing, unit);
+			userpref_main_region_padding(block, unit);
+		} while(false);
 
 		UI_block_scroll(region, block, root);
 		UI_block_end(C, block);
 	}
+
+
 }
 
 /** \} */
