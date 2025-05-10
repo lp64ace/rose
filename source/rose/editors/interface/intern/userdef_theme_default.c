@@ -36,7 +36,7 @@ const Theme U_theme_default = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x0a0a0aff),
 			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xfad0b0ff),
+			.text = RGBA(0xd0fab0ff),
 			.text_sel = RGBA(0xfceeeeaa),
 			.roundness = 0.05f,
 		},
