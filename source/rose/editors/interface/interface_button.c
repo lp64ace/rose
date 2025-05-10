@@ -309,8 +309,8 @@ ROSE_STATIC void ui_draw_text_font_draw(uiWidgetColors *wcol, uiBut *but, const 
 		rctf rect;
 		rect.xmin = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selsta - but->scroll)));
 		rect.xmax = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selend - but->scroll)));
-		rect.ymin = y - (RFT_height_max(font) * 1) / 4;
-		rect.ymax = y + (RFT_height_max(font) * 3) / 4;
+		rect.ymin = y - (RFT_height_max(font) * 1) / 4 - PIXELSIZE;
+		rect.ymax = y + (RFT_height_max(font) * 3.25) / 4 + PIXELSIZE;
 		UI_draw_roundbox_3ub_alpha(&rect, true, 0, wcol->text_sel, wcol->text_sel[3]);
 	}
 
