@@ -219,12 +219,12 @@ void userpref_main_region_theme_buttons(struct uiBlock *block, struct uiLayout *
 	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 5, true, false);
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2.5 * WIDGET_UNIT);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 3.5 * WIDGET_UNIT);
 		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, 2 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, 3 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_APPLY);
 		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, 2 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, 3 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_RESET);
 		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
 		UI_block_layout_set_current(block, global);
@@ -277,7 +277,7 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 			userpref_main_region_widget_header(block, global, "Edit", unit);
 			userpref_main_region_padding(block, unit);
 			do {
-				uiWidgetColors *wc = &(&user->editing)->tui.wcol_but;
+				uiWidgetColors *wc = &(&user->editing)->tui.wcol_edit;
 				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
 				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
 				userpref_main_region_widget_item_color(block, global, "Text1", "Default text foreground color", wc->text, unit);
