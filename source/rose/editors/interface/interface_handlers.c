@@ -804,9 +804,6 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 						case UI_BTYPE_SCROLL: {
 							button_activate_state(C, but, BUTTON_STATE_SCROLL);
 						} break;
-						case UI_BTYPE_EDIT: {
-							button_activate_state(C, but, BUTTON_STATE_TEXT_SELECTING);
-						} break;
 						default: {
 							button_activate_state(C, but, BUTTON_STATE_WAIT_RELEASE);
 						} break;
