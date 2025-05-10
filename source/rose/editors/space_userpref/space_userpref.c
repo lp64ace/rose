@@ -135,23 +135,23 @@ void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, vo
 
 void userpref_main_region_padding(struct uiBlock *block, int unit) {
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 4 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 4 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_theme_header(struct uiBlock *block, struct uiLayout *global, int unit) {
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 4, true, false);
 
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2 * WIDGET_UNIT);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Themes", 0, 0, 2 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "+", 0, 0, 1 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 2 * UI_UNIT_X);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_TEXT, "Themes", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "+", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_ADD);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, 0);
 
 		UI_block_layout_set_current(block, global);
 	} while(false);
@@ -176,60 +176,60 @@ void userpref_main_region_theme_item(struct uiBlock *block, struct uiLayout *glo
 
 		UI_block_layout_set_current(block, global);
 	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_widget_header(struct uiBlock *block, struct uiLayout *global, const char *nwidget, int unit) {
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_TEXT, nwidget, 0, 0, 4 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_TEXT, nwidget, 0, 0, 4 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_widget_item_color(struct uiBlock *block, struct uiLayout *global, const char *iname, const char *idscr, unsigned char ptr[4], int unit) {
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 3, true, false);
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 3 * WIDGET_UNIT);
-		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
-		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
+		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 3 * UI_UNIT_X);
+		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
+		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
 		UI_block_layout_set_current(block, global);
 	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_widget_item_float(struct uiBlock *block, struct uiLayout *global, const char *iname, const char *idscr, float *ptr, int unit) {
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_X, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 3, true, false);
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 3 * WIDGET_UNIT);
-		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_FLT, 0, UI_BUT_HEX);
-		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
+		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 3 * UI_UNIT_X);
+		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_FLT, 0, UI_BUT_HEX);
+		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
 		UI_block_layout_set_current(block, global);
 	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_theme_buttons(struct uiBlock *block, struct uiLayout *global, struct Theme *editing, int unit) {
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 5, true, false);
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 3.5 * WIDGET_UNIT);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, 3 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 3.5 * UI_UNIT_X);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_APPLY);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, 3 * WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_RESET);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
+		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
 		UI_block_layout_set_current(block, global);
 	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
 }
 
 void userpref_main_region_layout(struct rContext *C, ARegion *region) {
