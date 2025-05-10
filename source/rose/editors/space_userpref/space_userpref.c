@@ -166,7 +166,7 @@ void userpref_main_region_theme_item(struct uiBlock *block, struct uiLayout *glo
 
 		int flex = ROSE_MAX(WIDGET_UNIT, 4 * unit - 3 * WIDGET_UNIT);
 		but = uiDefBut(block, UI_BTYPE_EDIT, "(placeholder)", 0, 0, flex, WIDGET_UNIT, &theme->name, UI_POINTER_STR, ARRAY_SIZE(theme->name), UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2713", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "\u25B2", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_SEL);
 		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2716", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
 		UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_DEL);
@@ -191,9 +191,9 @@ void userpref_main_region_widget_item_color(struct uiBlock *block, struct uiLayo
 	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 3, true, false);
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2 * WIDGET_UNIT);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 3 * WIDGET_UNIT);
 		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 4 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
 		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
 		UI_block_layout_set_current(block, global);
 	} while(false);
@@ -205,9 +205,9 @@ void userpref_main_region_widget_item_float(struct uiBlock *block, struct uiLayo
 	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
 	do {
 		uiLayout *local = UI_layout_grid(global, 3, true, false);
-		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 2 * WIDGET_UNIT);
+		int flex = ROSE_MAX(WIDGET_UNIT, 2 * unit - 3 * WIDGET_UNIT);
 		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 4 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_FLT, 0, UI_BUT_HEX);
+		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * WIDGET_UNIT, WIDGET_UNIT, ptr, UI_POINTER_FLT, 0, UI_BUT_HEX);
 		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, WIDGET_UNIT, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
 		UI_block_layout_set_current(block, global);
 	} while(false);

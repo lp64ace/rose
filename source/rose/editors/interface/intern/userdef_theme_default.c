@@ -24,8 +24,8 @@ const Theme U_theme_default = {
 			.outline = RGBA(0x222222ff),
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xe0e0e0ff),
-			.text_sel = RGBA(0x00ffccff),
+			.text = RGBA(0xfaa070ee),
+			.text_sel = RGBA(0x00ffccf0),
 			.roundness = 0.15f,
 		},
 		/** The colors that will be used for text buttons. */
@@ -33,7 +33,7 @@ const Theme U_theme_default = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0xe0e0e055),
-			.text = RGBA(0xe0e0e0ff),
+			.text = RGBA(0xfab080ff),
 			.text_sel = RGBA(0x00ffccff),
 			.roundness = 0.15f,
 		},
@@ -42,8 +42,8 @@ const Theme U_theme_default = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x0a0a0aff),
 			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xc0c0c0ff),
-			.text_sel = RGBA(0x2222e0ee),
+			.text = RGBA(0xfad0b0ff),
+			.text_sel = RGBA(0xfceeeeaa),
 			.roundness = 0.15f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
@@ -55,7 +55,7 @@ const Theme U_theme_default = {
 			.text_sel = RGBA(0x7f7f7fee),
 			.roundness = 0.15f,
 		},
-		.text_cur = RGBA(0xffffffff),
+		.text_cur = RGBA(0xff0000ff),
 	},
 	/** The colors that will be used for the PopUp space. */
 	.space_empty = {

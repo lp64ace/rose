@@ -54,7 +54,7 @@ typedef struct uiHandleButtonData {
 enum {
 #define _BUTTON_STATE_BEGIN BUTTON_STATE_HIGHLIGHT
 	BUTTON_STATE_HIGHLIGHT = 1,
-#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_TEXT_SELECTING
+	#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_TEXT_SELECTING
 	BUTTON_STATE_TEXT_SELECTING,
 	BUTTON_STATE_TEXT_EDITING,
 	BUTTON_STATE_WAIT_RELEASE,
@@ -767,6 +767,9 @@ ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, AR
 	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
 	if (but) {
 		switch (but->type) {
+			case UI_BTYPE_EDIT: {
+				ui_but_activate(C, region, but, BUTTON_STATE_TEXT_SELECTING);
+			} break;
 			default: {
 				ui_but_activate(C, region, but, BUTTON_STATE_HIGHLIGHT);
 			} break;
