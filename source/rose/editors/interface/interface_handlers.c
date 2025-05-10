@@ -53,8 +53,8 @@ typedef struct uiHandleButtonData {
 /** #uiHandleButtonData->state */
 enum {
 #define _BUTTON_STATE_BEGIN BUTTON_STATE_HIGHLIGHT
+#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_HIGHLIGHT
 	BUTTON_STATE_HIGHLIGHT = 1,
-	#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_TEXT_SELECTING
 	BUTTON_STATE_TEXT_SELECTING,
 	BUTTON_STATE_TEXT_EDITING,
 	BUTTON_STATE_WAIT_RELEASE,
@@ -823,8 +823,9 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 					button_activate_state(C, but, BUTTON_STATE_MENU_OPEN);
 				}
 				else {
-					button_activate_state(C, but, BUTTON_STATE_HIGHLIGHT);
 					ui_apply_but_func(C, but, but->arg1, but->arg2);
+					button_activate_state(C, but, BUTTON_STATE_EXIT);
+					break;
 				}
 				retval |= WM_UI_HANDLER_BREAK;
 			}
