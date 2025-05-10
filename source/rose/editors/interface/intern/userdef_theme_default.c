@@ -12,12 +12,8 @@ const Theme U_theme_default = {
 	.tui = {
 		/** The colors that will be used for separator buttons. */
 		.wcol_sepr = {
-			.outline = RGBA(0x00000000),
-			.inner = RGBA(0x00000000),
-			.inner_sel = RGBA(0x00000000),
 			.text = RGBA(0x777777aa),
-			.text_sel = RGBA(0x00000000),
-			.roundness = 0.15f,
+			.roundness = 0.05f,
 		},
 		/** The colors that will be used for regural buttons. */
 		.wcol_but = {
@@ -25,8 +21,7 @@ const Theme U_theme_default = {
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xfaa070ee),
-			.text_sel = RGBA(0x00ffccf0),
-			.roundness = 0.15f,
+			.roundness = 0.05f,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
@@ -34,8 +29,7 @@ const Theme U_theme_default = {
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0xe0e0e055),
 			.text = RGBA(0xfab080ff),
-			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0.15f,
+			.roundness = 0.05f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
@@ -44,16 +38,16 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0xfad0b0ff),
 			.text_sel = RGBA(0xfceeeeaa),
-			.roundness = 0.15f,
+			.roundness = 0.05f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x1f1f1fff),
-			.inner_sel = RGBA(0x4f4f4fff),
+			.inner_sel = RGBA(0x2f2f2fff),
 			.text = RGBA(0x3f3f3fee),
 			.text_sel = RGBA(0x7f7f7fee),
-			.roundness = 0.15f,
+			.roundness = 0.05f,
 		},
 		.text_cur = RGBA(0xff0000ff),
 	},
@@ -91,6 +85,14 @@ const Theme U_theme_default = {
 	},
 	/** The colors that will be used for the UserPref space. */
 	.space_userpref = {
+		.back = RGBA(0x101010ff),
+		.text = RGBA(0xe0e0e0ff),
+		.text_hi = RGBA(0xffffffff),
+		.header = RGBA(0x1a1a1aff),
+		.header_hi = RGBA(0x2a2a2aff),
+	},
+	/** The colors that will be used for the File space. */
+	.space_file = {
 		.back = RGBA(0x101010ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),

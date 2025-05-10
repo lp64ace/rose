@@ -238,7 +238,7 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 
 	uiBlock *block;
 	uiBut *but;
-	if ((block = UI_block_begin(C, region, "USERPREF_theme_order"))) {
+	if ((block = UI_block_begin(C, region, "USERPREF_theme_editor"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, region->sizex * region->hscroll, region->sizey * region->vscroll, 0, 0);
 
 		int unit = ROSE_MAX(WIDGET_UNIT, region->sizex / 6);
@@ -246,10 +246,7 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 		do {
 			uiLayout *global = UI_layout_grid(root, 3, true, false);
 
-			but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 4 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-			but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-
+			userpref_main_region_padding(block, unit);
 			userpref_main_region_theme_header(block, global, unit);
 			userpref_main_region_padding(block, unit);
 			LISTBASE_FOREACH(Theme *, theme, &U.themes) {
@@ -308,8 +305,6 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 		UI_block_scroll(region, block, root);
 		UI_block_end(C, block);
 	}
-
-
 }
 
 /** \} */

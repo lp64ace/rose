@@ -3,7 +3,7 @@
 
 set(INC
 	# Internal Include Directories
-	PUBLIC .
+	PUBLIC ../include
 	
 	# External Include Directories
 	
@@ -21,7 +21,7 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	creator.c
+	space_file.c
 	
 )
 
@@ -31,41 +31,18 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::oswin
-	
-	rose::source::dna
-	rose::source::roselib
 	rose::source::rosekernel
-	rose::source::rosefont
-	rose::source::functions
-	rose::source::gpu
+	rose::source::roseloader
+	rose::source::dna
 	rose::source::windowmanager
 	rose::source::editors::screen
-	rose::source::editors::space_api
-	rose::source::editors::space_statusbar
-	rose::source::editors::space_topbar
-	rose::source::editors::space_view3d
-	rose::source::editors::space_file
-	rose::source::rosemesh
-	rose::source::roseloader
 	
 	# External Library Dependencies
-	${PTHREADS_LIBRARIES}
 	
 )
 
 # -----------------------------------------------------------------------------
-# Declare Executable
+# Declare Library
 
-add_executable(rose "${SRC}")
-
-rose_target_link_libraries(rose "${LIB}")
-rose_target_include_dirs(rose "${INC}")
-
-if(GLEW_BINARIES)
-	add_custom_command(TARGET rose POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${GLEW_BINARIES}
-            $<TARGET_FILE_DIR:rose>/glew32.dll
-	)
-endif()
+rose_add_lib(space_file "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::source::editors::space_file ALIAS space_file)

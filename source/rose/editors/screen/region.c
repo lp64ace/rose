@@ -90,7 +90,7 @@ ROSE_STATIC void region_clear(struct rContext *C, ARegion *region) {
 	
 	float back[4];
 	
-	if (area && (ED_area_is_global(area) || ED_screen_area_active(C))) {
+	if (area && (ED_area_is_global(area) /* || ED_screen_area_active(C) */)) {
 		UI_GetThemeColor4fv(TH_BACK_HI, back);
 	}
 	else {

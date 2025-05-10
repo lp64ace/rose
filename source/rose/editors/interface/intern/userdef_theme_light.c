@@ -97,6 +97,14 @@ const Theme U_theme_xp = {
 		.header = RGBA(0xb0b0b0ff),
 		.header_hi = RGBA(0x909090ff),
 	},
+	/** The colors that will be used for the File space. */
+	.space_file = {
+		.back = RGBA(0xc0c0c0ff),
+		.text = RGBA(0x000000ff),
+		.text_hi = RGBA(0x316ac5ff),
+		.header = RGBA(0xb0b0b0ff),
+		.header_hi = RGBA(0x909090ff),
+	},
 };
 
 /* clang-format on */

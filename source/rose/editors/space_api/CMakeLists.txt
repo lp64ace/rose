@@ -37,6 +37,7 @@ set(LIB
 	rose::source::editors::space_topbar
 	rose::source::editors::space_view3d
 	rose::source::editors::space_userpref
+	rose::source::editors::space_file
 	
 	# External Library Dependencies
 	
