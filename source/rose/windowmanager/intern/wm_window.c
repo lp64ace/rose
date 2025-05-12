@@ -108,10 +108,10 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 	
 	if (!window) {
 		if (!parent) {
-			window = wm_window_new(C, parent, name, 1470, 900);
+			window = wm_window_new(C, parent, name, 1600, 900);
 		}
 		else {
-			window = wm_window_new(C, parent, name, 1024, 720);
+			window = wm_window_new(C, parent, name, 1024, 768);
 		}
 
 		rcti rect;
@@ -126,7 +126,7 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 
 	CTX_wm_window_set(C, window);
 	CTX_wm_screen_set(C, screen);
-	
+
 	if (space_type != SPACE_EMPTY) {
 		/* Ensure it shows the right space-type editor. */
 		ScrArea *area = (ScrArea *)(screen->areabase.first);
@@ -137,7 +137,7 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 	
 	/** Update the screen to be temporary if set! */
 	screen->temp = temp;
-	
+
 	ED_screen_refresh(wm, window);
 
 	if (parent) {
