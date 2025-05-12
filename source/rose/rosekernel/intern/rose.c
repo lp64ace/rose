@@ -24,7 +24,7 @@ void KER_rose_free() {
 }
 
 void KER_rose_userdef_init() {
-	Theme *const themes[] = {&U_theme_default, &U_theme_xp};
+	const Theme *const themes[] = {&U_theme_default, &U_theme_xp};
 
 	for (size_t index = 0; index < ARRAY_SIZE(themes); index++) {
 		Theme *theme = MEM_mallocN(sizeof(Theme), "DefaultTheme");
