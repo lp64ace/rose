@@ -56,7 +56,7 @@ int NET_address_in_length(const NetAddressIn *addr) {
 }
 const struct sockaddr *NET_address_in_data(const NetAddressIn *addr) {
 	if (addr->a6.sin6_family == AF_INET6) {
-		return &addr->a6;
+		return (const struct sockaddr *)&addr->a6;
 	}
-	return &addr->a4;
+	return (const struct sockaddr *)&addr->a4;
 }

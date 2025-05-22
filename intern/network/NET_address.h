@@ -2,6 +2,7 @@
 #define NET_ADDRESS_H
 
 #ifndef WIN32
+#	include <arpa/inet.h>
 #	include <sys/types.h>
 #	include <sys/socket.h>
 #	include <netdb.h>
