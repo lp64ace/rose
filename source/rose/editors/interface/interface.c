@@ -431,7 +431,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 		float x = xy[0], y = xy[1];
 		ui_window_to_block_fl(region, block, &x, &y);
 		LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
-			if (but->flag & UI_DISABLED) {
+			if (but->flag & UI_DISABLED || ELEM(but->type, UI_BTYPE_SEPR)) {
 				continue;
 			}
 			if (ui_but_contains_pt(but, x, y)) {
