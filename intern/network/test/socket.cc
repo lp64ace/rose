@@ -1,7 +1,6 @@
 #include "NET_socket.h"
 
 #include "gtest/gtest.h"
-#include "pthread.h"
 
 namespace {
 
@@ -139,6 +138,12 @@ TEST(Socket, Accept) {
 	auto addr = NET_address_new_ex("127.0.0.1", "6969", AF_INET, SOCK_STREAM);
 	ASSERT_NE(addr, nullptr);
 
+	/**
+	 * Even though connect is a blocking function and we have not accepted the socket yet, 
+	 * the #NET_socket_listen function has already been called.
+	 * 
+	 * \remarks #NET_socket_connect blocks only until the server is ready to accept.
+	 */
 	EXPECT_EQ(NET_socket_connect((NetSocket *)client, addr), 0);
 
 	while (!NET_socket_select(server, 0)) {
