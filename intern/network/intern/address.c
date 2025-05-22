@@ -8,7 +8,7 @@ typedef struct NetAddress {
 	int index;
 } NetAddress;
 
-NetAddress *NET_address_new() {
+NetAddress *NET_address_new(void) {
 	NetAddress *addr = MEM_mallocN(sizeof(NetAddress), "NetAddress");
 	addr->ptr = NULL;
 	addr->itr = NULL;
@@ -66,10 +66,6 @@ bool NET_address_next(NetAddress *addr) {
 		addr->itr = addr->ptr;
 	}
 	return (addr->itr == addr->ptr);
-}
-
-const char *NET_address_name(const NetAddress *addr) {
-	return (addr->itr) ? addr->itr->ai_canonname : NULL;
 }
 
 int NET_address_family(const NetAddress *addr) {

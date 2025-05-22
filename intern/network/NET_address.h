@@ -12,6 +12,7 @@
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,7 +21,7 @@ extern "C" {
 /** Opaque object hiding the NetAddress defined in address.c */
 typedef struct NetAddress NetAddress;
 
-struct NetAddress *NET_addresss_new();
+struct NetAddress *NET_addresss_new(void);
 struct NetAddress *NET_address_new_ex(const char *mode, const char *service, int af, int sock);
 void NET_address_free(NetAddress *addr);
 
@@ -50,8 +51,6 @@ int NET_address_init(NetAddress *addr, const char *mode, const char *service, in
  * \endcode
  */
 bool NET_address_next(NetAddress *addr);
-
-const char *NET_address_canonical_name(const NetAddress *addr);
 
 int NET_address_protocol(const NetAddress *addr);
 int NET_address_socktype(const NetAddress *addr);
