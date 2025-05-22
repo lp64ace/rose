@@ -63,6 +63,7 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
+	${PTHREADS_INCLUDES}
 
 )
 
@@ -82,6 +83,7 @@ set(LIB
 	rose::intern::network
 
 	# External Library Dependencies
+	${PTHREADS_LIBRARIES}
 
 )
 
