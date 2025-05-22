@@ -40,12 +40,17 @@ void NET_socket_close(NetSocket *sock) {
 	}
 }
 
+int NET_socket_bind(NetSocket *socket, NetAddressIn *addr_in) {
+	return bind(socket->fd, NET_address_in_data(addr_in), NET_address_in_length(addr_in));
+}
 int NET_socket_connect(NetSocket *sock, NetAddress *addr) {
 	return connect(sock->fd, NET_address_data(addr), NET_address_length(addr));
 }
-
-int NET_socket_bind(NetSocket *socket, NetAddressIn *addr_in) {
-	return bind(socket->fd, NET_address_in_data(addr_in), NET_address_in_length(addr_in));
+int NET_socket_listen(NetSocket *sock) {
+	return NET_socket_listen_ex(sock, SOMAXCONN);
+}
+int NET_socket_listen_ex(NetSocket *sock, int backlog) {
+	return listen(sock->fd, backlog);
 }
 
 #ifndef WIN32
