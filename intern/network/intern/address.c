@@ -58,14 +58,16 @@ void NET_address_free(NetAddress *addr) {
 	MEM_freeN(addr);
 }
 
-bool NET_address_next(NetAddress *addr) {
+int NET_address_next(NetAddress *addr) {
 	if (addr->itr != NULL && addr->itr->ai_next != NULL) {
 		addr->itr = addr->itr->ai_next;
+		addr->index++;
 	}
 	else {
 		addr->itr = addr->ptr;
+		addr->index = 0;
 	}
-	return (addr->itr == addr->ptr);
+	return addr->index;
 }
 
 int NET_address_family(const NetAddress *addr) {

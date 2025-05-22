@@ -5,6 +5,7 @@
 #	include <sys/types.h>
 #	include <sys/socket.h>
 #	include <netdb.h>
+#	include <unistd.h>
 #else
 #	include <winsock2.h>
 #	include <ws2tcpip.h>
@@ -21,7 +22,7 @@ extern "C" {
 /** Opaque object hiding the NetAddress defined in address.c */
 typedef struct NetAddress NetAddress;
 
-struct NetAddress *NET_addresss_new(void);
+struct NetAddress *NET_address_new(void);
 struct NetAddress *NET_address_new_ex(const char *mode, const char *service, int af, int sock);
 void NET_address_free(NetAddress *addr);
 
@@ -41,7 +42,7 @@ int NET_address_init(NetAddress *addr, const char *mode, const char *service, in
 /**
  * A network address resolved from the #NET_address_init might return mutliple resoved address information.
  * \param addr The address structure we have resolved.
- * \return Success returns zero. Failure (no more entries) return nonzero value.
+ * \return The index of the current selected resolved address.
  *
  * \code{.c}
  * NetAddress *addr = NET_address_new_ex("127.0.0.1", "http", AF_UNSPEC, SOCK_TCP);
@@ -50,7 +51,7 @@ int NET_address_init(NetAddress *addr, const char *mode, const char *service, in
  * } while(NET_address_next(addr));
  * \endcode
  */
-bool NET_address_next(NetAddress *addr);
+int NET_address_next(NetAddress *addr);
 
 int NET_address_protocol(const NetAddress *addr);
 int NET_address_socktype(const NetAddress *addr);

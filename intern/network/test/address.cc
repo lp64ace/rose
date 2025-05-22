@@ -12,7 +12,7 @@ TEST(Address, Get) {
 	int length = 0;
 	do {
 		length++;
-	} while(!NET_address_next(addr));
+	} while(NET_address_next(addr));
 
 	ASSERT_GT(length, 0); // At least one address should be found!
 
