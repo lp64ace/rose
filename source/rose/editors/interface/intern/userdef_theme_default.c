@@ -20,7 +20,7 @@ const Theme U_theme_default = {
 			.outline = RGBA(0x222222ff),
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xfaa070ee),
+			.text = RGBA(0x80b0faff),
 			.roundness = 0.05f,
 		},
 		/** The colors that will be used for text buttons. */
@@ -28,16 +28,16 @@ const Theme U_theme_default = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0xe0e0e055),
-			.text = RGBA(0xfab080ff),
+			.text = RGBA(0xfaa070ee),
 			.roundness = 0.05f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x0a0a0aff),
-			.inner_sel = RGBA(0x444444ff),
+			.inner_sel = RGBA(0x3a3a3a3f),
 			.text = RGBA(0xd0fab0ff),
-			.text_sel = RGBA(0xfceeeeaa),
+			.text_sel = RGBA(0xfceeee3f),
 			.roundness = 0.05f,
 		},
 		/** The colors that will be used for scrollbar buttons. */

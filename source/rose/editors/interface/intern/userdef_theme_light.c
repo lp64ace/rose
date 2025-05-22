@@ -41,18 +41,18 @@ const Theme U_theme_xp = {
 		.wcol_edit = {
 			.outline = RGBA(0x808080ff),
 			.inner = RGBA(0xffffffcc),         // near white
-			.inner_sel = RGBA(0x316ac5ff),
+			.inner_sel = RGBA(0x316ac5cc),
 			.text = RGBA(0x000000ff),
-			.text_sel = RGBA(0xffffffff),
+			.text_sel = RGBA(0xaa80ffcc),
 			.roundness = 0.05f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
 			.outline = RGBA(0x808080ff),
-			.inner = RGBA(0xffffffcc),
-			.inner_sel = RGBA(0x000000ff),
-			.text = RGBA(0x000000ff),
-			.text_sel = RGBA(0xffffffff),
+			.inner = RGBA(0xffffff7f),
+			.inner_sel = RGBA(0xffffff2f),
+			.text = RGBA(0x000000cf),
+			.text_sel = RGBA(0x000000ff),
 			.roundness = 0.05f,
 		},
 		.text_cur = RGBA(0x000000ff),
