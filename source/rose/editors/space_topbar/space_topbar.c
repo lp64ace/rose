@@ -91,11 +91,6 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Open", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
-		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_load_but, NULL, NULL);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Save", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
-		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_save_but, NULL, NULL);
-		but = uiDefBut(block, UI_BTYPE_HSPR, "", 0, 0, 6 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
 		but = uiDefBut(block, UI_BTYPE_PUSH, "Settings", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_edit_settings_but, NULL, NULL);
 		but = uiDefBut(block, UI_BTYPE_HSPR, "", 0, 0, 6 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
