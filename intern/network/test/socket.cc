@@ -136,27 +136,19 @@ TEST(Socket, Accept) {
 	auto client = NET_socket_new_ex(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	ASSERT_NE(client, nullptr);
 
-	pthread_t thread;
-	void *ret;
-	pthread_create(
-		&thread,
-		nullptr,
-		[](void *c) -> void * {
-			auto addr = NET_address_new_ex("127.0.0.1", "6969", AF_INET, SOCK_STREAM);
-			int res = addr ? NET_socket_connect((NetSocket *)c, addr) : 0xdeadbeef;
-			NET_address_free(addr);
-			return (void *)(intptr_t)res;
-		},
-		client);
+	auto addr = NET_address_new_ex("127.0.0.1", "6969", AF_INET, SOCK_STREAM);
+	ASSERT_NE(addr, nullptr);
 
+	EXPECT_EQ(NET_socket_connect((NetSocket *)client, addr), 0);
+
+	while (!NET_socket_select(server, 0)) {
+	}
 	auto peer = NET_socket_accept(server);
 	ASSERT_NE(peer, nullptr);
 	NET_socket_free(peer);
 
-	pthread_join(thread, &ret);
-	EXPECT_EQ(ret, nullptr);
-
 	NET_socket_free(client);
+	NET_address_free(addr);
 	NET_address_in_free(addrin);
 	NET_socket_free(server);
 	NET_exit();
