@@ -2,8 +2,6 @@
 
 #include "NET_socket.h"
 
-#include <sys/socket.h>
-
 /**
  * Not a huge fun of having platform specific defines but I would hate virtual functions here even more.
  * I have decided to manipulate function and declaration from a single platform instead of both.
