@@ -22,7 +22,7 @@ NetSocket *NET_socket_new(NetAddress *addr) {
 NetSocket *NET_socket_new_ex(int af, int type, int protocol) {
 	NetSocket *sock = MEM_mallocN(sizeof(NetSocket), "NetSocket");
 	if ((sock->fd = socket(af, type, protocol)) == (SOCKET)-1) {
-		MEM_SAFE_FREE(socket);
+		MEM_SAFE_FREE(sock);
 	}
 	return sock;
 }
