@@ -16,13 +16,7 @@ typedef struct NetSocket {
 } NetSocket;
 
 NetSocket *NET_socket_new(NetAddress *addr) {
-	NetSocket *sock = NET_socket_new_ex(NET_address_family(addr), NET_address_socktype(addr), NET_address_protocol(addr));
-	if (sock) {
-		if (connect(sock->fd, NET_address_data(addr), NET_address_length(addr)) != 0) {
-			MEM_SAFE_FREE(sock);
-		}
-	}
-	return sock;
+	return NET_socket_new_ex(NET_address_family(addr), NET_address_socktype(addr), NET_address_protocol(addr));
 }
 
 NetSocket *NET_socket_new_ex(int af, int type, int protocol) {
@@ -44,6 +38,14 @@ void NET_socket_close(NetSocket *sock) {
 		closesocket(sock->fd); // Not a native Linux/Unix function but defined above.
 		sock->fd = (SOCKET)-1;
 	}
+}
+
+int NET_socket_connect(NetSocket *sock, NetAddress *addr) {
+	return connect(sock->fd, NET_address_data(addr), NET_address_length(addr));
+}
+
+int NET_socket_bind(NetSocket *socket, NetAddressIn *addr_in) {
+	return bind(socket->fd, NET_address_in_data(addr_in), NET_address_in_length(addr_in));
 }
 
 #ifndef WIN32

@@ -2,6 +2,7 @@
 #define NET_SOCKET_H
 
 #include "NET_address.h"
+#include "NET_bind.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,12 +11,14 @@ extern "C" {
 /** Opaque object hiding the NetSocket defined in socket.c */
 typedef struct NetSocket NetSocket;
 
-/** This method will open the socket and attempt to connect to the specified address. */
 NetSocket *NET_socket_new(NetAddress *addr);
 NetSocket *NET_socket_new_ex(int af, int socktype, int protocol);
 
 void NET_socket_close(NetSocket *socket);
 void NET_socket_free(NetSocket *socket);
+
+int NET_socket_connect(NetSocket *socket, NetAddress *addr);
+int NET_socket_bind(NetSocket *socket, NetAddressIn *addr_in);
 
 void NET_init();
 void NET_exit();

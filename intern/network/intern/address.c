@@ -61,9 +61,12 @@ void NET_address_free(NetAddress *addr) {
 int NET_address_next(NetAddress *addr) {
 	if (addr->itr != NULL && addr->itr->ai_next != NULL) {
 		addr->itr = addr->itr->ai_next;
-		addr->index++;
+		return ++addr->index;
 	}
-	else {
+	return NET_address_first(addr);
+}
+int NET_address_first(NetAddress *addr) {
+	if (addr->ptr) {
 		addr->itr = addr->ptr;
 		addr->index = 0;
 	}
@@ -83,6 +86,6 @@ int NET_address_protocol(const NetAddress *addr) {
 int NET_address_length(const NetAddress *addr) {
 	return (addr->itr) ? addr->itr->ai_addrlen : 0;
 }
-struct sockaddr *NET_address_data(const NetAddress *addr) {
+const struct sockaddr *NET_address_data(const NetAddress *addr) {
 	return (addr->itr) ? addr->itr->ai_addr : NULL;
 }

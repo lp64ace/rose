@@ -52,13 +52,14 @@ int NET_address_init(NetAddress *addr, const char *mode, const char *service, in
  * \endcode
  */
 int NET_address_next(NetAddress *addr);
+int NET_address_first(NetAddress *addr);
 
 int NET_address_protocol(const NetAddress *addr);
 int NET_address_socktype(const NetAddress *addr);
 int NET_address_family(const NetAddress *addr);
 
 int NET_address_length(const NetAddress *addr);
-struct sockaddr *NET_address_data(const NetAddress *addr);
+const struct sockaddr *NET_address_data(const NetAddress *addr);
 
 #ifdef __cplusplus
 }

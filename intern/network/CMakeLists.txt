@@ -22,9 +22,11 @@ set(INC_SYS
 
 set(SRC
 	NET_address.h
+	NET_bind.h
 	NET_socket.h
 
 	intern/address.c
+	intern/bind.c
 	intern/socket.c
 )
 

@@ -32,10 +32,51 @@ TEST(Socket, Connect) {
 	int length = 0;
 	do {
 		NetSocket *sock = NET_socket_new(addr);
-		if (sock) {
+		if (!sock) {
+			continue;
+		}
+
+		if (NET_socket_connect(sock, addr) == 0) {
 			length++;
+		}
+
+		NET_socket_free(sock);
+	} while (NET_address_next(addr));
+
+	EXPECT_GT(length, 0);  // At least one socket should connect.
+
+	NET_address_free(addr);
+	NET_exit();
+}
+
+TEST(Socket, Bind) {
+	NET_init();
+	NetAddress *addr = NET_address_new_ex("google.com", "http", AF_INET, SOCK_STREAM);
+	ASSERT_NE(addr, nullptr);
+
+	int length = 0;
+	do {
+		NetAddressIn *addr_in = NET_address_in_new_ex("0.0.0.0", 0, AF_INET);
+		if (!addr_in) {
+			continue;
+		}
+
+		NetSocket *sock = NET_socket_new(addr);
+		if (sock) {
+			do {
+				if (NET_socket_bind(sock, addr_in) != 0) {
+					break;
+				}
+				if (NET_socket_connect(sock, addr) != 0) {
+					break;
+				}
+				length++;
+			} while (false);
+
 			NET_socket_free(sock);
 		}
+
+		NET_address_in_free(addr_in);
 	} while (NET_address_next(addr));
 
 	EXPECT_GT(length, 0);  // At least one socket should connect.
