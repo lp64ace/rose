@@ -139,9 +139,46 @@ TEST(Socket, Accept) {
 	ASSERT_NE(addr, nullptr);
 
 	/**
-	 * Even though connect is a blocking function and we have not accepted the socket yet, 
-	 * the #NET_socket_listen function has already been called.
+	 * Even though `connect` is a blocking function and we haven't accepted the connection yet,
+	 * `NET_socket_listen` has already been called.
+	 *
+	 * Originally, this was tested using pthreads to spawn a separate client thread that we would join later.
+	 * However, since this setup works reliably on both Windows and Unix systems,
+	 * we reverted to a simple loop with non-blocking server-side polling.
 	 * 
+	 * 																								
+	 * 															 .;X&&&&&&$+;.                      
+	 * 														 .$&;             :+&$:                 
+	 * 													   +&.                     X$.              
+	 * 													 :&                          ;$             
+	 * 													+x                             &            
+	 * 												   +x                               &           
+	 * 												  :$                                +;          
+	 * 	 .$;;;;;;;;;;;;;;;;;;;;;;;;;;&:               x;                                 $          
+	 * 	+&&&&$&&&&&&&&&&&&&&&&&&&&&&+;x               &                                  &          
+	 * 	+.                        $;x:X              :&     :;;;..    .XX$;:x            $          
+	 * 	;:                       X::$:+:              & .   x    :;         X           :+          
+	 * 	;:                   ...X:::X;:X              $ .   X     $.:      x:           &.          
+	 * 	.X                      X::::X:X              ;$$$X        :$$++&$;            :X           
+	 * 	 x                      :X:::$:+;              $                              .&            
+	 * 	 .X                      &:::x+:$              .&  .&$$$$&X.                 :&             
+	 * 	  X    ;+;;;;;;;;;;;X+   ;::::$:X                &&:        XX              xX              
+	 * 	  .+   x            $$    &:::X:;+               $&;          X+          ;&.               
+	 * 	   &   X            $+;   $:::+x:&              .$ :&:         .&       $&:                 
+	 * 		;  X            X:X    x:::$:X              +    .&X.        &  ;&$   $:                
+	 * 		& :+           :+:X    &:::X::+             $       .+&&$$$&&x&+$      &:               
+	 * 		:;+:           x;:X    +;::;x:&             &                 $$       X$               
+	 * 		 $X            &:;+     X:::&:x:            &               .&.;+     :x:X              
+	 * 		 ;$            $:X:     X;::x::x            &              x+   X:    +; X.             
+	 * 		  x            X:$      .x::;X:&            X            :$     :$    $. :X             
+	 * 		 ;;           :;:X::::;;+&;::&;X            ;;         .$;       X.  .x   $             
+	 * 		 X:           X:;                           .&        &;         :$  &:   X             
+	 * 		 $            &:X&&&&&&&&&&&&&&&&&&&+.       &.    ;&:            $ ;;    +:            
+	 * ======$xxxxxxxxxxxx&+:xX===================;xX====;X==$$===============X+$=====++=========   
+	 * 	   $.              x:::+&x++++++++++++++++xx;     ;+                  :;         :+$&X;:$.  
+	 * 	 +&+++++++++++++xxx&$$+:                                                 ;XXX+;:::::::::$.  
+	 *
+	 *
 	 * \remarks #NET_socket_connect blocks only until the server is ready to accept.
 	 */
 	EXPECT_EQ(NET_socket_connect((NetSocket *)client, addr), 0);
