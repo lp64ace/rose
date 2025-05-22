@@ -16,7 +16,13 @@ typedef struct NetSocket {
 } NetSocket;
 
 NetSocket *NET_socket_new(NetAddress *addr) {
-	return NET_socket_new_ex(NET_address_family(addr), NET_address_socktype(addr), NET_address_protocol(addr));
+	NetSocket *sock = NET_socket_new_ex(NET_address_family(addr), NET_address_socktype(addr), NET_address_protocol(addr));
+	if (sock) {
+		if (connect(sock->fd, NET_address_data(addr), NET_address_length(addr)) != 0) {
+			MEM_SAFE_FREE(sock);
+		}
+	}
+	return sock;
 }
 
 NetSocket *NET_socket_new_ex(int af, int type, int protocol) {

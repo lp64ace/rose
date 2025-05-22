@@ -80,3 +80,9 @@ int NET_address_protocol(const NetAddress *addr) {
 	return (addr->itr) ? addr->itr->ai_protocol : -1;
 }
 
+int NET_address_length(const NetAddress *addr) {
+	return (addr->itr) ? addr->itr->ai_addrlen : 0;
+}
+struct sockaddr *NET_address_data(const NetAddress *addr) {
+	return (addr->itr) ? addr->itr->ai_addr : NULL;
+}

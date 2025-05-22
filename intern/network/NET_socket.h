@@ -10,6 +10,7 @@ extern "C" {
 /** Opaque object hiding the NetSocket defined in socket.c */
 typedef struct NetSocket NetSocket;
 
+/** This method will open the socket and attempt to connect to the specified address. */
 NetSocket *NET_socket_new(NetAddress *addr);
 NetSocket *NET_socket_new_ex(int af, int socktype, int protocol);
 

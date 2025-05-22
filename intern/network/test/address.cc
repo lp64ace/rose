@@ -14,7 +14,7 @@ TEST(Address, Get) {
 		length++;
 	} while(NET_address_next(addr));
 
-	ASSERT_GT(length, 0); // At least one address should be found!
+	EXPECT_GT(length, 0);  // At least one address should be found!
 
 	NET_address_free(addr);
 	NET_exit();

@@ -57,6 +57,9 @@ int NET_address_protocol(const NetAddress *addr);
 int NET_address_socktype(const NetAddress *addr);
 int NET_address_family(const NetAddress *addr);
 
+int NET_address_length(const NetAddress *addr);
+struct sockaddr *NET_address_data(const NetAddress *addr);
+
 #ifdef __cplusplus
 }
 #endif
