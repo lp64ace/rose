@@ -74,8 +74,40 @@ NetSocket *NET_socket_accept(NetSocket *server) {
 	if ((sock->fd = accept(server->fd, NULL, NULL)) == (SOCKET)-1) {
 		MEM_SAFE_FREE(sock);
 	}
-
 	return sock;
+}
+
+size_t NET_socket_send_ex(NetSocket *sock, const void *data, size_t length, int flag) {
+	int ret = send(sock->fd, data, length, flag);
+	if (ret != (int)length && ret <= 0) {
+		NET_socket_close(sock);
+		return 0;
+	}
+	return (size_t)ret;
+}
+size_t NET_socket_recv_ex(NetSocket *sock, void *data, size_t length, int flag) {
+	int ret = recv(sock->fd, data, length, flag);
+	if (ret != (int)length && ret <= 0) {
+		NET_socket_close(sock);
+		return 0;
+	}
+	return (size_t)ret;
+}
+
+size_t NET_socket_send(NetSocket *sock, const void *data, size_t length) {
+	return NET_socket_send_ex(sock, data, length, 0);
+}
+
+size_t NET_socket_recv(NetSocket *sock, void *data, size_t length) {
+	return NET_socket_recv_ex(sock, data, length, 0);
+}
+
+size_t NET_socket_peek(NetSocket *sock, void *data, size_t length) {
+	return NET_socket_recv_ex(sock, data, length, MSG_PEEK);
+}
+
+bool NET_socket_valid(NetSocket *sock) {
+	return sock->fd != (SOCKET)-1;
 }
 
 #ifndef WIN32

@@ -147,7 +147,7 @@ TEST(Socket, Accept) {
 	 * we reverted to a simple loop with non-blocking server-side polling.
 	 * 
 	 *                                                           .;X&&&&&&$+;.                      
-	 *                                                        .$&;             :+&$:                 
+	 *                                                       .$&;             :+&$:                 
 	 *                                                     +&.                     X$.              
 	 *                                                   :&                          ;$             
 	 *                                                  +x                             &            
@@ -169,11 +169,11 @@ TEST(Socket, Accept) {
 	 *      :;+:           x;:X    +;::;x:&             &                 $$       X$               
 	 *       $X            &:;+     X:::&:x:            &               .&.;+     :x:X              
 	 *       ;$            $:X:     X;::x::x            &              x+   X:    +; X.             
-	 *       x            X:$      .x::;X:&            X            :$     :$    $. :X             
+	 *        x            X:$      .x::;X:&            X            :$     :$    $. :X             
 	 *       ;;           :;:X::::;;+&;::&;X            ;;         .$;       X.  .x   $             
 	 *       X:           X:;                           .&        &;         :$  &:   X             
 	 *       $            &:X&&&&&&&&&&&&&&&&&&&+.       &.    ;&:            $ ;;    +:            
-	 * ======$xxxxxxxxxxxx&+:xX===================;xX====;X==$$===============X+$=====++=========   
+	 * ======$xxxxxxxxxxxx&+:xX&&&&&&&&&&&&&&&&&&+;xX====;X==$$===============X+$=====++=========   
 	 *     $.              x:::+&x++++++++++++++++xx;     ;+                  :;         :+$&X;:$.  
 	 *   +&+++++++++++++xxx&$$+:                                                 ;XXX+;:::::::::$.  
 	 *
@@ -183,6 +183,7 @@ TEST(Socket, Accept) {
 	EXPECT_EQ(NET_socket_connect((NetSocket *)client, addr), 0);
 
 	while (!NET_socket_select(server, 0)) {
+		continue; // Await until an update occurs on the socket!
 	}
 	auto peer = NET_socket_accept(server);
 	ASSERT_NE(peer, nullptr);
@@ -192,6 +193,47 @@ TEST(Socket, Accept) {
 	NET_address_free(addr);
 	NET_address_in_free(addrin);
 	NET_socket_free(server);
+	NET_exit();
+}
+
+TEST(Socket, Full) {
+	NET_init();
+	
+	unsigned char bufferout[16] = {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76};
+	unsigned char bufferin[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	
+	NetSocket *server = NET_socket_new_ex(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	NetSocket *client = NET_socket_new_ex(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	
+	ASSERT_NE(server, nullptr);
+	ASSERT_NE(client, nullptr);
+	
+	NetAddressIn *addri = NET_address_in_new_ex("0.0.0.0", 6969, AF_INET);
+	NetAddress *addrr = NET_address_new_ex("127.0.0.1", "6969", AF_INET, SOCK_STREAM);
+	
+	ASSERT_NE(addri, nullptr);
+	ASSERT_NE(addrr, nullptr);
+	
+	ASSERT_EQ(NET_socket_bind(server, addri), 0);
+	ASSERT_EQ(NET_socket_listen(server), 0);
+	ASSERT_EQ(NET_socket_connect(client, addrr), 0);
+
+	NET_address_free(addrr);
+	NET_address_in_free(addri);
+	
+	NetSocket *peer = NET_socket_accept(server);
+	
+	ASSERT_NE(peer, nullptr);
+	
+	ASSERT_EQ(NET_socket_send(peer, bufferout, sizeof(bufferout)), sizeof(bufferout));
+	ASSERT_EQ(NET_socket_recv(client, bufferin, sizeof(bufferin)), sizeof(bufferin));
+	
+	EXPECT_EQ(memcmp(bufferin, bufferout, sizeof(bufferout)), 0);
+
+	NET_socket_free(peer);
+	NET_socket_free(client);
+	NET_socket_free(server);
+	
 	NET_exit();
 }
 
