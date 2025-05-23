@@ -208,6 +208,10 @@ TEST(Socket, Full) {
 	ASSERT_NE(server, nullptr);
 	ASSERT_NE(client, nullptr);
 	
+	/**
+	 * Using a different port to avoid binding issues on Linux due to TIME_WAIT state.
+	 * On Linux, recently closed sockets may keep ports in TIME_WAIT; using different ports avoids binding failures between tests.
+	 */
 	NetAddressIn *addri = NET_address_in_new_ex("0.0.0.0", 42069, AF_INET);
 	NetAddress *addrr = NET_address_new_ex("127.0.0.1", "42069", AF_INET, SOCK_STREAM);
 	
