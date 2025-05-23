@@ -208,8 +208,8 @@ TEST(Socket, Full) {
 	ASSERT_NE(server, nullptr);
 	ASSERT_NE(client, nullptr);
 	
-	NetAddressIn *addri = NET_address_in_new_ex("0.0.0.0", 6969, AF_INET);
-	NetAddress *addrr = NET_address_new_ex("127.0.0.1", "6969", AF_INET, SOCK_STREAM);
+	NetAddressIn *addri = NET_address_in_new_ex("0.0.0.0", 42069, AF_INET);
+	NetAddress *addrr = NET_address_new_ex("127.0.0.1", "42069", AF_INET, SOCK_STREAM);
 	
 	ASSERT_NE(addri, nullptr);
 	ASSERT_NE(addrr, nullptr);
