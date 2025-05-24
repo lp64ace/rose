@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+struct Compilation;
+
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
  *

@@ -61,7 +61,7 @@ const size_t COM_type_size(const CType *a) {
 
 ROSE_INLINE bool same_basic_types(const struct CType *a, const struct CType *b);
 ROSE_INLINE bool compatible_basic_types(const struct CType *a, const struct CType *b);
-ROSE_INLINE const struct CType *composite_basic_types(struct Compilation *c, const struct CType *a, const struct CType *b);
+ROSE_INLINE const struct CType *composite_basic_types(struct Compilation *, const struct CType *a, const struct CType *b);
 
 #define MAKE_BASIC_TYPE(kind_, type_, unsigned_)                                                            \
 	&(CType) {                                                                                              \
@@ -161,14 +161,11 @@ ROSE_INLINE bool compatible_basic_types(const CType *a, const CType *b) {
 	return a->kind == b->kind;
 }
 
-ROSE_INLINE const CType *composite_basic_types(struct Compiler *com, const CType *a, const CType *b) {
+ROSE_INLINE const CType *composite_basic_types(struct Compilation *compilation, const CType *a, const CType *b) {
 	if (!COM_type_compatible(a, b)) {
 		return NULL;
 	}
-	if (b->kind == TP_ENUM) {
-		return b;
-	}
-	return a;
+	return (b->kind == TP_ENUM) ? b : a;
 }
 
 /** \} */
