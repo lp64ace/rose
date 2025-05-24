@@ -8,10 +8,10 @@ extern "C" {
 #endif
 
 /* File name of the default variable-width font. */
-#define RFT_DEFAULT_PROPORTIONAL_FONT "Roboto.ttf"
+#define RFT_DEFAULT_PROPORTIONAL_FONT "DejaVuSans.ttf"
 
 /* File name of the default fixed-pitch font. */
-#define RFT_DEFAULT_MONOSPACED_FONT "RobotoMono.ttf"
+#define RFT_DEFAULT_MONOSPACED_FONT "DejaVuSansMono.ttf"
 
 bool RFT_init(void);
 void RFT_exit(void);

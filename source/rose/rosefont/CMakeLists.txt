@@ -64,10 +64,6 @@ set(LIB
 set(FONTS_SRC
 	fonts/DejaVuSans.ttf
 	fonts/DejaVuSansMono.ttf
-	fonts/OpenSans.ttf
-	fonts/OpenSansMono.ttf
-	fonts/Roboto.ttf
-	fonts/RobotoMono.ttf
 )
 
 set(FONTS_C
