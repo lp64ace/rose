@@ -2077,6 +2077,14 @@ const RTNode *RT_parser_stmt(RTCParser *P, RTToken **rest, RTToken *token) {
 		*rest = token;
 		return node;
 	}
+	if (consume(&token, token, "while")) {
+		// TODO: Fix this
+		ROSE_assert_unreachable();
+	}
+	if (consume(&token, token, "for")) {
+		// TODO: Fix this
+		ROSE_assert_unreachable();
+	}
 	if (consume(&token, token, "break")) {
 		if (!P->state->on_break) {
 			ERROR(P, token, "stray break statement");
