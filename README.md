@@ -9,6 +9,8 @@ it would definately be scary!
 Rose aims to be a software development tool that allows easy development and management of an application both in runtime and develop-time. 
 By employing the intergrated c99 interperter we can quickly view/edit data in runtime and store them in the application's database file for later usage.
 
+Yet another library that feels like fighting with it rather than your project! You're welcome!
+
 ## How to Build
 
 ### Prerequisites
