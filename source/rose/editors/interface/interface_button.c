@@ -305,7 +305,7 @@ ROSE_STATIC void ui_draw_text_font_caret(uiBut *but, const rcti *recti, int font
 }
 
 ROSE_STATIC void ui_draw_text_font_draw(uiWidgetColors *wcol, uiBut *but, const rcti *recti, int font, const char *text, int x, int y) {
-	if (but->type == UI_BTYPE_EDIT) {
+	if (ELEM(but->type, UI_BTYPE_EDIT)) {
 		rctf rect;
 		rect.xmin = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selsta - but->scroll)));
 		rect.xmax = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selend - but->scroll)));

@@ -13,6 +13,7 @@
 
 #include "LIB_listbase.h"
 #include "LIB_string.h"
+#include "LIB_ghash.h"
 #include "LIB_utildefines.h"
 
 #include "RLO_readfile.h"
@@ -23,6 +24,11 @@
 
 #include "WM_api.h"
 #include "WM_window.h"
+
+#include "RT_token.h"
+#include "RT_parser.h"
+#include "intern/ast/type.h"
+#include "intern/genfile.h"
 
 /* -------------------------------------------------------------------- */
 /** \name UserPref SpaceType Methods
@@ -82,16 +88,16 @@ enum {
 	THEME_RESET,
 };
 
-void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, void *vop) {
+void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, void *voperation) {
 	Theme *theme = (Theme *)vtheme;
 
-	if (ELEM(POINTER_AS_INT(vop), THEME_SEL, THEME_DEL) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
+	if (ELEM(POINTER_AS_INT(voperation), THEME_SEL, THEME_DEL) && (theme == NULL || !LIB_haslink(&U.themes, theme))) {
 		return;
 	}
 
 	WindowManager *wm = CTX_wm_manager(C);
 
-	switch (POINTER_AS_INT(vop)) {
+	switch (POINTER_AS_INT(voperation)) {
 		case THEME_ADD: {
 			theme = MEM_mallocN(sizeof(Theme), "Theme");
 			memcpy(theme, U.themes.first, sizeof(Theme));
@@ -119,7 +125,7 @@ void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, vo
 	ScrArea *area = CTX_wm_area(C);
 	SpaceUser *user = (SpaceUser *)area->spacedata.first;
 
-	if (ELEM(POINTER_AS_INT(vop), THEME_APPLY, THEME_RESET)) {
+	if (ELEM(POINTER_AS_INT(voperation), THEME_APPLY, THEME_RESET)) {
 		ScrArea *area = CTX_wm_area(C);
 
 		ED_area_tag_redraw(area);
@@ -133,103 +139,211 @@ void userpref_main_theme_update(struct rContext *C, uiBut *but, void *vtheme, vo
 	memcpy(&user->editing, U.themes.first, sizeof(Theme));
 }
 
-void userpref_main_region_padding(struct uiBlock *block, int unit) {
-	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 4 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+void userpref_main_region_layout_theme_list_edit(struct rContext *C, ARegion *region, uiBlock *block, uiLayout *root) {
+	uiLayout *grid = UI_layout_grid(root, 3, true, false);
+	LISTBASE_FOREACH(Theme *, theme, &U.themes) {
+		uiBut *but;
+		but = uiDefBut(block, UI_BTYPE_TEXT, "", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, theme->name, UI_POINTER_STR, ARRAY_SIZE(theme->name), UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2217", 0, 0, 4 * PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, theme, THEME_SEL);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2A2F", 0, 0, 4 * PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		UI_but_func_set(but, userpref_main_theme_update, theme, THEME_DEL);
+	}
+	UI_block_layout_set_current(block, root);
 }
 
-void userpref_main_region_theme_header(struct uiBlock *block, struct uiLayout *global, int unit) {
-	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
-	do {
-		uiLayout *local = UI_layout_grid(global, 4, true, false);
-
-		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 2 * UI_UNIT_X);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Themes", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "+", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
-		UI_but_func_set(but, userpref_main_theme_update, NULL, (void *)THEME_ADD);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, 0);
-
-		UI_block_layout_set_current(block, global);
-	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
+void userpref_main_region_layout_theme_list(struct rContext *C, ARegion *region, uiBlock *block, uiLayout *root) {
+	uiLayout *grid = UI_layout_grid(root, 3, true, false);
+	uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	userpref_main_region_layout_theme_list_edit(C, region, block, grid);
+	uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	UI_block_layout_set_current(block, root);
 }
 
-void userpref_main_region_theme_item(struct uiBlock *block, struct uiLayout *global, struct Theme *theme, int unit) {
-	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, WIDGET_UNIT, NULL, 0, 0, 0);
-	do {
-		uiLayout *local = UI_layout_grid(global, 4, true, false);
+enum {
+	UI_WIDGET_COLORS_ROUNDNESS = 1 << 0,
+	UI_WIDGET_COLORS_INNERDEF = 1 << 1,
+	UI_WIDGET_COLORS_INNERSEL = 1 << 2,
+	UI_WIDGET_COLORS_TEXTDEF = 1 << 3,
+	UI_WIDGET_COLORS_TEXTSEL = 1 << 4,
+	UI_WIDGET_COLORS_THUMBDEF = 1 << 5,
+	UI_WIDGET_COLORS_THUMBSEL = 1 << 6,
 
-		int flex = ROSE_MAX(WIDGET_UNIT, 4 * unit - 3 * WIDGET_UNIT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(placeholder)", 0, 0, flex, WIDGET_UNIT, &theme->name, UI_POINTER_STR, ARRAY_SIZE(theme->name), UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "\u25B2", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-		UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_SEL);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "\u2716", 0, 0, WIDGET_UNIT, WIDGET_UNIT, NULL, 0, 0, 0);
-		UI_but_func_set(but, userpref_main_theme_update, theme, (void *)THEME_DEL);
-		if (LIB_listbase_is_single(&U.themes)) {
-			uiButEnableFlag(but, UI_DISABLED);
+	UI_WIDGET_COLORS_SEPR = UI_WIDGET_COLORS_ROUNDNESS | UI_WIDGET_COLORS_INNERDEF,
+	UI_WIDGET_COLORS_TEXT = UI_WIDGET_COLORS_ROUNDNESS | UI_WIDGET_COLORS_INNERDEF | UI_WIDGET_COLORS_INNERSEL | UI_WIDGET_COLORS_TEXTDEF,
+	UI_WIDGET_COLORS_PUSH = UI_WIDGET_COLORS_ROUNDNESS | UI_WIDGET_COLORS_INNERDEF | UI_WIDGET_COLORS_INNERSEL | UI_WIDGET_COLORS_TEXTDEF,
+	UI_WIDGET_COLORS_EDIT = UI_WIDGET_COLORS_ROUNDNESS | UI_WIDGET_COLORS_INNERDEF | UI_WIDGET_COLORS_INNERSEL | UI_WIDGET_COLORS_TEXTDEF | UI_WIDGET_COLORS_TEXTSEL,
+	UI_WIDGET_COLORS_SCROLL = UI_WIDGET_COLORS_ROUNDNESS | UI_WIDGET_COLORS_INNERDEF | UI_WIDGET_COLORS_INNERSEL | UI_WIDGET_COLORS_THUMBDEF | UI_WIDGET_COLORS_THUMBSEL,
+};
+
+void userpref_main_region_layout_color(uiBlock *block, uiLayout *root, unsigned char *ptr) {
+#if 1
+	uiLayout *grid = UI_layout_grid(root, 5, true, false);
+	uiDefBut(block, UI_BTYPE_TEXT, "RGBA", 0, 0, 0.4f * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_EDIT, "0x00", 0, 0, 0.4f * UI_UNIT_X, UI_UNIT_Y, ptr + 0, UI_POINTER_BYTE, 0, 0);
+	uiDefBut(block, UI_BTYPE_EDIT, "0x00", 0, 0, 0.4f * UI_UNIT_X, UI_UNIT_Y, ptr + 1, UI_POINTER_BYTE, 0, 0);
+	uiDefBut(block, UI_BTYPE_EDIT, "0x00", 0, 0, 0.4f * UI_UNIT_X, UI_UNIT_Y, ptr + 2, UI_POINTER_BYTE, 0, 0);
+	uiDefBut(block, UI_BTYPE_EDIT, "0x00", 0, 0, 0.4f * UI_UNIT_X, UI_UNIT_Y, ptr + 3, UI_POINTER_BYTE, 0, 0);
+	UI_block_layout_set_current(block, root);
+#else
+	uiDefBut(block, UI_BTYPE_EDIT, "Color", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
+#endif
+}
+
+void userpref_main_region_layout_theme_edit_widget_post(uiBlock *block, uiLayout *root, uiWidgetColors *widget, int flag) {
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 4 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	do {
+		uiLayout *grid = UI_layout_grid(root, 3, true, false);
+		
+		if (flag & UI_WIDGET_COLORS_ROUNDNESS) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Roundness", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			uiDefBut(block, UI_BTYPE_EDIT, "Roundness", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, &widget->roundness, UI_POINTER_FLT, 0, UI_BUT_HEX);
 		}
 
-		UI_block_layout_set_current(block, global);
-	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+		if (flag & UI_WIDGET_COLORS_INNERDEF) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Default", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			userpref_main_region_layout_color(block, grid, widget->inner);
+		}
+
+		if (flag & UI_WIDGET_COLORS_INNERSEL) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Hovered", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			userpref_main_region_layout_color(block, grid, widget->inner_sel);
+		}
+
+		if (flag & UI_WIDGET_COLORS_TEXTDEF) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Text", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			userpref_main_region_layout_color(block, grid, widget->text);
+		}
+
+		if (flag & UI_WIDGET_COLORS_TEXTSEL) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Selection", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			userpref_main_region_layout_color(block, grid, widget->text_sel);
+		}
+
+		if (flag & UI_WIDGET_COLORS_THUMBDEF) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Thumb", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			userpref_main_region_layout_color(block, grid, widget->text);
+		}
+
+		if (flag & UI_WIDGET_COLORS_THUMBSEL) {
+			uiDefBut(block, UI_BTYPE_TEXT, "Thumb Selected", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+			uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+			userpref_main_region_layout_color(block, grid, widget->text_sel);
+		}
+		
+		UI_block_layout_set_current(block, root);
+	} while (false);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 4 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
 }
 
-void userpref_main_region_widget_header(struct uiBlock *block, struct uiLayout *global, const char *nwidget, int unit) {
-	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_TEXT, nwidget, 0, 0, 4 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+void userpref_main_region_layout_theme_edit_widget_pre(uiBlock *block, uiLayout *root, const char *name, uiWidgetColors *widget, int flag) {
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_TEXT, name, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	userpref_main_region_layout_theme_edit_widget_post(block, root, widget, flag);
 }
 
-void userpref_main_region_widget_item_color(struct uiBlock *block, struct uiLayout *global, const char *iname, const char *idscr, unsigned char ptr[4], int unit) {
-	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+void userpref_main_region_layout_theme_edit_widget(struct rContext *C, ARegion *region, uiBlock *block, uiLayout *root) {
+	ScrArea *area = CTX_wm_area(C);
+	SpaceUser *user = (SpaceUser *)area->spacedata.first;
+
+	uiLayout *grid = UI_layout_grid(root, 3, false, false);
+
+	userpref_main_region_layout_theme_edit_widget_pre(block, grid, "Line", & user->editing.tui.wcol_sepr, UI_WIDGET_COLORS_SEPR);
+	userpref_main_region_layout_theme_edit_widget_pre(block, grid, "Text", &user->editing.tui.wcol_txt, UI_WIDGET_COLORS_TEXT);
+	userpref_main_region_layout_theme_edit_widget_pre(block, grid, "Push", &user->editing.tui.wcol_but, UI_WIDGET_COLORS_PUSH);
+	userpref_main_region_layout_theme_edit_widget_pre(block, grid, "Edit", &user->editing.tui.wcol_edit, UI_WIDGET_COLORS_EDIT);
+	userpref_main_region_layout_theme_edit_widget_pre(block, grid, "Scroll", &user->editing.tui.wcol_scroll, UI_WIDGET_COLORS_SCROLL);
+	
+	UI_block_layout_set_current(block, root);
+}
+
+void userpref_main_region_layout_theme_edit_spaces_post(uiBlock *block, uiLayout *root, ThemeSpace *space) {
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 4 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
 	do {
-		uiLayout *local = UI_layout_grid(global, 3, true, false);
-		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 3 * UI_UNIT_X);
-		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_UINT, 0, UI_BUT_HEX);
-		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
-		UI_block_layout_set_current(block, global);
-	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+		uiLayout *grid = UI_layout_grid(root, 3, true, false);
+
+		uiDefBut(block, UI_BTYPE_TEXT, "Header", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+		uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_color(block, grid, space->header);
+
+		uiDefBut(block, UI_BTYPE_TEXT, "Hovered", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+		uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_color(block, grid, space->header_hi);
+
+		uiDefBut(block, UI_BTYPE_TEXT, "Background", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, UI_BUT_TEXT_LEFT);
+		uiDefBut(block, UI_BTYPE_VSPR, "Padding", 0, 0, PIXELSIZE, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_color(block, grid, space->back);
+
+		UI_block_layout_set_current(block, root);
+	} while (false);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 4 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
 }
 
-void userpref_main_region_widget_item_float(struct uiBlock *block, struct uiLayout *global, const char *iname, const char *idscr, float *ptr, int unit) {
-	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_X, NULL, 0, 0, 0);
-	do {
-		uiLayout *local = UI_layout_grid(global, 3, true, false);
-		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 3 * UI_UNIT_X);
-		but = uiDefBut(block, UI_BTYPE_TEXT, iname, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "(nil)", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_FLT, 0, UI_BUT_HEX);
-		but = uiDefBut(block, UI_BTYPE_TEXT, idscr, 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
-		UI_block_layout_set_current(block, global);
-	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+void userpref_main_region_layout_theme_edit_spaces_pre(uiBlock *block, uiLayout *root, const char *name, ThemeSpace *space) {
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_TEXT, name, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	uiDefBut(block, UI_BTYPE_SEPR, "()", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	userpref_main_region_layout_theme_edit_spaces_post(block, root, space);
 }
 
-void userpref_main_region_theme_buttons(struct uiBlock *block, struct uiLayout *global, struct Theme *editing, int unit) {
+void userpref_main_region_layout_theme_edit_spaces(struct rContext *C, ARegion *region, uiBlock *block, uiLayout *root) {
+	ScrArea *area = CTX_wm_area(C);
+	SpaceUser *user = (SpaceUser *)area->spacedata.first;
+
+	uiLayout *grid = UI_layout_grid(root, 3, false, false);
+
+	userpref_main_region_layout_theme_edit_spaces_pre(block, grid, "Empty", &user->editing.space_empty);
+	userpref_main_region_layout_theme_edit_spaces_pre(block, grid, "View3D", &user->editing.space_view3d);
+	userpref_main_region_layout_theme_edit_spaces_pre(block, grid, "User Preferences", &user->editing.space_userpref);
+
+	UI_block_layout_set_current(block, root);
+}
+
+void userpref_main_region_layout_theme_push_buttons(struct rContext *C, ARegion *region, uiBlock *block, uiLayout *root, Theme *theme) {
+	uiLayout *grid = UI_layout_grid(root, 3, true, false);
+	
 	uiBut *but;
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
-	do {
-		uiLayout *local = UI_layout_grid(global, 5, true, false);
-		int flex = ROSE_MAX(UI_UNIT_X, 2 * unit - 3.5 * UI_UNIT_X);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_LEFT);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
-		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_APPLY);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0);
-		UI_but_func_set(but, userpref_main_theme_update, editing, (void *)THEME_RESET);
-		but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, flex, UI_UNIT_Y, NULL, 0, 0, UI_BUT_TEXT_RIGHT);
-		UI_block_layout_set_current(block, global);
-	} while(false);
-	but = uiDefBut(block, UI_BTYPE_SEPR, "(pad)", 0, 0, 1 * unit, UI_UNIT_Y, NULL, 0, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_PUSH, "Apply", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	UI_but_func_set(but, userpref_main_theme_update, theme, THEME_APPLY);
+	but = uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	but = uiDefBut(block, UI_BTYPE_PUSH, "Reset", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	UI_but_func_set(but, userpref_main_theme_update, theme, THEME_RESET);
+	
+	UI_block_layout_set_current(block, root);
+}
+
+void userpref_main_region_layout_theme_push(struct rContext *C, ARegion *region, uiBlock *block, uiLayout *root) {
+	ScrArea *area = CTX_wm_area(C);
+	SpaceUser *user = (SpaceUser *)area->spacedata.first;
+
+	uiLayout *grid = UI_layout_grid(root, 3, true, false);
+	uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	userpref_main_region_layout_theme_push_buttons(C, region, block, grid, &user->editing);
+	uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+	UI_block_layout_set_current(block, root);
 }
 
 void userpref_main_region_layout(struct rContext *C, ARegion *region) {
@@ -241,66 +355,19 @@ void userpref_main_region_layout(struct rContext *C, ARegion *region) {
 	if ((block = UI_block_begin(C, region, "USERPREF_theme_editor"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, region->sizex * region->hscroll, region->sizey * region->vscroll, 0, 0);
 
-		int unit = ROSE_MAX(WIDGET_UNIT, region->sizex / 6);
-
-		do {
-			uiLayout *global = UI_layout_grid(root, 3, true, false);
-
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_theme_header(block, global, unit);
-			userpref_main_region_padding(block, unit);
-			LISTBASE_FOREACH(Theme *, theme, &U.themes) {
-				userpref_main_region_theme_item(block, global, theme, unit);
-			}
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_widget_header(block, global, "Text", unit);
-			userpref_main_region_padding(block, unit);
-			do {
-				uiWidgetColors *wc = &(&user->editing)->tui.wcol_txt;
-				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
-				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
-				userpref_main_region_widget_item_color(block, global, "Text", "Text foreground color", wc->text, unit);
-			} while(false);
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_widget_header(block, global, "Push", unit);
-			userpref_main_region_padding(block, unit);
-			do {
-				uiWidgetColors *wc = &(&user->editing)->tui.wcol_but;
-				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
-				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
-				userpref_main_region_widget_item_color(block, global, "Text", "Text foreground color", wc->text, unit);
-			} while(false);
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_widget_header(block, global, "Edit", unit);
-			userpref_main_region_padding(block, unit);
-			do {
-				uiWidgetColors *wc = &(&user->editing)->tui.wcol_edit;
-				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
-				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
-				userpref_main_region_widget_item_color(block, global, "Text1", "Default text foreground color", wc->text, unit);
-				userpref_main_region_widget_item_color(block, global, "Text2", "Hovered text foreground color", wc->text_sel, unit);
-			} while(false);
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_widget_header(block, global, "Separator", unit);
-			userpref_main_region_padding(block, unit);
-			do {
-				uiWidgetColors *wc = &(&user->editing)->tui.wcol_sepr;
-				userpref_main_region_widget_item_color(block, global, "Line", "Default line foreground color", wc->text, unit);
-			} while(false);
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_widget_header(block, global, "Scrollbar", unit);
-			userpref_main_region_padding(block, unit);
-			do {
-				uiWidgetColors *wc = &(&user->editing)->tui.wcol_scroll;
-				userpref_main_region_widget_item_color(block, global, "Inner1", "Default background color", wc->inner, unit);
-				userpref_main_region_widget_item_color(block, global, "Inner2", "Hovered background color", wc->inner_sel, unit);
-				userpref_main_region_widget_item_color(block, global, "Thumb1", "Default thumb color", wc->text, unit);
-				userpref_main_region_widget_item_color(block, global, "Thumb2", "Hovered thumb color", wc->text_sel, unit);
-			} while(false);
-			userpref_main_region_padding(block, unit);
-			userpref_main_region_theme_buttons(block, global, &user->editing, unit);
-			userpref_main_region_padding(block, unit);
-		} while(false);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_theme_list(C, region, block, root);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_TEXT, "Widgets", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_theme_edit_widget(C, region, block, root);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_TEXT, "Spaces", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_theme_edit_spaces(C, region, block, root);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
+		userpref_main_region_layout_theme_push(C, region, block, root);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, region->sizex, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0);
 
 		UI_block_scroll(region, block, root);
 		UI_block_end(C, block);

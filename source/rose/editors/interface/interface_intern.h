@@ -113,8 +113,8 @@ typedef struct uiPopupBlockHandle {
 
 	uiPopupBlockCreate popup_create_vars;
 
-	int max_size_x;
-	int max_size_y;
+	int sizex;
+	int sizey;
 
 	struct {
 		struct ScrArea *area;

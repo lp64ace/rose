@@ -259,7 +259,7 @@ const char *LIB_strfind(const char *begin, const char *end, const char *word) {
 		roll = rabin_karp_rolling_hash_roll_ex(roll, itr, (size_t)1, (ptrdiff_t)1);
 	}
 
-	return (roll == real && STREQLEN(itr - length, word, length - 1)) ? itr - length : NULL;
+	return (roll == real && (length == 0 || STREQLEN(itr - length, word, length - 1))) ? itr - length : NULL;
 }
 
 const char *LIB_strrfind(const char *begin, const char *end, const char *word) {

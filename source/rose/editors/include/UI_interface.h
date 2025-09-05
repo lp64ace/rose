@@ -110,7 +110,7 @@ void UI_block_free(struct rContext *C, struct uiBlock *block);
 typedef void (*uiButHandleFunc)(struct rContext *C, struct uiBut *but, void *arg1, void *arg2);
 typedef bool (*uiButHandleTextFunc)(struct rContext *C, struct uiBut *but, const char *edit);
 
-typedef struct uiBlock *(*uiBlockCreateFunc)(struct rContext *C, struct ARegion *region, void *arg);
+typedef struct uiBlock *(*uiBlockCreateFunc)(struct rContext *C, struct ARegion *region, struct uiBut *but, void *arg);
 
 typedef struct uiBut {
 	struct uiBut *prev, *next;
@@ -156,6 +156,7 @@ typedef struct uiBut {
 /** #uiBut->pointype */
 enum {
 	UI_POINTER_NIL = 0,
+	UI_POINTER_BYTE,
 	UI_POINTER_STR,
 	UI_POINTER_INT,
 	UI_POINTER_FLT,
@@ -180,7 +181,7 @@ enum {
 	UI_HOVER = 1 << 0,
 	UI_SELECT = 1 << 1,
 	UI_DISABLED = 1 << 2,
-	UI_BUT_DEFAULT = 1 << 3,
+	UI_DEFAULT = 1 << 3,
 };
 
 /** #uiBut->draw */
@@ -190,13 +191,14 @@ enum {
 	UI_BUT_ICON_LEFT = 1 << 16,
 	UI_BUT_TEXT_LEFT = 1 << 17,
 	UI_BUT_TEXT_RIGHT = 1 << 18,
-	UI_BUT_HEX = 1 << 19,
+	UI_BUT_HEX = 1 << 20,
+	UI_BUT_FILTER = 1 << 21,
 	/**
 	 * The button is inside a grid layout that has a static number of columns, 
 	 * which means that a full rows should be displayed as hovered when a single item in that row is hovered.
 	 */
-	UI_BUT_GRID = 1 << 20,
-	UI_BUT_ROW = 1 << 21,
+	UI_BUT_GRID = 1 << 22,
+	UI_BUT_ROW = 1 << 23,
 };
 
 #define DRAW_FLAG(draw) ((draw) & 0xffff0000)
@@ -208,6 +210,9 @@ struct uiBut *uiDefButEx(struct uiBlock *block, int type, const char *name, int 
 void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double softmin, double softmax);
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
 void UI_but_menu_set(struct uiBut *but, uiBlockCreateFunc func, void *arg);
+
+const char *UI_but_dropdown_text(const struct uiBut *but);
+const char *UI_but_dropdown_text_ex(const struct uiBut *but, size_t index);
 
 void uiButEnableFlag(struct uiBut *but, int flag);
 void uiButDisableFlag(struct uiBut *but, int flag);

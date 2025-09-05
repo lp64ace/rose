@@ -23,6 +23,7 @@ typedef struct SpaceLink {
 
 typedef struct SpaceLink SpaceTopBar;
 typedef struct SpaceLink SpaceStatusBar;
+typedef struct SpaceLink SpaceDebug;
 
 /** \} */
 
@@ -100,6 +101,7 @@ enum eFile_Types {
 
 enum {
 	SPACE_EMPTY = 0,
+	SPACE_DEBUG,
 	SPACE_STATUSBAR,
 	SPACE_TOPBAR,
 	SPACE_VIEW3D,

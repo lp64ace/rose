@@ -14,6 +14,7 @@ void ED_spacetypes_exit();
  * Calls for registering default spaces, only called once, from #ED_spacetypes_init
  * \{ */
 
+void ED_spacetype_debug();
 void ED_spacetype_statusbar();
 void ED_spacetype_topbar();
 void ED_spacetype_userpref();

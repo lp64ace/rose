@@ -13,7 +13,7 @@ const Theme U_theme_default = {
 		/** The colors that will be used for separator buttons. */
 		.wcol_sepr = {
 			.text = RGBA(0x777777aa),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for regural buttons. */
 		.wcol_but = {
@@ -21,7 +21,7 @@ const Theme U_theme_default = {
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
 			.text = RGBA(0x80b0faff),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
@@ -29,7 +29,7 @@ const Theme U_theme_default = {
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0xe0e0e055),
 			.text = RGBA(0xfaa070ee),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
@@ -38,7 +38,7 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x3a3a3a3f),
 			.text = RGBA(0xd0fab0ff),
 			.text_sel = RGBA(0xfceeee3f),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
@@ -47,12 +47,20 @@ const Theme U_theme_default = {
 			.inner_sel = RGBA(0x2f2f2fff),
 			.text = RGBA(0x3f3f3fee),
 			.text_sel = RGBA(0x7f7f7fee),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		.text_cur = RGBA(0xff0000ff),
 	},
 	/** The colors that will be used for the PopUp space. */
 	.space_empty = {
+		.back = RGBA(0x2a2a2aff),
+		.text = RGBA(0xe0e0e0ff),
+		.text_hi = RGBA(0xffffffff),
+		.header = RGBA(0x1a1a1aff),
+		.header_hi = RGBA(0x2a2a2aff),
+	},
+	/** The colors that will be used for the Debug space. */
+	.space_debug = {
 		.back = RGBA(0x2a2a2aff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),

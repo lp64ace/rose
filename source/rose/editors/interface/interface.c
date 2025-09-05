@@ -351,6 +351,15 @@ bool ui_but_contains_rect(const uiBut *but, const rctf *rect) {
 	return LIB_rctf_isect(&but->rect, rect, NULL);
 }
 
+ROSE_STATIC size_t ui_but_drop_index(uiBut *but, const char *text) {
+	for (size_t index = (size_t)but->softmin; index <= (size_t)but->softmax; index++) {
+		if (STREQ(UI_but_dropdown_text_ex(but, index), text)) {
+			return index;
+		}
+	}
+	return ui_but_get_value(but);
+}
+
 void ui_but_update(uiBut *but) {
 	if (!ui_but_is_editing(but)) {
 		but->scroll = 0;
@@ -359,6 +368,15 @@ void ui_but_update(uiBut *but) {
 	if (but->pointer) {
 		but->drawstr = MEM_reallocN(but->drawstr, but->maxlength + 1);
 		switch (but->pointype) {
+			case UI_POINTER_BYTE:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%02x" : "%d", *(unsigned char *)but->pointer);
+				}
+				else {
+					char *itr = but->drawstr;
+					*(unsigned char *)but->pointer = strtol(itr, &itr, 0);
+				}
+				break;
 			case UI_POINTER_STR:
 				if (!ui_but_is_editing(but)) {
 					/** Update the draw sting from the pointer data. */
@@ -451,6 +469,8 @@ double ui_but_get_value(struct uiBut *but) {
 	const int base = but->flag & UI_BUT_HEX ? 16 : 0;
 
 	switch (but->pointype) {
+		case UI_POINTER_BYTE:
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const unsigned char *)but->pointer;
 		case UI_POINTER_INT:
 			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const int *)but->pointer;
 		case UI_POINTER_FLT:
@@ -470,6 +490,9 @@ double ui_but_set_value(struct uiBut *but, double nvalue) {
 	nvalue = ROSE_MAX(but->softmin, ROSE_MIN(nvalue, but->softmax));
 
 	switch (but->pointype) {
+		case UI_POINTER_BYTE: {
+			*(unsigned char *)but->pointer = (unsigned char)round(nvalue);
+		} break;
 		case UI_POINTER_INT: {
 			*(int *)but->pointer = (int)round(nvalue);
 		} break;
@@ -495,7 +518,7 @@ double ui_but_set_value(struct uiBut *but, double nvalue) {
 /** \name Builtin UI Functions
  * \{ */
 
-bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Integer(struct rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	if (but->hardmin < 0) {
 		long long value = strtoll(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
@@ -514,7 +537,7 @@ bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const ch
 	return false;
 }
 
-bool uiButHandleTextFunc_Decimal(struct rContext *C, struct uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Decimal(struct rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	long double value = strtold(edit, &end);
 	while (isspace((unsigned char)*end)) {
@@ -707,7 +730,10 @@ void UI_block_scroll(ARegion *region, uiBlock *block, uiLayout *layout) {
 			0,
 			UI_BUT_TEXT_LEFT
 		);
-		uiButEnableFlag(but, UI_BUT_DEFAULT);
+		uiButEnableFlag(but, UI_DEFAULT);
+	}
+	else {
+		region->vscroll = 1;
 	}
 
 	/* clang-format on */

@@ -1,5 +1,17 @@
 #include "KER_idtype.h"
+#include "KER_lib_id.h"
+#include "KER_main.h"
 #include "KER_scene.h"
+
+/* -------------------------------------------------------------------- */
+/** \name Scene Creation
+ * \{ */
+
+Scene *KER_scene_new(Main *main, const char *name) {
+	return KER_id_new(main, ID_SCE, name);
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Scene Data-block Definition
