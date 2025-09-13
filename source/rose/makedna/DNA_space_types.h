@@ -23,7 +23,6 @@ typedef struct SpaceLink {
 
 typedef struct SpaceLink SpaceTopBar;
 typedef struct SpaceLink SpaceStatusBar;
-typedef struct SpaceLink SpaceDebug;
 
 /** \} */
 
@@ -51,62 +50,15 @@ enum {
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name UserPref Space
- * \{ */
-
-typedef struct SpaceUser {
-	struct SpaceLink *prev, *next;
-
-	int spacetype;
-	int flag;
-
-	ListBase regionbase;
-	/** End of 'SpaceLink' header. */
-
-	Theme editing;
-} SpaceUser;
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name File Space
- * \{ */
-
- typedef struct SpaceFile {
-	struct SpaceLink *prev, *next;
-
-	int spacetype;
-	int flag;
-
-	ListBase regionbase;
-	/** End of 'SpaceLink' header. */
-} SpaceFile;
-
-enum eFile_Types {
-	FILE_TYPE_ROSE = 1 << 0,
-	FILE_TYPE_IMAGE = 1 << 1,
-	FILE_TYPE_MOVIE = 1 << 2,
-	FILE_TYPE_SOUND = 1 << 3,
-	FILE_TYPE_ASSET = 1 << 4,
-	FILE_TYPE_FONT = 1 << 5,
-	FILE_TYPE_TEXT = 1 << 6,
-	FILE_TYPE_FOLDER = 1 << 7,
-};
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Space Defines
  * \{ */
 
 enum {
 	SPACE_EMPTY = 0,
-	SPACE_DEBUG,
 	SPACE_STATUSBAR,
 	SPACE_TOPBAR,
 	SPACE_VIEW3D,
 	SPACE_USERPREF,
-	SPACE_FILE,
 };
 
 /** \} */

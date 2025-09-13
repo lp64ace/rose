@@ -59,14 +59,6 @@ const Theme U_theme_default = {
 		.header = RGBA(0x1a1a1aff),
 		.header_hi = RGBA(0x2a2a2aff),
 	},
-	/** The colors that will be used for the Debug space. */
-	.space_debug = {
-		.back = RGBA(0x2a2a2aff),
-		.text = RGBA(0xe0e0e0ff),
-		.text_hi = RGBA(0xffffffff),
-		.header = RGBA(0x1a1a1aff),
-		.header_hi = RGBA(0x2a2a2aff),
-	},
 	/** The colors that will be used for the View3D space. */
 	.space_view3d = {
 		.back = RGBA(0x101010ff),
@@ -93,14 +85,6 @@ const Theme U_theme_default = {
 	},
 	/** The colors that will be used for the UserPref space. */
 	.space_userpref = {
-		.back = RGBA(0x101010ff),
-		.text = RGBA(0xe0e0e0ff),
-		.text_hi = RGBA(0xffffffff),
-		.header = RGBA(0x1a1a1aff),
-		.header_hi = RGBA(0x2a2a2aff),
-	},
-	/** The colors that will be used for the File space. */
-	.space_file = {
 		.back = RGBA(0x101010ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),

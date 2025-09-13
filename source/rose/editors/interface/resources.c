@@ -38,12 +38,6 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 			case SPACE_USERPREF: {
 				ts = &theme->space_userpref;
 			} break;
-			case SPACE_FILE: {
-				ts = &theme->space_file;
-			} break;
-			case SPACE_DEBUG: {
-				ts = &theme->space_debug;
-			} break;
 			default: {
 				ROSE_assert_unreachable();
 			} break;

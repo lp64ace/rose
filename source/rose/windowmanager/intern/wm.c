@@ -278,23 +278,11 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	RM_mesh_rm_to_me(main, rm, me, &params);
 	RM_mesh_free(rm);
 
-	id_us_rem(me);
-
-	do {
-		Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, true);
-		if (!ob) {
-			fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
-			return;
-		}
-	} while (false);
-
-	do {
-		Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, true);
-		if (!ob) {
-			fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
-			return;
-		}
-	} while (false);
+	Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, false);
+	if (!ob) {
+		fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
+		return;
+	}
 }
 
 void WM_init(struct rContext *C) {

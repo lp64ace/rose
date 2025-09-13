@@ -461,7 +461,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 }
 
 double ui_but_get_value(struct uiBut *but) {
-	if (but->pointer == NULL && !(but->drawstr && ui_but_is_editing(but))) {
+	if (but->pointer == NULL) {
 		return 0;
 	}
 
@@ -712,31 +712,16 @@ void UI_block_scroll(ARegion *region, uiBlock *block, uiLayout *layout) {
 	UI_layout_estimate(layout, &w, &h);
 	UI_block_layout_set_current(block, NULL);
 
-	/* clang-format off */
+	int x = region->sizex - V2D_SCROLL_WIDTH + 1;
+	double pages = ROSE_MAX(((float)h / (float)region->sizey), 1);
 
 	if (((float)h / (float)region->sizey) > 1) {
-		but = uiDefButEx(
-			block,
-			UI_BTYPE_SCROLL,
-			"",
-			region->sizex - V2D_SCROLL_WIDTH,
-			0,
-			V2D_SCROLL_WIDTH,
-			region->sizey,
-			&region->vscroll,
-			UI_POINTER_FLT,
-			1,
-			ROSE_MAX(((float)h / (float)region->sizey), 1),
-			0,
-			UI_BUT_TEXT_LEFT
-		);
+		but = uiDefButEx(block, UI_BTYPE_SCROLL, "", x, 0, V2D_SCROLL_WIDTH, region->sizey, &region->vscroll, UI_POINTER_FLT, 1, pages, 0, 0);
 		uiButEnableFlag(but, UI_DEFAULT);
 	}
 	else {
 		region->vscroll = 1;
 	}
-
-	/* clang-format on */
 }
 
 void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {
