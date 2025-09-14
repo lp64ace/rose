@@ -1,6 +1,10 @@
 #ifndef DRW_RENDER_H
 #define DRW_RENDER_H
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 struct DrawEngineType;
 
 #ifdef __cplusplus

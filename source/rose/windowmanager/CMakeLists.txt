@@ -46,6 +46,7 @@ set(LIB
 	rose::source::rosemesh
 	rose::source::rosefont
 	rose::source::gpu
+	rose::source::draw
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar

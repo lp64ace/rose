@@ -294,6 +294,8 @@ void WM_init(struct rContext *C) {
 	KER_rose_globals_init();
 	KER_rose_globals_main_replace(main);
 
+	DRW_engines_register();
+
 	RFT_init();
 
 	ED_spacetypes_init();
@@ -318,6 +320,8 @@ void WM_main(struct rContext *C) {
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
 	KER_rose_userdef_clear();
+	
+	DRW_engines_free();
 
 	ED_spacetypes_exit();
 
