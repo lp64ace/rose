@@ -1,6 +1,8 @@
 #include "DRW_engine.h"
 #include "DRW_render.h"
 
+#include "LIB_listbase.h"
+
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
 
