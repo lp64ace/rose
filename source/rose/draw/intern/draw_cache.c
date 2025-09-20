@@ -45,7 +45,7 @@ GPUBatch *DRW_cache_fullscreen_quad_get(void) {
 		mul_m3_v3(m, w);
 		float u = w[0] * tex[0][0] + w[1] * tex[1][0] + w[2] * tex[2][0];
 		float v = w[0] * tex[0][1] + w[1] * tex[1][1] + w[2] * tex[2][1];
-		ROSE_assert(fabs(u - 1.0f) <= FLT_EPSILON && abs(v - 1.0f) <= FLT_EPSILON);
+		ROSE_assert(fabs(u - 1.0f) < FLT_EPSILON && abs(v - 1.0f) < FLT_EPSILON);
 #endif
 
 		static GPUVertFormat format;

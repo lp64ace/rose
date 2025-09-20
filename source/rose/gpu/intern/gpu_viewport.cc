@@ -54,7 +54,7 @@ typedef struct GPUViewport {
  * \{ */
 
 static void gpu_viewport_textures_create(GPUViewport *viewport) {
-	const float black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+	const float black[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
 	TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
 

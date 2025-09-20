@@ -17,7 +17,11 @@
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
 
-static ListBase registered_engine_list;
+/* -------------------------------------------------------------------- */
+/** \name Draw Engines
+ * \{ */
+
+static ListBase GEngineList;
 
 void DRW_engines_register(void) {
 	DRW_engine_register(&draw_engine_basic_type);
@@ -28,52 +32,41 @@ void DRW_engines_register_experimental(void) {
 }
 
 void DRW_engines_free(void) {
-	LISTBASE_FOREACH_MUTABLE(DrawEngineType *, engine, &registered_engine_list) {
+	LISTBASE_FOREACH_MUTABLE(DrawEngineType *, engine, &GEngineList) {
 		
 	}
-	LIB_listbase_clear(&registered_engine_list);
+	LIB_listbase_clear(&GEngineList);
 }
 
 void DRW_engine_register(DrawEngineType *draw_engine_type) {
-	LIB_addtail(&registered_engine_list, draw_engine_type);
+	LIB_addtail(&GEngineList, draw_engine_type);
 }
 
-void DRW_draw_loop(const struct Context *C, struct ARegion *region, struct GPUViewport *viewport) {
-	GPUFrameBuffer *framebuffer = GPU_viewport_framebuffer_overlay_get(viewport);
-	GPU_framebuffer_bind(framebuffer);
-	GPU_framebuffer_clear_color(framebuffer, (const float[4]){1.0f, 1.0f, 1.0f, 1.0f});
+/** \} */
 
-	GPUBatch *batch = DRW_cache_fullscreen_quad_get();
-	GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE);
-	GPU_batch_uniform_1i(batch, "overlay", true);
-	GPU_batch_uniform_1i(batch, "display_transform", false);
-	GPU_batch_uniform_1i(batch, "use_hdr", false);
+/* -------------------------------------------------------------------- */
+/** \name Draw Engines Internal
+ * \{ */
 
-	GPUTexture *color = GPU_texture_create_error(2, false);
-	GPUTexture *color_overlay = GPU_texture_create_error(2, false);
+// Called once before starting rendering using our (used/active) draw engines
+void DRW_draw_engines_init(void) {
 
-	GPU_matrix_push();
-	GPU_matrix_push_projection();
+}
 
-	GPU_matrix_identity_set();
-	GPU_matrix_identity_projection_set();
+void DRW_draw_engines_exit(void) {
 
-	GPUSamplerState sampler;
-	memset(&sampler, 0, sizeof(GPUSamplerState));
+}
 
-	GPU_texture_bind_ex(color, sampler, 0);
-	GPU_texture_bind_ex(color_overlay, sampler, 1);
-	GPU_batch_draw(batch);
-	GPU_texture_unbind(color);
-	GPU_texture_unbind(color_overlay);
+/** \} */
 
-	GPU_matrix_pop_projection();
-	GPU_matrix_pop();
+/* -------------------------------------------------------------------- */
+/** \name Draw
+ * Draw Away!
+ * \{ */
 
-	GPU_texture_free(color_overlay);
-	GPU_texture_free(color);
-
-	GPU_framebuffer_restore();
+void DRW_draw_render_loop(const struct Context *C, struct ARegion *region, struct GPUViewport *viewport) {
+	/** No framebuffer is allowed to be bound the moment we are rendering! */
+	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
 }
 
 void DRW_draw_view(const struct Context *C) {
@@ -91,5 +84,7 @@ void DRW_draw_view(const struct Context *C) {
 		return;
 	}
 
-	DRW_draw_loop(C, region, viewport);
+	DRW_draw_render_loop(C, region, viewport);
 }
+
+/** \} */

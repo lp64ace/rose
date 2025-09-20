@@ -7,7 +7,7 @@
  * \{ */
 
 DrawEngineType draw_engine_basic_type = {
-	.name = "Rose",
+	.name = "ROSE_BASIC",
 	
 	.cache_init = NULL,
 	.cache_populate = NULL,

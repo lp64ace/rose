@@ -7,8 +7,7 @@
  * \{ */
 
 DrawEngineType draw_engine_alice_type = {
-	// I know what is real
-	.name = "Alice",
+	.name = "ROSE_ALICE", // I know what is real
 	
 	.cache_init = NULL,
 	.cache_populate = NULL,

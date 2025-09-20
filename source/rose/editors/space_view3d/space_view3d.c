@@ -4,6 +4,10 @@
 #include "DNA_space_types.h"
 #include "DNA_windowmanager_types.h"
 
+#include "GPU_framebuffer.h"
+#include "GPU_texture.h"
+#include "GPU_viewport.h"
+
 #include "DRW_engine.h"
 
 #include "ED_screen.h"

@@ -10,6 +10,10 @@ struct DrawEngineType;
 extern "C" {
 #endif
 
+/* -------------------------------------------------------------------- */
+/** \name Draw Engines
+ * \{ */
+
 void DRW_engines_register(void);
 void DRW_engines_register_experimental(void);
 void DRW_engines_free(void);
@@ -17,7 +21,15 @@ void DRW_engines_free(void);
 bool DRW_engine_render_support(struct DrawEngineType *draw_engine_type);
 void DRW_engine_register(struct DrawEngineType *draw_engine_type);
 
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw
+ * \{ */
+
 void DRW_draw_view(const struct Context *C);
+
+/** \} */
 
 #ifdef __cplusplus
 }
