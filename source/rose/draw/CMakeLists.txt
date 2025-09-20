@@ -32,9 +32,11 @@ set(BASIC
 )
 
 set(SRC
+	DRW_cache.h
 	DRW_engine.h
 	DRW_render.h
 	
+	intern/draw_cache.c
 	intern/draw_manager.c
 	
 )
@@ -48,9 +50,11 @@ list(APPEND SRC ${BASIC}) # Another day, a different dream perhaps.
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	PUBLIC rose::source::gpu
 	PUBLIC rose::source::dna
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::rosekernel
+	PUBLIC rose::source::windowmanager
 	
 	# External Library Dependencies
 	

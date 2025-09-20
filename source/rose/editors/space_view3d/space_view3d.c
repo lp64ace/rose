@@ -4,12 +4,7 @@
 #include "DNA_space_types.h"
 #include "DNA_windowmanager_types.h"
 
-#include "GPU_compute.h"
-#include "GPU_framebuffer.h"
-#include "GPU_texture.h"
-#include "GPU_state.h"
-#include "GPU_shader.h"
-#include "GPU_shader_builtin.h"
+#include "DRW_engine.h"
 
 #include "ED_screen.h"
 #include "ED_space_api.h"
@@ -70,6 +65,8 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 	ED_region_default_draw(C, region);
+
+	DRW_draw_view(C);
 }
 
 /** \} */

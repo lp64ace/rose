@@ -3,6 +3,8 @@
 #include "DNA_mesh_types.h"
 #include "DNA_space_types.h"
 
+#include "DRW_engine.h"
+
 #include "KER_context.h"
 #include "KER_cpp_types.h"
 #include "KER_idtype.h"
@@ -320,12 +322,12 @@ void WM_main(struct rContext *C) {
 void WM_exit(struct rContext *C) {
 	KER_rose_globals_clear();
 	KER_rose_userdef_clear();
-	
+
 	DRW_engines_free();
 
-	ED_spacetypes_exit();
-
 	RFT_exit();
+
+	ED_spacetypes_exit();
 
 	CTX_free(C);
 	exit(0);

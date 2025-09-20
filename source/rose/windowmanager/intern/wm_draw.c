@@ -93,6 +93,9 @@ ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
 		return;
 	}
 
+	// Maybe viewport would be more suited for the matrix update!
+	GPU_viewport(region->winrct.xmin, region->winrct.ymin, region->sizex, region->sizey);
+
 	if (region->draw_buffer->viewport) {
 		GPU_viewport_bind(region->draw_buffer->viewport, view, &region->winrct);
 	}
@@ -137,7 +140,14 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 	}
 
 	if (region->draw_buffer->viewport) {
+		GPU_matrix_push();
+		GPU_matrix_push_projection();
+		GPU_matrix_ortho_2d_set(region->winrct.xmin, region->winrct.xmax, region->winrct.ymin, region->winrct.ymax);
+
 		GPU_viewport_draw_to_screen(region->draw_buffer->viewport, view, &region->winrct);
+		
+		GPU_matrix_pop_projection();
+		GPU_matrix_pop();
 	}
 	else {
 		GPU_offscreen_draw_to_screen(region->draw_buffer->offscreen, region->winrct.xmin, region->winrct.ymin);
@@ -222,7 +232,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 			}
 
 			CTX_wm_region_set(C, region);
-			wm_draw_region_buffer_create(region, false);
+			wm_draw_region_buffer_create(region, ELEM(area->spacetype, SPACE_VIEW3D));
 			wm_draw_region_bind(region, 0);
 			ED_region_do_draw(C, region);
 			wm_draw_region_unbind(region);
@@ -272,6 +282,7 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 			}
 		}
 	}
+
 	LISTBASE_FOREACH(ScrArea *, area, &window->global_areas.areabase) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			if (!region->visible) {

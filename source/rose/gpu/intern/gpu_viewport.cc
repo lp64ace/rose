@@ -59,7 +59,7 @@ static void gpu_viewport_textures_create(GPUViewport *viewport) {
 	TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
 
 	if (viewport->color_render_tx[0] == nullptr) {
-		viewport->color_render_tx[0] = GPU_texture_create_2d("dtxl_color", UNPACK2(viewport->size), 1, GPU_RGBA16F, usage | GPU_TEXTURE_USAGE_SHADER_WRITE, NULL);
+		viewport->color_render_tx[0] = GPU_texture_create_2d("dtxl_color", UNPACK2(viewport->size), 1, GPU_RGBA8, usage | GPU_TEXTURE_USAGE_SHADER_WRITE, NULL);
 		viewport->color_overlay_tx[0] = GPU_texture_create_2d("dtxl_color_overlay", UNPACK2(viewport->size), 1, GPU_SRGB8_A8, usage, NULL);
 
 		if (GPU_get_info_i(GPU_INFO_CLEAR_VIEWPORT_WORKAROUND)) {
@@ -247,10 +247,10 @@ void GPU_viewport_draw_to_screen(GPUViewport *viewport, int view, const rcti *re
 }
 
 GPUTexture *GPU_viewport_color_texture(GPUViewport *viewport, int view) {
-	return viewport->color_render_tx[0];
+	return viewport->color_render_tx[view];
 }
 GPUTexture *GPU_viewport_overlay_texture(GPUViewport *viewport, int view) {
-	return viewport->color_overlay_tx[0];
+	return viewport->color_overlay_tx[view];
 }
 GPUTexture *GPU_viewport_depth_texture(GPUViewport *viewport) {
 	return viewport->depth_tx;

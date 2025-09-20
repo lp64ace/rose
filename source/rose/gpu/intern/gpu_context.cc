@@ -13,6 +13,7 @@
 #include "opengl/gl_backend.hh"
 #include "opengl/gl_context.hh"
 
+#include "DRW_cache.h"
 #include "RFT_api.h"
 
 #include <mutex>
@@ -93,6 +94,7 @@ void GPU_context_discard(GPUContext *ctx_) {
 		num_backend_users--;
 		ROSE_assert(num_backend_users >= 0);
 		if (num_backend_users == 0) {
+			DRW_global_cache_free();
 			RFT_cache_clear();
 			GPU_exit();
 
