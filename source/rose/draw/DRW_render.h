@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 struct DrawEngineType;
+struct Object;
 
 #ifdef __cplusplus
 extern "C" {
