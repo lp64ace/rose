@@ -29,8 +29,9 @@ typedef struct MeshBatchCache {
 	/**
 	 * We use more than one surface batch for handling different material shaders.
 	 */
-	GPUBatch **surface;
+	GPUBatch **surfaces;
 	GPUIndexBuf **triangles;
+	GPUBatch *surface;
 
 	bool is_dirty;
 

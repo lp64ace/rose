@@ -28,7 +28,7 @@ ROSE_INLINE struct GPUBatch *DRW_batch_request(GPUBatch **batch) {
 ROSE_INLINE bool DRW_batch_requested(GPUBatch *batch, PrimType primitive) {
 	if (batch != NULL && batch->verts[0] == NULL) {
 		// Override the VBO in order to init the batch.
-		GPU_batch_init(batch, primitive, (GPUVertBuf *)0xdeadbeef, NULL);
+		GPU_batch_init(batch, primitive, (GPUVertBuf *)POINTER_FROM_UINT(0xdeadbeef), NULL);
 		/**
 		 * I do not like the way we do this here, we should maybe add another init function in GPU!
 		 */

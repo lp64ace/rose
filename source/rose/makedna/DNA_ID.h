@@ -1,6 +1,8 @@
 #ifndef DNA_ID_H
 #define DNA_ID_H
 
+#include "DNA_listbase.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,7 +22,9 @@ typedef struct DrawData {
 	DrawDataFreeCb free;
 } DrawData;
 
-typedef struct ListBase DrawDataList;
+typedef struct DrawDataList {
+	struct DrawData *first, *last;
+} DrawDataList;
 
 /** \} */
 

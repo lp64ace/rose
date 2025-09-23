@@ -96,28 +96,35 @@ void DRW_global_cache_free(void) {
 
 ROSE_STATIC GPUBatch *mesh_batch_cache_request_surface_batches(MeshBatchCache *cache) {
 	for (size_t index = 0; index < cache->materials; index++) {
-		DRW_batch_request(&cache->surface[index]);
+		DRW_batch_request(&cache->surfaces[index]);
 	}
+	DRW_batch_request(&cache->surface);
 }
 
 ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache) {
 	for (size_t index = 0; index < cache->materials; index++) {
-		GPU_BATCH_DISCARD_SAFE(cache->surface[index]);
+		GPU_BATCH_DISCARD_SAFE(cache->surfaces[index]);
 	}
+	GPU_BATCH_DISCARD_SAFE(cache->surface);
 }
 
 void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
 
 	for (size_t index = 0; index < cache->materials; index++) {
-		GPU_BATCH_CLEAR_SAFE(cache->surface[index]);
+		GPU_BATCH_CLEAR_SAFE(cache->surfaces[index]);
 	}
+	GPU_BATCH_CLEAR_SAFE(cache->surface);
 
 	for (size_t index = 0; index < cache->materials; index++) {
-		if (DRW_batch_requested(cache->surface[index], GPU_PRIM_TRIS)) {
-			DRW_vbo_request(cache->surface[index], &cache->buffers.vbo.pos);
-			DRW_ibo_request(cache->surface[index], &cache->buffers.ibo.tris);
+		if (DRW_batch_requested(cache->surfaces[index], GPU_PRIM_TRIS)) {
+			// DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
+			// DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 		}
+	}
+	if (DRW_batch_requested(cache->surface, GPU_PRIM_TRIS)) {
+		DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
+		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 	}
 
 	DRW_cache_mesh_create(cache, object, mesh);

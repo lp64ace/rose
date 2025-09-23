@@ -25,7 +25,7 @@ ROSE_STATIC void mesh_batch_cache_init(Object *object, Mesh *mesh) {
 	}
 
 	cache->materials = mesh_batch_cache_material_length(object, mesh);
-	cache->surface = static_cast<GPUBatch **>(MEM_callocN(sizeof(*cache->surface) * cache->materials, "MeshBatchCache::surface"));
+	cache->surfaces = static_cast<GPUBatch **>(MEM_callocN(sizeof(*cache->surface) * cache->materials, "MeshBatchCache::surface"));
 	cache->triangles = static_cast<GPUIndexBuf **>(MEM_callocN(sizeof(*cache->triangles) * cache->materials, "MeshBatchCache::triangles"));
 
 	cache->is_dirty = false;
@@ -71,9 +71,11 @@ ROSE_STATIC void mesh_batch_cache_clear(Mesh *mesh) {
 		MEM_SAFE_FREE(cache->triangles);
 
 		for (size_t index = 0; index < cache->materials; index++) {
-			GPU_BATCH_DISCARD_SAFE(cache->surface[index]);
+			GPU_BATCH_DISCARD_SAFE(cache->surfaces[index]);
 		}
-		MEM_SAFE_FREE(cache->surface);
+		MEM_SAFE_FREE(cache->surfaces);
+
+		GPU_BATCH_DISCARD_SAFE(cache->surface);
 
 		cache->materials = 0;
 

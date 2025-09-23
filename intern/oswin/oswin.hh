@@ -439,7 +439,7 @@ private:
 	bool context_created_ = false;
 	/** A flag indicating that the window has a current context, set when the context is made current. */
 	bool context_current_ = false;
-	bool active_;
+	bool active_ = false;
 
 	State state_ = State::normal;
 

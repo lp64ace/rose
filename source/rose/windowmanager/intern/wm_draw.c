@@ -216,7 +216,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 		CTX_wm_area_set(C, area);
 
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-			const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
+			const bool ignore_visibility = (region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN)) != 0;
 			if (region->visible || ignore_visibility) {
 				CTX_wm_region_set(C, region);
 				ED_region_do_layout(C, region);
@@ -244,7 +244,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 	CTX_wm_area_set(C, NULL);
 
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
-		const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
+		const bool ignore_visibility = (region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN)) != 0;
 		if (region->visible || ignore_visibility) {
 			CTX_wm_region_set(C, region);
 			ED_region_do_layout(C, region);

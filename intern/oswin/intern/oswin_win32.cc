@@ -106,11 +106,14 @@ bool tWindowManager::SetClipboard(const char *buffer, unsigned int length, bool 
 		if (clipbuffer) {
 			wchar_t *data = (wchar_t *)GlobalLock(clipbuffer);
 
-			if (::MultiByteToWideChar(CP_UTF8, 0, buffer, length, data, ret + 1) < 0) {
-				data[0] = '\0';
+			if (data) {
+				if (::MultiByteToWideChar(CP_UTF8, 0, buffer, length, data, ret + 1) < 0) {
+					data[0] = '\0';
+				}
+
+				GlobalUnlock(clipbuffer);
 			}
 
-			GlobalUnlock(clipbuffer);
 			SetClipboardData(CF_UNICODETEXT, clipbuffer);
 		}
 

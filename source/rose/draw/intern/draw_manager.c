@@ -123,7 +123,7 @@ ROSE_STATIC DrawData *drw_drawdata_ensure(struct ID *id, DrawEngineType *engine,
 		init(data);
 	}
 
-	LIB_addtail(list, data);
+	LIB_addtail((ListBase *)list, data);
 
 	return data;
 }
@@ -138,7 +138,7 @@ ROSE_STATIC void drw_drawdata_free(struct ID *id) {
 			}
 		}
 
-		LIB_freelistN(list);
+		LIB_freelistN((ListBase *)list);
 	}
 }
 
