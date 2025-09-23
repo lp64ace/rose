@@ -59,6 +59,12 @@ tWindowManager *tWindowManager::Init(const char *application) {
 	}
 
 	if (!(manager->display_ = XOpenDisplay(NULL))) {
+		fprintf(stderr, "[Linux] Error! Could not create display\n");
+		delete manager;
+		return nullptr;
+	}
+	if (!XDefaultRootWindow(manager->display_)) {
+		fprintf(stderr, "[Linux] Error! Could not locate root window\n");
 		delete manager;
 		return nullptr;
 	}
