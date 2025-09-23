@@ -15,14 +15,12 @@ typedef void (*DrawDataFreeCb)(struct DrawData *engine_data);
 
 typedef struct DrawData {
 	struct DrawData *prev, *next;
-	struct DrawDataEngine *engine;
+	struct DrawEngineType *engine;
 	/** Only nested data, NOT the engine data itself. */
 	DrawDataFreeCb free;
 } DrawData;
 
-typedef struct DrawDataList {
-	struct DrawData *first, *last;
-} DrawDataList;
+typedef struct ListBase DrawDataList;
 
 /** \} */
 

@@ -108,7 +108,7 @@ ROSE_STATIC DrawData *drw_drawdata_ensure(struct ID *id, DrawEngineType *engine,
 	ROSE_assert(size >= sizeof(DrawData));
 	ROSE_assert(id_type_can_have_drawdata(GS(id->name)));
 
-	DrawData *data = DRW_drawdata(id, engine);
+	DrawData *data = drw_drawdata(id, engine);
 	if (data != NULL) {
 		return data;
 	}
@@ -265,7 +265,7 @@ void DRW_draw_view(const struct rContext *C) {
 		return;
 	}
 
-	struct wmWindowManager *wm = CTX_wm_manager(C);
+	struct WindowManager *wm = CTX_wm_manager(C);
 	struct wmWindow *win = CTX_wm_window(C);
 
 	wm_window_make_drawable(wm, NULL);
