@@ -35,8 +35,15 @@ set(SRC
 	DRW_cache.h
 	DRW_engine.h
 	DRW_render.h
-	
+
+	intern/mesh/extract_mesh.h
+	intern/mesh/extract_mesh_ibo_tris.cc
+	intern/mesh/extract_mesh_vbo_pos.cc
+	intern/draw_cache_private.h
+	intern/draw_cache_inline.h
 	intern/draw_cache.c
+	intern/draw_cache.cc
+	intern/draw_cache_extract_mesh.cc
 	intern/draw_manager.c
 	
 )

@@ -15,6 +15,23 @@ extern "C" {
 struct Mesh;
 
 /* -------------------------------------------------------------------- */
+/** \name Draw Cache
+ * This is primarily part of the DRAW module but we export functions!
+ * \{ */
+
+enum {
+	KER_MESH_BATCH_DIRTY_ALL = 0,
+};
+
+void KER_mesh_batch_cache_tag_dirty(struct Mesh *mesh, int mode);
+void KER_mesh_batch_cache_free(struct Mesh *mesh);
+
+extern void (*KER_mesh_batch_cache_tag_dirty_cb)(struct Mesh *mesh, int mode);
+extern void (*KER_mesh_batch_cache_free_cb)(struct Mesh *mesh);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Mesh Creation
  * \{ */
 

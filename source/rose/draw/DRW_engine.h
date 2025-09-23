@@ -21,6 +21,9 @@ void DRW_engines_free(void);
 bool DRW_engine_render_support(struct DrawEngineType *draw_engine_type);
 void DRW_engine_register(struct DrawEngineType *draw_engine_type);
 
+struct DrawEngineType *DRW_engine_find(const char *name);
+struct DrawEngineType *DRW_engine_type(const struct Context *C, struct Scene *scene);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

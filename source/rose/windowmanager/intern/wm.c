@@ -25,6 +25,7 @@
 #include "ED_space_api.h"
 
 #include "GPU_init_exit.h"
+#include "GPU_context.h"
 
 #include "LIB_math_geom.h"
 #include "LIB_listbase.h"
@@ -230,19 +231,13 @@ ROSE_INLINE void wm_handle_key_up_event(struct WTKWindow *handle, int key, doubl
  * \{ */
 
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
-	WindowManager *wm = (WindowManager *)KER_libblock_alloc(main, ID_WM, "WindowManager", 0);
+	WindowManager *wm = (WindowManager *)KER_id_new(main, ID_WM, "WindowManager");
 	if (!wm) {
 		return;
 	}
 
 	CTX_data_main_set(C, main);
 	CTX_wm_manager_set(C, wm);
-
-	wm->handle = WTK_window_manager_new();
-	if (!wm->handle) {
-		printf("[WindowManager] Suitable backend was not found, running headless...\n");
-		return;
-	}
 
 	WTK_window_manager_destroy_callback(wm->handle, wm_handle_destroy_event, C);
 	WTK_window_manager_resize_callback(wm->handle, wm_handle_size_event, C);
@@ -379,12 +374,30 @@ float WM_time(struct rContext *C) {
 /** \name WindowManager Data-block definition
  * \{ */
 
+ROSE_INLINE void window_manager_init_data(struct ID *id) {
+	WindowManager *wm = (WindowManager *)id;
+
+	wm->handle = WTK_window_manager_new();
+	if (!wm->handle) {
+		printf("[WindowManager] Suitable backend was not found, running headless...\n");
+		return;
+	}
+
+	wm->draw_window_handle = WTK_create_window(wm->handle, "Rose::DrawWindow", 0, 0);
+	WTK_window_make_context_current(wm->draw_window_handle);
+	wm->draw_window_context = GPU_context_create(wm->draw_window_handle, NULL);
+}
+
 ROSE_INLINE void window_manager_free_data(struct ID *id) {
 	WindowManager *wm = (WindowManager *)id;
 
 	while (!LIB_listbase_is_empty(&wm->windows)) {
 		WM_window_free(wm, (wmWindow *)wm->windows.first);
 	}
+
+	WTK_window_make_context_current(wm->draw_window_handle);
+	GPU_context_discard(wm->draw_window_context);
+	WTK_window_free(wm->handle, wm->draw_window_handle);
 
 	if (wm->handle) {
 		WTK_window_manager_free(wm->handle);
@@ -413,7 +426,7 @@ IDTypeInfo IDType_ID_WM = {
 
 	.flag = IDTYPE_FLAGS_NO_COPY,
 
-	.init_data = NULL,
+	.init_data = window_manager_init_data,
 	.copy_data = NULL,
 	.free_data = window_manager_free_data,
 

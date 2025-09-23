@@ -8,6 +8,26 @@
 #include "LIB_implicit_sharing.hh"
 
 /* -------------------------------------------------------------------- */
+/** \name Draw Cache
+ * This is primarily part of the DRAW module but we export functions!
+ * \{ */
+
+void KER_mesh_batch_cache_tag_dirty(Mesh *mesh, int mode) {
+	if (mesh->runtime->draw_cache) {
+		KER_mesh_batch_cache_tag_dirty_cb(mesh, mode);
+	}
+}
+
+void KER_mesh_batch_cache_free(Mesh *mesh) {
+	KER_mesh_batch_cache_free_cb(mesh);
+}
+
+void (*KER_mesh_batch_cache_tag_dirty_cb)(Mesh *mesh, int mode) = NULL;
+void (*KER_mesh_batch_cache_free_cb)(Mesh *mesh) = NULL;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Mesh Creation
  * \{ */
 

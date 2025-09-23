@@ -143,6 +143,10 @@ void GPU_indexbuf_update_sub(GPUIndexBuf *elem, uint start, uint len, const void
  */
 void GPU_indexbuf_read(GPUIndexBuf *elem, uint32_t *data);
 
+ROSE_INLINE unsigned int *GPU_indexbuf_get_data(struct GPUIndexBufBuilder *builder) {
+	return builder->data;
+}
+
 /* \} */
 
 #if defined(__cplusplus)

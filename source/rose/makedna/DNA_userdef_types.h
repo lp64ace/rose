@@ -53,6 +53,8 @@ typedef struct Theme {
 } Theme;
 
 typedef struct UserDef {
+	char engine[64];
+
 	ListBase themes;
 } UserDef;
 

@@ -21,7 +21,7 @@ typedef struct DrawData {
 } DrawData;
 
 typedef struct DrawDataList {
-	struct DrawData *prev, *next;
+	struct DrawData *first, *last;
 } DrawDataList;
 
 /** \} */
@@ -182,15 +182,14 @@ enum {
 typedef enum eID_Index {
 	/* Special case: Library, should never ever depend on any other type. */
 	INDEX_ID_LI = 0,
-	
+
+	INDEX_ID_WM,
 	INDEX_ID_ME,
 	INDEX_ID_OB,
 	INDEX_ID_GR,
 	INDEX_ID_SCE,
-	
 	INDEX_ID_SCR,
-	INDEX_ID_WM,
-
+	
 	/* Special values, keep last. */
 	INDEX_ID_NULL,
 } eID_Index;

@@ -36,6 +36,7 @@ set(SRC
 	KER_lib_remap.h
 	KER_main.h
 	KER_mesh.h
+	KER_mesh.hh
 	KER_mesh_types.hh
 	KER_object.h
 	KER_rose.h

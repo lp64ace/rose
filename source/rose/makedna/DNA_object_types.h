@@ -45,6 +45,7 @@ typedef struct ObjectRuntime {
 typedef struct Object {
 	ID id;
 	
+	struct DrawDataList drawdata;
 	struct Object *parent;
 	struct Object *track;
 	

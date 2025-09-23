@@ -277,9 +277,7 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::oswin
-	rose::source::draw
 	rose::source::roselib
-	rose::source::rosefont
 	rose::source::shaders
 	
 	# External Library Dependencies

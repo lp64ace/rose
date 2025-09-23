@@ -50,6 +50,7 @@ typedef struct Mesh {
 	CustomData fdata;
 	
 	int totface;
+	int totmat;
 	
 	/**
 	 * Data that isn't saved in files, including caches of derived data, temporary data to improve

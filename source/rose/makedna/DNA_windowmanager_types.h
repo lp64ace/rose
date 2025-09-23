@@ -62,6 +62,8 @@ typedef struct WindowManager {
 	 * this handle does not belong to us but is the linking part between TinyWindow and WindowManager.
 	 */
 	void *handle;
+	void *draw_window_handle;
+	void *draw_window_context;
 
 	/** A list of all #wmWindow links that are allocated. */
 	ListBase windows;

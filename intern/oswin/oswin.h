@@ -10,6 +10,7 @@ extern "C" {
 
 typedef struct WTKWindowManager WTKWindowManager;
 typedef struct WTKWindow WTKWindow;
+typedef struct WTKContext WTKContext;
 
 /**
  * \brief Create a new window manager for the current operating system.
@@ -246,7 +247,7 @@ void WTK_window_manager_key_up_callback(struct WTKWindowManager *, WTKKeyUpCallb
  * \return A pointer to the newly created \ref WTKWindow, or NULL if the window creation fails.
  */
 struct WTKWindow *WTK_create_window(struct WTKWindowManager *, const char *title, int width, int height);
-/**
+	/**
  * \brief Free a window and release its associated resources.
  *
  * This function destroys the specified window, releases any allocated resources,

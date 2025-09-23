@@ -6,6 +6,7 @@
 
 #include "GPU_framebuffer.h"
 #include "GPU_texture.h"
+#include "GPU_matrix.h"
 #include "GPU_viewport.h"
 
 #include "DRW_engine.h"
@@ -70,7 +71,15 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 	ED_region_default_draw(C, region);
 
+	GPU_matrix_push();
+	GPU_matrix_push_projection();
+
+	GPU_matrix_identity_set();
+	GPU_matrix_identity_projection_set();
 	DRW_draw_view(C);
+
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
 }
 
 /** \} */

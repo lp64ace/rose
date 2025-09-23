@@ -187,9 +187,9 @@ ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, boo
 
 	wm->windrawable = window;
 	if (activate) {
-		WTK_window_make_context_current(window->handle);
+		WTK_window_make_context_current((window) ? window->handle : wm->draw_window_handle);
 	}
-	GPU_context_active_set(window->context);
+	GPU_context_active_set((window) ? window->context : wm->draw_window_context);
 }
 
 void wm_window_clear_drawable(WindowManager *wm) {
@@ -197,7 +197,7 @@ void wm_window_clear_drawable(WindowManager *wm) {
 }
 
 void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
-	if (wm->windrawable != window && window->handle) {
+	if (wm->windrawable != window) {
 		wm_window_clear_drawable(wm);
 		wm_window_set_drawable(wm, window, true);
 	}
@@ -231,8 +231,10 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 				continue;
 			}
 
+			const bool viewport = ELEM(area->spacetype, SPACE_VIEW3D) && ELEM(region->regiontype, RGN_TYPE_WINDOW);
+
 			CTX_wm_region_set(C, region);
-			wm_draw_region_buffer_create(region, ELEM(area->spacetype, SPACE_VIEW3D));
+			wm_draw_region_buffer_create(region, viewport);
 			wm_draw_region_bind(region, 0);
 			ED_region_do_draw(C, region);
 			wm_draw_region_unbind(region);

@@ -42,6 +42,7 @@ ROSE_CPP_TYPE_MAKE(bool, CPPTypeFlags::BasicType)
 ROSE_CPP_TYPE_MAKE(float, CPPTypeFlags::BasicType)
 ROSE_CPP_TYPE_MAKE(float2, CPPTypeFlags::BasicType)
 ROSE_CPP_TYPE_MAKE(float3, CPPTypeFlags::BasicType)
+ROSE_CPP_TYPE_MAKE(uint3, CPPTypeFlags::BasicType)
 ROSE_CPP_TYPE_MAKE(float4x4, CPPTypeFlags::BasicType)
 
 ROSE_CPP_TYPE_MAKE(int8_t, CPPTypeFlags::BasicType)
@@ -72,6 +73,7 @@ void register_cpp_types() {
 	ROSE_CPP_TYPE_REGISTER(float);
 	ROSE_CPP_TYPE_REGISTER(float2);
 	ROSE_CPP_TYPE_REGISTER(float3);
+	ROSE_CPP_TYPE_REGISTER(uint3);
 
 	ROSE_CPP_TYPE_REGISTER(int8_t);
 	ROSE_CPP_TYPE_REGISTER(int16_t);

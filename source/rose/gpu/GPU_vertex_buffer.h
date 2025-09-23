@@ -60,7 +60,7 @@ void GPU_vertbuf_handle_ref_remove(struct GPUVertBuf *buffer);
 void GPU_vertbuf_init_with_format_ex(struct GPUVertBuf *buffer, const struct GPUVertFormat *format, UsageType usage);
 void GPU_vertbuf_init_build_on_device(struct GPUVertBuf *buffer, struct GPUVertFormat *format, unsigned int vertex_length);
 
-#define GPU_vertbuf_init_with_format(buffer, format) GPU_vertbuf_create_with_format_ex(buffer, format, GPU_USAGE_STATIC)
+#define GPU_vertbuf_init_with_format(buffer, format) GPU_vertbuf_init_with_format_ex(buffer, format, GPU_USAGE_STATIC)
 
 struct GPUVertBuf *GPU_vertbuf_duplicate(struct GPUVertBuf *buffer);
 

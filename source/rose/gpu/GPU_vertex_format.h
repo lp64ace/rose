@@ -56,6 +56,10 @@ typedef struct GPUVertFormat {
 
 struct GPUShader;
 
+ROSE_INLINE bool GPU_vertformat_empty(const struct GPUVertFormat *format) {
+	return format->attr_len == 0;
+}
+
 void GPU_vertformat_clear(struct GPUVertFormat *format);
 void GPU_vertformat_copy(struct GPUVertFormat *destination, const struct GPUVertFormat *source);
 

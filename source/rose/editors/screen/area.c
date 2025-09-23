@@ -93,6 +93,10 @@ ROSE_INLINE int rct_fits(const rcti *rect, char axis, int size) {
 	return LIB_rcti_size_y(rect) + 1 - size;
 }
 
+ROSE_STATIC bool region_overlap(ScrArea *area, ARegion *region) {
+	return false;
+}
+
 ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *remainder, rcti *overlap_remainder, int quad) {
 	rcti *remainder_prev = remainder;
 

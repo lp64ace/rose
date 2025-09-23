@@ -1,4 +1,10 @@
+#include "KER_mesh.h"
+#include "KER_object.h"
+
 #include "GPU_batch.h"
+#include "GPU_context.h"
+
+#include "draw_cache_private.h"
 
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
@@ -10,6 +16,10 @@ typedef struct DRWCache {
 static struct DRWCache GCache; // = NULL;
 
 GPUBatch *DRW_cache_fullscreen_quad_get(void);
+
+/* -------------------------------------------------------------------- */
+/** \name Predefined cache objects
+ * \{ */
 
 GPUBatch *DRW_cache_fullscreen_quad_get(void) {
 	if (GCache.draw_fullscreen_quad == NULL) {
@@ -76,3 +86,87 @@ void DRW_global_cache_free(void) {
 	}
 	// memset(&GCache, 0, sizeof(GCache));
 }
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Default cache mesh
+ * \{ */
+
+ROSE_STATIC GPUBatch *mesh_batch_cache_request_surface_batches(MeshBatchCache *cache) {
+	for (size_t index = 0; index < cache->materials; index++) {
+		DRW_batch_request(&cache->surface[index]);
+	}
+}
+
+ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache) {
+	for (size_t index = 0; index < cache->materials; index++) {
+		GPU_BATCH_DISCARD_SAFE(cache->surface[index]);
+	}
+}
+
+void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
+	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
+
+	for (size_t index = 0; index < cache->materials; index++) {
+		GPU_BATCH_CLEAR_SAFE(cache->surface[index]);
+	}
+
+	for (size_t index = 0; index < cache->materials; index++) {
+		if (DRW_batch_requested(cache->surface[index], GPU_PRIM_TRIS)) {
+			DRW_vbo_request(cache->surface[index], &cache->buffers.vbo.pos);
+			DRW_ibo_request(cache->surface[index], &cache->buffers.ibo.tris);
+		}
+	}
+
+	DRW_cache_mesh_create(cache, object, mesh);
+}
+
+GPUBatch *DRW_cache_mesh_surface_get(Object *object) {
+	ROSE_assert(object->type == OB_MESH);
+	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
+	return mesh_batch_cache_request_surface_batches(cache);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Default cache objects
+ * \{ */
+
+void DRW_batch_cache_validate(Object *object) {
+#define ROUTE(obtype, function) case obtype: function(object, object->data); break;
+	
+	switch (object->type) {
+		ROUTE(OB_MESH, DRW_mesh_batch_cache_validate);
+		default:
+			ROSE_assert_msg(0, "Unsupported object type for batch cache creation.");
+			break;
+	}
+
+#undef ROUTE
+}
+
+void DRW_batch_cache_generate(Object *object) {
+#define ROUTE(obtype, function) case obtype: function(object, object->data); break;
+
+	switch (object->type) {
+		ROUTE(OB_MESH, DRW_mesh_batch_cache_create);
+		default:
+			ROSE_assert_msg(0, "Unsupported object type for batch cache creation.");
+			break;
+	}
+
+#undef ROUTE
+}
+
+GPUBatch *DRW_cache_object_surface_get(Object *object) {
+	switch (object->type) {
+		case OB_MESH:
+			return DRW_cache_mesh_surface_get(object);
+	}
+
+	return NULL;
+}
+
+/** \} */

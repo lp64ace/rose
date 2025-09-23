@@ -9,6 +9,10 @@
 /** \name Mesh Runtime Struct Utils
  * \{ */
 
+void KER_mesh_runtime_clear_batch_cache(Mesh *mesh) {
+	KER_mesh_batch_cache_free(mesh);
+}
+
 void KER_mesh_runtime_init_data(Mesh *mesh) {
 	mesh->runtime = MEM_new<rose::kernel::MeshRuntime>("rose::kernel::MeshRuntime");
 }
@@ -16,6 +20,7 @@ void KER_mesh_runtime_init_data(Mesh *mesh) {
 void KER_mesh_runtime_free_data(Mesh *mesh) {
 	if (mesh->runtime) {
 		KER_mesh_runtime_clear_cache(mesh);
+		KER_mesh_runtime_clear_batch_cache(mesh);
 
 		MEM_delete<rose::kernel::MeshRuntime>(mesh->runtime);
 	}

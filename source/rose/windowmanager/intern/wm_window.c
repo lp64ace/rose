@@ -1,5 +1,7 @@
 #include "MEM_guardedalloc.h"
 
+#include "DRW_cache.h"
+
 #include "ED_screen.h"
 
 #include "KER_lib_id.h"
@@ -16,6 +18,8 @@
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
+
+#include "RFT_api.h"
 
 #include <oswin.h>
 
@@ -59,6 +63,11 @@ ROSE_STATIC void wm_window_tiny_window_ensure(WindowManager *wm, wmWindow *windo
 	WTK_window_show(window->handle);
 }
 
+ROSE_STATIC void wm_window_draw_window_destroy(WindowManager *wm, wmWindow *window) {
+	DRW_global_cache_free();
+	RFT_cache_clear();
+}
+
 ROSE_STATIC void wm_window_tiny_window_destroy(WindowManager *wm, wmWindow *window) {
 	if (!window->handle) {
 		return;
@@ -67,6 +76,11 @@ ROSE_STATIC void wm_window_tiny_window_destroy(WindowManager *wm, wmWindow *wind
 	if (window->context) {
 		WTK_window_make_context_current(window->handle);
 		GPU_context_active_set(window->context);
+		/**
+		 * We are destroying a drawing context, this could be the last one but 
+		 * it could also own batches within the DRAW module, reset them!
+		 */
+		wm_window_draw_window_destroy(wm, window);
 		GPU_context_discard(window->context);
 		window->context = NULL;
 	}
@@ -144,6 +158,10 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 		CTX_wm_window_set(C, parent);
 		CTX_wm_screen_set(C, WM_window_screen_get(parent));
 	}
+	else {
+		CTX_wm_window_set(C, NULL);
+		CTX_wm_screen_set(C, NULL);
+	}
 
 	return window;
 }
@@ -176,6 +194,7 @@ void WM_window_close(struct rContext *C, wmWindow *window, bool do_free) {
 		wm_window_make_drawable(wm, window);
 		ED_screen_exit(C, window, screen);
 		wm_window_tiny_window_destroy(wm, window);
+		wm_window_make_drawable(wm, NULL);
 	}
 	else {
 		WM_window_screen_set(C, window, NULL);
