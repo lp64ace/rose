@@ -383,8 +383,7 @@ ROSE_INLINE void window_manager_init_data(struct ID *id) {
 		return;
 	}
 
-	wm->draw_window_handle = WTK_create_window(wm->handle, "Rose::DrawWindow", 0, 0);
-	WTK_window_make_context_current(wm->draw_window_handle);
+	wm->draw_window_handle = WTK_create_window(wm->handle, "Rose::DrawWindow", 1920, 1080);
 	wm->draw_window_context = GPU_context_create(wm->draw_window_handle, NULL);
 }
 
