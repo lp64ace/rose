@@ -4,7 +4,7 @@
 struct GPUBatch;
 struct Object;
 struct Mesh;
-struct Scene
+struct Scene;
 
 #ifdef __cplusplus
 extern "C" {
