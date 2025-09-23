@@ -3,8 +3,10 @@
 
 #include <stdbool.h>
 
-struct Context;
+struct rContext;
 struct DrawEngineType;
+struct Mesh;
+struct Scene;
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +24,7 @@ bool DRW_engine_render_support(struct DrawEngineType *draw_engine_type);
 void DRW_engine_register(struct DrawEngineType *draw_engine_type);
 
 struct DrawEngineType *DRW_engine_find(const char *name);
-struct DrawEngineType *DRW_engine_type(const struct Context *C, struct Scene *scene);
+struct DrawEngineType *DRW_engine_type(const struct rContext *C, struct Scene *scene);
 
 /** \} */
 
@@ -30,7 +32,7 @@ struct DrawEngineType *DRW_engine_type(const struct Context *C, struct Scene *sc
 /** \name Draw
  * \{ */
 
-void DRW_draw_view(const struct Context *C);
+void DRW_draw_view(const struct rContext *C);
 
 /** \} */
 

@@ -65,7 +65,7 @@ DrawEngineType *DRW_engine_find(const char *name) {
 	return engine;
 }
 
-DrawEngineType *DRW_engine_type(const struct Context *C, struct Scene *scene) {
+DrawEngineType *DRW_engine_type(const struct rContext *C, struct Scene *scene) {
 	return DRW_engine_find(U.engine);
 }
 
@@ -162,7 +162,7 @@ typedef struct DRWManager {
 static DRWManager GDrawManager;
 
 // Called once before starting rendering using our (used/active) draw engines
-void DRW_engines_init(const struct Context *C) {
+void DRW_engines_init(const struct rContext *C) {
 	struct Main *main = CTX_data_main(C);
 	struct ListBase *listbase = which_libbase(main, ID_SCE);
 
@@ -191,7 +191,7 @@ void DRW_engines_init(const struct Context *C) {
 	}
 }
 
-void DRW_engines_exit(const struct Context *C) {
+void DRW_engines_exit(const struct rContext *C) {
 }
 
 /** \} */
@@ -234,7 +234,7 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GDrawManager.engine->draw(GDrawManager.vdata);
 }
 
-void DRW_draw_render_loop(const struct Context *C, struct ARegion *region, struct GPUViewport *viewport) {
+void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, struct GPUViewport *viewport) {
 	/** No framebuffer is allowed to be bound the moment we are rendering! */
 	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
 
@@ -250,7 +250,7 @@ void DRW_draw_render_loop(const struct Context *C, struct ARegion *region, struc
 	drw_engine_draw_scene();
 }
 
-void DRW_draw_view(const struct Context *C) {
+void DRW_draw_view(const struct rContext *C) {
 	struct ARegion *region = CTX_wm_region(C);
 
 	if (!region) {
