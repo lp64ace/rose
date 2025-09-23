@@ -8,6 +8,7 @@
 
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
+#include "LIB_utildefines.h"
 
 typedef struct DRWCache {
 	GPUBatch *draw_fullscreen_quad;
