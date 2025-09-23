@@ -351,15 +351,6 @@ bool ui_but_contains_rect(const uiBut *but, const rctf *rect) {
 	return LIB_rctf_isect(&but->rect, rect, NULL);
 }
 
-ROSE_STATIC size_t ui_but_drop_index(uiBut *but, const char *text) {
-	for (size_t index = (size_t)but->softmin; index <= (size_t)but->softmax; index++) {
-		if (STREQ(UI_but_dropdown_text_ex(but, index), text)) {
-			return index;
-		}
-	}
-	return ui_but_get_value(but);
-}
-
 void ui_but_update(uiBut *but) {
 	if (!ui_but_is_editing(but)) {
 		but->scroll = 0;

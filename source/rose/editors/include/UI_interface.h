@@ -211,9 +211,6 @@ void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double so
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
 void UI_but_menu_set(struct uiBut *but, uiBlockCreateFunc func, void *arg);
 
-const char *UI_but_dropdown_text(const struct uiBut *but);
-const char *UI_but_dropdown_text_ex(const struct uiBut *but, size_t index);
-
 void uiButEnableFlag(struct uiBut *but, int flag);
 void uiButDisableFlag(struct uiBut *but, int flag);
 
