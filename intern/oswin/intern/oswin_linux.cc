@@ -492,6 +492,7 @@ bool tWindow::Init(tWindowManager *manager) {
 	
 	return true;
 }
+
 bool tWindow::InitContext(tWindowManager *manager) {
 	GLXContext dummyContext = glXCreateContext(this->display_, this->visual_info_, 0, true);
 	glXMakeCurrent(this->display_, this->window_handle_, dummyContext);
@@ -507,8 +508,7 @@ bool tWindow::InitContext(tWindowManager *manager) {
 	int attribs[] = {
 		GLX_CONTEXT_MAJOR_VERSION_ARB, settings.major,
 		GLX_CONTEXT_MINOR_VERSION_ARB, settings.minor,
-		GLX_CONTEXT_FLAGS_ARB,
-		GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+		GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 		None
 	};
 	
