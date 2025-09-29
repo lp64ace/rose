@@ -31,7 +31,7 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::oswin
+	rose::intern::gtk
 	
 	rose::source::dna
 	rose::source::roselib

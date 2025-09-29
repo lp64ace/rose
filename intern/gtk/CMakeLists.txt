@@ -22,11 +22,17 @@ set(INC_SYS
 # Declare Source Files
 
 set(SRC
-	oswin.h
-	oswin.hh
+	GTK_api.h
+	GTK_backend_type.h
+	GTK_window_type.h
 	
-	intern/api.cc
-	intern/oswin.cc
+	intern/gtk_api.cc
+	intern/gtk_render.cc
+	intern/gtk_render.hh
+	intern/gtk_window.cc
+	intern/gtk_window.hh
+	intern/gtk_window_manager.cc
+	intern/gtk_window_manager.hh
 )
 
 # -----------------------------------------------------------------------------
@@ -45,13 +51,27 @@ set(LIB
 )
 
 if(ROSE_BUILD_WIN32)
-	list(APPEND SRC intern/oswin_win32.cc)
 	list(APPEND LIB dwmapi.lib)
+	list(APPEND SRC
+		intern/win32/gtk_win32_render.cc
+		intern/win32/gtk_win32_render.hh
+		intern/win32/gtk_win32_window.cc
+		intern/win32/gtk_win32_window.hh
+		intern/win32/gtk_win32_window_manager.cc
+		intern/win32/gtk_win32_window_manager.hh
+	)
 endif()
 if(ROSE_BUILD_X11)
 	list(APPEND INC ${X11_INCLUDE_DIR})
 	list(APPEND LIB ${X11_LIBRARIES})
-	list(APPEND SRC intern/oswin_linux.cc)
+	list(APPEND SRC
+		intern/x11/gtk_x11_render.cc
+		intern/x11/gtk_x11_render.hh
+		intern/x11/gtk_x11_window.cc
+		intern/x11/gtk_x11_window.hh
+		intern/x11/gtk_x11_window_manager.cc
+		intern/x11/gtk_x11_window_manager.hh
+	)
 	
 	if(WITH_X11_XINPUT)
 		add_definitions(-DWITH_X11_XINPUT)
@@ -64,7 +84,5 @@ endif()
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(oswin "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::intern::oswin ALIAS oswin)
-
-
+rose_add_lib(gtk "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::intern::gtk ALIAS gtk)

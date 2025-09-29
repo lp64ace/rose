@@ -52,6 +52,7 @@ void WM_do_draw(struct rContext *C);
  * \{ */
 
 void wm_window_make_drawable(struct WindowManager *wm, struct wmWindow *window);
+void wm_window_reset_drawable(struct WindowManager *wm);
 void wm_window_clear_drawable(struct WindowManager *wm);
 
 /** \} */

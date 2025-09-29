@@ -45,6 +45,7 @@ set(SRC
 	intern/draw_cache.cc
 	intern/draw_cache_extract_mesh.cc
 	intern/draw_manager.c
+	intern/draw_manager.h
 	
 )
 

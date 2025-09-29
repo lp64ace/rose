@@ -185,11 +185,20 @@ typedef enum eID_Index {
 	/* Special case: Library, should never ever depend on any other type. */
 	INDEX_ID_LI = 0,
 
+	/**
+	 * I really hate this "hack", delaying the deletion of WindowManager so that the Mesh and other 
+	 * drawable datablocks can free their data while their rendering context still exists which is 
+	 * owned by WindowManager->handle.
+	 * 
+	 * The alternative would be to somehow free or delete the runtime data of all the objects before 
+	 * continuing with the deletion of the WindowManager!
+	 */
 	INDEX_ID_WM,
 	INDEX_ID_ME,
 	INDEX_ID_OB,
 	INDEX_ID_GR,
 	INDEX_ID_SCE,
+
 	INDEX_ID_SCR,
 	
 	/* Special values, keep last. */

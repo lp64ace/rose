@@ -24,7 +24,7 @@
 #include "WM_draw.h"
 #include "WM_window.h"
 
-#include <oswin.h>
+#include <GTK_api.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Region Drawing
@@ -187,13 +187,22 @@ ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, boo
 
 	wm->windrawable = window;
 	if (activate) {
-		WTK_window_make_context_current((window) ? window->handle : wm->draw_window_handle);
+		GTK_window_make_context_current(window->handle);
 	}
-	GPU_context_active_set((window) ? window->context : wm->draw_window_context);
+	GPU_context_active_set(window->context);
 }
 
 void wm_window_clear_drawable(WindowManager *wm) {
 	wm->windrawable = NULL;
+}
+
+void wm_window_reset_drawable(WindowManager *wm) {
+	wmWindow *win = wm->windrawable;
+
+	if (win && win->handle) {
+		wm_window_clear_drawable(wm);
+		wm_window_set_drawable(wm, win, true);
+	}
 }
 
 void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
@@ -327,19 +336,19 @@ void WM_do_draw(struct rContext *C) {
 
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
 		/** Do not render windows that are not visible. */
-		if (!window->handle || WTK_window_is_minimized(window->handle)) {
+		if (!window->handle || GTK_window_is_minimized(window->handle)) {
 			continue;
 		}
 
 		CTX_wm_window_set(C, window);
-		window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
+		window->delta_time = GTK_elapsed_time(wm->handle) - window->last_draw;
 		window->fps = 1.0 / window->delta_time;
 
 		wm_window_make_drawable(wm, window);
 
 		wm_window_draw(C, window);
 
-		WTK_window_swap_buffers(window->handle);
+		GTK_window_swap_buffers(window->handle);
 
 		window->last_draw += window->delta_time;
 		CTX_wm_window_set(C, NULL);
@@ -361,3 +370,32 @@ void WM_get_projection_matrix(float r_mat[4][4], const rcti *rect) {
 }
 
 /** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Render Context
+ * \{ */
+
+void *WM_render_context_create(struct WindowManager *wm) {
+	if (!wm) {
+		return NULL;
+	}
+
+	return GTK_render_create(wm->handle);
+}
+
+void WM_render_context_activate(void *render) {
+	GTK_render_make_context_current(render);
+}
+void WM_render_context_release(void *render) {
+	GTK_render_make_context_current(NULL);
+}
+
+void WM_render_context_destroy(struct WindowManager *wm, void *render) {
+	if (!wm) {
+		return;
+	}
+
+	GTK_render_free(wm->handle, (struct GTKRender *)render);
+}
+
+	/** \} */

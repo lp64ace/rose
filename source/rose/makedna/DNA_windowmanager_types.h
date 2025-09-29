@@ -28,8 +28,8 @@ typedef struct wmWindow {
 
 	int posx;
 	int posy;
-	unsigned int sizex;
-	unsigned int sizey;
+	int sizex;
+	int sizey;
 
 	double last_draw;
 	double delta_time;
@@ -62,8 +62,6 @@ typedef struct WindowManager {
 	 * this handle does not belong to us but is the linking part between TinyWindow and WindowManager.
 	 */
 	void *handle;
-	void *draw_window_handle;
-	void *draw_window_context;
 
 	/** A list of all #wmWindow links that are allocated. */
 	ListBase windows;

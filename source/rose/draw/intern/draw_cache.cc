@@ -85,6 +85,7 @@ ROSE_STATIC void mesh_batch_cache_clear(Mesh *mesh) {
 
 void DRW_mesh_batch_cache_free(Mesh *mesh) {
 	mesh_batch_cache_clear(mesh);
+
 	MEM_SAFE_FREE(mesh->runtime->draw_cache);
 }
 

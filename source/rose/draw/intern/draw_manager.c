@@ -12,6 +12,7 @@
 #include "KER_mesh.h"
 
 #include "GPU_batch.h"
+#include "GPU_context.h"
 #include "GPU_matrix.h"
 #include "GPU_framebuffer.h"
 #include "GPU_viewport.h"
@@ -20,6 +21,7 @@
 #include "LIB_listbase.h"
 #include "LIB_mempool.h"
 
+#include "WM_api.h"
 #include "WM_draw.h"
 
 #include "engines/alice/alice_engine.h"
@@ -157,6 +159,15 @@ typedef struct DRWManager {
 	struct DRWData *vdata;
 	struct DrawEngineType *engine;
 	struct Scene *scene;
+	
+	/**
+	 * \brief The native system rendering context, see WM_render_*!
+	 * We should in no way include GTK here (\type GTKRender *)!
+	 */
+	void *render;
+	struct GPUContext *context;
+
+	ThreadMutex *mutex;
 } DRWManager;
 
 static DRWManager GDrawManager;
@@ -192,6 +203,56 @@ void DRW_engines_init(const struct rContext *C) {
 }
 
 void DRW_engines_exit(const struct rContext *C) {
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Init/Exit
+ * \{ */
+
+void DRW_render_context_create(struct WindowManager *wm) {
+	ROSE_assert(GDrawManager.render == NULL);
+
+	GDrawManager.mutex = LIB_mutex_alloc();
+	GDrawManager.render = WM_render_context_create(wm);
+	GDrawManager.context = GPU_context_create(NULL, GDrawManager.render);
+	
+	wm_window_reset_drawable(wm);
+}
+
+void DRW_render_context_destroy(struct WindowManager *wm) {
+	if (GDrawManager.render != NULL) {
+		WM_render_context_activate(GDrawManager.render);
+		GPU_context_active_set(GDrawManager.context);
+		GPU_context_discard(GDrawManager.context);
+		WM_render_context_destroy(wm, GDrawManager.render);
+		LIB_mutex_free(GDrawManager.mutex);
+	}
+}
+
+void DRW_render_context_enable() {
+	DRW_render_context_enable_ex(false);
+}
+
+void DRW_render_context_disable() {
+	DRW_render_context_disable_ex(false);
+}
+
+void DRW_render_context_enable_ex(bool restore) {
+	if (GDrawManager.render != NULL) {
+		LIB_mutex_lock(GDrawManager.mutex);
+		WM_render_context_activate(GDrawManager.render);
+		GPU_context_active_set(GDrawManager.context);
+	}
+}
+
+void DRW_render_context_disable_ex(bool restore) {
+	if (GDrawManager.render != NULL) {
+		GPU_context_active_set(NULL);
+		WM_render_context_release(GDrawManager.render);
+		LIB_mutex_unlock(GDrawManager.mutex);
+	}
 }
 
 /** \} */
@@ -268,13 +329,15 @@ void DRW_draw_view(const struct rContext *C) {
 	struct WindowManager *wm = CTX_wm_manager(C);
 	struct wmWindow *win = CTX_wm_window(C);
 
-	wm_window_make_drawable(wm, NULL);
+	DRW_render_context_enable();
 
 	DRW_engines_init(C);
 	DRW_draw_render_loop(C, region, viewport);
 	DRW_engines_exit(C);
 
-	wm_window_make_drawable(wm, win);
+	DRW_render_context_disable();
+
+	wm_window_reset_drawable(wm);
 }
 
 /** \} */

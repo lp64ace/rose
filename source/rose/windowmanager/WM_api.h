@@ -41,10 +41,21 @@ void WM_clipboard_text_set(struct rContext *C, const char *buf, bool selection);
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Clipboard
+/** \name Time
  * \{ */
 
 float WM_time(struct rContext *C);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Render Context
+ * \{ */
+
+void *WM_render_context_create(struct WindowManager *wm);
+void WM_render_context_activate(void *render);
+void WM_render_context_release(void *render);
+void WM_render_context_destroy(struct WindowManager *wm, void *render);
 
 /** \} */
 

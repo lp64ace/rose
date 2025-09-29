@@ -13,7 +13,7 @@
 #include "KER_global.h"
 #include "KER_main.h"
 
-#include <oswin.h>
+#include <GTK_api.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Event Management
@@ -414,7 +414,7 @@ ROSE_STATIC void wm_event_state_update_and_click_set_ex(wmEvent *evt, double eve
 }
 
 ROSE_STATIC void wm_event_state_update_and_click_set(wmEvent *evt, double event_time, wmEvent *event_state, double *prev_press_event_time, int tiny_window_type) {
-	const bool is_keyboard = ELEM(tiny_window_type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP);
+	const bool is_keyboard = ELEM(tiny_window_type, GTK_EVT_KEYDOWN, GTK_EVT_KEYUP);
 
 	wm_event_state_update_and_click_set_ex(evt, event_time, event_state, prev_press_event_time, is_keyboard, true);
 }
@@ -477,7 +477,7 @@ void wm_event_add_tiny_window_activate(WindowManager *wm, wmWindow *window, bool
 }
 
 void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, int type, int button, int x, int y, double time) {
-	ROSE_assert(ELEM(type, WTK_EVT_MOUSEMOVE, WTK_EVT_MOUSESCROLL, WTK_EVT_BUTTONDOWN, WTK_EVT_BUTTONUP));
+	ROSE_assert(ELEM(type, GTK_EVT_MOUSEMOVE, GTK_EVT_MOUSESCROLL, GTK_EVT_BUTTONDOWN, GTK_EVT_BUTTONUP));
 
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
 	memcpy(evt, event_state, sizeof(wmEvent));
@@ -496,7 +496,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 	}
 
 	switch (type) {
-		case WTK_EVT_MOUSEMOVE: {
+		case GTK_EVT_MOUSEMOVE: {
 			evt->mouse_xy[0] = x;
 			evt->mouse_xy[1] = y;
 			wm_cursor_position_to_ghost_screen_coords(window, &evt->mouse_xy[0], &evt->mouse_xy[1]);
@@ -514,8 +514,8 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 				copy_v2_v2_int(event_state->prev_xy, event_new->mouse_xy);
 			}
 		} break;
-		case WTK_EVT_BUTTONDOWN:
-		case WTK_EVT_BUTTONUP: {
+		case GTK_EVT_BUTTONDOWN:
+		case GTK_EVT_BUTTONUP: {
 			evt->mouse_xy[0] = x;
 			evt->mouse_xy[1] = y;
 			wm_cursor_position_to_ghost_screen_coords(window, &evt->mouse_xy[0], &evt->mouse_xy[1]);
@@ -525,7 +525,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 				break;
 			}
 
-			if (type == WTK_EVT_BUTTONDOWN) {
+			if (type == GTK_EVT_BUTTONDOWN) {
 				evt->value = KM_PRESS;
 			}
 			else {
@@ -537,7 +537,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 			copy_v2_v2_int(event_state->prev_xy, evt->mouse_xy);
 			wm_event_add(window, evt);
 		} break;
-		case WTK_EVT_MOUSESCROLL: {
+		case GTK_EVT_MOUSESCROLL: {
 			evt->mouse_xy[0] = evt->prev_xy[0];
 			evt->mouse_xy[1] = evt->prev_xy[1];
 
@@ -555,7 +555,7 @@ void wm_event_add_tiny_window_mouse_button(WindowManager *wm, wmWindow *window, 
 }
 
 void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type, int key, bool repeat, char utf8[4], double event_time) {
-	ROSE_assert(ELEM(type, WTK_EVT_KEYDOWN, WTK_EVT_KEYUP));
+	ROSE_assert(ELEM(type, GTK_EVT_KEYDOWN, GTK_EVT_KEYUP));
 
 	wmEvent nevt, *event_state = window->event_state, *evt = &nevt;
 	memcpy(evt, event_state, sizeof(wmEvent));
@@ -577,12 +577,12 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 	evt->mouse_xy[1] = event_state->mouse_xy[1];
 
 	switch (type) {
-		case WTK_EVT_KEYDOWN:
-		case WTK_EVT_KEYUP: {
+		case GTK_EVT_KEYDOWN:
+		case GTK_EVT_KEYUP: {
 			evt->type = convert_key(key);
 			SET_FLAG_FROM_TEST(evt->flag, repeat, WM_EVENT_IS_REPEAT);
 
-			if (type == WTK_EVT_KEYDOWN) {
+			if (type == GTK_EVT_KEYDOWN) {
 				memcpy(evt->input, utf8, sizeof(char[4]));
 				if ((evt->input[0] < 32 && evt->input[0] > 0) || (evt->input[0] == 127)) {
 					evt->input[0] = '\0';
@@ -624,17 +624,17 @@ void wm_event_add_tiny_window_key(WindowManager *wm, wmWindow *window, int type,
 }
 
 ROSE_STATIC int convert_key(int tiny_window_key) {
-	if (tiny_window_key >= WTK_KEY_A && tiny_window_key <= WTK_KEY_Z) {
-		return (EVT_AKEY + (tiny_window_key - WTK_KEY_A));
+	if (tiny_window_key >= GTK_KEY_A && tiny_window_key <= GTK_KEY_Z) {
+		return (EVT_AKEY + (tiny_window_key - GTK_KEY_A));
 	}
-	if (tiny_window_key >= WTK_KEY_0 && tiny_window_key <= WTK_KEY_9) {
-		return (EVT_ZEROKEY + (tiny_window_key - WTK_KEY_0));
+	if (tiny_window_key >= GTK_KEY_0 && tiny_window_key <= GTK_KEY_9) {
+		return (EVT_ZEROKEY + (tiny_window_key - GTK_KEY_0));
 	}
-	if (tiny_window_key >= WTK_KEY_NUMPAD_0 && tiny_window_key <= WTK_KEY_NUMPAD_9) {
-		return (EVT_PAD0 + (tiny_window_key - WTK_KEY_NUMPAD_0));
+	if (tiny_window_key >= GTK_KEY_NUMPAD_0 && tiny_window_key <= GTK_KEY_NUMPAD_9) {
+		return (EVT_PAD0 + (tiny_window_key - GTK_KEY_NUMPAD_0));
 	}
-	if (tiny_window_key >= WTK_KEY_F1 && tiny_window_key <= WTK_KEY_F24) {
-		return (EVT_F1KEY + (tiny_window_key - WTK_KEY_F1));
+	if (tiny_window_key >= GTK_KEY_F1 && tiny_window_key <= GTK_KEY_F24) {
+		return (EVT_F1KEY + (tiny_window_key - GTK_KEY_F1));
 	}
 
 #define ASSOCIATE(what, to) \
@@ -642,59 +642,59 @@ ROSE_STATIC int convert_key(int tiny_window_key) {
 		return to;
 
 	switch (tiny_window_key) {
-		ASSOCIATE(WTK_KEY_BACKSPACE, EVT_BACKSPACEKEY);
-		ASSOCIATE(WTK_KEY_TAB, EVT_TABKEY);
-		ASSOCIATE(WTK_KEY_CLEAR, EVENT_NONE);
-		ASSOCIATE(WTK_KEY_ENTER, EVT_RETKEY);
-		ASSOCIATE(WTK_KEY_ESC, EVT_ESCKEY);
-		ASSOCIATE(WTK_KEY_SPACE, EVT_SPACEKEY);
-		ASSOCIATE(WTK_KEY_QUOTE, EVT_QUOTEKEY);
-		ASSOCIATE(WTK_KEY_COMMA, EVT_COMMAKEY);
-		ASSOCIATE(WTK_KEY_MINUS, EVT_MINUSKEY);
-		ASSOCIATE(WTK_KEY_PLUS, EVT_PLUSKEY);
-		ASSOCIATE(WTK_KEY_PERIOD, EVT_PERIODKEY);
-		ASSOCIATE(WTK_KEY_SLASH, EVT_SLASHKEY);
-		ASSOCIATE(WTK_KEY_SEMICOLON, EVT_SEMICOLONKEY);
-		ASSOCIATE(WTK_KEY_EQUAL, EVT_EQUALKEY);
-		ASSOCIATE(WTK_KEY_LEFT_BRACKET, EVT_LEFTBRACKETKEY);
-		ASSOCIATE(WTK_KEY_RIGHT_BRACKET, EVT_RIGHTBRACKETKEY);
-		ASSOCIATE(WTK_KEY_BACKSLASH, EVT_BACKSLASHKEY);
-		ASSOCIATE(WTK_KEY_ACCENTGRAVE, EVT_ACCENTGRAVEKEY);
-		ASSOCIATE(WTK_KEY_LEFT_SHIFT, EVT_LEFTSHIFTKEY);
-		ASSOCIATE(WTK_KEY_RIGHT_SHIFT, EVT_RIGHTSHIFTKEY);
-		ASSOCIATE(WTK_KEY_LEFT_CTRL, EVT_LEFTCTRLKEY);
-		ASSOCIATE(WTK_KEY_RIGHT_CTRL, EVT_RIGHTCTRLKEY);
-		ASSOCIATE(WTK_KEY_LEFT_OS, EVT_OSKEY);
-		ASSOCIATE(WTK_KEY_RIGHT_OS, EVT_OSKEY);
-		ASSOCIATE(WTK_KEY_LEFT_ALT, EVT_LEFTALTKEY);
-		ASSOCIATE(WTK_KEY_RIGHT_ALT, EVT_RIGHTALTKEY);
-		ASSOCIATE(WTK_KEY_APP, EVT_APPKEY);
-		ASSOCIATE(WTK_KEY_CAPSLOCK, EVT_CAPSLOCKKEY);
-		ASSOCIATE(WTK_KEY_NUMLOCK, EVENT_NONE);
-		ASSOCIATE(WTK_KEY_SCRLOCK, EVENT_NONE);
-		ASSOCIATE(WTK_KEY_LEFT, EVT_LEFTARROWKEY);
-		ASSOCIATE(WTK_KEY_RIGHT, EVT_RIGHTARROWKEY);
-		ASSOCIATE(WTK_KEY_UP, EVT_UPARROWKEY);
-		ASSOCIATE(WTK_KEY_DOWN, EVT_DOWNARROWKEY);
-		ASSOCIATE(WTK_KEY_PRTSCN, EVENT_NONE);
-		ASSOCIATE(WTK_KEY_PAUSE, EVT_PAUSEKEY);
-		ASSOCIATE(WTK_KEY_INSERT, EVT_INSERTKEY);
-		ASSOCIATE(WTK_KEY_DELETE, EVT_DELKEY);
-		ASSOCIATE(WTK_KEY_HOME, EVT_HOMEKEY);
-		ASSOCIATE(WTK_KEY_END, EVT_ENDKEY);
-		ASSOCIATE(WTK_KEY_PAGEUP, EVT_PAGEUPKEY);
-		ASSOCIATE(WTK_KEY_PAGEDOWN, EVT_PAGEDOWNKEY);
-		ASSOCIATE(WTK_KEY_NUMPAD_PERIOD, EVT_PADPERIOD);
-		ASSOCIATE(WTK_KEY_NUMPAD_ENTER, EVT_PADENTER);
-		ASSOCIATE(WTK_KEY_NUMPAD_PLUS, EVT_PADPLUSKEY);
-		ASSOCIATE(WTK_KEY_NUMPAD_MINUS, EVT_PADMINUS);
-		ASSOCIATE(WTK_KEY_NUMPAD_ASTERISK, EVT_PADASTERKEY);
-		ASSOCIATE(WTK_KEY_NUMPAD_SLASH, EVT_PADSLASHKEY);
-		ASSOCIATE(WTK_KEY_GRLESS, EVT_GRLESSKEY);
-		ASSOCIATE(WTK_KEY_MEDIA_PLAY, EVT_MEDIAPLAY);
-		ASSOCIATE(WTK_KEY_MEDIA_STOP, EVT_MEDIASTOP);
-		ASSOCIATE(WTK_KEY_MEDIA_FIRST, EVT_MEDIAFIRST);
-		ASSOCIATE(WTK_KEY_MEDIA_LAST, EVT_MEDIALAST);
+		ASSOCIATE(GTK_KEY_BACKSPACE, EVT_BACKSPACEKEY);
+		ASSOCIATE(GTK_KEY_TAB, EVT_TABKEY);
+		ASSOCIATE(GTK_KEY_CLEAR, EVENT_NONE);
+		ASSOCIATE(GTK_KEY_ENTER, EVT_RETKEY);
+		ASSOCIATE(GTK_KEY_ESC, EVT_ESCKEY);
+		ASSOCIATE(GTK_KEY_SPACE, EVT_SPACEKEY);
+		ASSOCIATE(GTK_KEY_QUOTE, EVT_QUOTEKEY);
+		ASSOCIATE(GTK_KEY_COMMA, EVT_COMMAKEY);
+		ASSOCIATE(GTK_KEY_MINUS, EVT_MINUSKEY);
+		ASSOCIATE(GTK_KEY_PLUS, EVT_PLUSKEY);
+		ASSOCIATE(GTK_KEY_PERIOD, EVT_PERIODKEY);
+		ASSOCIATE(GTK_KEY_SLASH, EVT_SLASHKEY);
+		ASSOCIATE(GTK_KEY_SEMICOLON, EVT_SEMICOLONKEY);
+		ASSOCIATE(GTK_KEY_EQUAL, EVT_EQUALKEY);
+		ASSOCIATE(GTK_KEY_LEFT_BRACKET, EVT_LEFTBRACKETKEY);
+		ASSOCIATE(GTK_KEY_RIGHT_BRACKET, EVT_RIGHTBRACKETKEY);
+		ASSOCIATE(GTK_KEY_BACKSLASH, EVT_BACKSLASHKEY);
+		ASSOCIATE(GTK_KEY_ACCENTGRAVE, EVT_ACCENTGRAVEKEY);
+		ASSOCIATE(GTK_KEY_LEFT_SHIFT, EVT_LEFTSHIFTKEY);
+		ASSOCIATE(GTK_KEY_RIGHT_SHIFT, EVT_RIGHTSHIFTKEY);
+		ASSOCIATE(GTK_KEY_LEFT_CTRL, EVT_LEFTCTRLKEY);
+		ASSOCIATE(GTK_KEY_RIGHT_CTRL, EVT_RIGHTCTRLKEY);
+		ASSOCIATE(GTK_KEY_LEFT_OS, EVT_OSKEY);
+		ASSOCIATE(GTK_KEY_RIGHT_OS, EVT_OSKEY);
+		ASSOCIATE(GTK_KEY_LEFT_ALT, EVT_LEFTALTKEY);
+		ASSOCIATE(GTK_KEY_RIGHT_ALT, EVT_RIGHTALTKEY);
+		ASSOCIATE(GTK_KEY_APP, EVT_APPKEY);
+		ASSOCIATE(GTK_KEY_CAPSLOCK, EVT_CAPSLOCKKEY);
+		ASSOCIATE(GTK_KEY_NUMLOCK, EVENT_NONE);
+		ASSOCIATE(GTK_KEY_SCRLOCK, EVENT_NONE);
+		ASSOCIATE(GTK_KEY_LEFT, EVT_LEFTARROWKEY);
+		ASSOCIATE(GTK_KEY_RIGHT, EVT_RIGHTARROWKEY);
+		ASSOCIATE(GTK_KEY_UP, EVT_UPARROWKEY);
+		ASSOCIATE(GTK_KEY_DOWN, EVT_DOWNARROWKEY);
+		ASSOCIATE(GTK_KEY_PRTSCN, EVENT_NONE);
+		ASSOCIATE(GTK_KEY_PAUSE, EVT_PAUSEKEY);
+		ASSOCIATE(GTK_KEY_INSERT, EVT_INSERTKEY);
+		ASSOCIATE(GTK_KEY_DELETE, EVT_DELKEY);
+		ASSOCIATE(GTK_KEY_HOME, EVT_HOMEKEY);
+		ASSOCIATE(GTK_KEY_END, EVT_ENDKEY);
+		ASSOCIATE(GTK_KEY_PAGEUP, EVT_PAGEUPKEY);
+		ASSOCIATE(GTK_KEY_PAGEDOWN, EVT_PAGEDOWNKEY);
+		ASSOCIATE(GTK_KEY_NUMPAD_PERIOD, EVT_PADPERIOD);
+		ASSOCIATE(GTK_KEY_NUMPAD_ENTER, EVT_PADENTER);
+		ASSOCIATE(GTK_KEY_NUMPAD_PLUS, EVT_PADPLUSKEY);
+		ASSOCIATE(GTK_KEY_NUMPAD_MINUS, EVT_PADMINUS);
+		ASSOCIATE(GTK_KEY_NUMPAD_ASTERISK, EVT_PADASTERKEY);
+		ASSOCIATE(GTK_KEY_NUMPAD_SLASH, EVT_PADSLASHKEY);
+		ASSOCIATE(GTK_KEY_GRLESS, EVT_GRLESSKEY);
+		ASSOCIATE(GTK_KEY_MEDIA_PLAY, EVT_MEDIAPLAY);
+		ASSOCIATE(GTK_KEY_MEDIA_STOP, EVT_MEDIASTOP);
+		ASSOCIATE(GTK_KEY_MEDIA_FIRST, EVT_MEDIAFIRST);
+		ASSOCIATE(GTK_KEY_MEDIA_LAST, EVT_MEDIALAST);
 	}
 
 #undef ASSOCIATE
@@ -708,9 +708,9 @@ ROSE_STATIC int convert_btn(int tiny_window_btn) {
 		return to;
 
 	switch (tiny_window_btn) {
-		ASSOCIATE(WTK_BTN_LEFT, LEFTMOUSE);
-		ASSOCIATE(WTK_BTN_MIDDLE, MIDDLEMOUSE);
-		ASSOCIATE(WTK_BTN_RIGHT, RIGHTMOUSE);
+		ASSOCIATE(GTK_BTN_LEFT, LEFTMOUSE);
+		ASSOCIATE(GTK_BTN_MIDDLE, MIDDLEMOUSE);
+		ASSOCIATE(GTK_BTN_RIGHT, RIGHTMOUSE);
 	}
 
 #undef ASSOCIATE

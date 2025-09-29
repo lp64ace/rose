@@ -99,6 +99,12 @@ ROSE_STATIC GPUBatch *mesh_batch_cache_request_surface_batches(MeshBatchCache *c
 		DRW_batch_request(&cache->surfaces[index]);
 	}
 	DRW_batch_request(&cache->surface);
+
+	/**
+	 * We create all the sub-surface (per material) batches too, yet we only return the 
+	 * surface one...
+	 */
+	return cache->surface;
 }
 
 ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache) {

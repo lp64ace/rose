@@ -7,10 +7,25 @@ struct rContext;
 struct DrawEngineType;
 struct Mesh;
 struct Scene;
+struct WindowManager;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Init/Exit
+ * \{ */
+
+void DRW_render_context_create(struct WindowManager *wm);
+void DRW_render_context_destroy(struct WindowManager *wm);
+
+void DRW_render_context_enable();
+void DRW_render_context_disable();
+void DRW_render_context_enable_ex(bool restore);
+void DRW_render_context_disable_ex(bool restore);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Draw Engines

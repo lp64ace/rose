@@ -1,7 +1,7 @@
 #include "LIB_assert.h"
 #include "LIB_utildefines.h"
 
-#include <oswin.h>
+#include <GTK_api.h>
 
 #include "gl_backend.hh"
 #include "gl_context.hh"
@@ -27,7 +27,7 @@ GLContext::GLContext(void *window, GLSharedOrphanLists &shared_orphan_list) : sh
 
 	if (window) {
 		int w, h;
-		WTK_window_size(reinterpret_cast<WTKWindow *>(this->window_), &w, &h);
+		GTK_window_size(reinterpret_cast<GTKWindow *>(this->window_), &w, &h);
 
 		front_left = MEM_new<GLFrameBuffer>("GLFrameBuffer::FrontLeft", "front_left", this, GL_FRONT_LEFT, 0, w, h);
 		back_left = MEM_new<GLFrameBuffer>("GLFrameBuffer::BackLeft", "back_left", this, GL_BACK_LEFT, 0, w, h);
@@ -76,7 +76,7 @@ void GLContext::activate() {
 
 	if (this->window_) {
 		int w, h;
-		WTK_window_size(reinterpret_cast<WTKWindow *>(this->window_), &w, &h);
+		GTK_window_size(reinterpret_cast<GTKWindow *>(this->window_), &w, &h);
 
 		if (front_left) {
 			front_left->size_set(w, h);

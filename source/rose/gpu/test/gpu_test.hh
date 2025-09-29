@@ -40,8 +40,8 @@ namespace rose::gpu {
 class GPUTest : public ::testing::Test {
 	MEM_CXX_CLASS_ALLOC_FUNCS("GPUTest")
 private:
-	struct WTKWindowManager *manager = NULL;
-	struct WTKWindow *window = NULL;
+	struct GTKWindowManager *manager = NULL;
+	struct GTKWindow *window = NULL;
 
 	GPUContext *context = NULL;
 
