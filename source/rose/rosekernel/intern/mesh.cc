@@ -14,12 +14,16 @@
 
 void KER_mesh_batch_cache_tag_dirty(Mesh *mesh, int mode) {
 	if (mesh->runtime->draw_cache) {
-		KER_mesh_batch_cache_tag_dirty_cb(mesh, mode);
+		if (KER_mesh_batch_cache_tag_dirty_cb) {
+			KER_mesh_batch_cache_tag_dirty_cb(mesh, mode);
+		}
 	}
 }
 
 void KER_mesh_batch_cache_free(Mesh *mesh) {
-	KER_mesh_batch_cache_free_cb(mesh);
+	if (mesh->runtime->draw_cache) {
+		KER_mesh_batch_cache_free_cb(mesh);
+	}
 }
 
 void (*KER_mesh_batch_cache_tag_dirty_cb)(Mesh *mesh, int mode) = NULL;

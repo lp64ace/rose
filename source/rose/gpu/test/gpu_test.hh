@@ -32,7 +32,8 @@
 #include "GPU_vertex_format.h"
 #include "GPU_viewport.h"
 
-#include "oswin.h"
+#include "GTK_api.h"
+
 #include "gtest/gtest.h"
 
 namespace rose::gpu {
