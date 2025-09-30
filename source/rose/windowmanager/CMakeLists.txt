@@ -40,7 +40,7 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::gtk
+	rose::intern::native
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::rosemesh

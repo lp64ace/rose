@@ -4,6 +4,10 @@
 #include "gtk_window.hh"
 #include "gtk_render.hh"
 
+#include <algorithm>
+#include <cmath>
+#include <climits>
+
 GTKManagerInterface::GTKManagerInterface() {
 	this->t0 = std::chrono::system_clock::now();
 }

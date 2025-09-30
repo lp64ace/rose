@@ -84,5 +84,5 @@ endif()
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(gtk "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::intern::gtk ALIAS gtk)
+rose_add_lib(native "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::intern::native ALIAS native)

@@ -14,9 +14,9 @@ bool GTKWindowInterface::Install(int backend) {
 	if (this->backend != backend) {
 		GTKRenderInterface *newrender = this->AllocateRender(backend);
 		
-		RenderSetting default = RenderSetting();
+		RenderSetting setting = RenderSetting();
 
-		if (newrender != NULL && !newrender->Create(default)) {
+		if (newrender != NULL && !newrender->Create(setting)) {
 			MEM_delete<GTKRenderInterface>(this->render);
 			this->render = NULL;
 		}
