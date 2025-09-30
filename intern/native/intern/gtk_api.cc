@@ -1,3 +1,5 @@
+#include "MEM_guardedalloc.h"
+
 #include "GTK_api.h"
 
 #include "intern/gtk_render.hh"
