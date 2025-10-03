@@ -50,6 +50,18 @@ ROSE_STATIC void draw_view_engine_data_clear(ViewportEngineData *vdata) {
 }
 
 ROSE_STATIC void draw_view_data_clear(DRWViewData *view_data) {
+	GPU_FRAMEBUFFER_FREE_SAFE(view_data->dfbl.default_fb);
+
+	if ((view_data->flag & DRW_VIEW_DATA_VIEWPORT) == 0) {
+		GPU_TEXTURE_FREE_SAFE(view_data->dtxl.depth);
+		GPU_TEXTURE_FREE_SAFE(view_data->dtxl.color);
+	}
+	else {
+		view_data->dtxl.depth = NULL;
+		view_data->dtxl.color = NULL;
+		view_data->flag &= ~DRW_VIEW_DATA_VIEWPORT;
+	}
+
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &view_data->viewport_engine_data) {
 		draw_view_engine_data_clear(vdata);
 	}
@@ -68,6 +80,24 @@ void DRW_view_data_texture_list_size_validate(DRWViewData *view_data, const int 
 		draw_view_data_clear(view_data);
 		copy_v2_v2_int(view_data->txl_size, size);
 	}
+}
+
+void DRW_view_data_default_lists_from_viewport(DRWViewData *view_data, GPUViewport *viewport) {
+	int view = GPU_viewport_active_view_get(viewport);
+
+	DefaultFramebufferList *dfbl = &view_data->dfbl;
+	DefaultTextureList *dtxl = &view_data->dtxl;
+
+	dtxl->depth = GPU_viewport_depth_texture(viewport);
+	dtxl->color = GPU_viewport_color_texture(viewport, view);
+
+	GPU_framebuffer_ensure_config(&dfbl->default_fb,
+								  {
+									  GPU_ATTACHMENT_TEXTURE(dtxl->depth),
+									  GPU_ATTACHMENT_TEXTURE(dtxl->color),
+								  });
+
+	view_data->flag |= DRW_VIEW_DATA_VIEWPORT;
 }
 
 void DRW_view_data_use_engine(DRWViewData *view_data, DrawEngineType *engine_type) {

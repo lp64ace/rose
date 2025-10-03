@@ -165,11 +165,29 @@ typedef struct ViewportEngineData {
 /** \name Draw View Engine Data Methods
  * \{ */
 
+typedef struct DefaultFramebufferList {
+	GPUFrameBuffer *default_fb;
+} DefaultFramebufferList;
+
+typedef struct DefaultTextureList {
+	GPUTexture *color;
+	GPUTexture *depth;
+} DefaultTextureList;
+
 typedef struct DRWViewData {
+	DefaultFramebufferList dfbl;
+	DefaultTextureList dtxl;
+
+	int flag;
+
 	int txl_size[2];
 
 	ListBase viewport_engine_data;
 } DRWViewData;
+
+enum {
+	DRW_VIEW_DATA_VIEWPORT = 1 << 0,
+};
 
 struct ViewportEngineData;
 
@@ -178,6 +196,7 @@ void DRW_view_data_free(struct DRWViewData *view_data);
 
 struct ViewportEngineData *DRW_view_data_engine_data_get_ensure(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
 void DRW_view_data_texture_list_size_validate(struct DRWViewData *view_data, const int size[2]);
+void DRW_view_data_default_lists_from_viewport(struct DRWViewData *view_data, struct GPUViewport *viewport);
 void DRW_view_data_use_engine(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
 
 /** \} */

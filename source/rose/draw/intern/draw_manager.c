@@ -272,6 +272,10 @@ void DRW_manager_init(DRWManager *manager, GPUViewport *viewport, const int size
 
 	DRW_view_data_texture_list_size_validate(manager->vdata_engine, (const int[2]){manager->size[0], manager->size[1]});
 
+	if (viewport) {
+		DRW_view_data_default_lists_from_viewport(manager->vdata_engine, viewport);
+	}
+
 	// We should enabled the needed engines!
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &manager->vdata_engine->viewport_engine_data) {
 		DRW_engine_use(vdata->engine);
@@ -376,11 +380,17 @@ ROSE_STATIC void drw_engine_cache_finish(void) {
 }
 
 ROSE_STATIC void drw_engine_draw_scene(void) {
+	DefaultFramebufferList *dfbl = &GDrawManager.vdata_engine->dfbl;
+
+	GPU_framebuffer_bind(dfbl->default_fb);
+
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		if (vdata->engine && vdata->engine->draw) {
 			vdata->engine->draw(vdata);
 		}
 	}
+
+	GPU_framebuffer_restore();
 }
 
 void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, struct GPUViewport *viewport) {
@@ -397,7 +407,6 @@ void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, stru
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		drw_engine_cache_populate(object);
 	}
-
 
 	DRW_engines_exit(C);
 	DRW_manager_exit(&GDrawManager);

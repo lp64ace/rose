@@ -90,19 +90,7 @@ ROSE_STATIC void alice_init(void *vdata) {
 ROSE_STATIC void alice_draw(void *vdata) {
 	DRWAliceViewportPassList *psl = ((DRWAliceData *)vdata)->psl;
 
-	GPUTexture *texture = GPU_viewport_color_texture(GDrawManager.viewport, 0);
-
-	GPUFrameBuffer *fb = GPU_framebuffer_create("Viewport3D::Alice");
-	GPU_framebuffer_ensure_config(&fb,
-								  {
-									  GPU_ATTACHMENT_NONE,
-									  GPU_ATTACHMENT_TEXTURE(texture),
-								  });
-	GPU_framebuffer_bind(fb);
-	GPU_clear_color(0.125f, 0.125f, 0.125f, 1.0f);
 	DRW_draw_pass(psl->depth_pass);
-
-	GPU_framebuffer_free(fb);
 }
 
 ROSE_STATIC void alice_free() {
