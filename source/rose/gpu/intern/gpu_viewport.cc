@@ -59,7 +59,7 @@ typedef struct GPUViewport {
  * \{ */
 
 static void gpu_viewport_textures_create(GPUViewport *viewport) {
-	const float black[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+	const float black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
 	TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
 
@@ -207,7 +207,7 @@ static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_
 	GPUBatch *batch = gpu_viewport_batch_get(viewport, rect_pos, rect_uv);
 
 	GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE);
-	GPU_batch_uniform_1i(batch, "overlay", true);
+	GPU_batch_uniform_1i(batch, "overlay", false);
 	GPU_batch_uniform_1i(batch, "display_transform", false);
 	GPU_batch_uniform_1i(batch, "use_hdr", false);
 

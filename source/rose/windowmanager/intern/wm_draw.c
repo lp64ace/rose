@@ -98,12 +98,6 @@ ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
 
 	if (region->draw_buffer->viewport) {
 		GPU_viewport_bind(region->draw_buffer->viewport, view, &region->winrct);
-
-		GPUTexture *texture = GPU_viewport_overlay_texture(region->draw_buffer->viewport, view);
-
-		if (texture) {
-			GPU_texture_clear(texture, GPU_DATA_FLOAT, (const float[4]){0.0f, 0.0f, 0.0f, 0.0f});
-		}
 	}
 	else {
 		GPU_offscreen_bind(region->draw_buffer->offscreen, false);
