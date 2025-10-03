@@ -36,7 +36,6 @@ set(GLSL_SRC
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
-	shaders/gpu_shader_mandelbrot.glsl
 	shaders/gpu_shader_test_frag.glsl
 	shaders/gpu_shader_test_vert.glsl
 	shaders/gpu_shader_text_frag.glsl
@@ -248,11 +247,12 @@ set(INFO_SRC
 	infos/gpu_shader_2D_image_rect_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
 	infos/gpu_shader_3D_uniform_color_info.hh
-	infos/gpu_shader_mandelbrot_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh
 	
 	infos/gpu_shader_test_info.hh
+
+	../draw/engines/alice/shaders/infos/depth_mesh_info.hh
 )
 
 set(SHADER_CREATE_INFOS_CONTENT
@@ -277,8 +277,10 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::native
+	rose::source::draw
 	rose::source::roselib
 	rose::source::shaders
+	rose::source::draw_shaders
 	
 	# External Library Dependencies
 	${OPENGL_LIBRARIES}

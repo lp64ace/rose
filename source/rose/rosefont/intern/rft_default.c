@@ -10,7 +10,7 @@
 #define ASSERT_DEFAULT_SET ROSE_assert(global_font_default != -1)
 
 static int global_font_default = -1;
-static float global_font_size = 14.0f;
+static float global_font_size = 12.0f;
 
 void RFT_default_size(float size) {
 	global_font_size = size;

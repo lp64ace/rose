@@ -2,6 +2,8 @@
 
 #include "GPU_shader_builtin.h"
 
+#include <stdbool.h>
+
 /**
  * Hardware limit is 16. Position attribute is always needed so we reduce to 15.
  * This makes sure the GPUVertexFormat name buffer does not overflow.

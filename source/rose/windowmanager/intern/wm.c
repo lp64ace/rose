@@ -310,6 +310,9 @@ void WM_main(struct rContext *C) {
 		}
 		WM_do_handlers(C);
 		WM_do_draw(C);
+		if (!poll && /* is not in rendering - we do not throttle render loop */ 0) {
+			// GTK_sleep(1);
+		}
 	}
 }
 

@@ -226,7 +226,7 @@ enum {
 
 #define AREAMINX 32
 #define PIXELSIZE 1
-#define WIDGET_UNIT 28
+#define WIDGET_UNIT 26
 
 #define UI_UNIT_X (PIXELSIZE * WIDGET_UNIT)
 #define UI_UNIT_Y (PIXELSIZE * WIDGET_UNIT)

@@ -20,6 +20,7 @@
 
 extern "C" {
 #define SHADER_SOURCE(datatoc, filename, filepath) extern char datatoc[];
+#include "glsl_draw_source_list.h"
 #include "gpu_shader_source_list.h"
 #undef SHADER_SOURCE
 }
@@ -812,6 +813,7 @@ void gpu_shader_dependency_init() {
 	g_functions = MEM_new<GPUFunctionDictionnary>("rose::gpu::GlobalFunctionDictionary");
 
 #define SHADER_SOURCE(datatoc, filename, filepath) g_sources->add_new(filename, MEM_new<GPUSource>("rose::gpu::Source", filepath, filename, datatoc, g_functions));
+#include "glsl_draw_source_list.h"
 #include "gpu_shader_source_list.h"
 #undef SHADER_SOURCE
 

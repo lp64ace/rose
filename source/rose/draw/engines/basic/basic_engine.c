@@ -21,11 +21,13 @@ ROSE_STATIC void basic_cache_populate(void *vdata, struct Object *object) {
 
 DrawEngineType draw_engine_basic_type = {
 	.name = "ROSE_BASIC",
-	
+
+	.vdata_size = NULL,
+
 	.cache_init = NULL,
 	.cache_populate = NULL,
 	.cache_finish = NULL,
-	
+
 	.draw = NULL,
 };
 

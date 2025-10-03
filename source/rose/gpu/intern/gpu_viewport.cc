@@ -14,6 +14,8 @@
 #include "GPU_uniform_buffer.h"
 #include "GPU_viewport.h"
 
+#include "DRW_engine.h"
+
 #include "MEM_guardedalloc.h"
 
 typedef struct GPUViewportBatch {
@@ -39,6 +41,9 @@ typedef struct GPUViewport {
 	int flag;
 
 	int active_view;
+
+	/* Viewport Resources. */
+	DRWData *draw_data;
 
 	GPUTexture *color_render_tx[2];
 	GPUTexture *color_overlay_tx[2];
@@ -166,6 +171,10 @@ GPUViewport *GPU_viewport_create(void) {
 }
 
 void GPU_viewport_free(GPUViewport *viewport) {
+	if (viewport->draw_data) {
+		DRW_viewport_data_free(viewport->draw_data);
+	}
+
 	gpu_viewport_textures_free(viewport);
 	gpu_viewport_batch_free(viewport);
 
@@ -274,4 +283,8 @@ GPUFrameBuffer *GPU_viewport_framebuffer_overlay_get(GPUViewport *viewport) {
 
 	/* clang-format on */
 	return viewport->overlay_fb;
+}
+
+DRWData **GPU_viewport_data_get(GPUViewport *viewport) {
+	return &viewport->draw_data;
 }

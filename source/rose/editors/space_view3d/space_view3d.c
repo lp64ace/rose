@@ -37,6 +37,8 @@ ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Main");
 		LIB_addtail(&view3d->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
+
+		region->flag |= RGN_FLAG_ALWAYS_REDRAW;
 	}
 	view3d->spacetype = SPACE_VIEW3D;
 

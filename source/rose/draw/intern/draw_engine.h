@@ -1,0 +1,189 @@
+#ifndef DRAW_ENGINE_H
+#define DRAW_ENGINE_H
+
+#include "GPU_batch.h"
+#include "GPU_framebuffer.h"
+#include "GPU_texture.h"
+#include "GPU_viewport.h"
+
+#include "DRW_engine.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Engines Data
+ * \{ */
+
+enum {
+	DRW_UNIFORM_INT = 0,
+	DRW_UNIFORM_INT_COPY,
+	DRW_UNIFORM_FLOAT,
+	DRW_UNIFORM_FLOAT_COPY,
+	DRW_UNIFORM_TEXTURE,
+	DRW_UNIFORM_TEXTURE_REF,
+	DRW_UNIFORM_IMAGE,
+	DRW_UNIFORM_IMAGE_REF,
+	DRW_UNIFORM_BLOCK,
+	DRW_UNIFORM_BLOCK_REF,
+	DRW_UNIFORM_STORAGE_BLOCK,
+	DRW_UNIFORM_STORAGE_BLOCK_REF,
+	DRW_UNIFORM_TFEEDBACK_TARGET,
+	DRW_UNIFORM_VERTEX_BUFFER_AS_TEXTURE,
+	DRW_UNIFORM_VERTEX_BUFFER_AS_TEXTURE_REF,
+	DRW_UNIFORM_VERTEX_BUFFER_AS_STORAGE,
+	DRW_UNIFORM_VERTEX_BUFFER_AS_STORAGE_REF,
+};
+
+typedef struct DRWUniform {
+	struct DRWUniform *prev, *next;
+
+	int location;
+	int type;
+	int veclen;
+	int arrlen;
+
+	union {
+		void *pvalue;
+		float fvalue[4];
+		int ivalue[4];
+
+		struct {
+			union {
+				GPUTexture *texture;
+				GPUTexture **ptexture;
+			};
+			GPUSamplerState sampler;
+		};
+		union {
+			GPUUniformBuf *block;
+			GPUUniformBuf **pblock;
+		};
+		union {
+			GPUStorageBuf *ssbo;
+			GPUStorageBuf **pssbo;
+		};
+		union {
+			GPUVertBuf *vertbuf;
+			GPUVertBuf **pvertbuf;
+		};
+	};
+} DRWUniform;
+
+typedef struct DRWCommandDraw {
+	struct GPUBatch *batch;
+	unsigned int vcount;
+} DRWCommandDraw;
+
+typedef struct DRWCommandDrawRange {
+	struct GPUBatch *batch;
+	unsigned int vfirst;
+	unsigned int vcount;
+} DRWCommandDrawRange;
+
+typedef struct DRWCommandDrawInstance {
+	struct GPUBatch *batch;
+	unsigned int icount;
+} DRWCommandDrawInstance;
+
+typedef struct DRWCommandDrawInstanceRange {
+	struct GPUBatch *batch;
+	unsigned int ifirst;
+	unsigned int icount;
+} DRWCommandDrawInstanceRange;
+
+enum {
+	DRW_COMMAND_DRAW,
+	DRW_COMMAND_DRAW_RANGE,
+	DRW_COMMAND_DRAW_INSTANCE,
+	DRW_COMMAND_DRAW_INSTANCE_RANGE,
+};
+
+typedef struct DRWCommand {
+	struct DRWCommand *prev, *next;
+
+	int type;
+
+	union {
+		struct DRWCommandDraw draw;
+		struct DRWCommandDrawRange draw_range;
+		struct DRWCommandDrawInstance draw_instance;
+		struct DRWCommandDrawInstanceRange draw_instance_range;
+	};
+} DRWCommand;
+
+typedef struct DRWShadingGroup {
+	struct DRWShadingGroup *prev, *next;
+
+	struct GPUShader *shader;
+
+	ListBase uniforms;	// #DRWUniform
+	ListBase commands;	// #DRWCommand
+} DRWShadingGroup;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw View Engine Data
+ * \{ */
+
+struct GPUFrameBuffer;
+struct GPUTexture;
+struct DRWPass;
+
+typedef struct DRWViewportEngineDataFramebufferList {
+	GPUFrameBuffer *framebuffers[1];
+} DRWViewportEngineDataFramebufferList;
+
+typedef struct DRWViewportEngineDataTextureList {
+	GPUTexture *textures[1];
+} DRWViewportEngineDataTextureList;
+
+typedef struct DRWViewportEngineDataPassList {
+	DRWPass *passes[1];
+} DRWViewportEngineDataPassList;
+
+typedef struct DRWViewportEngineDataStorageList {
+	void *storage[1]; // Stores custom structs from the engine that have been MEM_(m/c)allocN'ed.
+} DRWViewportEngineDataStorageList;
+
+typedef struct ViewportEngineData {
+	struct ViewportEngineData *prev, *next;
+
+	DrawEngineType *engine;
+
+	DRWViewportEngineDataFramebufferList *fbl;
+	DRWViewportEngineDataTextureList *txl;
+	DRWViewportEngineDataPassList *psl;
+	DRWViewportEngineDataStorageList *stl;
+} ViewportEngineData;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw View Engine Data Methods
+ * \{ */
+
+typedef struct DRWViewData {
+	int txl_size[2];
+
+	ListBase viewport_engine_data;
+} DRWViewData;
+
+struct ViewportEngineData;
+
+struct DRWViewData *DRW_view_data_new(struct ListBase *engines);
+void DRW_view_data_free(struct DRWViewData *view_data);
+
+struct ViewportEngineData *DRW_view_data_engine_data_get_ensure(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
+void DRW_view_data_texture_list_size_validate(struct DRWViewData *view_data, const int size[2]);
+void DRW_view_data_use_engine(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
+
+/** \} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif	// DRAW_ENGINE_H

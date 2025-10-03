@@ -20,9 +20,13 @@
 
 #include "LIB_listbase.h"
 #include "LIB_mempool.h"
+#include "LIB_string.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
+
+#include "draw_engine.h"
+#include "draw_manager.h"
 
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
@@ -36,7 +40,7 @@ struct Object;
 static ListBase GEngineList;
 
 void DRW_engines_register(void) {
-	DRW_engine_register(&draw_engine_basic_type);
+	// DRW_engine_register(&draw_engine_basic_type);
 	DRW_engine_register(&draw_engine_alice_type);
 
 	{
@@ -50,7 +54,9 @@ void DRW_engines_register_experimental(void) {
 
 void DRW_engines_free(void) {
 	LISTBASE_FOREACH_MUTABLE(DrawEngineType *, engine, &GEngineList) {
-		
+		if (engine->engine_free) {
+			engine->engine_free();
+		}
 	}
 	LIB_listbase_clear(&GEngineList);
 }
@@ -150,59 +156,135 @@ ROSE_STATIC void drw_drawdata_free(struct ID *id) {
 /** \name Draw Engines Internal
  * \{ */
 
-typedef struct DRWData {
-	struct MemPool *framebuffers;
-	struct MemPool *passes;
-} DRWData;
+DRWManager GDrawManager;
 
-typedef struct DRWManager {
-	struct DRWData *vdata;
-	struct DrawEngineType *engine;
-	struct Scene *scene;
-	
-	/**
-	 * \brief The native system rendering context, see WM_render_*!
-	 * We should in no way include GTK here (\type GTKRender *)!
-	 */
-	void *render;
-	struct GPUContext *context;
+DRWData *DRW_viewport_data_new(void) {
+	DRWData *ddata = MEM_callocN(sizeof(DRWData), "DRWData");
 
-	ThreadMutex *mutex;
-} DRWManager;
+	ddata->commands = LIB_memory_pool_create(sizeof(DRWCommand), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
+	ddata->passes = LIB_memory_pool_create(sizeof(DRWPass), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
+	ddata->shgroups = LIB_memory_pool_create(sizeof(DRWShadingGroup), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
 
-static DRWManager GDrawManager;
+	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
+		ddata->vdata_engine[index] = DRW_view_data_new(&GEngineList);
+	}
+
+	return ddata;
+}
+
+void DRW_viewport_data_free(DRWData *ddata) {
+	LIB_memory_pool_destroy(ddata->commands);
+	LIB_memory_pool_destroy(ddata->passes);
+	LIB_memory_pool_destroy(ddata->shgroups);
+
+	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
+		DRW_view_data_free(ddata->vdata_engine[index]);
+	}
+
+	MEM_freeN(ddata);
+}
+
+ROSE_STATIC void DRW_engine_use(DrawEngineType *engine_type) {
+	DRW_view_data_use_engine(GDrawManager.vdata_engine, engine_type);
+}
 
 // Called once before starting rendering using our (used/active) draw engines
 void DRW_engines_init(const struct rContext *C) {
-	struct Main *main = CTX_data_main(C);
-	struct ListBase *listbase = which_libbase(main, ID_SCE);
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		const DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
 
-	/**
-	 * User the user-defined engine preference!
-	 */
-	GDrawManager.engine = DRW_engine_find(U.engine);
+		memset(vdata->psl->passes, 0, sizeof(*vdata->psl->passes) * vdata_size->psl_len);
 
-	struct DrawEngineType *engine = GDrawManager.engine;
-	struct Scene *scene = GDrawManager.scene;
-
-	// We should be using the active scene, there is no reason whatsoever for the listbase to be a singleton!
-	ROSE_assert(LIB_listbase_is_single(listbase) || LIB_listbase_is_empty(listbase));
-	LISTBASE_FOREACH(struct Scene *, scene, listbase) {
-		engine = DRW_engine_type(C, scene);
-	}
-
-	if (GDrawManager.engine == NULL || GDrawManager.engine != engine || GDrawManager.scene != scene) {
-		if (GDrawManager.engine) {
-			/**
-			 * We need to REDO the cache for the new engine...
-			 */
+		if (vdata->engine->engine_init) {
+			vdata->engine->engine_init(vdata);
 		}
-		GDrawManager.engine = engine;
-		GDrawManager.scene = scene;
 	}
 }
 
 void DRW_engines_exit(const struct rContext *C) {
+}
+
+DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original) {
+	DRWPass *npass = LIB_memory_pool_calloc(GDrawManager.vdata_pool->passes);
+
+	npass->groups.first = NULL;
+	npass->groups.last = NULL;
+
+	npass->original = original;
+
+	LIB_strcpy(npass->name, ARRAY_SIZE(npass->name), name);
+
+	return npass;
+}
+
+DRWPass *DRW_pass_new(const char *name) {
+	return DRW_pass_new_ex(name, NULL);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Manager
+ * \{ */
+
+ROSE_STATIC DRWData *draw_viewport_data_ensure(GPUViewport *viewport) {
+	DRWData **pvmempool = GPU_viewport_data_get(viewport);
+	DRWData *vmempool = *pvmempool;
+
+	if (vmempool == NULL) {
+		*pvmempool = vmempool = DRW_viewport_data_new();
+	}
+	return vmempool;
+}
+
+ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
+	LIB_memory_pool_clear(ddata->commands, DRW_RESOURCE_CHUNK_LEN);
+	LIB_memory_pool_clear(ddata->passes, DRW_RESOURCE_CHUNK_LEN);
+	LIB_memory_pool_clear(ddata->shgroups, DRW_RESOURCE_CHUNK_LEN);
+}
+
+void DRW_manager_init(DRWManager *manager, GPUViewport *viewport, const int size[2]) {
+	manager->viewport = viewport;
+
+	int view = 0;
+
+	if (viewport) {
+		manager->vdata_pool = draw_viewport_data_ensure(viewport);
+		view = GPU_viewport_active_view_get(viewport);
+	}
+	else {
+		manager->vdata_pool = DRW_viewport_data_new();
+	}
+
+	draw_viewport_data_reset(manager->vdata_pool);
+
+	if (viewport) {
+		GPUTexture *texture = GPU_viewport_color_texture(viewport, view);
+		manager->size[0] = GPU_texture_width(texture);
+		manager->size[1] = GPU_texture_height(texture);
+	}
+	else {
+		manager->size[0] = 1.0f;
+		manager->size[1] = 1.0f;
+	}
+
+	manager->vdata_engine = manager->vdata_pool->vdata_engine[view];
+
+	DRW_view_data_texture_list_size_validate(manager->vdata_engine, (const int[2]){manager->size[0], manager->size[1]});
+
+	// We should enabled the needed engines!
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &manager->vdata_engine->viewport_engine_data) {
+		DRW_engine_use(vdata->engine);
+	}
+}
+
+void DRW_manager_exit(DRWManager *manager) {
+	if (manager->viewport) {
+		// The data are persistent within the viewport, see the #GPU_viewport_free function!
+	}
+	else {
+		DRW_viewport_data_free(manager->vdata_pool);
+	}
 }
 
 /** \} */
@@ -263,16 +345,20 @@ void DRW_render_context_disable_ex(bool restore) {
  * \{ */
 
 ROSE_STATIC void drw_engine_cache_init(void) {
-	if (GDrawManager.engine && GDrawManager.engine->cache_init) {
-		GDrawManager.engine->cache_init(GDrawManager.vdata);
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (vdata->engine && vdata->engine->cache_init) {
+			vdata->engine->cache_init(vdata);
+		}
 	}
 }
 
 ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 	DRW_batch_cache_validate(object);
 
-	if (GDrawManager.engine && GDrawManager.engine->cache_populate) {
-		GDrawManager.engine->cache_populate(GDrawManager.vdata, object);
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (vdata->engine && vdata->engine->cache_populate) {
+			vdata->engine->cache_populate(vdata, object);
+		}
 	}
 
 	// @TODO assign a different thread to generate these!
@@ -282,22 +368,27 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 ROSE_STATIC void drw_engine_cache_finish(void) {
 	// @TODO wait for any threads that have beed dispatched by #drw_engine_cache_populate
 
-	if (GDrawManager.engine && GDrawManager.engine->cache_finish) {
-		GDrawManager.engine->cache_finish(GDrawManager.vdata);
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (vdata->engine && vdata->engine->cache_finish) {
+			vdata->engine->cache_finish(vdata);
+		}
 	}
 }
 
 ROSE_STATIC void drw_engine_draw_scene(void) {
-	if (!GDrawManager.engine || !GDrawManager.engine->draw) {
-		return;
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (vdata->engine && vdata->engine->draw) {
+			vdata->engine->draw(vdata);
+		}
 	}
-
-	GDrawManager.engine->draw(GDrawManager.vdata);
 }
 
 void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, struct GPUViewport *viewport) {
 	/** No framebuffer is allowed to be bound the moment we are rendering! */
 	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
+
+	DRW_manager_init(&GDrawManager, viewport, NULL);
+	DRW_engines_init(C);
 
 	drw_engine_cache_init();
 
@@ -306,6 +397,10 @@ void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, stru
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		drw_engine_cache_populate(object);
 	}
+
+
+	DRW_engines_exit(C);
+	DRW_manager_exit(&GDrawManager);
 
 	drw_engine_cache_finish();
 	drw_engine_draw_scene();
@@ -330,11 +425,7 @@ void DRW_draw_view(const struct rContext *C) {
 	struct wmWindow *win = CTX_wm_window(C);
 
 	DRW_render_context_enable();
-
-	DRW_engines_init(C);
 	DRW_draw_render_loop(C, region, viewport);
-	DRW_engines_exit(C);
-
 	DRW_render_context_disable();
 
 	wm_window_reset_drawable(wm);

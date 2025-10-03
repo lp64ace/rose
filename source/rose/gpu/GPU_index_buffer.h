@@ -86,6 +86,7 @@ void GPU_indexbuf_set_tri_restart(GPUIndexBufBuilder *builder, uint elem);
 GPUIndexBuf *GPU_indexbuf_build(GPUIndexBufBuilder *);
 
 void GPU_indexbuf_build_in_place(GPUIndexBufBuilder *, GPUIndexBuf *);
+void GPU_indexbuf_build_in_place_ex(GPUIndexBufBuilder *, unsigned int, unsigned int, bool, GPUIndexBuf *);
 
 /* \} */
 
