@@ -257,26 +257,28 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 
 	/* Demo Scene */
 
+	Mesh *me = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "CubeMesh");
+	if (!me) {
+		fprintf(stderr, "[WindowManager] Failed to create mesh.\n");
+		return;
+	}
+
+	RMesh *rm = RM_preset_cube_create((const float[3]){0.125f, 0.125f, 0.125f});
+	if (!rm) {
+		fprintf(stderr, "[WindowManager] Failed to create preset mesh.\n");
+		return;
+	}
+
+	RMeshToMeshParams params = {
+		.cd_mask_extra = 0,
+	};
+	RM_mesh_rm_to_me(main, rm, me, &params);
+	RM_mesh_free(rm);
+
+	id_us_rem(me);
+
 	for (int i = -1; i <= 1; i++) {
-		Mesh *me = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "CubeMesh");
-		if (!me) {
-			fprintf(stderr, "[WindowManager] Failed to create mesh.\n");
-			return;
-		}
-
-		RMesh *rm = RM_preset_cube_create((const float[3]){0.125f, 0.125f, 0.125f});
-		if (!rm) {
-			fprintf(stderr, "[WindowManager] Failed to create preset mesh.\n");
-			return;
-		}
-
-		RMeshToMeshParams params = {
-			.cd_mask_extra = 0,
-		};
-		RM_mesh_rm_to_me(main, rm, me, &params);
-		RM_mesh_free(rm);
-
-		Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, false);
+		Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, true);
 		if (!ob) {
 			fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
 			return;
@@ -308,6 +310,8 @@ void WM_init(struct rContext *C) {
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
+	float t0 = WM_time(C);
+
 	while (true) {
 		bool poll = false;
 		if ((poll = (wm->handle && GTK_window_manager_has_events(wm->handle)))) {
@@ -316,6 +320,18 @@ void WM_main(struct rContext *C) {
 		}
 		WM_do_handlers(C);
 		WM_do_draw(C);
+
+		float t1 = WM_time(C);
+
+		int index = 0;
+
+		Main *main = CTX_data_main(C);
+		LISTBASE_FOREACH(Object *, object, &main->objects) {
+			rotate_m4(object->runtime.object_to_world, 'Y', t1 - t0);
+			invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
+		}
+
+		t0 = t1;
 
 		if (!poll && /* is not in rendering - we do not throttle render loop */ 0) {
 			// GTK_sleep(1);
