@@ -284,7 +284,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 			return;
 		}
 
-		translate_m4(ob->runtime.object_to_world, 0.5f * i, 0.0f, 0.0f);
+		translate_m4(ob->runtime.object_to_world, 0.75f * i, 0.0f, 0.0f);
 		invert_m4_m4(ob->runtime.world_to_object, ob->runtime.object_to_world);
 	}
 }
