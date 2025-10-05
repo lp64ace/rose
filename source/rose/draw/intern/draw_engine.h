@@ -6,11 +6,47 @@
 #include "GPU_texture.h"
 #include "GPU_viewport.h"
 
+#include "LIB_memblock.h"
+#include "LIB_mempool.h"
+
 #include "DRW_engine.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Resource Handle & Data
+ * \{ */
+
+#define DRW_RESOURCE_CHUNK_LEN (1 << 9)
+
+typedef unsigned int DRWResourceHandle;
+
+typedef struct DRWObjectMatrix {
+	float model[4][4];
+	float modelinverse[4][4];
+} DRWObjectMatrix;
+
+ROSE_INLINE DRWResourceHandle DRW_handle_increment(DRWResourceHandle *handle) {
+	return ++(*handle) - 1;
+}
+
+ROSE_INLINE size_t DRW_handle_chunk_get(const DRWResourceHandle *handle) {
+	return (*handle & 0x7fffffff) >> 9;
+}
+
+ROSE_INLINE size_t DRW_handle_elem_get(const DRWResourceHandle *handle) {
+	return (*handle) & 0x1ff;
+}
+
+ROSE_INLINE void *DRW_memblock_elem_from_handle(struct MemBlock *memblock, const DRWResourceHandle *handle) {
+	return LIB_memory_block_elem_get(memblock, DRW_handle_chunk_get(handle), DRW_handle_elem_get(handle));
+}
+
+void DRW_render_buffer_finish();
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Draw Engines Data
@@ -34,6 +70,11 @@ enum {
 	DRW_UNIFORM_VERTEX_BUFFER_AS_TEXTURE_REF,
 	DRW_UNIFORM_VERTEX_BUFFER_AS_STORAGE,
 	DRW_UNIFORM_VERTEX_BUFFER_AS_STORAGE_REF,
+
+	// Builtin
+
+	DRW_UNIFORM_RESOURCE_ID,
+	DRW_UNIFORM_BLOCK_OBMATS,
 };
 
 typedef struct DRWUniform {
@@ -71,6 +112,16 @@ typedef struct DRWUniform {
 	};
 } DRWUniform;
 
+typedef struct DRWCommandClear {
+	unsigned char bits;
+	unsigned char stencil;
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
+	float depth;
+} DRWCommandClear;
+
 typedef struct DRWCommandDraw {
 	struct GPUBatch *batch;
 	unsigned int vcount;
@@ -94,6 +145,7 @@ typedef struct DRWCommandDrawInstanceRange {
 } DRWCommandDrawInstanceRange;
 
 enum {
+	DRW_COMMAND_CLEAR,
 	DRW_COMMAND_DRAW,
 	DRW_COMMAND_DRAW_RANGE,
 	DRW_COMMAND_DRAW_INSTANCE,
@@ -106,11 +158,14 @@ typedef struct DRWCommand {
 	int type;
 
 	union {
+		struct DRWCommandClear clear;
 		struct DRWCommandDraw draw;
 		struct DRWCommandDrawRange draw_range;
 		struct DRWCommandDrawInstance draw_instance;
 		struct DRWCommandDrawInstanceRange draw_instance_range;
 	};
+
+	DRWResourceHandle handle;
 } DRWCommand;
 
 typedef struct DRWShadingGroup {

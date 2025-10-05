@@ -40,6 +40,9 @@ typedef struct ObjectRuntime {
 	struct BoundBox *bb;
 
 	int local_collections_bits;
+
+	float object_to_world[4][4];
+	float world_to_object[4][4];
 } ObjectRuntime;
 
 typedef struct Object {

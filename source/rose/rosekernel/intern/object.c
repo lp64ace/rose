@@ -17,6 +17,13 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 	Object *ob = (Object *)id;
 	
 	ob->type = OB_EMPTY;
+
+	unit_m4(ob->runtime.object_to_world);
+	unit_m4(ob->runtime.world_to_object);
+
+	scale_m4_fl(ob->runtime.object_to_world, 0.5f);
+	rotate_m4(ob->runtime.object_to_world, 'X', M_PI_4);
+	invert_m4_m4(ob->runtime.world_to_object, ob->runtime.object_to_world);
 }
 
 ROSE_STATIC void object_free_data(struct ID *id) {
@@ -237,6 +244,14 @@ void KER_object_matrix_local_get(Object *ob, float r_mat[4][4]) {
 	else {
 		copy_m4_m4(r_mat, ob->obmat);
 	}
+}
+
+const float (*KER_object_object_to_world(const Object *object))[4] {
+	return object->runtime.object_to_world;
+}
+
+const float (*KER_object_world_to_object(const Object *object))[4] {
+	return object->runtime.world_to_object;
 }
 
 /** \} */

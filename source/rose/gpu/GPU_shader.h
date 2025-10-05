@@ -185,6 +185,14 @@ typedef enum UniformBuiltin {
  */
 int GPU_shader_get_builtin_uniform(GPUShader *shader, int builtin);
 
+typedef enum UniformBlockBuiltin {
+	GPU_UNIFORM_BLOCK_MODEL,
+} UniformBlockBuiltin;
+
+#define GPU_NUM_UNIFORM_BLOCKS (GPU_UNIFORM_BLOCK_MODEL + 1)
+
+int GPU_shader_get_builtin_block(GPUShader *shader, int builtin);
+
 /* \} */
 
 #if defined(__cplusplus)

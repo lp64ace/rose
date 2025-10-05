@@ -6,6 +6,8 @@
 #include "KER_mesh.h"
 #include "KER_object.h"
 
+#include <stdbool.h>
+
 struct Mesh;
 
 #ifdef __cplusplus
@@ -17,6 +19,7 @@ extern "C" {
  * \{ */
 
 void extract_positions(const struct Mesh *mesh, struct GPUVertBuf *vbo);
+void extract_normals(const Mesh *mesh, struct GPUVertBuf *vbo, bool use_hq);
 
 /** \} */
 

@@ -155,6 +155,7 @@ size_t LIB_memory_pool_length(MemPool *pool);
  * Returns the element at the specified index.
  */
 void *LIB_memory_pool_findelem(MemPool *pool, size_t index);
+void *LIB_memory_pool_findelem_ex(MemPool *pool, size_t chunk, size_t elem);
 
 /** \} */
 

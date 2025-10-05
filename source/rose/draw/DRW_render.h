@@ -40,7 +40,7 @@ typedef struct DrawEngineType {
 	 * For the general/base format of the Engine's draw data refer to the
 	 * #ViewportEngineData struct defined in `intern/draw_engine.h`.
 	 */
-	DrawEngineDataSize *vdata_size;
+	const DrawEngineDataSize *vdata_size;
 
 	void (*engine_init)(void *vdata);
 

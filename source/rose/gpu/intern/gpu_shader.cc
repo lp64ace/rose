@@ -401,6 +401,11 @@ int GPU_shader_get_builtin_uniform(GPUShader *shader, int builtin) {
 	return interface->uniform_builtin((UniformBuiltin)builtin);
 }
 
+int GPU_shader_get_builtin_block(GPUShader *shader, int builtin) {
+	const ShaderInterface *interface = unwrap(shader)->interface;
+	return interface->uniform_block_builtin((UniformBlockBuiltin)builtin);
+}
+
 uint GPU_shader_get_attribute_len(const GPUShader *shader) {
 	const ShaderInterface *interface = unwrap(shader)->interface;
 	return interface->attr_len_;

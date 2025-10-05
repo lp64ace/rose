@@ -6,9 +6,15 @@
 
 #include "GPU_batch.h"
 #include "GPU_framebuffer.h"
+#include "GPU_state.h"
 #include "GPU_viewport.h"
 
+#include "KER_object.h"
+
 #include "LIB_assert.h"
+#include "LIB_math_vector.h"
+#include "LIB_math_matrix.h"
+#include "LIB_math_rotation.h"
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -22,11 +28,11 @@
  * \{ */
 
 typedef struct DRWAliceViewportPrivateData {
-	DRWShadingGroup *depth_shgroup;
+	DRWShadingGroup *opaque_shgroup;
 } DRWAliceViewportPrivateData;
 
 typedef struct DRWAliceViewportPassList {
-	DRWPass *depth_pass;
+	DRWPass *opaque_pass;
 } DRWAliceViewportPassList;
 
 typedef struct DRWAliceViewportStorageList {
@@ -61,20 +67,24 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 
 	DRWAliceViewportPrivateData *impl = stl->data;
 
-	GPUShader *depth = DRW_alice_shader_depth_get();
-	if ((psl->depth_pass = DRW_pass_new("Depth Pass"))) {
-		impl->depth_shgroup = DRW_shading_group_new(depth, psl->depth_pass);
+	GPUShader *opaque = DRW_alice_shader_opaque_get();
+	if ((psl->opaque_pass = DRW_pass_new("Opaque Pass"))) {
+		impl->opaque_shgroup = DRW_shading_group_new(opaque, psl->opaque_pass);
+
+		DRW_shading_group_clear_ex(impl->opaque_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, NULL);
 	}
 }
 
-ROSE_STATIC void alice_cache_populate(void *vdata, struct Object *object) {
+ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
 	DRWAliceViewportPrivateData *impl = stl->data;
 
 	GPUBatch *batch = DRW_cache_object_surface_get(object);
 
-	if (impl->depth_shgroup) {
-		DRW_shading_group_call_ex(impl->depth_shgroup, batch);
+	if (impl->opaque_shgroup) {
+		const float (*mat)[4] = KER_object_object_to_world(object);
+
+		DRW_shading_group_call_ex(impl->opaque_shgroup, object, mat, batch);
 	}
 }
 
@@ -90,10 +100,10 @@ ROSE_STATIC void alice_init(void *vdata) {
 ROSE_STATIC void alice_draw(void *vdata) {
 	DRWAliceViewportPassList *psl = ((DRWAliceData *)vdata)->psl;
 
-	DRW_draw_pass(psl->depth_pass);
+	DRW_draw_pass(psl->opaque_pass);
 }
 
-ROSE_STATIC void alice_free() {
+ROSE_STATIC void alice_free(void) {
 	DRW_alice_shaders_free();
 }
 

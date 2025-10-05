@@ -18,6 +18,7 @@ extern "C" {
 typedef struct MeshBufferList {
 	struct {
 		GPUVertBuf *pos;
+		GPUVertBuf *nor;
 	} vbo;
 	struct {
 		GPUIndexBuf *tris;

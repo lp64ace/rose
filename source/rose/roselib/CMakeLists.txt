@@ -108,6 +108,7 @@ set(SRC
 	LIB_math_vector_types.hh
 	LIB_memarena.h
 	LIB_memory_utils.hh
+	LIB_memblock.h
 	LIB_mempool.h
 	LIB_multi_value_map.hh
 	LIB_offset_indices.hh
@@ -190,6 +191,7 @@ set(SRC
 	intern/math_rotation.c
 	intern/math_vector.c
 	intern/memarena.c
+	intern/memblock.c
 	intern/mempool.c
 	intern/path_utils.c
 	intern/polyfill_2d.c

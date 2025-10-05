@@ -11,6 +11,7 @@
 #include "DRW_render.h"
 
 #include "draw_engine.h"
+#include "draw_manager.h"
 
 DRWViewData *DRW_view_data_new(ListBase *engines) {
 	DRWViewData *view_data = (DRWViewData *)MEM_callocN(sizeof(DRWViewData), "DRWViewData");
@@ -31,7 +32,7 @@ DRWViewData *DRW_view_data_new(ListBase *engines) {
 }
 
 ROSE_STATIC void draw_view_engine_data_clear(ViewportEngineData *vdata) {
-	DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
+	const DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
 
 	for (int i = 0; vdata->fbl && i < vdata_size->fbl_len; i++) {
 		GPU_FRAMEBUFFER_FREE_SAFE(vdata->fbl->framebuffers[i]);

@@ -39,6 +39,9 @@ void KER_object_to_mat4(struct Object *object, float r_mat[4][4]);
 void KER_object_matrix_parent_get(struct Object *object, struct Object *parent, float r_mat[4][4]);
 void KER_object_matrix_local_get(struct Object *object, float r_mat[4][4]);
 
+const float (*KER_object_object_to_world(const struct Object *object))[4];
+const float (*KER_object_world_to_object(const struct Object *object))[4];
+
 /** \} */
 
 #ifdef __cplusplus

@@ -6,7 +6,9 @@
 
 GPU_SHADER_CREATE_INFO(alice_mesh)
     .vertex_in(0, Type::VEC3, "pos")
-    .vertex_source("depth_vert.glsl");
+    .vertex_in(1, Type::VEC3, "nor")
+    .vertex_source("alice_vert.glsl")
+	.additional_info("draw_mesh");
 	
 /** \} */
 	
@@ -14,13 +16,12 @@ GPU_SHADER_CREATE_INFO(alice_mesh)
 /** \name Depth shader types.
  * \{ */
 
-GPU_SHADER_CREATE_INFO(alice_depth)
-	.fragment_out(0, Type::VEC4, "fragColor")
-	.fragment_source("depth_frag.glsl");
+GPU_SHADER_CREATE_INFO(alice_opaque)
+	.additional_info("gpu_shader_simple_lighting");
 
 /** \} */
 
-GPU_SHADER_CREATE_INFO(alice_depth_mesh)
+GPU_SHADER_CREATE_INFO(alice_opaque_mesh)
 	.additional_info("alice_mesh")
-	.additional_info("alice_depth")
+	.additional_info("alice_opaque")
 	.do_static_compilation(true);

@@ -201,6 +201,7 @@ void GPU_viewport_unbind(GPUViewport *viewport) {
 }
 
 static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_pos, const rctf *rect_uv) {
+	GPUTexture *depth = viewport->depth_tx;
 	GPUTexture *color = viewport->color_render_tx[view];
 	GPUTexture *color_overlay = viewport->color_overlay_tx[view];
 
@@ -214,8 +215,8 @@ static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_
 	GPU_texture_bind(color, 0);
 	GPU_texture_bind(color_overlay, 1);
 	GPU_batch_draw(batch);
-	GPU_texture_unbind(color);
 	GPU_texture_unbind(color_overlay);
+	GPU_texture_unbind(color);
 }
 
 void GPU_viewport_draw_to_screen(GPUViewport *viewport, int view, const rcti *rect) {

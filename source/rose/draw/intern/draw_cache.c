@@ -130,6 +130,7 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 	}
 	if (DRW_batch_requested(cache->surface, GPU_PRIM_TRIS)) {
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
+		DRW_vbo_request(cache->surface, &cache->buffers.vbo.nor);
 		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 	}
 

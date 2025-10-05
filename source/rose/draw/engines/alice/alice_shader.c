@@ -3,16 +3,16 @@
 #include "alice_private.h"
 
 typedef struct DRWAliceShaderList {
-	GPUShader *depth;
+	GPUShader *opaque;
 } DRWAliceShaderList;
 
 static DRWAliceShaderList GAliceShaderList;
 
-GPUShader *DRW_alice_shader_depth_get(void) {
-	if (GAliceShaderList.depth == NULL) {
-		GAliceShaderList.depth = GPU_shader_create_from_info_name("alice_depth_mesh");
+GPUShader *DRW_alice_shader_opaque_get(void) {
+	if (GAliceShaderList.opaque == NULL) {
+		GAliceShaderList.opaque = GPU_shader_create_from_info_name("alice_opaque_mesh");
 	}
-	return GAliceShaderList.depth;
+	return GAliceShaderList.opaque;
 }
 
 void DRW_alice_shaders_free() {

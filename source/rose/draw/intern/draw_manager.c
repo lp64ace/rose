@@ -37,7 +37,8 @@ struct Object;
 /** \name Draw Engines
  * \{ */
 
-static ListBase GEngineList;
+ListBase GEngineList;
+DRWManager GDrawManager;
 
 void DRW_engines_register(void) {
 	// DRW_engine_register(&draw_engine_basic_type);
@@ -156,14 +157,17 @@ ROSE_STATIC void drw_drawdata_free(struct ID *id) {
 /** \name Draw Engines Internal
  * \{ */
 
-DRWManager GDrawManager;
-
 DRWData *DRW_viewport_data_new(void) {
 	DRWData *ddata = MEM_callocN(sizeof(DRWData), "DRWData");
 
 	ddata->commands = LIB_memory_pool_create(sizeof(DRWCommand), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
 	ddata->passes = LIB_memory_pool_create(sizeof(DRWPass), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
 	ddata->shgroups = LIB_memory_pool_create(sizeof(DRWShadingGroup), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
+	ddata->uniforms = LIB_memory_pool_create(sizeof(DRWUniform), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
+
+	// Resource Data Pool(s)
+
+	ddata->obmats = LIB_memory_block_create_ex(sizeof(DRWShadingGroup), DRW_RESOURCE_CHUNK_LEN);
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		ddata->vdata_engine[index] = DRW_view_data_new(&GEngineList);
@@ -176,9 +180,19 @@ void DRW_viewport_data_free(DRWData *ddata) {
 	LIB_memory_pool_destroy(ddata->commands);
 	LIB_memory_pool_destroy(ddata->passes);
 	LIB_memory_pool_destroy(ddata->shgroups);
+	LIB_memory_pool_destroy(ddata->uniforms);
+
+	LIB_memory_block_destroy(ddata->obmats, NULL);
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		DRW_view_data_free(ddata->vdata_engine[index]);
+	}
+
+	if (ddata->matrices_ubo != NULL) {
+		for (int i = 0; i < ddata->ubo_length; i++) {
+			GPU_uniformbuf_free(ddata->matrices_ubo[i]);
+		}
+		MEM_freeN(ddata->matrices_ubo);
 	}
 
 	MEM_freeN(ddata);
@@ -241,6 +255,9 @@ ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
 	LIB_memory_pool_clear(ddata->commands, DRW_RESOURCE_CHUNK_LEN);
 	LIB_memory_pool_clear(ddata->passes, DRW_RESOURCE_CHUNK_LEN);
 	LIB_memory_pool_clear(ddata->shgroups, DRW_RESOURCE_CHUNK_LEN);
+	LIB_memory_pool_clear(ddata->uniforms, DRW_RESOURCE_CHUNK_LEN);
+
+	LIB_memory_block_clear(ddata->obmats, NULL);
 }
 
 void DRW_manager_init(DRWManager *manager, GPUViewport *viewport, const int size[2]) {
@@ -276,10 +293,12 @@ void DRW_manager_init(DRWManager *manager, GPUViewport *viewport, const int size
 		DRW_view_data_default_lists_from_viewport(manager->vdata_engine, viewport);
 	}
 
-	// We should enabled the needed engines!
+	// We should enable the needed engines!
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &manager->vdata_engine->viewport_engine_data) {
 		DRW_engine_use(vdata->engine);
 	}
+
+	GDrawManager.resource_handle = 0;
 }
 
 void DRW_manager_exit(DRWManager *manager) {
@@ -357,6 +376,8 @@ ROSE_STATIC void drw_engine_cache_init(void) {
 }
 
 ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
+	GDrawManager.objcache_handle = 0;
+
 	DRW_batch_cache_validate(object);
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
@@ -377,12 +398,20 @@ ROSE_STATIC void drw_engine_cache_finish(void) {
 			vdata->engine->cache_finish(vdata);
 		}
 	}
+
+	DRW_render_buffer_finish();
 }
 
 ROSE_STATIC void drw_engine_draw_scene(void) {
 	DefaultFramebufferList *dfbl = &GDrawManager.vdata_engine->dfbl;
 
 	GPU_framebuffer_bind(dfbl->default_fb);
+
+	/**
+	 * These should be configured by each DRWPass by introducing a structure like DRWState instead!
+	 */
+	GPU_depth_test(GPU_DEPTH_LESS);
+	GPU_face_culling(GPU_CULL_BACK);
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		if (vdata->engine && vdata->engine->draw) {
@@ -412,6 +441,7 @@ void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, stru
 	DRW_manager_exit(&GDrawManager);
 
 	drw_engine_cache_finish();
+
 	drw_engine_draw_scene();
 }
 

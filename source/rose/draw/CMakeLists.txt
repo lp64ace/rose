@@ -34,8 +34,9 @@ set(BASIC
 )
 
 set(GLSL_SRC
-	engines/alice/shaders/depth_vert.glsl
-	engines/alice/shaders/depth_frag.glsl
+	engines/alice/shaders/alice_vert.glsl
+
+	intern/shaders/draw_shader_shared.h
 
 )
 
@@ -47,17 +48,21 @@ set(SRC
 	intern/mesh/extract_mesh.h
 	intern/mesh/extract_mesh_ibo_tris.cc
 	intern/mesh/extract_mesh_vbo_pos.cc
+	intern/mesh/extract_mesh_vbo_lnor.cc
 	intern/draw_cache_private.h
 	intern/draw_cache_inline.h
 	intern/draw_cache.c
 	intern/draw_cache.cc
 	intern/draw_cache_extract_mesh.cc
+	intern/draw_defines.h
 	intern/draw_engine.c
 	intern/draw_engine.h
 	intern/draw_manager.c
 	intern/draw_manager.h
 	intern/draw_manager_data.c
 	intern/draw_manager_exec.c
+
+	intern/shaders/draw_shader_shared.h
 	
 )
 
