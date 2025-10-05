@@ -59,8 +59,8 @@ set(SHADERS_C
 
 list(APPEND SHADERS_C ${GLSL_C})
 
-rose_add_lib(shaders "${SHADERS_C}" "" "" "")
-add_library(rose::source::shaders ALIAS shaders)
+rose_add_lib(gpu_shaders "${SHADERS_C}" "" "" "")
+add_library(rose::source::gpu_shaders ALIAS gpu_shaders)
 
 set(GLSL_SOURCE_CONTENT
 	""
@@ -282,7 +282,7 @@ set(LIB
 	rose::intern::native
 	rose::source::draw
 	rose::source::roselib
-	rose::source::shaders
+	rose::source::gpu_shaders
 	rose::source::draw_shaders
 	
 	# External Library Dependencies

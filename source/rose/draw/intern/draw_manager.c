@@ -167,7 +167,7 @@ DRWData *DRW_viewport_data_new(void) {
 
 	// Resource Data Pool(s)
 
-	ddata->obmats = LIB_memory_block_create_ex(sizeof(DRWShadingGroup), DRW_RESOURCE_CHUNK_LEN);
+	ddata->obmats = LIB_memory_block_create_ex(sizeof(DRWObjectMatrix), DRW_RESOURCE_CHUNK_LEN);
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		ddata->vdata_engine[index] = DRW_view_data_new(&GEngineList);

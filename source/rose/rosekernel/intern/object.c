@@ -20,10 +20,6 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 
 	unit_m4(ob->runtime.object_to_world);
 	unit_m4(ob->runtime.world_to_object);
-
-	scale_m4_fl(ob->runtime.object_to_world, 0.5f);
-	rotate_m4(ob->runtime.object_to_world, 'X', M_PI_4);
-	invert_m4_m4(ob->runtime.world_to_object, ob->runtime.object_to_world);
 }
 
 ROSE_STATIC void object_free_data(struct ID *id) {
