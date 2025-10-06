@@ -408,12 +408,6 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 
 	GPU_framebuffer_bind(dfbl->default_fb);
 
-	/**
-	 * These should be configured by each DRWPass by introducing a structure like DRWState instead!
-	 */
-	GPU_depth_test(GPU_DEPTH_LESS);
-	GPU_face_culling(GPU_CULL_BACK);
-
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		if (vdata->engine && vdata->engine->draw) {
 			vdata->engine->draw(vdata);
