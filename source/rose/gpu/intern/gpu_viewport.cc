@@ -212,11 +212,11 @@ static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_
 	GPU_batch_uniform_1i(batch, "display_transform", false);
 	GPU_batch_uniform_1i(batch, "use_hdr", false);
 
-	GPU_texture_bind(depth, 0);
+	GPU_texture_bind(color, 0);
 	GPU_texture_bind(color_overlay, 1);
 	GPU_batch_draw(batch);
 	GPU_texture_unbind(color_overlay);
-	GPU_texture_unbind(depth);
+	GPU_texture_unbind(color);
 }
 
 void GPU_viewport_draw_to_screen(GPUViewport *viewport, int view, const rcti *rect) {
