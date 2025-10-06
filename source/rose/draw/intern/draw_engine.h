@@ -86,7 +86,7 @@ typedef struct DRWUniform {
 	int arrlen;
 
 	union {
-		void *pvalue;
+		const void *pvalue;
 		float fvalue[4];
 		int ivalue[4];
 
@@ -188,15 +188,15 @@ struct GPUTexture;
 struct DRWPass;
 
 typedef struct DRWViewportEngineDataFramebufferList {
-	GPUFrameBuffer *framebuffers[1];
+	struct GPUFrameBuffer *framebuffers[1];
 } DRWViewportEngineDataFramebufferList;
 
 typedef struct DRWViewportEngineDataTextureList {
-	GPUTexture *textures[1];
+	struct GPUTexture *textures[1];
 } DRWViewportEngineDataTextureList;
 
 typedef struct DRWViewportEngineDataPassList {
-	DRWPass *passes[1];
+	struct DRWPass *passes[1];
 } DRWViewportEngineDataPassList;
 
 typedef struct DRWViewportEngineDataStorageList {

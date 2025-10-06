@@ -31,32 +31,6 @@ void DRW_render_context_disable_ex(bool restore);
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Draw Engine Data
- * \{ */
-
-typedef struct DRWShadingGroup DRWShadingGroup;
-
-typedef struct DRWPass {
-	/**
-	 * \type DRWShadingGroup each pass consists of multiple shading group rendering passes!
-	 * Each group commands are executed in order.
-	 */
-	ListBase groups;
-
-	/**
-	 * Draw the shading group commands of the original pass instead, 
-	 * this way we avoid duplicating drawcalls and shading group commands for similar passes!
-	 */
-	struct DRWPass *original;
-	/** Link list of additional passes to render! */
-	struct DRWPass *next;
-
-	char name[64];
-} DRWPass;
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Draw Engines
  * \{ */
 
@@ -77,14 +51,14 @@ struct DrawEngineType *DRW_engine_type(const struct rContext *C, struct Scene *s
 
 struct GPUShader;
 
-struct DRWPass *DRW_pass_new_ex(const char *name, struct DRWPass *original);
-struct DRWPass *DRW_pass_new(const char *name);
+struct DRWPass *DRW_pass_new_ex(const char *name, struct DRWPass *original, int state);
+struct DRWPass *DRW_pass_new(const char *name, int state);
 
 struct DRWShadingGroup *DRW_shading_group_new(struct GPUShader *shader, struct DRWPass *pass);
 
-void DRW_shading_group_clear_ex(DRWShadingGroup *shgroup, unsigned char bits, const unsigned char rgba[4], float depth, unsigned char stencil);
-void DRW_shading_group_call_ex(DRWShadingGroup *shgroup, const struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch);
-void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, const struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount);
+void DRW_shading_group_clear_ex(struct DRWShadingGroup *shgroup, unsigned char bits, const unsigned char rgba[4], float depth, unsigned char stencil);
+void DRW_shading_group_call_ex(struct DRWShadingGroup *shgroup, const struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch);
+void DRW_shading_group_call_range_ex(struct DRWShadingGroup *shgroup, const struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount);
 
 struct DRWData *DRW_viewport_data_new(void);
 void DRW_viewport_data_free(struct DRWData *);

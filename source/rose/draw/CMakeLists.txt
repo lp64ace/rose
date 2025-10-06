@@ -61,6 +61,7 @@ set(SRC
 	intern/draw_manager.h
 	intern/draw_manager_data.c
 	intern/draw_manager_exec.c
+	intern/draw_state.h
 
 	intern/shaders/draw_shader_shared.h
 	

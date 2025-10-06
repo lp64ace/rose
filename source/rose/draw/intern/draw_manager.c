@@ -218,21 +218,22 @@ void DRW_engines_init(const struct rContext *C) {
 void DRW_engines_exit(const struct rContext *C) {
 }
 
-DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original) {
+DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
 	DRWPass *npass = LIB_memory_pool_calloc(GDrawManager.vdata_pool->passes);
 
 	npass->groups.first = NULL;
 	npass->groups.last = NULL;
 
 	npass->original = original;
+	npass->state = state;
 
 	LIB_strcpy(npass->name, ARRAY_SIZE(npass->name), name);
 
 	return npass;
 }
 
-DRWPass *DRW_pass_new(const char *name) {
-	return DRW_pass_new_ex(name, NULL);
+DRWPass *DRW_pass_new(const char *name, int state) {
+	return DRW_pass_new_ex(name, NULL, state);
 }
 
 /** \} */

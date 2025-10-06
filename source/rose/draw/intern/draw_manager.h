@@ -1,4 +1,5 @@
 #include "draw_engine.h"
+#include "draw_state.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Draw Manager Structure
@@ -14,7 +15,7 @@ typedef struct DRWData {
 
 	struct DRWViewData *vdata_engine[2];
 
-	struct GPUUniform **matrices_ubo;
+	struct GPUUniformBuf **matrices_ubo;
 
 	size_t ubo_length;
 } DRWData;
@@ -42,5 +43,33 @@ typedef struct DRWManager {
 } DRWManager;
 
 extern DRWManager GDrawManager;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Engine Data
+ * \{ */
+
+typedef struct DRWShadingGroup DRWShadingGroup;
+
+typedef struct DRWPass {
+	/**
+	 * \type DRWShadingGroup each pass consists of multiple shading group rendering passes!
+	 * Each group commands are executed in order.
+	 */
+	ListBase groups;
+
+	/**
+	 * Draw the shading group commands of the original pass instead,
+	 * this way we avoid duplicating drawcalls and shading group commands for similar passes!
+	 */
+	struct DRWPass *original;
+	/** Link list of additional passes to render! */
+	struct DRWPass *next;
+
+	char name[64];
+
+	DRWState state;
+} DRWPass;
 
 /** \} */

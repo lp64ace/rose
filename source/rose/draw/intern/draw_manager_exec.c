@@ -1,4 +1,5 @@
 #include "GPU_batch.h"
+#include "GPU_state.h"
 #include "GPU_framebuffer.h"
 #include "GPU_texture.h"
 #include "GPU_viewport.h"
@@ -8,6 +9,139 @@
 
 #include "draw_engine.h"
 #include "draw_manager.h"
+#include "draw_state.h"
+
+/* -------------------------------------------------------------------- */
+/** \name Draw State
+ * \{ */
+
+ROSE_STATIC void draw_state_set(DRWState state) {
+	WriteMask write_mask = GPU_WRITE_NONE;
+	Blend blend = GPU_BLEND_NONE;
+	FaceCullTest cull = GPU_CULL_NONE;
+	DepthTest depth = GPU_DEPTH_NONE;
+	StencilTest stencil = GPU_STENCIL_NONE;
+	StencilOp stencil_operator = GPU_STENCIL_OP_NONE;
+	ProvokingVertex provoking_vertex = GPU_VERTEX_LAST;
+
+	if (state & DRW_STATE_WRITE_DEPTH) {
+		write_mask |= GPU_WRITE_DEPTH;
+	}
+	if (state & DRW_STATE_WRITE_COLOR) {
+		write_mask |= GPU_WRITE_COLOR;
+	}
+	if (state & DRW_STATE_WRITE_STENCIL_ENABLED) {
+		write_mask |= GPU_WRITE_STENCIL;
+	}
+
+	switch (state & (DRW_STATE_CULL_BACK | DRW_STATE_CULL_FRONT)) {
+		case DRW_STATE_CULL_BACK:
+			cull = GPU_CULL_BACK;
+			break;
+		case DRW_STATE_CULL_FRONT:
+			cull = GPU_CULL_FRONT;
+			break;
+		default:
+			cull = GPU_CULL_NONE;
+			break;
+	}
+
+	switch (state & DRW_STATE_DEPTH_TEST_ENABLED) {
+		case DRW_STATE_DEPTH_LESS:
+			depth = GPU_DEPTH_LESS;
+			break;
+		case DRW_STATE_DEPTH_LESS_EQUAL:
+			depth = GPU_DEPTH_LESS_EQUAL;
+			break;
+		case DRW_STATE_DEPTH_EQUAL:
+			depth = GPU_DEPTH_EQUAL;
+			break;
+		case DRW_STATE_DEPTH_GREATER:
+			depth = GPU_DEPTH_GREATER;
+			break;
+		case DRW_STATE_DEPTH_GREATER_EQUAL:
+			depth = GPU_DEPTH_GREATER_EQUAL;
+			break;
+		case DRW_STATE_DEPTH_ALWAYS:
+			depth = GPU_DEPTH_ALWAYS;
+			break;
+		default:
+			depth = GPU_DEPTH_NONE;
+			break;
+	}
+
+	switch (state & DRW_STATE_WRITE_STENCIL_ENABLED) {
+		case DRW_STATE_WRITE_STENCIL:
+			stencil_operator = GPU_STENCIL_OP_REPLACE;
+			GPU_stencil_write_mask_set(0xFF);
+			break;
+		case DRW_STATE_WRITE_STENCIL_SHADOW_PASS:
+			stencil_operator = GPU_STENCIL_OP_COUNT_DEPTH_PASS;
+			GPU_stencil_write_mask_set(0xFF);
+			break;
+		case DRW_STATE_WRITE_STENCIL_SHADOW_FAIL:
+			stencil_operator = GPU_STENCIL_OP_COUNT_DEPTH_FAIL;
+			GPU_stencil_write_mask_set(0xFF);
+			break;
+		default:
+			stencil_operator = GPU_STENCIL_OP_NONE;
+			GPU_stencil_write_mask_set(0x00);
+			break;
+	}
+
+	switch (state & DRW_STATE_STENCIL_TEST_ENABLED) {
+		case DRW_STATE_STENCIL_ALWAYS:
+			stencil = GPU_STENCIL_ALWAYS;
+			break;
+		case DRW_STATE_STENCIL_EQUAL:
+			stencil = GPU_STENCIL_EQUAL;
+			break;
+		case DRW_STATE_STENCIL_NEQUAL:
+			stencil = GPU_STENCIL_NEQUAL;
+			break;
+		default:
+			stencil = GPU_STENCIL_NONE;
+			break;
+	}
+
+	switch (state & DRW_STATE_BLEND_ENABLED) {
+		case DRW_STATE_BLEND_ADD:
+			blend = GPU_BLEND_ADDITIVE;
+			break;
+		case DRW_STATE_BLEND_ADD_FULL:
+			blend = GPU_BLEND_ADDITIVE_PREMULT;
+			break;
+		case DRW_STATE_BLEND_ALPHA:
+			blend = GPU_BLEND_ALPHA;
+			break;
+		case DRW_STATE_BLEND_ALPHA_PREMUL:
+			blend = GPU_BLEND_ALPHA_PREMULT;
+			break;
+		case DRW_STATE_BLEND_BACKGROUND:
+			blend = GPU_BLEND_BACKGROUND;
+			break;
+		case DRW_STATE_BLEND_OIT:
+			blend = GPU_BLEND_OIT;
+			break;
+		case DRW_STATE_BLEND_MUL:
+			blend = GPU_BLEND_MULTIPLY;
+			break;
+		case DRW_STATE_BLEND_SUB:
+			blend = GPU_BLEND_SUBTRACT;
+			break;
+		default:
+			blend = GPU_BLEND_NONE;
+			break;
+	}
+
+	GPU_state_set(write_mask, blend, cull, depth, stencil, stencil_operator, provoking_vertex);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Commands
+ * \{ */
 
 typedef struct DRWCommandState {
 	int obmat_block_loc;
@@ -130,6 +264,13 @@ ROSE_STATIC void draw_update_uniforms(DRWShadingGroup *group, DRWCommandState *s
 	}
 }
 
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Pass
+ * \{ */
+
+
 ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group) {
 	GPU_shader_bind(group->shader);
 
@@ -175,6 +316,8 @@ ROSE_STATIC void draw_draw_pass_ex(DRWPass *pass, DRWShadingGroup *first, DRWSha
 		return;
 	}
 
+	draw_state_set(pass->state);
+
 	for (DRWShadingGroup *group = first; group; group = group->next) {
 		draw_draw_shading_group(group);
 
@@ -193,3 +336,5 @@ void DRW_draw_pass(DRWPass *ps) {
 void DRW_draw_pass_range(DRWPass *ps, DRWShadingGroup *first, DRWShadingGroup *last) {
 	draw_draw_pass_ex(ps, ps->groups.first, ps->groups.last);
 }
+
+/** \} */

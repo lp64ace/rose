@@ -263,7 +263,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	RMesh *rm = RM_preset_cube_create((const float[3]){0.125f, 0.125f, 0.125f});
+	RMesh *rm = RM_preset_cube_create((const float[3]){0.25f, 0.25f, 0.25f});
 	if (!rm) {
 		fprintf(stderr, "[WindowManager] Failed to create preset mesh.\n");
 		return;
@@ -284,7 +284,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 			return;
 		}
 
-		translate_m4(ob->runtime.object_to_world, 0.75f * i, 0.0f, 0.0f);
+		translate_m4(ob->runtime.object_to_world, 0.66f * i, 0.0f, 0.0f);
 		invert_m4_m4(ob->runtime.world_to_object, ob->runtime.object_to_world);
 	}
 }
@@ -320,18 +320,6 @@ void WM_main(struct rContext *C) {
 		}
 		WM_do_handlers(C);
 		WM_do_draw(C);
-
-		float t1 = WM_time(C);
-
-		int index = 0;
-
-		Main *main = CTX_data_main(C);
-		LISTBASE_FOREACH(Object *, object, &main->objects) {
-			rotate_m4(object->runtime.object_to_world, 'Y', t1 - t0);
-			invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
-		}
-
-		t0 = t1;
 
 		if (!poll && /* is not in rendering - we do not throttle render loop */ 0) {
 			// GTK_sleep(1);
