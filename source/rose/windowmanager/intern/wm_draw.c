@@ -344,6 +344,14 @@ void WM_do_draw(struct rContext *C) {
 		window->delta_time = GTK_elapsed_time(wm->handle) - window->last_draw;
 		window->fps = 1.0 / window->delta_time;
 
+		const double alpha = ROSE_MAX(0.0, ROSE_MIN(window->delta_time * 8, 1.0));
+		if (window->average_fps == 0.0) {
+			window->average_fps = window->fps;
+		}
+		else {
+			window->average_fps = (alpha * window->fps) + (1.0 - alpha) * window->average_fps;
+		}
+
 		wm_window_make_drawable(wm, window);
 
 		wm_window_draw(C, window);
