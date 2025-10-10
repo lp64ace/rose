@@ -47,6 +47,8 @@ struct ActionChannelBag *KER_action_strip_keyframe_data_channelbag_add_ex(struct
 struct ActionChannelBag *KER_action_strip_keyframe_data_channelbag_add(struct ActionStripKeyframeData *strip_data, struct ActionSlot *slot);
 struct ActionChannelBag *KER_action_strip_keyframe_data_channelbag_for_slot_ex(struct ActionStripKeyframeData *strip_data, int handle);
 struct ActionChannelBag *KER_action_strip_keyframe_data_channelbag_for_slot(struct ActionStripKeyframeData *strip_data, struct ActionSlot *slot);
+struct ActionChannelBag *KER_action_strip_keyframe_data_ensure_channelbag_for_slot_ex(struct ActionStripKeyframeData *strip_data, int handle);
+struct ActionChannelBag *KER_action_strip_keyframe_data_ensure_channelbag_for_slot(struct ActionStripKeyframeData *strip_data, struct ActionSlot *slot);
 
 /** \} */
 

@@ -170,6 +170,17 @@ ActionChannelBag *KER_action_strip_keyframe_data_channelbag_for_slot(ActionStrip
 	return KER_action_strip_keyframe_data_channelbag_for_slot_ex(strip_data, slot->handle);
 }
 
+ActionChannelBag *KER_action_strip_keyframe_data_ensure_channelbag_for_slot_ex(ActionStripKeyframeData *strip_data, int handle) {
+	ActionChannelBag *channelbag = KER_action_strip_keyframe_data_channelbag_for_slot_ex(strip_data, handle);
+	if (channelbag != NULL) {
+		return channelbag;
+	}
+	return KER_action_strip_keyframe_data_channelbag_add_ex(strip_data, handle);
+}
+ActionChannelBag *KER_action_strip_keyframe_data_ensure_channelbag_for_slot(ActionStripKeyframeData *strip_data, ActionSlot *slot) {
+	return KER_action_strip_keyframe_data_ensure_channelbag_for_slot_ex(strip_data, slot->handle);
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
