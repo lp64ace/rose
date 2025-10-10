@@ -10,6 +10,7 @@
 #include "draw_engine.h"
 #include "draw_manager.h"
 #include "draw_state.h"
+#include "draw_pass.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Draw State

@@ -12,9 +12,11 @@
 #include "LIB_mempool.h"
 #include "LIB_utildefines.h"
 
+#include "draw_defines.h"
 #include "draw_engine.h"
 #include "draw_manager.h"
-#include "draw_defines.h"
+#include "draw_pass.h"
+#include "draw_state.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Draw Resource Data
