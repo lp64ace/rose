@@ -17,13 +17,13 @@ typedef struct MemBlock {
 	size_t chunk_length;
 } MemBlock;
 
-MemBlock *LIB_memory_block_create_ex(size_t nelem, size_t nchunk) {
+MemBlock *LIB_memory_block_create_ex(size_t elem_size, size_t chunk_size) {
 	MemBlock *block = MEM_mallocN(sizeof(MemBlock), "MemBlock");
 
-	block->elem_size = nelem;
+	block->elem_size = elem_size;
 	block->elem_next = 0;
 	block->elem_last = -1;
-	block->chunk_size = nchunk;
+	block->chunk_size = chunk_size;
 	block->chunk_length = CHUNK_LIST_SIZE;
 	block->chunks = MEM_callocN(sizeof(void *) * block->chunk_length, "MemBlock Chunks");
 	block->chunks[0] = MEM_callocN_aligned(block->chunk_size, 32, __func__);

@@ -12,7 +12,8 @@ extern "C" {
 typedef struct MemBlock MemBlock;
 typedef void (*MemblockValFreeFP)(void *val);
 
-struct MemBlock *LIB_memory_block_create_ex(size_t nelem, size_t nchunk);
+/** \note This does not define the number of elements per chunk, but rather defines the size in bytes of the chunk. */
+struct MemBlock *LIB_memory_block_create_ex(size_t elem_size, size_t chunk_size);
 #define LIB_memory_block_create(nelem) LIB_memory_block_create_ex(nelem, ROSE_MEM_BLOCK_CHUNK_SIZE)
 
 /**

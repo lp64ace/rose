@@ -338,7 +338,7 @@ void *LIB_memory_pool_findelem(MemPool *pool, size_t index) {
 }
 
 void *LIB_memory_pool_findelem_ex(MemPool *pool, size_t ichunk, size_t ielem) {
-	PoolChunk *chunk = memory_pool_chunk_find(pool, ichunk);
+	PoolChunk *chunk = memory_pool_chunk_find(pool->chunks_head, ichunk);
 
 	FreeNode *ret = NULL;
 
