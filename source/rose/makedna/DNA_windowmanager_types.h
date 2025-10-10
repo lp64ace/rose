@@ -31,6 +31,7 @@ typedef struct wmWindow {
 	int sizex;
 	int sizey;
 
+	double average_fps;
 	double last_draw;
 	double delta_time;
 	double fps;
