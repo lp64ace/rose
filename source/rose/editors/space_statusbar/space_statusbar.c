@@ -11,6 +11,7 @@
 
 #include "LIB_listbase.h"
 #include "LIB_string.h"
+#include "LIB_string_utils.h"
 #include "LIB_utildefines.h"
 
 #include "KER_context.h"
@@ -63,10 +64,13 @@ ROSE_INLINE void statusbar_exit(WindowManager *wm, ScrArea *area) {
 ROSE_STATIC void statusbar_header_region_layout(struct rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
 
+	char memory[64];
+	LIB_strnformat_byte_size(memory, ARRAY_SIZE(memory), MEM_num_memory_in_use(), 1);
+
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "statusbar"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
-		uiDefBut(block, UI_BTYPE_TEXT, "Frames", 0, 0, 6 * UI_UNIT_X, 1 * UI_UNIT_Y, &window->fps, UI_POINTER_DBL, 16, UI_BUT_TEXT_LEFT);
+		uiDefBut(block, UI_BTYPE_TEXT, "(null)", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->average_fps, UI_POINTER_DBL, 16, UI_BUT_TEXT_LEFT);
 		UI_block_end(C, block);
 	}
 }
