@@ -1,0 +1,27 @@
+#ifndef KER_ANIM_DATA_H
+#define KER_ANIM_DATA_H
+
+#include "DNA_anim_types.h"
+
+#include <stdbool.h>
+
+struct AnimData;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+bool id_type_can_have_animdata(const short id_type);
+bool id_can_have_animdata(const struct ID *id);
+
+/**
+ * Get #AnimData from the given ID-block.
+ */
+struct AnimData *KER_animdata_from_id(const struct ID *id);
+struct AnimData *KER_animdata_ensure_id(struct ID *id);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif	// KER_ANIM_DATA_H

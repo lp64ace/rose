@@ -1,6 +1,8 @@
 #ifndef DNA_ID_H
 #define DNA_ID_H
 
+#include "DNA_ID_enums.h"
+
 #include "DNA_listbase.h"
 
 #ifdef __cplusplus
@@ -145,12 +147,13 @@ enum {
 };
 
 #define FILTER_ID_LI (1 << 0)
-#define FILTER_ID_ME (1 << 1)
-#define FILTER_ID_OB (1 << 2)
-#define FILTER_ID_GR (1 << 3)
-#define FILTER_ID_SCE (1 << 4)
-#define FILTER_ID_SCR (1 << 5)
-#define FILTER_ID_WM (1 << 6)
+#define FILTER_ID_AC (1 << 1)
+#define FILTER_ID_ME (1 << 2)
+#define FILTER_ID_OB (1 << 3)
+#define FILTER_ID_GR (1 << 4)
+#define FILTER_ID_SCE (1 << 5)
+#define FILTER_ID_SCR (1 << 6)
+#define FILTER_ID_WM (1 << 7)
 
 /**
  * This enum defines the index assigned to each type of IDs in the array returned by
@@ -194,11 +197,14 @@ typedef enum eID_Index {
 	 * continuing with the deletion of the WindowManager!
 	 */
 	INDEX_ID_WM,
+	/**
+	 * Animation types and actions might be used by almost any other ID type.
+	 */
+	INDEX_ID_AC,
 	INDEX_ID_ME,
 	INDEX_ID_OB,
 	INDEX_ID_GR,
 	INDEX_ID_SCE,
-
 	INDEX_ID_SCR,
 	
 	/* Special values, keep last. */

@@ -20,6 +20,8 @@ typedef struct RenderData {
 
 typedef struct Scene {
     ID id;
+	/** Animation data (must be immediately after id for utilities to use it). */
+	struct AnimData *adt;
 
     struct Object *camera;
     struct World *world;

@@ -285,7 +285,7 @@ IDTypeInfo IDType_ID_SCR = {
 	.name = "Screen",
 	.name_plural = "Screens",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = NULL,

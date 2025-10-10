@@ -277,7 +277,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	RM_mesh_rm_to_me(main, rm, me, &params);
 	RM_mesh_free(rm);
 
-	id_us_rem(me);
+	id_us_rem(&me->id);
 
 	for (int i = 0; i < count; i++) {
 		Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, true);
@@ -435,7 +435,7 @@ IDTypeInfo IDType_ID_WM = {
 	.name = "WindowManager",
 	.name_plural = "Window Managers",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = window_manager_init_data,
 	.copy_data = NULL,

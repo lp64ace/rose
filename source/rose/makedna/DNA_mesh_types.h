@@ -23,6 +23,8 @@ extern "C" {
 
 typedef struct Mesh {
 	ID id;
+	/** Animation data (must be immediately after id for utilities to use it). */
+	struct AnimData *adt;
 	
 	/** The number of vertices in the mesh, and the size of #vdata. */
 	int totvert;

@@ -605,7 +605,7 @@ bool KER_collection_object_rem(Main *main, Collection *collection, Object *ob, b
 	.name = "Collection",
 	.name_plural = "Collections",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = collection_copy_data,

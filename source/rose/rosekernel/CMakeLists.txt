@@ -22,10 +22,14 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
+	KER_action.h
+	KER_action.hh
+	KER_anim_data.h
 	KER_context.h
 	KER_cpp_types.h
 	KER_collection.h
 	KER_customdata.h
+	KER_fcurve.h
 	KER_global.h
 	KER_idprop.h
 	KER_idtype.h
@@ -45,10 +49,14 @@ set(SRC
 	KER_screen.h
 	KER_userdef.h
 
+	intern/action.c
+	intern/action_runtime.cc
+	intern/anim_data.c
 	intern/context.c
 	intern/cpp_types.cc
 	intern/collection.c
 	intern/customdata.cc
+	intern/fcurve.c
 	intern/idprop.c
 	intern/idtype.c
 	intern/layer.c

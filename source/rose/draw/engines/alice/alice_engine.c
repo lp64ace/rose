@@ -71,7 +71,7 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 	if ((psl->opaque_pass = DRW_pass_new("Opaque Pass", DRW_STATE_DEFAULT))) {
 		impl->opaque_shgroup = DRW_shading_group_new(opaque, psl->opaque_pass);
 
-		DRW_shading_group_clear_ex(impl->opaque_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, NULL);
+		DRW_shading_group_clear_ex(impl->opaque_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, 0);
 	}
 }
 

@@ -33,10 +33,12 @@ typedef struct Main {
 	 */
 	char filepath[1024];
 
+	bool is_action_slot_to_id_map_dirty;
 	bool is_global_main;
 
 	struct Library *curlib;
 	struct ListBase libraries;
+	struct ListBase actions;
 	struct ListBase meshes;
 	struct ListBase objects;
 	struct ListBase collections;

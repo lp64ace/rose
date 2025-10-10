@@ -47,6 +47,8 @@ typedef struct ObjectRuntime {
 
 typedef struct Object {
 	ID id;
+	/** Animation data (must be immediately after id for utilities to use it). */
+	struct AnimData *adt;
 	
 	struct DrawDataList drawdata;
 	struct Object *parent;
