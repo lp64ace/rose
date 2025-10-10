@@ -190,13 +190,13 @@ void KER_action_keystrip_ensure(Action *action) {
 	}
 }
 
-typedef struct ActionVisitUse {
+typedef struct VisitActionUseData {
 	Action *action;
 	int handle;
-} ActionVisitUse;
+} VisitActionUseData;
 
 ROSE_STATIC bool visit_action_use(struct ID *animated, const struct Action *used_action, int used_handle, void *userdata) {
-	ActionVisitUse *data = (ActionVisitUse *)userdata;
+	VisitActionUseData *data = (VisitActionUseData *)userdata;
 
 	if (used_action != data->action) {
 		return true;
@@ -205,11 +205,11 @@ ROSE_STATIC bool visit_action_use(struct ID *animated, const struct Action *used
 		return true;
 	}
 
-	return false;
+	return false; // We found a match, the iteration should exit and return false!
 }
 
 bool is_id_using_action_slot(ID *id, Action *action, int handle) {
-	ActionVisitUse data = {
+	VisitActionUseData data = {
 		.action = action,
 		.handle = handle,
 	};
