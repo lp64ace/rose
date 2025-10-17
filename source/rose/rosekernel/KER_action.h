@@ -10,6 +10,8 @@
 struct Action;
 struct ActionSlot;
 struct Main;
+struct Pose;
+struct PoseChannel;
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,6 +95,54 @@ void KER_action_slot_runtime_users_add(const struct ActionSlot *slot, struct ID 
 void KER_action_slot_runtime_users_remove(const struct ActionSlot *slot, struct ID *id);
 void KER_action_slot_runtime_users_invalidate(struct ActionSlot *slot, struct Main *main);
 void KER_action_slot_runtime_free(struct ActionSlot *slot);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name PoseChannel Action
+ * \{ */
+
+/**
+ * Looks to see if the channel with the given name already exists
+ * in this pose - if not a new one is allocated and initialized.
+ *
+ * \note Use with care, not on Armature poses but for temporal ones.
+ * \note (currently used for action constraints and in rebuild_pose).
+ */
+struct PoseChannel *KER_pose_channel_ensure(struct Pose *pose, const char *name);
+struct PoseChannel *KER_pose_channel_find(struct Pose *pose, const char *name);
+
+/**
+ * Apply a 4x4 matrix to the pose bone,
+ * similar to #KER_object_apply_mat4().
+ */
+void KER_pose_channel_apply_mat4(struct PoseChannel *pchannel, const float mat[4][4], bool use_compat);
+void KER_pose_channel_mat3_to_rot(struct PoseChannel *pchannel, const float mat[3][3], bool use_compat);
+
+void KER_pose_channel_free_ex(struct PoseChannel *pchan, bool do_id_user);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Pose Action
+ * \{ */
+
+/**
+ * Removes the hash for quick lookup of channels, must be done when adding/removing channels.
+ */
+void KER_pose_channels_hash_ensure(struct Pose *pose);
+void KER_pose_channels_hash_free(struct Pose *pose);
+
+/**
+ * Return a pointer to the pose channel of the given name
+ * from this pose.
+ */
+struct PoseChannel *KER_pose_channel_find_name(const struct Pose *pose, const char *name);
+
+void KER_pose_free_data_ex(struct Pose *pose, const bool do_id_user);
+void KER_pose_free_data(struct Pose *pose);
+void KER_pose_free_ex(struct Pose *pose, const bool do_id_user);
+void KER_pose_free(struct Pose *pose);
 
 /** \} */
 

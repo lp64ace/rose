@@ -33,9 +33,9 @@
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
-#include "RFT_api.h"
+#include "IO_fbx.h"
 
-#include "RM_include.h"
+#include "RFT_api.h"
 
 #include <GTK_api.h>
 
@@ -255,40 +255,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	/* Demo Scene */
-
-	int count = 1;
-
-	Mesh *me = (Mesh *)KER_object_obdata_add_from_type(main, OB_MESH, "CubeMesh");
-	if (!me) {
-		fprintf(stderr, "[WindowManager] Failed to create mesh.\n");
-		return;
-	}
-
-	RMesh *rm = RM_preset_cube_create((const float[3]){0.5f / count, 0.5f / count, 0.5f / count});
-	if (!rm) {
-		fprintf(stderr, "[WindowManager] Failed to create preset mesh.\n");
-		return;
-	}
-
-	RMeshToMeshParams params = {
-		.cd_mask_extra = 0,
-	};
-	RM_mesh_rm_to_me(main, rm, me, &params);
-	RM_mesh_free(rm);
-
-	id_us_rem(&me->id);
-
-	for (int i = 0; i < count; i++) {
-		Object *ob = KER_object_add_for_data(main, NULL, OB_MESH, NULL, (ID *)me, true);
-		if (!ob) {
-			fprintf(stderr, "[WindowManager] Failed to create a cube object.\n");
-			return;
-		}
-
-		translate_m4(ob->runtime.object_to_world, -1.0f + (2.0f * (i + 1)) / (count + 1), 0.0f, 0.0f);
-		translate_m4(ob->runtime.world_to_object, +1.0f - (2.0f * (i + 1)) / (count + 1), 0.0f, 0.0f);
-	}
+	FBX_import(C, "C:\\Users\\jim\\Documents\\cat.fbx");
 }
 
 void WM_init(struct rContext *C) {

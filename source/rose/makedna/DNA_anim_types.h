@@ -3,6 +3,8 @@
 
 #include "DNA_ID.h"
 
+#include "DNA_curve_types.h"
+
 struct ActionGroup;
 
 #ifdef __cplusplus
@@ -23,6 +25,7 @@ typedef struct FCurve {
 
 	struct ActionGroup *group;
 
+	BezTriple *bezt;
 	/** Baked or imported motion samples (array). */
 	FPoint *fpt;
 	/** Total number of points which define the curve (i.e. size of arrays in FPoints). */

@@ -39,14 +39,14 @@ typedef struct RTState {
 	size_t warnings;
 } RTState;
 
-ROSE_INLINE void RT_state_init(struct RTParser *parser) {
+ROSE_INLINE void RT_state_init(struct RTCParser *parser) {
 	parser->state = MEM_callocN(sizeof(RTState), "RTParserState");
 
 	/** Create the global state for this parser, will always be alive until `RT_state_free` is called. */
 	RT_scope_push(parser->context, parser->state);
 }
 
-ROSE_INLINE void RT_state_exit(struct RTParser *parser) {
+ROSE_INLINE void RT_state_exit(struct RTCParser *parser) {
 	while (parser->state->scope) {
 		/**
 		 * Under normal circumstances this will only be called once to delete the global scope,
@@ -396,7 +396,7 @@ ROSE_INLINE void configure(RTCParser *P) {
 }
 
 RTCParser *RT_parser_new(const RTFile *file) {
-	RTCParser *parser = MEM_callocN(sizeof(RTCParser), "RTParser");
+	RTCParser *parser = MEM_callocN(sizeof(RTCParser), "RTCParser");
 	parser->context = RT_context_new();
 	parser->file = file;
 
@@ -418,7 +418,7 @@ RTCParser *RT_parser_new(const RTFile *file) {
 /** \name Delete Methods
  * \{ */
 
-void RT_parser_free(struct RTParser *parser) {
+void RT_parser_free(struct RTCParser *parser) {
 	RT_state_exit(parser);
 	RT_context_free(parser->context);
 	MEM_freeN(parser);
@@ -2131,6 +2131,10 @@ ROSE_INLINE bool funcvars(RTCParser *P, RTObject *func) {
 	}
 
 	return true;
+}
+
+RTContext *RT_parser_context(RTCParser *parser) {
+	return parser->context;
 }
 
 bool RT_parser_do(RTCParser *P) {

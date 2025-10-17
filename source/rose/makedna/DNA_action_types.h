@@ -220,6 +220,85 @@ enum {
 
 /** \} */
 
+/* #pchannel->rotmode, #object->rotmode */
+enum {
+	/* quaternion rotations (default, and for older Rose versions) */
+	ROT_MODE_QUAT = 0,
+
+	/* euler rotations - keep in sync with enum in LIB_math.h */
+	/** Rose 'default' (classic) - must be as 1 to sync with LIB_math_rotation.h defines */
+	ROT_MODE_EUL = 1,
+	ROT_MODE_XYZ = 1,
+	ROT_MODE_XZY = 2,
+	ROT_MODE_YXZ = 3,
+	ROT_MODE_YZX = 4,
+	ROT_MODE_ZXY = 5,
+	ROT_MODE_ZYX = 6,
+	/**
+	 * NOTE: space is reserved here for 18 other possible
+	 * euler rotation orders not implemented.
+	 */
+	/* axis angle rotations */
+	ROT_MODE_AXISANGLE = -1,
+
+	ROT_MODE_MIN = ROT_MODE_AXISANGLE, /* sentinel for negative value. */
+	ROT_MODE_MAX = ROT_MODE_ZYX,
+};
+
+/* -------------------------------------------------------------------- */
+/** \name Action Pose
+ * \{ */
+
+typedef struct PoseChannel {
+	struct PoseChannel *prev, *next;
+
+	char name[64];
+
+	/** Set on read or rebuild pose */
+	struct Bone *bone;
+	/** Set on read or rebuild pose */
+	struct PoseChannel *parent;
+	/** Set on read or rebuild pose */
+	struct PoseChannel *child;
+
+	/** Transforms - written in by actions or transform. */
+	float loc[3];
+	float scale[3];
+	float euler[3];
+	float quat[4];
+	float rotAxis[3], rotAngle;
+	
+	int rotmode;
+
+	/**
+	 * Matrix result of location/rotation/scale components, and evaluation of
+	 * animation data and constraints.
+	 *
+	 * This is the dynamic component of `pose_mat` (without #Bone.arm_mat).
+	 */
+	float chan_mat[4][4];
+	/**
+	 * Channel matrix in the armature object space, i.e. `pose_mat = bone->arm_mat * chan_mat`.
+	 */
+	float pose_mat[4][4];
+} PoseChannel;
+
+typedef struct Pose {
+	struct ListBase channelbase;
+	struct GHash *channelhash;
+
+	int flag;
+
+	PoseChannel **channels;
+} Pose;
+
+enum {
+	POSE_RECALC = (1 << 0),
+	POSE_WAS_REBUILT = (1 << 1),
+};
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

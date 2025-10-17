@@ -90,6 +90,7 @@ int set_listbasepointers(Main *main, ListBase *lb[]) {
 	/* Libraries may be accessed from pretty much any other ID. */
 	lb[INDEX_ID_LI] = &(main->libraries);
 	lb[INDEX_ID_AC] = &(main->actions);
+	lb[INDEX_ID_AR] = &(main->armatures);
 	lb[INDEX_ID_ME] = &(main->meshes);
 	lb[INDEX_ID_OB] = &(main->objects);
 	lb[INDEX_ID_GR] = &(main->collections);
@@ -114,6 +115,8 @@ ListBase *which_libbase(Main *main, short type) {
 			return &(main->libraries);
 		case ID_AC:
 			return &(main->actions);
+		case ID_AR:
+			return &(main->armatures);
 		case ID_ME:
 			return &(main->meshes);
 		case ID_OB:

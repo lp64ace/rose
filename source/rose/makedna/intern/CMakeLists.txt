@@ -111,6 +111,8 @@ set(SRC
 	${CMAKE_CURRENT_BINARY_DIR}/dna.c
 	${CMAKE_CURRENT_BINARY_DIR}/verify.c
 	
+	dna.cc
+	dna.hh
 	genfile.c
 	genfile.h
 	utils.c

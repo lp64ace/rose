@@ -195,9 +195,10 @@ ROSE_INLINE bool sdna_read_type_struct(const SDNA *sdna, const void **rest, cons
 SDNA *DNA_sdna_new_empty(void) {
 	SDNA *sdna = MEM_mallocN(sizeof(SDNA), "SDNA");
 
-	sdna->context = RT_context_new();
+	sdna->parser = RT_parser_new(NULL);
 	sdna->types = LIB_ghash_str_new("SDNA::types");
 	sdna->visit = LIB_ghash_ptr_new("SDNA::visit");
+	sdna->context = RT_parser_context(sdna->parser);
 
 	sdna->data = NULL;
 	sdna->length = 0;
@@ -218,9 +219,10 @@ SDNA *DNA_sdna_new_empty(void) {
 SDNA *DNA_sdna_new_memory(const void *memory, size_t length) {
 	SDNA *sdna = MEM_mallocN(sizeof(SDNA), "SDNA");
 
-	sdna->context = RT_context_new();
+	sdna->parser = RT_parser_new(NULL);
 	sdna->types = LIB_ghash_str_new("SDNA::types");
 	sdna->visit = LIB_ghash_ptr_new("SDNA::visit");
+	sdna->context = RT_parser_context(sdna->parser);
 
 	sdna->data = (void *)memory;
 	sdna->length = length;
@@ -242,8 +244,8 @@ void DNA_sdna_free(SDNA *sdna) {
 	if (sdna->visit) {
 		LIB_ghash_free(sdna->visit, NULL, NULL);
 	}
-	if (sdna->context) {
-		RT_context_free(sdna->context);
+	if (sdna->parser) {
+		RT_parser_free(sdna->parser);
 	}
 	if (sdna->allocated) {
 		MEM_freeN(sdna->data);
@@ -501,26 +503,18 @@ bool DNA_sdna_read_token(const SDNA *sdna, const void **rest, const void *ptr, c
  * \{ */
 
 ROSE_STATIC ptrdiff_t dna_find_member_offset(const SDNA *sdna, const RTType *type, const RTField *field) {
-	RTCParser *parser = RT_parser_new(NULL);
-	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
-	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
-	ptrdiff_t offset = (ptrdiff_t)RT_parser_offsetof(parser, type, field);
-	RT_parser_free(parser);
+	ptrdiff_t offset = (ptrdiff_t)RT_parser_offsetof(sdna->parser, type, field);
 
 	return offset;
 }
 
 ROSE_STATIC size_t dna_find_type_size(const SDNA *sdna, const RTType *type) {
-	RTCParser *parser = RT_parser_new(NULL);
-	parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
-	parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
-	size_t size = (size_t)RT_parser_size(parser, type);
-	RT_parser_free(parser);
+	size_t size = (size_t)RT_parser_size(sdna->parser, type);
 
 	return size;
 }
 
-bool DNA_sdna_build_struct_list(const SDNA *sdna) {
+bool DNA_sdna_build_struct_list(SDNA *sdna) {
 	bool status = true;
 
 	const void *ptr = POINTER_OFFSET(sdna->data, 8);
@@ -537,6 +531,9 @@ bool DNA_sdna_build_struct_list(const SDNA *sdna) {
 		}
 		LIB_ghash_insert(sdna->types, (void *)RT_token_as_string(token), (void *)type);
 	}
+
+	sdna->parser->configuration.tp_size = LIB_ghash_lookup(sdna->types, "conf::tp_size");
+	sdna->parser->configuration.tp_enum = LIB_ghash_lookup(sdna->types, "conf::tp_enum");
 
 	return status;
 }
@@ -616,23 +613,6 @@ size_t DNA_sdna_struct_size(const SDNA *sdna, uint64_t struct_nr) {
 	return dna_find_type_size(sdna, type);
 }
 
-ptrdiff_t DNA_sdna_field_offset(const struct SDNA *sdna, uint64_t struct_nr, const char *fieldname) {
-	const RTType *type = LIB_ghash_lookup(sdna->visit, (void *)struct_nr);
-	if (!type || type->kind != TP_STRUCT) {
-		ROSE_assert_msg(0, "Invalid struct provided for #DNA_sdna_field_offset.");
-		return 0;
-	}
-
-	LISTBASE_FOREACH(RTField *, field, &type->tp_struct.fields) {
-		if (STREQ(RT_token_as_string(field->identifier), fieldname)) {
-			return dna_find_member_offset(sdna, type, field);
-		}
-	}
-
-	ROSE_assert_msg(0, "Invalid field-name provided for #DNA_sdna_field_offset.");
-	return 0;
-}
-
 uint64_t DNA_sdna_struct_ex(const SDNA *sdna, const struct RTType *type) {
 	GHashIterator iter;
 	GHASH_ITER(iter, sdna->visit) {
@@ -649,6 +629,25 @@ uint64_t DNA_sdna_struct_id(const SDNA *sdna, const char *name) {
 		return DNA_sdna_struct_ex(sdna, type);
 	}
 	return 0;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name DNA Util Methods
+ * \{ */
+
+const DNAType *DNA_sdna_type(SDNA *sdna, const char *name) {
+	const RTType *type = LIB_ghash_lookup(sdna->types, name);
+	return (const DNAType *)(type);
+}
+
+const size_t DNA_sdna_sizeof(SDNA *sdna, const DNAType *type) {
+	return dna_find_type_size(sdna, (const RTType *)type);
+}
+
+const size_t DNA_sdna_offsetof(SDNA *sdna, const DNATypeStruct *type, const DNATypeStructField *field) {
+	return dna_find_member_offset(sdna, (const RTType *)type, (const RTField *)field);
 }
 
 /** \} */

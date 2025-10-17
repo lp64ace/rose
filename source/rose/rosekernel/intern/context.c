@@ -17,6 +17,7 @@ typedef struct rContext {
 
 	struct {
 		struct Main *main;
+		struct Scene *scene;
 	} data;
 } rContext;
 
@@ -59,6 +60,9 @@ struct ARegion *CTX_wm_region(const rContext *ctx) {
 struct Main *CTX_data_main(const rContext *ctx) {
 	return ctx->data.main;
 }
+struct Scene *CTX_data_scene(const rContext *ctx) {
+	return ctx->data.scene;
+}
 
 void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {
 	ctx->wm.manager = manager;
@@ -77,6 +81,9 @@ void CTX_wm_region_set(rContext *ctx, struct ARegion *region) {
 }
 void CTX_data_main_set(rContext *ctx, struct Main *main) {
 	ctx->data.main = main;
+}
+void CTX_data_scene_set(rContext *ctx, struct Scene *scene) {
+	ctx->data.scene = scene;
 }
 
 /** \} */

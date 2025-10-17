@@ -79,6 +79,10 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
 	DRWAliceViewportPrivateData *impl = stl->data;
 
+	if (!ELEM(object->type, OB_MESH)) {
+		return;
+	}
+
 	GPUBatch *batch = DRW_cache_object_surface_get(object);
 
 	if (impl->opaque_shgroup) {

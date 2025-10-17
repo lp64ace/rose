@@ -22,6 +22,7 @@ static void id_type_init() {
 	(void)0
 
 	INIT_TYPE(ID_LI);
+	INIT_TYPE(ID_AR);
 	INIT_TYPE(ID_AC);
 	INIT_TYPE(ID_ME);
 	INIT_TYPE(ID_OB);
@@ -107,6 +108,7 @@ int KER_idtype_idcode_to_index(short idcode) {
 
 	switch (idcode) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(AR);
 		CASE_IDINDEX(AC);
 		CASE_IDINDEX(ME);
 		CASE_IDINDEX(OB);
@@ -133,6 +135,7 @@ int KER_idtype_idfilter_to_index(int idfilter) {
 
 	switch (idfilter) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(AR);
 		CASE_IDINDEX(AC);
 		CASE_IDINDEX(ME);
 		CASE_IDINDEX(OB);

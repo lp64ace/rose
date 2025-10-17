@@ -39,6 +39,7 @@ set(LIB
 	rose::source::rosefont
 	rose::source::functions
 	rose::source::gpu
+	rose::source::io::fbx
 	rose::source::windowmanager
 	rose::source::editors::screen
 	rose::source::editors::space_api

@@ -130,6 +130,26 @@ void copy_m4d_m4(double m1[4][4], const float m2[4][4]) {
 /** \name Arithmetic
  * \{ */
 
+void negate_m3(float R[3][3]) {
+	int i, j;
+
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+			R[i][j] *= -1.0f;
+		}
+	}
+}
+
+void negate_m4(float R[4][4]) {
+	int i, j;
+
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			R[i][j] *= -1.0f;
+		}
+	}
+}
+
 void add_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]) {
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
@@ -533,6 +553,37 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]) {
 /** \name Linear Algebra
  * \{ */
 
+void normalize_m3_m3(float R[3][3], const float M[3][3]) {
+	for (int i = 0; i < 3; i++) {
+		normalize_v3_v3(R[i], M[i]);
+	}
+}
+
+void normalize_m4_m4(float R[4][4], const float M[4][4]) {
+	int i;
+	for (i = 0; i < 3; i++) {
+		float len = normalize_v3_v3(R[i], M[i]);
+		R[i][3] = (len != 0.0f) ? (M[i][3] / len) : M[i][3];
+	}
+	copy_v4_v4(R[3], M[3]);
+}
+
+void normalize_m3(float M[3][3]) {
+	for (int i = 0; i < 3; i++) {
+		normalize_v3(M[i]);
+	}
+}
+
+void normalize_m4(float M[4][4]) {
+	int i;
+	for (i = 0; i < 3; i++) {
+		float len = normalize_v3(M[i]);
+		if (len != 0.0f) {
+			M[i][3] /= len;
+		}
+	}
+}
+
 void transpose_m3(float R[3][3]) {
 	float t;
 
@@ -805,6 +856,27 @@ void rotate_m4(float mat[4][4], char axis, float angle) {
 			ROSE_assert_unreachable();
 		} break;
 	}
+}
+
+void mat3_to_rot_size(float rot[3][3], float size[3], const float mat3[3][3]) {
+	/* keep rot as a 3x3 matrix, the caller can convert into a quat or euler */
+	size[0] = normalize_v3_v3(rot[0], mat3[0]);
+	size[1] = normalize_v3_v3(rot[1], mat3[1]);
+	size[2] = normalize_v3_v3(rot[2], mat3[2]);
+	if (is_negative_m3(rot)) {
+		negate_m3(rot);
+		negate_v3(size);
+	}
+}
+
+void mat4_to_loc_rot_size(float loc[3], float rot[3][3], float size[3], const float wmat[4][4]) {
+	float mat3[3][3]; /* wmat -> 3x3 */
+
+	copy_m3_m4(mat3, wmat);
+	mat3_to_rot_size(rot, size, mat3);
+
+	/* location */
+	copy_v3_v3(loc, wmat[3]);
 }
 
 /** \} */

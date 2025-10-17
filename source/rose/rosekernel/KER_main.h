@@ -39,6 +39,7 @@ typedef struct Main {
 	struct Library *curlib;
 	struct ListBase libraries;
 	struct ListBase actions;
+	struct ListBase armatures;
 	struct ListBase meshes;
 	struct ListBase objects;
 	struct ListBase collections;

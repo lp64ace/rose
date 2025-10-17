@@ -154,9 +154,6 @@ void DRW_batch_cache_validate(Object *object) {
 	
 	switch (object->type) {
 		ROUTE(OB_MESH, DRW_mesh_batch_cache_validate);
-		default:
-			ROSE_assert_msg(0, "Unsupported object type for batch cache creation.");
-			break;
 	}
 
 #undef ROUTE
@@ -167,9 +164,6 @@ void DRW_batch_cache_generate(Object *object) {
 
 	switch (object->type) {
 		ROUTE(OB_MESH, DRW_mesh_batch_cache_create);
-		default:
-			ROSE_assert_msg(0, "Unsupported object type for batch cache creation.");
-			break;
 	}
 
 #undef ROUTE

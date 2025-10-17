@@ -4,7 +4,9 @@
 set(DNA_TYPEDEF_HEADERS
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_action_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_anim_types.h
+	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_armature_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_collection_types.h
+	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_curve_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_customdata_types.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_ID.h
 	${CMAKE_SOURCE_DIR}/source/rose/makedna/DNA_ID_enums.h

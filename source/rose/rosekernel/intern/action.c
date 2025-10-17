@@ -6,6 +6,11 @@
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
 
+#include "LIB_ghash.h"
+#include "LIB_listbase.h"
+#include "LIB_math_matrix.h"
+#include "LIB_math_rotation.h"
+#include "LIB_math_vector.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
@@ -446,6 +451,148 @@ bool KER_action_slot_suitable_for_id(ActionSlot *slot, ID *id) {
 	/* Check that the ID type is compatible with this slot. */
 	const short idtype = GS(id->name);
 	return slot->idtype == idtype;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name PoseChannel Action
+ * \{ */
+
+PoseChannel *KER_pose_channel_ensure(Pose *pose, const char *name) {
+	PoseChannel *chan;
+
+	if (pose == NULL) {
+		return NULL;
+	}
+
+	/* See if this channel exists */
+	chan = KER_pose_channel_find_name(pose, name);
+	if (chan) {
+		return chan;
+	}
+
+	/* If not, create it and add it */
+	chan = MEM_callocN(sizeof(PoseChannel), "VerifyPoseChannel");
+
+	LIB_strcpy(chan->name, ARRAY_SIZE(chan->name), name);
+
+	LIB_addtail(&pose->channelbase, chan);
+	if (pose->channelhash) {
+		LIB_ghash_insert(pose->channelhash, chan->name, chan);
+	}
+
+	return chan;
+}
+
+struct PoseChannel *KER_pose_channel_find(struct Pose *pose, const char *name) {
+	if (ELEM(NULL, pose, name) || (name[0] == '\0')) {
+		return NULL;
+	}
+
+	if (pose->channelhash) {
+		return (PoseChannel *)LIB_ghash_lookup(pose->channelhash, (const void *)name);
+	}
+
+	return (PoseChannel *)LIB_findstr(&pose->channelbase, name, offsetof(PoseChannel, name));
+}
+
+void KER_pose_channel_mat3_to_rot(PoseChannel *pchannel, const float mat[3][3], bool use_compat) {
+	switch (pchannel->rotmode) {
+		case ROT_MODE_QUAT:
+			mat3_normalized_to_quat(pchannel->quat, mat);
+			break;
+		case ROT_MODE_AXISANGLE:
+			mat3_normalized_to_axis_angle(pchannel->rotAxis, &pchannel->rotAngle, mat);
+			break;
+		default: /* euler */
+			if (use_compat) {
+				mat3_normalized_to_compatible_eulO(pchannel->euler, pchannel->euler, pchannel->rotmode, mat);
+			}
+			else {
+				mat3_normalized_to_eulO(pchannel->euler, pchannel->rotmode, mat);
+			}
+			break;
+	}
+}
+
+void KER_pose_channel_apply_mat4(PoseChannel *pchannel, const float mat[4][4], bool use_compat) {
+	float rot[3][3];
+	mat4_to_loc_rot_size(pchannel->loc, rot, pchannel->scale, mat);
+	KER_pose_channel_mat3_to_rot(pchannel, rot, use_compat);
+}
+
+void KER_pose_channel_free_ex(PoseChannel *pchan, bool do_id_user) {
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Pose Action
+ * \{ */
+
+void KER_pose_channels_hash_ensure(Pose *pose) {
+	if (!pose->channelhash) {
+		pose->channelhash = LIB_ghash_str_new("Pose::channelhash");
+		LISTBASE_FOREACH(PoseChannel *, pchan, &pose->channelbase) {
+			LIB_ghash_insert(pose->channelhash, pchan->name, pchan);
+		}
+	}
+}
+
+void KER_pose_channels_hash_free(Pose *pose) {
+	if (pose->channelhash) {
+		LIB_ghash_free(pose->channelhash, NULL, NULL);
+		pose->channelhash = NULL;
+	}
+}
+
+PoseChannel *KER_pose_channel_find_name(const Pose *pose, const char *name) {
+	if (ELEM(NULL, pose, name) || (name[0] == '\0')) {
+		return NULL;
+	}
+
+	if (pose->channelhash) {
+		return (PoseChannel *)LIB_ghash_lookup(pose->channelhash, (const void *)name);
+	}
+
+	return (PoseChannel *)LIB_findstr(&pose->channelbase, name, offsetof(PoseChannel, name));
+}
+
+void KER_pose_channels_free_ex(Pose *pose, const bool do_id_user) {
+	if (!LIB_listbase_is_empty(&pose->channelbase)) {
+		LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+			KER_pose_channel_free_ex(pchannel, do_id_user);
+		}
+		LIB_freelistN(&pose->channelbase);
+	}
+
+	KER_pose_channels_hash_free(pose);
+
+	MEM_SAFE_FREE(pose->channels);
+}
+
+void KER_pose_channels_free(Pose *pose) {
+	KER_pose_channels_free_ex(pose, true);
+}
+
+void KER_pose_free_data_ex(Pose *pose, const bool do_id_user) {
+	KER_pose_channels_free_ex(pose, do_id_user);
+}
+
+void KER_pose_free_data(Pose *pose) {
+	KER_pose_free_data_ex(pose, true);
+}
+
+void KER_pose_free_ex(Pose *pose, const bool do_id_user) {
+	if (pose) {
+		KER_pose_free_data_ex(pose, do_id_user);
+		MEM_freeN(pose);
+	}
+}
+
+void KER_pose_free(Pose *pose) {
+	KER_pose_free_ex(pose, true);
 }
 
 /** \} */

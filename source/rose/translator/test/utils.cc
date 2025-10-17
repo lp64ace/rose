@@ -15,7 +15,7 @@ TEST(Utils, TypeName) {
 	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "const volatile int (*(*)(unsigned long x, short y))[0xff];", 58);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
 			const RTType *type = RT_parser_typename(parser, &token, token);
@@ -56,7 +56,7 @@ TEST(Utils, EnumType) {
 	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "enum e { eVal1 = 1, eVal2 = 2, eVal3 = 3, eVal, };", 50);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
 			const RTType *type = RT_parser_typename(parser, &token, token);
@@ -94,7 +94,7 @@ TEST(Utils, StructType) {
 	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "struct s { int f1 : 16; int f2 : 16; int f3 : 16; int x; };", 59);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
 			const RTType *type = RT_parser_typename(parser, &token, token);
@@ -136,7 +136,7 @@ TEST(Utils, Expr1) {
 	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "1 << 0;", 7);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
 			const RTNode *expr = RT_parser_conditional(parser, &token, token);
@@ -154,7 +154,7 @@ TEST(Utils, Expr2) {
 	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "(1 == 1) ? 0x3fLL : 01771LL;", 28);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			RTToken *token = reinterpret_cast<RTToken *>(parser->tokens.first);
 			const RTNode *expr = RT_parser_conditional(parser, &token, token);
@@ -172,7 +172,7 @@ TEST(Utils, Parser1) {
 	RTFileCache *cache = RT_fcache_new("D:/test/test.c", "int main() { return 0; }", 24);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			EXPECT_TRUE(RT_parser_do(parser));
 
@@ -230,7 +230,7 @@ TEST(Utils, Parser2) {
 										154);
 	RTFile *file = RT_file_new("test.c", cache);
 	{
-		RTParser *parser = RT_parser_new(file);
+		RTCParser *parser = RT_parser_new(file);
 		{
 			EXPECT_TRUE(RT_parser_do(parser));
 

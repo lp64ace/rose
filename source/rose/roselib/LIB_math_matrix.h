@@ -36,6 +36,9 @@ void copy_m4d_m4(double m1[4][4], const float m2[4][4]);
 /** \name Arithmetic
  * \{ */
 
+void negate_m3(float R[3][3]);
+void negate_m4(float R[4][4]);
+
 void add_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]);
 void add_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]);
 
@@ -96,6 +99,12 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]);
 /** \name Linear Algebra
  * \{ */
 
+void normalize_m3_m3(float R[3][3], const float M[3][3]);
+void normalize_m4_m4(float R[4][4], const float M[4][4]);
+
+void normalize_m3(float M[3][3]);
+void normalize_m4(float M[4][4]);
+
 void transpose_m3(float R[3][3]);
 void transpose_m4(float R[4][4]);
 
@@ -147,6 +156,18 @@ void translate_m4(float mat[4][4], float Tx, float Ty, float Tz);
  * (axis & angle args are compatible).
  */
 void rotate_m4(float mat[4][4], char axis, float angle);
+
+/**
+ * \param rot: A 3x3 rotation matrix, normalized never negative.
+ * \param size: The scale, negative if `mat3` is negative.
+ */
+void mat3_to_rot_size(float rot[3][3], float size[3], const float mat3[3][3]);
+
+/**
+ * \param rot: A 3x3 rotation matrix, normalized never negative.
+ * \param size: The scale, negative if `mat3` is negative.
+ */
+void mat4_to_loc_rot_size(float loc[3], float rot[3][3], float size[3], const float wmat[4][4]);
 
 /** \} */
 

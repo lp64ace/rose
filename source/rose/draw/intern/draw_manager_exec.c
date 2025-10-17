@@ -254,7 +254,9 @@ ROSE_STATIC void draw_update_uniforms(DRWShadingGroup *group, DRWCommandState *s
 				state->resourceid_loc = uniform->location;
 			} break;
 			case DRW_UNIFORM_BLOCK_OBMATS: {
-				GPU_uniformbuf_bind(GDrawManager.vdata_pool->matrices_ubo[0], uniform->location);
+				if (GDrawManager.vdata_pool->ubo_length > 0) {
+					GPU_uniformbuf_bind(GDrawManager.vdata_pool->matrices_ubo[0], uniform->location);
+				}
 
 				/**
 				 * We will need to bind other chunks too, store the location of this uniform!

@@ -2,6 +2,7 @@
 # Add Sub-Directories
 
 add_subdirectory(include)
+add_subdirectory(armature)
 add_subdirectory(interface)
 add_subdirectory(screen)
 add_subdirectory(space_api)

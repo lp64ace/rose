@@ -25,6 +25,7 @@ set(SRC
 	KER_action.h
 	KER_action.hh
 	KER_anim_data.h
+	KER_armature.h
 	KER_context.h
 	KER_cpp_types.h
 	KER_collection.h
@@ -52,6 +53,7 @@ set(SRC
 	intern/action.c
 	intern/action_runtime.cc
 	intern/anim_data.c
+	intern/armature.c
 	intern/context.c
 	intern/cpp_types.cc
 	intern/collection.c
