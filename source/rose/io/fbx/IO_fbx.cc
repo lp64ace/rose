@@ -11,6 +11,7 @@
 
 #include "importer/fbx_import_util.hh"
 #include "importer/fbx_import_armature.hh"
+#include "importer/fbx_import_mesh.hh"
 
 namespace rose::io::fbx {
 
@@ -36,6 +37,7 @@ void FbxImportContext::import_globals() {
 }
 
 void FbxImportContext::import_meshes() {
+	rose::io::fbx::import_meshes(this->main, this->scene, this->fbx, &this->mapping);
 }
 
 void FbxImportContext::import_armatures() {

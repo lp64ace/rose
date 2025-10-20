@@ -47,6 +47,14 @@ void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool us
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Object Cache
+ * \{ */
+
+void KER_object_batch_cache_dirty_tag(struct Object *object);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

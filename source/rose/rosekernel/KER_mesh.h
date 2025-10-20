@@ -85,6 +85,19 @@ ROSE_INLINE int *KER_mesh_corner_edges_for_write(Mesh *mesh) {
 }
 
 void KER_mesh_poly_offsets_ensure_alloc(struct Mesh *mesh);
+void KER_mesh_ensure_required_data_layers(struct Mesh *mesh);
+
+ROSE_INLINE const MDeformVert *KER_mesh_deform_verts(const Mesh *mesh) {
+	return (const MDeformVert *)CustomData_get_layer(&mesh->vdata, CD_MDEFORMVERT);
+}
+
+ROSE_INLINE MDeformVert *KER_mesh_deform_verts_for_write(Mesh *mesh) {
+	MDeformVert *dvert = (MDeformVert *)CustomData_get_layer_for_write(&mesh->vdata, CD_MDEFORMVERT, mesh->totvert);
+	if (dvert == NULL) {
+		dvert = (MDeformVert *)CustomData_add_layer(&mesh->vdata, CD_MDEFORMVERT, CD_SET_DEFAULT, mesh->totvert);
+	}
+	return dvert;
+}
 
 /** \} */
 

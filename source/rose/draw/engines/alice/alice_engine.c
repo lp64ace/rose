@@ -86,9 +86,9 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	GPUBatch *batch = DRW_cache_object_surface_get(object);
 
 	if (impl->opaque_shgroup) {
-		const float (*mat)[4] = KER_object_object_to_world(object);
+		const float (*obmat)[4] = KER_object_object_to_world(object);
 
-		DRW_shading_group_call_ex(impl->opaque_shgroup, object, mat, batch);
+		DRW_shading_group_call_ex(impl->opaque_shgroup, object, obmat, batch);
 	}
 }
 

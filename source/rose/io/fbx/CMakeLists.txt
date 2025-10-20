@@ -23,6 +23,8 @@ set(INC_SYS
 set(SRC
 	importer/fbx_import_util.cc
 	importer/fbx_import_util.hh
+	importer/fbx_import_mesh.cc
+	importer/fbx_import_mesh.hh
 	importer/fbx_import_armature.cc
 	importer/fbx_import_armature.hh
 

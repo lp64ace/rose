@@ -9,6 +9,12 @@
 extern "C" {
 #endif
 
+typedef struct DeformGroup {
+	struct DeformGroup *prev, *next;
+
+	char name[64];
+} DeformGroup;
+
 /**
  * The following illustates the orientation of the bounding box in local space.
  *
@@ -117,6 +123,8 @@ enum {
 	OB_MESH,
 	OB_ARMATURE,
 };
+
+#define OB_TYPE_SUPPORT_VGROUP(_type) (ELEM(_type, OB_MESH))
 
 /** #Object->partype, first 4 bits are the type. */
 enum {

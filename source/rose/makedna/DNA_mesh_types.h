@@ -53,6 +53,8 @@ typedef struct Mesh {
 	
 	int totface;
 	int totmat;
+
+	ListBase vertex_group_names;
 	
 	/**
 	 * Data that isn't saved in files, including caches of derived data, temporary data to improve

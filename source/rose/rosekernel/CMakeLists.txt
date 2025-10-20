@@ -30,6 +30,7 @@ set(SRC
 	KER_cpp_types.h
 	KER_collection.h
 	KER_customdata.h
+	KER_deform.h
 	KER_fcurve.h
 	KER_global.h
 	KER_idprop.h
@@ -43,7 +44,9 @@ set(SRC
 	KER_mesh.h
 	KER_mesh.hh
 	KER_mesh_types.hh
+	KER_modifier.h
 	KER_object.h
+	KER_object_deform.h
 	KER_rose.h
 	KER_rosefile.h
 	KER_scene.h
@@ -58,6 +61,7 @@ set(SRC
 	intern/cpp_types.cc
 	intern/collection.c
 	intern/customdata.cc
+	intern/deform.c
 	intern/fcurve.c
 	intern/idprop.c
 	intern/idtype.c
@@ -72,7 +76,9 @@ set(SRC
 	intern/mesh_normals.cc
 	intern/mesh_runtime.cc
 	intern/mesh_tessellate.cc
+	intern/modifier.c
 	intern/object.c
+	intern/object_deform.c
 	intern/rose.c
 	intern/rosefile.c
 	intern/scene.c

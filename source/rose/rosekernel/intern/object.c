@@ -20,6 +20,12 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 	
 	ob->type = OB_EMPTY;
 
+	// Transform
+
+	ob->rotmode = ROT_MODE_EUL;
+	copy_v3_fl(ob->scale, 1.0f);
+	copy_v3_fl(ob->dscale, 1.0f);
+
 	unit_m4(ob->runtime.object_to_world);
 	unit_m4(ob->runtime.world_to_object);
 }
@@ -389,6 +395,20 @@ void KER_object_apply_mat4_ex(Object *object, const float mat[4][4], Object *par
 
 void KER_object_apply_mat4(Object *object, const float mat[4][4], bool use_compat, bool use_parent) {
 	KER_object_apply_mat4_ex(object, mat, use_parent ? object->parent : NULL, object->parentinv, use_compat);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Cache
+ * \{ */
+
+void KER_object_batch_cache_dirty_tag(Object *object) {
+	switch (object->type) {
+		case OB_MESH: {
+			KER_mesh_batch_cache_tag_dirty(object->data, KER_MESH_BATCH_DIRTY_ALL);
+		} break;
+	}
 }
 
 /** \} */

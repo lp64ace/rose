@@ -76,6 +76,21 @@ void KER_mesh_poly_offsets_ensure_alloc(Mesh *mesh) {
 	mesh->poly_offset_indices[mesh->totpoly] = mesh->totloop;
 }
 
+void KER_mesh_ensure_required_data_layers(Mesh *mesh) {
+	CustomData_add_layer_named(&mesh->vdata, CD_PROP_FLOAT3, CD_SET_DEFAULT, mesh->totvert, "position");
+	CustomData_add_layer_named(&mesh->edata, CD_PROP_INT32_2D, CD_SET_DEFAULT, mesh->totedge, ".edge_verts");
+	CustomData_add_layer_named(&mesh->ldata, CD_PROP_INT32, CD_SET_DEFAULT, mesh->totloop, ".corner_vert");
+	CustomData_add_layer_named(&mesh->ldata, CD_PROP_INT32, CD_SET_DEFAULT, mesh->totloop, ".corner_edge");
+	/* The "hide" attributes are stored as flags on #Mesh. */
+	CustomData_add_layer_named(&mesh->vdata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totvert, ".hide_vert");
+	CustomData_add_layer_named(&mesh->edata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totedge, ".hide_edge");
+	CustomData_add_layer_named(&mesh->pdata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totpoly, ".hide_poly");
+	/* The "selection" attributes are stored as flags on #Mesh. */
+	CustomData_add_layer_named(&mesh->vdata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totvert, ".select_vert");
+	CustomData_add_layer_named(&mesh->edata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totedge, ".select_edge");
+	CustomData_add_layer_named(&mesh->pdata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totpoly, ".select_poly");
+}
+
 int *KER_mesh_poly_offsets_for_write(Mesh *mesh) {
 	rose::implicit_sharing::make_trivial_data_mutable(&mesh->poly_offset_indices, &mesh->runtime->poly_offsets_sharing_info, mesh->totpoly + 1);
 	return mesh->poly_offset_indices;

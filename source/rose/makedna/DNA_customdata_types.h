@@ -58,6 +58,8 @@ typedef enum eCustomDataType {
 	 */
 	CD_AUTO_FROM_NAME = -1,
 
+	CD_MDEFORMVERT = 2,
+
 	/**
 	 * Used for derived face corner normals on mesh `ldata`, since currently they are not computed
 	 * lazily. Derived vertex and polygon normals are stored in #Mesh_Runtime.

@@ -1,5 +1,8 @@
 #include "fbx_import_util.hh"
 
+#include "LIB_math_matrix.h"
+#include "LIB_math_matrix.hh"
+
 namespace rose::io::fbx {
 
 const char *get_fbx_name(const ufbx_string &name, const char *def) {
@@ -30,6 +33,7 @@ void ufbx_matrix_to_obj(const ufbx_matrix &mtx, Object *obj) {
 	matrix_to_mat4(mtx, obmat);
 	KER_object_apply_mat4(obj, obmat, true, false);
 	KER_object_to_mat4(obj, obj->runtime.object_to_world);
+	invert_m4_m4(obj->runtime.world_to_object, obj->runtime.object_to_world);
 }
 
 void node_matrix_to_obj(const ufbx_node *node, Object *obj, const FbxElementMapping *mapping) {

@@ -279,8 +279,6 @@ void WM_init(struct rContext *C) {
 void WM_main(struct rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
-	float t0 = WM_time(C);
-
 	while (true) {
 		bool poll = false;
 		if ((poll = (wm->handle && GTK_window_manager_has_events(wm->handle)))) {
