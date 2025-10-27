@@ -149,7 +149,7 @@ void *KER_object_obdata_add_from_type(Main *main, int type, const char *name) {
 /** \name Parent Object Transform
  * \{ */
 
-ROSE_STATIC void ob_parbone(Object *ob, Object *par, float r_mat[4][4]) {
+ROSE_STATIC void ob_parbone(const Object *ob, Object *par, float r_mat[4][4]) {
 	float vec[3];
 
 	if (par->type != OB_ARMATURE) {

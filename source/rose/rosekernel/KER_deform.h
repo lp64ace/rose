@@ -3,6 +3,7 @@
 
 #include "DNA_meshdata_types.h"
 
+struct Object;
 struct MDeformVert;
 struct MDeformWeight;
 

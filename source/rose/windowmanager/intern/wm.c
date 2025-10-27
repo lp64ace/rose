@@ -36,8 +36,9 @@
 #include "IO_fbx.h"
 
 #include "RFT_api.h"
+#include "GTK_api.h"
 
-#include <GTK_api.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates

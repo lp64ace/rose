@@ -8,8 +8,10 @@
 
 struct rContext;
 struct DrawEngineType;
+struct GPUBatch;
 struct Mesh;
 struct Scene;
+struct Object;
 struct WindowManager;
 
 #ifdef __cplusplus

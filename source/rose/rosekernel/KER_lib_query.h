@@ -123,7 +123,7 @@ int KER_lib_query_foreachid_process_callback_flag_override(struct LibraryForeach
 	}                                                              \
 	((void)0)
 
-void KER_lib_query_idpropertiesForeachIDLink_callback(struct IDProperty *prop, struct LibraryForeachIDData *data);
+void KER_lib_query_idpropertiesForeachIDLink_callback(struct IDProperty *prop, void *data);
 
 /* Flags for the foreach function itself. */
 enum {
