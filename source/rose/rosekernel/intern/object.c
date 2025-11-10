@@ -9,6 +9,7 @@
 #include "KER_lib_query.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
+#include "KER_modifier.h"
 #include "KER_object.h"
 
 /* -------------------------------------------------------------------- */
@@ -32,6 +33,8 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 
 ROSE_STATIC void object_free_data(struct ID *id) {
 	Object *ob = (Object *)id;
+
+	KER_object_free_modifiers(ob, LIB_ID_CREATE_NO_USER_REFCOUNT);
 
 	if (ob->pose) {
 		KER_pose_free_ex(ob->pose, false);
@@ -395,6 +398,18 @@ void KER_object_apply_mat4_ex(Object *object, const float mat[4][4], Object *par
 
 void KER_object_apply_mat4(Object *object, const float mat[4][4], bool use_compat, bool use_parent) {
 	KER_object_apply_mat4_ex(object, mat, use_parent ? object->parent : NULL, object->parentinv, use_compat);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Modifiers
+ * \{ */
+
+void KER_object_free_modifiers(Object *object, const int flag) {
+	for (ModifierData *md; md = (ModifierData *)LIB_pophead(&object->modifiers);) {
+		KER_modifier_free_ex(md, flag);
+	}
 }
 
 /** \} */

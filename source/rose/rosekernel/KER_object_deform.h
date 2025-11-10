@@ -10,7 +10,9 @@ struct ListBase;
 extern "C" {
 #endif
 
+const struct ListBase *KER_id_defgroup_list_get(const struct ID *id);
 const struct ListBase *KER_object_defgroup_list(const struct Object *object);
+struct ListBase *KER_id_defgroup_list_get_mutable(struct ID *id);
 struct ListBase *KER_object_defgroup_list_mutable(struct Object *object);
 
 /**

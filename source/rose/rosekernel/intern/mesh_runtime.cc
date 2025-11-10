@@ -36,4 +36,15 @@ void KER_mesh_runtime_clear_geometry(Mesh *mesh) {
 	mesh->runtime->looptri_polys_cache.tag_dirty();
 }
 
+void KER_mesh_positions_changed(Mesh *mesh) {
+	KER_mesh_normals_tag_dirty(mesh);
+	KER_mesh_batch_cache_free(mesh);
+
+	mesh->runtime->looptris_cache.tag_dirty();
+}
+
+void KER_mesh_positions_changed_uniformly(Mesh *mesh) {
+	/* The normals and triangulation didn't change, since all verts moved by the same amount. */
+}
+
 /** \} */

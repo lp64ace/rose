@@ -88,7 +88,24 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	if (impl->opaque_shgroup) {
 		const float (*obmat)[4] = KER_object_object_to_world(object);
 
-		DRW_shading_group_call_ex(impl->opaque_shgroup, object, obmat, batch);
+		float mat[4][4];
+		unit_m4(mat);
+
+		do {
+			float tmat[4][4];
+			unit_m4(tmat);
+			rotate_m4(tmat, 'X', -M_PI_2);
+			mul_m4_m4m4(mat, mat, tmat);
+		} while (false);
+
+		do {
+			float tmat[4][4];
+			unit_m4(tmat);
+			rotate_m4(tmat, 'Z', ((float)clock()) / 1000.0f);
+			mul_m4_m4m4(mat, mat, tmat);
+		} while (false);
+
+		DRW_shading_group_call_ex(impl->opaque_shgroup, NULL, mat, batch);
 	}
 }
 

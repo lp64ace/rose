@@ -10,6 +10,7 @@
 #include "KER_context.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
+#include "KER_object.h"
 
 #include "GPU_batch.h"
 #include "GPU_context.h"
@@ -424,10 +425,21 @@ void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, stru
 	DRW_manager_init(&GDrawManager, viewport, NULL);
 	DRW_engines_init(C);
 
+	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
+
+	/**
+	 * Definetely not the fucking place to update the mesh here,
+	 * we should evaluate the depsgraph instead.
+	 */
+	LISTBASE_FOREACH(struct Object *, object, listbase) {
+		if (object->type == OB_MESH) {
+			// KER_mesh_data_update(NULL, object);
+		}
+	}
+
 	drw_engine_cache_init();
 
 	// We really ough to make a Dependency Graph to iterate the objects in order!
-	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		drw_engine_cache_populate(object);
 	}

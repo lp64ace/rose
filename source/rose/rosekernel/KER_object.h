@@ -3,6 +3,8 @@
 
 #include "DNA_object_types.h"
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +46,14 @@ const float (*KER_object_world_to_object(const struct Object *object))[4];
 
 void KER_object_apply_mat4_ex(struct Object *object, const float mat[4][4], Object *parent, const float parentinv[4][4], bool use_compat);
 void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool use_compat, bool use_parent);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Modifiers
+ * \{ */
+
+void KER_object_free_modifiers(Object *object, const int flag);
 
 /** \} */
 
