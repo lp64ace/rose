@@ -30,6 +30,14 @@ typedef struct FCurve {
 	FPoint *fpt;
 	/** Total number of points which define the curve (i.e. size of arrays in FPoints). */
 	int totvert;
+
+	/**
+	 * RNA-path to resolve data-access, see: #RNA_path_resolve_property.
+	 *
+	 * \note String look-ups for collection and custom-properties are escaped using #LIB_str_escape.
+	 */
+	char *path;
+	int index;
 } FCurve;
 
 /** \} */

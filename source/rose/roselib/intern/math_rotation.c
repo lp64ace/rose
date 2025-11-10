@@ -4,11 +4,11 @@
 
 #include <stdio.h>
 
+#define QUAT_EPSILON 1e-4
+
 /* -------------------------------------------------------------------- */
 /** \name Quaternions (w, x, y, z) order.
  * \{ */
-
-#define EULER_HYPOT_EPSILON 0.0000375
 
 float quat_split_swing_and_twist(const float q_in[4], int axis, float r_swing[4], float r_twist[4]) {
 	ROSE_assert(axis >= 0 && axis <= 2);
@@ -111,7 +111,7 @@ ROSE_STATIC void quat_to_mat3_no_error(float m[3][3], const float q[4]) {
 void quat_to_mat3(float mat[3][3], const float q[4]) {
 #ifndef NDEBUG
 	float f;
-	if (!((f = dot_qtqt(q, q)) == 0.0f || (fabsf(f - 1.0f) < (float)FLT_EPSILON))) {
+	if (!((f = dot_qtqt(q, q)) == 0.0f || (fabsf(f - 1.0f) < (float)QUAT_EPSILON))) {
 		fprintf(stderr, "Warning! quat_to_mat3() called with non-normalized: size %.8f *** report a bug ***\n", f);
 	}
 #endif
@@ -123,7 +123,7 @@ void quat_to_mat4(float mat[4][4], const float q[4]) {
 
 #ifndef NDEBUG
 	float f;
-	if (!((f = dot_qtqt(q, q)) == 0.0f || (fabsf(f - 1.0f) < (float)FLT_EPSILON))) {
+	if (!((f = dot_qtqt(q, q)) == 0.0f || (fabsf(f - 1.0f) < (float)QUAT_EPSILON))) {
 		fprintf(stderr, "Warning! quat_to_mat4() called with non-normalized: size %.8f *** report a bug ***\n", f);
 	}
 #endif
@@ -369,6 +369,8 @@ void mat4_to_quat(float q[4], const float mat[4][4]) {
 /* -------------------------------------------------------------------- */
 /** \name Conversion Defines
  * \{ */
+
+#define EULER_HYPOT_EPSILON 0.0000375
 
 /**
  * Euler Rotation Order Code:

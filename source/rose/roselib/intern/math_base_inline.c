@@ -177,6 +177,54 @@ ROSE_INLINE float saasin(float fac) {
 	}
 }
 
+ROSE_INLINE float increment_ulp(float value) {
+	if (!isfinite(value)) {
+		return value;
+	}
+
+	union {
+		float f;
+		uint i;
+	} v;
+	v.f = value;
+
+	if (v.f > 0.0f) {
+		v.i += 1;
+	}
+	else if (v.f < -0.0f) {
+		v.i -= 1;
+	}
+	else {
+		v.i = 0x00000001;
+	}
+
+	return v.f;
+}
+
+ROSE_INLINE float decrement_ulp(float value) {
+	if (!isfinite(value)) {
+		return value;
+	}
+
+	union {
+		float f;
+		uint i;
+	} v;
+	v.f = value;
+
+	if (v.f > 0.0f) {
+		v.i -= 1;
+	}
+	else if (v.f < -0.0f) {
+		v.i += 1;
+	}
+	else {
+		v.i = 0x80000001;
+	}
+
+	return v.f;
+}
+
 #ifdef __cplusplus
 }
 #endif

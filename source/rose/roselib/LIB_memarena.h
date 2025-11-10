@@ -82,6 +82,8 @@ void *LIB_memory_arena_malloc(MemArena *arena, size_t size);
  * \return A pointer to the allocated memory block.
  */
 void *LIB_memory_arena_calloc(MemArena *arena, size_t size);
+void *LIB_memory_arena_strdup(MemArena *arena, const char *str);
+void *LIB_memory_arena_strfmt(MemArena *arena, ATTR_PRINTF_FORMAT const char *fmt, ...);
 
 /**
  * Free all the memory blocks that were allocated from the specified arena.

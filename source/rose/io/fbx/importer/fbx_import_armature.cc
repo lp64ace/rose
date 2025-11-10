@@ -1,6 +1,7 @@
 #include "LIB_listbase.h"
 #include "LIB_math_vector.hh"
 #include "LIB_math_matrix.hh"
+#include "LIB_math_matrix.h"
 
 #include "KER_action.h"
 #include "KER_armature.h"
@@ -10,6 +11,8 @@
 #include "ED_armature.h"
 
 #include "fbx_import_armature.hh"
+
+#include <iomanip>
 
 namespace rose::io::fbx {
 
@@ -230,32 +233,6 @@ void ArmatureImportContext::create_armature_bones(const ufbx_node *node, Object 
 	}
 }
 
-ROSE_STATIC void print_armature_recursive(Object *object, Armature *armature, Bone *bone) {
-	for (Bone *pbone = bone->parent; pbone; pbone = pbone->parent) {
-		printf("  ");
-	}
-	printf("[bone]::%-16s\t[%.3f %.3f %.3f] [%.3f %.3f %.3f]\n", bone->name, bone->arm_head[0], bone->arm_head[1], bone->arm_head[2], bone->arm_tail[0], bone->arm_tail[1], bone->arm_tail[2]);
-
-	PoseChannel *pchannel = KER_pose_channel_find(object->pose, bone->name);
-
-	for (Bone *pbone = bone; pbone; pbone = pbone->parent) {
-		printf("  ");
-	}
-	if (pchannel) {
-		printf("[PoseChannel::quat] (%.3f %.3f %.3f %.3f)\n", pchannel->quat[0], pchannel->quat[1], pchannel->quat[2], pchannel->quat[3]);
-	}
-
-	LISTBASE_FOREACH(Bone *, fbone, &bone->childbase) {
-		print_armature_recursive(object, armature, fbone);
-	}
-}
-
-ROSE_STATIC void print_armature(Object *object, Armature *armature) {
-	LISTBASE_FOREACH(Bone *, bone, &armature->bonebase) {
-		print_armature_recursive(object, armature, bone);
-	}
-}
-
 void ArmatureImportContext::calc_bone_bind_matrices() {
 	/**
 	 * Figure out bind matrices for bone nodes:
@@ -337,8 +314,6 @@ void ArmatureImportContext::find_armatures(const ufbx_node *node) {
 				KER_pose_channel_apply_mat4(pchannel, pchan_matrix, false);
 			}
 		}
-
-		print_armature(object, armature);
 	}
 
 	/* Recurse into children that have not been turned into bones yet. */

@@ -36,6 +36,9 @@ void KER_action_layer_free(struct ActionLayer *layer);
 /** \name Action Strip
  * \{ */
 
+const struct ActionStripKeyframeData *KER_action_strip_data_const(const struct Action *action, const struct ActionStrip *strip);
+struct ActionStripKeyframeData *KER_action_strip_data(struct Action *action, struct ActionStrip *strip);
+
 /** Appends the specified #ActionStripKeyframeData and return the index of the data within the #Action. */
 int KER_action_strip_keyframe_data_append(struct Action *action, struct ActionStripKeyframeData *strip_data);
 
@@ -75,12 +78,13 @@ const struct ActionSlot *KER_action_slot_for_handle_const(const struct Action *a
 struct ActionSlot *KER_action_slot_for_handle(struct Action *action, int handle);
 
 /** Allocates and append a new action slot for the specified #Action. */
-struct ActionSlot *KER_action_slot_for_add_idtype(struct Action *action, short idtype);
+struct ActionSlot *KER_action_slot_add_for_idtype(struct Action *action, short idtype);
 
 void KER_action_slot_identifier_define(struct Action *action, struct ActionSlot *slot, const char *name);
 void KER_action_slot_setup_for_id(struct ActionSlot *slot, const struct ID *id);
 void KER_action_slot_free(struct ActionSlot *slot);
 
+bool KER_action_slot_assign(struct ActionSlot *slot, struct ID *id);
 bool KER_action_slot_suitable_for_id(struct ActionSlot *slot, struct ID *id);
 
 /** \} */
@@ -91,6 +95,7 @@ bool KER_action_slot_suitable_for_id(struct ActionSlot *slot, struct ID *id);
 
 void KER_action_slot_foreach_id(ActionSlot *slot, struct LibraryForeachIDData *data);
 
+void KER_action_slot_runtime_init(struct ActionSlot *slot);
 void KER_action_slot_runtime_users_add(const struct ActionSlot *slot, struct ID *id);
 void KER_action_slot_runtime_users_remove(const struct ActionSlot *slot, struct ID *id);
 void KER_action_slot_runtime_users_invalidate(struct ActionSlot *slot, struct Main *main);
@@ -111,6 +116,8 @@ void KER_action_slot_runtime_free(struct ActionSlot *slot);
  */
 struct PoseChannel *KER_pose_channel_ensure(struct Pose *pose, const char *name);
 struct PoseChannel *KER_pose_channel_find(struct Pose *pose, const char *name);
+
+void KER_pose_channel_mat3_to_rot(PoseChannel *pchannel, const float mat[3][3], bool use_compat);
 
 /**
  * Apply a 4x4 matrix to the pose bone,
@@ -143,6 +150,14 @@ void KER_pose_free_data_ex(struct Pose *pose, const bool do_id_user);
 void KER_pose_free_data(struct Pose *pose);
 void KER_pose_free_ex(struct Pose *pose, const bool do_id_user);
 void KER_pose_free(struct Pose *pose);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Action Channel Bag
+ * \{ */
+
+void KER_action_channelbag_fcurve_create_many(struct Main *main, struct ActionChannelBag *channelbag, const struct FCurveDescriptor *descriptors, int length, struct FCurve **newcurves);
 
 /** \} */
 

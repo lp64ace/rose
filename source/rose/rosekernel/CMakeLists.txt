@@ -57,6 +57,7 @@ set(SRC
 	intern/action_runtime.cc
 	intern/anim_data.c
 	intern/armature.c
+	intern/armature_deform.cc
 	intern/context.c
 	intern/cpp_types.cc
 	intern/collection.c
@@ -73,6 +74,7 @@ set(SRC
 	intern/main.c
 	intern/mesh.c
 	intern/mesh.cc
+	intern/mesh_data_update.c
 	intern/mesh_normals.cc
 	intern/mesh_runtime.cc
 	intern/mesh_tessellate.cc
@@ -96,7 +98,9 @@ set(LIB
 	rose::intern::atomic
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::dna
+	PUBLIC rose::source::rna
 	PUBLIC rose::source::functions
+	PUBLIC rose::source::modifiers
 	PUBLIC rose::source::editors::interface
 	
 	# External Library Dependencies

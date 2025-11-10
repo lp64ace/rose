@@ -10,6 +10,7 @@
 #include "IO_fbx.h"
 
 #include "importer/fbx_import_util.hh"
+#include "importer/fbx_import_anim.hh"
 #include "importer/fbx_import_armature.hh"
 #include "importer/fbx_import_mesh.hh"
 
@@ -29,7 +30,7 @@ struct FbxImportContext {
 	void import_globals();
 	void import_meshes();
 	void import_armatures();
-	void import_animation();
+	void import_animation(double fps);
 
 };
 
@@ -44,7 +45,8 @@ void FbxImportContext::import_armatures() {
 	rose::io::fbx::import_armatures(this->main, this->scene, this->fbx, &this->mapping);
 }
 
-void FbxImportContext::import_animation() {
+void FbxImportContext::import_animation(double fps) {
+	rose::io::fbx::import_animations(this->main, this->scene, this->fbx, &this->mapping, fps);
 }
 
 }  // namespace rose::io::fbx
@@ -82,8 +84,8 @@ void importer_main(Main *main, Scene *scene, const char *filepath) {
 
 	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
 	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
+	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
+	opts.target_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
 	opts.target_unit_meters = 1.0f;
 
 	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
@@ -111,7 +113,7 @@ void importer_main(Main *main, Scene *scene, const char *filepath) {
 	ctx.import_globals();
 	ctx.import_armatures();
 	ctx.import_meshes();
-	ctx.import_animation();
+	ctx.import_animation(fbx->settings.frames_per_second);
 
 	ufbx_free_scene(fbx);
 }

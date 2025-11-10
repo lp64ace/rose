@@ -43,6 +43,7 @@ enum {
 	/** object child will use relative transform (like deform) */
 	BONE_RELATIVE_PARENTING = (1 << 0),
 	BONE_CONNECTED = (1 << 1),
+	BONE_NO_DEFORM = (1 << 2),
 };
 
 typedef struct Armature {

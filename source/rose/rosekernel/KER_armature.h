@@ -114,6 +114,32 @@ struct Bone *KER_armature_find_bone_name(struct Armature *arm, const char *name)
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Pose Solver
+ * \{ */
+
+void KER_pose_ensure(struct Main *main, struct Object *object, struct Armature *armature, bool do_id_user);
+
+/**
+ * Updates vectors and matrices on rest-position level, only needed
+ * after editing armature itself, now only on reading file.
+ */
+void KER_armature_where_is(struct Armature *armature);
+void KER_armature_where_is_bone(struct Bone *bone, const Bone *parbone, bool use_recursion);
+
+void KER_pose_channel_to_mat4(const struct PoseChannel *pchannel, float r_mat[4][4]);
+void KER_pose_channel_do_mat4(struct PoseChannel *pchannel);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Armature Mesh Deformation
+ * \{ */
+
+void KER_armature_deform_coords_with_mesh(struct Object *armature, struct Object *obtarget, float (*positions)[3], size_t length, struct Mesh *metarget);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

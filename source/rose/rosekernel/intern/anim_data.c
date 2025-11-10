@@ -1,7 +1,9 @@
 #include "MEM_guardedalloc.h"
 
+#include "KER_action.h"
 #include "KER_anim_data.h"
 #include "KER_idtype.h"
+#include "KER_fcurve.h"
 
 #include "LIB_utildefines.h"
 
@@ -38,4 +40,27 @@ AnimData *KER_animdata_ensure_id(ID *id) {
 		return iat->adt;
 	}
 	return NULL;
+}
+
+void KER_animdata_free(ID *id, const bool do_id_user) {
+	if (!id_can_have_animdata(id)) {
+		return;
+	}
+
+	IdAdtTemplate *iat = (IdAdtTemplate *)id;
+	AnimData *adt = iat->adt;
+	if (!adt) {
+		return;
+	}
+
+	if (do_id_user) {
+		if (adt->action) {
+			const bool ok = KER_action_assign(NULL, id);
+			ROSE_assert_msg(ok, "[Kernel] Expecting action un-assignment to always work");
+			UNUSED_VARS_NDEBUG(ok);
+		}
+	}
+
+	MEM_freeN(adt);
+	iat->adt = NULL;
 }

@@ -148,6 +148,10 @@ rose::Span<ID *> KER_action_slot_runtime_users(ActionSlot *slot, Main *main) {
 	return runtime->users;
 }
 
+void KER_action_slot_runtime_init(ActionSlot *slot) {
+	slot->runtime = MEM_new<ActionSlotRuntime>("ActionSlotRuntime");
+}
+
 void KER_action_slot_runtime_free(ActionSlot *slot) {
 	ActionSlotRuntime *runtime = static_cast<ActionSlotRuntime *>(slot->runtime);
 

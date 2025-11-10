@@ -355,6 +355,25 @@ const DNAType *DNA_sdna_pointer_pointee(SDNA *sdna, const DNATypePointer *type) 
 	return reinterpret_cast<const DNAType *>(reinterpret_cast<const DNATypePointerInterface *>(type)->pointee());
 }
 
+size_t DNA_sdna_pointer_level(SDNA *sdna, const DNAType *type) {
+	size_t level = 0;
+
+	const DNATypeInterface *derived = reinterpret_cast<const DNATypeInterface *>(type);
+	while (ELEM(derived->type(), DNA_PTR, DNA_QUALIFIED)) {
+		switch (derived->type()) {
+			case DNA_PTR: {
+				derived = static_cast<const DNATypePointerInterface *>(derived)->pointee();
+				level++;
+			} break;
+			case DNA_QUALIFIED: {
+				derived = static_cast<const DNATypeQualInterface *>(derived)->base();
+			} break;
+		}
+	}
+
+	return level;
+}
+
 /** \} */
 
 
@@ -410,6 +429,18 @@ const char *DNA_sdna_struct_identifier(SDNA *sdna, const DNATypeStruct *type) {
 const ListBase *DNA_sdna_struct_fields(SDNA *sdna, const DNATypeStruct *type) {
 	UNUSED_VARS(sdna);
 	return reinterpret_cast<const DNATypeStructInterface *>(type)->fields();
+}
+
+const DNATypeStructField *DNA_sdna_struct_field_find(SDNA *sdna, const DNATypeStruct *type, const char *name) {
+	const ListBase *lb = DNA_sdna_struct_fields(sdna, type);
+	
+	LISTBASE_FOREACH(DNATypeStructField *, field, lb) {
+		if (STREQ(DNA_sdna_struct_field_identifier(sdna, type, field), name)) {
+			return field;
+		}
+	}
+
+	return NULL;
 }
 
 /** \} */

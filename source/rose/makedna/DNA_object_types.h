@@ -101,6 +101,8 @@ typedef struct Object {
 	 * before using this value you should do: `invert_m4_m4(ob->imat, ob->obmat)`
 	 */
 	float invmat[4][4];
+
+	ListBase modifiers;
 	
 	ObjectRuntime runtime;
 } Object;

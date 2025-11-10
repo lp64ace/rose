@@ -2,6 +2,7 @@
 
 #include "LIB_assert.h"
 #include "LIB_memarena.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include <stdio.h>
@@ -99,6 +100,29 @@ void *LIB_memory_arena_calloc(MemArena *arena, size_t size) {
 	void *ptr = LIB_memory_arena_malloc(arena, size);
 
 	memset(ptr, 0, size);
+
+	return ptr;
+}
+
+void *LIB_memory_arena_strdup(MemArena *arena, const char *str) {
+	const size_t length = LIB_strlen(str);
+	void *ptr = LIB_memory_arena_malloc(arena, length + 1);
+	return LIB_strcpy(ptr, length + 1, str);
+}
+
+void *LIB_memory_arena_strfmt(MemArena *arena, const char *fmt, ...) {
+	va_list args;
+	char *str;
+
+	va_start(args, fmt);
+	str = LIB_vstrformat_allocN(fmt, args);
+	va_end(args);
+
+	void *ptr = NULL;
+	if (str) {
+		ptr = LIB_memory_arena_strdup(arena, str);
+		MEM_freeN(str);
+	}
 
 	return ptr;
 }

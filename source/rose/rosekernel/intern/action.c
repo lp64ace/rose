@@ -5,12 +5,15 @@
 #include "KER_fcurve.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
+#include "KER_main.h"
 
 #include "LIB_ghash.h"
+#include "LIB_hash_mm2a.h"
 #include "LIB_listbase.h"
 #include "LIB_math_matrix.h"
 #include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
+#include "LIB_hash.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
@@ -86,6 +89,7 @@ void KER_action_channelbag_free(ActionChannelBag *channelbag) {
 		KER_action_group_free(channelbag->groups[index]);
 	}
 	MEM_SAFE_FREE(channelbag->groups);
+	MEM_freeN(channelbag);
 }
 
 /** \} */
@@ -93,6 +97,18 @@ void KER_action_channelbag_free(ActionChannelBag *channelbag) {
 /* -------------------------------------------------------------------- */
 /** \name Action Strip
  * \{ */
+
+const ActionStripKeyframeData *KER_action_strip_data_const(const Action *action, const ActionStrip *strip) {
+	ROSE_assert(0 <= strip->index_data && strip->index_data < action->totstripkeyframedata);
+
+	return action->stripkeyframedata[strip->index_data];
+}
+
+ActionStripKeyframeData *KER_action_strip_data(Action *action, ActionStrip *strip) {
+	ROSE_assert(0 <= strip->index_data && strip->index_data < action->totstripkeyframedata);
+
+	return action->stripkeyframedata[strip->index_data];
+}
 
 ROSE_STATIC ActionStrip *action_strip_alloc(Action *action, int type) {
 	ActionStrip *strip = MEM_callocN(sizeof(ActionStrip), "ActionStrip");
@@ -233,7 +249,7 @@ bool is_id_using_action_slot(ID *id, Action *action, int handle) {
 	return KER_id_foreach_action_slot_use(id, visit_action_use, &data) == false;
 }
 
-ROSE_STATIC bool generatic_assign_action_slot(ActionSlot *slot, ID *id, Action **action_ptr, int *r_handle) {
+ROSE_STATIC bool generic_assign_action_slot(ActionSlot *slot, ID *id, Action **action_ptr, int *r_handle) {
 	if (!(*action_ptr)) {
 		/* No action assigned yet, so no way to assign a slot. */
 		return false;
@@ -312,7 +328,7 @@ ROSE_STATIC bool generic_assign_action(ID *id, Action *action_to_assign, Action 
 	/* Un-assign any previously-assigned Action first. */
 	if (*action_ptr) {
 		if (*r_handle) {
-			generatic_assign_action_slot(NULL, id, action_ptr, r_handle);
+			generic_assign_action_slot(NULL, id, action_ptr, r_handle);
 		}
 
 		id_us_rem(&(*action_ptr)->id);
@@ -328,7 +344,7 @@ ROSE_STATIC bool generic_assign_action(ID *id, Action *action_to_assign, Action 
 	id_us_add(&(*action_ptr)->id);
 
 	ActionSlot *slot = generic_slot_for_autoassign(*action_ptr, id);
-	return generatic_assign_action_slot(slot, id, action_ptr, r_handle);
+	return generic_assign_action_slot(slot, id, action_ptr, r_handle);
 }
 
 bool KER_action_assign(Action *action, ID *id) {
@@ -337,6 +353,14 @@ bool KER_action_assign(Action *action, ID *id) {
 		return false;
 	}
 	return generic_assign_action(id, action, &adt->action, &adt->handle);
+}
+
+bool KER_action_slot_assign(ActionSlot *slot, ID *id) {
+	AnimData *adt = KER_animdata_ensure_id(id);
+	if (!adt) {
+		return false;
+	}
+	return generic_assign_action_slot(slot, id, &adt->action, &adt->handle);
 }
 
 bool KER_action_has_slot(const struct Action *action, const struct ActionSlot *slot) {
@@ -370,6 +394,8 @@ ROSE_STATIC ActionSlot *action_slot_alloc(Action *action) {
 	ROSE_assert_msg(action->uidslot > 0, "Action slot handle overflow");
 
 	slot->handle = action->uidslot;
+
+	KER_action_slot_runtime_init(slot);
 	
 	return slot;
 }
@@ -388,7 +414,7 @@ ActionSlot *KER_action_slot_add(Action *action) {
 	return slot;
 }
 
-ActionSlot *KER_action_slot_for_add_idtype(struct Action *action, short idtype) {
+ActionSlot *KER_action_slot_add_for_idtype(struct Action *action, short idtype) {
 	ActionSlot *nslot = KER_action_slot_add(action);
 
 	nslot->idtype = idtype;
@@ -399,14 +425,17 @@ ActionSlot *KER_action_slot_for_add_idtype(struct Action *action, short idtype) 
 }
 
 void KER_action_slot_identifier_define(Action *action, ActionSlot *slot, const char *name) {
-	LIB_strcpy(slot->identifier + 2, ARRAY_SIZE(slot->identifier) - 2, ACTION_SLOT_DEFAULT_NAME);
+	if (!name) {
+		name = ACTION_SLOT_DEFAULT_NAME;
+	}
+	LIB_strcpy(slot->identifier + 2, ARRAY_SIZE(slot->identifier) - 2, name);
 
 	UNUSED_VARS(action);  // We may want to ensure uniqueness in the future.
 }
 
 void KER_action_slot_setup_for_id(ActionSlot *slot, const ID *id) {
 	if (slot->idtype != 0) {
-		ROSE_assert(slot->idtype != GS(id->name));
+		ROSE_assert(slot->idtype == GS(id->name));
 		return;
 	}
 
@@ -598,13 +627,225 @@ void KER_pose_free(Pose *pose) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Action Channel Bag
+ * \{ */
+
+ROSE_INLINE uint fcurve_lookup_hash(const void *key) {
+	const FCurve *info = (const FCurve *)key;
+
+	uint h0 = LIB_ghashutil_strhash(info->path);
+	uint h1 = LIB_ghashutil_inthash(info->index);
+
+	return h0 ^ h1;
+}
+
+ROSE_INLINE bool fcurve_lookup_cmp(const void *vleft, const void *vright) {
+	const FCurve *left = (const FCurve *)vleft;
+	const FCurve *right = (const FCurve *)vright;
+
+	if (left->index == right->index && STREQ(left->path, right->path)) {
+		return false;
+	}
+	return true;
+}
+
+ROSE_STATIC FCurve *create_fcurve_for_channel(const FCurveDescriptor *descriptor) {
+	FCurve *fcurve = KER_fcurve_new();
+	fcurve->path = LIB_strdupN(descriptor->path);
+	fcurve->index = descriptor->index;
+	
+	if (descriptor->type >= 0) {
+		// Note the type within the flag of the FCurve.
+	}
+
+	return fcurve;
+}
+
+ActionGroup *KER_action_channelbag_group_find(ActionChannelBag *channelbag, const char *name) {
+	for (ActionGroup **group = channelbag->groups; group != channelbag->groups + channelbag->totgroup; group++) {
+		if (*group != NULL && STREQ((*group)->name, name)) {
+			return *group;
+		}
+	}
+	return NULL;
+}
+
+int KER_action_channelbag_group_find_index(ActionChannelBag *channelbag, ActionGroup *group) {
+	for (int index = 0; index < channelbag->totgroup; index++) {
+		if (channelbag->groups[index] == group) {
+			return index;
+		}
+	}
+	return -1;
+}
+
+ActionGroup *KER_action_channelbag_group_create(ActionChannelBag *channelbag, const char *name) {
+	ActionGroup *newgroup = MEM_callocN(sizeof(ActionGroup), "ActionGroup");
+
+	int index = 0;
+	const int length = channelbag->totgroup;
+	if (length > 0) {
+		ActionGroup *last = channelbag->groups[length - 1];
+		index = last->fcurve_range_start + last->fcurve_range_length;
+	}
+	newgroup->fcurve_range_start = index;
+	newgroup->channelbag = channelbag;
+	
+	LIB_strcpy(newgroup->name, ARRAY_SIZE(newgroup->name), name);
+
+	channelbag->groups = MEM_reallocN(channelbag->groups, sizeof(ActionGroup *) * (length + 1));
+	channelbag->groups[channelbag->totgroup++] = newgroup;
+
+	return newgroup;
+}
+
+ActionGroup *KER_action_channelbag_group_ensure(ActionChannelBag *channelbag, const char *name) {
+	ActionGroup *group = KER_action_channelbag_group_find(channelbag, name);
+	if (group != NULL) {
+		return group;
+	}
+
+	return KER_action_channelbag_group_create(channelbag, name);
+}
+
+ROSE_STATIC FCurve **fcurve_rotate(FCurve **first, FCurve **middle, FCurve **last) {
+	if (first == middle) {
+		return last;
+	}
+	if (middle == last) {
+		return first;
+	}
+
+	FCurve **write = first;
+	FCurve **next = first;
+
+	for (FCurve **read = middle; read != last; ++write, ++read) {
+		if (write == next) {
+			next = read;
+		}
+		SWAP(FCurve *, write[0], read[0]);
+	}
+
+	fcurve_rotate(write, next, last);
+	return write;
+}
+
+ROSE_STATIC void fcurve_shift_range(FCurve **fcurves, const int num, const int left, const int right, const int to) {
+	ROSE_assert(left <= right);
+	ROSE_assert(right <= num);
+	ROSE_assert(to <= num + left - right);
+
+	if (ELEM(left, right, to)) {
+		return;
+	}
+
+	if (to < left) {
+		FCurve **start = fcurves + to;
+		FCurve **mid = fcurves + left;
+		FCurve **end = fcurves + right;
+		fcurve_rotate(start, mid, end);
+	}
+	else {
+		FCurve **start = fcurves + left;
+		FCurve **mid = fcurves + right;
+		FCurve **end = fcurves + to;
+		fcurve_rotate(start, mid, end);
+	}
+}
+
+ROSE_STATIC void restore_channelbag_group_invariants(ActionChannelBag *channelbag) {
+	{
+		int start = 0;
+		for (ActionGroup **group = channelbag->groups; group != channelbag->groups + channelbag->totgroup; group++) {
+			group[0]->fcurve_range_start = start;
+			start += group[0]->fcurve_range_length;
+		}
+
+		ROSE_assert(start <= channelbag->totcurve);
+	}
+	{
+		for (FCurve **fcurve = channelbag->fcurves; fcurve != channelbag->fcurves + channelbag->totcurve; fcurve++) {
+			fcurve[0]->group = NULL;
+		}
+		for (ActionGroup **group = channelbag->groups; group != channelbag->groups + channelbag->totgroup; group++) {
+			for (size_t offset = 0; offset < group[0]->fcurve_range_length; offset++) {
+				size_t index = offset + group[0]->fcurve_range_start;
+
+				channelbag->fcurves[index]->group = group[0];
+			}
+		}
+	}
+}
+
+void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *channelbag, FCurveDescriptor *descriptors, int length, FCurve **newcurves) {
+	const int prevcount = channelbag->totcurve;
+	
+	GSet *unique = LIB_gset_new_ex(fcurve_lookup_hash, fcurve_lookup_cmp, "FCurveLookup", prevcount);
+	for (FCurve *curve = channelbag->fcurves; curve != channelbag->fcurves + channelbag->totcurve; curve++) {
+		LIB_gset_insert(unique, curve);
+	}
+
+	channelbag->totcurve += length;
+	channelbag->fcurves = MEM_reallocN(channelbag->fcurves, sizeof(FCurve *) * channelbag->totcurve);
+
+	int newindex = prevcount;
+	for (int i = 0; i < length; i++) {
+		const FCurveDescriptor *descriptor = &descriptors[i];
+
+		FCurve template = {
+			.path = descriptor->path,
+			.index = descriptor->index,
+		};
+
+		if (descriptor->path == NULL || STREQ(descriptor->path, "") || LIB_gset_lookup(unique, &template)) {
+			newcurves[i] = NULL;
+			continue;
+		}
+
+		FCurve *fcurve = create_fcurve_for_channel(descriptor);
+		newcurves[i] = fcurve;
+
+		channelbag->fcurves[newindex] = fcurve;
+		if (descriptor->group) {
+			ActionGroup *group = KER_action_channelbag_group_ensure(channelbag, descriptor->group);
+			const int groupindex = group->fcurve_range_start + group->fcurve_range_length;
+			ROSE_assert(groupindex <= channelbag->totcurve);
+
+			fcurve_shift_range(channelbag->fcurves, channelbag->totcurve, newindex, newindex + 1, groupindex);
+
+			group->fcurve_range_length++;
+			int index = KER_action_channelbag_group_find_index(channelbag, group);
+			ROSE_assert(0 <= index && index < channelbag->totgroup);
+			for (index = index + 1; index < channelbag->totgroup; index++) {
+				channelbag->groups[index]->fcurve_range_start++;
+			}
+		}
+		newindex++;
+	}
+
+	if (channelbag->totcurve != newindex) {
+		// Some curves were not created, resize to final amount.
+		channelbag->totcurve = newindex;
+		channelbag->fcurves = MEM_reallocN(channelbag->fcurves, sizeof(FCurve *) * channelbag->totcurve);
+	}
+
+	LIB_gset_free(unique, NULL);
+
+	restore_channelbag_group_invariants(channelbag);
+
+	return newcurves;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Action Data-block Definition
  * \{ */
 
 ROSE_STATIC void action_init_data(ID *id) {
 	Action *action = (Action *)id;
 
-	action->uidslot = (0x37627bf5 ^ POINTER_AS_INT(action)) >> 1;
+	action->uidslot = 0x37627bf5;
 }
 
 ROSE_STATIC void action_free_data(ID *id) {

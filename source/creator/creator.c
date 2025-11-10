@@ -3,6 +3,7 @@
 #endif
 
 #include "KER_context.h"
+#include "KER_modifier.h"
 
 #include "WM_api.h"
 
@@ -14,6 +15,8 @@ int main(void) {
 #endif
 
 	struct rContext *C = CTX_new();
+
+	KER_modifier_init();
 
 	WM_init(C);
 	do {

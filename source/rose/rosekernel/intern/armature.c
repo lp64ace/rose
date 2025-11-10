@@ -7,7 +7,9 @@
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_mesh.h"
 #include "KER_object.h"
+#include "KER_object_deform.h"
 
 #include "LIB_ghash.h"
 #include "LIB_math_matrix.h"
@@ -400,6 +402,123 @@ void KER_armature_bone_hash_free(Armature *arm) {
 		LIB_ghash_free(arm->bonehash, NULL, NULL);
 		arm->bonehash = NULL;
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Bone Matrix Calculation API
+ * \{ */
+
+void KER_bone_offset_matrix_get(const Bone *bone, float offs_bone[4][4]) {
+	ROSE_assert(bone->parent != NULL);
+
+	/* Bone transform itself. */
+	copy_m4_m3(offs_bone, bone->mat);
+
+	/* The bone's root offset (is in the parent's coordinate system). */
+	copy_v3_v3(offs_bone[3], bone->head);
+
+	/* Get the length translation of parent (length along y axis). */
+	offs_bone[3][1] += bone->parent->length;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Pose Solver
+ * \{ */
+
+void KER_pose_ensure(Main *main, Object *object, Armature *armature, bool do_id_user) {
+	ROSE_assert(!ELEM(NULL, armature, object));
+	if (object->type == OB_ARMATURE && ((object->pose == NULL) || (object->pose->flag & POSE_RECALC))) {
+		ROSE_assert(GS(armature->id.name) == ID_AR);
+		KER_pose_rebuild(main, object, armature, do_id_user);
+	}
+}
+
+void KER_armature_where_is(Armature *armature) {
+	/* hierarchical from root to children */
+	LISTBASE_FOREACH(Bone *, bone, &armature->bonebase) {
+		KER_armature_where_is_bone(bone, NULL, true);
+	}
+}
+
+void KER_armature_where_is_bone(Bone *bone, Bone *parbone, bool use_recursion) {
+	float vec[3];
+
+	/* Bone Space */
+	sub_v3_v3v3(vec, bone->tail, bone->head);
+	bone->length = len_v3(vec);
+	vec_roll_to_mat3(vec, bone->roll, bone->mat);
+
+	if (parbone) {
+		float offs_bone[4][4];
+		/* yoffs(b-1) + root(b) + bonemat(b) */
+		KER_bone_offset_matrix_get(bone, offs_bone);
+
+		/* Compose the matrix for this bone. */
+		mul_m4_m4m4(bone->arm_mat, parbone->arm_mat, offs_bone);
+	}
+	else {
+		copy_m4_m3(bone->arm_mat, bone->mat);
+		copy_v3_v3(bone->arm_mat[3], bone->head);
+	}
+
+	/* and the children */
+	if (use_recursion) {
+		LISTBASE_FOREACH(Bone *, childbone, &bone->childbase) {
+			KER_armature_where_is_bone(childbone, bone, use_recursion);
+		}
+	}
+}
+
+void KER_pose_channel_rot_to_mat3(const PoseChannel *pchan, float r_mat[3][3]) {
+	/* rotations may either be quats, eulers (with various rotation orders), or axis-angle */
+	if (pchan->rotmode == ROT_MODE_QUAT) {
+		/* quats are normalized before use to eliminate scaling issues */
+		float quat[4];
+
+		/* NOTE: we now don't normalize the stored values anymore,
+		 * since this was kind of evil in some cases but if this proves to be too problematic,
+		 * switch back to the old system of operating directly on the stored copy. */
+		normalize_qt_qt(quat, pchan->quat);
+		quat_to_mat3(r_mat, quat);
+	}
+	else if (pchan->rotmode == ROT_MODE_AXISANGLE) {
+		/* axis-angle - not really that great for 3D-changing orientations */
+		axis_angle_to_mat3(r_mat, pchan->rotAxis, pchan->rotAngle);
+	}
+	else {
+		/* Euler rotations (will cause gimbal lock,
+		 * but this can be alleviated a bit with rotation orders) */
+		eulO_to_mat3(r_mat, pchan->euler, pchan->rotmode);
+	}
+}
+
+void KER_pose_channel_to_mat4(const PoseChannel *pchannel, float r_mat[4][4]) {
+	float smat[3][3];
+	float rmat[3][3];
+	float tmat[3][3];
+
+	/* get scaling matrix */
+	size_to_mat3(smat, pchannel->scale);
+
+	/* get rotation matrix */
+	KER_pose_channel_rot_to_mat3(pchannel, rmat);
+
+	/* calculate matrix of bone (as 3x3 matrix, but then copy the 4x4) */
+	mul_m3_m3m3(tmat, rmat, smat);
+	copy_m4_m3(r_mat, tmat);
+
+	/* prevent action channels breaking chains */
+	/* need to check for bone here, CONSTRAINT_TYPE_ACTION uses this call */
+	if ((pchannel->bone == NULL) || !(pchannel->bone->flag & BONE_CONNECTED)) {
+		copy_v3_v3(r_mat[3], pchannel->loc);
+	}
+}
+void KER_pose_channel_do_mat4(PoseChannel *pchannel) {
+	KER_pose_channel_to_mat4(pchannel, pchannel->chan_mat);
 }
 
 /** \} */

@@ -1,11 +1,15 @@
+#include "KER_action.h"
+#include "KER_armature.h"
 #include "KER_deform.h"
 #include "KER_lib_id.h"
 #include "KER_mesh.h"
 #include "KER_mesh.hh"
+#include "KER_modifier.h"
 #include "KER_object.h"
 #include "KER_object_deform.h"
 
 #include "LIB_task.hh"
+#include "LIB_listbase.h"
 #include "LIB_math_matrix.hh"
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.hh"
@@ -15,6 +19,8 @@
 #include "LIB_utildefines.h"
 
 #include "fbx_import_mesh.hh"
+
+#include <iomanip>
 
 namespace rose::io::fbx {
 
@@ -189,6 +195,19 @@ void import_meshes(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMa
 					}
 					
 					if (armature != NULL) {
+						ModifierData *md = KER_modifier_new(MODIFIER_TYPE_ARMATURE);
+
+						/**
+						 * Assign the modifier to the object that is to be deformed.
+						 */
+						LIB_addtail(&object->modifiers, md);
+
+						ArmatureModifierData *ad = reinterpret_cast<ArmatureModifierData *>(md);
+						/**
+						 * Assign the armature object to the modifier.
+						 */
+						ad->object = armature;
+
 						if (!matrix_already_set) {
 							matrix_already_set = true;
 							object->parent = armature;

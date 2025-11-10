@@ -84,6 +84,7 @@ set(SRC
 	LIB_map.hh
 	LIB_map_slots.hh
 	LIB_math_angle_types.hh
+	LIB_math_axis_angle.hh
 	LIB_math_axis_angle_types.hh
 	LIB_math_base.h
 	LIB_math_base.hh
@@ -103,6 +104,7 @@ set(SRC
 	LIB_math_quaternion_types.hh
 	LIB_math_rotation.h
 	LIB_math_rotation_types.hh
+	LIB_math_solvers.h
 	LIB_math_vector.h
 	LIB_math_vector.hh
 	LIB_math_vector_types.hh
@@ -189,6 +191,7 @@ set(SRC
 	intern/math_matrix.c
 	intern/math_matrix.cc
 	intern/math_rotation.c
+	intern/math_solvers.c
 	intern/math_vector.c
 	intern/memarena.c
 	intern/memblock.c

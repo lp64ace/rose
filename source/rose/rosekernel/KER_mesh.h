@@ -130,6 +130,9 @@ void KER_mesh_runtime_free_data(struct Mesh *mesh);
 void KER_mesh_runtime_clear_cache(struct Mesh *mesh);
 void KER_mesh_runtime_clear_geometry(struct Mesh *mesh);
 
+void KER_mesh_positions_changed(struct Mesh *mesh);
+void KER_mesh_positions_changed_uniformly(struct Mesh *mesh);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -140,6 +143,14 @@ void KER_mesh_runtime_clear_geometry(struct Mesh *mesh);
  * Returns an array of indices that can be used for corner vertices.
  */
 const MLoopTri *KER_mesh_looptris(const struct Mesh *mesh);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Mesh Depsgraph Update
+ * \{ */
+
+void KER_mesh_data_update(struct Scene *scene, struct Object *object);
 
 /** \} */
 

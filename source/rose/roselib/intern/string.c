@@ -322,6 +322,8 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	/** vsnprintf returns an int! */
 	ROSE_assert(maxncpy <= INT_MAX);
 
+	va_list copy;
+	va_copy(copy, args);
 	/**
 	 * #vsnprintf, `int vsnprintf (char * s, size_t n, const char * format, va_list arg );`
 	 *
@@ -330,7 +332,8 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	 * character. If an encoding error occurs, a negative number is returned. Notice that only when this returned value is
 	 * non-negative and less than n, the string has been completely written.
 	 */
-	int n = vsnprintf(buffer, maxncpy, fmt, args);
+	int n = vsnprintf(buffer, maxncpy, fmt, copy);
+	va_end(copy);
 
 	/** Resulting string has to be null-terminated. */
 	if (n < 0 || n >= maxncpy) {
@@ -341,10 +344,7 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	return n;
 }
 
-char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
-	va_list args;
-
-	va_start(args, fmt);
+char *LIB_vstrformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, va_list args) {
 	/**
 	 * #vsnprintf, `int vsnprintf (char * s, size_t n, const char * format, va_list arg );`
 	 *
@@ -353,16 +353,29 @@ char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 	 * character. If an encoding error occurs, a negative number is returned. Notice that only when this returned value is
 	 * non-negative and less than n, the string has been completely written.
 	 */
-	size_t n = vsnprintf(NULL, 0, fmt, args) + 1;
-	va_end(args);
+	va_list copy;
+	va_copy(copy, args); /* Copy because vsnprintf consumes va_list */
+
+	int n = vsnprintf(NULL, 0, fmt, copy) + 1;
+	va_end(copy);
 
 	char *buffer = MEM_mallocN(n, "StringFormatN");
 	if (buffer) {
-		va_start(args, fmt);
 		vsnprintf(buffer, n, fmt, args);
-		va_end(args);
 	}
+
 	return buffer;
+}
+
+char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
+	va_list args;
+	char *out;
+
+	va_start(args, fmt);
+	out = LIB_vstrformat_allocN(fmt, args);
+	va_end(args);
+
+	return out;
 }
 
 size_t LIB_strnformat_byte_size(char *buffer, size_t maxncpy, uint64_t bytes, int decimal) {

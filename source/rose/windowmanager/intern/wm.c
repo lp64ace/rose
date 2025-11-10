@@ -255,7 +255,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	FBX_import(C, "C:\\Users\\jim\\Documents\\cat.fbx");
+	FBX_import(C, "C:\\Users\\jim\\Documents\\six.fbx");
 }
 
 void WM_init(struct rContext *C) {

@@ -192,6 +192,8 @@ typedef struct DNATypePointer DNATypePointer;
 
 const struct DNAType *DNA_sdna_pointer_pointee(struct SDNA *sdna, const struct DNATypePointer *type);
 
+size_t DNA_sdna_pointer_level(struct SDNA *sdna, const struct DNAType *type);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -244,6 +246,7 @@ const char *DNA_sdna_struct_identifier(struct SDNA *sdna, const struct DNATypeSt
 
 /** Returns the listbase containing the fields of the specified struct. */
 const struct ListBase *DNA_sdna_struct_fields(struct SDNA *sdna, const struct DNATypeStruct *type);
+const struct DNATypeStructField *DNA_sdna_struct_field_find(struct SDNA *sdna, const struct DNATypeStruct *type, const char *name);
 
 /** \} */
 

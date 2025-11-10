@@ -99,6 +99,26 @@ ROSE_INLINE unsigned int round_db_to_uint_clamp(double a);
 ROSE_INLINE float saacos(float fac);
 ROSE_INLINE float saasin(float fac);
 
+/**
+ * Increment the given float to the next representable floating point value in
+ * the positive direction.
+ *
+ * Infinities and NaNs are left untouched. Subnormal numbers are handled
+ * correctly, as is crossing zero (i.e. 0 and -0 are considered a single value,
+ * and progressing past zero continues on to the positive numbers).
+ */
+ROSE_INLINE float increment_ulp(float value);
+
+/**
+ * Decrement the given float to the next representable floating point value in
+ * the negative direction.
+ *
+ * Infinities and NaNs are left untouched. Subnormal numbers are handled
+ * correctly, as is zero (i.e. 0 and -0 are considered a single value, and
+ * progressing past zero continues on to the negative numbers).
+ */
+ROSE_INLINE float decrement_ulp(float value);
+
 #ifdef __cplusplus
 }
 #endif
