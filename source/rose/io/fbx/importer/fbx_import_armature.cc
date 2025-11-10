@@ -12,8 +12,6 @@
 
 #include "fbx_import_armature.hh"
 
-#include <iomanip>
-
 namespace rose::io::fbx {
 
 struct ArmatureImportContext {

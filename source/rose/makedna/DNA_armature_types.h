@@ -22,6 +22,7 @@ typedef struct Bone {
 	float roll;
 
 	int flag;
+	int inherit_scale_mode;
 
 	float arm_roll;
 	/** Head position in armature space. So should be the same as head in edit mode. */
@@ -44,6 +45,11 @@ enum {
 	BONE_RELATIVE_PARENTING = (1 << 0),
 	BONE_CONNECTED = (1 << 1),
 	BONE_NO_DEFORM = (1 << 2),
+};
+
+enum {
+	/* Inherit all scale and shear. */
+	BONE_INHERIT_SCALE_FULL = 0,
 };
 
 typedef struct Armature {

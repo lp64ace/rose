@@ -63,6 +63,64 @@ ROSE_STATIC void ebone_free(Armature *armature, EditBone *ebone) {
 	LIB_freelinkN(armature->ebonebase, ebone);
 }
 
+ROSE_STATIC void armature_finalize_restpose(ListBase *bonelist, ListBase *editbonelist) {
+	LISTBASE_FOREACH(Bone *, bone, bonelist) {
+		/* Set bone's local head/tail.
+		 * Note that it's important to use final parent's rest-pose (arm_mat) here,
+		 * instead of setting those values from edit-bone's matrix (see #46010). */
+		if (bone->parent) {
+			float parmat_inv[4][4];
+
+			invert_m4_m4(parmat_inv, bone->parent->arm_mat);
+
+			/* Get the new head and tail */
+			sub_v3_v3v3(bone->head, bone->arm_head, bone->parent->arm_tail);
+			sub_v3_v3v3(bone->tail, bone->arm_tail, bone->parent->arm_tail);
+
+			mul_m3_m4_v3(parmat_inv, bone->head);
+			mul_m3_m4_v3(parmat_inv, bone->tail);
+		}
+		else {
+			copy_v3_v3(bone->head, bone->arm_head);
+			copy_v3_v3(bone->tail, bone->arm_tail);
+		}
+
+		/**
+		 * Set local matrix and arm_mat (rest-pose).
+		 * Do not recurse into children here, armature_finalize_restpose() is already recursive.
+		 */
+		KER_armature_where_is_bone(bone, bone->parent, false);
+
+		/* Find the associated editbone */
+		LISTBASE_FOREACH(EditBone *, ebone, editbonelist) {
+			if (ebone->temp.bone == bone) {
+				float premat[3][3];
+				float postmat[3][3];
+				float difmat[3][3];
+				float imat[3][3];
+
+				/* Get the ebone premat and its inverse. */
+				ED_armature_ebone_to_mat3(ebone, premat);
+				invert_m3_m3(imat, premat);
+
+				/* Get the bone postmat. */
+				copy_m3_m4(postmat, bone->arm_mat);
+
+				mul_m3_m3m3(difmat, imat, postmat);
+
+				bone->roll = -atan2f(difmat[2][0], difmat[2][2]);
+
+				/* And set rest-position again. */
+				KER_armature_where_is_bone(bone, bone->parent, false);
+				break;
+			}
+		}
+
+		/* Recurse into children... */
+		armature_finalize_restpose(&bone->childbase, editbonelist);
+	}
+}
+
 void ED_armature_edit_apply(Main *main, Armature *armature) {
 	EditBone *ebone;
 	EditBone *nebone;
@@ -122,6 +180,9 @@ void ED_armature_edit_apply(Main *main, Armature *armature) {
 			LIB_addtail(&armature->bonebase, newbone);
 		}
 	}
+
+	/* Finalize definition of rest-pose data (roll, bone_mat, arm_mat, head/tail...). */
+	armature_finalize_restpose(&armature->bonebase, armature->ebonebase);
 
 	KER_armature_bone_hash_make(armature);
 

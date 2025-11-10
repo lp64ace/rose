@@ -414,20 +414,6 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 					KER_fcurve_handles_recalc(curve);
 				}
 
-				for (const ActionGroup *group : rose::Span<ActionGroup *>(channelbag->groups, channelbag->totgroup)) {
-					fprintf(stdout, "[Group] %s\n", group->name);
-					for (const FCurve *fcurve : rose::Span<FCurve *>(channelbag->fcurves, channelbag->totcurve).slice(group->fcurve_range_start, group->fcurve_range_length)) {
-						fprintf(stdout, "\t%s[%d]\n", fcurve->path, fcurve->index);
-						for (const BezTriple pt : rose::Span<BezTriple>(fcurve->bezt, fcurve->totvert)) {
-							fprintf(stdout, "\t\t");
-							fprintf(stdout, "{(t: %.1f v: %.1f) }", pt.vec[0][0], pt.vec[0][1]);
-							fprintf(stdout, "{(t: %.1f v: %.1f) }", pt.vec[1][0], pt.vec[1][1]);
-							fprintf(stdout, "{(t: %.1f v: %.1f) }", pt.vec[2][0], pt.vec[2][1]);
-							fprintf(stdout, "\n");
-						}
-					}
-				}
-
 				LIB_memory_arena_destroy(names);
 			}
 		}

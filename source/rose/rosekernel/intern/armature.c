@@ -281,6 +281,98 @@ void KER_pose_rebuild(Main *main, Object *object, Armature *armature, bool do_id
 	}
 }
 
+void KER_pose_pchannel_index_rebuild(Pose *pose) {
+	MEM_SAFE_FREE(pose->channels);
+	const size_t num_channels = LIB_listbase_count(&pose->channelbase);
+	pose->channels = MEM_mallocN(sizeof(PoseChannel *) * num_channels, "Pose::channels");
+
+	size_t index = 0;
+	LISTBASE_FOREACH_INDEX(PoseChannel *, pchannel, &pose->channelbase, index) {
+		pose->channels[index] = pchannel;
+	}
+}
+
+void KER_pose_eval_init(Object *object) {
+	Pose *pose = object->pose;
+	ROSE_assert(pose != NULL);
+	ROSE_assert(object->type == OB_ARMATURE);
+	ROSE_assert(object->pose != NULL);
+	ROSE_assert((object->pose->flag & POSE_RECALC) == 0);
+
+	invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
+
+	ROSE_assert(pose->channels != NULL || LIB_listbase_is_empty(&pose->channelbase));
+}
+
+void KER_pose_eval_init_ik(Object *object) {
+	ROSE_assert(object->type == OB_ARMATURE);
+
+	/* construct the IK tree (standard IK) */
+	// RIK_init_tree(object, 0.0f);
+}
+
+ROSE_INLINE PoseChannel *pose_pchannel_get_indexed(Object *object, size_t index) {
+	Pose *pose = object->pose;
+	ROSE_assert(pose != NULL);
+	ROSE_assert(pose->channels != NULL);
+	ROSE_assert(index >= 0);
+	ROSE_assert(index < MEM_allocN_length(pose->channels) / sizeof(PoseChannel *));
+	return pose->channels[index];
+}
+
+void KER_pose_eval_bone(Object *object, size_t index) {
+	const Armature *armature = (Armature *)object->data;
+
+	if (armature->ebonebase != NULL) {
+		return;
+	}
+
+	PoseChannel *pchannel = pose_pchannel_get_indexed(object, index);
+	ROSE_assert(object->type == OB_ARMATURE);
+
+	if (pchannel->flag & POSE_IKTREE) {
+		/* pass */
+	}
+	else {
+		if ((pchannel->flag & POSE_DONE) == 0) {
+			KER_pose_where_is_bone(object, pchannel, 0.0f);
+		}
+	}
+}
+
+void KER_pose_bone_done(Object *object, size_t index) {
+	const Armature *armature = (Armature *)object->data;
+
+	if (armature->ebonebase != NULL) {
+		return;
+	}
+
+	PoseChannel *pchannel = pose_pchannel_get_indexed(object, index);
+	ROSE_assert(object->type == OB_ARMATURE);
+
+	float imat[4][4];
+	if (pchannel->bone) {
+		invert_m4_m4(imat, pchannel->bone->arm_mat);
+		mul_m4_m4m4(pchannel->chan_mat, pchannel->pose_mat, imat);
+	}
+}
+
+void KER_pose_eval_cleanup(Object *object) {
+	Pose *pose = object->pose;
+	ROSE_assert(pose != NULL);
+	UNUSED_VARS_NDEBUG(pose);
+	ROSE_assert(object->type == OB_ARMATURE);
+	/* Release the IK tree. */
+	// RIK_release_tree(scene, object, ctime);
+}
+
+void KER_pose_eval_done(Object *object) {
+	Pose *pose = object->pose;
+	ROSE_assert(pose != NULL);
+	UNUSED_VARS_NDEBUG(pose);
+	ROSE_assert(object->type == OB_ARMATURE);
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -410,6 +502,14 @@ void KER_armature_bone_hash_free(Armature *arm) {
 /** \name Bone Matrix Calculation API
  * \{ */
 
+/* Transformation inherited from the parent bone. These matrices apply the effects of
+ * HINGE/NO_SCALE/NO_LOCAL_LOCATION options over the pchan loc/rot/scale transformations. */
+typedef struct BoneParentTransform {
+	float rotscale_mat[4][4]; /* parent effect on rotation & scale pose channels */
+	float loc_mat[4][4];	  /* parent effect on location pose channel */
+	float post_scale[3];	  /* additional scale to apply with post-multiply */
+} BoneParentTransform;
+
 void KER_bone_offset_matrix_get(const Bone *bone, float offs_bone[4][4]) {
 	ROSE_assert(bone->parent != NULL);
 
@@ -421,6 +521,115 @@ void KER_bone_offset_matrix_get(const Bone *bone, float offs_bone[4][4]) {
 
 	/* Get the length translation of parent (length along y axis). */
 	offs_bone[3][1] += bone->parent->length;
+}
+
+void KER_bone_parent_transform_calc_from_matrices(int bone_flag, int inherit_scale_mode, const float offs_bone[4][4], const float parent_arm_mat[4][4], const float parent_pose_mat[4][4], BoneParentTransform *r_bpt) {
+	copy_v3_fl(r_bpt->post_scale, 1.0f);
+
+	if (parent_pose_mat) {
+		const bool use_rotation = true;
+		const bool full_transform = true;
+
+		/* Compose the rotscale matrix for this bone. */
+		if (full_transform) {
+			/* Parent pose rotation and scale. */
+			mul_m4_m4m4(r_bpt->rotscale_mat, parent_pose_mat, offs_bone);
+		}
+		else {
+			float tmat[4][4], tscale[3];
+
+			/* If using parent pose rotation: */
+			if (use_rotation) {
+				copy_m4_m4(tmat, parent_pose_mat);
+
+				/* Normalize the matrix when needed. */
+				switch (inherit_scale_mode) {
+					case BONE_INHERIT_SCALE_FULL:
+						/* Keep scale and shear. */
+						break;
+
+					default:
+						ROSE_assert_unreachable();
+				}
+			}
+			/* If removing parent pose rotation: */
+			else {
+				copy_m4_m4(tmat, parent_arm_mat);
+
+				/* Copy the parent scale when needed. */
+				switch (inherit_scale_mode) {
+					case BONE_INHERIT_SCALE_FULL:
+						/* Ignore effects of shear. */
+						mat4_to_size(tscale, parent_pose_mat);
+						rescale_m4(tmat, tscale);
+						break;
+
+					default:
+						ROSE_assert_unreachable();
+				}
+			}
+
+			mul_m4_m4m4(r_bpt->rotscale_mat, tmat, offs_bone);
+		}
+
+		/* Compose the loc matrix for this bone. */
+		/* NOTE: That version does not modify bone's loc when HINGE/NO_SCALE options are set. */
+
+		/* Those flags do not affect position, use plain parent transform space! */
+		if (!full_transform) {
+			mul_m4_m4m4(r_bpt->loc_mat, parent_pose_mat, offs_bone);
+		}
+		/* Else (i.e. default, usual case),
+		 * just use the same matrix for rotation/scaling, and location. */
+		else {
+			copy_m4_m4(r_bpt->loc_mat, r_bpt->rotscale_mat);
+		}
+	}
+	/* Root bones. */
+	else {
+		/* Rotation/scaling. */
+		copy_m4_m4(r_bpt->rotscale_mat, offs_bone);
+		/* Translation. */
+		copy_m4_m4(r_bpt->loc_mat, r_bpt->rotscale_mat);
+	}
+}
+
+void KER_bone_parent_transform_calc_from_pchan(const PoseChannel *pchan, BoneParentTransform *r_bpt) {
+	const Bone *bone, *parbone;
+	const PoseChannel *parchan;
+
+	/* set up variables for quicker access below */
+	bone = pchan->bone;
+	parbone = bone->parent;
+	parchan = pchan->parent;
+
+	if (parchan) {
+		float offs_bone[4][4];
+		/* yoffs(b-1) + root(b) + bonemat(b). */
+		KER_bone_offset_matrix_get(bone, offs_bone);
+
+		KER_bone_parent_transform_calc_from_matrices(bone->flag, bone->inherit_scale_mode, offs_bone, parbone->arm_mat, parchan->pose_mat, r_bpt);
+	}
+	else {
+		KER_bone_parent_transform_calc_from_matrices(bone->flag, bone->inherit_scale_mode, bone->arm_mat, NULL, NULL, r_bpt);
+	}
+}
+
+void KER_bone_parent_transform_apply(const BoneParentTransform *bpt, const float inmat[4][4], float outmat[4][4]) {
+	/* in case inmat == outmat */
+	float tmploc[3];
+	copy_v3_v3(tmploc, inmat[3]);
+
+	mul_m4_m4m4(outmat, bpt->rotscale_mat, inmat);
+	mul_v3_m4v3(outmat[3], bpt->loc_mat, tmploc);
+	rescale_m4(outmat, bpt->post_scale);
+}
+
+void KER_armature_mat_bone_to_pose(const PoseChannel *pchannel, const float inmat[4][4], float outmat[4][4]) {
+	BoneParentTransform bpt;
+
+	KER_bone_parent_transform_calc_from_pchan(pchannel, &bpt);
+	KER_bone_parent_transform_apply(&bpt, inmat, outmat);
 }
 
 /** \} */
@@ -471,6 +680,57 @@ void KER_armature_where_is_bone(Bone *bone, Bone *parbone, bool use_recursion) {
 			KER_armature_where_is_bone(childbone, bone, use_recursion);
 		}
 	}
+}
+
+void KER_pose_where_is(Object *object) {
+	if (object->type != OB_ARMATURE) {
+		return;
+	}
+
+	Armature *armature = (Armature *)object->data;
+
+	if (ELEM(NULL, armature)) {
+		return;
+	}
+
+	KER_pose_ensure(NULL, object, armature, true);
+
+	/* In edit-mode or rest-position we read the data from the bones. */
+	if (armature->ebonebase) {
+		LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
+			Bone *bone = pchannel->bone;
+			if (bone) {
+				copy_m4_m4(pchannel->pose_mat, bone->arm_mat);
+			}
+		}
+	}
+	else {
+		invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
+
+		LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
+			if (!(pchannel->flag & POSE_DONE)) {
+				KER_pose_where_is_bone(object, pchannel, 0.0f);
+			}
+		}
+	}
+
+	float imat[4][4];
+
+	/* calculating deform matrices */
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
+		if (pchannel->bone) {
+			invert_m4_m4(imat, pchannel->bone->arm_mat);
+			mul_m4_m4m4(pchannel->chan_mat, pchannel->pose_mat, imat);
+		}
+	}
+}
+
+void KER_pose_where_is_bone(Object *object, PoseChannel *pchannel, float time) {
+	KER_pose_channel_do_mat4(pchannel);
+
+	/* Construct the posemat based on PoseChannels, that we do before applying constraints. */
+	/* pose_mat(b) = pose_mat(b-1) * yoffs(b-1) * d_root(b) * bone_mat(b) * chan_mat(b) */
+	KER_armature_mat_bone_to_pose(pchannel, pchannel->chan_mat, pchannel->pose_mat);
 }
 
 void KER_pose_channel_rot_to_mat3(const PoseChannel *pchan, float r_mat[3][3]) {

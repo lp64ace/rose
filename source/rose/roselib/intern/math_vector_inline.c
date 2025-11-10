@@ -482,6 +482,7 @@ ROSE_INLINE void sub_v2db_v2fl_v2fl(double r[2], const float a[2], const float b
 	r[0] = (double)a[0] - (double)b[0];
 	r[1] = (double)a[1] - (double)b[1];
 }
+
 ROSE_INLINE void sub_v3db_v3fl_v3fl(double r[3], const float a[3], const float b[3]) {
 	r[0] = (double)a[0] - (double)b[0];
 	r[1] = (double)a[1] - (double)b[1];
@@ -795,7 +796,7 @@ ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
 		mul_v3_v3fl(r, v, 1.0f / d);
 	}
 	else {
-		zero_v2(r);
+		zero_v3(r);
 		d = 0.0f;
 	}
 
@@ -809,7 +810,7 @@ ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 		mul_v4_v4fl(r, v, 1.0f / d);
 	}
 	else {
-		zero_v2(r);
+		zero_v4(r);
 		d = 0.0f;
 	}
 

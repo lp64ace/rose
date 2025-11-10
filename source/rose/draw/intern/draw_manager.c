@@ -432,8 +432,13 @@ void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, stru
 	 * we should evaluate the depsgraph instead.
 	 */
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
+		if (object->type == OB_ARMATURE) {
+			KER_object_build_rig(object);
+		}
+	}
+	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		if (object->type == OB_MESH) {
-			// KER_mesh_data_update(NULL, object);
+			KER_mesh_data_update(NULL, object);
 		}
 	}
 

@@ -84,8 +84,8 @@ void importer_main(Main *main, Scene *scene, const char *filepath) {
 
 	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
 	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
 	opts.target_unit_meters = 1.0f;
 
 	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;

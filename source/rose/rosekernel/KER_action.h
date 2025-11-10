@@ -107,6 +107,8 @@ void KER_action_slot_runtime_free(struct ActionSlot *slot);
 /** \name PoseChannel Action
  * \{ */
 
+void KER_pose_tag_recalc(struct Pose *pose);
+
 /**
  * Looks to see if the channel with the given name already exists
  * in this pose - if not a new one is allocated and initialized.

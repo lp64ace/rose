@@ -88,6 +88,15 @@ struct Armature *KER_armature_from_object(struct Object *object);
  * \param main: May be NULL, only used to tag depsgraph as being dirty.
  */
 void KER_pose_rebuild(struct Main *main, struct Object *ob, struct Armature *arm, bool do_id_user);
+void KER_pose_pchannel_index_rebuild(struct Pose *pose);
+
+void KER_pose_eval_init(struct Object *object);
+void KER_pose_eval_init_ik(struct Object *object);
+void KER_pose_eval_cleanup(struct Object *object);
+void KER_pose_eval_done(struct Object *object);
+
+void KER_pose_eval_bone(struct Object *object, size_t index);
+void KER_pose_bone_done(struct Object *object, size_t index);
 
 /** \} */
 
@@ -126,6 +135,9 @@ void KER_pose_ensure(struct Main *main, struct Object *object, struct Armature *
  */
 void KER_armature_where_is(struct Armature *armature);
 void KER_armature_where_is_bone(struct Bone *bone, const Bone *parbone, bool use_recursion);
+
+void KER_pose_where_is(struct Object *object);
+void KER_pose_where_is_bone(struct Object *object, struct PoseChannel *pchannel ,float time);
 
 void KER_pose_channel_to_mat4(const struct PoseChannel *pchannel, float r_mat[4][4]);
 void KER_pose_channel_do_mat4(struct PoseChannel *pchannel);

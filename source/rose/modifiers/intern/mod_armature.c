@@ -1,6 +1,9 @@
 #include "MOD_modifiertypes.h"
 
+#include "LIB_listbase.h"
+
 #include "KER_armature.h"
+#include "KER_object.h"
 #include "KER_mesh.h"
 
 #include <stdio.h>

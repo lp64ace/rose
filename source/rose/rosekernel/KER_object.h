@@ -50,10 +50,18 @@ void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool us
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Object Evaluation
+ * \{ */
+
+void KER_object_build_rig(struct Object *object);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Object Modifiers
  * \{ */
 
-void KER_object_free_modifiers(Object *object, const int flag);
+void KER_object_free_modifiers(struct Object *object, const int flag);
 
 /** \} */
 

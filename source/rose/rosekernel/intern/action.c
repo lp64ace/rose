@@ -488,6 +488,10 @@ bool KER_action_slot_suitable_for_id(ActionSlot *slot, ID *id) {
 /** \name PoseChannel Action
  * \{ */
 
+void KER_pose_tag_recalc(Pose *pose) {
+	pose->flag |= POSE_RECALC;
+}
+
 PoseChannel *KER_pose_channel_ensure(Pose *pose, const char *name) {
 	PoseChannel *chan;
 

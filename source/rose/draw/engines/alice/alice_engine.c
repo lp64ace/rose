@@ -94,6 +94,13 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 		do {
 			float tmat[4][4];
 			unit_m4(tmat);
+			translate_m4(tmat, 0.0f, -0.5f, 0.0f);
+			mul_m4_m4m4(mat, mat, tmat);
+		} while (false);
+
+		do {
+			float tmat[4][4];
+			unit_m4(tmat);
 			rotate_m4(tmat, 'X', -M_PI_2);
 			mul_m4_m4m4(mat, mat, tmat);
 		} while (false);

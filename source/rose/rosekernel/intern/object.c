@@ -12,6 +12,8 @@
 #include "KER_modifier.h"
 #include "KER_object.h"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Data-Block Functions
  * \{ */
@@ -398,6 +400,82 @@ void KER_object_apply_mat4_ex(Object *object, const float mat[4][4], Object *par
 
 void KER_object_apply_mat4(Object *object, const float mat[4][4], bool use_compat, bool use_parent) {
 	KER_object_apply_mat4_ex(object, mat, use_parent ? object->parent : NULL, object->parentinv, use_compat);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Evaluation
+ * \{ */
+
+void KER_object_build_armature_bonebase(ListBase *bonebase) {
+	LISTBASE_FOREACH(Bone *, bone, bonebase) {
+		KER_object_build_armature_bonebase(&bone->childbase);
+	}
+}
+
+void KER_object_build_armature(Armature *armature) {
+	KER_object_build_armature_bonebase(&armature->bonebase);
+}
+
+void KER_object_build_rig(Object *object) {
+	ROSE_assert(object->type == OB_ARMATURE);
+
+	Armature *armature = (Armature *)object->data;
+
+	/** Without an armature there is nothing we can do! */
+	if (armature == NULL) {
+		return;
+	}
+
+	KER_object_build_armature(armature);
+
+	if (object->pose == NULL || (object->pose->flag & POSE_RECALC) != 0) {
+		/* By definition, no need to tag depsgraph as dirty from here, so we can pass NULL main. */
+		KER_pose_rebuild(NULL, object, armature, true);
+	}
+	if (object->pose != NULL) {
+		KER_pose_channels_hash_ensure(object->pose);
+		KER_pose_pchannel_index_rebuild(object->pose);
+	}
+
+	/**
+	 * Pose Rig Graph
+	 * ==============
+	 *
+	 * Pose Component:
+	 * - Mainly used for referencing Bone components.
+	 * - This is where the evaluation operations for init/exec/cleanup
+	 *   (ik) solvers live, and are later hooked up (so that they can be
+	 *   interleaved during runtime) with bone-operations they depend on/affect.
+	 * - init_pose_eval() and cleanup_pose_eval() are absolute first and last
+	 *   steps of pose eval process. ALL bone operations must be performed
+	 *   between these two...
+	 *
+	 * Bone Component:
+	 * - Used for representing each bone within the rig
+	 * - Acts to encapsulate the evaluation operations (base matrix + parenting,
+	 *   and constraint stack) so that they can be easily found.
+	 * - Everything else which depends on bone-results hook up to the component
+	 *   only so that we can redirect those to point at either the
+	 *   post-IK/post-constraint/post-matrix steps, as needed.
+	 */
+
+	/* Pose eval context. */
+
+	KER_pose_eval_init(object);
+	KER_pose_eval_init_ik(object);
+	KER_pose_eval_cleanup(object);
+	KER_pose_eval_done(object);
+
+	if (object->pose) {
+		size_t index = 0;
+		LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
+			KER_pose_eval_bone(object, index);
+			KER_pose_bone_done(object, index);
+			index++;
+		}
+	}
 }
 
 /** \} */

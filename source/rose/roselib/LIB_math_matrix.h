@@ -53,9 +53,12 @@ void mul_m4_m3m4(float R[4][4], const float A[3][3], const float B[4][4]);
 void mul_m4_m4m3(float R[4][4], const float A[4][4], const float B[3][3]);
 void mul_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]);
 
+void mul_m3_m4_v3(const float M[4][4], float r[3]);
+
 void mul_m4_v3(const float M[4][4], float r[3]);
 void mul_m4_v4(const float M[4][4], float r[4]);
 
+void mul_v3_m4v3(float r[3], const float M[4][4], const float v[3]);
 void mul_v4_m4v3(float r[4], const float M[4][4], const float v[3]);
 void mul_v4_m4v4(float r[4], const float M[4][4], const float v[4]);
 
@@ -112,6 +115,9 @@ void adjoint_m2_m2(float R[2][2], const float M[2][2]);
 void adjoint_m3_m3(float R[3][3], const float M[3][3]);
 void adjoint_m4_m4(float R[4][4], const float M[4][4]);
 
+void rescale_m3(float M[4][4], const float scale[3]);
+void rescale_m4(float M[3][3], const float scale[3]);
+
 /** Sometimes we calculate the determinant of parts of m3 matrix this is why the elements are defined like this. */
 float determinant_m2(float a, float b, float c, float d);
 float determinant_m2_array(const float m[2][2]);
@@ -142,6 +148,9 @@ bool equals_m4_m4(const float a[4][4], const float b[4][4]);
 
 void size_to_mat3(float R[3][3], const float size[3]);
 void size_to_mat4(float R[4][4], const float size[3]);
+
+void mat3_to_size(float size[3], const float M[3][3]);
+void mat4_to_size(float size[4], const float M[4][4]);
 
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);

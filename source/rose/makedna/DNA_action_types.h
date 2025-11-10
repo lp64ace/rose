@@ -269,6 +269,7 @@ typedef struct PoseChannel {
 	float rotAxis[3], rotAngle;
 	
 	int rotmode;
+	int flag;
 
 	/**
 	 * Matrix result of location/rotation/scale components, and evaluation of
@@ -282,6 +283,15 @@ typedef struct PoseChannel {
 	 */
 	float pose_mat[4][4];
 } PoseChannel;
+
+enum {
+	POSE_LOC = (1 << 0),
+	POSE_ROT = (1 << 1),
+	POSE_SCALE = (1 << 2),
+
+	POSE_IKTREE = (1 << 8),
+	POSE_DONE = (1 << 9),
+};
 
 typedef struct Pose {
 	struct ListBase channelbase;
