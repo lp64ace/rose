@@ -1,5 +1,3 @@
-#include "gpu_shader_create_info.hh"
-
 #include "intern/draw_defines.h"
 
 /* -------------------------------------------------------------------- */

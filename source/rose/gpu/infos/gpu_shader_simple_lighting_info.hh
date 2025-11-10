@@ -1,5 +1,3 @@
-#include "gpu_shader_create_info.hh"
-
 GPU_SHADER_INTERFACE_INFO(smooth_normal_iface, "")
 	.smooth(Type::VEC3, "normal");
 
