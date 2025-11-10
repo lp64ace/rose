@@ -115,8 +115,8 @@ void adjoint_m2_m2(float R[2][2], const float M[2][2]);
 void adjoint_m3_m3(float R[3][3], const float M[3][3]);
 void adjoint_m4_m4(float R[4][4], const float M[4][4]);
 
-void rescale_m3(float M[4][4], const float scale[3]);
-void rescale_m4(float M[3][3], const float scale[3]);
+void rescale_m3(float M[3][3], const float scale[3]);
+void rescale_m4(float M[4][4], const float scale[3]);
 
 /** Sometimes we calculate the determinant of parts of m3 matrix this is why the elements are defined like this. */
 float determinant_m2(float a, float b, float c, float d);

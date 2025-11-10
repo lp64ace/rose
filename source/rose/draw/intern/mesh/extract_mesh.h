@@ -8,7 +8,12 @@
 
 #include <stdbool.h>
 
+struct GPUIndexBuf;
+struct GPUUniformBuf;
+struct GPUVertBuf;
+
 struct Mesh;
+struct Object;
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,6 +25,9 @@ extern "C" {
 
 void extract_positions(const struct Mesh *mesh, struct GPUVertBuf *vbo);
 void extract_normals(const Mesh *mesh, struct GPUVertBuf *vbo, bool use_hq);
+
+/** Returns the uniform buffer that will be used for the armature matrices! */
+struct GPUUniformBuf *extract_weights(const Object *obarmature, const Object *obtarget, const Mesh *mesh, struct GPUVertBuf *vbo);
 
 /** \} */
 

@@ -47,7 +47,6 @@ ROSE_STATIC ModifierData *modifier_allocate_and_init(eModifierType type) {
 	LIB_strcpy(md->name, ARRAY_SIZE(md->name), mti->name);
 
 	md->type = type;
-	md->flag = MODIFIER_DEFORM_DIRTY;
 	
 	if (mti->init_data) {
 		mti->init_data(md);
@@ -102,17 +101,13 @@ bool KER_modifier_depends_ontime(Scene *scene, ModifierData *md) {
 bool KER_modifier_deform_verts(ModifierData *md, const ModifierEvalContext *ctx, struct Mesh *mesh, float (*positions)[3], size_t length) {
 	const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
 
-	if ((md->flag & MODIFIER_DEFORM_DIRTY) == 0) {
-		return true;
-	}
-
 	if (mti->deform_verts) {
-		mti->deform_verts(md, ctx, mesh, positions, length);
-		if (mesh) {
-			KER_mesh_positions_changed(mesh);
+		if ((md->flag & MODIFIER_DEVICE_ONLY) == 0) {
+			mti->deform_verts(md, ctx, mesh, positions, length);
+			if (mesh) {
+				KER_mesh_positions_changed(mesh);
+			}
 		}
-
-		md->flag &= ~MODIFIER_DEFORM_DIRTY;
 
 		return true;
 	}

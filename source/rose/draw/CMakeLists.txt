@@ -49,6 +49,7 @@ set(SRC
 	intern/mesh/extract_mesh_ibo_tris.cc
 	intern/mesh/extract_mesh_vbo_pos.cc
 	intern/mesh/extract_mesh_vbo_lnor.cc
+	intern/mesh/extract_mesh_vbo_weights.cc
 	intern/draw_cache_private.h
 	intern/draw_cache_inline.h
 	intern/draw_cache.c

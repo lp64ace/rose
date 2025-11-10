@@ -39,7 +39,7 @@ typedef struct ActionGroup {
 	 * This is needed in the keyframe drawing code, etc., to give direct access to
 	 * the fcurves in this group.
 	 */
-	struct ActionChannelbag *channelbag;
+	struct ActionChannelBag *channelbag;
 } ActionGroup;
 
 /** \} */

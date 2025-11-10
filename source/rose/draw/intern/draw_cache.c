@@ -1,4 +1,5 @@
 #include "KER_mesh.h"
+#include "KER_modifier.h"
 #include "KER_object.h"
 
 #include "GPU_batch.h"
@@ -6,6 +7,7 @@
 
 #include "draw_cache_private.h"
 
+#include "LIB_listbase.h"
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
@@ -107,6 +109,16 @@ ROSE_STATIC GPUBatch *mesh_batch_cache_request_surface_batches(MeshBatchCache *c
 	return cache->surface;
 }
 
+ROSE_STATIC GPUUniformBuf *mesh_batch_cache_request_deform_group_ubo(MeshBatchCache *cache) {
+	DRW_batch_request(&cache->surface);
+
+	/**
+	 * We create all the sub-surface (per material) batches too, yet we only return the
+	 * deform group uniform buffer...
+	 */
+	return cache->buffers.ubo.defgroup;
+}
+
 ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache) {
 	for (size_t index = 0; index < cache->materials; index++) {
 		GPU_BATCH_DISCARD_SAFE(cache->surfaces[index]);
@@ -132,6 +144,11 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.nor);
 		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
+
+		Object *obarm = DRW_batch_cache_device_armature(object);
+		if (obarm) {
+			DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
+		}
 	}
 
 	DRW_cache_mesh_create(cache, object, mesh);
@@ -141,6 +158,12 @@ GPUBatch *DRW_cache_mesh_surface_get(Object *object) {
 	ROSE_assert(object->type == OB_MESH);
 	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
 	return mesh_batch_cache_request_surface_batches(cache);
+}
+
+GPUUniformBuf *DRW_cache_mesh_deform_group_ubo_get(Object *object) {
+	ROSE_assert(object->type == OB_MESH);
+	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
+	return mesh_batch_cache_request_deform_group_ubo(cache);
 }
 
 /** \} */
@@ -169,10 +192,31 @@ void DRW_batch_cache_generate(Object *object) {
 #undef ROUTE
 }
 
+const Object *DRW_batch_cache_device_armature(const Object *object) {
+	LISTBASE_FOREACH_BACKWARD(const ModifierData *, md, &object->modifiers) {
+		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			if (md->type == MODIFIER_TYPE_ARMATURE) {
+				return ((const ArmatureModifierData *)md)->object;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 GPUBatch *DRW_cache_object_surface_get(Object *object) {
 	switch (object->type) {
 		case OB_MESH:
 			return DRW_cache_mesh_surface_get(object);
+	}
+
+	return NULL;
+}
+
+GPUUniformBuf *DRW_cache_object_deform_group_ubo_get(Object *object) {
+	switch (object->type) {
+		case OB_MESH:
+			return DRW_cache_mesh_deform_group_ubo_get(object);
 	}
 
 	return NULL;

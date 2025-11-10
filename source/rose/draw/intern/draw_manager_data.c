@@ -5,6 +5,7 @@
 #include "DRW_render.h"
 
 #include "KER_object.h"
+#include "KER_mesh.h"
 
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
@@ -18,6 +19,8 @@
 #include "draw_pass.h"
 #include "draw_state.h"
 
+#include "draw_cache_private.h"
+
 /* -------------------------------------------------------------------- */
 /** \name Draw Resource Data
  * \{ */
@@ -26,10 +29,24 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 	copy_m4_m4(matrix->model, mat);
 	if (ob) {
 		copy_m4_m4(matrix->modelinverse, KER_object_world_to_object(ob));
+
+		const Object *obarm = DRW_batch_cache_device_armature(ob);
+		if (obarm) {
+			mul_m4_m4m4(matrix->armature, KER_object_world_to_object(ob), KER_object_object_to_world(obarm));
+			mul_m4_m4m4(matrix->armatureinverse, KER_object_world_to_object(obarm), KER_object_object_to_world(ob));
+		}
 	}
 	else {
 		/* WATCH: Can be costly. */
 		invert_m4_m4(matrix->modelinverse, matrix->model);
+		unit_m4(matrix->armature);
+		unit_m4(matrix->armatureinverse);
+	}
+}
+
+ROSE_STATIC void draw_call_dvinfo_init(DRWDVertGroupInfo *dinfo, const Object *ob) {
+	if (ob) {
+		dinfo->matrices = DRW_cache_object_deform_group_ubo_get(ob);
 	}
 }
 
@@ -42,8 +59,10 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 ROSE_STATIC DRWResourceHandle draw_resource_handle_new(const float (*mat)[4], const Object *ob) {
 	DRWResourceHandle handle = DRW_handle_increment(&GDrawManager.resource_handle);
 	DRWObjectMatrix *obmat = LIB_memory_block_alloc(GDrawManager.vdata_pool->obmats);
+	DRWDVertGroupInfo *dinfo = LIB_memory_block_alloc(GDrawManager.vdata_pool->dvinfo);
 
 	draw_call_matrix_init(obmat, mat, ob);
+	draw_call_dvinfo_init(dinfo, ob);
 
 	return handle;
 }
@@ -71,7 +90,7 @@ ROSE_STATIC void draw_resource_buffer_finish(DRWData *dd) {
 	size_t nlist = nchunk + 1 - (nelem == 0 ? 1 : 0);
 
 	if (dd->matrices_ubo == NULL) {
-		dd->matrices_ubo = MEM_callocN(sizeof(GPUUniformBuf *) * nlist, __func__);
+		dd->matrices_ubo = MEM_recallocN_id(dd->matrices_ubo, sizeof(GPUUniformBuf *) * nlist, __func__);
 		dd->ubo_length = nlist;
 	}
 

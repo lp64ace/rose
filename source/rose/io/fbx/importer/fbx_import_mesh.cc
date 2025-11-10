@@ -203,6 +203,7 @@ void import_meshes(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMa
 						LIB_addtail(&object->modifiers, md);
 
 						ArmatureModifierData *ad = reinterpret_cast<ArmatureModifierData *>(md);
+						ad->modifier.flag |= MODIFIER_DEVICE_ONLY;
 						/**
 						 * Assign the armature object to the modifier.
 						 */

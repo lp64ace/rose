@@ -169,6 +169,7 @@ DRWData *DRW_viewport_data_new(void) {
 	// Resource Data Pool(s)
 
 	ddata->obmats = LIB_memory_block_create_ex(sizeof(DRWObjectMatrix), sizeof(DRWObjectMatrix[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->dvinfo = LIB_memory_block_create_ex(sizeof(DRWDVertGroupInfo), sizeof(DRWDVertGroupInfo[DRW_RESOURCE_CHUNK_LEN]));
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		ddata->vdata_engine[index] = DRW_view_data_new(&GEngineList);
@@ -184,6 +185,7 @@ void DRW_viewport_data_free(DRWData *ddata) {
 	LIB_memory_pool_destroy(ddata->uniforms);
 
 	LIB_memory_block_destroy(ddata->obmats, NULL);
+	LIB_memory_block_destroy(ddata->dvinfo, NULL);
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		DRW_view_data_free(ddata->vdata_engine[index]);
@@ -259,6 +261,7 @@ ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
 	LIB_memory_pool_clear(ddata->shgroups, DRW_RESOURCE_CHUNK_LEN);
 	LIB_memory_pool_clear(ddata->uniforms, DRW_RESOURCE_CHUNK_LEN);
 
+	LIB_memory_block_clear(ddata->dvinfo, NULL);
 	LIB_memory_block_clear(ddata->obmats, NULL);
 }
 

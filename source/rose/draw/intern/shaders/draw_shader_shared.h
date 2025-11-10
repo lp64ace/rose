@@ -9,11 +9,18 @@
 typedef struct ObjectMatrices ObjectMatrices;
 #endif
 
-#define DRW_RESOURCE_CHUNK_LEN 512
+#define DRW_RESOURCE_CHUNK_LEN 256
+#define DRW_RESOURCE_BONES_LEN 256
 
 struct ObjectMatrices {
 	float4x4 drw_modelMatrix;
 	float4x4 drw_modelMatrixInverse;
+	float4x4 drw_armatureMatrix;
+	float4x4 drw_armatureMatrixInverse;
+};
+
+struct DVertGroupMatrices {
+	float4x4 drw_poseMatrix;
 };
 
 #define resource_id drw_ResourceID

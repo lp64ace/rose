@@ -94,29 +94,6 @@ template<typename MixerT> ROSE_INLINE float pchannel_bone_deform(const PoseChann
 	return weight;
 }
 
-/**
- * armature_to_target [(1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)]
- * target_to_armature [(1, -0, 0, -0), (-0, 1, -0, 0), (0, -0, 1, -0), (-0, 0, -0, 1)]
- * Deforming vertex 4768
- *  << in (7.78784, -8.81405, 71.2185)
- *         Vertex (7.78784, -8.81405, 71.2185) deformed 0.188235 * skinned_c_pelvis_bn
- * Deforming vertex 4767
- *  << in (5.8639, -10.8033, 67.2812)
- *         Vertex (7.78784, -8.81405, 71.2185) deformed 0.196078 * skinned_c_lumbar_bn
- *         Vertex (5.8639, -10.8033, 67.2812) deformed 0.301961 * skinned_c_pelvis_bn
- *         Vertex (7.78784, -8.81405, 71.2185) deformed 0.160784 * skinned_c_thoracic1_bn
- *         Vertex (5.8639, -10.8033, 67.2812) deformed 0.0431373 * skinned_c_thoracic2_bn
- *         Vertex (7.78784, -8.81405, 71.2185) deformed 0.454902 * skinned_c_thoracic2_bn
- *         Vertex (5.8639, -10.8033, 67.2812) deformed  >> out (6.63813, -7.18345, 69.1281)0.317647 * skinned_c_sacrum_bn
- * Deforming vertex 4769
- *  << in (9.50692, -7.28301, 75.8027)
- *         Vertex (5.8639, -10.8033, 67.2812) deformed 0.337255 * skinned_r_femur_bn
- *         Vertex (9.50692, -7.28301, 75.8027) deformed 0.145098 * skinned_c_thoracic1_bn
- *  >> out (3.0163, -8.78124, 65.8423)     Vertex (9.50692, -7.28301, 75.8027) deformed 0.694118 * skinned_c_thoracic2_bn
- *         Vertex (9.50692, -7.28301, 75.8027) deformed 0.160784 * skinned_c_thoracic3_bn
- *  >> out (9.22381, -5.4776, 73.3764)
- */
-
 template<typename MixerT> ROSE_INLINE void armature_vert_task_with_mixer(const ArmatureDeformParams &params, const size_t index, const MDeformVert *dvert, MixerT &mixer) {
 	const bool full_deform = !params.vert_deform_mats.is_empty();
 

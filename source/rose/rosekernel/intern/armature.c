@@ -653,7 +653,7 @@ void KER_armature_where_is(Armature *armature) {
 	}
 }
 
-void KER_armature_where_is_bone(Bone *bone, Bone *parbone, bool use_recursion) {
+void KER_armature_where_is_bone(Bone *bone, const Bone *parbone, bool use_recursion) {
 	float vec[3];
 
 	/* Bone Space */

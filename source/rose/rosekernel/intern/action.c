@@ -781,12 +781,12 @@ ROSE_STATIC void restore_channelbag_group_invariants(ActionChannelBag *channelba
 	}
 }
 
-void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *channelbag, FCurveDescriptor *descriptors, int length, FCurve **newcurves) {
+void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *channelbag, const FCurveDescriptor *descriptors, int length, FCurve **newcurves) {
 	const int prevcount = channelbag->totcurve;
 	
 	GSet *unique = LIB_gset_new_ex(fcurve_lookup_hash, fcurve_lookup_cmp, "FCurveLookup", prevcount);
-	for (FCurve *curve = channelbag->fcurves; curve != channelbag->fcurves + channelbag->totcurve; curve++) {
-		LIB_gset_insert(unique, curve);
+	for (FCurve **curve = channelbag->fcurves; curve != channelbag->fcurves + channelbag->totcurve; curve++) {
+		LIB_gset_insert(unique, *curve);
 	}
 
 	channelbag->totcurve += length;
@@ -795,9 +795,10 @@ void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *chan
 	int newindex = prevcount;
 	for (int i = 0; i < length; i++) {
 		const FCurveDescriptor *descriptor = &descriptors[i];
+		char *path = LIB_strdupN(descriptor->path);
 
 		FCurve template = {
-			.path = descriptor->path,
+			.path = path,
 			.index = descriptor->index,
 		};
 
@@ -805,6 +806,8 @@ void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *chan
 			newcurves[i] = NULL;
 			continue;
 		}
+
+		MEM_freeN(path);
 
 		FCurve *fcurve = create_fcurve_for_channel(descriptor);
 		newcurves[i] = fcurve;
@@ -836,8 +839,6 @@ void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *chan
 	LIB_gset_free(unique, NULL);
 
 	restore_channelbag_group_invariants(channelbag);
-
-	return newcurves;
 }
 
 /** \} */

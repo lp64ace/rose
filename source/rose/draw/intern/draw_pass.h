@@ -12,13 +12,15 @@
 /** \name Draw Resource Handle & Data
  * \{ */
 
-#define DRW_RESOURCE_CHUNK_LEN (1 << 9)
+#define DRW_RESOURCE_CHUNK_LEN (1 << 8)
 
 typedef unsigned int DRWResourceHandle;
 
 typedef struct DRWObjectMatrix {
 	float model[4][4];
 	float modelinverse[4][4];
+	float armature[4][4];
+	float armatureinverse[4][4];
 } DRWObjectMatrix;
 
 ROSE_INLINE DRWResourceHandle DRW_handle_increment(DRWResourceHandle *handle) {
@@ -169,6 +171,19 @@ typedef struct DRWShadingGroup {
 	ListBase uniforms;	// #DRWUniform
 	ListBase commands;	// #DRWCommand
 } DRWShadingGroup;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Deform Vert
+ * \{ */
+
+typedef struct DRWDVertGroupInfo {
+	/**
+	 * The uniform buffer that stores the matrices for ecah deform group.
+	 */
+	GPUUniformBuf *matrices;
+} DRWDVertGroupInfo;
 
 /** \} */
 

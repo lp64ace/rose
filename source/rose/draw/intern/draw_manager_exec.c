@@ -5,8 +5,10 @@
 #include "GPU_viewport.h"
 
 #include "DRW_engine.h"
+#include "DRW_cache.h"
 #include "DRW_render.h"
 
+#include "draw_defines.h"
 #include "draw_engine.h"
 #include "draw_manager.h"
 #include "draw_state.h"
@@ -156,6 +158,7 @@ typedef struct DRWCommandState {
 
 ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResourceHandle *handle) {
 	size_t chunk = DRW_handle_chunk_get(handle);
+	size_t elem = DRW_handle_elem_get(handle);
 	if (chunk != state->chunk) {
 		if (state->obmat_block_loc) {
 			if (state->chunk != (size_t)-1) {
@@ -171,6 +174,13 @@ ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResour
 
 		int id = (int)DRW_handle_elem_get(handle);
 		GPU_shader_uniform_int_ex(shader, state->resourceid_loc, 1, 1, &id);
+		
+		DRWDVertGroupInfo *info = LIB_memory_block_elem_get(GDrawManager.vdata_pool->dvinfo, chunk, elem);
+		if (info) {
+			if (info->matrices) {
+				GPU_uniformbuf_bind(info->matrices, DRW_DVGROUP_UBO_SLOT);
+			}
+		}
 	}
 }
 
