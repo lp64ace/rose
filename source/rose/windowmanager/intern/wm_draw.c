@@ -347,15 +347,6 @@ void WM_do_draw(struct rContext *C) {
 		window->delta_time = GTK_elapsed_time(wm->handle) - window->last_draw;
 		window->fps = 1.0 / window->delta_time;
 
-		LISTBASE_FOREACH(Object *, object, &CTX_data_main(C)->objects) {
-			if (object->type != OB_MESH) {
-				continue;
-			}
-
-			rotate_m4(object->runtime.object_to_world, 'Y', M_PI * window->delta_time);
-			invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
-		}
-
 		const double alpha = ROSE_MAX(0.0, ROSE_MIN(window->delta_time * 8, 1.0));
 		if (window->average_fps == 0.0) {
 			window->average_fps = window->fps;
