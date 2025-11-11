@@ -21,6 +21,8 @@
 
 #include "draw_cache_private.h"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Draw Resource Data
  * \{ */
@@ -32,8 +34,8 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 
 		const Object *obarm = DRW_batch_cache_device_armature(ob);
 		if (obarm) {
-			mul_m4_m4m4(matrix->armature, KER_object_world_to_object(ob), KER_object_object_to_world(obarm));
-			mul_m4_m4m4(matrix->armatureinverse, KER_object_world_to_object(obarm), KER_object_object_to_world(ob));
+			copy_m4_m4(matrix->armature, KER_object_object_to_world(obarm));
+			copy_m4_m4(matrix->armatureinverse, KER_object_world_to_object(obarm));
 		}
 		else {
 			unit_m4(matrix->armature);
@@ -43,6 +45,7 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 	else {
 		/* WATCH: Can be costly. */
 		invert_m4_m4(matrix->modelinverse, matrix->model);
+
 		unit_m4(matrix->armature);
 		unit_m4(matrix->armatureinverse);
 	}
@@ -93,8 +96,12 @@ ROSE_STATIC void draw_resource_buffer_finish(DRWData *dd) {
 	size_t nelem = DRW_handle_elem_get(&end);
 	size_t nlist = nchunk + 1 - (nelem == 0 ? 1 : 0);
 
+	if (GDrawManager.resource_handle <= 0) {
+		return;
+	}
+
 	if (dd->matrices_ubo == NULL) {
-		dd->matrices_ubo = MEM_recallocN_id(dd->matrices_ubo, sizeof(GPUUniformBuf *) * nlist, __func__);
+		dd->matrices_ubo = MEM_callocN(sizeof(GPUUniformBuf *) * nlist, __func__);
 		dd->ubo_length = nlist;
 	}
 

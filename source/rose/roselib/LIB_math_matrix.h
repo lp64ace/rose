@@ -180,6 +180,14 @@ void mat4_to_loc_rot_size(float loc[3], float rot[3][3], float size[3], const fl
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Debug
+ * \{ */
+
+void print_m4(float m[4][4]);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

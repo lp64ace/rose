@@ -2,6 +2,7 @@
 #include "LIB_math_vector.h"
 
 #include <math.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Init
@@ -920,6 +921,21 @@ void mat4_to_loc_rot_size(float loc[3], float rot[3][3], float size[3], const fl
 
 	/* location */
 	copy_v3_v3(loc, wmat[3]);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Debug
+ * \{ */
+
+void print_m4(float m[4][4]) {
+	fprintf(stdout, "[");
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[0][0], m[0][1], m[0][2], m[0][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[1][0], m[1][1], m[1][2], m[1][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[2][0], m[2][1], m[2][2], m[2][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[3][0], m[3][1], m[3][2], m[3][3]);
+	fprintf(stdout, "]");
 }
 
 /** \} */

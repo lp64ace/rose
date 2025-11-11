@@ -3,10 +3,8 @@ float3 mul_m4_v3(float4x4 m, float3 v) {
 }
 
 void main() {
-    float3 co = mul_m4_v3(ArmatureMatrixInverse, pos);
-    float3 no = normalize(mat3(ArmatureMatrixInverse) * nor);
-
-    co = pos;
+    float3 co = pos;
+    float3 no = nor;
     
     float3 dv = float3(0.0, 0.0, 0.0);
     float3 dn = float3(0.0, 0.0, 0.0);
@@ -28,10 +26,7 @@ void main() {
         no = normalize((1.0 / contrib) * dn);
     }
 
-    co = mul_m4_v3(ArmatureMatrix, co);
-    no = normalize(mat3(ArmatureMatrix) * no);
-    
-    gl_Position = ModelMatrix * float4(co, 1.0);
+    gl_Position = ArmatureMatrix * ModelMatrix * float4(co.xzy, 1.0);
 
-    normal = normalize(transpose(mat3(ModelMatrixInverse)) * no);
+    normal = normalize(transpose(mat3(ModelMatrixInverse * ArmatureMatrixInverse)) * no.xzy);
 }

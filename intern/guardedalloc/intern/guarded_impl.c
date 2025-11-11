@@ -113,7 +113,7 @@ void *MEM_guarded_mallocN(size_t size, char const *identity) {
 		head++;
 
 #ifndef NDEBUG
-		memset(head, 0xff, size);
+		memset(head, 0xcc, size);
 #endif
 	}
 
@@ -137,7 +137,7 @@ void *MEM_guarded_mallocN_aligned(size_t size, size_t align, char const *identit
 		head++;
 
 #ifndef NDEBUG
-		memset(head, 0xff, size);
+		memset(head, 0xcc, size);
 #endif
 	}
 
