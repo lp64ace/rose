@@ -4,9 +4,11 @@
 
 #include "ED_screen.h"
 
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_main.h"
 #include "KER_screen.h"
+#include "KER_scene.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -17,6 +19,7 @@
 
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "RFT_api.h"
@@ -301,6 +304,25 @@ void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 			} break;
 		}
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Window Scene
+ * \{ */
+
+void WM_window_ensure_active_view_layer(wmWindow *window) {
+	Scene *scene = WM_window_get_active_scene(window);
+
+	if (scene && KER_view_layer_find(scene, window->view_layer_name) == NULL) {
+		ViewLayer *view_layer = KER_view_layer_default_view(scene);
+		LIB_strcpy(window->view_layer_name, ARRAY_SIZE(window->view_layer_name), view_layer->name);
+	}
+}
+
+Scene *WM_window_get_active_scene(wmWindow *window) {
+	return window->scene;
 }
 
 /** \} */

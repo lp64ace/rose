@@ -145,10 +145,11 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.nor);
 		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 
-		Object *obarm = DRW_batch_cache_device_armature(object);
-		if (obarm) {
-			DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
-		}
+		/**
+		 * Always created since running the modifier on device can leave 
+		 * things unitialize for objects that have no deformation.
+		 */
+		DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
 	}
 
 	DRW_cache_mesh_create(cache, object, mesh);

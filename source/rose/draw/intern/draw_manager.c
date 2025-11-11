@@ -8,6 +8,7 @@
 #include "DNA_userdef_types.h"
 
 #include "KER_context.h"
+#include "KER_layer.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_object.h"
@@ -265,8 +266,10 @@ ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
 	LIB_memory_block_clear(ddata->obmats, NULL);
 }
 
-void DRW_manager_init(DRWManager *manager, GPUViewport *viewport, const int size[2]) {
+void DRW_manager_init(DRWManager *manager, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
 	manager->viewport = viewport;
+	manager->scene = scene;
+	manager->view_layer = view_layer;
 
 	int view = 0;
 
@@ -421,11 +424,11 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GPU_framebuffer_restore();
 }
 
-void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, struct GPUViewport *viewport) {
+void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct ViewLayer *view_layer, struct ARegion *region, struct GPUViewport *viewport) {
 	/** No framebuffer is allowed to be bound the moment we are rendering! */
 	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
 
-	DRW_manager_init(&GDrawManager, viewport, NULL);
+	DRW_manager_init(&GDrawManager, scene, view_layer, viewport, NULL);
 	DRW_engines_init(C);
 
 	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
@@ -448,8 +451,8 @@ void DRW_draw_render_loop(const struct rContext *C, struct ARegion *region, stru
 	drw_engine_cache_init();
 
 	// We really ough to make a Dependency Graph to iterate the objects in order!
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		drw_engine_cache_populate(object);
+	LISTBASE_FOREACH(struct Base *, base, &view_layer->bases) {
+		drw_engine_cache_populate(base->object);
 	}
 
 	DRW_engines_exit(C);
@@ -478,8 +481,11 @@ void DRW_draw_view(const struct rContext *C) {
 	struct WindowManager *wm = CTX_wm_manager(C);
 	struct wmWindow *win = CTX_wm_window(C);
 
+	struct Scene *scene = CTX_data_scene(C);
+	struct ViewLayer *view_layer = CTX_data_view_layer(C);
+
 	DRW_render_context_enable();
-	DRW_draw_render_loop(C, region, viewport);
+	DRW_draw_render_loop(C, scene, view_layer, region, viewport);
 	DRW_render_context_disable();
 
 	wm_window_reset_drawable(wm);

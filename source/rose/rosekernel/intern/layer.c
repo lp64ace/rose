@@ -973,6 +973,8 @@ void KER_layer_collection_sync(const Scene *scene, ViewLayer *view_layer) {
 	layer_collection_resync_unused_layers_free(view_layer, master_layer_resync);
 	master_layer_resync = NULL;
 
+	LIB_memory_pool_destroy(layer_resync_mempool);
+
 	LISTBASE_FOREACH(Base *, base, &view_layer->bases) {
 		if (view_layer->active == base) {
 			view_layer->active = NULL;

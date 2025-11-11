@@ -51,6 +51,17 @@ void WM_window_screen_rect_calc(const struct wmWindow *window, rcti *r_rect);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Window Scene
+ * \{ */
+
+void WM_window_ensure_active_view_layer(struct wmWindow *window);
+
+/** Get the scene of the window for 3D view rendering. */
+struct Scene *WM_window_get_active_scene(struct wmWindow *window);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

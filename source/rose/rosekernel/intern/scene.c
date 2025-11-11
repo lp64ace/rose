@@ -1,4 +1,8 @@
+#include "MEM_guardedalloc.h"
+
+#include "KER_collection.h"
 #include "KER_idtype.h"
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_main.h"
 #include "KER_scene.h"
@@ -17,6 +21,35 @@ Scene *KER_scene_new(Main *main, const char *name) {
 /** \name Scene Data-block Definition
  * \{ */
 
+ROSE_STATIC void scene_init_data(ID *id) {
+	Scene *scene = (Scene *)id;
+
+	/* Master Collection */
+	scene->master_collection = KER_collection_master_add();
+
+	KER_view_layer_add(scene, "ViewLayer", NULL, VIEWLAYER_ADD_NEW);
+}
+
+ROSE_STATIC void scene_free_data(ID *id) {
+	Scene *scene = (Scene *)id;
+
+	LISTBASE_FOREACH_MUTABLE(ViewLayer *, view_layer, &scene->view_layers) {
+		LIB_remlink(&scene->view_layers, view_layer);
+		KER_view_layer_free_ex(view_layer, false);
+	}
+
+	/* Master Collection */
+	/* TODO: what to do with do_id_user? it's also true when just
+	 * closing the file which seems wrong? should decrement users
+	 * for objects directly in the master collection? then other
+	 * collections in the scene need to do it too? */
+	if (scene->master_collection) {
+		KER_collection_free_data(scene->master_collection);
+		MEM_freeN(scene->master_collection);
+		scene->master_collection = NULL;
+	}
+}
+
  IDTypeInfo IDType_ID_SCE = {
 	.idcode = ID_SCE,
 
@@ -30,9 +63,9 @@ Scene *KER_scene_new(Main *main, const char *name) {
 
 	.flag = IDTYPE_FLAGS_NO_COPY,
 
-	.init_data = NULL,
+	.init_data = scene_init_data,
 	.copy_data = NULL,
-	.free_data = NULL,
+	.free_data = scene_free_data,
 
 	.foreach_id = NULL,
 

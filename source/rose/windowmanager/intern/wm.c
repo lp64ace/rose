@@ -13,6 +13,7 @@
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_rose.h"
+#include "KER_scene.h"
 #include "KER_object.h"
 
 #include "WM_api.h"
@@ -231,6 +232,13 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 /** \name Init & Exit Methods
  * \{ */
 
+ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmWindow *window) {
+	Scene *scene = KER_scene_new(main, "Scene");
+
+	ED_screen_scene_change(C, window, scene);
+	FBX_import(C, "C:\\Users\\jim\\Documents\\six.fbx");
+}
+
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WindowManager *wm = (WindowManager *)KER_id_new(main, ID_WM, "WindowManager");
 	if (!wm) {
@@ -256,7 +264,9 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 		return;
 	}
 
-	FBX_import(C, "C:\\Users\\jim\\Documents\\six.fbx");
+	CTX_wm_window_set(C, window);
+	wm_init_scene(C, main, window);
+	CTX_wm_window_set(C, NULL);
 }
 
 void WM_init(struct rContext *C) {

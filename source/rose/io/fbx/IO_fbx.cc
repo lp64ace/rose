@@ -1,4 +1,6 @@
+#include "KER_collection.h"
 #include "KER_context.h"
+#include "KER_layer.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_scene.h"
@@ -63,7 +65,7 @@ static void fbx_task_wait_fn(void * /* user */, ufbx_thread_pool_context /* ctx 
 	/* Empty implementation; #fbx_task_run_fn already waits for the tasks. This means that only one fbx "task group" is effectively scheduled at once. */
 }
 
-void importer_main(Main *main, Scene *scene, const char *filepath) {
+void importer_main(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath) {
 	FILE *file = fopen(filepath, "rb");
 	if (!file) {
 		fprintf(stderr, "[FBX] Cannot open resource file '%s'", filepath);
@@ -86,7 +88,7 @@ void importer_main(Main *main, Scene *scene, const char *filepath) {
 	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
 	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
 	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
-	opts.target_unit_meters = 1.0f;
+	opts.target_unit_meters = 128.0f;
 
 	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
 	opts.target_camera_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
@@ -115,12 +117,26 @@ void importer_main(Main *main, Scene *scene, const char *filepath) {
 	ctx.import_meshes();
 	ctx.import_animation(fbx->settings.frames_per_second);
 
+	LayerCollection *lc = KER_layer_collection_get_active(view_layer);
+
+	/* Add objects to collection. */
+	for (Object *obj : ctx.mapping.imported_objects) {
+		KER_collection_object_add(main, lc->collection, obj);
+	}
+
+	KER_view_layer_base_deselect_all(view_layer);
+	for (Object *obj : ctx.mapping.imported_objects) {
+		Base *base = KER_view_layer_base_find(view_layer, obj);
+		KER_view_layer_base_select_and_set_active(view_layer, base);
+	}
+
 	ufbx_free_scene(fbx);
 }
 
 void FBX_import(struct rContext *C, const char *filepath) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
+	ViewLayer *view_layer = CTX_data_view_layer(C);
 
-	importer_main(main, scene, filepath);
+	importer_main(main, scene, view_layer, filepath);
 }

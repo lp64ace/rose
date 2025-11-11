@@ -3,23 +3,35 @@ float3 mul_m4_v3(float4x4 m, float3 v) {
 }
 
 void main() {
-	float3 co = mul_m4_v3(ArmatureMatrixInverse, pos);
-	float3 dv = float3(0.0, 0.0, 0.0);
+    float3 co = mul_m4_v3(ArmatureMatrixInverse, pos);
+    float3 no = normalize(mat3(ArmatureMatrixInverse) * nor);
 
-	float contrib = 0.0;
-	for (int i = 0; i < 4; i++) {
-		if (weight[i] != 0.0 && defgroup[i] >= 0) {
-			float4x4 mat = grp_matrices[defgroup[i]].drw_poseMatrix;
-			dv += weight[i] * (mul_m4_v3(mat, co) - co);
-			contrib += weight[i];
-		}
-	}
+    co = pos;
+    
+    float3 dv = float3(0.0, 0.0, 0.0);
+    float3 dn = float3(0.0, 0.0, 0.0);
+    float contrib = 0.0;
 
-	if (contrib > 1e-3) {
-		co += (1.0 / contrib) * dv;
-	}
+    for (int i = 0; i < 4; i++) {
+        if (weight[i] != 0.0 && defgroup[i] >= 0) {
+            float4x4 mat = grp_matrices[defgroup[i]].drw_poseMatrix;
+            
+            dv += weight[i] * (mul_m4_v3(mat, co) - co);
+            dn += weight[i] * (mat3(mat) * no);
+            
+            contrib += weight[i];
+        }
+    }
 
-	gl_Position = ModelMatrix * float4(mul_m4_v3(ArmatureMatrix, co) / 128.0, 1.0);
+    if (contrib > 1e-7) {
+        co += (1.0 / contrib) * dv;
+        no = normalize((1.0 / contrib) * dn);
+    }
 
-	normal = transpose(mat3(ModelMatrixInverse)) * nor;
+    co = mul_m4_v3(ArmatureMatrix, co);
+    no = normalize(mat3(ArmatureMatrix) * no);
+    
+    gl_Position = ModelMatrix * float4(co, 1.0);
+
+    normal = normalize(transpose(mat3(ModelMatrixInverse)) * no);
 }

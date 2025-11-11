@@ -13,7 +13,9 @@
 #include "LIB_utildefines.h"
 
 #include "KER_context.h"
+#include "KER_scene.h"
 #include "KER_screen.h"
+#include "KER_layer.h"
 
 #include "WM_window.h"
 
@@ -162,6 +164,21 @@ bool ED_screen_area_active(struct rContext *C) {
 	}
 
 	return false;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scene
+ * \{ */
+
+void ED_screen_scene_change(struct rContext *C, wmWindow *window, Scene *scene) {
+	window->scene = scene;
+	if (CTX_wm_window(C) == window) {
+		CTX_data_scene_set(C, scene);
+	}
+
+	WM_window_ensure_active_view_layer(window);
 }
 
 /** \} */

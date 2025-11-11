@@ -1,6 +1,10 @@
 #include "MEM_guardedalloc.h"
 
 #include "KER_context.h"
+#include "KER_layer.h"
+#include "KER_scene.h"
+
+#include "DNA_windowmanager_types.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -62,6 +66,19 @@ struct Main *CTX_data_main(const rContext *ctx) {
 }
 struct Scene *CTX_data_scene(const rContext *ctx) {
 	return ctx->data.scene;
+}
+struct ViewLayer *CTX_data_view_layer(const rContext *C) {
+	ViewLayer *view_layer = NULL;
+
+	wmWindow *window = CTX_wm_window(C);
+	Scene *scene = CTX_data_scene(C);
+	if (window) {
+		if ((view_layer = KER_view_layer_find(scene, window->view_layer_name)) != NULL) {
+			return view_layer;
+		}
+	}
+
+	return KER_view_layer_default_view(scene);
 }
 
 void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {

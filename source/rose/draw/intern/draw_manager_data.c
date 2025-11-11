@@ -35,6 +35,10 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 			mul_m4_m4m4(matrix->armature, KER_object_world_to_object(ob), KER_object_object_to_world(obarm));
 			mul_m4_m4m4(matrix->armatureinverse, KER_object_world_to_object(obarm), KER_object_object_to_world(ob));
 		}
+		else {
+			unit_m4(matrix->armature);
+			unit_m4(matrix->armatureinverse);
+		}
 	}
 	else {
 		/* WATCH: Can be costly. */
@@ -44,7 +48,7 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 	}
 }
 
-ROSE_STATIC void draw_call_dvinfo_init(DRWDVertGroupInfo *dinfo, const Object *ob) {
+ROSE_STATIC void draw_call_dvinfo_init(DRWDVertGroupInfo *dinfo, Object *ob) {
 	if (ob) {
 		dinfo->matrices = DRW_cache_object_deform_group_ubo_get(ob);
 	}
@@ -56,7 +60,7 @@ ROSE_STATIC void draw_call_dvinfo_init(DRWDVertGroupInfo *dinfo, const Object *o
 /** \name Draw Resource Handle
  * \{ */
 
-ROSE_STATIC DRWResourceHandle draw_resource_handle_new(const float (*mat)[4], const Object *ob) {
+ROSE_STATIC DRWResourceHandle draw_resource_handle_new(const float (*mat)[4], Object *ob) {
 	DRWResourceHandle handle = DRW_handle_increment(&GDrawManager.resource_handle);
 	DRWObjectMatrix *obmat = LIB_memory_block_alloc(GDrawManager.vdata_pool->obmats);
 	DRWDVertGroupInfo *dinfo = LIB_memory_block_alloc(GDrawManager.vdata_pool->dvinfo);
@@ -67,7 +71,7 @@ ROSE_STATIC DRWResourceHandle draw_resource_handle_new(const float (*mat)[4], co
 	return handle;
 }
 
-ROSE_STATIC DRWResourceHandle draw_resource_handle(DRWShadingGroup *shgroup, const float (*mat)[4], const Object *ob) {
+ROSE_STATIC DRWResourceHandle draw_resource_handle(DRWShadingGroup *shgroup, const float (*mat)[4], Object *ob) {
 	if (ob == NULL) {
 		if (mat == NULL) {
 			return 0;
@@ -168,13 +172,13 @@ void DRW_shading_group_clear_ex(DRWShadingGroup *shgroup, unsigned char bits, co
 	draw_command_clear(shgroup, bits, rgba[0], rgba[1], rgba[2], rgba[3], depth, stencil);
 }
 
-void DRW_shading_group_call_ex(DRWShadingGroup *shgroup, const Object *ob, const float (*obmat)[4], struct GPUBatch *batch) {
+void DRW_shading_group_call_ex(DRWShadingGroup *shgroup, Object *ob, const float (*obmat)[4], struct GPUBatch *batch) {
 	DRWResourceHandle handle = draw_resource_handle(shgroup, obmat, ob);
 
 	draw_command_draw(shgroup, handle, batch, 0);
 }
 
-void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, const Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount) {
+void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount) {
 	DRWResourceHandle handle = draw_resource_handle(shgroup, obmat, ob);
 	
 	draw_command_draw_range(shgroup, handle, batch, vfirst, vcount);

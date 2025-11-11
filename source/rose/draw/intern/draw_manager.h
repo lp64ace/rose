@@ -23,7 +23,11 @@ typedef struct DRWData {
 typedef struct DRWManager {
 	struct DRWData *vdata_pool;
 	struct DRWViewData *vdata_engine;
+
+	/** Evaluated Scene. */
 	struct Scene *scene;
+	/** Evaluated ViewLayer. */
+	struct ViewLayer *view_layer;
 
 	float size[2];
 

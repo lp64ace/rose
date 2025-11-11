@@ -70,12 +70,20 @@ struct MDeformDeviceData {
 };
 
 void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, rose::Vector<float4x4>& ubo_data) {
+	if (obarmature == nullptr) {
+		return;
+	}
+
 	const ListBase *defbase = NULL;
 	if (metarget) {
 		defbase = KER_id_defgroup_list_get(&metarget->id);
 	}
 	else {
 		defbase = KER_id_defgroup_list_get(&obtarget->id);
+	}
+
+	if (defbase == nullptr) {
+		return;
 	}
 
 	/* gather the deform matrices for each vertex group. */
@@ -103,7 +111,7 @@ void extract_weights_mesh_vbo(const Object *obarmature, const Object *obtarget, 
 	rose::Span<MDeformVert> dverts = KER_mesh_deform_verts_span(metarget);
 	rose::Span<int> vcorners = KER_mesh_corner_verts_span(metarget);
 
-	if (dverts.is_empty()) {
+	if (obarmature == nullptr || dverts.is_empty()) {
 		vbo_data.fill(MDeformDeviceData());
 		return;
 	}
@@ -141,5 +149,5 @@ GPUUniformBuf *extract_weights(const Object *obarmature, const Object *obtarget,
 	extract_weights_mesh_vbo(obarmature, obtarget, mesh, vbo_data);
 	extract_weights_mesh_ubo(obarmature, obtarget, mesh, ubo_data);
 
-	return GPU_uniformbuf_create_ex(ubo_data.size_in_bytes(), &ubo_data[0], "Armature");
+	return GPU_uniformbuf_create_ex(ubo_data.size_in_bytes(), ubo_data.data(), "Armature");
 }
