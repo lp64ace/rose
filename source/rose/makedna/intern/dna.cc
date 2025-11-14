@@ -1,8 +1,12 @@
+#include "MEM_guardedalloc.h"
+
 #include "RT_context.h"
 #include "RT_parser.h"
 #include "RT_token.h"
 
 #include "dna.hh"
+
+#include "genfile.h"
 
 using namespace rose::dna;
 
