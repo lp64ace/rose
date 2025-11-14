@@ -1,6 +1,7 @@
 #ifndef KER_OBJECT_DEFORM_H
 #define KER_OBJECT_DEFORM_H
 
+#include "KER_deform.h"
 #include "KER_object.h"
 
 struct DeformGroup;

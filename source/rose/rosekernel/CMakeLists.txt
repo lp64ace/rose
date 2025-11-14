@@ -26,6 +26,7 @@ set(SRC
 	KER_action.hh
 	KER_anim_data.h
 	KER_armature.h
+	KER_camera.h
 	KER_context.h
 	KER_cpp_types.h
 	KER_collection.h
@@ -58,6 +59,7 @@ set(SRC
 	intern/anim_data.c
 	intern/armature.c
 	intern/armature_deform.cc
+	intern/camera.c
 	intern/context.c
 	intern/cpp_types.cc
 	intern/collection.c
