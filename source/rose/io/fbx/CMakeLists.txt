@@ -40,9 +40,10 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::source::roselib
-	rose::source::rosekernel
-	rose::source::editors::armature
+	rose::source::dna
+	PUBLIC rose::source::roselib
+	PUBLIC rose::source::rosekernel
+	PUBLIC rose::source::editors::armature
 	
 	# External Library Dependencies
 	rose::extern::ufbx

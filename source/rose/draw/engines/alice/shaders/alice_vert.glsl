@@ -1,7 +1,3 @@
-float3 mul_m4_v3(float4x4 m, float3 v) {
-    return (m * float4(v, 1.0)).xyz;
-}
-
 void main() {
     float3 co = pos;
     float3 no = nor;
@@ -14,8 +10,8 @@ void main() {
         if (weight[i] != 0.0 && defgroup[i] >= 0) {
             float4x4 mat = grp_matrices[defgroup[i]].drw_poseMatrix;
             
-            dv += weight[i] * (mul_m4_v3(mat, co) - co);
-            dn += weight[i] * (mat3(mat) * no);
+            dv += weight[i] * ((float4x4(mat) * float4(co, 1.0)).xyz - co);
+            dn += weight[i] * ((float3x3(mat) * no).xyz);
             
             contrib += weight[i];
         }
