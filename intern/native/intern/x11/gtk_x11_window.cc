@@ -1,0 +1,154 @@
+#include "MEM_guardedalloc.h"
+
+#include "gtk_x11_window.hh"
+
+GTKWindowX11::GTKWindowX11(GTKManagerX11 *manager) : GTKWindowInterface(manager), window(NULL), visual_info(NULL) {
+	this->display = manager->display;
+}
+
+GTKWindowX11::~GTKWindowX11() {
+	if (this->window) {
+		XDestroyWindow(this->display, this->window);
+		this->window = NULL;
+	}
+}
+
+#if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+XIC xic;
+
+bool GTKWindowX11::InitXIC(GTKManagerX11 *manager) {
+	XIM xim = manager->xim;
+	if (!xim) {
+		return false;
+	}
+	XICCallback destroy;
+	destroy.callback = (XICProc)destroyICCallback;
+	destroy.client_data = (XPointer)&this->xic;
+	this->xic = XCreateIC(
+		xim,
+		XNClientWindow, this->window_handle_,
+		XNFocusWindow, this->window_handle_,
+		XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+		XNDestroyCallback, &destroy,
+		nullptr
+	);
+	
+	if (!this->xic) {
+		return false;
+	}
+	
+	unsigned long mask = 0;
+		
+	mask |= KeyPressMask | KeyReleaseMask;
+	mask |= ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
+	mask |= PointerMotionMask | EnterWindowMask | LeaveWindowMask;
+	mask |= SubstructureNotifyMask | StructureNotifyMask | PropertyChangeMask | FocusChangeMask;
+	mask |= ExposureMask;
+	
+	unsigned long extra = 0;
+	XGetICValues(this->xic, XNFilterEvents, &extra, nullptr);
+	XSelectInput(this->display, this->window, mask | extra);
+	return true;
+}
+#endif
+
+bool GTKWindowX11::Create(GTKWindowInterface *parent, const char *name, int width, int height, int state) {
+	int glattribs[] = {
+		GLX_RGBA,
+		GLX_DOUBLEBUFFER,
+		GLX_RED_SIZE, settings.color_bits,
+		GLX_GREEN_SIZE, settings.color_bits,
+		GLX_BLUE_SIZE, settings.color_bits,
+		GLX_ALPHA_SIZE, settings.color_bits,
+		GLX_DEPTH_SIZE, settings.depth_bits,
+		GLX_STENCIL_SIZE, settings.stencil_bits,
+		None
+	};
+	
+	this->visual_info = glXChooseVisual(this->display, XDefaultScreen(this->display), glattribs);
+	
+	if (!this->visual_info) {
+		return false;
+	}
+	
+	XSetWindowAttributes xattribs;
+	xattribs.colormap = XCreateColormap(this->display_, DefaultRootWindow(this->display_), this->visual_info_->visual, AllocNone);
+	xattribs.event_mask |= ExposureMask;
+	xattribs.event_mask |= KeyPressMask | KeyReleaseMask;
+	xattribs.event_mask |= PointerMotionMask | ButtonPressMask | ButtonReleaseMask;
+	xattribs.event_mask |= FocusIn | FocusOut | FocusChangeMask;
+	xattribs.event_mask |= Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask;
+	xattribs.event_mask |= VisibilityChangeMask | PropertyChangeMask | SubstructureNotifyMask | MotionNotify;
+	
+	this->window = XCreateWindow(this->display, XDefaultRootWindow(this->display), 0, 0, width, height, 0, this->visual_info->depth, InputOutput, this->visual_info->visual, CWColormap | CWEventMask, &xattribs);
+
+	if (!this->window) {
+		return false;
+	}
+	
+	XStoreName(this->display, this->window, name);
+	
+	unsigned long mask = 0;
+		
+	mask |= KeyPressMask | KeyReleaseMask;
+	mask |= ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
+	mask |= PointerMotionMask | EnterWindowMask | LeaveWindowMask;
+	mask |= SubstructureNotifyMask | StructureNotifyMask | PropertyChangeMask | FocusChangeMask;
+	mask |= ExposureMask;
+	
+	XSelectInput(this->display, this->window, mask);
+	XSetWMProtocols(this->display, this->window, &this->AtomClose, 1);
+	
+#if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+	if (!this->InitXIC(static_cast<GTKManagerX11 *>(this->GetManagerInterface()))) {
+		return false;
+	}
+#endif
+
+	return true;
+}
+
+void GTKWindowX11::Minimize() {
+}
+void GTKWindowX11::Maximize() {
+}
+void GTKWindowX11::Show() {
+	XMapWindow(this->display, this->window);
+}
+void GTKWindowX11::Hide() {
+	XUnmapWindow(this->display, this->window);
+}
+
+int GTKWindowX11::GetState(void) const {
+	return this->state;
+}
+
+void GTKWindowX11::GetPos(int *x, int *y) const {
+	XWindowAttributes attr;
+	
+	XGetWindowAttributes(this->display, this->window, &attr);
+	
+	if (x) {
+		*x = attr.x;
+	}
+	if (y) {
+		*y = attr.y;
+	}
+}
+
+void GTKWindowX11::GetSize(int *w, int *h) const {
+	XWindowAttributes attr;
+	
+	XGetWindowAttributes(this->display, this->window, &attr);
+	
+	if (w) {
+		*w = attr.width;
+	}
+	if (h) {
+		*h = attr.height;
+	}
+}
+
+Window GTKWindowX11::GetHandle() {
+	return this->window;
+}
