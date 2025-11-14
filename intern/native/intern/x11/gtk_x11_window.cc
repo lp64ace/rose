@@ -180,3 +180,133 @@ void GTKWindowX11::GetSize(int *w, int *h) const {
 Window GTKWindowX11::GetHandle() {
 	return this->window;
 }
+
+static int convert_key(const KeySym x11_key) {
+	int key = WTK_KEY_UNKOWN;
+	
+	if ((x11_key >= XK_A) && (x11_key <= XK_Z)) {
+		key = (x11_key - XK_A + WTK_KEY_A);
+	}
+	else if ((x11_key >= XK_a) && (x11_key <= XK_z)) {
+		key = (x11_key - XK_a + WTK_KEY_A);
+	}
+	else if ((x11_key >= XK_0) && (x11_key <= XK_9)) {
+		key = (x11_key - XK_0 + WTK_KEY_0);
+	}
+	else if ((x11_key >= XK_F1) && (x11_key <= XK_F24)) {
+		key = (x11_key - XK_F1 + WTK_KEY_F1);
+	}
+	else {
+		
+#define ASSOCIATE(store, what, to) case what: store = to; break;
+		
+		switch(x11_key) {
+			ASSOCIATE(key, XK_BackSpace, WTK_KEY_BACKSPACE);
+			ASSOCIATE(key, XK_Tab, WTK_KEY_TAB);
+			ASSOCIATE(key, XK_ISO_Left_Tab, WTK_KEY_TAB);
+			ASSOCIATE(key, XK_Return, WTK_KEY_ENTER);
+			ASSOCIATE(key, XK_Escape, WTK_KEY_ESC);
+			ASSOCIATE(key, XK_space, WTK_KEY_SPACE);
+			
+			ASSOCIATE(key, XK_semicolon, WTK_KEY_SEMICOLON);
+			ASSOCIATE(key, XK_period, WTK_KEY_PERIOD);
+			ASSOCIATE(key, XK_comma, WTK_KEY_COMMA);
+			ASSOCIATE(key, XK_quoteright, WTK_KEY_QUOTE);
+			ASSOCIATE(key, XK_quoteleft, WTK_KEY_ACCENTGRAVE);
+			ASSOCIATE(key, XK_minus, WTK_KEY_MINUS);
+			ASSOCIATE(key, XK_plus, WTK_KEY_PLUS);
+			ASSOCIATE(key, XK_slash, WTK_KEY_SLASH);
+			ASSOCIATE(key, XK_backslash, WTK_KEY_BACKSLASH);
+			ASSOCIATE(key, XK_equal, WTK_KEY_EQUAL);
+			ASSOCIATE(key, XK_bracketleft, WTK_KEY_LEFT_BRACKET);
+			ASSOCIATE(key, XK_bracketright, WTK_KEY_RIGHT_BRACKET);
+			ASSOCIATE(key, XK_Pause, WTK_KEY_PAUSE);
+			
+			ASSOCIATE(key, XK_Shift_L, WTK_KEY_LEFT_SHIFT);
+			ASSOCIATE(key, XK_Shift_R, WTK_KEY_RIGHT_SHIFT);
+			ASSOCIATE(key, XK_Control_L, WTK_KEY_LEFT_CTRL);
+			ASSOCIATE(key, XK_Control_R, WTK_KEY_RIGHT_CTRL);
+			ASSOCIATE(key, XK_Alt_L, WTK_KEY_LEFT_ALT);
+			ASSOCIATE(key, XK_Alt_R, WTK_KEY_RIGHT_ALT);
+			ASSOCIATE(key, XK_Super_L, WTK_KEY_LEFT_OS);
+			ASSOCIATE(key, XK_Super_R, WTK_KEY_RIGHT_OS);
+			
+			ASSOCIATE(key, XK_Insert, WTK_KEY_INSERT);
+			ASSOCIATE(key, XK_Delete, WTK_KEY_DELETE);
+			ASSOCIATE(key, XK_Home, WTK_KEY_HOME);
+			ASSOCIATE(key, XK_End, WTK_KEY_END);
+			ASSOCIATE(key, XK_Page_Up, WTK_KEY_PAGEUP);
+			ASSOCIATE(key, XK_Page_Down, WTK_KEY_PAGEDOWN);
+			
+			ASSOCIATE(key, XK_Left, WTK_KEY_LEFT);
+			ASSOCIATE(key, XK_Right, WTK_KEY_RIGHT);
+			ASSOCIATE(key, XK_Up, WTK_KEY_UP);
+			ASSOCIATE(key, XK_Down, WTK_KEY_DOWN);
+			
+			ASSOCIATE(key, XK_Caps_Lock, WTK_KEY_CAPSLOCK);
+			ASSOCIATE(key, XK_Scroll_Lock, WTK_KEY_SCRLOCK);
+			ASSOCIATE(key, XK_Num_Lock, WTK_KEY_NUMLOCK);
+			ASSOCIATE(key, XK_Menu, WTK_KEY_APP);
+			
+			ASSOCIATE(key, XK_KP_0, WTK_KEY_NUMPAD_0);
+			ASSOCIATE(key, XK_KP_1, WTK_KEY_NUMPAD_1);
+			ASSOCIATE(key, XK_KP_2, WTK_KEY_NUMPAD_2);
+			ASSOCIATE(key, XK_KP_3, WTK_KEY_NUMPAD_3);
+			ASSOCIATE(key, XK_KP_4, WTK_KEY_NUMPAD_4);
+			ASSOCIATE(key, XK_KP_5, WTK_KEY_NUMPAD_5);
+			ASSOCIATE(key, XK_KP_6, WTK_KEY_NUMPAD_6);
+			ASSOCIATE(key, XK_KP_7, WTK_KEY_NUMPAD_7);
+			ASSOCIATE(key, XK_KP_8, WTK_KEY_NUMPAD_8);
+			ASSOCIATE(key, XK_KP_9, WTK_KEY_NUMPAD_9);
+			ASSOCIATE(key, XK_KP_Decimal, WTK_KEY_NUMPAD_PERIOD);
+			
+			ASSOCIATE(key, XK_KP_Insert, WTK_KEY_NUMPAD_0);
+			ASSOCIATE(key, XK_KP_End, WTK_KEY_NUMPAD_1);
+			ASSOCIATE(key, XK_KP_Down, WTK_KEY_NUMPAD_2);
+			ASSOCIATE(key, XK_KP_Page_Down, WTK_KEY_NUMPAD_3);
+			ASSOCIATE(key, XK_KP_Left, WTK_KEY_NUMPAD_4);
+			ASSOCIATE(key, XK_KP_Begin, WTK_KEY_NUMPAD_5);
+			ASSOCIATE(key, XK_KP_Right, WTK_KEY_NUMPAD_6);
+			ASSOCIATE(key, XK_KP_Home, WTK_KEY_NUMPAD_7);
+			ASSOCIATE(key, XK_KP_Up, WTK_KEY_NUMPAD_8);
+			ASSOCIATE(key, XK_KP_Page_Up, WTK_KEY_NUMPAD_9);
+			ASSOCIATE(key, XK_KP_Delete, WTK_KEY_NUMPAD_PERIOD);
+			
+			ASSOCIATE(key, XK_KP_Enter, WTK_KEY_NUMPAD_ENTER);
+			ASSOCIATE(key, XK_KP_Add, WTK_KEY_NUMPAD_PLUS);
+			ASSOCIATE(key, XK_KP_Subtract, WTK_KEY_NUMPAD_MINUS);
+			ASSOCIATE(key, XK_KP_Multiply, WTK_KEY_NUMPAD_ASTERISK);
+			ASSOCIATE(key, XK_KP_Divide, WTK_KEY_NUMPAD_SLASH);
+
+			default: {
+				// fprintf(stdout, "[Linux/Key] Warning! Failed to associate %lu with any key.\n", x11_key);
+			} break;
+		}
+		
+#undef ASSOCIATE
+	}
+	
+	return key;
+}
+
+static int convert_code(XkbDescPtr xkb_descr, const KeyCode x11_code) {
+	if (x11_code >= xkb_descr->min_key_code && x11_code <= xkb_descr->max_key_code) {
+		const char *id_str = xkb_descr->names->keys[x11_code].name;
+		fprintf(stdout, "[Linux/Key] %s\n", id_str);
+	}
+	return WTK_KEY_UNKOWN;
+}
+
+static int convert_key_ex(const KeySym x11_key, XkbDescPtr xkb_descr, const KeyCode x11_code) {
+	int key = convert_key(x11_key);
+	if (key == WTK_KEY_UNKOWN) {
+		if (xkb_descr) {
+			key = convert_code(xkb_descr, x11_code);
+		}
+	}
+	return key;
+}
+
+static unsigned char bit_is_on(const unsigned char *ptr, int bit) {
+	return ptr[bit >> 3] & (1 << (bit & 7));
+}

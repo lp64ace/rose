@@ -10,6 +10,7 @@ class GTKWindowX11 : public GTKWindowInterface {
     Window window;
 	
 	int state;
+	int active;
 	
 	XVisualInfo *visual_info;
 	

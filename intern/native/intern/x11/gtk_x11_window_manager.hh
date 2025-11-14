@@ -68,6 +68,8 @@ protected:
 		return static_cast<GTKWindowInterface *>(MEM_new<GTKWindowX11>("GTKWindowX11", static_cast<GTKManagerInterface *>(manager)));
 	}
 	
+	void EventProcedure(XEvent *evt);
+	
 	friend class GTKWindowX11;
 };
 
