@@ -86,6 +86,34 @@ bool GTKWindowX11::Create(GTKWindowInterface *parent, const char *name, int widt
 		return false;
 	}
 	
+	this->AtomState = XInternAtom(this->display, "_NET_WM_STATE", false);
+	this->AtomFullScreen = XInternAtom(this->display, "_NET_WM_STATE_FULLSCREEN", false);
+	this->AtomMaxHorz = XInternAtom(this->display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
+	this->AtomMaxVert = XInternAtom(this->display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
+	this->AtomClose = XInternAtom(this->display, "WM_DELETE_WINDOW", false);
+	this->AtomHidden = XInternAtom(this->display, "_NET_WM_STATE_HIDDEN", false);
+	this->AtomActive = XInternAtom(this->display, "_NET_ACTIVE_WINDOW", false);
+	this->AtomDemandsAttention = XInternAtom(this->display, "_NET_WM_STATE_DEMANDS_ATTENTION", false);
+	this->AtomFocused = XInternAtom(this->display, "_NET_WM_STATE_FOCUSED", false);
+	this->AtomCardinal = XInternAtom(this->display, "CARDINAL", false);
+	this->AtomIcon = XInternAtom(this->display, "_NET_WM_ICON", false);
+	this->AtomHints = XInternAtom(this->display, "_MOTIF_WM_HINTS", true);
+
+	this->AtomWindowType = XInternAtom(this->display, "_NET_WM_WINDOW_TYPE", false);
+	this->AtomWindowTypeDesktop = XInternAtom(this->display, "_NET_WM_WINDOW_TYPE_UTILITY", false);
+	this->AtomWindowTypeSplash = XInternAtom(this->display, "_NET_WM_WINDOW_TYPE_SPLASH", false);
+	this->AtomWindowTypeNormal = XInternAtom(this->display, "_NET_WM_WINDOW_TYPE_NORMAL", false);
+
+	this->AtomAllowedActions = XInternAtom(this->display, "_NET_WM_ALLOWED_ACTIONS", false);
+	this->AtomActionResize = XInternAtom(this->display, "WM_ACTION_RESIZE", false);
+	this->AtomActionMinimize = XInternAtom(this->display, "_WM_ACTION_MINIMIZE", false);
+	this->AtomActionShade = XInternAtom(this->display, "WM_ACTION_SHADE", false);
+	this->AtomActionMaximizeHorz = XInternAtom(this->display, "_WM_ACTION_MAXIMIZE_HORZ", false);
+	this->AtomActionMaximizeVert = XInternAtom(this->display, "_WM_ACTION_MAXIMIZE_VERT", false);
+	this->AtomActionClose = XInternAtom(this->display, "_WM_ACTION_CLOSE", false);
+
+	this->AtomDesktopGeometry = XInternAtom(this->display, "_NET_DESKTOP_GEOMETRY", false);
+	
 	XStoreName(this->display, this->window, name);
 	
 	unsigned long mask = 0;
