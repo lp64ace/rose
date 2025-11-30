@@ -260,6 +260,14 @@ ROSE_STATIC void draw_shading_group_init(DRWShadingGroup *shgroup) {
 		draw_shading_group_uniform_create_ex(shgroup, loc, DRW_UNIFORM_RESOURCE_ID, NULL, GPU_SAMPLER_DEFAULT, 0, 1);
 	}
 
+	if ((loc = GPU_shader_get_builtin_block(shgroup->shader, GPU_UNIFORM_BLOCK_VIEW)) >= 0) {
+		draw_shading_group_uniform_create_ex(shgroup, loc, DRW_UNIFORM_BLOCK, GDraw.view, GPU_SAMPLER_DEFAULT, 0, 1);
+	}
+	else {
+		// TODO: Fix this!
+		draw_shading_group_uniform_create_ex(shgroup, DRW_VIEW_INFO_UBO_SLOT, DRW_UNIFORM_BLOCK, GDraw.view, GPU_SAMPLER_DEFAULT, 0, 1);
+	}
+
 	if ((loc = GPU_shader_get_builtin_block(shgroup->shader, GPU_UNIFORM_BLOCK_MODEL)) >= 0) {
 		draw_shading_group_uniform_create_ex(shgroup, loc, DRW_UNIFORM_BLOCK_OBMATS, NULL, GPU_SAMPLER_DEFAULT, 0, 1);
 	}

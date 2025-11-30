@@ -152,6 +152,11 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
 	}
 
+	// In case of device vertex deformation do the matrices!
+	if (DRW_batch_cache_device_armature(object)) {
+		DRW_ubo_request(&cache->buffers.ubo.defgroup);
+	}
+
 	DRW_cache_mesh_create(cache, object, mesh);
 }
 

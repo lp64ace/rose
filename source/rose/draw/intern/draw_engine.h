@@ -11,6 +11,8 @@
 
 #include "DRW_engine.h"
 
+#include "shaders/draw_shader_shared.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -68,6 +70,8 @@ typedef struct DefaultTextureList {
 typedef struct DRWViewData {
 	DefaultFramebufferList dfbl;
 	DefaultTextureList dtxl;
+
+	ViewInfos storage;
 
 	int flag;
 

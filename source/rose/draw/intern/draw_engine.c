@@ -73,6 +73,8 @@ void DRW_view_data_free(DRWViewData *view_data) {
 
 	LIB_freelistN(&view_data->viewport_engine_data);
 
+	GPU_UNIFORMBUF_DISCARD_SAFE(GDraw.view);
+
 	MEM_freeN(view_data);
 }
 

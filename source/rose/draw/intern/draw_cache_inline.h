@@ -38,6 +38,16 @@ ROSE_INLINE bool DRW_batch_requested(GPUBatch *batch, PrimType primitive) {
 	return false;
 }
 
+ROSE_INLINE void DRW_ubo_request(GPUUniformBuf **ubo) {
+	if (*ubo == NULL) {
+		*ubo = GPU_uniformbuf_create_ex(0, NULL, "UniformBuffer");
+	}
+}
+
+ROSE_INLINE bool DRW_ubo_requested(GPUUniformBuf *ubo) {
+	return (ubo != NULL);
+}
+
 ROSE_INLINE void DRW_vbo_request(GPUBatch *batch, GPUVertBuf **vbo) {
 	if (*vbo == NULL) {
 		*vbo = GPU_vertbuf_calloc();

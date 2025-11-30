@@ -7,6 +7,12 @@
 #include "mesh/extract_mesh.h"
 
 void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
+	const Object *obarm = DRW_batch_cache_device_armature(object);
+
+	if (DRW_ubo_requested(cache->buffers.ubo.defgroup)) {
+		extract_matrices(obarm, object, mesh, cache->buffers.ubo.defgroup);
+	}
+
 	if (!DRW_vbo_requested(cache->buffers.vbo.pos) && !DRW_ibo_requested(cache->buffers.ibo.tris) && !DRW_vbo_requested(cache->buffers.vbo.weights)) {
 		return;
 	}
@@ -20,11 +26,7 @@ void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
 		extract_normals(mesh, cache->buffers.vbo.nor, false);
 	}
 	if (DRW_vbo_requested(cache->buffers.vbo.weights)) {
-		const Object *obarm = DRW_batch_cache_device_armature(object);
-		/**
-		 * Fill the vertex buffer anyway!
-		 */
-		cache->buffers.ubo.defgroup = extract_weights(obarm, object, mesh, cache->buffers.vbo.weights);
+		extract_weights(obarm, object, mesh, cache->buffers.vbo.weights);
 	}
 	if (DRW_ibo_requested(cache->buffers.ibo.tris)) {
 		extract_triangles(mesh, cache->buffers.ibo.tris);

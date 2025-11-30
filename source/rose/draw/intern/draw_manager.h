@@ -48,4 +48,10 @@ typedef struct DRWManager {
 
 extern DRWManager GDrawManager;
 
+typedef struct DRWGlobal {
+	struct GPUUniformBuf *view;
+} DRWGlobal;
+
+extern DRWGlobal GDraw;
+
 /** \} */

@@ -329,6 +329,8 @@ ROSE_STATIC void draw_draw_pass_ex(DRWPass *pass, DRWShadingGroup *first, DRWSha
 		return;
 	}
 
+	GPU_uniformbuf_update(GDraw.view, &GDrawManager.vdata_engine->storage);
+
 	draw_state_set(pass->state);
 
 	for (DRWShadingGroup *group = first; group; group = group->next) {

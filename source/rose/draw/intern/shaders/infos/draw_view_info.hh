@@ -24,8 +24,11 @@ GPU_SHADER_CREATE_INFO(draw_view)
  
 GPU_SHADER_CREATE_INFO(draw_modelmat)
     .uniform_buf(DRW_OBJ_MAT_UBO_SLOT, "ObjectMatrices", "drw_matrices[DRW_RESOURCE_CHUNK_LEN]", Frequency::BATCH)
+    .uniform_buf(DRW_VIEW_INFO_UBO_SLOT, "ViewInfos", "drw_view", Frequency::BATCH)
     .define("ModelMatrix", "(drw_matrices[resource_id].drw_modelMatrix)")
     .define("ModelMatrixInverse", "(drw_matrices[resource_id].drw_modelMatrixInverse)")
+	.define("ProjectionMatrix", "(drw_view.winmat)")
+    .define("ProjectionMatrixInverse", "(drw_view.wininv)")
     .define("ArmatureMatrix", "(drw_matrices[resource_id].drw_armatureMatrix)")
     .define("ArmatureMatrixInverse", "(drw_matrices[resource_id].drw_armatureMatrixInverse)")
     .additional_info("draw_view");

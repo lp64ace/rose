@@ -137,7 +137,7 @@ void extract_weights_mesh_vbo(const Object *obarmature, const Object *obtarget, 
 	});
 }
 
-GPUUniformBuf *extract_weights(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {
+void extract_weights(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {
 	GPU_vertbuf_init_with_format(vbo, extract_weights_format());
 	GPU_vertbuf_data_alloc(vbo, mesh->totloop);
 
@@ -147,7 +147,12 @@ GPUUniformBuf *extract_weights(const Object *obarmature, const Object *obtarget,
 	rose::Vector<float4x4> ubo_data;
 
 	extract_weights_mesh_vbo(obarmature, obtarget, mesh, vbo_data);
+}
+
+void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUUniformBuf *ubo) {
+	rose::Vector<float4x4> ubo_data;
+
 	extract_weights_mesh_ubo(obarmature, obtarget, mesh, ubo_data);
 
-	return GPU_uniformbuf_create_ex(ubo_data.size_in_bytes(), ubo_data.data(), "Armature");
+	GPU_uniformbuf_update_ex(ubo, ubo_data.data(), ubo_data.size_in_bytes());
 }

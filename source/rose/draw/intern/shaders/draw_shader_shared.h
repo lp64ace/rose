@@ -7,6 +7,7 @@
 
 #ifndef GPU_SHADER
 typedef struct ObjectMatrices ObjectMatrices;
+typedef struct ViewInfos ViewInfos;
 #endif
 
 #define DRW_RESOURCE_CHUNK_LEN 256
@@ -21,6 +22,12 @@ struct ObjectMatrices {
 
 struct DVertGroupMatrices {
 	float4x4 drw_poseMatrix;
+};
+
+struct ViewInfos {
+	/* View matrices */
+	float4x4 winmat;
+	float4x4 wininv;
 };
 
 #define resource_id drw_ResourceID

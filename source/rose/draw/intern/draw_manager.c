@@ -7,10 +7,13 @@
 #include "DNA_ID_enums.h"
 #include "DNA_userdef_types.h"
 
+#include "KER_anim_sys.h"
+#include "KER_camera.h"
 #include "KER_context.h"
 #include "KER_layer.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
+#include "KER_scene.h"
 #include "KER_object.h"
 
 #include "GPU_batch.h"
@@ -21,6 +24,8 @@
 #include "GPU_state.h"
 
 #include "LIB_listbase.h"
+#include "LIB_math_geom.h"
+#include "LIB_math_matrix.h"
 #include "LIB_mempool.h"
 #include "LIB_string.h"
 
@@ -32,6 +37,7 @@
 
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
+#include "shaders/draw_shader_shared.h"
 
 struct Object;
 
@@ -40,7 +46,9 @@ struct Object;
  * \{ */
 
 ListBase GEngineList;
+
 DRWManager GDrawManager;
+DRWGlobal GDraw;
 
 void DRW_engines_register(void) {
 	// DRW_engine_register(&draw_engine_basic_type);
@@ -306,7 +314,25 @@ void DRW_manager_init(DRWManager *manager, struct Scene *scene, struct ViewLayer
 		DRW_engine_use(vdata->engine);
 	}
 
+	ViewInfos *storage = &GDrawManager.vdata_engine->storage;
+	if (scene->camera) {
+		KER_camera_multiview_window_matrix(&scene->r, scene->camera, storage->winmat);
+
+		/** Calculate the inverted window matrix */
+		invert_m4_m4(storage->wininv, storage->winmat);
+	}
+	else {
+		unit_m4(storage->winmat);
+
+		/** Calculate the inverted window matrix */
+		invert_m4_m4(storage->wininv, storage->winmat);
+	}
+
 	GDrawManager.resource_handle = 0;
+
+	if (GDraw.view == NULL) {
+		GDraw.view = GPU_uniformbuf_create_ex(sizeof(ViewInfos), NULL, "GDraw.view");
+	}
 }
 
 void DRW_manager_exit(DRWManager *manager) {
@@ -437,6 +463,9 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 	 * Definetely not the fucking place to update the mesh here,
 	 * we should evaluate the depsgraph instead.
 	 */
+	LISTBASE_FOREACH(struct Object *, object, listbase) {
+		KER_animsys_eval_animdata(&object->id);
+	}
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		if (object->type == OB_ARMATURE) {
 			KER_object_build_rig(object);
