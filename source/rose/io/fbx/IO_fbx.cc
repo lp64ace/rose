@@ -25,8 +25,10 @@ struct FbxImportContext {
 	Scene *scene;
 	FbxElementMapping mapping;
 
-	FbxImportContext(Main *main, Scene *scene, const ufbx_scene *fbx, const char *filepath) :main(main), fbx(fbx) {
+	float fps;
 
+	FbxImportContext(Main *main, Scene *scene, const ufbx_scene *fbx, const char *filepath) : main(main), scene(scene), fbx(fbx) {
+		fps = (float)fbx->settings.frames_per_second;
 	}
 
 	void import_globals();
@@ -37,6 +39,14 @@ struct FbxImportContext {
 };
 
 void FbxImportContext::import_globals() {
+	RenderData *r = &this->scene->r;
+
+	if (r->fps == 0) {
+		r->fps = fps;
+	}
+	else {
+		fps = r->fps;
+	}
 }
 
 void FbxImportContext::import_meshes() {
@@ -65,7 +75,29 @@ static void fbx_task_wait_fn(void * /* user */, ufbx_thread_pool_context /* ctx 
 	/* Empty implementation; #fbx_task_run_fn already waits for the tasks. This means that only one fbx "task group" is effectively scheduled at once. */
 }
 
-void importer_main(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath) {
+void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene *fbx, const char *filepath) {
+	FbxImportContext ctx(main, scene, fbx, filepath);
+
+	ctx.import_globals();
+	ctx.import_armatures();
+	ctx.import_meshes();
+	ctx.import_animation(ctx.fps);
+
+	LayerCollection *lc = KER_layer_collection_get_active(view_layer);
+
+	/* Add objects to collection. */
+	for (Object *obj : ctx.mapping.imported_objects) {
+		KER_collection_object_add(main, lc->collection, obj);
+	}
+
+	KER_view_layer_base_deselect_all(view_layer);
+	for (Object *obj : ctx.mapping.imported_objects) {
+		Base *base = KER_view_layer_base_find(view_layer, obj);
+		KER_view_layer_base_select_and_set_active(view_layer, base);
+	}
+}
+
+void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath) {
 	FILE *file = fopen(filepath, "rb");
 	if (!file) {
 		fprintf(stderr, "[FBX] Cannot open resource file '%s'", filepath);
@@ -110,25 +142,48 @@ void importer_main(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 		return;
 	}
 
-	FbxImportContext ctx(main, scene, fbx, filepath);
+	importer_scene(main, scene, view_layer, fbx, filepath);
 
-	ctx.import_globals();
-	ctx.import_armatures();
-	ctx.import_meshes();
-	ctx.import_animation(fbx->settings.frames_per_second);
+	ufbx_free_scene(fbx);
+}
 
-	LayerCollection *lc = KER_layer_collection_get_active(view_layer);
+void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void *memory, size_t size) {
+	ufbx_load_opts opts = {};
+	opts.evaluate_skinning = false;
+	opts.evaluate_caches = false;
+	opts.load_external_files = false;
+	opts.clean_skin_weights = true;
+	opts.use_blender_pbr_material = true;
 
-	/* Add objects to collection. */
-	for (Object *obj : ctx.mapping.imported_objects) {
-		KER_collection_object_add(main, lc->collection, obj);
+	opts.geometry_transform_handling = UFBX_GEOMETRY_TRANSFORM_HANDLING_MODIFY_GEOMETRY;
+	opts.pivot_handling = UFBX_PIVOT_HANDLING_ADJUST_TO_ROTATION_PIVOT;
+
+	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
+	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
+	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
+	opts.target_unit_meters = 128.0f;
+
+	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
+	opts.target_camera_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
+	opts.target_camera_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+	opts.target_light_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
+	opts.target_light_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
+	opts.target_light_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+
+	/* Setup ufbx threading to go through our own task system. */
+	opts.thread_opts.pool.run_fn = fbx_task_run_fn;
+	opts.thread_opts.pool.wait_fn = fbx_task_wait_fn;
+
+	ufbx_error fbx_error;
+	ufbx_scene *fbx = ufbx_load_memory(memory, size, &opts, &fbx_error);
+
+	if (!fbx) {
+		fprintf(stderr, "[FBX] Cannot import resource file : %s", fbx_error.description.data);
+		return;
 	}
 
-	KER_view_layer_base_deselect_all(view_layer);
-	for (Object *obj : ctx.mapping.imported_objects) {
-		Base *base = KER_view_layer_base_find(view_layer, obj);
-		KER_view_layer_base_select_and_set_active(view_layer, base);
-	}
+	importer_scene(main, scene, view_layer, fbx, "");
 
 	ufbx_free_scene(fbx);
 }
@@ -138,5 +193,13 @@ void FBX_import(struct rContext *C, const char *filepath) {
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);
 
-	importer_main(main, scene, view_layer, filepath);
+	importer_file(main, scene, view_layer, filepath);
+}
+
+void FBX_import_memory(struct rContext *C, const void *memory, size_t size) {
+	Main *main = CTX_data_main(C);
+	Scene *scene = CTX_data_scene(C);
+	ViewLayer *view_layer = CTX_data_view_layer(C);
+
+	importer_memory(main, scene, view_layer, memory, size);
 }

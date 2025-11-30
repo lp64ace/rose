@@ -232,11 +232,14 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 /** \name Init & Exit Methods
  * \{ */
 
+extern const int datatoc_six_fbx_size;
+extern const char datatoc_six_fbx[];
+
 ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import(C, "C:\\Users\\jim\\Documents\\six.fbx");
+	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size);
 }
 
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {

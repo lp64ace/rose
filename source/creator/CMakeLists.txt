@@ -48,6 +48,8 @@ set(LIB
 	rose::source::editors::space_view3d
 	rose::source::rosemesh
 	rose::source::roseloader
+
+	rose::resources::models
 	
 	# External Library Dependencies
 	${PTHREADS_LIBRARIES}
