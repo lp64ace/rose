@@ -67,6 +67,39 @@ char *LIB_strncpy(char *dst, size_t dst_maxncpy, const char *src, size_t length)
 	return dst;
 }
 
+ROSE_INLINE bool str_unescape_pair(char c_next, char *r_out) {
+#define CASE_PAIR(value_src, value_dst) \
+	case value_src: {                   \
+		*r_out = value_dst;             \
+		return true;                    \
+	}
+	switch (c_next) {
+		CASE_PAIR('"', '"');   /* Quote. */
+		CASE_PAIR('\\', '\\'); /* Backslash. */
+		CASE_PAIR('t', '\t');  /* Tab. */
+		CASE_PAIR('n', '\n');  /* Newline. */
+		CASE_PAIR('r', '\r');  /* Carriage return. */
+		CASE_PAIR('a', '\a');  /* Bell. */
+		CASE_PAIR('b', '\b');  /* Backspace. */
+		CASE_PAIR('f', '\f');  /* Form-feed. */
+	}
+#undef CASE_PAIR
+	return false;
+}
+
+char *LIB_strcpy_unescape_ex(char *dst, const char *src, size_t length) {
+	size_t len = 0;
+	for (const char *src_end = src + length; (src < src_end) && *src; src++) {
+		char c = *src;
+		if (c == '\\' && str_unescape_pair(*(src + 1), &c)) {
+			src++;
+		}
+		dst[len++] = c;
+	}
+	dst[len] = 0;
+	return len;
+}
+
 char *LIB_strcat(char *dst, size_t dst_maxncpy, const char *src) {
 	size_t idx = LIB_strnlen(dst, dst_maxncpy);
 
@@ -297,6 +330,15 @@ const char *LIB_strprev(const char *begin, const char *end, const char *itr, int
 		}
 	}
 	return begin - 1;
+}
+
+const char *LIB_str_escape_find_quote(const char *p) {
+	bool escape = false;
+	while (*p && (*p != '"' || escape)) {
+		escape = (escape == false) && (*p == '\\');
+		p++;
+	}
+	return p;
 }
 
 /** \} */

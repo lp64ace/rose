@@ -56,6 +56,13 @@ size_t LIB_strcpy_rlen(char *dst, size_t dst_maxncpy, const char *src);
 char *LIB_strncpy(char *dst, size_t dst_maxncpy, const char *src, size_t length);
 
 /**
+ * Copy as unescaped string into the destination buffer.
+ * \note The length must be known before hand and the #dst buffer must 
+ * be large enough to store the result.
+ */
+char *LIB_strcpy_unescape_ex(char *dst, const char *src, size_t length);
+
+/**
  * \brief Concatenates the source string to the destination string.
  *
  * This function appends the \p src string to the end of the \p dst string.
@@ -213,6 +220,11 @@ const char *LIB_strnext(const char *begin, const char *end, const char *itr, int
  *       the behavior is undefined. If \p c is not found, the function returns \p end.
  */
 const char *LIB_strprev(const char *begin, const char *end, const char *itr, int c);
+
+/**
+ * Find the next unescaped quote character in a string.
+ */
+const char *LIB_str_escape_find_quote(const char *p);
 
 /** \} */
 

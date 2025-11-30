@@ -52,6 +52,7 @@ set(SRC
 	LIB_devirtualize_parameters.hh
 	LIB_dot_export.hh
 	LIB_dot_export_attribute_enums.hh
+	LIB_easing.h
 	LIB_endian_switch.h
 	LIB_enumerable_thread_specific.hh
 	LIB_fileops.h
@@ -166,6 +167,7 @@ set(SRC
 	intern/cpp_type.cc
 	intern/cpp_types.cc
 	intern/dot_export.cc
+	intern/easing.c
 	intern/endian_switch.c
 	intern/fileops.c
 	intern/filereader.c

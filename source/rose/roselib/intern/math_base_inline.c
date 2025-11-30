@@ -11,6 +11,24 @@
 extern "C" {
 #endif
 
+ROSE_INLINE double sqrt3d(double d) {
+	if (d == 0.0) {
+		return 0.0;
+	}
+	if (d < 0.0) {
+		return -exp(log(-d) / 3.0);
+	}
+	return exp(log(d) / 3.0);
+}
+
+ROSE_INLINE float interpf(float target, float origin, float fac) {
+	return (fac * target) + (1.0f - fac) * origin;
+}
+
+ROSE_INLINE double interpd(double target, double origin, double fac) {
+	return (fac * target) + (1.0 - fac) * origin;
+}
+
 ROSE_INLINE unsigned char unit_float_to_uchar_clamp(float val) {
 	return (unsigned char)(((val <= 0.0f) ? 0 : ((val > (1.0f - 0.5f / 255.0f)) ? 255 : ((255.0f * val) + 0.5f))));
 }

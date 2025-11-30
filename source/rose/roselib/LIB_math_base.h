@@ -50,6 +50,11 @@
 extern "C" {
 #endif
 
+ROSE_INLINE double sqrt3d(double d);
+
+ROSE_INLINE float interpf(float target, float origin, float t);
+ROSE_INLINE double interpd(double target, double origin, double t);
+
 int32_t divide_ceil_i32(int32_t a, int32_t b);
 int32_t divide_round_i32(int32_t a, int32_t b);
 int32_t ceil_to_multiple_i32(int32_t a, int32_t b);
