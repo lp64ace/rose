@@ -18,11 +18,43 @@ Scene *KER_scene_new(Main *main, const char *name) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Scene Render Data
+ * \{ */
+
+void KER_scene_time_step(struct Scene *scene, float dt) {
+	RenderData *r = &scene->r;
+
+	float duration = 1.0f / (float)r->fps;
+
+	r->subframe += dt / duration;
+	r->cframe += (int)r->subframe;
+	r->subframe = fmodf(r->subframe, 1.0f);
+
+	if (r->cframe >= r->eframe) {
+		int length = r->eframe - r->sframe;
+
+		r->cframe = r->sframe + (r->cframe - r->sframe) % r->cframe;
+	}
+}
+
+float KER_scene_frame(const Scene *scene) {
+	const RenderData *r = &scene->r;
+
+	return (float)r->cframe + (float)r->subframe;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Scene Data-block Definition
  * \{ */
 
 ROSE_STATIC void scene_init_data(ID *id) {
 	Scene *scene = (Scene *)id;
+
+	scene->r.sframe = 0;
+	scene->r.eframe = 27;
+	scene->r.fps = 27;
 
 	/* Master Collection */
 	scene->master_collection = KER_collection_master_add();

@@ -464,7 +464,7 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 	 * we should evaluate the depsgraph instead.
 	 */
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		KER_animsys_eval_animdata(&object->id);
+		KER_animsys_eval_animdata(scene, &object->id);
 	}
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		if (object->type == OB_ARMATURE) {

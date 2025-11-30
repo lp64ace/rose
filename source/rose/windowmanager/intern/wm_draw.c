@@ -22,6 +22,7 @@
 
 #include "KER_object.h"
 #include "KER_main.h"
+#include "KER_scene.h"
 #include "KER_screen.h"
 
 #include "WM_draw.h"
@@ -355,8 +356,12 @@ void WM_do_draw(struct rContext *C) {
 			window->average_fps = (alpha * window->fps) + (1.0 - alpha) * window->average_fps;
 		}
 
-		wm_window_make_drawable(wm, window);
+		Scene *scene;
+		if ((scene = WM_window_get_active_scene(window))) {
+			KER_scene_time_step(scene, window->delta_time);
+		}
 
+		wm_window_make_drawable(wm, window);
 		wm_window_draw(C, window);
 
 		GTK_window_swap_buffers(window->handle);
