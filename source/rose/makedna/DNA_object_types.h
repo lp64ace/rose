@@ -122,8 +122,9 @@ enum {
 /** #Object->type */
 enum {
 	OB_EMPTY,
-	OB_MESH,
 	OB_ARMATURE,
+	OB_CAMERA,
+	OB_MESH,
 };
 
 #define OB_TYPE_SUPPORT_VGROUP(_type) (ELEM(_type, OB_MESH))

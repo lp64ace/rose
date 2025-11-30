@@ -89,7 +89,7 @@ set(INC
 	PUBLIC ..
 	
 	# Internal Include Directories
-	${CMAKE_CURRENT_BINARY_DIR}
+	PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
 	
 )
 
