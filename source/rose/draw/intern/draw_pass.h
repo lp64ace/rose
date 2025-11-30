@@ -12,8 +12,6 @@
 /** \name Draw Resource Handle & Data
  * \{ */
 
-#define DRW_RESOURCE_CHUNK_LEN (1 << 8)
-
 typedef unsigned int DRWResourceHandle;
 
 typedef struct DRWObjectMatrix {

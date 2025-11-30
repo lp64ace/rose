@@ -21,6 +21,8 @@
 
 #include "draw_cache_private.h"
 
+#include "shaders/draw_shader_shared.h"
+
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
