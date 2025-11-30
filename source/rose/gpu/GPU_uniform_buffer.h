@@ -13,7 +13,15 @@ typedef struct GPUUniformBuf GPUUniformBuf;
 
 GPUUniformBuf *GPU_uniformbuf_create_ex(size_t size, const void *data, const char *name);
 
-void GPU_uniformbuf_free(GPUUniformBuf *ibo);
+void GPU_uniformbuf_free(GPUUniformBuf *ubo);
+
+#define GPU_UNIFORMBUF_DISCARD_SAFE(ubo) \
+	do {                                 \
+		if (ubo != NULL) {               \
+			GPU_uniformbuf_free(ubo);    \
+			ubo = NULL;                  \
+		}                                \
+	} while (0)
 
 /* \} */
 
@@ -22,6 +30,7 @@ void GPU_uniformbuf_free(GPUUniformBuf *ibo);
  * \{ */
 
 void GPU_uniformbuf_update(GPUUniformBuf *ubo, const void *data);
+void GPU_uniformbuf_update_ex(GPUUniformBuf *ubo, const void *data, size_t size);
 
 void GPU_uniformbuf_clear_to_zero(GPUUniformBuf *ubo);
 

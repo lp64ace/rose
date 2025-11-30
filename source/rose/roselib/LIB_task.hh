@@ -50,7 +50,7 @@ template<typename Range, typename Function> inline void parallel_for_each(Range 
 #ifdef WITH_TBB
 	tbb::parallel_for_each(range, function);
 #else
-	for (auto &value : range) {
+	for (const auto &value : range) {
 		function(value);
 	}
 #endif

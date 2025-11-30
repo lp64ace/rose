@@ -2,6 +2,7 @@
 #define DNA_SPACE_TYPES_H
 
 #include "DNA_listbase.h"
+#include "DNA_userdef_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,44 +46,6 @@ typedef struct View3D {
 enum {
 	V3D_LOCAL_COLLECTIONS = 1 << 0,
 };
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name UserPref Space
- * \{ */
-
-typedef struct SpaceUser {
-	struct SpaceLink *prev, *next;
-
-	int spacetype;
-	int flag;
-
-	ListBase regionbase;
-	/** End of 'SpaceLink' header. */
-} SpaceUser;
-
-/** #SpaceUser->tab */
-enum {
-	USERPREF_TAB_VIDEO = 0,
-	USERPREF_TAB_THEME = 1,
-};
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Test Space
- * \{ */
-
- typedef struct SpaceTest {
-	struct SpaceLink *prev, *next;
-
-	int spacetype;
-	int flag;
-
-	ListBase regionbase;
-	/** End of 'SpaceLink' header. */
-} SpaceTest;
 
 /** \} */
 

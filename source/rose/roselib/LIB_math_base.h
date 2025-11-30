@@ -50,6 +50,11 @@
 extern "C" {
 #endif
 
+ROSE_INLINE double sqrt3d(double d);
+
+ROSE_INLINE float interpf(float target, float origin, float t);
+ROSE_INLINE double interpd(double target, double origin, double t);
+
 int32_t divide_ceil_i32(int32_t a, int32_t b);
 int32_t divide_round_i32(int32_t a, int32_t b);
 int32_t ceil_to_multiple_i32(int32_t a, int32_t b);
@@ -98,6 +103,26 @@ ROSE_INLINE unsigned int round_db_to_uint_clamp(double a);
 
 ROSE_INLINE float saacos(float fac);
 ROSE_INLINE float saasin(float fac);
+
+/**
+ * Increment the given float to the next representable floating point value in
+ * the positive direction.
+ *
+ * Infinities and NaNs are left untouched. Subnormal numbers are handled
+ * correctly, as is crossing zero (i.e. 0 and -0 are considered a single value,
+ * and progressing past zero continues on to the positive numbers).
+ */
+ROSE_INLINE float increment_ulp(float value);
+
+/**
+ * Decrement the given float to the next representable floating point value in
+ * the negative direction.
+ *
+ * Infinities and NaNs are left untouched. Subnormal numbers are handled
+ * correctly, as is zero (i.e. 0 and -0 are considered a single value, and
+ * progressing past zero continues on to the negative numbers).
+ */
+ROSE_INLINE float decrement_ulp(float value);
 
 #ifdef __cplusplus
 }

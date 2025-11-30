@@ -22,6 +22,9 @@ static void id_type_init() {
 	(void)0
 
 	INIT_TYPE(ID_LI);
+	INIT_TYPE(ID_AR);
+	INIT_TYPE(ID_AC);
+	INIT_TYPE(ID_CA);
 	INIT_TYPE(ID_ME);
 	INIT_TYPE(ID_OB);
 	INIT_TYPE(ID_GR);
@@ -106,6 +109,9 @@ int KER_idtype_idcode_to_index(short idcode) {
 
 	switch (idcode) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(AR);
+		CASE_IDINDEX(AC);
+		CASE_IDINDEX(CA);
 		CASE_IDINDEX(ME);
 		CASE_IDINDEX(OB);
 		CASE_IDINDEX(GR);
@@ -131,6 +137,9 @@ int KER_idtype_idfilter_to_index(int idfilter) {
 
 	switch (idfilter) {
 		CASE_IDINDEX(LI);
+		CASE_IDINDEX(AR);
+		CASE_IDINDEX(AC);
+		CASE_IDINDEX(CA);
 		CASE_IDINDEX(ME);
 		CASE_IDINDEX(OB);
 		CASE_IDINDEX(GR);
@@ -200,7 +209,7 @@ IDTypeInfo IDType_ID_LINK_PLACEHOLDER = {
 	.name = "LinkPlaceholder",
 	.name_plural = "Link Placeholders",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = NULL,

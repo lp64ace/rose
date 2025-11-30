@@ -320,10 +320,23 @@ GPUTexture *GPU_texture_create_from_vertbuf(const char *name, GPUVertBuf *vert) 
 }
 
 GPUTexture *GPU_texture_create_error(int dimension, bool is_array) {
-	float pixel[4] = {1.0f, 0.0f, 1.0f, 1.0f};
-	int w = 1;
-	int h = (dimension < 2 && !is_array) ? 0 : 1;
-	int d = (dimension < 3 && !is_array) ? 0 : 1;
+	float color[2][4] = {
+		{0.0f, 0.0f, 0.0f, 1.0f},
+		{1.0f, 0.0f, 1.0f, 1.0f},
+	};
+	float pixel[4][4][4][4];
+
+	int w = 2;
+	int h = (dimension < 2 && !is_array) ? 0 : 4;
+	int d = (dimension < 3 && !is_array) ? 0 : 4;
+
+	for (int x = 0; x < 4; x++) {
+		for (int y = 0; y < 4; y++) {
+			for (int z = 0; z < 4; z++) {
+				memcpy(pixel[x][y][z], color[(x + y + z) % 2], sizeof(float[4]));
+			}
+		}
+	}
 
 	TextureType type = GPU_TEXTURE_3D;
 	type = (dimension == 2) ? (is_array ? GPU_TEXTURE_2D_ARRAY : GPU_TEXTURE_2D) : type;

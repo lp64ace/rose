@@ -32,7 +32,8 @@
 #include "GPU_vertex_format.h"
 #include "GPU_viewport.h"
 
-#include "oswin.h"
+#include "GTK_api.h"
+
 #include "gtest/gtest.h"
 
 namespace rose::gpu {
@@ -40,8 +41,8 @@ namespace rose::gpu {
 class GPUTest : public ::testing::Test {
 	MEM_CXX_CLASS_ALLOC_FUNCS("GPUTest")
 private:
-	struct WTKWindowManager *manager = NULL;
-	struct WTKWindow *window = NULL;
+	struct GTKWindowManager *manager = NULL;
+	struct GTKWindow *window = NULL;
 
 	GPUContext *context = NULL;
 

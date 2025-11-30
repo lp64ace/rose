@@ -31,7 +31,7 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::oswin
+	rose::intern::native
 	
 	rose::source::dna
 	rose::source::roselib
@@ -39,6 +39,7 @@ set(LIB
 	rose::source::rosefont
 	rose::source::functions
 	rose::source::gpu
+	rose::source::io::fbx
 	rose::source::windowmanager
 	rose::source::editors::screen
 	rose::source::editors::space_api
@@ -47,6 +48,8 @@ set(LIB
 	rose::source::editors::space_view3d
 	rose::source::rosemesh
 	rose::source::roseloader
+
+	rose::resources::models
 	
 	# External Library Dependencies
 	${PTHREADS_LIBRARIES}

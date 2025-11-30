@@ -36,6 +36,14 @@ struct MeshRuntime {
 	bool poly_normals_dirty = true;
 	mutable Vector<float3> vert_normals = {};
 	mutable Vector<float3> poly_normals = {};
+	
+	/**
+     * Data used to efficiently draw the mesh in the viewport, especially useful when 
+     * the same mesh is used in many objects or instances. See `draw_cache_impl_mesh.c`.
+	 * 
+	 * \type MeshBatchCache
+	 */
+	void *draw_cache;
 };
 
 }  // namespace rose::kernel

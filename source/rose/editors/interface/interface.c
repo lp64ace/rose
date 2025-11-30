@@ -213,7 +213,7 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 }
 
 ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, int maxlen) {
-	ROSE_assert(w >= 0 && h >= 0 || (type == UI_BTYPE_SEPR));
+	ROSE_assert(w >= 0 && h >= 0 || (ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)));
 
 	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
 
@@ -359,6 +359,15 @@ void ui_but_update(uiBut *but) {
 	if (but->pointer) {
 		but->drawstr = MEM_reallocN(but->drawstr, but->maxlength + 1);
 		switch (but->pointype) {
+			case UI_POINTER_BYTE:
+				if (!ui_but_is_editing(but)) {
+					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%02x" : "%d", *(unsigned char *)but->pointer);
+				}
+				else {
+					char *itr = but->drawstr;
+					*(unsigned char *)but->pointer = strtol(itr, &itr, 0);
+				}
+				break;
 			case UI_POINTER_STR:
 				if (!ui_but_is_editing(but)) {
 					/** Update the draw sting from the pointer data. */
@@ -431,7 +440,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 		float x = xy[0], y = xy[1];
 		ui_window_to_block_fl(region, block, &x, &y);
 		LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
-			if (but->flag & UI_DISABLED) {
+			if (but->flag & UI_DISABLED || ELEM(but->type, UI_BTYPE_SEPR)) {
 				continue;
 			}
 			if (ui_but_contains_pt(but, x, y)) {
@@ -443,7 +452,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 }
 
 double ui_but_get_value(struct uiBut *but) {
-	if (but->pointer == NULL && !(but->drawstr && ui_but_is_editing(but))) {
+	if (but->pointer == NULL) {
 		return 0;
 	}
 
@@ -451,6 +460,8 @@ double ui_but_get_value(struct uiBut *but) {
 	const int base = but->flag & UI_BUT_HEX ? 16 : 0;
 
 	switch (but->pointype) {
+		case UI_POINTER_BYTE:
+			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const unsigned char *)but->pointer;
 		case UI_POINTER_INT:
 			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const int *)but->pointer;
 		case UI_POINTER_FLT:
@@ -470,6 +481,9 @@ double ui_but_set_value(struct uiBut *but, double nvalue) {
 	nvalue = ROSE_MAX(but->softmin, ROSE_MIN(nvalue, but->softmax));
 
 	switch (but->pointype) {
+		case UI_POINTER_BYTE: {
+			*(unsigned char *)but->pointer = (unsigned char)round(nvalue);
+		} break;
 		case UI_POINTER_INT: {
 			*(int *)but->pointer = (int)round(nvalue);
 		} break;
@@ -495,7 +509,7 @@ double ui_but_set_value(struct uiBut *but, double nvalue) {
 /** \name Builtin UI Functions
  * \{ */
 
-bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Integer(struct rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	if (but->hardmin < 0) {
 		long long value = strtoll(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
@@ -514,7 +528,7 @@ bool uiButHandleTextFunc_Integer(struct rContext *C, struct uiBut *but, const ch
 	return false;
 }
 
-bool uiButHandleTextFunc_Decimal(struct rContext *C, struct uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Decimal(struct rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	long double value = strtold(edit, &end);
 	while (isspace((unsigned char)*end)) {
@@ -689,28 +703,16 @@ void UI_block_scroll(ARegion *region, uiBlock *block, uiLayout *layout) {
 	UI_layout_estimate(layout, &w, &h);
 	UI_block_layout_set_current(block, NULL);
 
-	/* clang-format off */
+	int x = region->sizex - V2D_SCROLL_WIDTH + 1;
+	double pages = ROSE_MAX(((float)h / (float)region->sizey), 1);
 
 	if (((float)h / (float)region->sizey) > 1) {
-		but = uiDefButEx(
-			block,
-			UI_BTYPE_SCROLL,
-			"",
-			region->sizex - V2D_SCROLL_WIDTH,
-			0,
-			V2D_SCROLL_WIDTH,
-			region->sizey,
-			&region->vscroll,
-			UI_POINTER_FLT,
-			1,
-			ROSE_MAX(((float)h / (float)region->sizey), 1),
-			0,
-			UI_BUT_TEXT_LEFT
-		);
-		uiButEnableFlag(but, UI_BUT_DEFAULT);
+		but = uiDefButEx(block, UI_BTYPE_SCROLL, "", x, 0, V2D_SCROLL_WIDTH, region->sizey, &region->vscroll, UI_POINTER_FLT, 1, pages, 0, 0);
+		uiButEnableFlag(but, UI_DEFAULT);
 	}
-
-	/* clang-format on */
+	else {
+		region->vscroll = 1;
+	}
 }
 
 void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {

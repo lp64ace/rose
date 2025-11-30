@@ -3,9 +3,17 @@
 
 #include "DNA_ID.h"
 
+#include "DNA_action_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct DeformGroup {
+	struct DeformGroup *prev, *next;
+
+	char name[64];
+} DeformGroup;
 
 /**
  * The following illustates the orientation of the bounding box in local space.
@@ -40,11 +48,17 @@ typedef struct ObjectRuntime {
 	struct BoundBox *bb;
 
 	int local_collections_bits;
+
+	float object_to_world[4][4];
+	float world_to_object[4][4];
 } ObjectRuntime;
 
 typedef struct Object {
 	ID id;
+	/** Animation data (must be immediately after id for utilities to use it). */
+	struct AnimData *adt;
 	
+	struct DrawDataList drawdata;
 	struct Object *parent;
 	struct Object *track;
 	
@@ -56,6 +70,11 @@ typedef struct Object {
 
 	struct Collection *instance_collection;
 	
+	struct Pose *pose;
+
+	/** String describing sub-object info. */
+	char parsubstr[64];
+
 	/** Pointer to objects data - an 'ID' or NULL. */
 	void *data;
 	
@@ -66,6 +85,10 @@ typedef struct Object {
 	float rot[3], drot[3];
 	/** Quaternion rotation. */
 	float quat[4], dquat[4];
+	/** Axis angle rotation (axis) */
+	float rotAxis[3], drotAxis[3];
+	/** Axis angle rotation (angle) */
+	float rotAngle, drotAngle;
 	/** Final world-space matrix with constraints & animsys applied. */
 	float obmat[4][4];
 	
@@ -78,6 +101,8 @@ typedef struct Object {
 	 * before using this value you should do: `invert_m4_m4(ob->imat, ob->obmat)`
 	 */
 	float invmat[4][4];
+
+	ListBase modifiers;
 	
 	ObjectRuntime runtime;
 } Object;
@@ -97,9 +122,12 @@ enum {
 /** #Object->type */
 enum {
 	OB_EMPTY,
-	OB_MESH,
 	OB_ARMATURE,
+	OB_CAMERA,
+	OB_MESH,
 };
+
+#define OB_TYPE_SUPPORT_VGROUP(_type) (ELEM(_type, OB_MESH))
 
 /** #Object->partype, first 4 bits are the type. */
 enum {
@@ -107,31 +135,6 @@ enum {
 	PAROBJECT = 0,
 	PARSKEL = 4,
 	PARBONE = 7,
-};
-
-/* #object->rotmode */
-enum {
-	/* quaternion rotations (default, and for older Rose versions) */
-	ROT_MODE_QUAT = 0,
-
-	/* euler rotations - keep in sync with enum in LIB_math.h */
-	/** Rose 'default' (classic) - must be as 1 to sync with LIB_math_rotation.h defines */
-	ROT_MODE_EUL = 1,
-	ROT_MODE_XYZ = 1,
-	ROT_MODE_XZY = 2,
-	ROT_MODE_YXZ = 3,
-	ROT_MODE_YZX = 4,
-	ROT_MODE_ZXY = 5,
-	ROT_MODE_ZYX = 6,
-	/**
-	 * NOTE: space is reserved here for 18 other possible
-	 * euler rotation orders not implemented.
-	 */
-	/* axis angle rotations */
-	ROT_MODE_AXISANGLE = -1,
-
-	ROT_MODE_MIN = ROT_MODE_AXISANGLE, /* sentinel for negative value. */
-	ROT_MODE_MAX = ROT_MODE_ZYX,
 };
 
 #ifdef __cplusplus

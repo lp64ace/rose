@@ -333,7 +333,13 @@ GLShaderInterface::GLShaderInterface(GLuint program) {
 	/* Builtin Uniforms */
 	for (int32_t u_int = 0; u_int < GPU_NUM_UNIFORMS; u_int++) {
 		UniformBuiltin u = static_cast<UniformBuiltin>(u_int);
-		builtins_[u] = glGetUniformLocation(program, builtin_uniform_name(u));
+		unibuiltins_[u] = glGetUniformLocation(program, builtin_uniform_name(u));
+	}
+
+	/* Builtin Uniform Blocks */
+	for (int32_t u_int = 0; u_int < GPU_NUM_UNIFORM_BLOCKS; u_int++) {
+		UniformBlockBuiltin u = static_cast<UniformBlockBuiltin>(u_int);
+		ubobuiltins_[u] = glGetUniformBlockIndex(program, builtin_uniform_block_name(u));
 	}
 
 	MEM_freeN(uniforms_from_blocks);
@@ -495,11 +501,19 @@ GLShaderInterface::GLShaderInterface(GLuint program, const shader::ShaderCreateI
 	this->sort_inputs();
 
 	/* Resolving builtins must happen after the inputs have been sorted. */
+
 	/* Builtin Uniforms */
 	for (int32_t u_int = 0; u_int < GPU_NUM_UNIFORMS; u_int++) {
 		UniformBuiltin u = static_cast<UniformBuiltin>(u_int);
 		const ShaderInput *uni = this->uniform_get(builtin_uniform_name(u));
-		builtins_[u] = (uni != nullptr) ? uni->location : -1;
+		unibuiltins_[u] = (uni != nullptr) ? uni->location : -1;
+	}
+
+	/* Builtin Uniform Blocks */
+	for (int32_t u_int = 0; u_int < GPU_NUM_UNIFORM_BLOCKS; u_int++) {
+		UniformBlockBuiltin u = static_cast<UniformBlockBuiltin>(u_int);
+		const ShaderInput *ubo = this->ubo_get(builtin_uniform_block_name(u));
+		ubobuiltins_[u] = (ubo != nullptr) ? ubo->location : -1;
 	}
 
 	// this->debug_print();

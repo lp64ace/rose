@@ -45,6 +45,37 @@ typedef struct MInt8Property {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Custom Data (Vertex)
+ * \{ */
+
+typedef struct MDeformWeight {
+	/** The index for the vertex group, must *always* be unique when in an array. */
+	unsigned int def_nr;
+	/** Weight between 0.0 and 1.0. */
+	float weight;
+} MDeformWeight;
+
+typedef struct MDeformVert {
+	/**
+	 * Array of weight indices and values.
+	 * - There must not be any duplicate #def_nr indices.
+	 * - Groups in the array are unordered.
+	 * - Indices outside the usable range of groups are ignored.
+	 */
+	struct MDeformWeight *dw;
+	/**
+	 * The length of the #dw array.
+	 * \note This is not necessarily the same length as the total number of vertex groups.
+	 * However, generally it isn't larger.
+	 */
+	int totweight;
+	/** Flag is only in use as a run-time tag at the moment. */
+	int flag;
+} MDeformVert;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Utility Macros
  * \{ */
 

@@ -1,11 +1,11 @@
+#ifndef DNA_USERDEF_TYPES_H
+#define DNA_USERDEF_TYPES_H
+
 #include "DNA_listbase.h"
 
-#ifndef DNA_USERDEF_TYPES_H
-#	define DNA_USERDEF_TYPES_H
-
-#	ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#	endif
+#endif
 
 typedef struct uiWidgetColors {
 	unsigned char outline[4];
@@ -53,13 +53,15 @@ typedef struct Theme {
 } Theme;
 
 typedef struct UserDef {
+	char engine[64];
+
 	ListBase themes;
 } UserDef;
 
 extern UserDef U;
 
-#	ifdef __cplusplus
+#ifdef __cplusplus
 }
-#	endif
+#endif
 
 #endif	// DNA_USERDEF_TYPES_H

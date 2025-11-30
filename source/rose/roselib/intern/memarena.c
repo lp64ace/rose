@@ -2,6 +2,7 @@
 
 #include "LIB_assert.h"
 #include "LIB_memarena.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include <stdio.h>
@@ -50,7 +51,7 @@ MemArena *LIB_memory_arena_create(size_t size, const char *name) {
 /** \name Arena Destruction
  * \{ */
 
-ROSE_INLINE void memory_arena_free_all(MemBuf *iter) {
+ROSE_INLINE void memory_arena_free_all(MemArena *arena, MemBuf *iter) {
 	while (iter) {
 		MemBuf *next = iter->next;
 		MEM_freeN(iter);
@@ -59,7 +60,7 @@ ROSE_INLINE void memory_arena_free_all(MemBuf *iter) {
 }
 
 void LIB_memory_arena_destroy(MemArena *arena) {
-	memory_arena_free_all(arena->buffers);
+	memory_arena_free_all(arena, arena->buffers);
 	MEM_freeN(arena);
 }
 
@@ -79,7 +80,7 @@ void *LIB_memory_arena_malloc(MemArena *arena, size_t size) {
 	if (size > arena->cursize) {
 		arena->cursize = arena->bufsize;
 
-		MemBuf *nbuf = MEM_mallocN(arena->cursize, arena->name);
+		MemBuf *nbuf = MEM_mallocN(arena->bufsize + sizeof(MemBuf), arena->name);
 
 		/** Emplace this new buffer at the beginning of the list. */
 		nbuf->next = arena->buffers;
@@ -103,12 +104,35 @@ void *LIB_memory_arena_calloc(MemArena *arena, size_t size) {
 	return ptr;
 }
 
+void *LIB_memory_arena_strdup(MemArena *arena, const char *str) {
+	const size_t length = LIB_strlen(str);
+	void *ptr = LIB_memory_arena_malloc(arena, length + 1);
+	return LIB_strcpy(ptr, length + 1, str);
+}
+
+void *LIB_memory_arena_strfmt(MemArena *arena, const char *fmt, ...) {
+	va_list args;
+	char *str;
+
+	va_start(args, fmt);
+	str = LIB_vstrformat_allocN(fmt, args);
+	va_end(args);
+
+	void *ptr = NULL;
+	if (str) {
+		ptr = LIB_memory_arena_strdup(arena, str);
+		MEM_freeN(str);
+	}
+
+	return ptr;
+}
+
 void LIB_memory_arena_clear(MemArena *arena) {
 	MemBuf *cbuf = arena->buffers;
 
 	if (cbuf) {
 		/** Free all the buffers except the first one. */
-		memory_arena_free_all(cbuf->next);
+		memory_arena_free_all(arena, cbuf->next);
 
 #ifndef NDEBUG
 		memset(arena, 0xff, arena->bufsize);

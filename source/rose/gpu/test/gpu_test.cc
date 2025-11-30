@@ -7,18 +7,17 @@
 namespace rose::gpu {
 
 void GPUTest::SetUp() {
-	manager = WTK_window_manager_new();
+	manager = GTK_window_manager_new(GTK_WINDOW_MANAGER_NONE);
 	if (!manager) {
 		GTEST_SKIP() << "Skipping gpu::test, GUI not supported.";
 	}
 
-	window = WTK_create_window(manager, "gpu::test", 800, 450);
+	window = GTK_create_window_ex(manager, "gpu::test", 800, 450, GTK_STATE_HIDDEN);
 	if (!window) {
 		GTEST_SKIP() << "Skipping gpu::test, GUI not supported.";
 	}
 
-	WTK_window_make_context_current(window);
-	WTK_window_hide(window);
+	GTK_window_make_context_current(window);
 
 	context = GPU_context_create(window, NULL);
 	if (!context) {
@@ -30,10 +29,10 @@ void GPUTest::TearDown() {
 		GPU_context_discard(context);
 	}
 	if (window) {
-		WTK_window_free(manager, window);
+		GTK_window_free(manager, window);
 	}
 	if (manager) {
-		WTK_window_manager_free(manager);
+		GTK_window_manager_free(manager);
 	}
 }
 

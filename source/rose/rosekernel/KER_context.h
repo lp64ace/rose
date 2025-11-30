@@ -29,6 +29,8 @@ struct WindowManager;
 struct wmWindow;
 
 struct Main;
+struct Scene;
+struct ViewLayer;
 
 struct WindowManager *CTX_wm_manager(const struct rContext *C);
 struct wmWindow *CTX_wm_window(const struct rContext *C);
@@ -36,6 +38,8 @@ struct Screen *CTX_wm_screen(const struct rContext *C);
 struct ScrArea *CTX_wm_area(const struct rContext *C);
 struct ARegion *CTX_wm_region(const struct rContext *C);
 struct Main *CTX_data_main(const struct rContext *C);
+struct Scene *CTX_data_scene(const struct rContext *C);
+struct ViewLayer *CTX_data_view_layer(const struct rContext *C);
 
 void CTX_wm_manager_set(struct rContext *C, struct WindowManager *);
 void CTX_wm_window_set(struct rContext *C, struct wmWindow *);
@@ -43,6 +47,7 @@ void CTX_wm_screen_set(struct rContext *C, struct Screen *);
 void CTX_wm_area_set(struct rContext *C, struct ScrArea *);
 void CTX_wm_region_set(struct rContext *C, struct ARegion *);
 void CTX_data_main_set(struct rContext *C, struct Main *);
+void CTX_data_scene_set(struct rContext *C, struct Scene *);
 
 /** \} */
 

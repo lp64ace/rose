@@ -134,7 +134,7 @@ void GLBackend::platform_init() {
 		}
 	}
 
-	GPG.init(device, system, support_level, GPU_BACKEND_OPENGL, vendor, renderer, version, GPU_ARCHITECTURE_IMR);
+	GPG.init(device, system, driver, support_level, GPU_BACKEND_OPENGL, vendor, renderer, version, GPU_ARCHITECTURE_IMR);
 }
 
 void GLBackend::platform_exit() {

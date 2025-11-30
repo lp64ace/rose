@@ -1,6 +1,10 @@
 #include "MEM_guardedalloc.h"
 
 #include "KER_context.h"
+#include "KER_layer.h"
+#include "KER_scene.h"
+
+#include "DNA_windowmanager_types.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -17,6 +21,7 @@ typedef struct rContext {
 
 	struct {
 		struct Main *main;
+		struct Scene *scene;
 	} data;
 } rContext;
 
@@ -59,6 +64,22 @@ struct ARegion *CTX_wm_region(const rContext *ctx) {
 struct Main *CTX_data_main(const rContext *ctx) {
 	return ctx->data.main;
 }
+struct Scene *CTX_data_scene(const rContext *ctx) {
+	return ctx->data.scene;
+}
+struct ViewLayer *CTX_data_view_layer(const rContext *C) {
+	ViewLayer *view_layer = NULL;
+
+	wmWindow *window = CTX_wm_window(C);
+	Scene *scene = CTX_data_scene(C);
+	if (window) {
+		if ((view_layer = KER_view_layer_find(scene, window->view_layer_name)) != NULL) {
+			return view_layer;
+		}
+	}
+
+	return KER_view_layer_default_view(scene);
+}
 
 void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {
 	ctx->wm.manager = manager;
@@ -77,6 +98,9 @@ void CTX_wm_region_set(rContext *ctx, struct ARegion *region) {
 }
 void CTX_data_main_set(rContext *ctx, struct Main *main) {
 	ctx->data.main = main;
+}
+void CTX_data_scene_set(rContext *ctx, struct Scene *scene) {
+	ctx->data.scene = scene;
 }
 
 /** \} */

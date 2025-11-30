@@ -40,17 +40,21 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::oswin
+	rose::intern::native
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::rosemesh
 	rose::source::rosefont
 	rose::source::gpu
+	rose::source::draw
+	rose::source::io::fbx
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar
 	rose::source::editors::space_view3d
 	rose::source::editors::screen
+
+	rose::resources::models
 	
 	# External Library Dependencies
 	

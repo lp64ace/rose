@@ -13,6 +13,7 @@ struct ARegion;
 struct Main;
 struct ScrArea;
 struct Screen;
+struct Scene;
 struct WindowManager;
 struct rContext;
 struct wmWindow;
@@ -119,6 +120,16 @@ void ED_screen_exit(struct rContext *C, struct wmWindow *window, struct Screen *
 
 void ED_screen_refresh(struct WindowManager *wm, struct wmWindow *window);
 void ED_screen_global_areas_refresh(struct wmWindow *window);
+
+bool ED_screen_area_active(struct rContext *C);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scene
+ * \{ */
+
+void ED_screen_scene_change(struct rContext *C, struct wmWindow *window, struct Scene *scene);
 
 /** \} */
 

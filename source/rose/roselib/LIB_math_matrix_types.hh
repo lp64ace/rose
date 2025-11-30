@@ -392,7 +392,7 @@ template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow)
 	}
 
 	friend std::ostream &operator<<(std::ostream &stream, const MatBase &mat) {
-		stream << "(\n";
+		stream << "[";
 		for (int i = 0; i < NumRow; i++) {
 			stream << "(";
 			for (int j = 0; j < NumCol; j++) {
@@ -404,12 +404,11 @@ template<typename T, int NumCol, int NumRow, int Alignment = (((NumCol * NumRow)
 			}
 			stream << ")";
 			if (i < NumRow - 1) {
-				stream << ",";
+				stream << ", ";
 			}
-			stream << "\n";
 		}
 
-		stream << ")\n";
+		stream << "]";
 		return stream;
 	}
 };

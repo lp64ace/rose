@@ -115,6 +115,8 @@ typedef struct IDTypeInfo {
 enum {
 	/** Indicates that the given IDType does not support copying. */
 	IDTYPE_FLAGS_NO_COPY = 1 << 0,
+	/** Indicates that the given IDType cannot have animation data. */
+	IDTYPE_FLAGS_NO_ANIMDATA = 1 << 1,
 };
 
 /* -------------------------------------------------------------------- */
@@ -122,6 +124,9 @@ enum {
  * \{ */
 
 extern IDTypeInfo IDType_ID_LI;
+extern IDTypeInfo IDType_ID_AC;
+extern IDTypeInfo IDType_ID_AR;
+extern IDTypeInfo IDType_ID_CA;
 extern IDTypeInfo IDType_ID_ME;
 extern IDTypeInfo IDType_ID_OB;
 extern IDTypeInfo IDType_ID_GR;

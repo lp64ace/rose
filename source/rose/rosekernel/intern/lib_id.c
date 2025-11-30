@@ -2,6 +2,7 @@
 
 #include "LIB_string.h"
 
+#include "KER_anim_data.h"
 #include "KER_idprop.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
@@ -134,6 +135,8 @@ void KER_libblock_free_data(ID *id, bool do_id_user) {
 		MEM_freeN(id->properties);
 		id->properties = NULL;
 	}
+
+	KER_animdata_free(id, do_id_user);
 }
 
 ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
@@ -191,6 +194,7 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 void KER_id_free_ex(Main *main, void *idv, int flag, bool use_flag_from_idtag) {
 	id_free(main, idv, flag, use_flag_from_idtag);
 }
+
 void KER_id_free_us(struct Main *main, void *idv) {
 	ID *id = (ID *)idv;
 

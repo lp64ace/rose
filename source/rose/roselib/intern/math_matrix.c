@@ -2,6 +2,7 @@
 #include "LIB_math_vector.h"
 
 #include <math.h>
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Init
@@ -129,6 +130,26 @@ void copy_m4d_m4(double m1[4][4], const float m2[4][4]) {
 /* -------------------------------------------------------------------- */
 /** \name Arithmetic
  * \{ */
+
+void negate_m3(float R[3][3]) {
+	int i, j;
+
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+			R[i][j] *= -1.0f;
+		}
+	}
+}
+
+void negate_m4(float R[4][4]) {
+	int i, j;
+
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			R[i][j] *= -1.0f;
+		}
+	}
+}
 
 void add_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]) {
 	for (int i = 0; i < 3; i++) {
@@ -269,6 +290,15 @@ void mul_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]) {
 	R[3][3] = B[3][0] * A[0][3] + B[3][1] * A[1][3] + B[3][2] * A[2][3] + B[3][3] * A[3][3];
 }
 
+void mul_m3_m4_v3(const float mat[4][4], float r[3]) {
+	const float x = r[0];
+	const float y = r[1];
+
+	r[0] = x * mat[0][0] + y * mat[1][0] + mat[2][0] * r[2];
+	r[1] = x * mat[0][1] + y * mat[1][1] + mat[2][1] * r[2];
+	r[2] = x * mat[0][2] + y * mat[1][2] + mat[2][2] * r[2];
+}
+
 void mul_m4_v3(const float mat[4][4], float r[3]) {
 	const float x = r[0];
 	const float y = r[1];
@@ -279,6 +309,16 @@ void mul_m4_v3(const float mat[4][4], float r[3]) {
 }
 void mul_m4_v4(const float mat[4][4], float r[4]) {
 	mul_v4_m4v4(r, mat, r);
+}
+
+
+void mul_v3_m4v3(float r[3], const float mat[4][4], const float vec[3]) {
+	const float x = vec[0];
+	const float y = vec[1];
+
+	r[0] = x * mat[0][0] + y * mat[1][0] + mat[2][0] * vec[2] + mat[3][0];
+	r[1] = x * mat[0][1] + y * mat[1][1] + mat[2][1] * vec[2] + mat[3][1];
+	r[2] = x * mat[0][2] + y * mat[1][2] + mat[2][2] * vec[2] + mat[3][2];
 }
 
 void mul_v4_m4v3(float r[4], const float mat[4][4], const float vec[3]) {
@@ -533,6 +573,37 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]) {
 /** \name Linear Algebra
  * \{ */
 
+void normalize_m3_m3(float R[3][3], const float M[3][3]) {
+	for (int i = 0; i < 3; i++) {
+		normalize_v3_v3(R[i], M[i]);
+	}
+}
+
+void normalize_m4_m4(float R[4][4], const float M[4][4]) {
+	int i;
+	for (i = 0; i < 3; i++) {
+		float len = normalize_v3_v3(R[i], M[i]);
+		R[i][3] = (len != 0.0f) ? (M[i][3] / len) : M[i][3];
+	}
+	copy_v4_v4(R[3], M[3]);
+}
+
+void normalize_m3(float M[3][3]) {
+	for (int i = 0; i < 3; i++) {
+		normalize_v3(M[i]);
+	}
+}
+
+void normalize_m4(float M[4][4]) {
+	int i;
+	for (i = 0; i < 3; i++) {
+		float len = normalize_v3(M[i]);
+		if (len != 0.0f) {
+			M[i][3] /= len;
+		}
+	}
+}
+
 void transpose_m3(float R[3][3]) {
 	float t;
 
@@ -641,6 +712,18 @@ void adjoint_m4_m4(float R[4][4], const float M[4][4]) {
 	R[1][3] = determinant_m3(a1, a2, a3, c1, c2, c3, d1, d2, d3);
 	R[2][3] = -determinant_m3(a1, a2, a3, b1, b2, b3, d1, d2, d3);
 	R[3][3] = determinant_m3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
+}
+
+void rescale_m3(float M[3][3], const float scale[3]) {
+	mul_v3_fl(M[0], scale[0]);
+	mul_v3_fl(M[1], scale[1]);
+	mul_v3_fl(M[2], scale[2]);
+}
+
+void rescale_m4(float M[4][4], const float scale[3]) {
+	mul_v3_fl(M[0], scale[0]);
+	mul_v3_fl(M[1], scale[1]);
+	mul_v3_fl(M[2], scale[2]);
 }
 
 float determinant_m2(const float a, const float b, const float c, const float d) {
@@ -752,6 +835,18 @@ void size_to_mat4(float R[4][4], const float size[3]) {
 	R[3][3] = 1.0f;
 }
 
+void mat3_to_size(float size[3], const float M[3][3]) {
+	size[0] = len_v3(M[0]);
+	size[1] = len_v3(M[1]);
+	size[2] = len_v3(M[2]);
+}
+
+void mat4_to_size(float size[4], const float M[4][4]) {
+	size[0] = len_v3(M[0]);
+	size[1] = len_v3(M[1]);
+	size[2] = len_v3(M[2]);
+}
+
 void scale_m3_fl(float R[3][3], float scale) {
 	R[0][0] = R[1][1] = R[2][2] = scale;
 	R[0][1] = R[0][2] = 0.0f;
@@ -805,6 +900,42 @@ void rotate_m4(float mat[4][4], char axis, float angle) {
 			ROSE_assert_unreachable();
 		} break;
 	}
+}
+
+void mat3_to_rot_size(float rot[3][3], float size[3], const float mat3[3][3]) {
+	/* keep rot as a 3x3 matrix, the caller can convert into a quat or euler */
+	size[0] = normalize_v3_v3(rot[0], mat3[0]);
+	size[1] = normalize_v3_v3(rot[1], mat3[1]);
+	size[2] = normalize_v3_v3(rot[2], mat3[2]);
+	if (is_negative_m3(rot)) {
+		negate_m3(rot);
+		negate_v3(size);
+	}
+}
+
+void mat4_to_loc_rot_size(float loc[3], float rot[3][3], float size[3], const float wmat[4][4]) {
+	float mat3[3][3]; /* wmat -> 3x3 */
+
+	copy_m3_m4(mat3, wmat);
+	mat3_to_rot_size(rot, size, mat3);
+
+	/* location */
+	copy_v3_v3(loc, wmat[3]);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Debug
+ * \{ */
+
+void print_m4(float m[4][4]) {
+	fprintf(stdout, "[");
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[0][0], m[0][1], m[0][2], m[0][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[1][0], m[1][1], m[1][2], m[1][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[2][0], m[2][1], m[2][2], m[2][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[3][0], m[3][1], m[3][2], m[3][3]);
+	fprintf(stdout, "]");
 }
 
 /** \} */

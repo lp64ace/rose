@@ -37,7 +37,7 @@ IDTypeInfo IDType_ID_LI = {
 	.name = "Library",
 	.name_plural = "Libraries",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = NULL,

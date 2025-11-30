@@ -86,6 +86,7 @@ void GPU_indexbuf_set_tri_restart(GPUIndexBufBuilder *builder, uint elem);
 GPUIndexBuf *GPU_indexbuf_build(GPUIndexBufBuilder *);
 
 void GPU_indexbuf_build_in_place(GPUIndexBufBuilder *, GPUIndexBuf *);
+void GPU_indexbuf_build_in_place_ex(GPUIndexBufBuilder *, unsigned int, unsigned int, bool, GPUIndexBuf *);
 
 /* \} */
 
@@ -142,6 +143,10 @@ void GPU_indexbuf_update_sub(GPUIndexBuf *elem, uint start, uint len, const void
  * NOTE: caller is responsible to reserve enough memory.
  */
 void GPU_indexbuf_read(GPUIndexBuf *elem, uint32_t *data);
+
+ROSE_INLINE unsigned int *GPU_indexbuf_get_data(struct GPUIndexBufBuilder *builder) {
+	return builder->data;
+}
 
 /* \} */
 

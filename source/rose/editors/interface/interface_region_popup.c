@@ -57,7 +57,7 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 	int delta = LIB_rctf_size_x(&block->rect) - LIB_rctf_size_x(&butrct);
 
 	const float max_radius = (0.5f * WIDGET_UNIT);
-	if (delta >= 0 && delta < max_radius) {
+	if (delta > 0 && delta < max_radius) {
 		LISTBASE_FOREACH(uiBut *, bt, &block->buttons) {
 			/* Only trim the right most buttons in multi-column popovers. */
 			if (bt->rect.xmax == block->rect.xmax) {
@@ -77,8 +77,8 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 	const int win_x = WM_window_size_x(window);
 	const int win_y = WM_window_size_y(window);
 
-	const int max_size_x = ROSE_MAX(size_x, handle->max_size_x);
-	const int max_size_y = ROSE_MAX(size_y, handle->max_size_y);
+	const int max_size_x = handle->sizex ? handle->sizex : size_x;
+	const int max_size_y = handle->sizey ? handle->sizey : size_y;
 
 	int dir1 = 0, dir2 = 0;
 
@@ -162,7 +162,7 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 	float offset_x = 0, offset_y = 0;
 
 	if (dir1 == UI_DIR_LEFT) {
-		offset_x = (butrct.xmin - block->rect.xmax) + PIXELSIZE;
+		offset_x = (butrct.xmin - block->rect.xmax);
 		if (dir2 == UI_DIR_UP) {
 			offset_y = butrct.ymin - block->rect.ymin - center_y - UI_MENU_PADDING;
 		}
@@ -171,7 +171,7 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 		}
 	}
 	else if (dir1 == UI_DIR_RIGHT) {
-		offset_x = (butrct.xmax - block->rect.xmin) - PIXELSIZE;
+		offset_x = (butrct.xmax - block->rect.xmin);
 		if (dir2 == UI_DIR_UP) {
 			offset_y = butrct.ymin - block->rect.ymin - center_y - UI_MENU_PADDING;
 		}
@@ -180,7 +180,7 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 		}
 	}
 	else if (dir1 == UI_DIR_UP) {
-		offset_y = (butrct.ymax - block->rect.ymin) - PIXELSIZE;
+		offset_y = (butrct.ymax - block->rect.ymin);
 		if (dir2 == UI_DIR_RIGHT) {
 			offset_x = butrct.xmax - block->rect.xmax + center_x;
 		}
@@ -189,7 +189,7 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 		}
 	}
 	else if (dir1 == UI_DIR_DOWN) {
-		offset_y = (butrct.ymin - block->rect.ymax) + PIXELSIZE;
+		offset_y = (butrct.ymin - block->rect.ymax);
 		if (dir2 == UI_DIR_RIGHT) {
 			offset_x = butrct.xmax - block->rect.xmax + center_x;
 		}
@@ -262,7 +262,10 @@ ROSE_STATIC uiBlock *ui_popup_block_refresh(struct rContext *C, uiPopupBlockHand
 	uiBlock *block = NULL;
 	if (!block) {
 		if (handle->popup_create_vars.block_create_func) {
-			block = handle->popup_create_vars.block_create_func(C, region, handle->popup_create_vars.arg);
+			block = handle->popup_create_vars.block_create_func(C, region, but, handle->popup_create_vars.arg);
+
+			handle->sizex = region->sizex;
+			handle->sizey = region->sizey;
 		}
 		else {
 			block = handle->popup_create_vars.handle_create_func(C, handle, handle->popup_create_vars.arg);
@@ -290,6 +293,29 @@ ROSE_STATIC uiBlock *ui_popup_block_refresh(struct rContext *C, uiPopupBlockHand
 	region->winrct.xmax = block->rect.xmax;
 	region->winrct.ymin = block->rect.ymin;
 	region->winrct.ymax = block->rect.ymax;
+
+	switch (block->direction) {
+		case UI_DIR_LEFT: {
+			if (handle->sizex) {
+				region->winrct.xmax = region->winrct.xmin + handle->sizex;
+			}
+		} break;
+		case UI_DIR_RIGHT: {
+			if (handle->sizex) {
+				region->winrct.xmin = region->winrct.xmax - handle->sizex;
+			}
+		} break;
+		case UI_DIR_UP: {
+			if (handle->sizey) {
+				region->winrct.ymax = region->winrct.ymin + handle->sizey;
+			}
+		} break;
+		case UI_DIR_DOWN: {
+			if (handle->sizey) {
+				region->winrct.ymin = region->winrct.ymax - handle->sizey;
+			}
+		} break;
+	}
 
 	UI_block_translate(block, -region->winrct.xmin, -region->winrct.ymin);
 

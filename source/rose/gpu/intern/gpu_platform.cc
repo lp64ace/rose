@@ -47,13 +47,14 @@ static char *create_gpu_name(const char *vendor, const char *renderer, const cha
 	return gpu_name;
 }
 
-void GPUPlatformGlobal::init(DeviceType device, OperatingSystemType system, SupportLevel support_level, BackendType backend, const char *_vendor, const char *_renderer, const char *_version, ArchitectureType architecture) {
+void GPUPlatformGlobal::init(DeviceType device, OperatingSystemType system, DriverType driver, SupportLevel support_level, BackendType backend, const char *_vendor, const char *_renderer, const char *_version, ArchitectureType architecture) {
 	this->clear();
 
 	this->initialized = true;
 
 	this->device = device;
 	this->system = system;
+	this->driver = driver;
 	this->support_level = support_level;
 	this->backend = backend;
 
@@ -137,7 +138,7 @@ bool GPU_type_matches(DeviceType device, OperatingSystemType system, DriverType 
 
 bool GPU_type_matches_ex(DeviceType device, OperatingSystemType system, DriverType driver, BackendType backend) {
 	ROSE_assert(GPG.initialized);
-	return (GPG.device & device) && (GPG.system & system) && (GPG.driver & driver) && (GPG.backend & backend);
+	return (GPG.device & device) != 0 && (GPG.system & system) != 0 && (GPG.driver & driver) != 0 && (GPG.backend & backend) != 0;
 }
 
 /** \} */

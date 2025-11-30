@@ -23,6 +23,7 @@
 #		define float3x4 mat3x4
 #		define float4 vec4
 #		define float4x4 mat4
+#		define float3x3 mat3
 #		define int2 ivec2
 #		define int3 ivec3
 #		define int4 ivec4
@@ -53,6 +54,7 @@ typedef float float3[3];
 typedef float float4[4];
 typedef float float4x4[4][4];
 typedef float float3x4[3][4];
+typedef float float3x3[3][3];
 typedef int int2[2];
 typedef int int3[2];
 typedef int int4[4];

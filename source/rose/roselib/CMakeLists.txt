@@ -52,6 +52,7 @@ set(SRC
 	LIB_devirtualize_parameters.hh
 	LIB_dot_export.hh
 	LIB_dot_export_attribute_enums.hh
+	LIB_easing.h
 	LIB_endian_switch.h
 	LIB_enumerable_thread_specific.hh
 	LIB_fileops.h
@@ -84,6 +85,7 @@ set(SRC
 	LIB_map.hh
 	LIB_map_slots.hh
 	LIB_math_angle_types.hh
+	LIB_math_axis_angle.hh
 	LIB_math_axis_angle_types.hh
 	LIB_math_base.h
 	LIB_math_base.hh
@@ -103,11 +105,13 @@ set(SRC
 	LIB_math_quaternion_types.hh
 	LIB_math_rotation.h
 	LIB_math_rotation_types.hh
+	LIB_math_solvers.h
 	LIB_math_vector.h
 	LIB_math_vector.hh
 	LIB_math_vector_types.hh
 	LIB_memarena.h
 	LIB_memory_utils.hh
+	LIB_memblock.h
 	LIB_mempool.h
 	LIB_multi_value_map.hh
 	LIB_offset_indices.hh
@@ -163,6 +167,7 @@ set(SRC
 	intern/cpp_type.cc
 	intern/cpp_types.cc
 	intern/dot_export.cc
+	intern/easing.c
 	intern/endian_switch.c
 	intern/fileops.c
 	intern/filereader.c
@@ -188,8 +193,10 @@ set(SRC
 	intern/math_matrix.c
 	intern/math_matrix.cc
 	intern/math_rotation.c
+	intern/math_solvers.c
 	intern/math_vector.c
 	intern/memarena.c
+	intern/memblock.c
 	intern/mempool.c
 	intern/path_utils.c
 	intern/polyfill_2d.c

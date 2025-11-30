@@ -23,14 +23,18 @@ typedef struct wmWindow {
 
 	struct wmWindow *parent;
 	struct Screen *screen;
+	struct Scene *scene;
 	/** Global areas aren't part of the screen, but part of the window directly. */
 	struct ScrAreaMap global_areas;
 
+	char view_layer_name[64];
+
 	int posx;
 	int posy;
-	unsigned int sizex;
-	unsigned int sizey;
+	int sizex;
+	int sizey;
 
+	double average_fps;
 	double last_draw;
 	double delta_time;
 	double fps;

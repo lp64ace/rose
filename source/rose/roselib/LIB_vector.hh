@@ -551,6 +551,13 @@ public:
 	}
 
 	/**
+	 * Return how many bytes are currently stored in the vector.
+	 */
+	size_t size_in_bytes() const {
+		return (const char *)end_ - (const char *)begin_;
+	}
+
+	/**
 	 * Returns true when the vector contains no elements, otherwise false.
 	 *
 	 * This is the same as std::vector::empty.

@@ -1,10 +1,14 @@
 #include "MEM_guardedalloc.h"
 
+#include "DRW_cache.h"
+
 #include "ED_screen.h"
 
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_main.h"
 #include "KER_screen.h"
+#include "KER_scene.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -15,9 +19,12 @@
 
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
-#include <oswin.h>
+#include "RFT_api.h"
+
+#include <GTK_api.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Create/Destroy Methods
@@ -47,16 +54,21 @@ ROSE_STATIC void wm_window_tiny_window_ensure(WindowManager *wm, wmWindow *windo
 	}
 	wm_window_clear_drawable(wm);
 
-	window->handle = WTK_create_window(wm->handle, name, width, height);
+	window->handle = GTK_create_window_ex(wm->handle, name, width, height, GTK_STATE_HIDDEN);
 	ROSE_assert(window->handle);
 
 	window->context = GPU_context_create(window->handle, NULL);
 
 	/** Windows have the habbit of setting the swap interval to one by default. */
-	WTK_window_set_swap_interval(window->handle, 0);
-	WTK_window_pos(window->handle, &window->posx, &window->posy);
-	WTK_window_size(window->handle, &window->sizex, &window->sizey);
-	WTK_window_show(window->handle);
+	GTK_window_set_swap_interval(window->handle, 0);
+	GTK_window_pos(window->handle, &window->posx, &window->posy);
+	GTK_window_size(window->handle, &window->sizex, &window->sizey);
+	GTK_window_show(window->handle);
+}
+
+ROSE_STATIC void wm_window_draw_window_destroy(WindowManager *wm, wmWindow *window) {
+	DRW_global_cache_free();
+	RFT_cache_clear();
 }
 
 ROSE_STATIC void wm_window_tiny_window_destroy(WindowManager *wm, wmWindow *window) {
@@ -65,14 +77,19 @@ ROSE_STATIC void wm_window_tiny_window_destroy(WindowManager *wm, wmWindow *wind
 	}
 
 	if (window->context) {
-		WTK_window_make_context_current(window->handle);
+		GTK_window_make_context_current(window->handle);
 		GPU_context_active_set(window->context);
+		/**
+		 * We are destroying a drawing context, this could be the last one but 
+		 * it could also own batches within the DRAW module, reset them!
+		 */
+		wm_window_draw_window_destroy(wm, window);
 		GPU_context_discard(window->context);
 		window->context = NULL;
 	}
 	wm->windrawable = NULL;
 
-	WTK_window_free(wm->handle, window->handle);
+	GTK_window_free(wm->handle, window->handle);
 	window->handle = NULL;
 }
 
@@ -108,10 +125,10 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 	
 	if (!window) {
 		if (!parent) {
-			window = wm_window_new(C, parent, name, 1470, 900);
+			window = wm_window_new(C, parent, name, 1600, 900);
 		}
 		else {
-			window = wm_window_new(C, parent, name, 1024, 720);
+			window = wm_window_new(C, parent, name, 1024, 768);
 		}
 
 		rcti rect;
@@ -126,7 +143,7 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 
 	CTX_wm_window_set(C, window);
 	CTX_wm_screen_set(C, screen);
-	
+
 	if (space_type != SPACE_EMPTY) {
 		/* Ensure it shows the right space-type editor. */
 		ScrArea *area = (ScrArea *)(screen->areabase.first);
@@ -137,12 +154,16 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 	
 	/** Update the screen to be temporary if set! */
 	screen->temp = temp;
-	
+
 	ED_screen_refresh(wm, window);
 
 	if (parent) {
 		CTX_wm_window_set(C, parent);
 		CTX_wm_screen_set(C, WM_window_screen_get(parent));
+	}
+	else {
+		CTX_wm_window_set(C, NULL);
+		CTX_wm_screen_set(C, NULL);
 	}
 
 	return window;
@@ -176,6 +197,7 @@ void WM_window_close(struct rContext *C, wmWindow *window, bool do_free) {
 		wm_window_make_drawable(wm, window);
 		ED_screen_exit(C, window, screen);
 		wm_window_tiny_window_destroy(wm, window);
+		wm_window_clear_drawable(wm);
 	}
 	else {
 		WM_window_screen_set(C, window, NULL);
@@ -195,7 +217,7 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 	 * First and foremost we remove this window from the window list,
 	 * since we do not want to handle events for this window anymore since we are shuting it down.
 	 *
-	 * Otherwise, the call to #WTK_window_free later on would trigger a new event,
+	 * Otherwise, the call to #GTK_window_free later on would trigger a new event,
 	 * that would call this function again!
 	 */
 	LIB_remlink(&wm->windows, window);
@@ -255,12 +277,15 @@ Screen *WM_window_screen_get(const wmWindow *window) {
 int WM_window_size_x(const struct wmWindow *window) {
 	return window->sizex;
 }
+
 int WM_window_size_y(const struct wmWindow *window) {
 	return window->sizey;
 }
+
 void WM_window_rect_calc(const wmWindow *window, rcti *r_rect) {
 	LIB_rcti_init(r_rect, 0, WM_window_size_x(window), 0, WM_window_size_y(window));
 }
+
 void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 	WM_window_rect_calc(window, r_rect);
 	LISTBASE_FOREACH(ScrArea *, global_area, &window->global_areas.areabase) {
@@ -279,6 +304,25 @@ void WM_window_screen_rect_calc(const wmWindow *window, rcti *r_rect) {
 			} break;
 		}
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Window Scene
+ * \{ */
+
+void WM_window_ensure_active_view_layer(wmWindow *window) {
+	Scene *scene = WM_window_get_active_scene(window);
+
+	if (scene && KER_view_layer_find(scene, window->view_layer_name) == NULL) {
+		ViewLayer *view_layer = KER_view_layer_default_view(scene);
+		LIB_strcpy(window->view_layer_name, ARRAY_SIZE(window->view_layer_name), view_layer->name);
+	}
+}
+
+Scene *WM_window_get_active_scene(wmWindow *window) {
+	return window->scene;
 }
 
 /** \} */

@@ -36,7 +36,7 @@ set(GLSL_SRC
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
-	shaders/gpu_shader_mandelbrot.glsl
+	shaders/gpu_shader_simple_lighting_frag.glsl
 	shaders/gpu_shader_test_frag.glsl
 	shaders/gpu_shader_test_vert.glsl
 	shaders/gpu_shader_text_frag.glsl
@@ -59,8 +59,8 @@ set(SHADERS_C
 
 list(APPEND SHADERS_C ${GLSL_C})
 
-rose_add_lib(shaders "${SHADERS_C}" "" "" "")
-add_library(rose::source::shaders ALIAS shaders)
+rose_add_lib(gpu_shaders "${SHADERS_C}" "" "" "")
+add_library(rose::source::gpu_shaders ALIAS gpu_shaders)
 
 set(GLSL_SOURCE_CONTENT
 	""
@@ -248,11 +248,14 @@ set(INFO_SRC
 	infos/gpu_shader_2D_image_rect_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
 	infos/gpu_shader_3D_uniform_color_info.hh
-	infos/gpu_shader_mandelbrot_info.hh
+	infos/gpu_shader_simple_lighting_info.hh
 	infos/gpu_shader_text_info.hh
 	infos/gpu_srgb_to_framebuffer_space.hh
 	
 	infos/gpu_shader_test_info.hh
+
+	../draw/engines/alice/shaders/infos/opaque_mesh_info.hh
+	../draw/intern/shaders/infos/draw_view_info.hh
 )
 
 set(SHADER_CREATE_INFOS_CONTENT
@@ -276,10 +279,11 @@ list(APPEND SRC ${SHADER_CREATE_INFO_LIST_FILE})
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::oswin
+	rose::intern::native
+	rose::source::draw
 	rose::source::roselib
-	rose::source::rosefont
-	rose::source::shaders
+	rose::source::gpu_shaders
+	rose::source::draw_shaders
 	
 	# External Library Dependencies
 	${OPENGL_LIBRARIES}
@@ -329,7 +333,8 @@ set(TEST
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::oswin
+	rose::intern::native
+	rose::source::draw
 	rose::source::roselib
 	rose::source::gpu
 	

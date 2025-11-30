@@ -11,6 +11,7 @@
 #include "GPU_framebuffer.h"
 #include "GPU_matrix.h"
 #include "GPU_state.h"
+#include "GPU_viewport.h"
 
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
@@ -90,14 +91,21 @@ ROSE_STATIC void region_clear(struct rContext *C, ARegion *region) {
 	
 	float back[4];
 	
-	if (area && ED_area_is_global(area)) {
+	if (area && (ED_area_is_global(area) /* || ED_screen_area_active(C) */)) {
 		UI_GetThemeColor4fv(TH_BACK_HI, back);
 	}
 	else {
 		UI_GetThemeColor4fv(TH_BACK, back);
 	}
-	
-	GPU_clear_color(back[0], back[1], back[2], back[3]);
+
+	GPUTexture *texture = WM_draw_region_texture(region, 0);
+
+	if (texture) {
+		/**
+		 * Using GPU_clear_color here will not work since Viewport does not bind a framebuffer!
+		 */
+		GPU_texture_clear(texture, GPU_DATA_FLOAT, back);
+	}
 }
 
 void ED_region_do_draw(struct rContext *C, ARegion *region) {
@@ -149,6 +157,7 @@ void ED_region_default_exit(ARegion *region) {
 }
 
 void ED_region_default_draw(struct rContext *C, ARegion *region) {
+	region_clear(C, region);
 }
 
 bool ED_region_contains_xy(const ARegion *region, const int event_xy[2]) {

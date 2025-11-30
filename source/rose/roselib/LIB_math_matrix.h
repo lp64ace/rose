@@ -36,6 +36,9 @@ void copy_m4d_m4(double m1[4][4], const float m2[4][4]);
 /** \name Arithmetic
  * \{ */
 
+void negate_m3(float R[3][3]);
+void negate_m4(float R[4][4]);
+
 void add_m3_m3m3(float R[3][3], const float A[3][3], const float B[3][3]);
 void add_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]);
 
@@ -50,9 +53,12 @@ void mul_m4_m3m4(float R[4][4], const float A[3][3], const float B[4][4]);
 void mul_m4_m4m3(float R[4][4], const float A[4][4], const float B[3][3]);
 void mul_m4_m4m4(float R[4][4], const float A[4][4], const float B[4][4]);
 
+void mul_m3_m4_v3(const float M[4][4], float r[3]);
+
 void mul_m4_v3(const float M[4][4], float r[3]);
 void mul_m4_v4(const float M[4][4], float r[4]);
 
+void mul_v3_m4v3(float r[3], const float M[4][4], const float v[3]);
 void mul_v4_m4v3(float r[4], const float M[4][4], const float v[3]);
 void mul_v4_m4v4(float r[4], const float M[4][4], const float v[4]);
 
@@ -96,12 +102,21 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]);
 /** \name Linear Algebra
  * \{ */
 
+void normalize_m3_m3(float R[3][3], const float M[3][3]);
+void normalize_m4_m4(float R[4][4], const float M[4][4]);
+
+void normalize_m3(float M[3][3]);
+void normalize_m4(float M[4][4]);
+
 void transpose_m3(float R[3][3]);
 void transpose_m4(float R[4][4]);
 
 void adjoint_m2_m2(float R[2][2], const float M[2][2]);
 void adjoint_m3_m3(float R[3][3], const float M[3][3]);
 void adjoint_m4_m4(float R[4][4], const float M[4][4]);
+
+void rescale_m3(float M[3][3], const float scale[3]);
+void rescale_m4(float M[4][4], const float scale[3]);
 
 /** Sometimes we calculate the determinant of parts of m3 matrix this is why the elements are defined like this. */
 float determinant_m2(float a, float b, float c, float d);
@@ -134,6 +149,9 @@ bool equals_m4_m4(const float a[4][4], const float b[4][4]);
 void size_to_mat3(float R[3][3], const float size[3]);
 void size_to_mat4(float R[4][4], const float size[3]);
 
+void mat3_to_size(float size[3], const float M[3][3]);
+void mat4_to_size(float size[4], const float M[4][4]);
+
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);
 
@@ -147,6 +165,26 @@ void translate_m4(float mat[4][4], float Tx, float Ty, float Tz);
  * (axis & angle args are compatible).
  */
 void rotate_m4(float mat[4][4], char axis, float angle);
+
+/**
+ * \param rot: A 3x3 rotation matrix, normalized never negative.
+ * \param size: The scale, negative if `mat3` is negative.
+ */
+void mat3_to_rot_size(float rot[3][3], float size[3], const float mat3[3][3]);
+
+/**
+ * \param rot: A 3x3 rotation matrix, normalized never negative.
+ * \param size: The scale, negative if `mat3` is negative.
+ */
+void mat4_to_loc_rot_size(float loc[3], float rot[3][3], float size[3], const float wmat[4][4]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Debug
+ * \{ */
+
+void print_m4(float m[4][4]);
 
 /** \} */
 

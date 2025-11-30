@@ -14,17 +14,21 @@
 #include "GPU_viewport.h"
 
 #include "LIB_listbase.h"
+#include "LIB_math_base.h"
 #include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
+#include "KER_object.h"
+#include "KER_main.h"
+#include "KER_scene.h"
 #include "KER_screen.h"
 
 #include "WM_draw.h"
 #include "WM_window.h"
 
-#include <oswin.h>
+#include <GTK_api.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Region Drawing
@@ -93,6 +97,9 @@ ROSE_INLINE void wm_draw_region_bind(ARegion *region, int view) {
 		return;
 	}
 
+	// Maybe viewport would be more suited for the matrix update!
+	GPU_viewport(region->winrct.xmin, region->winrct.ymin, region->sizex, region->sizey);
+
 	if (region->draw_buffer->viewport) {
 		GPU_viewport_bind(region->draw_buffer->viewport, view, &region->winrct);
 	}
@@ -137,7 +144,14 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 	}
 
 	if (region->draw_buffer->viewport) {
+		GPU_matrix_push();
+		GPU_matrix_push_projection();
+		GPU_matrix_ortho_2d_set(region->winrct.xmin, region->winrct.xmax, region->winrct.ymin, region->winrct.ymax);
+
 		GPU_viewport_draw_to_screen(region->draw_buffer->viewport, view, &region->winrct);
+		
+		GPU_matrix_pop_projection();
+		GPU_matrix_pop();
 	}
 	else {
 		GPU_offscreen_draw_to_screen(region->draw_buffer->offscreen, region->winrct.xmin, region->winrct.ymin);
@@ -177,7 +191,7 @@ ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, boo
 
 	wm->windrawable = window;
 	if (activate) {
-		WTK_window_make_context_current(window->handle);
+		GTK_window_make_context_current(window->handle);
 	}
 	GPU_context_active_set(window->context);
 }
@@ -186,8 +200,17 @@ void wm_window_clear_drawable(WindowManager *wm) {
 	wm->windrawable = NULL;
 }
 
+void wm_window_reset_drawable(WindowManager *wm) {
+	wmWindow *win = wm->windrawable;
+
+	if (win && win->handle) {
+		wm_window_clear_drawable(wm);
+		wm_window_set_drawable(wm, win, true);
+	}
+}
+
 void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
-	if (wm->windrawable != window && window->handle) {
+	if (wm->windrawable != window) {
 		wm_window_clear_drawable(wm);
 		wm_window_set_drawable(wm, window, true);
 	}
@@ -206,7 +229,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 		CTX_wm_area_set(C, area);
 
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
-			const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
+			const bool ignore_visibility = (region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN)) != 0;
 			if (region->visible || ignore_visibility) {
 				CTX_wm_region_set(C, region);
 				ED_region_do_layout(C, region);
@@ -221,8 +244,10 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 				continue;
 			}
 
+			const bool viewport = ELEM(area->spacetype, SPACE_VIEW3D) && ELEM(region->regiontype, RGN_TYPE_WINDOW);
+
 			CTX_wm_region_set(C, region);
-			wm_draw_region_buffer_create(region, false);
+			wm_draw_region_buffer_create(region, viewport);
 			wm_draw_region_bind(region, 0);
 			ED_region_do_draw(C, region);
 			wm_draw_region_unbind(region);
@@ -232,7 +257,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 	CTX_wm_area_set(C, NULL);
 
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
-		const bool ignore_visibility = region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN) != 0;
+		const bool ignore_visibility = (region->flag & (RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_TOO_SMALL | RGN_FLAG_HIDDEN)) != 0;
 		if (region->visible || ignore_visibility) {
 			CTX_wm_region_set(C, region);
 			ED_region_do_layout(C, region);
@@ -272,6 +297,7 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 			}
 		}
 	}
+
 	LISTBASE_FOREACH(ScrArea *, area, &window->global_areas.areabase) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			if (!region->visible) {
@@ -314,19 +340,31 @@ void WM_do_draw(struct rContext *C) {
 
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
 		/** Do not render windows that are not visible. */
-		if (!window->handle || WTK_window_is_minimized(window->handle)) {
+		if (!window->handle || GTK_window_is_minimized(window->handle)) {
 			continue;
 		}
 
 		CTX_wm_window_set(C, window);
-		window->delta_time = WTK_elapsed_time(wm->handle) - window->last_draw;
+		window->delta_time = GTK_elapsed_time(wm->handle) - window->last_draw;
 		window->fps = 1.0 / window->delta_time;
 
-		wm_window_make_drawable(wm, window);
+		const double alpha = ROSE_MAX(0.0, ROSE_MIN(window->delta_time * 8, 1.0));
+		if (window->average_fps == 0.0) {
+			window->average_fps = window->fps;
+		}
+		else {
+			window->average_fps = (alpha * window->fps) + (1.0 - alpha) * window->average_fps;
+		}
 
+		Scene *scene;
+		if ((scene = WM_window_get_active_scene(window))) {
+			KER_scene_time_step(scene, window->delta_time);
+		}
+
+		wm_window_make_drawable(wm, window);
 		wm_window_draw(C, window);
 
-		WTK_window_swap_buffers(window->handle);
+		GTK_window_swap_buffers(window->handle);
 
 		window->last_draw += window->delta_time;
 		CTX_wm_window_set(C, NULL);
@@ -348,3 +386,32 @@ void WM_get_projection_matrix(float r_mat[4][4], const rcti *rect) {
 }
 
 /** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Render Context
+ * \{ */
+
+void *WM_render_context_create(struct WindowManager *wm) {
+	if (!wm) {
+		return NULL;
+	}
+
+	return GTK_render_create(wm->handle);
+}
+
+void WM_render_context_activate(void *render) {
+	GTK_render_make_context_current(render);
+}
+void WM_render_context_release(void *render) {
+	GTK_render_make_context_current(NULL);
+}
+
+void WM_render_context_destroy(struct WindowManager *wm, void *render) {
+	if (!wm) {
+		return;
+	}
+
+	GTK_render_free(wm->handle, (struct GTKRender *)render);
+}
+
+	/** \} */

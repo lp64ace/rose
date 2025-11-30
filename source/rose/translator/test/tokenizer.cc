@@ -26,7 +26,7 @@ TEST(Tokenizer, Simple) {
 		RTFileCache *cache = RT_fcache_new("some\\path\\main.c", source, ARRAY_SIZE(source) - 1);
 		RTFile *file = RT_file_new("main.c", cache);
 		{
-			RTParser *parser = RT_parser_new(file);
+			RTCParser *parser = RT_parser_new(file);
 
 			RTSLoc sloc;
 			RTToken *token = (RTToken *)parser->tokens.first;
@@ -61,7 +61,7 @@ TEST(Tokenizer, SimpleWithLocation) {
 		RTFileCache *cache = RT_fcache_new("some\\path\\main.c", source, ARRAY_SIZE(source) - 1);
 		RTFile *file = RT_file_new("main.c", cache);
 		{
-			RTParser *parser = RT_parser_new(file);
+			RTCParser *parser = RT_parser_new(file);
 
 			RTToken *token = (RTToken *)parser->tokens.first;
 			ASSERT_TRUE(token->location.column == 0 && token->location.line == 1);							  // int

@@ -50,7 +50,8 @@ public:
 	uint64_t enabled_tex_mask_ = 0;
 	uint16_t enabled_ssbo_mask_ = 0;
 	/** Location of builtin uniforms. Fast access, no lookup needed. */
-	int32_t builtins_[GPU_NUM_UNIFORMS] = {};
+	int32_t unibuiltins_[GPU_NUM_UNIFORMS] = {};
+	int32_t ubobuiltins_[GPU_NUM_UNIFORM_BLOCKS] = {};
 
 	/**
 	 * Currently only used for `GPU_shader_get_attribute_info`.
@@ -100,12 +101,18 @@ public:
 
 	/* Returns uniform location. */
 	inline int32_t uniform_builtin(const UniformBuiltin builtin) const {
-		ROSE_assert(0 <= builtin && builtin < ARRAY_SIZE(builtins_));
-		return builtins_[builtin];
+		ROSE_assert(0 <= builtin && builtin < ARRAY_SIZE(unibuiltins_));
+		return unibuiltins_[builtin];
+	}
+	/* Returns uniform block location. */
+	inline int32_t uniform_block_builtin(const UniformBlockBuiltin builtin) const {
+		ROSE_assert(0 <= builtin && builtin < ARRAY_SIZE(ubobuiltins_));
+		return ubobuiltins_[builtin];
 	}
 
 protected:
 	static inline const char *builtin_uniform_name(UniformBuiltin u);
+	static inline const char *builtin_uniform_block_name(UniformBlockBuiltin u);
 
 	inline uint32_t set_input_name(ShaderInput *input, char *name, uint32_t name_len) const;
 	inline void copy_input_name(ShaderInput *input, const StringRefNull &name, char *name_buffer, uint32_t &name_buffer_offset) const;
@@ -159,12 +166,23 @@ inline const char *ShaderInterface::builtin_uniform_name(UniformBuiltin u) {
 		case GPU_UNIFORM_BASE_INSTANCE:
 			return "gpu_BaseInstance";
 		case GPU_UNIFORM_RESOURCE_CHUNK:
-			return "drw_resourceChunk";
+			return "drw_ResourceChunk";
 		case GPU_UNIFORM_RESOURCE_ID:
 			return "drw_ResourceID";
 		case GPU_UNIFORM_SRGB_TRANSFORM:
 			return "srgbTarget";
 
+		default:
+			return nullptr;
+	}
+}
+
+inline const char *ShaderInterface::builtin_uniform_block_name(UniformBlockBuiltin u) {
+	switch (u) {
+		case GPU_UNIFORM_BLOCK_MODEL:
+			return "modelBlock";
+		case GPU_UNIFORM_BLOCK_VIEW:
+			return "viewBlock";
 		default:
 			return nullptr;
 	}

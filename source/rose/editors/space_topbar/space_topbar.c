@@ -64,24 +64,28 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name TopBar Header Region Methods
  * \{ */
 
-ROSE_INLINE void topbar_header_file_edit_settings_but(struct rContext *C, uiBut *but, void *unused1, void *unused2) {
-	ED_screen_temp_space_open(C, "Settings", NULL, SPACE_USERPREF);
-}
-
 ROSE_INLINE void topbar_header_file_menu_quit_but(struct rContext *C, uiBut *but, void *unused1, void *unused2) {
 	WM_window_post_quit_event(CTX_wm_window(C));
 }
 
-ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, void *arg) {
+ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, uiBut *owner, void *arg) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Settings", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
-		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_edit_settings_but, NULL, NULL);
-		but = uiDefBut(block, UI_BTYPE_HSPR, "", 0, 0, 6 * UI_UNIT_X, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0);
 		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_quit_but, NULL, NULL);
+		block->direction = UI_DIR_DOWN;
+		UI_block_end(C, block);
+	}
+	return block;
+}
+
+ROSE_INLINE uiBlock *topbar_header_debug_menu(struct rContext *C, ARegion *region, uiBut *owner, void *arg) {
+	uiBlock *block;
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "TOPBAR_menu_debug"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
 		block->direction = UI_DIR_DOWN;
 		UI_block_end(C, block);
 	}

@@ -22,10 +22,18 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
+	KER_action.h
+	KER_action.hh
+	KER_anim_data.h
+	KER_anim_sys.h
+	KER_armature.h
+	KER_camera.h
 	KER_context.h
 	KER_cpp_types.h
 	KER_collection.h
 	KER_customdata.h
+	KER_deform.h
+	KER_fcurve.h
 	KER_global.h
 	KER_idprop.h
 	KER_idtype.h
@@ -36,18 +44,30 @@ set(SRC
 	KER_lib_remap.h
 	KER_main.h
 	KER_mesh.h
+	KER_mesh.hh
 	KER_mesh_types.hh
+	KER_modifier.h
 	KER_object.h
+	KER_object_deform.h
 	KER_rose.h
 	KER_rosefile.h
 	KER_scene.h
 	KER_screen.h
 	KER_userdef.h
 
+	intern/action.c
+	intern/action_runtime.cc
+	intern/anim_data.c
+	intern/anim_sys.c
+	intern/armature.c
+	intern/armature_deform.cc
+	intern/camera.c
 	intern/context.c
 	intern/cpp_types.cc
 	intern/collection.c
 	intern/customdata.cc
+	intern/deform.c
+	intern/fcurve.c
 	intern/idprop.c
 	intern/idtype.c
 	intern/layer.c
@@ -58,10 +78,13 @@ set(SRC
 	intern/main.c
 	intern/mesh.c
 	intern/mesh.cc
+	intern/mesh_data_update.c
 	intern/mesh_normals.cc
 	intern/mesh_runtime.cc
 	intern/mesh_tessellate.cc
+	intern/modifier.c
 	intern/object.c
+	intern/object_deform.c
 	intern/rose.c
 	intern/rosefile.c
 	intern/scene.c
@@ -79,7 +102,9 @@ set(LIB
 	rose::intern::atomic
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::dna
+	PUBLIC rose::source::rna
 	PUBLIC rose::source::functions
+	PUBLIC rose::source::modifiers
 	PUBLIC rose::source::editors::interface
 	
 	# External Library Dependencies

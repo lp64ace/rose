@@ -1,6 +1,10 @@
 #ifndef DNA_ID_H
 #define DNA_ID_H
 
+#include "DNA_ID_enums.h"
+
+#include "DNA_listbase.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,13 +19,13 @@ typedef void (*DrawDataFreeCb)(struct DrawData *engine_data);
 
 typedef struct DrawData {
 	struct DrawData *prev, *next;
-	struct DrawDataEngine *engine;
+	struct DrawEngineType *engine;
 	/** Only nested data, NOT the engine data itself. */
 	DrawDataFreeCb free;
 } DrawData;
 
 typedef struct DrawDataList {
-	struct DrawData *prev, *next;
+	struct DrawData *first, *last;
 } DrawDataList;
 
 /** \} */
@@ -143,12 +147,15 @@ enum {
 };
 
 #define FILTER_ID_LI (1 << 0)
-#define FILTER_ID_ME (1 << 1)
-#define FILTER_ID_OB (1 << 2)
-#define FILTER_ID_GR (1 << 3)
-#define FILTER_ID_SCE (1 << 4)
-#define FILTER_ID_SCR (1 << 5)
-#define FILTER_ID_WM (1 << 6)
+#define FILTER_ID_AC (1 << 1)
+#define FILTER_ID_AR (1 << 2)
+#define FILTER_ID_ME (1 << 3)
+#define FILTER_ID_CA (1 << 4)
+#define FILTER_ID_OB (1 << 5)
+#define FILTER_ID_GR (1 << 6)
+#define FILTER_ID_SCE (1 << 7)
+#define FILTER_ID_SCR (1 << 8)
+#define FILTER_ID_WM (1 << 9)
 
 /**
  * This enum defines the index assigned to each type of IDs in the array returned by
@@ -182,15 +189,28 @@ enum {
 typedef enum eID_Index {
 	/* Special case: Library, should never ever depend on any other type. */
 	INDEX_ID_LI = 0,
-	
+
+	/**
+	 * I really hate this "hack", delaying the deletion of WindowManager so that the Mesh and other 
+	 * drawable datablocks can free their data while their rendering context still exists which is 
+	 * owned by WindowManager->handle.
+	 * 
+	 * The alternative would be to somehow free or delete the runtime data of all the objects before 
+	 * continuing with the deletion of the WindowManager!
+	 */
+	INDEX_ID_WM,
+	/**
+	 * Animation types and actions might be used by almost any other ID type.
+	 */
+	INDEX_ID_AC,
+	INDEX_ID_AR,
 	INDEX_ID_ME,
+	INDEX_ID_CA,
 	INDEX_ID_OB,
 	INDEX_ID_GR,
 	INDEX_ID_SCE,
-	
 	INDEX_ID_SCR,
-	INDEX_ID_WM,
-
+	
 	/* Special values, keep last. */
 	INDEX_ID_NULL,
 } eID_Index;

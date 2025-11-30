@@ -4,12 +4,12 @@
 #include "DNA_space_types.h"
 #include "DNA_windowmanager_types.h"
 
-#include "GPU_compute.h"
 #include "GPU_framebuffer.h"
 #include "GPU_texture.h"
-#include "GPU_state.h"
-#include "GPU_shader.h"
-#include "GPU_shader_builtin.h"
+#include "GPU_matrix.h"
+#include "GPU_viewport.h"
+
+#include "DRW_engine.h"
 
 #include "ED_screen.h"
 #include "ED_space_api.h"
@@ -37,6 +37,8 @@ ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Main");
 		LIB_addtail(&view3d->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
+
+		region->flag |= RGN_FLAG_ALWAYS_REDRAW;
 	}
 	view3d->spacetype = SPACE_VIEW3D;
 
@@ -70,6 +72,16 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 	ED_region_default_draw(C, region);
+
+	GPU_matrix_push();
+	GPU_matrix_push_projection();
+
+	GPU_matrix_identity_set();
+	GPU_matrix_identity_projection_set();
+	DRW_draw_view(C);
+
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
 }
 
 /** \} */

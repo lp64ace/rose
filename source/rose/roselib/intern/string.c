@@ -67,6 +67,39 @@ char *LIB_strncpy(char *dst, size_t dst_maxncpy, const char *src, size_t length)
 	return dst;
 }
 
+ROSE_INLINE bool str_unescape_pair(char c_next, char *r_out) {
+#define CASE_PAIR(value_src, value_dst) \
+	case value_src: {                   \
+		*r_out = value_dst;             \
+		return true;                    \
+	}
+	switch (c_next) {
+		CASE_PAIR('"', '"');   /* Quote. */
+		CASE_PAIR('\\', '\\'); /* Backslash. */
+		CASE_PAIR('t', '\t');  /* Tab. */
+		CASE_PAIR('n', '\n');  /* Newline. */
+		CASE_PAIR('r', '\r');  /* Carriage return. */
+		CASE_PAIR('a', '\a');  /* Bell. */
+		CASE_PAIR('b', '\b');  /* Backspace. */
+		CASE_PAIR('f', '\f');  /* Form-feed. */
+	}
+#undef CASE_PAIR
+	return false;
+}
+
+char *LIB_strcpy_unescape_ex(char *dst, const char *src, size_t length) {
+	size_t len = 0;
+	for (const char *src_end = src + length; (src < src_end) && *src; src++) {
+		char c = *src;
+		if (c == '\\' && str_unescape_pair(*(src + 1), &c)) {
+			src++;
+		}
+		dst[len++] = c;
+	}
+	dst[len] = 0;
+	return dst;
+}
+
 char *LIB_strcat(char *dst, size_t dst_maxncpy, const char *src) {
 	size_t idx = LIB_strnlen(dst, dst_maxncpy);
 
@@ -259,7 +292,7 @@ const char *LIB_strfind(const char *begin, const char *end, const char *word) {
 		roll = rabin_karp_rolling_hash_roll_ex(roll, itr, (size_t)1, (ptrdiff_t)1);
 	}
 
-	return (roll == real && STREQLEN(itr - length, word, length - 1)) ? itr - length : NULL;
+	return (roll == real && (length == 0 || STREQLEN(itr - length, word, length - 1))) ? itr - length : NULL;
 }
 
 const char *LIB_strrfind(const char *begin, const char *end, const char *word) {
@@ -299,6 +332,15 @@ const char *LIB_strprev(const char *begin, const char *end, const char *itr, int
 	return begin - 1;
 }
 
+const char *LIB_str_escape_find_quote(const char *p) {
+	bool escape = false;
+	while (*p && (*p != '"' || escape)) {
+		escape = (escape == false) && (*p == '\\');
+		p++;
+	}
+	return p;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -322,6 +364,8 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	/** vsnprintf returns an int! */
 	ROSE_assert(maxncpy <= INT_MAX);
 
+	va_list copy;
+	va_copy(copy, args);
 	/**
 	 * #vsnprintf, `int vsnprintf (char * s, size_t n, const char * format, va_list arg );`
 	 *
@@ -330,7 +374,8 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	 * character. If an encoding error occurs, a negative number is returned. Notice that only when this returned value is
 	 * non-negative and less than n, the string has been completely written.
 	 */
-	int n = vsnprintf(buffer, maxncpy, fmt, args);
+	int n = vsnprintf(buffer, maxncpy, fmt, copy);
+	va_end(copy);
 
 	/** Resulting string has to be null-terminated. */
 	if (n < 0 || n >= maxncpy) {
@@ -341,10 +386,7 @@ size_t LIB_vstrnformat(char *buffer, size_t maxncpy, ATTR_PRINTF_FORMAT const ch
 	return n;
 }
 
-char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
-	va_list args;
-
-	va_start(args, fmt);
+char *LIB_vstrformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, va_list args) {
 	/**
 	 * #vsnprintf, `int vsnprintf (char * s, size_t n, const char * format, va_list arg );`
 	 *
@@ -353,16 +395,29 @@ char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
 	 * character. If an encoding error occurs, a negative number is returned. Notice that only when this returned value is
 	 * non-negative and less than n, the string has been completely written.
 	 */
-	size_t n = vsnprintf(NULL, 0, fmt, args) + 1;
-	va_end(args);
+	va_list copy;
+	va_copy(copy, args); /* Copy because vsnprintf consumes va_list */
+
+	int n = vsnprintf(NULL, 0, fmt, copy) + 1;
+	va_end(copy);
 
 	char *buffer = MEM_mallocN(n, "StringFormatN");
 	if (buffer) {
-		va_start(args, fmt);
 		vsnprintf(buffer, n, fmt, args);
-		va_end(args);
 	}
+
 	return buffer;
+}
+
+char *LIB_strformat_allocN(ATTR_PRINTF_FORMAT const char *fmt, ...) {
+	va_list args;
+	char *out;
+
+	va_start(args, fmt);
+	out = LIB_vstrformat_allocN(fmt, args);
+	va_end(args);
+
+	return out;
 }
 
 size_t LIB_strnformat_byte_size(char *buffer, size_t maxncpy, uint64_t bytes, int decimal) {

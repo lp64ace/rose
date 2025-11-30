@@ -550,7 +550,7 @@ template<typename T, int NumCol, int NumRow, typename AngleT> [[nodiscard]] MatB
 }
 
 template<typename T, int NumCol, int NumRow, typename VectorT> [[nodiscard]] MatBase<T, NumCol, NumRow> scale(const MatBase<T, NumCol, NumRow> &mat, const VectorT &scale) {
-	BLI_STATIC_ASSERT(VectorT::type_length <= NumCol, "Scale should be less or equal to the matrix in column count.");
+	ROSE_STATIC_ASSERT(VectorT::type_length <= NumCol, "Scale should be less or equal to the matrix in column count.");
 	MatBase<T, NumCol, NumRow> result = mat;
 	unroll<VectorT::type_length>([&](auto c) { result[c] *= scale[c]; });
 	return result;

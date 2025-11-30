@@ -141,6 +141,125 @@ struct LayerTypeInfo {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Callbacks for (#MDeformVert, #CD_MDEFORMVERT)
+ * \{ */
+
+static void layerCopy_mdeformvert(const void *source, void *dest, const int count) {
+	int i, size = sizeof(MDeformVert);
+
+	memcpy(dest, source, count * size);
+
+	for (i = 0; i < count; i++) {
+		MDeformVert *dvert = static_cast<MDeformVert *>(POINTER_OFFSET(dest, i * size));
+
+		if (dvert->totweight) {
+			MDeformWeight *dw = (MDeformWeight *)MEM_mallocN(sizeof(MDeformWeight) * dvert->totweight, __func__);
+
+			memcpy(dw, dvert->dw, dvert->totweight * sizeof(*dw));
+			dvert->dw = dw;
+		}
+		else {
+			dvert->dw = nullptr;
+		}
+	}
+}
+
+static void layerFree_mdeformvert(void *data, const int count, const int /* size */) {
+	for (MDeformVert &dvert : rose::MutableSpan(static_cast<MDeformVert *>(data), count)) {
+		if (dvert.dw) {
+			MEM_freeN(dvert.dw);
+			dvert.dw = nullptr;
+			dvert.totweight = 0;
+		}
+	}
+}
+
+static void layerInterp_mdeformvert(const void **sources, const float *weights, const float * /* sub_weights */, const int count, void *dest) {
+	/* A single linked list of #MDeformWeight's.
+	 * use this to avoid double allocations (which #LinkNode would do). */
+	struct MDeformWeight_Link {
+		MDeformWeight_Link *next;
+		MDeformWeight dw;
+	};
+
+	MDeformVert *dvert = static_cast<MDeformVert *>(dest);
+	MDeformWeight_Link *dest_dwlink = nullptr;
+	MDeformWeight_Link *node;
+
+	/* build a list of unique def_nrs for dest */
+	int totweight = 0;
+	for (int i = 0; i < count; i++) {
+		const MDeformVert *source = static_cast<const MDeformVert *>(sources[i]);
+		float interp_weight = weights[i];
+
+		for (int j = 0; j < source->totweight; j++) {
+			MDeformWeight *dw = &source->dw[j];
+			float weight = dw->weight * interp_weight;
+
+			if (weight == 0.0f) {
+				continue;
+			}
+
+			for (node = dest_dwlink; node; node = node->next) {
+				MDeformWeight *tmp_dw = &node->dw;
+
+				if (tmp_dw->def_nr == dw->def_nr) {
+					tmp_dw->weight += weight;
+					break;
+				}
+			}
+
+			/* if this def_nr is not in the list, add it */
+			if (!node) {
+				MDeformWeight_Link *tmp_dwlink = static_cast<MDeformWeight_Link *>(alloca(sizeof(*tmp_dwlink)));
+				tmp_dwlink->dw.def_nr = dw->def_nr;
+				tmp_dwlink->dw.weight = weight;
+
+				/* Inline linked-list. */
+				tmp_dwlink->next = dest_dwlink;
+				dest_dwlink = tmp_dwlink;
+
+				totweight++;
+			}
+		}
+	}
+
+	/* Delay writing to the destination in case dest is in sources. */
+
+	/* now we know how many unique deform weights there are, so realloc */
+	if (dvert->dw && (dvert->totweight == totweight)) {
+		/* pass (fast-path if we don't need to realloc). */
+	}
+	else {
+		if (dvert->dw) {
+			MEM_freeN(dvert->dw);
+		}
+
+		if (totweight) {
+			dvert->dw = (MDeformWeight *)MEM_mallocN(sizeof(MDeformWeight) * totweight, __func__);
+		}
+	}
+
+	if (totweight) {
+		dvert->totweight = totweight;
+		int i = 0;
+		for (node = dest_dwlink; node; node = node->next, i++) {
+			node->dw.weight = std::min(node->dw.weight, 1.0f);
+			dvert->dw[i] = node->dw;
+		}
+	}
+	else {
+		*dvert = MDeformVert{};
+	}
+}
+
+static void layerConstruct_mdeformvert(void *data, const int count) {
+	std::fill_n(static_cast<MDeformVert *>(data), count, MDeformVert{});
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Callbacks for (#vec3f, #CD_NORMAL)
  * \{ */
 
@@ -670,8 +789,8 @@ static const LayerTypeInfo LAYERTYPEINFO[CD_NUMTYPES] = {
 	{sizeof(int), "void", 1, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
 	/* UNKOWN = 1 */
 	{sizeof(int), "void", 1, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
-	/* UNKOWN = 2 */
-	{sizeof(int), "void", 1, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	/* CD_MDEFORMVERT = 2 */
+	{sizeof(MDeformVert), "MDeformVert", 1, nullptr, layerCopy_mdeformvert, layerFree_mdeformvert, layerInterp_mdeformvert, nullptr, nullptr},
 	/* UNKOWN = 3 */
 	{sizeof(int), "void", 1, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
 	/* UNKOWN = 4 */

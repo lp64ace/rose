@@ -13,6 +13,7 @@ extern "C" {
 typedef struct GHash GHash;
 typedef struct GPUViewport GPUViewport;
 
+struct DRWData;
 struct GPUFrameBuffer;
 
 struct GPUViewport *GPU_viewport_create(void);
@@ -40,6 +41,9 @@ int GPU_viewport_active_view_get(struct GPUViewport *viewport);
  * Overlay frame-buffer for drawing outside of DRW module.
  */
 struct GPUFrameBuffer *GPU_viewport_framebuffer_overlay_get(struct GPUViewport *viewport);
+
+/** We need persistent drawing data for rendering (per engine)! */
+struct DRWData **GPU_viewport_data_get(struct GPUViewport *viewport);
 
 #if defined(__cplusplus)
 }

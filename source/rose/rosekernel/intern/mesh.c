@@ -1,5 +1,7 @@
 #include "MEM_guardedalloc.h"
 
+#include "LIB_listbase.h"
+
 #include "KER_idtype.h"
 #include "KER_mesh.h"
 
@@ -26,9 +28,11 @@ ROSE_STATIC void mesh_init_data(ID *id) {
 
 ROSE_STATIC void mesh_free_data(ID *id) {
 	Mesh *mesh = (Mesh *)id;
-	
+
 	KER_mesh_geometry_clear(mesh);
 	KER_mesh_runtime_free_data(mesh);
+
+	LIB_freelistN(&mesh->vertex_group_names);
 }
 
 IDTypeInfo IDType_ID_ME = {

@@ -2,12 +2,12 @@
 
 #include "DNA_userdef_types.h"
 
+#include "LIB_string.h"
+
 #include "KER_global.h"
 #include "KER_main.h"
 #include "KER_rose.h"
 #include "KER_userdef.h"
-
-#include <string.h>
 
 Global G;
 UserDef U;
@@ -24,13 +24,16 @@ void KER_rose_free() {
 }
 
 void KER_rose_userdef_init() {
-	Theme *const themes[] = {&U_theme_default, &U_theme_xp};
+	const Theme *const themes[] = {&U_theme_default, &U_theme_xp};
 
 	for (size_t index = 0; index < ARRAY_SIZE(themes); index++) {
 		Theme *theme = MEM_mallocN(sizeof(Theme), "DefaultTheme");
 		memcpy(theme, themes[index], sizeof(Theme));
 		LIB_addtail(&U.themes, theme);
 	}
+
+	// We could honestly leave this empty, and make Alice the default but I prefer basic to be the default!
+	LIB_strcpy(U.engine, ARRAY_SIZE(U.engine), "ROSE_ALICE");
 }
 void KER_rose_userdef_clear() {
 	KER_userdef_clear(&U);

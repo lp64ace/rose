@@ -512,6 +512,19 @@ template<typename T, int Size> struct VecBase : public vec_struct_base<T, Size> 
 	}
 
 #undef ROSE_INT_OP
+
+	friend std::ostream &operator<<(std::ostream &stream, const VecBase &vec) {
+		stream << "(";
+		for (int i = 0; i < Size; i++) {
+			stream << vec[i];
+			if (i < Size - 1) {
+				stream << ", ";
+			}
+		}
+
+		stream << ")";
+		return stream;
+	}
 };
 
 namespace math {

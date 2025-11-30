@@ -23,6 +23,8 @@ extern "C" {
 
 typedef struct Mesh {
 	ID id;
+	/** Animation data (must be immediately after id for utilities to use it). */
+	struct AnimData *adt;
 	
 	/** The number of vertices in the mesh, and the size of #vdata. */
 	int totvert;
@@ -50,6 +52,9 @@ typedef struct Mesh {
 	CustomData fdata;
 	
 	int totface;
+	int totmat;
+
+	ListBase vertex_group_names;
 	
 	/**
 	 * Data that isn't saved in files, including caches of derived data, temporary data to improve

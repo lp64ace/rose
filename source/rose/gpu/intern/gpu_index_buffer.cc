@@ -392,6 +392,13 @@ void GPU_indexbuf_build_in_place(GPUIndexBufBuilder *builder, GPUIndexBuf *elem)
 	builder->data = nullptr;
 }
 
+void GPU_indexbuf_build_in_place_ex(GPUIndexBufBuilder *builder, unsigned int minindex, unsigned int maxindex, bool use_restart, GPUIndexBuf *elem) {
+	ROSE_assert(builder->data != nullptr);
+	/** Transfer data ownership to GPUIndexBuf. It will be uploaded upon first use. */
+	unwrap(elem)->init(builder->max_index_len, builder->data, minindex, maxindex, builder->prim_type, use_restart);
+	builder->data = nullptr;
+}
+
 void GPU_indexbuf_create_subrange_in_place(GPUIndexBuf *elem, GPUIndexBuf *elem_src, uint start, uint length) {
 	unwrap(elem)->init_subrange(unwrap(elem_src), start, length);
 }

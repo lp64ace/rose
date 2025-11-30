@@ -15,6 +15,7 @@
 
 #define IS_EQ(a, b) ((fabs((double)((a) - (b))) >= (double)FLT_EPSILON) ? false : true)
 #define IS_EQF(a, b) ((fabsf((float)((a) - (b))) >= (float)FLT_EPSILON) ? false : true)
+#define IS_EQT(a, b, threshold) ((fabs((double)((a) - (b))) >= (double)threshold) ? false : true)
 
 /**
  * Although the naming of the arguments imply that `lo` and `hi` are ordered, we would hate to add an assert here so we handle

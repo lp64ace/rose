@@ -14,6 +14,8 @@
 #include "GPU_uniform_buffer.h"
 #include "GPU_viewport.h"
 
+#include "DRW_engine.h"
+
 #include "MEM_guardedalloc.h"
 
 typedef struct GPUViewportBatch {
@@ -40,6 +42,9 @@ typedef struct GPUViewport {
 
 	int active_view;
 
+	/* Viewport Resources. */
+	DRWData *draw_data;
+
 	GPUTexture *color_render_tx[2];
 	GPUTexture *color_overlay_tx[2];
 	GPUTexture *depth_tx;
@@ -59,7 +64,7 @@ static void gpu_viewport_textures_create(GPUViewport *viewport) {
 	TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT;
 
 	if (viewport->color_render_tx[0] == nullptr) {
-		viewport->color_render_tx[0] = GPU_texture_create_2d("dtxl_color", UNPACK2(viewport->size), 1, GPU_RGBA16F, usage | GPU_TEXTURE_USAGE_SHADER_WRITE, NULL);
+		viewport->color_render_tx[0] = GPU_texture_create_2d("dtxl_color", UNPACK2(viewport->size), 1, GPU_RGBA8, usage | GPU_TEXTURE_USAGE_SHADER_WRITE, NULL);
 		viewport->color_overlay_tx[0] = GPU_texture_create_2d("dtxl_color_overlay", UNPACK2(viewport->size), 1, GPU_SRGB8_A8, usage, NULL);
 
 		if (GPU_get_info_i(GPU_INFO_CLEAR_VIEWPORT_WORKAROUND)) {
@@ -166,6 +171,10 @@ GPUViewport *GPU_viewport_create(void) {
 }
 
 void GPU_viewport_free(GPUViewport *viewport) {
+	if (viewport->draw_data) {
+		DRW_viewport_data_free(viewport->draw_data);
+	}
+
 	gpu_viewport_textures_free(viewport);
 	gpu_viewport_batch_free(viewport);
 
@@ -192,21 +201,22 @@ void GPU_viewport_unbind(GPUViewport *viewport) {
 }
 
 static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_pos, const rctf *rect_uv) {
+	GPUTexture *depth = viewport->depth_tx;
 	GPUTexture *color = viewport->color_render_tx[view];
 	GPUTexture *color_overlay = viewport->color_overlay_tx[view];
 
 	GPUBatch *batch = gpu_viewport_batch_get(viewport, rect_pos, rect_uv);
 
 	GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE);
-	GPU_batch_uniform_1i(batch, "overlay", true);
+	GPU_batch_uniform_1i(batch, "overlay", false);
 	GPU_batch_uniform_1i(batch, "display_transform", false);
 	GPU_batch_uniform_1i(batch, "use_hdr", false);
 
 	GPU_texture_bind(color, 0);
 	GPU_texture_bind(color_overlay, 1);
 	GPU_batch_draw(batch);
-	GPU_texture_unbind(color);
 	GPU_texture_unbind(color_overlay);
+	GPU_texture_unbind(color);
 }
 
 void GPU_viewport_draw_to_screen(GPUViewport *viewport, int view, const rcti *rect) {
@@ -247,10 +257,10 @@ void GPU_viewport_draw_to_screen(GPUViewport *viewport, int view, const rcti *re
 }
 
 GPUTexture *GPU_viewport_color_texture(GPUViewport *viewport, int view) {
-	return viewport->color_render_tx[0];
+	return viewport->color_render_tx[view];
 }
 GPUTexture *GPU_viewport_overlay_texture(GPUViewport *viewport, int view) {
-	return viewport->color_overlay_tx[0];
+	return viewport->color_overlay_tx[view];
 }
 GPUTexture *GPU_viewport_depth_texture(GPUViewport *viewport) {
 	return viewport->depth_tx;
@@ -274,4 +284,8 @@ GPUFrameBuffer *GPU_viewport_framebuffer_overlay_get(GPUViewport *viewport) {
 
 	/* clang-format on */
 	return viewport->overlay_fb;
+}
+
+DRWData **GPU_viewport_data_get(GPUViewport *viewport) {
+	return &viewport->draw_data;
 }

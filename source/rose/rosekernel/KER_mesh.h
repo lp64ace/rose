@@ -12,7 +12,25 @@
 extern "C" {
 #endif
 
+struct Main;
 struct Mesh;
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Cache
+ * This is primarily part of the DRAW module but we export functions!
+ * \{ */
+
+enum {
+	KER_MESH_BATCH_DIRTY_ALL = 0,
+};
+
+void KER_mesh_batch_cache_tag_dirty(struct Mesh *mesh, int mode);
+void KER_mesh_batch_cache_free(struct Mesh *mesh);
+
+extern void (*KER_mesh_batch_cache_tag_dirty_cb)(struct Mesh *mesh, int mode);
+extern void (*KER_mesh_batch_cache_free_cb)(struct Mesh *mesh);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Mesh Creation
@@ -67,6 +85,19 @@ ROSE_INLINE int *KER_mesh_corner_edges_for_write(Mesh *mesh) {
 }
 
 void KER_mesh_poly_offsets_ensure_alloc(struct Mesh *mesh);
+void KER_mesh_ensure_required_data_layers(struct Mesh *mesh);
+
+ROSE_INLINE const MDeformVert *KER_mesh_deform_verts(const Mesh *mesh) {
+	return (const MDeformVert *)CustomData_get_layer(&mesh->vdata, CD_MDEFORMVERT);
+}
+
+ROSE_INLINE MDeformVert *KER_mesh_deform_verts_for_write(Mesh *mesh) {
+	MDeformVert *dvert = (MDeformVert *)CustomData_get_layer_for_write(&mesh->vdata, CD_MDEFORMVERT, mesh->totvert);
+	if (dvert == NULL) {
+		dvert = (MDeformVert *)CustomData_add_layer(&mesh->vdata, CD_MDEFORMVERT, CD_SET_DEFAULT, mesh->totvert);
+	}
+	return dvert;
+}
 
 /** \} */
 
@@ -99,6 +130,9 @@ void KER_mesh_runtime_free_data(struct Mesh *mesh);
 void KER_mesh_runtime_clear_cache(struct Mesh *mesh);
 void KER_mesh_runtime_clear_geometry(struct Mesh *mesh);
 
+void KER_mesh_positions_changed(struct Mesh *mesh);
+void KER_mesh_positions_changed_uniformly(struct Mesh *mesh);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -109,6 +143,14 @@ void KER_mesh_runtime_clear_geometry(struct Mesh *mesh);
  * Returns an array of indices that can be used for corner vertices.
  */
 const MLoopTri *KER_mesh_looptris(const struct Mesh *mesh);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Mesh Depsgraph Update
+ * \{ */
+
+void KER_mesh_data_update(struct Scene *scene, struct Object *object);
 
 /** \} */
 

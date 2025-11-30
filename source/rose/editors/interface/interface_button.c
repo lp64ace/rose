@@ -200,7 +200,7 @@ ROSE_STATIC bool ui_draw_but_row_extended_left(uiBut *but) {
 }
 
 ROSE_STATIC bool ui_draw_but_row_extended_right(uiBut *but) {
-	if (but->draw & UI_BUT_GRID) {
+	if ((but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW) != 0) {
 		uiBut *right = but->next;
 		if (right && right->draw & UI_BUT_GRID && DRAW_INDX(right->draw) == DRAW_INDX(but->draw)) {
 			/**
@@ -223,7 +223,7 @@ ROSE_STATIC bool ui_draw_but_row_extended_right(uiBut *but) {
 }
 
 ROSE_STATIC bool ui_draw_but_row_hovered(uiBut *but) {
-	if (but->draw & (UI_BUT_GRID & UI_BUT_ROW)) {
+	if ((but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW) != 0) {
 		int row = DRAW_INDX(but->draw);
 		for (uiBut *l = but->prev; l && ui_draw_but_row_extended_left(l->next); l = l->prev) {
 			if (l->flag & UI_HOVER) {
@@ -246,13 +246,13 @@ ROSE_STATIC void ui_draw_text_back(uiWidgetColors *wcol, uiBut *but, const rcti 
 	if (but->draw & UI_BUT_GRID) {
 		int lcorner = selected && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
 		int rcorner = selected && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
-		UI_draw_roundbox_corner_set(/* lcorner | rcorner */ UI_CNR_NONE);
+		UI_draw_roundbox_corner_set(0 /* lcorner | rcorner */);
 	}
 	const unsigned char *inner = selected ? wcol->inner_sel : wcol->inner;
 
 	unsigned char alpha = inner[3];
 	/** Add a little background for items that are in a list. */
-	if (!selected && (but->draw & UI_BUT_GRID) != 0) {
+	if (!selected && (but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW)) {
 		alpha = (wcol->inner_sel[3] + wcol->inner[3]) / (2 + DRAW_INDX(but->draw) % 2);
 	}
 
@@ -305,12 +305,12 @@ ROSE_STATIC void ui_draw_text_font_caret(uiBut *but, const rcti *recti, int font
 }
 
 ROSE_STATIC void ui_draw_text_font_draw(uiWidgetColors *wcol, uiBut *but, const rcti *recti, int font, const char *text, int x, int y) {
-	if (but->type == UI_BTYPE_EDIT) {
+	if (ELEM(but->type, UI_BTYPE_EDIT)) {
 		rctf rect;
 		rect.xmin = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selsta - but->scroll)));
 		rect.xmax = ROSE_MIN(recti->xmax, x + RFT_width(font, text, ROSE_MAX(0, but->selend - but->scroll)));
-		rect.ymin = y - (RFT_height_max(font) * 1) / 4;
-		rect.ymax = y + (RFT_height_max(font) * 3) / 4;
+		rect.ymin = y - (RFT_height_max(font) * 1) / 4 - PIXELSIZE;
+		rect.ymax = y + (RFT_height_max(font) * 3.25) / 4 + PIXELSIZE;
 		UI_draw_roundbox_3ub_alpha(&rect, true, 0, wcol->text_sel, wcol->text_sel[3]);
 	}
 
@@ -343,7 +343,7 @@ ROSE_STATIC void ui_draw_scroll_thumb(uiWidgetColors *wcol, uiBut *but, const rc
 
 	unsigned char alpha = inner[3];
 	/** Add a little background for items that are in a list. */
-	if (!selected && (but->draw & UI_BUT_GRID) != 0) {
+	if (!selected && (but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW)) {
 		alpha = (wcol->text_sel[3] + wcol->text[3]) / (2 + DRAW_INDX(but->draw) % 2);
 	}
 

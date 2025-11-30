@@ -28,8 +28,8 @@
 
 #include <ctype.h>
 #include <limits.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* -------------------------------------------------------------------- */
 /** \name UI Event Handlers
@@ -53,8 +53,8 @@ typedef struct uiHandleButtonData {
 /** #uiHandleButtonData->state */
 enum {
 #define _BUTTON_STATE_BEGIN BUTTON_STATE_HIGHLIGHT
+#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_HIGHLIGHT
 	BUTTON_STATE_HIGHLIGHT = 1,
-#define _BUTTON_MODAL_STATE_BEGIN BUTTON_STATE_TEXT_SELECTING
 	BUTTON_STATE_TEXT_SELECTING,
 	BUTTON_STATE_TEXT_EDITING,
 	BUTTON_STATE_WAIT_RELEASE,
@@ -95,6 +95,9 @@ ROSE_STATIC void ui_but_tag_redraw(uiBut *but) {
 		return;
 	}
 
+	if (data->menu) {
+		ED_region_tag_redraw(data->menu->region);
+	}
 	ED_region_tag_redraw_no_rebuild(data->region);
 }
 
@@ -117,8 +120,10 @@ ROSE_STATIC void button_activate_state(struct rContext *C, uiBut *but, int state
 	/** When highlighted the button is just hovered otherwise mark it selected! */
 	SET_FLAG_FROM_TEST(but->flag, state != BUTTON_STATE_HIGHLIGHT, UI_SELECT);
 
-	if (state == BUTTON_STATE_MENU_OPEN) {
-		data->menu = ui_popup_block_create(C, data->region, but, but->menu_create_func, NULL, but->arg);
+	if (ELEM(state, BUTTON_STATE_MENU_OPEN)) {
+		if (but->menu_create_func) {
+			data->menu = ui_popup_block_create(C, data->region, but, but->menu_create_func, NULL, but->arg);
+		}
 	}
 	else if (data->menu) {
 		ui_popup_block_free(C, data->menu);
@@ -152,7 +157,7 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, in
 	 */
 	but->flag |= UI_HOVER;
 	but->active = data;
-	
+
 	switch (state) {
 		case BUTTON_STATE_TEXT_SELECTING: {
 			data->selini = -1;
@@ -163,6 +168,7 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, in
 
 	switch (but->type) {
 		case UI_BTYPE_EDIT: {
+			data->selini = -1;
 			data->undo_stack = ui_textedit_undo_stack_create();
 			if (state == BUTTON_STATE_TEXT_EDITING) {
 				but->selsta = 0;
@@ -273,7 +279,7 @@ ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const 
 				double prev = ui_but_get_value(but), next = ui_but_set_value(but, prev + move);
 				if (prev != next) {
 					ED_region_tag_redraw(region);
-					ui_apply_but_func(C, but, but->arg1, but->arg2);
+					// ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
 
 				retval |= WM_UI_HANDLER_BREAK;
@@ -283,7 +289,7 @@ ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const 
 				double prev = ui_but_get_value(but), next = ui_but_set_value(but, nval);
 				if (prev != next) {
 					ED_region_tag_redraw(region);
-					ui_apply_but_func(C, but, but->arg1, but->arg2);
+					// ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
 
 				retval |= WM_UI_HANDLER_BREAK;
@@ -490,7 +496,7 @@ enum {
 
 ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int mode) {
 	bool changed = false;
-	
+
 	unsigned int length = 0;
 	switch (mode) {
 		case UI_TEXTEDIT_PASTE: {
@@ -516,7 +522,7 @@ ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int
 	return changed;
 }
 
-ROSE_STATIC bool ui_textedit_set(uiBut *but, const char *text) {
+ROSE_STATIC bool ui_but_is_editing_set(uiBut *but, const char *text) {
 	if (text) {
 		MEM_freeN(but->drawstr);
 		but->drawstr = LIB_strdupN(text);
@@ -564,40 +570,40 @@ ROSE_STATIC bool ui_but_is_editable_as_text(uiBut *but) {
 }
 
 ROSE_STATIC uiBut *ui_textedit_next_but(uiBlock *block, uiBut *but, uiHandleButtonData *data) {
-	if(ELEM(but->type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)) {
+	if (ELEM(but->type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)) {
 		return NULL;
 	}
-	
-	for(uiBut *other = but->next; other; other = other->next) {
+
+	for (uiBut *other = but->next; other; other = other->next) {
 		if (ui_but_is_editable_as_text(other)) {
 			return other;
 		}
 	}
-	for(uiBut *other = (uiBut *)block->buttons.first; other; other = other->next) {
+	for (uiBut *other = (uiBut *)block->buttons.first; other; other = other->next) {
 		if (ui_but_is_editable_as_text(other)) {
 			return other;
 		}
 	}
-	
+
 	return NULL;
 }
 
 ROSE_STATIC uiBut *ui_textedit_prev_but(uiBlock *block, uiBut *but, uiHandleButtonData *data) {
-	if(ELEM(but->type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)) {
+	if (ELEM(but->type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)) {
 		return NULL;
 	}
-	
-	for(uiBut *other = but->prev; other; other = other->prev) {
+
+	for (uiBut *other = but->prev; other; other = other->prev) {
 		if (ui_but_is_editable_as_text(other)) {
 			return other;
 		}
 	}
-	for(uiBut *other = (uiBut *)block->buttons.last; other; other = other->prev) {
+	for (uiBut *other = (uiBut *)block->buttons.last; other; other = other->prev) {
 		if (ui_but_is_editable_as_text(other)) {
 			return other;
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -652,9 +658,11 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 			ui_but_update(but);
 			button_activate_state(C, but, BUTTON_STATE_EXIT);
 			ui_apply_but_func(C, but, but->arg1, but->arg2);
+			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 		case EVT_ESCKEY: {
 			button_activate_state(C, but, BUTTON_STATE_EXIT);
+			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 		case EVT_BACKSPACEKEY:
 		case EVT_DELKEY: {
@@ -721,7 +729,7 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 					int offset;
 
 					const char *text = ui_textedit_undo(data->undo_stack, direction * multiply, &offset);
-					if (ui_textedit_set(but, text)) {
+					if (ui_but_is_editing_set(but, text)) {
 						but->selsta = but->selend = but->offset = offset;
 					}
 					retval |= WM_UI_HANDLER_BREAK;
@@ -736,7 +744,7 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 					else {
 						other = ui_textedit_next_but(block, but, data);
 					}
-					
+
 					if (other && other != but) {
 						ui_but_activate(C, data->region, other, BUTTON_STATE_TEXT_EDITING);
 						retval |= WM_UI_HANDLER_BREAK;
@@ -802,6 +810,10 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 							button_activate_state(C, but, BUTTON_STATE_SCROLL);
 						} break;
 						case UI_BTYPE_EDIT: {
+							ui_textedit_cursor_select(but, data, evt->mouse_xy[0]);
+							if (data->selini < 0) {
+								data->selini = but->offset;
+							}
 							button_activate_state(C, but, BUTTON_STATE_TEXT_SELECTING);
 						} break;
 						default: {
@@ -857,14 +869,14 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 				}
 				button_activate_state(C, but, BUTTON_STATE_EXIT);
 				/**
-				 * A popup was closed because the current popup receive a left-mouse click event, 
+				 * A popup was closed because the current popup receive a left-mouse click event,
 				 * even though the popup was not able to handle it parent pop-ups may be able to instead!
-				 * 
-				 * The parent region has priority, send the event to the active in there, 
-				 * if that doesn't find a hovered-button either the chain keeps going up, 
+				 *
+				 * The parent region has priority, send the event to the active in there,
+				 * if that doesn't find a hovered-button either the chain keeps going up,
 				 * until eventually all the popup regions close or one of them is triggered!
-				 * 
-				 * NOTE: We do not update the active button since it may no longer has the focus, 
+				 *
+				 * NOTE: We do not update the active button since it may no longer has the focus,
 				 * we try to find the hovered one instead!
 				 */
 				retval |= ui_handle_button_over(C, evt, menuregion);
@@ -945,7 +957,7 @@ ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *
 
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
-			if (but->flag & UI_BUT_DEFAULT) {
+			if (but->flag & UI_DEFAULT) {
 				retval |= ui_do_but(C, block, but, evt);
 			}
 			if (retval != WM_UI_HANDLER_CONTINUE) {

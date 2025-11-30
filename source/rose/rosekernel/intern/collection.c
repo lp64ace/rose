@@ -122,7 +122,7 @@ Collection *KER_collection_add(Main *main, Collection *parent, const char *name)
 }
 
 Collection *KER_collection_master_add() {
-	Collection *master_collection = KER_libblock_alloc(NULL, ID_GR, NULL, LIB_ID_CREATE_NO_MAIN);
+	Collection *master_collection = KER_libblock_alloc(NULL, ID_GR, "Colleciton", LIB_ID_CREATE_NO_MAIN);
 	do {
 		master_collection->id.flag |= ID_FLAG_EMBEDDED_DATA;
 		master_collection->flag |= COLLECTION_IS_MASTER;
@@ -547,7 +547,7 @@ bool KER_collection_object_add_notest(Main *main, Collection *collection, Object
 		KER_main_collection_sync(main);
 	}
 
-	fprintf(stdout, "[%s:%d] Update dependency graph here for %p (geometry).", __FILE__, __LINE__, &collection->id);
+	fprintf(stdout, "[%s:%d] Update dependency graph here for %p (geometry).\n", __FILE__, __LINE__, &collection->id);
 
 	return true;
 }
@@ -594,7 +594,7 @@ bool KER_collection_object_rem(Main *main, Collection *collection, Object *ob, b
 /** \name Collection Data-block Definition
  * \{ */
 
- IDTypeInfo IDType_ID_GR = {
+IDTypeInfo IDType_ID_GR = {
 	.idcode = ID_GR,
 
 	.filter = FILTER_ID_GR,
@@ -605,7 +605,7 @@ bool KER_collection_object_rem(Main *main, Collection *collection, Object *ob, b
 	.name = "Collection",
 	.name_plural = "Collections",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = collection_copy_data,

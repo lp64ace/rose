@@ -2,6 +2,8 @@
 
 #include "GPU_shader_builtin.h"
 
+#include <stdbool.h>
+
 /**
  * Hardware limit is 16. Position attribute is always needed so we reduce to 15.
  * This makes sure the GPUVertexFormat name buffer does not overflow.
@@ -182,6 +184,15 @@ typedef enum UniformBuiltin {
  * offer a noticeable performance boost.
  */
 int GPU_shader_get_builtin_uniform(GPUShader *shader, int builtin);
+
+typedef enum UniformBlockBuiltin {
+	GPU_UNIFORM_BLOCK_VIEW,
+	GPU_UNIFORM_BLOCK_MODEL,
+} UniformBlockBuiltin;
+
+#define GPU_NUM_UNIFORM_BLOCKS (GPU_UNIFORM_BLOCK_MODEL + 1)
+
+int GPU_shader_get_builtin_block(GPUShader *shader, int builtin);
 
 /* \} */
 

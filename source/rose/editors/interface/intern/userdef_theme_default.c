@@ -12,50 +12,44 @@ const Theme U_theme_default = {
 	.tui = {
 		/** The colors that will be used for separator buttons. */
 		.wcol_sepr = {
-			.outline = RGBA(0x00000000),
-			.inner = RGBA(0x00000000),
-			.inner_sel = RGBA(0x00000000),
 			.text = RGBA(0x777777aa),
-			.text_sel = RGBA(0x00000000),
-			.roundness = 0.15f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for regural buttons. */
 		.wcol_but = {
 			.outline = RGBA(0x222222ff),
 			.inner = RGBA(0x222222ff),
 			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xe0e0e0ff),
-			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0.15f,
+			.text = RGBA(0x80b0faff),
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0xe0e0e055),
-			.text = RGBA(0xe0e0e0ff),
-			.text_sel = RGBA(0x00ffccff),
-			.roundness = 0.15f,
+			.text = RGBA(0xfaa070ee),
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x0a0a0aff),
-			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0xc0c0c0ff),
-			.text_sel = RGBA(0x2222e0ee),
-			.roundness = 0.15f,
+			.inner_sel = RGBA(0x3a3a3a3f),
+			.text = RGBA(0xd0fab0ff),
+			.text_sel = RGBA(0xfceeee3f),
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x1f1f1fff),
-			.inner_sel = RGBA(0x4f4f4fff),
+			.inner_sel = RGBA(0x2f2f2fff),
 			.text = RGBA(0x3f3f3fee),
 			.text_sel = RGBA(0x7f7f7fee),
-			.roundness = 0.15f,
+			.roundness = 0.0f,
 		},
-		.text_cur = RGBA(0xffffffff),
+		.text_cur = RGBA(0xff0000ff),
 	},
 	/** The colors that will be used for the PopUp space. */
 	.space_empty = {

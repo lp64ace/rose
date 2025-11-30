@@ -337,6 +337,33 @@ void *LIB_memory_pool_findelem(MemPool *pool, size_t index) {
 	return NULL;
 }
 
+void *LIB_memory_pool_findelem_ex(MemPool *pool, size_t ichunk, size_t ielem) {
+	PoolChunk *chunk = memory_pool_chunk_find(pool->chunks_head, ichunk);
+
+	FreeNode *ret = NULL;
+
+	size_t index = 0;
+	do {
+		FreeNode *curnode = POINTER_OFFSET(CHUNK_DATA(chunk), (pool->esize * index));
+
+		do {
+			ret = curnode;
+
+			if (++index != pool->clength) {
+				curnode = POINTER_OFFSET(curnode, pool->esize);
+			}
+			else {
+				/**
+				 * We are searching for an element that does not exist within this memory pool chunk!
+				 */
+				ROSE_assert_unreachable();
+			}
+		} while (ret->freeword == FREEWORD);
+	} while (ielem--);
+
+	return ret;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

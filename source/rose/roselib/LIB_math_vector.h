@@ -223,9 +223,9 @@ ROSE_INLINE bool is_zero_v2(const float v[2]);
 ROSE_INLINE bool is_zero_v3(const float v[3]);
 ROSE_INLINE bool is_zero_v4(const float v[4]);
 
-ROSE_INLINE bool equals_v2_v2(const float v1[2], const float v2[2]);
-ROSE_INLINE bool equals_v3_v3(const float v1[3], const float v2[3]);
-ROSE_INLINE bool equals_v4_v4(const float v1[4], const float v2[4]);
+ROSE_INLINE bool equals_v2_v2_int(const int v1[2], const int v2[2]);
+ROSE_INLINE bool equals_v3_v3_int(const int v1[3], const int v2[3]);
+ROSE_INLINE bool equals_v4_v4_int(const int v1[4], const int v2[4]);
 
 // int
 

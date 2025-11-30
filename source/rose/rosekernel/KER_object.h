@@ -3,6 +3,8 @@
 
 #include "DNA_object_types.h"
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,6 +40,36 @@ void KER_object_to_mat4(struct Object *object, float r_mat[4][4]);
 
 void KER_object_matrix_parent_get(struct Object *object, struct Object *parent, float r_mat[4][4]);
 void KER_object_matrix_local_get(struct Object *object, float r_mat[4][4]);
+
+const float (*KER_object_object_to_world(const struct Object *object))[4];
+const float (*KER_object_world_to_object(const struct Object *object))[4];
+
+void KER_object_apply_mat4_ex(struct Object *object, const float mat[4][4], Object *parent, const float parentinv[4][4], bool use_compat);
+void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool use_compat, bool use_parent);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Evaluation
+ * \{ */
+
+void KER_object_build_rig(struct Object *object);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Modifiers
+ * \{ */
+
+void KER_object_free_modifiers(struct Object *object, const int flag);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Cache
+ * \{ */
+
+void KER_object_batch_cache_dirty_tag(struct Object *object);
 
 /** \} */
 

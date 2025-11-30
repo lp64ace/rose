@@ -1,0 +1,26 @@
+#ifndef GTK_BACKEND_TYPE_H
+#define GTK_BACKEND_TYPE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+enum {
+	GTK_WINDOW_MANAGER_NONE = 0,
+	GTK_WINDOW_MANAGER_WIN32,
+	GTK_WINDOW_MANAGER_X11,
+	GTK_WINDOW_MANAGER_WAYLAND,
+};
+
+enum {
+	GTK_WINDOW_RENDER_NONE = 0,
+	GTK_WINDOW_RENDER_DIRECTX,
+	GTK_WINDOW_RENDER_OPENGL,
+	GTK_WINDOW_RENDER_VULKAN,
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // GTK_BACKEND_TYPE_H

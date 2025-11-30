@@ -96,6 +96,7 @@ void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int
 			}
 		}
 	}
+
 	if (area) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			if (ED_region_contains_xy(region, xy)) {
@@ -103,6 +104,7 @@ void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int
 				break;
 			}
 		}
+		ED_area_tag_redraw(area);
 	}
 	else {
 		screen->active_region = NULL;
@@ -116,8 +118,11 @@ void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int
 			}
 
 			LISTBASE_FOREACH(ARegion *, region, &area_iter->regionbase) {
-				if (region == region_prev && area_iter->type && area_iter->type->deactivate) {
-					area_iter->type->deactivate(area_iter);
+				if (region == region_prev) {
+					ED_area_tag_redraw(area_iter);
+					if (area_iter->type && area_iter->type->deactivate) {
+						area_iter->type->deactivate(area_iter);
+					}
 				}
 			}
 		}

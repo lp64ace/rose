@@ -30,6 +30,7 @@ enum {
 	OBJ_TYPEDEF,
 	OBJ_FUNCTION,
 	OBJ_ENUM,
+	OBJ_LABEL,
 };
 
 /** \} */
