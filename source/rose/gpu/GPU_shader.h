@@ -186,6 +186,7 @@ typedef enum UniformBuiltin {
 int GPU_shader_get_builtin_uniform(GPUShader *shader, int builtin);
 
 typedef enum UniformBlockBuiltin {
+	GPU_UNIFORM_BLOCK_VIEW,
 	GPU_UNIFORM_BLOCK_MODEL,
 } UniformBlockBuiltin;
 

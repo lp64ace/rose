@@ -30,6 +30,7 @@ void GPU_uniformbuf_free(GPUUniformBuf *ubo);
  * \{ */
 
 void GPU_uniformbuf_update(GPUUniformBuf *ubo, const void *data);
+void GPU_uniformbuf_update_ex(GPUUniformBuf *ubo, const void *data, size_t size);
 
 void GPU_uniformbuf_clear_to_zero(GPUUniformBuf *ubo);
 

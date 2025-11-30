@@ -26,6 +26,7 @@ public:
 	void bind(int slot) override;
 	void bind_as_ssbo(int slot) override;
 	void unbind() override;
+	void resize(size_t size) override;
 
 private:
 	void init();

@@ -181,6 +181,8 @@ inline const char *ShaderInterface::builtin_uniform_block_name(UniformBlockBuilt
 	switch (u) {
 		case GPU_UNIFORM_BLOCK_MODEL:
 			return "modelBlock";
+		case GPU_UNIFORM_BLOCK_VIEW:
+			return "viewBlock";
 		default:
 			return nullptr;
 	}

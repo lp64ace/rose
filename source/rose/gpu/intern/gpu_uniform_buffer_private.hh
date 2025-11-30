@@ -30,6 +30,7 @@ public:
 	UniformBuf(size_t size, const char *name);
 	virtual ~UniformBuf();
 
+	virtual void resize(size_t size) = 0;
 	virtual void update(const void *data) = 0;
 	virtual void clear_to_zero() = 0;
 	virtual void bind(int slot) = 0;

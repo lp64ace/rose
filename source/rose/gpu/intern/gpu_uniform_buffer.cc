@@ -58,6 +58,12 @@ void GPU_uniformbuf_update(GPUUniformBuf *ubo, const void *data) {
 	unwrap(ubo)->update(data);
 }
 
+void GPU_uniformbuf_update_ex(GPUUniformBuf *vubo, const void *data, size_t size) {
+	UniformBuf *ubo = unwrap(vubo);
+	ubo->resize(size);
+	ubo->update(data);
+}
+
 void GPU_uniformbuf_bind(GPUUniformBuf *ubo, int slot) {
 	unwrap(ubo)->bind(slot);
 }

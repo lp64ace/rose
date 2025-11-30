@@ -119,6 +119,10 @@ void GLUniformBuf::unbind() {
 	slot_ = 0;
 }
 
+void GLUniformBuf::resize(size_t size) {
+	size_in_bytes_ = size;
+}
+
 /** \} */
 
 }  // namespace rose::gpu
