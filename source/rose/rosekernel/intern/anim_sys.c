@@ -135,8 +135,6 @@ void KER_animsys_evaluate_animdata(ID *id, AnimData *adt, float ctime, int recal
 void KER_animsys_eval_animdata(Scene *scene, ID *id) {
 	AnimData *adt = KER_animdata_from_id(id);
 
-	printf("%.1f\n", KER_scene_frame(scene));
-
 	KER_animsys_evaluate_animdata(id, adt, KER_scene_frame(scene), ADT_RECALC_ANIM);
 }
 
