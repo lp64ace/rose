@@ -549,7 +549,7 @@ bool RNA_property_collection_lookup_string_ex(PointerRNA *ptr, PropertyRNA *prop
 
 			char inlinebuf[256];
 
-			const char *namebuf = RNA_property_string_get_alloc(&iter.ptr, name, inlinebuf, sizeof(inlinebuf), &vallength);
+			char *namebuf = RNA_property_string_get_alloc(&iter.ptr, name, inlinebuf, sizeof(inlinebuf), &vallength);
 
 			bool found = false;
 			if ((keylength == vallength) && STREQ(namebuf, key)) {
@@ -1022,7 +1022,7 @@ PointerRNA property_pointer_get(PointerRNA *ptr, PropertyRNA *prop) {
 	if ((idprop = rna_idproperty_check(&prop, ptr))) {
 		pprop = (PointerPropertyRNA *)prop;
 
-		if (RNA_struct_is_ID(pprop->type)) {
+		if (RNA_struct_is_ID(pprop->srna)) {
 			/* ID PointerRNA should not have ancestors currently. */
 			return RNA_id_pointer_create(idprop->type == IDP_GROUP ? NULL : IDP_Id(idprop));
 		}
@@ -1032,7 +1032,7 @@ PointerRNA property_pointer_get(PointerRNA *ptr, PropertyRNA *prop) {
 			return RNA_pointer_create_with_parent(ptr, pprop->type(ptr), idprop);
 		}
 
-		return RNA_pointer_create_with_parent(ptr, pprop->type, idprop);
+		return RNA_pointer_create_with_parent(ptr, pprop->srna, idprop);
 	}
 
 	if (pprop->get) {
