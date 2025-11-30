@@ -209,7 +209,7 @@ IDTypeInfo IDType_ID_LINK_PLACEHOLDER = {
 	.name = "LinkPlaceholder",
 	.name_plural = "Link Placeholders",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = NULL,
