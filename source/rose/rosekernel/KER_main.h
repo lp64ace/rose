@@ -40,6 +40,7 @@ typedef struct Main {
 	struct ListBase libraries;
 	struct ListBase actions;
 	struct ListBase armatures;
+	struct ListBase cameras;
 	struct ListBase meshes;
 	struct ListBase objects;
 	struct ListBase collections;

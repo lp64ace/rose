@@ -64,6 +64,12 @@ struct ActionChannelBag *KER_action_strip_keyframe_data_ensure_channelbag_for_sl
 void KER_action_keystrip_ensure(struct Action *action);
 bool KER_action_assign(struct Action *action, struct ID *id);
 
+/**
+ * This is a valid layered Action if there is ANY layered info (because that
+ * takes precedence) or when there is no legacy info.
+ */
+bool KER_action_is_layered(const struct Action *action);
+
 bool KER_action_has_slot(const struct Action *action, const struct ActionSlot *slot);
 
 struct ActionSlot *KER_action_slot_find_by_identifier(struct Action *action, const char *identifier);
@@ -158,6 +164,9 @@ void KER_pose_free(struct Pose *pose);
 /* -------------------------------------------------------------------- */
 /** \name Action Channel Bag
  * \{ */
+
+struct ActionChannelBag *KER_action_channelbag_for_action_slot(struct Action *action, struct ActionSlot *slot);
+struct ActionChannelBag *KER_action_channelbag_for_action_slot_ex(struct Action *action, int slot);
 
 void KER_action_channelbag_fcurve_create_many(struct Main *main, struct ActionChannelBag *channelbag, const struct FCurveDescriptor *descriptors, int length, struct FCurve **newcurves);
 

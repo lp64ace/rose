@@ -363,7 +363,14 @@ bool KER_action_slot_assign(ActionSlot *slot, ID *id) {
 	return generic_assign_action_slot(slot, id, &adt->action, &adt->handle);
 }
 
-bool KER_action_has_slot(const struct Action *action, const struct ActionSlot *slot) {
+bool KER_action_is_layered(const Action *action) {
+	if (action->totlayer > 0 || action->totslot > 0) {
+		return true;
+	}
+	return false;
+}
+
+bool KER_action_has_slot(const Action *action, const ActionSlot *slot) {
 	for (size_t index = 0; index < (size_t)action->totslot; index++) {
 		if (action->slots[index] == slot) {
 			return true;
@@ -779,6 +786,57 @@ ROSE_STATIC void restore_channelbag_group_invariants(ActionChannelBag *channelba
 			}
 		}
 	}
+}
+
+ActionChannelBag *KER_action_channelbag_for_action_slot(Action *action, ActionSlot *slot) {
+	if (slot == 0) {
+		return NULL;
+	}
+
+	for (ActionLayer **player = action->layers; player != action->layers + action->totlayer; player++) {
+		ActionLayer *layer = *player;
+
+		for (ActionStrip **pstrip = layer->strips; pstrip != layer->strips + layer->totstrip; pstrip++) {
+			ActionStrip *strip = *pstrip;
+			if (strip->strip_type != ACTION_STRIP_KEYFRAME) {
+				continue;
+			}
+			ActionStripKeyframeData *strip_data = KER_action_strip_data(action, strip);
+			ActionChannelBag *bag = KER_action_strip_keyframe_data_channelbag_for_slot(strip_data, slot);
+
+			if (bag) {
+				return bag;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+ActionChannelBag *KER_action_channelbag_for_action_slot_ex(Action *action, int slot) {
+	if (slot == 0) {
+		return NULL;
+	}
+
+	for (ActionLayer **player = action->layers; player != action->layers + action->totlayer; player++) {
+		ActionLayer *layer = *player;
+
+		for (ActionStrip **pstrip = layer->strips; pstrip != layer->strips + layer->totstrip; pstrip++) {
+			ActionStrip *strip = *pstrip;
+
+			if (strip->strip_type != ACTION_STRIP_KEYFRAME) {
+				continue;
+			}
+			ActionStripKeyframeData *strip_data = KER_action_strip_data(action, strip);
+			ActionChannelBag *bag = KER_action_strip_keyframe_data_channelbag_for_slot_ex(strip_data, slot);
+
+			if (bag) {
+				return bag;
+			}
+		}
+	}
+
+	return NULL;
 }
 
 void KER_action_channelbag_fcurve_create_many(Main *main, ActionChannelBag *channelbag, const FCurveDescriptor *descriptors, int length, FCurve **newcurves) {

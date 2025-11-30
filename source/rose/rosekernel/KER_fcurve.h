@@ -43,6 +43,14 @@ void KER_fcurve_free(struct FCurve *fcurve);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name F-Curve Evaluate
+ * \{ */
+
+float KER_fcurve_evaluate(struct PathResolvedRNA *rna, struct FCurve *fcurve, float ctime);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name F-Curve Edit
  * \{ */
 

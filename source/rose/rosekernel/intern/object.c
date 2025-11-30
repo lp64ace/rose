@@ -4,6 +4,7 @@
 
 #include "KER_action.h"
 #include "KER_armature.h"
+#include "KER_camera.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
@@ -79,6 +80,7 @@ ROSE_STATIC int KER_object_obdata_to_type(const ID *id) {
 #define CASE_IDTYPE(type, obtype) case type: return obtype
 
 	switch (GS(id->name)) {
+		CASE_IDTYPE(ID_CA, OB_CAMERA);
 		CASE_IDTYPE(ID_ME, OB_MESH);
 		CASE_IDTYPE(ID_AR, OB_ARMATURE);
 	}
@@ -94,6 +96,7 @@ ROSE_STATIC const char *get_obdata_defname(int type) {
 
 	switch (type) {
 		CASE_OBTYPE(OB_ARMATURE, "Armature");
+		CASE_OBTYPE(OB_CAMERA, "Camera");
 		CASE_OBTYPE(OB_MESH, "Mesh");
 		CASE_OBTYPE(OB_EMPTY, "Empty");
 	}
@@ -137,6 +140,7 @@ void *KER_object_obdata_add_from_type(Main *main, int type, const char *name) {
 #define CASE_OBTYPE(type, fn) case type: return fn
 	
 	switch(type) {
+		CASE_OBTYPE(OB_CAMERA, KER_camera_add(main, name));
 		CASE_OBTYPE(OB_MESH, KER_mesh_add(main, name));
 		CASE_OBTYPE(OB_ARMATURE, KER_armature_add(main, name));
 		CASE_OBTYPE(OB_EMPTY, NULL);

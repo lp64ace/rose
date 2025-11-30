@@ -1,5 +1,8 @@
 #include "MEM_guardedalloc.h"
 
+#include "RNA_access.h"
+
+#include "LIB_easing.h"
 #include "LIB_math_base.h"
 #include "LIB_math_solvers.h"
 #include "LIB_math_vector.h"
@@ -7,6 +10,8 @@
 #include "LIB_utildefines.h"
 
 #include "KER_fcurve.h"
+
+#define SMALL -1.0e-10
 
 /* -------------------------------------------------------------------- */
 /** \name F-Curve
@@ -43,6 +48,480 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_SAFE_FREE(fcurve->path);
 
 	MEM_freeN(fcurve);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Finding Keyframes/Extents
+ * \{ */
+
+ROSE_INLINE int KER_fcurve_bezt_binarysearch_index_ex(const BezTriple *array, const float frame, const int length, const float threshold, bool *r_replace) {
+	int start = 0, end = length;
+	int loopbreaker = 0, maxloop = length * 2;
+
+	/* Initialize replace-flag first. */
+	*r_replace = false;
+
+	/* Sneaky optimizations (don't go through searching process if...):
+	 * - Keyframe to be added is to be added out of current bounds.
+	 * - Keyframe to be added would replace one of the existing ones on bounds.
+	 */
+	if (length <= 0 || array == NULL) {
+		return 0;
+	}
+
+	/* Check whether to add before/after/on. */
+	/* 'First' Keyframe (when only one keyframe, this case is used) */
+	float framenum = array[0].vec[1][0];
+	if (IS_EQT(frame, framenum, threshold)) {
+		*r_replace = true;
+		return 0;
+	}
+	if (frame < framenum) {
+		return 0;
+	}
+
+	/**
+	 * Most of the time, this loop is just to find where to put it
+	 * 'loopbreaker' is just here to prevent infinite loops.
+	 */
+	for (loopbreaker = 0; (start <= end) && (loopbreaker < maxloop); loopbreaker++) {
+		const int mid = start + ((end - start) / 2);
+
+		const float midfra = array[mid].vec[1][0];
+
+		/* Check if exactly equal to midpoint. */
+		if (IS_EQT(frame, midfra, threshold)) {
+			*r_replace = true;
+			return mid;
+		}
+
+		/* Repeat in upper/lower half. */
+		if (frame > midfra) {
+			start = mid + 1;
+		}
+		else if (frame < midfra) {
+			end = mid - 1;
+		}
+	}
+
+	/* Not found, so return where to place it. */
+	return start;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name F-Curve Calculations
+ * \{ */
+
+void KER_fcurve_correct_bezpart(const float v1[2], float v2[2], float v3[2], const float v4[2]) {
+	float h1[2], h2[2], len1, len2, len, fac;
+
+	/* Calculate handle deltas. */
+	h1[0] = v1[0] - v2[0];
+	h1[1] = v1[1] - v2[1];
+
+	h2[0] = v4[0] - v3[0];
+	h2[1] = v4[1] - v3[1];
+
+	/* Calculate distances:
+	 * - len  = Span of time between keyframes.
+	 * - len1 = Length of handle of start key.
+	 * - len2 = Length of handle of end key.
+	 */
+	len = v4[0] - v1[0];
+	len1 = fabsf(h1[0]);
+	len2 = fabsf(h2[0]);
+
+	/* If the handles have no length, no need to do any corrections. */
+	if ((len1 + len2) == 0.0f) {
+		return;
+	}
+
+	/* To prevent looping or rewinding, handles cannot
+	 * exceed the adjacent key-frames time position. */
+	if (len1 > len) {
+		fac = len / len1;
+		v2[0] = (v1[0] - fac * h1[0]);
+		v2[1] = (v1[1] - fac * h1[1]);
+	}
+
+	if (len2 > len) {
+		fac = len / len2;
+		v3[0] = (v4[0] - fac * h2[0]);
+		v3[1] = (v4[1] - fac * h2[1]);
+	}
+}
+
+/**
+ * Find roots of cubic equation (c0 + c1 x + c2 x^2 + c3 x^3)
+ * \return number of roots in `o`.
+ *
+ * \note it is up to the caller to allocate enough memory for `o`.
+ */
+static int solve_cubic(double c0, double c1, double c2, double c3, float *o) {
+	double a, b, c, p, q, d, t, phi;
+	int nr = 0;
+
+	if (c3 != 0.0) {
+		a = c2 / c3;
+		b = c1 / c3;
+		c = c0 / c3;
+		a = a / 3;
+
+		p = b / 3 - a * a;
+		q = (2 * a * a * a - a * b + c) / 2;
+		d = q * q + p * p * p;
+
+		if (d > 0.0) {
+			t = sqrt(d);
+			o[0] = (float)(sqrt3d(-q + t) + sqrt3d(-q - t) - a);
+
+			if ((o[0] >= SMALL) && (o[0] <= 1.000001f)) {
+				return 1;
+			}
+			return 0;
+		}
+
+		if (d == 0.0) {
+			t = sqrt3d(-q);
+			o[0] = (float)(2 * t - a);
+
+			if ((o[0] >= SMALL) && (o[0] <= 1.000001f)) {
+				nr++;
+			}
+			o[nr] = (float)(-t - a);
+
+			if ((o[nr] >= SMALL) && (o[nr] <= 1.000001f)) {
+				return nr + 1;
+			}
+			return nr;
+		}
+
+		phi = acos(-q / sqrt(-(p * p * p)));
+		t = sqrt(-p);
+		p = cos(phi / 3);
+		q = sqrt(3 - 3 * p * p);
+		o[0] = (float)(2 * t * p - a);
+
+		if ((o[0] >= SMALL) && (o[0] <= 1.000001f)) {
+			nr++;
+		}
+		o[nr] = (float)(-t * (p + q) - a);
+
+		if ((o[nr] >= SMALL) && (o[nr] <= 1.000001f)) {
+			nr++;
+		}
+		o[nr] = (float)(-t * (p - q) - a);
+
+		if ((o[nr] >= SMALL) && (o[nr] <= 1.000001f)) {
+			return nr + 1;
+		}
+		return nr;
+	}
+	a = c2;
+	b = c1;
+	c = c0;
+
+	if (a != 0.0) {
+		/* Discriminant */
+		p = b * b - 4 * a * c;
+
+		if (p > 0) {
+			p = sqrt(p);
+			o[0] = (float)((-b - p) / (2 * a));
+
+			if ((o[0] >= SMALL) && (o[0] <= 1.000001f)) {
+				nr++;
+			}
+			o[nr] = (float)((-b + p) / (2 * a));
+
+			if ((o[nr] >= SMALL) && (o[nr] <= 1.000001f)) {
+				return nr + 1;
+			}
+			return nr;
+		}
+
+		if (p == 0) {
+			o[0] = (float)(-b / (2 * a));
+			if ((o[0] >= SMALL) && (o[0] <= 1.000001f)) {
+				return 1;
+			}
+		}
+
+		return 0;
+	}
+
+	if (b != 0.0) {
+		o[0] = (float)(-c / b);
+
+		if ((o[0] >= SMALL) && (o[0] <= 1.000001f)) {
+			return 1;
+		}
+		return 0;
+	}
+
+	if (c == 0.0) {
+		o[0] = 0.0;
+		return 1;
+	}
+
+	return 0;
+}
+
+/* Find root(s) ('zero') of a Bezier curve. */
+ROSE_INLINE int findzero(float x, float q0, float q1, float q2, float q3, float *o) {
+	const double c0 = q0 - x;
+	const double c1 = 3.0f * (q1 - q0);
+	const double c2 = 3.0f * (q0 - 2.0f * q1 + q2);
+	const double c3 = q3 - q0 + 3.0f * (q1 - q2);
+
+	return solve_cubic(c0, c1, c2, c3, o);
+}
+
+ROSE_INLINE void berekeny(float f1, float f2, float f3, float f4, float *o, int b) {
+	float t, c0, c1, c2, c3;
+	int a;
+
+	c0 = f1;
+	c1 = 3.0f * (f2 - f1);
+	c2 = 3.0f * (f1 - 2.0f * f2 + f3);
+	c3 = f4 - f1 + 3.0f * (f2 - f3);
+
+	for (a = 0; a < b; a++) {
+		t = o[a];
+		o[a] = c0 + t * c1 + t * t * c2 + t * t * t * c3;
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name F-Curve Evaluate
+ * \{ */
+
+ROSE_INLINE float fcurve_eval_keyframes_extrapolate(const FCurve *fcu, const BezTriple *bezts, float evaltime, int endpoint_offset, int direction_to_neighbor) {
+	/* The first/last keyframe. */
+	const BezTriple *endpoint_bezt = bezts + endpoint_offset;
+	/* The second (to last) keyframe. */
+	const BezTriple *neighbor_bezt = endpoint_bezt + direction_to_neighbor;
+
+	if (endpoint_bezt->ipo == BEZT_IPO_CONST) {
+		/* Constant (BEZT_IPO_HORIZ) extrapolation or constant interpolation, so just extend the
+		 * endpoint's value. */
+		return endpoint_bezt->vec[1][1];
+	}
+
+	if (endpoint_bezt->ipo == BEZT_IPO_LINEAR) {
+		/* Use the next center point instead of our own handle for linear interpolated extrapolate. */
+		if (fcu->totvert == 1) {
+			return endpoint_bezt->vec[1][1];
+		}
+
+		const float dx = endpoint_bezt->vec[1][0] - evaltime;
+		float fac = neighbor_bezt->vec[1][0] - endpoint_bezt->vec[1][0];
+
+		/* Prevent division by zero. */
+		if (fac == 0.0f) {
+			return endpoint_bezt->vec[1][1];
+		}
+
+		fac = (neighbor_bezt->vec[1][1] - endpoint_bezt->vec[1][1]) / fac;
+		return endpoint_bezt->vec[1][1] - (fac * dx);
+	}
+
+	/* Use the gradient of the second handle (later) of neighbor to calculate the gradient and thus
+	 * the value of the curve at evaluation time. */
+	const int handle = direction_to_neighbor > 0 ? 0 : 2;
+	const float dx = endpoint_bezt->vec[1][0] - evaltime;
+	float fac = endpoint_bezt->vec[1][0] - endpoint_bezt->vec[handle][0];
+
+	/* Prevent division by zero. */
+	if (fac == 0.0f) {
+		return endpoint_bezt->vec[1][1];
+	}
+
+	fac = (endpoint_bezt->vec[1][1] - endpoint_bezt->vec[handle][1]) / fac;
+	return endpoint_bezt->vec[1][1] - (fac * dx);
+}
+
+static float fcurve_eval_keyframes_interpolate(const FCurve *fcu, const BezTriple *bezts, float evaltime) {
+	const float eps = 1.e-8f;
+	uint a;
+
+	/* Evaluation-time occurs somewhere in the middle of the curve. */
+	bool exact = false;
+
+	/* Use binary search to find appropriate keyframes...
+	 *
+	 * The threshold here has the following constraints:
+	 * - 0.001 is too coarse:
+	 *   We get artifacts with 2cm driver movements at 1BU = 1m.
+	 *
+	 * - 0.00001 is too fine:
+	 *   Weird errors, like selecting the wrong keyframe range, occur.
+	 */
+	a = KER_fcurve_bezt_binarysearch_index_ex(bezts, evaltime, fcu->totvert, 0.0001, &exact);
+	const BezTriple *bezt = bezts + a;
+
+	if (exact) {
+		/* Index returned must be interpreted differently when it sits on top of an existing keyframe
+		 * - That keyframe is the start of the segment we need (see action_bug_2.blend in #39207).
+		 */
+		return bezt->vec[1][1];
+	}
+
+	/* Index returned refers to the keyframe that the eval-time occurs *before*
+	 * - hence, that keyframe marks the start of the segment we're dealing with.
+	 */
+	const BezTriple *prevbezt = (a > 0) ? (bezt - 1) : bezt;
+
+	/* Use if the key is directly on the frame, in rare cases this is needed else we get 0.0 instead.
+	 * XXX: consult #39207 for examples of files where failure of these checks can cause issues. */
+	if (fabsf(bezt->vec[1][0] - evaltime) < eps) {
+		return bezt->vec[1][1];
+	}
+
+	if (evaltime < prevbezt->vec[1][0] || bezt->vec[1][0] < evaltime) {
+		return 0.0f;
+	}
+
+	/* Evaluation-time occurs within the interval defined by these two keyframes. */
+	const float begin = prevbezt->vec[1][1];
+	const float change = bezt->vec[1][1] - prevbezt->vec[1][1];
+	const float duration = bezt->vec[1][0] - prevbezt->vec[1][0];
+	const float time = evaltime - prevbezt->vec[1][0];
+	const float period = prevbezt->period;
+
+	/* Value depends on interpolation mode. */
+	if ((prevbezt->ipo == BEZT_IPO_CONST) || (duration == 0)) {
+		/* Constant (evaltime not relevant, so no interpolation needed). */
+		return prevbezt->vec[1][1];
+	}
+
+	switch (prevbezt->ipo) {
+		/* Interpolation ...................................... */
+		case BEZT_IPO_BEZ: {
+			float v1[2], v2[2], v3[2], v4[2], opl[32];
+
+			/* Bezier interpolation. */
+			/* (v1, v2) are the first keyframe and its 2nd handle. */
+			v1[0] = prevbezt->vec[1][0];
+			v1[1] = prevbezt->vec[1][1];
+			v2[0] = prevbezt->vec[2][0];
+			v2[1] = prevbezt->vec[2][1];
+			/* (v3, v4) are the last keyframe's 1st handle + the last keyframe. */
+			v3[0] = bezt->vec[0][0];
+			v3[1] = bezt->vec[0][1];
+			v4[0] = bezt->vec[1][0];
+			v4[1] = bezt->vec[1][1];
+
+			if (fabsf(v1[1] - v4[1]) < FLT_EPSILON && fabsf(v2[1] - v3[1]) < FLT_EPSILON && fabsf(v3[1] - v4[1]) < FLT_EPSILON) {
+				/* Optimization: If all the handles are flat/at the same values,
+				 * the value is simply the shared value (see #40372 -> F91346).
+				 */
+				return v1[1];
+			}
+			/* Adjust handles so that they don't overlap (forming a loop). */
+			KER_fcurve_correct_bezpart(v1, v2, v3, v4);
+
+			/* Try to get a value for this position - if failure, try another set of points. */
+			if (!findzero(evaltime, v1[0], v2[0], v3[0], v4[0], opl)) {
+				return 0.0;
+			}
+
+			berekeny(v1[1], v2[1], v3[1], v4[1], opl, 1);
+			return opl[0];
+		}
+		case BEZT_IPO_LINEAR:
+			/* Linear - simply linearly interpolate between values of the two keyframes. */
+			return LIB_easing_linear_ease(time, begin, change, duration);
+
+		default:
+			ROSE_assert_unreachable();
+
+			return prevbezt->vec[1][1];
+	}
+
+	return 0.0f;
+}
+
+/* Calculate F-Curve value for 'evaltime' using #BezTriple keyframes. */
+ROSE_INLINE float fcurve_eval_keyframes(const FCurve *fcu, const BezTriple *bezts, float evaltime) {
+	if (evaltime <= bezts->vec[1][0]) {
+		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, 0, +1);
+	}
+
+	const BezTriple *lastbezt = bezts + fcu->totvert - 1;
+	if (lastbezt->vec[1][0] <= evaltime) {
+		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, fcu->totvert - 1, -1);
+	}
+
+	return fcurve_eval_keyframes_interpolate(fcu, bezts, evaltime);
+}
+
+/* Calculate F-Curve value for 'evaltime' using #FPoint samples. */
+ROSE_INLINE float fcurve_eval_samples(const FCurve *fcu, const FPoint *fpts, float evaltime) {
+	float cvalue = 0.0f;
+
+	/* Get pointers. */
+	const FPoint *prevfpt = fpts;
+	const FPoint *lastfpt = prevfpt + fcu->totvert - 1;
+
+	/* Evaluation time at or past endpoints? */
+	if (prevfpt->vec[0] >= evaltime) {
+		/* Before or on first sample, so just extend value. */
+		cvalue = prevfpt->vec[1];
+	}
+	else if (lastfpt->vec[0] <= evaltime) {
+		/* After or on last sample, so just extend value. */
+		cvalue = lastfpt->vec[1];
+	}
+	else {
+		float t = fabsf(evaltime - floorf(evaltime));
+
+		/* Find the one on the right frame (assume that these are spaced on 1-frame intervals). */
+		const FPoint *fpt = prevfpt + ((int)evaltime - (int)prevfpt->vec[0]);
+
+		/* If not exactly on the frame, perform linear interpolation with the next one. */
+		if (t != 0.0f && t < 1.0f) {
+			cvalue = interpf(fpt->vec[1], (fpt + 1)->vec[1], 1.0f - t);
+		}
+		else {
+			cvalue = fpt->vec[1];
+		}
+	}
+
+	return cvalue;
+}
+
+ROSE_INLINE float fcurve_evaluate_ex(FCurve *fcurve, float ctime, float cvalue) {
+	if (fcurve->bezt) {
+		cvalue = fcurve_eval_keyframes(fcurve, fcurve->bezt, ctime);
+	}
+	else if (fcurve->fpt) {
+		cvalue = fcurve_eval_samples(fcurve, fcurve->fpt, ctime);
+	}
+
+	return cvalue;
+}
+
+ROSE_INLINE float fcurve_evaluate(FCurve *fcurve, float ctime) {
+	return fcurve_evaluate_ex(fcurve, ctime, 0.0f);
+}
+
+bool KER_fcurve_is_empty(FCurve *fcurve) {
+	return fcurve->totvert == 0;
+}
+
+float KER_fcurve_evaluate(PathResolvedRNA *rna, FCurve *fcurve, float ctime) {
+	if (KER_fcurve_is_empty(fcurve)) {
+		return 0.0f;
+	}
+
+	return fcurve_evaluate(fcurve, ctime);
 }
 
 /** \} */

@@ -594,7 +594,7 @@ bool KER_collection_object_rem(Main *main, Collection *collection, Object *ob, b
 /** \name Collection Data-block Definition
  * \{ */
 
- IDTypeInfo IDType_ID_GR = {
+IDTypeInfo IDType_ID_GR = {
 	.idcode = ID_GR,
 
 	.filter = FILTER_ID_GR,
