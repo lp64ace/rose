@@ -24,15 +24,23 @@ set(INC_SYS
 # Define Source Files
 
 set(LIB_SRC
-	../RNA_access.h
 	../RNA_define.h
 	../RNA_types.h
 	
-	rna_access.c
 	rna_define.c
+	rna_define_inline.c
 	rna_internal_types.h
 	rna_internal.h
 	
+)
+
+set(RUN_SRC
+	../RNA_access.h
+
+	rna_access.c
+	rna_id_runtime.c
+	rna_pose_runtime.c
+	rna_rna_runtime.c
 )
 
 # -----------------------------------------------------------------------------
@@ -40,6 +48,9 @@ set(LIB_SRC
 
 set(IN_SRC
 	rna_id.c
+	rna_ob.c
+	rna_pose.c
+	rna_rna.c
 
 )
 
@@ -123,7 +134,10 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
+list(APPEND LIB_SRC ${RUN_SRC})
 list(APPEND LIB_SRC ${OUT_SRC})
 
 rose_add_lib(rna "${LIB_SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::rna ALIAS rna)
+
+target_compile_definitions(rna PRIVATE RNA_RUNTIME)

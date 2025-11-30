@@ -32,11 +32,12 @@ struct StructRNA *RNA_def_struct(struct RoseRNA *brna, const char *identifier, c
 void RNA_struct_free(struct RoseRNA *rna, struct StructRNA *srna);
 
 void RNA_def_struct_ui_text(struct StructRNA *srna, const char *name, const char *description);
-
+void RNA_def_struct_sdna(struct StructRNA *srna, const char *structname);
 void RNA_def_struct_flag(struct StructRNA *nstruct, int flag);
 void RNA_def_struct_clear_flag(struct StructRNA *nstruct, int flag);
 
 void RNA_def_struct_name_property(struct StructRNA *srna, struct PropertyRNA *prop);
+void RNA_def_struct_refine_func(struct StructRNA *srna, const char *func);
 
 /** \} */
 
@@ -44,24 +45,36 @@ void RNA_def_struct_name_property(struct StructRNA *srna, struct PropertyRNA *pr
 /** \name Property RNA Definition
  * \{ */
 
+#define RNA_TRANSLATION_PREC_DEFAULT 3
+
 struct PropertyRNA *RNA_def_property(void *container, const char *identifier, int type, int subtype);
 
 void RNA_def_property_ui_text(struct PropertyRNA *prop, const char *name, const char *description);
+void RNA_def_property_ui_range(struct PropertyRNA *prop, double min, double max, double step, int precision);
 
 void RNA_def_property_flag(struct PropertyRNA *prop, ePropertyFlag flag);
 void RNA_def_property_clear_flag(struct PropertyRNA *prop, ePropertyFlag flag);
-
-#define IS_DNATYPE_FLOAT_COMPAT(_str) (strcmp(_str, "float") == 0 || strcmp(_str, "double") == 0)
-#define IS_DNATYPE_INT_COMPAT(_str) (strcmp(_str, "int") == 0 || strcmp(_str, "short") == 0 || strcmp(_str, "char") == 0 || strcmp(_str, "uchar") == 0 || strcmp(_str, "ushort") == 0 || strcmp(_str, "int8_t") == 0)
-#define IS_DNATYPE_BOOLEAN_COMPAT(_str) (IS_DNATYPE_INT_COMPAT(_str) || strcmp(_str, "int64_t") == 0 || strcmp(_str, "uint64_t") == 0)
 
 void RNA_def_property_boolean_sdna(struct PropertyRNA *prop, const char *structname, const char *propname, int64_t booleanbit);
 void RNA_def_property_int_sdna(struct PropertyRNA *prop, const char *structname, const char *propname);
 void RNA_def_property_float_sdna(struct PropertyRNA *prop, const char *structname, const char *propname);
 void RNA_def_property_string_sdna(struct PropertyRNA *prop, const char *structname, const char *propname);
 void RNA_def_property_pointer_sdna(struct PropertyRNA *prop, const char *structname, const char *propname);
+void RNA_def_property_collection_sdna(struct PropertyRNA *prop, const char *structname, const char *propname, const char *lengthpropname);
 
+void RNA_def_property_struct_type(struct PropertyRNA *prop, const char *type);
 void RNA_def_property_array(struct PropertyRNA *prop, int length);
+
+void RNA_def_property_string_funcs(struct PropertyRNA *prop, const char *get, const char *length, const char *set);
+void RNA_def_property_collection_funcs(struct PropertyRNA *prop, const char *begin, const char *next, const char *end, const char *get, const char *length, const char *lookupint, const char *lookupstring);
+
+/* Common arguments for defaults. */
+
+extern const float rna_default_axis_angle[4];
+extern const float rna_default_quaternion[4];
+extern const float rna_default_scale_3d[3];
+
+void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float *defaultarray);
 
 /** \} */
 
@@ -83,8 +96,50 @@ const char *RNA_property_subtypename(enum ePropertySubType type);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name RNA Exposed Functions
+ * \{ */
+
+void rna_Struct_properties_begin(struct CollectionPropertyIterator *iter, struct PointerRNA *ptr);
+void rna_Struct_properties_next(struct CollectionPropertyIterator *iter);
+
+struct PointerRNA rna_Struct_properties_get(struct CollectionPropertyIterator *iter);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name RNA Exposed Functions
+ * \{ */
+
+void rna_Property_name_get(struct PointerRNA *ptr, char *value);
+int rna_Property_name_length(struct PointerRNA *ptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name ID Exposed Functions
+ * \{ */
+
+struct StructRNA *rna_ID_refine(struct PointerRNA *ptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Pose Exposed Functions
+ * \{ */
+
+bool rna_PoseBones_lookup_string(struct PointerRNA *ptr, const char *key, struct PointerRNA *r_ptr);
+
+/** \} */
+
+ROSE_INLINE bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type);
+ROSE_INLINE bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type);
+ROSE_INLINE bool IS_DNATYPE_BOOLEAN_COMPAT(const struct DNAType *type);
+
 #ifdef __cplusplus
 }
 #endif
+
+#include "intern/rna_define_inline.c"
 
 #endif	// RNA_DEFINE_H

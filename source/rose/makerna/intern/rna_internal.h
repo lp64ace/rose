@@ -16,14 +16,14 @@ extern "C" {
 typedef struct ContainerDefRNA {
 	void *prev, *next;
 
-	ContainerRNA *ptr;
-	ListBase properties;
+	struct ContainerRNA *ptr;
+	struct ListBase properties;
 } ContainerDefRNA;
 
 typedef struct StructDefRNA {
-	ContainerDefRNA container;
+	struct ContainerDefRNA container;
 
-	StructRNA *ptr;
+	struct StructRNA *ptr;
 
 	const char *filename;
 	const char *dnaname;
@@ -41,8 +41,8 @@ typedef struct StructDefRNA {
 typedef struct PropertyDefRNA {
 	struct PropertyDefRNA *prev, *next;
 
-	ContainerRNA *container;
-	PropertyRNA *ptr;
+	struct ContainerRNA *container;
+	struct PropertyRNA *ptr;
 
 	/* struct */
 	const char *dnastructname;
@@ -73,16 +73,29 @@ typedef struct PropertyDefRNA {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Alloc RNA Definition Structures
+ * \{ */
+
+typedef struct AllocDefRNA {
+	struct AllocDefRNA *prev, *next;
+	void *mem;
+} AllocDefRNA;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Rose RNA Definition Structures
  * \{ */
 
 typedef struct RoseDefRNA {
 	struct SDNA *sdna;
 
-	ListBase structs;
-	StructRNA *nstruct;
+	struct ListBase structs;
+	struct ListBase allocs;
+	struct StructRNA *nstruct;
 
 	struct {
+		unsigned int silent : 1;
 		unsigned int error : 1;
 		unsigned int preprocess : 1;
 		unsigned int animate : 1;
@@ -91,13 +104,52 @@ typedef struct RoseDefRNA {
 
 /** \} */
 
-void RNA_def_ID(RoseRNA *rna);
+void RNA_def_rna(struct RoseRNA *rna);
+void RNA_def_ID(struct RoseRNA *rna);
+void RNA_def_Object(struct RoseRNA *rna);
+void RNA_def_Pose(struct RoseRNA *rna);
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Definition Functions
  * \{ */
 
 struct PropertyDefRNA *rna_find_struct_property_def(struct StructRNA *nstruct, struct PropertyRNA *proprety);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Iteraton
+ * \{ */
+
+void rna_iterator_listbase_begin(struct CollectionPropertyIterator *iter, struct PointerRNA *ptr, struct ListBase *lb, IteratorSkipFunc skip);
+void rna_iterator_listbase_next(struct CollectionPropertyIterator *iter);
+void rna_iterator_listbase_end(struct CollectionPropertyIterator *iter);
+
+void *rna_iterator_listbase_get(struct CollectionPropertyIterator *iter);
+
+void rna_builtin_properties_begin(struct CollectionPropertyIterator *iter, struct PointerRNA *ptr);
+void rna_builtin_properties_next(struct CollectionPropertyIterator *iter);
+void rna_builtin_properties_end(struct CollectionPropertyIterator *iter);
+
+PointerRNA rna_builtin_properties_get(struct CollectionPropertyIterator *iter);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Pointer Handling
+ * \{ */
+
+/**
+ * Internal implementation for #RNA_pointer_create_with_parent.
+ *
+ * Only exposed to RNA code because custom collection lookup functions get an existing PointerRNA
+ * data to modify, instead of returning a new one.
+ */
+void rna_pointer_create_with_ancestors(const struct PointerRNA *parent, struct StructRNA *type, void *data, struct PointerRNA *r_ptr);
+
+struct PointerRNA RNA_pointer_create_discrete(struct ID *id, struct StructRNA *type, void *data);
+struct PointerRNA RNA_pointer_create_with_parent(const struct PointerRNA *parent, struct StructRNA *type, void *data);
+struct PointerRNA RNA_property_pointer_get(struct PointerRNA *ptr, struct  PropertyRNA *property);
 
 /** \} */
 

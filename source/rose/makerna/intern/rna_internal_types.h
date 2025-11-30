@@ -55,6 +55,51 @@ typedef struct PropertyRNA {
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Property or IDProperty RNA Data Structures
+ * \{ */
+
+typedef struct PropertyRNAorID {
+	struct PointerRNA *ptr;
+	struct PropertyRNA *rawprop;
+	struct PropertyRNA *rnaprop;
+	struct IDProperty *idprop;
+
+	const char *identifier;
+
+	/**
+	 * Whether this property is a 'pure' IDProperty or not.
+	 *
+	 * \note Mutually exclusive with #is_rna_storage_idprop.
+	 */
+	unsigned int is_idprop : 1;
+	/**
+	 * Whether this property is defined as a RNA one, but uses an #IDProperty to store its value
+	 * (aka Python-defined runtime RNA properties).
+	 *
+	 * \note In that case, the IDProperty itself may very well not exist (yet), when it has never
+	 * been set.
+	 *
+	 * \note Mutually exclusive with #is_idprop.
+	 */
+	unsigned int is_rna_storage_idprop : 1;
+	/**
+	 * For runtime RNA properties (i.e. when #is_rna_storage_idprop is true), whether it is set,
+	 * defined, or not.
+	 *
+	 * \warning This DOES take into account the `IDP_FLAG_GHOST` flag, i.e. it matches result of
+	 * `RNA_property_is_set`.
+	 */
+	unsigned int is_set : 1;
+	/**
+	 * Whether this property is an array property or not.
+	 */
+	unsigned int is_array : 1;
+	unsigned int length;
+} PropertyRNAorID;
+
+/** \} */
+
 struct PointerRNA;
 
 /* -------------------------------------------------------------------- */
@@ -155,7 +200,7 @@ typedef struct FloatPropertyRNA {
 	PropertyRNA property;
 
 	PropFloatGetFunc get;
-	PropFloatGetFunc set;
+	PropFloatSetFunc set;
 	PropFloatArrayGetFunc getarray;
 	PropFloatArraySetFunc setarray;
 	PropFloatRangeFunc range;
@@ -232,6 +277,40 @@ typedef struct PointerPropertyRNA {
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Collection Property RNA Data Structures
+ * \{ */
+
+typedef void (*PropCollectionBeginFunc)(struct CollectionPropertyIterator *itr, struct PointerRNA *ptr);
+typedef void (*PropCollectionNextFunc)(struct CollectionPropertyIterator *itr);
+typedef void (*PropCollectionEndFunc)(struct CollectionPropertyIterator *itr);
+
+typedef struct PointerRNA (*PropCollectionGetFunc)(struct CollectionPropertyIterator *itr);
+
+/**
+ * Returns the length of the collection defined by the specified pointer.
+ */
+typedef int (*PropCollectionLengthFunc)(struct PointerRNA *ptr);
+
+typedef bool (*PropCollectionLookupIntFunc)(struct PointerRNA *ptr, int key, struct PointerRNA *r_ptr);
+typedef bool (*PropCollectionLookupStringFunc)(struct PointerRNA *ptr, const char *key, struct PointerRNA *r_ptr);
+
+typedef struct CollectionPropertyRNA {
+	PropertyRNA property;
+
+	PropCollectionBeginFunc begin;
+	PropCollectionNextFunc next;
+	PropCollectionEndFunc end; /* optional */
+	PropCollectionGetFunc get;
+	PropCollectionLengthFunc length;			 /* optional */
+	PropCollectionLookupIntFunc lookupint;		 /* optional */
+	PropCollectionLookupStringFunc lookupstring; /* optional */
+
+	struct StructRNA *element;
+} CollectionPropertyRNA;
+
+/** \} */
+
 typedef struct ContainerRNA {
 	void *prev, *next;
 
@@ -241,6 +320,9 @@ typedef struct ContainerRNA {
 /* -------------------------------------------------------------------- */
 /** \name Struct RNA Data Structures
  * \{ */
+
+typedef struct StructRNA *(*StructRefineFunc)(struct PointerRNA *ptr);
+typedef char *(*StructPathFunc)(const struct PointerRNA *ptr);
 
 typedef struct StructRNA {
 	ContainerRNA container;
@@ -268,6 +350,12 @@ typedef struct StructRNA {
 	 * and that this struct will never exist without its parent.
 	 */
 	struct StructRNA *nested;
+
+	/** Function to give the more specific type. */
+	StructRefineFunc refine;
+
+	/** Function to find path to this struct in an ID. */
+	StructPathFunc path;
 } StructRNA;
 
 /** \} */

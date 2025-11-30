@@ -1,5 +1,6 @@
 #include "DNA_ID.h"
 
+#include "RNA_access.h"
 #include "RNA_define.h"
 
 #include "rna_internal_types.h"
@@ -9,6 +10,13 @@ ROSE_STATIC void rna_def_id(RoseRNA *rna) {
 	do {
 		StructRNA *id = RNA_def_struct(rna, "ID", NULL);
 		RNA_def_struct_ui_text(id, "ID", "Base type for data-blocks, defining a unique name and garbage collection");
+		/**
+		 * This is needed so that when we create a pointer for an ID, 
+		 * we can get the exact type from it.
+		 * 
+		 * e.g. #ID -> (#Object | #Mesh | ...)
+		 */
+		RNA_def_struct_refine_func(id, "rna_ID_refine");
 		RNA_def_struct_flag(id, STRUCT_ID | STRUCT_ID_REFCOUNT);
 
 		do {

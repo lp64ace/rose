@@ -20,6 +20,50 @@ typedef struct PointerRNA {
 	void *data;
 } PointerRNA;
 
+extern const PointerRNA PointerRNA_NULL;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Public API
+ * \{ */
+
+typedef struct PathResolvedRNA {
+	struct PointerRNA ptr;
+	struct PropertyRNA *property;
+	/**
+	 * In case the #property is an array property this stores the index 
+	 * of the accessed element.
+	 * 
+	 * \note -1 for not array access.
+	 */
+	int index;
+} PathResolvedRNA;
+
+typedef bool (*IteratorSkipFunc)(struct CollectionPropertyIterator *iter, void *data);
+
+typedef struct ListBaseIterator {
+	struct Link *link;
+	int flag;
+	IteratorSkipFunc skip;
+} ListBaseIterator;
+
+typedef struct CollectionPropertyIterator {
+	struct PointerRNA parent;
+	struct PointerRNA builtin_parent;
+	struct PropertyRNA *property;
+
+	union {
+		ListBaseIterator listbase;
+		void *custom;
+	} internal;
+
+	struct PointerRNA ptr;
+	
+	unsigned int level : 7;
+	unsigned int valid : 1;
+} CollectionPropertyIterator;
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -107,7 +151,18 @@ typedef enum ePropertyFlag {
 	 * This is an IDProperty, not a DNA one.
 	 */
 	PROP_IDPROPERTY = (1 << 4),
-
+	/**
+	 * Mark this property as handling ID user count.
+	 *
+	 * This is done automatically by the auto-generated setter function. If an RNA property has a
+	 * custom setter, it's the setter's responsibility to correctly update the user count.
+	 *
+	 * \note In most basic cases, makesrna will automatically set this flag, based on the
+	 * `STRUCT_ID_REFCOUNT` flag of the defined pointer type. This only works if makesrna can find a
+	 * matching DNA property though, 'virtual' RNA properties (using both a getter and setter) will
+	 * never get this flag defined automatically.
+	 */
+	PROP_ID_REFCOUNT = (1 << 5),
 } ePropertyFlag;
 
 ENUM_OPERATORS(ePropertyFlag, PROP_PTR_NO_OWNERSHIP);
@@ -116,6 +171,8 @@ typedef enum ePropertyInternalFlag {
 	PROP_INTERN_RUNTIME = (1 << 0),
 	PROP_INTERN_FREE_POINTERS = (1 << 1),
 	PROP_INTERN_RAW_ACCESS = (1 << 2),
+	PROP_INTERN_PTR_OWNERSHIP_FORCED = (1 << 3),
+	PROP_INTERN_BUILTIN = (1 << 4),
 } ePropertyInternalFlag;
 
 ENUM_OPERATORS(ePropertyInternalFlag, PROP_INTERN_FREE_POINTERS);
