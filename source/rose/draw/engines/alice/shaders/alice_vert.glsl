@@ -22,7 +22,7 @@ void main() {
         no = normalize((1.0 / contrib) * dn);
     }
 
-    gl_Position = ArmatureMatrix * ModelMatrix * float4(co.xzy, 1.0);
+    gl_Position = ProjectionMatrix * ArmatureMatrix * ModelMatrix * float4(co.xzy, 1.0);
 
     normal = normalize(transpose(mat3(ModelMatrixInverse * ArmatureMatrixInverse)) * no.xzy);
 }
