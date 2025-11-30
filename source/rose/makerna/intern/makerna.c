@@ -898,8 +898,8 @@ ROSE_INLINE void rna_def_property_funcs(FILE *fpout, StructRNA *srna, PropertyDe
 					// rna_set_raw_property(defproperty, property);
 				}
 
-				fproperty->getarray = (PropFloatGetFunc)(rna_def_property_get_func(fpout, srna, property, defproperty, (const char *)fproperty->getarray));
-				fproperty->setarray = (PropFloatSetFunc)(rna_def_property_set_func(fpout, srna, property, defproperty, (const char *)fproperty->setarray));
+				fproperty->getarray = (PropFloatArrayGetFunc)(rna_def_property_get_func(fpout, srna, property, defproperty, (const char *)fproperty->getarray));
+				fproperty->setarray = (PropFloatArraySetFunc)(rna_def_property_set_func(fpout, srna, property, defproperty, (const char *)fproperty->setarray));
 			}
 		} break;
 		case PROP_STRING: {
@@ -911,7 +911,7 @@ ROSE_INLINE void rna_def_property_funcs(FILE *fpout, StructRNA *srna, PropertyDe
 			}
 
 			sproperty->get = (PropStringGetFunc)rna_def_property_get_func(fpout, srna, property, defproperty, (const char *)sproperty->get);
-			sproperty->length = (PropStringGetFunc)rna_def_property_length_func(fpout, srna, property, defproperty, (const char *)sproperty->length);
+			sproperty->length = (PropStringLengthFunc)rna_def_property_length_func(fpout, srna, property, defproperty, (const char *)sproperty->length);
 		} break;
 		case PROP_POINTER: {
 			PointerPropertyRNA *pproperty = (PointerPropertyRNA *)property;
