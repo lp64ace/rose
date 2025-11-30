@@ -32,6 +32,9 @@ ROSE_INLINE void set_curve_sample(FCurve *curve, size_t key_index, float time, f
 	BezTriple &bez = curve->bezt[key_index];
 	bez.vec[1][0] = time;
 	bez.vec[1][1] = value;
+
+	// Linear, because it is very important we are "fast as fuck boiiii"
+
 	bez.ipo = BEZT_IPO_LINEAR;
 	bez.f1 = bez.f2 = bez.f3 = BEZT_FLAG_SELECT;
 	bez.h1 = bez.h2 = HD_AUTO_ANIM;
