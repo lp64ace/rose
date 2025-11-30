@@ -97,7 +97,7 @@ char *LIB_strcpy_unescape_ex(char *dst, const char *src, size_t length) {
 		dst[len++] = c;
 	}
 	dst[len] = 0;
-	return len;
+	return dst;
 }
 
 char *LIB_strcat(char *dst, size_t dst_maxncpy, const char *src) {
