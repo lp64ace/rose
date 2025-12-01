@@ -137,7 +137,7 @@ void ED_spacetype_topbar() {
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
 		art->layout = topbar_header_region_layout;
-		art->draw = ED_region_header_draw;
+		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 	}
@@ -146,7 +146,7 @@ void ED_spacetype_topbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "SpaceTopBar::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = ED_region_default_draw;
+		art->draw = NULL;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
 	}

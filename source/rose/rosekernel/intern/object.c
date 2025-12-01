@@ -422,7 +422,7 @@ void KER_object_build_armature(Armature *armature) {
 	KER_object_build_armature_bonebase(&armature->bonebase);
 }
 
-void KER_object_build_rig(Object *object) {
+void KER_armature_data_update(Object *object) {
 	ROSE_assert(object->type == OB_ARMATURE);
 
 	Armature *armature = (Armature *)object->data;

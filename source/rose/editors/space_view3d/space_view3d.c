@@ -71,8 +71,6 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 }
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
-	ED_region_default_draw(C, region);
-
 	GPU_matrix_push();
 	GPU_matrix_push_projection();
 
@@ -102,7 +100,7 @@ void ED_spacetype_view3d() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = ED_region_header_draw;
+		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 	}

@@ -86,12 +86,12 @@ void ED_region_do_layout(struct rContext *C, ARegion *region) {
 	region->flag &= ~RGN_FLAG_LAYOUT;
 }
 
-ROSE_STATIC void region_clear(struct rContext *C, ARegion *region) {
+ROSE_INLINE void region_clear(struct rContext *C, ARegion *region) {
 	ScrArea *area = CTX_wm_area(C);
 	
 	float back[4];
 	
-	if (area && (ED_area_is_global(area) /* || ED_screen_area_active(C) */)) {
+	if (area && ED_area_is_global(area)) {
 		UI_GetThemeColor4fv(TH_BACK_HI, back);
 	}
 	else {
@@ -117,15 +117,13 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 
 	UI_SetTheme((area) ? area->spacetype : SPACE_EMPTY, region->regiontype);
 
-	GPU_matrix_push();
 	GPU_matrix_push_projection();
-	GPU_matrix_identity_set();
 
 	region_clear(C, region);
 	
 	ED_region_pixelspace(region);
 
-	if (region->type && region->type->draw) {
+	if (region->type->draw) {
 		region->type->draw(C, region);
 	}
 
@@ -134,7 +132,6 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 	}
 
 	GPU_matrix_pop_projection();
-	GPU_matrix_pop();
 
 	region->flag &= ~RGN_FLAG_REDRAW;
 }

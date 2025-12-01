@@ -467,13 +467,13 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 		KER_animsys_eval_animdata(scene, &object->id);
 	}
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		if (object->type == OB_ARMATURE) {
-			KER_object_build_rig(object);
-		}
-	}
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		if (object->type == OB_MESH) {
-			KER_mesh_data_update(NULL, object);
+		switch (object->type) {
+			case OB_ARMATURE: {
+				KER_armature_data_update(object);
+			} break;
+			case OB_MESH: {
+				KER_mesh_data_update(scene, object);
+			} break;
 		}
 	}
 

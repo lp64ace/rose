@@ -53,7 +53,7 @@ void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool us
 /** \name Object Evaluation
  * \{ */
 
-void KER_object_build_rig(struct Object *object);
+void KER_armature_data_update(struct Object *object);
 
 /** \} */
 

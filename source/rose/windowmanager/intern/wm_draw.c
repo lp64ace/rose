@@ -30,6 +30,8 @@
 
 #include <GTK_api.h>
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Region Drawing
  *
@@ -348,14 +350,6 @@ void WM_do_draw(struct rContext *C) {
 		window->delta_time = GTK_elapsed_time(wm->handle) - window->last_draw;
 		window->fps = 1.0 / window->delta_time;
 
-		const double alpha = ROSE_MAX(0.0, ROSE_MIN(window->delta_time * 8, 1.0));
-		if (window->average_fps == 0.0) {
-			window->average_fps = window->fps;
-		}
-		else {
-			window->average_fps = (alpha * window->fps) + (1.0 - alpha) * window->average_fps;
-		}
-
 		Scene *scene;
 		if ((scene = WM_window_get_active_scene(window))) {
 			KER_scene_time_step(scene, window->delta_time);
@@ -365,6 +359,8 @@ void WM_do_draw(struct rContext *C) {
 		wm_window_draw(C, window);
 
 		GTK_window_swap_buffers(window->handle);
+
+		fprintf(stdout, "%.1lf\n", window->fps);
 
 		window->last_draw += window->delta_time;
 		CTX_wm_window_set(C, NULL);
