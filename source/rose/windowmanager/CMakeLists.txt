@@ -46,6 +46,7 @@ set(LIB
 	rose::source::rosemesh
 	rose::source::rosefont
 	rose::source::gpu
+	rose::source::rna
 	rose::source::draw
 	rose::source::io::fbx
 	rose::source::editors::space_api

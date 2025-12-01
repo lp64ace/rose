@@ -1354,7 +1354,7 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 			fprintf(fpout, "\t\t.properties = {\n");
 			fprintf(fpout, "\t\t\t.first = (PropertyRNA *)&rna_%s_%s_,\n", nstruct->identifier, first->identifier);
 			fprintf(fpout, "\t\t\t.last = (PropertyRNA *)&rna_%s_%s_,\n", nstruct->identifier, last->identifier);
-			fprintf(fpout, "\t\t}\n");
+			fprintf(fpout, "\t\t},\n");
 		}
 		else {
 			fprintf(fpout, "\t\t.properties = {\n");
@@ -1362,6 +1362,7 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 			fprintf(fpout, "\t\t\t.last = %s,\n", "NULL");
 			fprintf(fpout, "\t\t},\n");
 		}
+		fprintf(fpout, "\t\t.property_lookup_set = NULL,\n");
 	} while (false);
 	fprintf(fpout, "\t},\n");
 
@@ -1447,6 +1448,30 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 	fprintf(fpout, "\n");
 }
 
+ROSE_INLINE void rna_generate_rose(RoseRNA *rna, FILE *fpout) {
+	fprintf(fpout, "RoseRNA ROSE_RNA = {\n");
+	fprintf(fpout, "\t.srnabase = {\n");
+	LISTBASE_FOREACH(StructRNA *, nstruct, &rna->srnabase) {
+		fprintf(fpout, "\t\t/* %s */\n", nstruct->identifier);
+	}
+	if (rna->srnabase.first) {
+		fprintf(fpout, "\t\t.first = &RNA_%s,\n", ((StructRNA *)rna->srnabase.first)->identifier);
+	}
+	else {
+		fprintf(fpout, "\t\t.first = NULL,\n");
+	}
+	if (rna->srnabase.last) {
+		fprintf(fpout, "\t\t.last = &RNA_%s,\n", ((StructRNA *)rna->srnabase.last)->identifier);
+	}
+	else {
+		fprintf(fpout, "\t\t.last = NULL,\n");
+	}
+	fprintf(fpout, "\t},\n");
+	fprintf(fpout, "\t.srnahash = NULL,\n");
+	fprintf(fpout, "\t.totsrna = 0,\n");
+	fprintf(fpout, "};\n");
+}
+
 ROSE_INLINE void rna_generate(RoseRNA *rna, FILE *fpout, const char *filename) {
 	fprintf(fpout, "/**\n");
 	fprintf(fpout, " * Automatically generated struct definitions for the Data API.\n");
@@ -1489,6 +1514,10 @@ ROSE_INLINE void rna_generate(RoseRNA *rna, FILE *fpout, const char *filename) {
 		if (!filename || STREQ(defstruct->filename, filename)) {
 			rna_generate_struct(fpout, rna, defstruct->ptr);
 		}
+	}
+
+	if (filename && STREQ(filename, "rna_id.c")) {
+		rna_generate_rose(rna, fpout);
 	}
 }
 

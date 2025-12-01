@@ -53,8 +53,8 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	Scene *scene = (Scene *)id;
 
 	scene->r.sframe = 0;
-	scene->r.eframe = 162;
-	scene->r.fps = 144;
+	scene->r.eframe = 70;
+	scene->r.fps = 60;
 
 	/* Master Collection */
 	scene->master_collection = KER_collection_master_add();

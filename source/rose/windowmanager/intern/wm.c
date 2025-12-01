@@ -3,6 +3,8 @@
 #include "DNA_mesh_types.h"
 #include "DNA_space_types.h"
 
+#include "RNA_access.h"
+
 #include "DRW_engine.h"
 
 #include "KER_context.h"
@@ -239,7 +241,7 @@ ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmW
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size);
+	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 128.0f);
 }
 
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
@@ -275,6 +277,8 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 void WM_init(struct rContext *C) {
 	KER_cpp_types_init();
 	KER_idtype_init();
+
+	RNA_init();
 
 	Main *main = KER_main_new();
 	KER_rose_userdef_init();
@@ -315,6 +319,8 @@ void WM_exit(struct rContext *C) {
 	DRW_engines_free();
 
 	RFT_exit();
+
+	RNA_exit();
 
 	ED_spacetypes_exit();
 

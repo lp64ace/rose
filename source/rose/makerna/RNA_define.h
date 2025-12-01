@@ -105,6 +105,8 @@ void rna_Struct_properties_next(struct CollectionPropertyIterator *iter);
 
 struct PointerRNA rna_Struct_properties_get(struct CollectionPropertyIterator *iter);
 
+bool rna_builtin_properties_lookup_string(struct PointerRNA *ptr, const char *key, struct PointerRNA *r_ptr);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

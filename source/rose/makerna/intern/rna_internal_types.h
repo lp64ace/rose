@@ -315,6 +315,8 @@ typedef struct ContainerRNA {
 	void *prev, *next;
 
 	ListBase properties;
+	/* rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter> */
+	void *property_lookup_set;
 } ContainerRNA;
 
 /* -------------------------------------------------------------------- */
@@ -381,6 +383,14 @@ typedef struct RoseRNA {
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+struct PropertyRNAIdentifierGetter {
+	rose::StringRef PropertyRNAIdentifierGetter::operator()(const PropertyRNA *prop) const {
+		return prop->identifier;
+	}
+};
 #endif
 
 #endif	// RNA_INTERNAL_TYPES_H

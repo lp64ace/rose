@@ -38,9 +38,11 @@ set(RUN_SRC
 	../RNA_access.h
 
 	rna_access.c
+	rna_access.cc
 	rna_id_runtime.c
 	rna_pose_runtime.c
 	rna_rna_runtime.c
+	rna_rna_runtime.cc
 )
 
 # -----------------------------------------------------------------------------

@@ -289,6 +289,7 @@ StructRNA *RNA_def_struct_ex(RoseRNA *rna, const char *identifier, StructRNA *fr
 
 	if (fromstruct) {
 		memcpy(newstruct, fromstruct, sizeof(StructRNA));
+		newstruct->container.property_lookup_set = NULL;
 		LIB_listbase_clear(&newstruct->container.properties);
 
 		newstruct->base = fromstruct;
@@ -360,7 +361,7 @@ StructRNA *RNA_def_struct_ex(RoseRNA *rna, const char *identifier, StructRNA *fr
 				"rna_builtin_properties_get",
 				NULL,
 				NULL,
-				NULL
+				"rna_builtin_properties_lookup_string"
 			);
 
 			/* clang-format on */

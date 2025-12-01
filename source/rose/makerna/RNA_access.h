@@ -4,6 +4,7 @@
 #include "RNA_types.h"
 
 struct ID;
+struct RoseRNA;
 struct StructRNA;
 
 #ifdef __cplusplus
@@ -24,6 +25,8 @@ struct StructRNA *RNA_id_code_to_rna_type(int idcode);
  */
 struct PointerRNA RNA_id_pointer_create(struct ID *id);
 
+void RNA_init();
+void RNA_exit();
 
 /** \} */
 
