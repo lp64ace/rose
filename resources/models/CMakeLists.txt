@@ -3,6 +3,8 @@
 
 set(MODELS_SRC
 	cat.fbx
+	chief.fbx
+	macarena.fbx
 	six.fbx
 )
 
