@@ -41,8 +41,6 @@
 #include "RFT_api.h"
 #include "GTK_api.h"
 
-#include <stdio.h>
-
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
  * \{ */
@@ -234,14 +232,14 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 /** \name Init & Exit Methods
  * \{ */
 
-extern const int datatoc_six_fbx_size;
-extern const char datatoc_six_fbx[];
+extern const int datatoc_chief_fbx_size;
+extern const char datatoc_chief_fbx[];
 
 ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 128.0f);
+	FBX_import_memory(C, datatoc_chief_fbx, datatoc_chief_fbx_size, 8.0f);
 }
 
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {

@@ -53,7 +53,7 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	Scene *scene = (Scene *)id;
 
 	scene->r.sframe = 0;
-	scene->r.eframe = 70;
+	scene->r.eframe = 500;
 	scene->r.fps = 60;
 
 	/* Master Collection */

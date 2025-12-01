@@ -467,13 +467,13 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 		KER_animsys_eval_animdata(scene, &object->id);
 	}
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		switch (object->type) {
-			case OB_ARMATURE: {
-				KER_armature_data_update(object);
-			} break;
-			case OB_MESH: {
-				KER_mesh_data_update(scene, object);
-			} break;
+		if (object->type == OB_ARMATURE) {
+			KER_armature_data_update(object);
+		}
+	}
+	LISTBASE_FOREACH(struct Object *, object, listbase) {
+		if (object->type == OB_MESH) {
+			KER_mesh_data_update(scene, object);
 		}
 	}
 
@@ -488,7 +488,6 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 	DRW_manager_exit(&GDrawManager);
 
 	drw_engine_cache_finish();
-
 	drw_engine_draw_scene();
 }
 
@@ -508,7 +507,6 @@ void DRW_draw_view(const struct rContext *C) {
 	}
 
 	struct WindowManager *wm = CTX_wm_manager(C);
-	struct wmWindow *win = CTX_wm_window(C);
 
 	struct Scene *scene = CTX_data_scene(C);
 	struct ViewLayer *view_layer = CTX_data_view_layer(C);

@@ -72,10 +72,10 @@ ROSE_INLINE void view3d_main_region_layout(struct rContext *C, ARegion *region) 
 
 ROSE_INLINE void view3d_main_region_draw(struct rContext *C, ARegion *region) {
 	GPU_matrix_push();
-	GPU_matrix_push_projection();
-
 	GPU_matrix_identity_set();
+	GPU_matrix_push_projection();
 	GPU_matrix_identity_projection_set();
+
 	DRW_draw_view(C);
 
 	GPU_matrix_pop_projection();

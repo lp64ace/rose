@@ -125,12 +125,12 @@ struct PointerRNA rna_Struct_properties_get(CollectionPropertyIterator *iter) {
 
 void rna_Property_name_get(PointerRNA *ptr, char *value) {
 	PropertyRNA *data = (PropertyRNA *)ptr->data;
-	strcpy(value, data->identifier ? data->identifier : "");
+	strcpy(value, data->name ? data->name : "");
 }
 
 int rna_Property_name_length(PointerRNA *ptr) {
 	PropertyRNA *data = (PropertyRNA *)ptr->data;
-	return strlen(data->identifier);
+	return strlen(data->name);
 }
 
 /** \} */

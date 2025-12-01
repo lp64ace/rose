@@ -208,7 +208,7 @@ ROSE_INLINE bool rna_path_parse_collection_key(const char **path, PointerRNA *pt
 		char *token;
 
 		/* resolve the lookup with [] brackets */
-		token = rna_path_token_in_brackets(path, fixedbuf, sizeof(fixedbuf), &quoted);
+		token = rna_path_token_in_brackets(path, fixedbuf, ARRAY_SIZE(fixedbuf), &quoted);
 
 		if (!token) {
 			return false;
@@ -549,7 +549,7 @@ bool RNA_property_collection_lookup_string_ex(PointerRNA *ptr, PropertyRNA *prop
 
 			char inlinebuf[256];
 
-			char *namebuf = RNA_property_string_get_alloc(&iter.ptr, name, inlinebuf, sizeof(inlinebuf), &vallength);
+			char *namebuf = RNA_property_string_get_alloc(&iter.ptr, name, inlinebuf, ARRAY_SIZE(inlinebuf), &vallength);
 
 			bool found = false;
 			if ((keylength == vallength) && STREQ(namebuf, key)) {

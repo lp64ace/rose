@@ -360,8 +360,6 @@ void WM_do_draw(struct rContext *C) {
 
 		GTK_window_swap_buffers(window->handle);
 
-		fprintf(stdout, "%.1lf\n", window->fps);
-
 		window->last_draw += window->delta_time;
 		CTX_wm_window_set(C, NULL);
 	}
@@ -399,7 +397,7 @@ void WM_render_context_activate(void *render) {
 	GTK_render_make_context_current(render);
 }
 void WM_render_context_release(void *render) {
-	GTK_render_make_context_current(NULL);
+	// GTK_render_make_context_current(NULL);
 }
 
 void WM_render_context_destroy(struct WindowManager *wm, void *render) {

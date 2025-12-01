@@ -365,7 +365,7 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 				KER_action_slot_identifier_define(action, slot, id->name);
 
 				const AnimData *adt = KER_animdata_ensure_id(id);
-				if (adt->action == NULL) {
+				if (adt->action == NULL || true) {
 					bool ok = KER_action_assign(action, id);
 					ROSE_assert_msg(ok, "[IOFbx] Could not assign action to ID");
 					UNUSED_VARS_NDEBUG(ok);

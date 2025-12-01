@@ -27,7 +27,7 @@ void RNA_init() {
 	LISTBASE_FOREACH(StructRNA *, nstruct, &ROSE_RNA.srnabase) {
 		size_t nproperties = LIB_listbase_count(&nstruct->container.properties);
 
-		if (!nstruct->container.property_lookup_set && nproperties >= 8) {
+		if (!nstruct->container.property_lookup_set && nproperties >= 2) {
 			rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter> *ptr = MEM_new<rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter>>(__func__);
 
 			LISTBASE_FOREACH(PropertyRNA *, property, &nstruct->container.properties) {
