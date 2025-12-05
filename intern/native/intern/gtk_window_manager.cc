@@ -9,7 +9,7 @@
 #include <climits>
 
 GTKManagerInterface::GTKManagerInterface() {
-	this->t0 = std::chrono::system_clock::now();
+	this->t0 = std::chrono::steady_clock::now();
 }
 
 GTKManagerInterface::~GTKManagerInterface() {
@@ -25,7 +25,7 @@ GTKManagerInterface::~GTKManagerInterface() {
 }
 
 double GTKManagerInterface::Time(void) const {
-	auto now = std::chrono::system_clock::now();
+	auto now = std::chrono::steady_clock::now();
 
 	return std::chrono::duration<double>(now - this->t0).count();
 }
