@@ -311,6 +311,7 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 		}
 	}
 
+#if 0
 	ED_screen_areas_iter(window, screen, area) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			if (!region->visible) {
@@ -321,6 +322,7 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 			}
 		}
 	}
+#endif
 
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
 		if (!region->visible) {
@@ -346,13 +348,25 @@ void WM_do_draw(struct rContext *C) {
 			continue;
 		}
 
+		double t = GTK_elapsed_time(wm->handle);
+		double dt = t - window->last_draw;
+
 		CTX_wm_window_set(C, window);
-		window->delta_time = GTK_elapsed_time(wm->handle) - window->last_draw;
-		window->fps = 1.0 / window->delta_time;
+		window->delta_time = dt;
+		window->fps = 1.0 / dt;
+
+		const double alpha = ROSE_MAX(0.0, ROSE_MIN(window->delta_time * 32, 1.0));
+		if (window->average_fps == 0.0) {
+			window->average_fps = window->fps;
+		}
+		else {
+			window->average_fps = (alpha * window->fps) + (1.0 - alpha) * window->average_fps;
+		}
+
 
 		Scene *scene;
 		if ((scene = WM_window_get_active_scene(window))) {
-			KER_scene_time_step(scene, window->delta_time);
+			KER_scene_time_step(scene, dt);
 		}
 
 		wm_window_make_drawable(wm, window);
@@ -360,7 +374,7 @@ void WM_do_draw(struct rContext *C) {
 
 		GTK_window_swap_buffers(window->handle);
 
-		window->last_draw += window->delta_time;
+		window->last_draw += dt;
 		CTX_wm_window_set(C, NULL);
 	}
 

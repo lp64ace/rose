@@ -134,7 +134,7 @@ void DRW_render_buffer_finish() {
 /** \} */
 
 ROSE_STATIC void *draw_command_new(DRWShadingGroup *shgroup, DRWResourceHandle handle, int type) {
-	DRWCommand *cmd = LIB_memory_pool_calloc(GDrawManager.vdata_pool->commands);
+	DRWCommand *cmd = LIB_memory_block_alloc(GDrawManager.vdata_pool->commands);
 
 	cmd->type = type;
 	cmd->handle = handle;
@@ -194,13 +194,11 @@ void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, Object *ob, const
 }
 
 ROSE_STATIC DRWShadingGroup *draw_shading_group_new_ex(GPUShader *shader, DRWPass *pass) {
-	DRWShadingGroup *shgroup = LIB_memory_pool_calloc(GDrawManager.vdata_pool->shgroups);
+	DRWShadingGroup *shgroup = LIB_memory_block_alloc(GDrawManager.vdata_pool->shgroups);
 
 	shgroup->shader = shader;
-	shgroup->commands.first = NULL;
-	shgroup->commands.last = NULL;
-	shgroup->uniforms.first = NULL;
-	shgroup->uniforms.last = NULL;
+	LIB_listbase_clear(&shgroup->commands);
+	LIB_listbase_clear(&shgroup->uniforms);
 
 	LIB_addtail(&pass->groups, shgroup);
 
@@ -212,7 +210,7 @@ ROSE_STATIC void draw_shading_group_uniform_create_ex(DRWShadingGroup *shgroup, 
 		return;
 	}
 
-	DRWUniform *uniform = LIB_memory_pool_calloc(GDrawManager.vdata_pool->uniforms);
+	DRWUniform *uniform = LIB_memory_block_alloc(GDrawManager.vdata_pool->uniforms);
 
 	uniform->location = loc;
 	uniform->type = type;

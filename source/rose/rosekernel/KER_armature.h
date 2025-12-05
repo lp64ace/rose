@@ -88,7 +88,7 @@ struct Armature *KER_armature_from_object(struct Object *object);
  * \param main: May be NULL, only used to tag depsgraph as being dirty.
  */
 void KER_pose_rebuild(struct Main *main, struct Object *ob, struct Armature *arm, bool do_id_user);
-void KER_pose_pchannel_index_rebuild(struct Pose *pose);
+void KER_pose_channel_index_rebuild(struct Pose *pose);
 
 void KER_pose_eval_init(struct Object *object);
 void KER_pose_eval_init_ik(struct Object *object);

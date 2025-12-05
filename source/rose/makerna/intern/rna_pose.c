@@ -34,7 +34,7 @@ ROSE_INLINE void rna_def_pose_channel(RoseRNA *rna) {
 		} while (false);
 
 		do {
-			PropertyRNA *quat = RNA_def_property(posebone, "rotation_quaternion", PROP_FLOAT, PROP_TRANSLATION);
+			PropertyRNA *quat = RNA_def_property(posebone, "quaternion", PROP_FLOAT, PROP_TRANSLATION);
 			RNA_def_property_float_sdna(quat, NULL, "quat");
 			RNA_def_property_float_array_default(quat, rna_default_quaternion);
 			RNA_def_property_ui_text(quat, "Quaternion Rotation", "Rotation in Quaternions");
@@ -43,7 +43,7 @@ ROSE_INLINE void rna_def_pose_channel(RoseRNA *rna) {
 		/* TODO: Add axis angle. */
 
 		do {
-			PropertyRNA *euler = RNA_def_property(posebone, "rotation_euler", PROP_FLOAT, PROP_TRANSLATION);
+			PropertyRNA *euler = RNA_def_property(posebone, "euler", PROP_FLOAT, PROP_TRANSLATION);
 			RNA_def_property_float_sdna(euler, NULL, "euler");
 			RNA_def_property_ui_text(euler, "Euler Rotation", "Rotation in Eulers");
 			RNA_def_property_ui_range(euler, -FLT_MAX, FLT_MAX, 100, RNA_TRANSLATION_PREC_DEFAULT);

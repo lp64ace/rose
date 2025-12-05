@@ -11,7 +11,7 @@ namespace rose::threading::detail {
 
 #ifdef WITH_TBB
 static void parallel_for_impl_static_size(const IndexRange range, const size_t grain_size, const FunctionRef<void(IndexRange)> function) {
-	tbb::parallel_for(tbb::blocked_range<size_t>(range.first(), range.one_after_last(), grain_size), [function](const tbb::blocked_range<int64_t> &subrange) { function(IndexRange(subrange.begin(), subrange.size())); });
+	tbb::parallel_for(tbb::blocked_range<size_t>(range.first(), range.one_after_last(), grain_size), [function](const tbb::blocked_range<size_t> &subrange) { function(IndexRange(subrange.begin(), subrange.size())); });
 }
 #endif /* WITH_TBB */
 

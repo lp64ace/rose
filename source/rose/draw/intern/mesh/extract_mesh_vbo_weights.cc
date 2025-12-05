@@ -127,6 +127,7 @@ void extract_weights_mesh_vbo(const Object *obarmature, const Object *obtarget, 
 			const rose::Span<MDeformWeight> dweights(dvert->dw, dvert->totweight);
 			for (const size_t index : dweights.index_range()) {
 				if (index >= 4) {
+					fprintf(stderr, "[Draw] Warning, too many deform vertices.\n");
 					break;
 				}
 

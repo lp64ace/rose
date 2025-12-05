@@ -456,7 +456,6 @@ ROSE_INLINE float fcurve_eval_keyframes(const FCurve *fcu, const BezTriple *bezt
 		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, 0, +1);
 	}
 
-
 	const BezTriple *lastbezt = bezts + fcu->totvert - 1;
 	if (lastbezt->vec[1][0] <= evaltime) {
 		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, fcu->totvert - 1, -1);

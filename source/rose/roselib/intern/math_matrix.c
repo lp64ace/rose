@@ -512,14 +512,7 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]) {
 	ROSE_assert(inverse != mat);
 
 	/* Set inverse to identity */
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			inverse[i][j] = 0;
-		}
-	}
-	for (i = 0; i < 4; i++) {
-		inverse[i][i] = 1;
-	}
+	unit_m4(inverse);
 
 	/* Copy original matrix so we don't mess it up */
 	for (i = 0; i < 4; i++) {

@@ -69,6 +69,24 @@ void KER_main_free(Main *main) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Lookup Methods
+ * \{ */
+
+ID *KER_main_id_lookup(Main *main, short type, const char *name) {
+	ListBase *lb = which_libbase(main, type);
+
+	LISTBASE_FOREACH(ID *, id, lb) {
+		if (STREQ(id->name + 2, name)) {
+			return id;
+		}
+	}
+
+	return NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Util Methods
  * \{ */
 

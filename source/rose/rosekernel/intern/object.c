@@ -440,7 +440,7 @@ void KER_armature_data_update(Object *object) {
 	}
 	if (object->pose != NULL) {
 		KER_pose_channels_hash_ensure(object->pose);
-		KER_pose_pchannel_index_rebuild(object->pose);
+		KER_pose_channel_index_rebuild(object->pose);
 	}
 
 	/**
@@ -473,11 +473,10 @@ void KER_armature_data_update(Object *object) {
 	KER_pose_eval_done(object);
 
 	if (object->pose) {
-		size_t index = 0;
-		LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
+		size_t index;
+		LISTBASE_FOREACH_INDEX(PoseChannel *, pchannel, &object->pose->channelbase, index) {
 			KER_pose_eval_bone(object, index);
 			KER_pose_bone_done(object, index);
-			index++;
 		}
 	}
 }

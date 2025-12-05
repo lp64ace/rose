@@ -138,15 +138,15 @@ void create_transform_curve_desc(FbxElementMapping *mapping, const ElementAnimat
 	int rotmode = is_bone ? ROT_MODE_QUAT : anim->rotmode;
 	switch (rotmode) {
 		case ROT_MODE_QUAT: {
-			rnarotation = static_cast<const char *>(LIB_memory_arena_strfmt(names, "%srotation_quaternion", &prefix[0]));
+			rnarotation = static_cast<const char *>(LIB_memory_arena_strfmt(names, "%squaternion", &prefix[0]));
 			rotchannels = 4;
 		} break;
 		case ROT_MODE_AXISANGLE: {
-			rnarotation = static_cast<const char *>(LIB_memory_arena_strfmt(names, "%srotation_axis_angle", &prefix[0]));
+			rnarotation = static_cast<const char *>(LIB_memory_arena_strfmt(names, "%saxis_angle", &prefix[0]));
 			rotchannels = 4;
 		} break;
 		default: {
-			rnarotation = static_cast<const char *>(LIB_memory_arena_strfmt(names, "%srotation_euler", &prefix[0]));
+			rnarotation = static_cast<const char *>(LIB_memory_arena_strfmt(names, "%seuler", &prefix[0]));
 			rotchannels = 3;
 		} break;
 	}
@@ -188,7 +188,7 @@ void create_transform_curve_desc(FbxElementMapping *mapping, const ElementAnimat
 	}
 }
 
-ROSE_STATIC void create_transform_curve_data(const FbxElementMapping *mapping, const ufbx_anim *fanim, const ElementAnimations *anim, const double fps, FCurve **fcurves) {
+ROSE_STATIC double create_transform_curve_data(const FbxElementMapping *mapping, const ufbx_anim *fanim, const ElementAnimations *anim, const double fps, FCurve **fcurves) {
 	const ufbx_node *fnode = ufbx_as_node(anim->fbx_elem);
 	ufbx_matrix bone_xform = ufbx_identity_matrix;
 	const bool is_bone = mapping->node_is_rose_bone.contains(fnode);
@@ -322,6 +322,8 @@ ROSE_STATIC void create_transform_curve_data(const FbxElementMapping *mapping, c
 		set_curve_sample(fcurves[sclindex + 1], i, tf, float(xform.scale.y));
 		set_curve_sample(fcurves[sclindex + 2], i, tf, float(xform.scale.z));
 	}
+
+	return sorted_key_times.last() * fps;
 }
 
 void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMapping *mapping, const double fps) {
@@ -342,8 +344,6 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 			Action *action = static_cast<Action *>(KER_id_new(main, ID_AC, &action_name[0]));
 			KER_action_keystrip_ensure(action);
 
-			fprintf(stdout, "Action[%s]\n", action->id.name);
-
 			ActionLayer *layer = action->layers[0];
 			ActionStrip *strip = layer->strips[0];
 			ActionStripKeyframeData *strip_data = KER_action_strip_data(action, strip);
@@ -362,10 +362,10 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 				ROSE_assert(id);
 
 				ActionSlot *slot = KER_action_slot_add_for_idtype(action, GS(id->name));
-				KER_action_slot_identifier_define(action, slot, id->name);
+				KER_action_slot_identifier_define(action, slot, id->name + 2);
 
 				const AnimData *adt = KER_animdata_ensure_id(id);
-				if (adt->action == NULL || true) {
+				if (adt->action == NULL) {
 					bool ok = KER_action_assign(action, id);
 					ROSE_assert_msg(ok, "[IOFbx] Could not assign action to ID");
 					UNUSED_VARS_NDEBUG(ok);
@@ -409,9 +409,14 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 				for (const size_t index : id_anims.index_range()) {
 					const ElementAnimations *anim = id_anims[index];
 					if (anim->prop_position || anim->prop_rotation || anim->prop_scale) {
-						create_transform_curve_data(mapping, flayer->anim, anim, fps, fcurves.data() + anim_transform_curve_index[index]);
+						float duration = create_transform_curve_data(mapping, flayer->anim, anim, fps, fcurves.data() + anim_transform_curve_index[index]);
+
+						action->frame_start = 0;
+						action->frame_end = duration;
 					}
 				}
+
+				fprintf(stdout, "Action[%s:%.1f]\n", action->id.name, action->frame_end);
 
 				for (FCurve *curve : fcurves) {
 					KER_fcurve_handles_recalc(curve);

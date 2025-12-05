@@ -83,6 +83,14 @@ void KER_main_free(struct Main *main);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Lookup Methods
+ * \{ */
+
+struct ID *KER_main_id_lookup(struct Main *main, short type, const char *name);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Util Methods
  * \{ */
 

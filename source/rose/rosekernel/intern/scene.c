@@ -24,16 +24,22 @@ Scene *KER_scene_new(Main *main, const char *name) {
 void KER_scene_time_step(struct Scene *scene, float dt) {
 	RenderData *r = &scene->r;
 
-	float duration = 1.0f / (float)r->fps;
+	r->subframe += dt * r->fps;
 
-	r->subframe += dt / duration;
-	r->cframe += (int)r->subframe;
-	r->subframe = fmodf(r->subframe, 1.0f);
+	int f = (int)r->subframe;
 
-	if (r->cframe >= r->eframe) {
-		int length = r->eframe - r->sframe;
+	if (f > 0) {
+		r->subframe = r->subframe - (float)f;
+		r->cframe += f;
 
-		r->cframe = r->sframe + (r->cframe - r->sframe) % r->cframe;
+		/**
+		 * This should only happen once and is faster than running 
+		 * a module here!
+		 */
+		const int l = r->eframe - r->sframe;
+		while (r->cframe >= r->eframe) {
+			r->cframe -= l;
+		} 
 	}
 }
 
@@ -53,8 +59,8 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	Scene *scene = (Scene *)id;
 
 	scene->r.sframe = 0;
-	scene->r.eframe = 500;
-	scene->r.fps = 60;
+	scene->r.eframe = 27;
+	scene->r.fps = 24;
 
 	/* Master Collection */
 	scene->master_collection = KER_collection_master_add();

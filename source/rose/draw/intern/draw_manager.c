@@ -170,10 +170,10 @@ ROSE_STATIC void drw_drawdata_free(struct ID *id) {
 DRWData *DRW_viewport_data_new(void) {
 	DRWData *ddata = MEM_callocN(sizeof(DRWData), "DRWData");
 
-	ddata->commands = LIB_memory_pool_create(sizeof(DRWCommand), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
-	ddata->passes = LIB_memory_pool_create(sizeof(DRWPass), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
-	ddata->shgroups = LIB_memory_pool_create(sizeof(DRWShadingGroup), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
-	ddata->uniforms = LIB_memory_pool_create(sizeof(DRWUniform), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
+	ddata->commands = LIB_memory_block_create_ex(sizeof(DRWCommand), sizeof(DRWCommand[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->passes = LIB_memory_block_create_ex(sizeof(DRWPass), sizeof(DRWPass[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->shgroups = LIB_memory_block_create_ex(sizeof(DRWShadingGroup), sizeof(DRWShadingGroup[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->uniforms = LIB_memory_block_create_ex(sizeof(DRWUniform), sizeof(DRWUniform[DRW_RESOURCE_CHUNK_LEN]));
 
 	// Resource Data Pool(s)
 
@@ -188,10 +188,10 @@ DRWData *DRW_viewport_data_new(void) {
 }
 
 void DRW_viewport_data_free(DRWData *ddata) {
-	LIB_memory_pool_destroy(ddata->commands);
-	LIB_memory_pool_destroy(ddata->passes);
-	LIB_memory_pool_destroy(ddata->shgroups);
-	LIB_memory_pool_destroy(ddata->uniforms);
+	LIB_memory_block_destroy(ddata->commands, NULL);
+	LIB_memory_block_destroy(ddata->passes, NULL);
+	LIB_memory_block_destroy(ddata->shgroups, NULL);
+	LIB_memory_block_destroy(ddata->uniforms, NULL);
 
 	LIB_memory_block_destroy(ddata->obmats, NULL);
 	LIB_memory_block_destroy(ddata->dvinfo, NULL);
@@ -231,10 +231,9 @@ void DRW_engines_exit(const struct rContext *C) {
 }
 
 DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
-	DRWPass *npass = LIB_memory_pool_calloc(GDrawManager.vdata_pool->passes);
+	DRWPass *npass = LIB_memory_block_alloc(GDrawManager.vdata_pool->passes);
 
-	npass->groups.first = NULL;
-	npass->groups.last = NULL;
+	LIB_listbase_clear(&npass->groups);
 
 	npass->original = original;
 	npass->state = state;
@@ -265,10 +264,10 @@ ROSE_STATIC DRWData *draw_viewport_data_ensure(GPUViewport *viewport) {
 }
 
 ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
-	LIB_memory_pool_clear(ddata->commands, DRW_RESOURCE_CHUNK_LEN);
-	LIB_memory_pool_clear(ddata->passes, DRW_RESOURCE_CHUNK_LEN);
-	LIB_memory_pool_clear(ddata->shgroups, DRW_RESOURCE_CHUNK_LEN);
-	LIB_memory_pool_clear(ddata->uniforms, DRW_RESOURCE_CHUNK_LEN);
+	LIB_memory_block_clear(ddata->commands, NULL);
+	LIB_memory_block_clear(ddata->passes, NULL);
+	LIB_memory_block_clear(ddata->shgroups, NULL);
+	LIB_memory_block_clear(ddata->uniforms, NULL);
 
 	LIB_memory_block_clear(ddata->dvinfo, NULL);
 	LIB_memory_block_clear(ddata->obmats, NULL);
@@ -458,6 +457,8 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 	DRW_engines_init(C);
 
 	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
+
+	static int a = 0;
 
 	/**
 	 * Definetely not the fucking place to update the mesh here,

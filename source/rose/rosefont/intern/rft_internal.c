@@ -19,14 +19,9 @@ unsigned int rft_next_p2(unsigned int x) {
 }
 
 unsigned int rft_hash(unsigned int val) {
-	unsigned int key;
+	val ^= val >> 13;
+	val *= 0x7feb352dU;
+	val ^= val >> 15;
 
-	key = val;
-	key += ~(key << 16);
-	key ^= (key >> 5);
-	key += (key << 3);
-	key ^= (key >> 13);
-	key += ~(key << 9);
-	key ^= (key >> 17);
-	return key % 257;
+	return val & 0xff;
 }

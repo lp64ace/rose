@@ -88,6 +88,8 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 	/* Add objects to collection. */
 	for (Object *obj : ctx.mapping.imported_objects) {
 		KER_collection_object_add(main, lc->collection, obj);
+
+		fprintf(stdout, "[FBX] New object \"%s\" mapping \"%s\".\n", obj->id.name, ((ID *)obj->data)->name);
 	}
 
 	KER_view_layer_base_deselect_all(view_layer);
@@ -100,7 +102,7 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath, float unit) {
 	FILE *file = fopen(filepath, "rb");
 	if (!file) {
-		fprintf(stderr, "[FBX] Cannot open resource file '%s'", filepath);
+		fprintf(stderr, "[FBX] Cannot open resource file '%s'\n", filepath);
 		return;
 	}
 
@@ -138,7 +140,7 @@ void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 	fclose(file);
 
 	if (!fbx) {
-		fprintf(stderr, "[FBX] Cannot import resource file '%s': %s", filepath, fbx_error.description.data);
+		fprintf(stderr, "[FBX] Cannot import resource file '%s': %s\n", filepath, fbx_error.description.data);
 		return;
 	}
 
@@ -179,7 +181,7 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	ufbx_scene *fbx = ufbx_load_memory(memory, size, &opts, &fbx_error);
 
 	if (!fbx) {
-		fprintf(stderr, "[FBX] Cannot import resource file : %s", fbx_error.description.data);
+		fprintf(stderr, "[FBX] Cannot import resource file : %s\n", fbx_error.description.data);
 		return;
 	}
 

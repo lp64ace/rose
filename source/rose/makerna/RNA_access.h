@@ -74,6 +74,10 @@ bool RNA_property_collection_lookup_string(struct PointerRNA *ptr, struct Proper
 bool RNA_property_collection_lookup_int(struct PointerRNA *ptr, struct PropertyRNA *property, int key, struct PointerRNA *r_ptr);
 bool RNA_property_collection_type_get(struct PointerRNA *ptr, struct PropertyRNA *property, struct PointerRNA *r_ptr);
 
+const char *RNA_property_identifier(const struct PropertyRNA *property);
+const char *RNA_property_name(const struct PropertyRNA *property);
+const char *RNA_property_description(const struct PropertyRNA *property);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

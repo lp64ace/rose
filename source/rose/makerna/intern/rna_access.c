@@ -258,7 +258,7 @@ ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, Pointer
 	PointerRNA curptr, nextptr;
 	PropertyRNA *property = NULL;
 
-	memcpy(&curptr, ptr, sizeof(PointerRNA));
+	curptr = *ptr;
 
 	/* look up property name in current struct */
 	bool quoted = false;
@@ -280,7 +280,7 @@ ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, Pointer
 		}
 
 		if (brackets) {
-			/** Look up prooperty name in current struct. */
+			/** Look up property name in current struct. */
 			IDProperty *group = RNA_struct_idprops(&curptr);
 
 			if (group && quoted) {
@@ -304,11 +304,7 @@ ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, Pointer
 		switch (type) {
 			case PROP_POINTER: {
 				if (*path != '\0') {
-					nextptr = RNA_property_pointer_get(&curptr, property);
-				}
-
-				if (*path != '\0') {
-					curptr = nextptr;
+					curptr = RNA_property_pointer_get(&curptr, property);
 
 					/* now we have a PointerRNA, the #property is our parent so forget it */
 					property = NULL;
@@ -618,6 +614,18 @@ bool RNA_property_collection_type_get(PointerRNA *ptr, PropertyRNA *property, Po
 
 	*r_ptr = *ptr;
 	return ((r_ptr->type = rna_ensure_property(property)->srna) ? 1 : 0);
+}
+
+const char *RNA_property_identifier(const PropertyRNA *property) {
+	return property->identifier;
+}
+
+const char *RNA_property_name(const PropertyRNA *property) {
+	return property->name;
+}
+
+const char *RNA_property_description(const PropertyRNA *property) {
+	return property->description;
 }
 
 /** \} */

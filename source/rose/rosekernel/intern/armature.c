@@ -281,7 +281,7 @@ void KER_pose_rebuild(Main *main, Object *object, Armature *armature, bool do_id
 	}
 }
 
-void KER_pose_pchannel_index_rebuild(Pose *pose) {
+void KER_pose_channel_index_rebuild(Pose *pose) {
 	MEM_SAFE_FREE(pose->channels);
 	const size_t num_channels = LIB_listbase_count(&pose->channelbase);
 	pose->channels = MEM_mallocN(sizeof(PoseChannel *) * num_channels, "Pose::channels");

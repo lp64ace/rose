@@ -5,10 +5,10 @@
  * \{ */
 
 typedef struct DRWData {
-	struct MemPool *commands;
-	struct MemPool *passes;
-	struct MemPool *shgroups;
-	struct MemPool *uniforms;
+	struct MemBlock *commands;
+	struct MemBlock *passes;
+	struct MemBlock *shgroups;
+	struct MemBlock *uniforms;
 
 	struct MemBlock *obmats;
 	struct MemBlock *dvinfo;
