@@ -76,10 +76,17 @@ typedef struct ID {
 	struct Library *lib;
 } ID;
 
+typedef struct Library_Runtime {
+	/* Used for efficient calculations of unique names. */
+	struct UniqueName_Map *name_map;
+} Library_Runtime;
+
 typedef struct Library {
 	ID id;
 
 	char filepath[1024];
+
+	struct Library_Runtime runtime;
 } Library;
 
 /** \} */
