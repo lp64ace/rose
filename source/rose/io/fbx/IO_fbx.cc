@@ -88,8 +88,6 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 	/* Add objects to collection. */
 	for (Object *obj : ctx.mapping.imported_objects) {
 		KER_collection_object_add(main, lc->collection, obj);
-
-		fprintf(stdout, "[FBX] New object \"%s\" mapping \"%s\".\n", obj->id.name, ((ID *)obj->data)->name);
 	}
 
 	KER_view_layer_base_deselect_all(view_layer);

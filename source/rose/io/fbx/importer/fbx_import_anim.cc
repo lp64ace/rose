@@ -416,8 +416,6 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 					}
 				}
 
-				fprintf(stdout, "Action[%s:%.1f]\n", action->id.name, action->frame_end);
-
 				for (FCurve *curve : fcurves) {
 					KER_fcurve_handles_recalc(curve);
 				}
