@@ -88,11 +88,6 @@ bool KER_anim_write_to_rna_path(PathResolvedRNA *resolved, float value, bool for
 void KER_anim_vector_evaluate_fcurves(PathResolvedRNA resolved, FCurve **fcurves, int totcurve, float ctime, float r_vec[4]) {
 	ROSE_assert(totcurve <= 4);
 
-	bool is_quat = false;
-	if (STREQ(RNA_property_identifier(resolved.property), "quaternion")) {
-		is_quat = true;
-	}
-
 	for (int index = 0; index < totcurve; index++) {
 		FCurve *fcurve = fcurves[index];
 
@@ -101,7 +96,7 @@ void KER_anim_vector_evaluate_fcurves(PathResolvedRNA resolved, FCurve **fcurves
 		r_vec[array_index] = KER_fcurve_evaluate(&resolved, fcurve, ctime);
 	}
 
-	if (is_quat && totcurve < 4) {
+	if (totcurve < 4 && STREQ(RNA_property_identifier(resolved.property), "quaternion")) {
 		/* This quaternion was incompletely keyed, so the result is a mixture of the unit quaternion
 		 * and values from FCurves. This means that it's almost certainly no longer of unit length. */
 		normalize_qt(r_vec);

@@ -347,8 +347,6 @@ ROSE_INLINE float fcurve_eval_keyframes_extrapolate(const FCurve *fcu, const Bez
 	return endpoint_bezt->vec[1][1] - (fac * dx);
 }
 
-#include <stdio.h>
-
 static float fcurve_eval_keyframes_interpolate(const FCurve *fcu, const BezTriple *bezts, float evaltime) {
 	const float eps = 1.e-8f;
 	uint a;
@@ -452,12 +450,12 @@ static float fcurve_eval_keyframes_interpolate(const FCurve *fcu, const BezTripl
 
 /* Calculate F-Curve value for 'evaltime' using #BezTriple keyframes. */
 ROSE_INLINE float fcurve_eval_keyframes(const FCurve *fcu, const BezTriple *bezts, float evaltime) {
-	if (evaltime <= bezts->vec[1][0]) {
+	if (evaltime < bezts->vec[1][0]) {
 		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, 0, +1);
 	}
 
 	const BezTriple *lastbezt = bezts + fcu->totvert - 1;
-	if (lastbezt->vec[1][0] <= evaltime) {
+	if (lastbezt->vec[1][0] < evaltime) {
 		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, fcu->totvert - 1, -1);
 	}
 

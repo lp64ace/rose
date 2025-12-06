@@ -43,6 +43,7 @@ set(SRC
 	KER_lib_query.h
 	KER_lib_remap.h
 	KER_main.h
+	KER_main_name_map.h
 	KER_mesh.h
 	KER_mesh.hh
 	KER_mesh_types.hh
@@ -76,6 +77,7 @@ set(SRC
 	intern/lib_query.c
 	intern/lib_remap.c
 	intern/main.c
+	intern/main_name_map.cc
 	intern/mesh.c
 	intern/mesh.cc
 	intern/mesh_data_update.c

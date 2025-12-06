@@ -4,6 +4,7 @@
 
 #include "KER_idtype.h"
 #include "KER_library.h"
+#include "KER_main_name_map.h"
 
 #include "DNA_ID.h"
 #include "DNA_ID_enums.h"
@@ -25,6 +26,17 @@ bool KER_library_filepath_set(struct Main *main, struct Library *lib, const char
 /* -------------------------------------------------------------------- */
 /** \name Library Data-block definition
  * \{ */
+
+void library_init_data(struct ID *id) {
+	Library *lib = (Library *)id;
+}
+
+void library_free_data(struct ID *id) {
+	Library *lib = (Library *)id;
+	if (lib->runtime.name_map != NULL) {
+		KER_main_namemap_destroy(&lib->runtime.name_map);
+	}
+}
 
 IDTypeInfo IDType_ID_LI = {
 	.idcode = ID_LI,

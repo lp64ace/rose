@@ -8,6 +8,7 @@
 #include "KER_lib_id.h"
 #include "KER_lib_remap.h"
 #include "KER_main.h"
+#include "KER_main_name_map.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Datablock Creation
@@ -67,10 +68,9 @@ void *KER_libblock_alloc(Main *main, short type, const char *name, int flag) {
 
 			KER_main_lock(main);
 			LIB_addtail(lb, id);
+			KER_id_new_name_validate(main, lb, id, name);
 			KER_main_unlock(main);
 
-			/** TODO: Ensure that the name given is unique! */
-			LIB_strcpy(id->name + 2, ARRAY_SIZE(id->name) - 2, name);
 			if (main->curlib) {
 				id->lib = main->curlib;
 			}
@@ -178,6 +178,7 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 	if ((flag & LIB_ID_FREE_NO_MAIN) == 0) {
 		ListBase *lb = which_libbase(main, type);
 		LIB_remlink(lb, id);
+		KER_main_name_map_remove_id(main, id, KER_id_name(id));
 	}
 
 	KER_libblock_free_data(id, (flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0);
@@ -241,6 +242,39 @@ void id_us_rem(struct ID *id) {
 			id->user = id_us_min(id);
 		}
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Datablock Common Utils
+ * \{ */
+
+bool KER_id_new_name_validate(Main *main, ListBase *lb, ID *id, const char *tname) {
+	bool result = false;
+	char name[ARRAY_SIZE(id->name) - 2];
+
+	/* if no name given, use name of current ID
+	 * else make a copy (tname args can be const) */
+	if (tname == NULL) {
+		tname = id->name + 2;
+	}
+
+	LIB_strcpy(name, ARRAY_SIZE(name), tname);
+
+	if (name[0] == '\0') {
+		/* Disallow empty names. */
+		LIB_strcpy(name, ARRAY_SIZE(name), KER_idtype_idcode_to_name(GS(id->name)));
+	}
+
+	result = KER_main_name_map_get_unique_name(main, id, name);
+
+	LIB_strcpy(id->name + 2, ARRAY_SIZE(id->name) - 2, name);
+	return result;
+}
+
+const char *KER_id_name(const ID *id) {
+	return id->name + 2;
 }
 
 /** \} */

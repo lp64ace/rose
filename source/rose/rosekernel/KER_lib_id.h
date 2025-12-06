@@ -110,6 +110,16 @@ void id_us_rem(struct ID *id);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Datablock Common Utils
+ * \{ */
+
+bool KER_id_new_name_validate(struct Main *main, struct ListBase *lb, struct ID *id, const char *name);
+
+const char *KER_id_name(const struct ID *id);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

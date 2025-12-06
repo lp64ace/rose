@@ -2,6 +2,7 @@
 
 #include "KER_lib_id.h"
 #include "KER_main.h"
+#include "KER_main_name_map.h"
 
 #include "DNA_ID.h"
 #include "DNA_ID_enums.h"
@@ -41,6 +42,8 @@ void KER_main_clear(Main *main) {
 		}
 		LIB_listbase_clear(lb);
 	}
+
+	KER_main_namemap_destroy(&main->name_map);
 }
 
 /** \} */
