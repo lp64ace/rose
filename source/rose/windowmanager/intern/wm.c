@@ -241,19 +241,7 @@ ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmW
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	for (int i = 0; i < 1; i++) {
-		FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 256.0f);
-	}
-
-	ListBase *objects = which_libbase(main, ID_OB);
-	ListBase *actions = which_libbase(main, ID_AC);
-
-	for (Link *vob = (Link *)objects->first, *vac = (Link *)actions->first; vob && vac; vob = vob->next, vac = vac->next) {
-		Object *ob = (Object *)vob;
-		Action *ac = (Action *)vac;
-
-		KER_action_assign(ac, &ob->id);
-	}
+	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 512.0f);
 }
 
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
