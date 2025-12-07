@@ -164,8 +164,8 @@ typedef struct IntPropertyRNA {
 
 	PropIntGetFuncEx get_ex;
 	PropIntSetFuncEx set_ex;
-	PropIntArrayGetFunc getarray_ex;
-	PropIntArraySetFunc setarray_ex;
+	PropIntArrayGetFuncEx getarray_ex;
+	PropIntArraySetFuncEx setarray_ex;
 	PropIntRangeFuncEx range_ex;
 
 	int softmin, softmax;
@@ -173,7 +173,7 @@ typedef struct IntPropertyRNA {
 	int step;
 
 	PropIntGetFuncEx get_default;
-	PropIntArrayGetFunc get_default_array;
+	PropIntArrayGetFuncEx get_default_array;
 	int defaultvalue;
 	const int *defaultarray;
 } IntPropertyRNA;
@@ -325,6 +325,7 @@ typedef struct ContainerRNA {
 
 typedef struct StructRNA *(*StructRefineFunc)(struct PointerRNA *ptr);
 typedef char *(*StructPathFunc)(const struct PointerRNA *ptr);
+typedef struct IDPRoperty **(*IDPropertiesFunc)(struct PointerRNA *ptr);
 
 typedef struct StructRNA {
 	ContainerRNA container;
@@ -358,26 +359,11 @@ typedef struct StructRNA {
 
 	/** Function to find path to this struct in an ID. */
 	StructPathFunc path;
+
+	/** Return the location of the struct's pointer to the system-defined root group IDProperty. */
+	IDPropertiesFunc system_idproperties;
+	IDPropertiesFunc idproperties;
 } StructRNA;
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Rose RNA Data Structures
- * \{ */
-
-typedef struct RoseRNA {
-	ListBase srnabase;
-	/**
-	 * A map of structs: `{StructRNA.identifier -> StructRNA}`
-	 * These are ensured to have unique names (with #STRUCT_PUBLIC_NAMESPACE enabled).
-	 */
-	GHash *srnahash;
-	/** Needed because types with an empty identifier aren't included in `srnahash`. */
-	unsigned int totsrna;
-} RoseRNA;
-
-#define CONTAINER_RNA_ID(container) (*(const char **)(((ContainerRNA *)(container)) + 1))
 
 /** \} */
 

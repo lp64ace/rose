@@ -108,6 +108,7 @@ void RNA_def_rna(struct RoseRNA *rna);
 void RNA_def_ID(struct RoseRNA *rna);
 void RNA_def_Object(struct RoseRNA *rna);
 void RNA_def_Pose(struct RoseRNA *rna);
+void RNA_def_wm(struct RoseRNA *rna);
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Definition Functions

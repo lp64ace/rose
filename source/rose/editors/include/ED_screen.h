@@ -25,7 +25,7 @@ struct wmWindow;
 /**
  * Creates a new empty screen, with a single area initialzed as SPACE_EMPTY.
  */
-struct Screen *ED_screen_add(struct Main *main, const char *name, const rcti *rect);
+struct Screen *ED_screen_add(struct Main *main, const char *name, const struct rcti *rect);
 
 /** \} */
 
@@ -73,7 +73,7 @@ struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int re
 /** \name Area
  * \{ */
 
-struct ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const rcti *rect, int space_type);
+struct ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const struct rcti *rect, int space_type);
 
 void ED_area_newspace(struct rContext *C, struct ScrArea *area, int space_type);
 void ED_area_init(struct WindowManager *wm, struct wmWindow *window, struct ScrArea *area);
@@ -130,6 +130,24 @@ bool ED_screen_area_active(struct rContext *C);
  * \{ */
 
 void ED_screen_scene_change(struct rContext *C, struct wmWindow *window, struct Scene *scene);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Screen Operators
+ * \{ */
+
+void ED_operatortypes_screen(void);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Screen KeyMaps
+ * \{ */
+
+void ED_spacetypes_keymap(struct wmKeyConfig *keyconf);
+
+void ED_keymap_screen(struct wmKeyConfig *keyconf);
 
 /** \} */
 

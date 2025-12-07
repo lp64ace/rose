@@ -31,6 +31,7 @@ struct StructRNA *RNA_def_struct_ex(struct RoseRNA *brna, const char *identifier
 struct StructRNA *RNA_def_struct(struct RoseRNA *brna, const char *identifier, const char *from);
 void RNA_struct_free(struct RoseRNA *rna, struct StructRNA *srna);
 
+void RNA_def_struct_identifier(struct RoseRNA *rna, struct StructRNA *srna, const char *identifier);
 void RNA_def_struct_ui_text(struct StructRNA *srna, const char *name, const char *description);
 void RNA_def_struct_sdna(struct StructRNA *srna, const char *structname);
 void RNA_def_struct_flag(struct StructRNA *nstruct, int flag);
@@ -38,6 +39,8 @@ void RNA_def_struct_clear_flag(struct StructRNA *nstruct, int flag);
 
 void RNA_def_struct_name_property(struct StructRNA *srna, struct PropertyRNA *prop);
 void RNA_def_struct_refine_func(struct StructRNA *srna, const char *func);
+void RNA_def_struct_idprops_func(struct StructRNA *srna, const char *idproperties);
+void RNA_def_struct_system_idprops_func(struct StructRNA *srna, const char *system_idproperties);
 
 /** \} */
 
@@ -48,9 +51,11 @@ void RNA_def_struct_refine_func(struct StructRNA *srna, const char *func);
 #define RNA_TRANSLATION_PREC_DEFAULT 3
 
 struct PropertyRNA *RNA_def_property(void *container, const char *identifier, int type, int subtype);
+struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
 
 void RNA_def_property_ui_text(struct PropertyRNA *prop, const char *name, const char *description);
-void RNA_def_property_ui_range(struct PropertyRNA *prop, double min, double max, double step, int precision);
+void RNA_def_property_ui_range(struct PropertyRNA *prop, double vmin, double vmax, double step, int precision);
+void RNA_def_property_range(struct PropertyRNA *prop, double vmin, double vmax);
 
 void RNA_def_property_flag(struct PropertyRNA *prop, ePropertyFlag flag);
 void RNA_def_property_clear_flag(struct PropertyRNA *prop, ePropertyFlag flag);
@@ -75,6 +80,14 @@ extern const float rna_default_quaternion[4];
 extern const float rna_default_scale_3d[3];
 
 void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float *defaultarray);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Int Property RNA Definition
+ * \{ */
+
+void RNA_def_property_int_default(struct PropertyRNA *property, int default_value);
 
 /** \} */
 
@@ -123,6 +136,15 @@ int rna_Property_name_length(struct PointerRNA *ptr);
  * \{ */
 
 struct StructRNA *rna_ID_refine(struct PointerRNA *ptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name WM Exposed Functions
+ * \{ */
+
+struct StructRNA *rna_OperatorProperties_refine(struct PointerRNA *ptr);
+struct IDPRoperty **rna_OperatorProperties_idprops(struct PointerRNA *ptr);
 
 /** \} */
 

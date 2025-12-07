@@ -90,7 +90,7 @@ const Theme U_theme_xp = {
 		.header_hi = RGBA(0xa0a0a0ff),
 	},
 	/** The colors that will be used for the UserPref space. */
-	.space_userpref = {
+	.space_properties = {
 		.back = RGBA(0xc0c0c0ff),
 		.text = RGBA(0x000000ff),
 		.text_hi = RGBA(0x316ac5ff),

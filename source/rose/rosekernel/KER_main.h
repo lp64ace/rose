@@ -125,14 +125,14 @@ void KER_main_unlock(struct Main *main);
 /** \name Generic utils to loop over whole Main database.
  * \{ */
 
-#define FOREACH_MAIN_LISTBASE_ID_BEGIN(_lb, _id)                     \
-	{                                                                \
-		ID *_id_next = static_cast<ID *>((_lb)->first);              \
-		for ((_id) = _id_next; (_id) != nullptr; (_id) = _id_next) { \
-			_id_next = static_cast<ID *>((_id)->next);
+#define FOREACH_MAIN_LISTBASE_ID_BEGIN(_lb, _id)                  \
+	{                                                             \
+		ID *_id_next = (ID *)((_lb)->first);                      \
+		for ((_id) = _id_next; (_id) != NULL; (_id) = _id_next) { \
+			_id_next = (ID *)((_id)->next);
 
 #define FOREACH_MAIN_LISTBASE_ID_END \
-		}                            \
+	}                                \
 	}                                \
 	((void)0)
 

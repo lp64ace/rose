@@ -21,6 +21,8 @@
 #include "LIB_utildefines.h"
 
 #include "KER_object.h"
+#include "KER_idtype.h"
+#include "KER_lib_id.h"
 #include "KER_main.h"
 #include "KER_scene.h"
 #include "KER_screen.h"
@@ -145,9 +147,12 @@ ROSE_INLINE void wm_draw_region_blit(ARegion *region, int view) {
 		}
 	}
 
+	GPU_viewport(region->winrct.xmin, region->winrct.ymin, region->sizex, region->sizey);
+
 	if (region->draw_buffer->viewport) {
 		GPU_matrix_push();
 		GPU_matrix_push_projection();
+
 		GPU_matrix_ortho_2d_set(region->winrct.xmin, region->winrct.xmax, region->winrct.ymin, region->winrct.ymax);
 
 		GPU_viewport_draw_to_screen(region->draw_buffer->viewport, view, &region->winrct);
@@ -288,6 +293,8 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, int view) {
 	Screen *screen = WM_window_screen_get(window);
 
+	GPU_clear_color(0.0f, 0.0f, 0.0f, 1.0f);
+
 	/** A #ED_screen_areas_iter gives us the global areas first! */
 	LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
@@ -348,21 +355,12 @@ void WM_do_draw(struct rContext *C) {
 			continue;
 		}
 
-		double t = GTK_elapsed_time(wm->handle);
-		double dt = t - window->last_draw;
+		float t = GTK_elapsed_time(wm->handle);
+		float dt = t - window->last_draw;
 
 		CTX_wm_window_set(C, window);
 		window->delta_time = dt;
-		window->fps = 1.0 / dt;
-
-		const double alpha = ROSE_MAX(0.0, ROSE_MIN(window->delta_time * 32, 1.0));
-		if (window->average_fps == 0.0) {
-			window->average_fps = window->fps;
-		}
-		else {
-			window->average_fps = (alpha * window->fps) + (1.0 - alpha) * window->average_fps;
-		}
-
+		window->fps = 1.0f / dt;
 
 		Scene *scene;
 		if ((scene = WM_window_get_active_scene(window))) {
@@ -422,4 +420,4 @@ void WM_render_context_destroy(struct WindowManager *wm, void *render) {
 	GTK_render_free(wm->handle, (struct GTKRender *)render);
 }
 
-	/** \} */
+/** \} */

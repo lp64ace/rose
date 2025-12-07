@@ -207,7 +207,7 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 	LISTBASE_FOREACH(uiBut *, bt, &block->buttons) {
 		ui_block_to_window_rctf(butregion, but->block, &bt->rect, &bt->rect);
 		LIB_rctf_translate(&bt->rect, offset_x, offset_y);
-		ui_but_update(bt);
+		ui_but_update(bt, false);
 	}
 
 	LIB_rctf_translate(&block->rect, offset_x, offset_y);

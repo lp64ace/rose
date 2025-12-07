@@ -28,6 +28,7 @@ set(SRC
 	screen.c
 	screen_edit.c
 	screen_geometry.c
+	screen_ops.c
 	
 )
 

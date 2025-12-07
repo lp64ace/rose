@@ -265,6 +265,11 @@ void GTK_window_swap_buffers(struct GTKWindow *vwindow) {
 
 void GTK_window_make_context_current(struct GTKWindow *vwindow) {
 	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
+
+	if (!window) {
+		return;
+	}
+
 	GTKRenderInterface *render = window->GetRenderInterface();
 
 	if (!render) {

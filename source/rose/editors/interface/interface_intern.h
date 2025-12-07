@@ -134,7 +134,6 @@ void ui_popup_block_free(struct rContext *C, struct uiPopupBlockHandle *handle);
 /** Returns a handle to the font that the button is using. */
 int ui_but_text_font(struct uiBut *but);
 
-void ui_but_update(struct uiBut *but);
 void ui_draw_but(const struct rContext *C, struct ARegion *region, struct uiBut *but, const rcti *rect);
 
 bool ui_but_contains_px(const struct uiBut *but, const struct ARegion *region, const int xy[2]);
@@ -151,9 +150,9 @@ void ui_but_active_free(struct rContext *C, struct uiBut *but);
 
 bool ui_but_is_editing(struct uiBut *but);
 
-double ui_but_get_value(struct uiBut *but);
-/** Returns the new value that is stored in the button. */
-double ui_but_set_value(struct uiBut *but, double nvalue);
+void ui_but_value_set(struct uiBut *but, double value);
+void ui_but_value_get(struct uiBut *but, double *r_value);
+void ui_but_update(struct uiBut *but, bool validate);
 
 /** \} */
 

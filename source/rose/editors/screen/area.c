@@ -87,7 +87,7 @@ ROSE_INLINE void area_init_type_fallback(ScrArea *area, int spacetype) {
 }
 
 ROSE_INLINE int rct_fits(const rcti *rect, char axis, int size) {
-	if (axis == 'h') {
+	if (axis == SCREEN_AXIS_H) {
 		return LIB_rcti_size_x(rect) + 1 - size;
 	}
 	return LIB_rcti_size_y(rect) + 1 - size;
@@ -173,7 +173,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 			region->flag |= RGN_FLAG_TOO_SMALL;
 		}
 	}
-	else if (rct_fits(remainder, 'v', 1) < 0 || rct_fits(remainder, 'h', 1) < 0) {
+	else if (rct_fits(remainder, SCREEN_AXIS_V, 1) < 0 || rct_fits(remainder, SCREEN_AXIS_H, 1) < 0) {
 		region->flag |= RGN_FLAG_TOO_SMALL;
 	}
 	else if (alignment == RGN_ALIGN_NONE) {
@@ -183,11 +183,11 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	else if (ELEM(alignment, RGN_ALIGN_TOP, RGN_ALIGN_BOTTOM)) {
 		rcti *winrct = (region->overlap) ? overlap_remainder : remainder;
 
-		if ((prefsizey == 0) || (rct_fits(winrct, 'v', prefsizey) < 0)) {
+		if ((prefsizey == 0) || (rct_fits(winrct, SCREEN_AXIS_V, prefsizey) < 0)) {
 			region->flag |= RGN_FLAG_TOO_SMALL;
 		}
 		else {
-			int fac = rct_fits(winrct, 'v', prefsizey);
+			int fac = rct_fits(winrct, SCREEN_AXIS_V, prefsizey);
 
 			if (fac < 0) {
 				prefsizey += fac;
@@ -209,11 +209,11 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	else if (ELEM(alignment, RGN_ALIGN_LEFT, RGN_ALIGN_RIGHT)) {
 		rcti *winrct = (region->overlap) ? overlap_remainder : remainder;
 
-		if ((prefsizex == 0) || (rct_fits(winrct, 'h', prefsizex) < 0)) {
+		if ((prefsizex == 0) || (rct_fits(winrct, SCREEN_AXIS_H, prefsizex) < 0)) {
 			region->flag |= RGN_FLAG_TOO_SMALL;
 		}
 		else {
-			int fac = rct_fits(winrct, 'h', prefsizex);
+			int fac = rct_fits(winrct, SCREEN_AXIS_H, prefsizex);
 
 			if (fac < 0) {
 				prefsizex += fac;
@@ -236,7 +236,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 		memcpy(&region->winrct, remainder, sizeof(rcti));
 
 		if (alignment == RGN_ALIGN_HSPLIT) {
-			if (rct_fits(remainder, 'h', prefsizex) > 4) {
+			if (rct_fits(remainder, SCREEN_AXIS_H, prefsizex) > 4) {
 				region->winrct.xmax = LIB_rcti_cent_x(remainder);
 				remainder->xmin = region->winrct.xmax + 1;
 			}
@@ -245,7 +245,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 			}
 		}
 		else {
-			if (rct_fits(remainder, 'v', prefsizey) > 4) {
+			if (rct_fits(remainder, SCREEN_AXIS_V, prefsizey) > 4) {
 				region->winrct.ymax = LIB_rcti_cent_y(remainder);
 				remainder->ymin = region->winrct.ymax + 1;
 			}

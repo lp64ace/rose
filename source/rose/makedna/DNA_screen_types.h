@@ -63,6 +63,7 @@ typedef struct ScrVert {
 	 * In general operations happen in pixel space but we keep everything in floating values for scaling.
 	 */
 	vec2f vec;
+	int edit_flag;
 	int flag;
 } ScrVert;
 
@@ -227,6 +228,9 @@ enum {
 #define AREAMINX 32
 #define PIXELSIZE 1
 #define WIDGET_UNIT 26
+
+#define BORDERPADDING 3 * PIXELSIZE
+#define BORDERPADDING_GLOBAL 3 * PIXELSIZE
 
 #define UI_UNIT_X (PIXELSIZE * WIDGET_UNIT)
 #define UI_UNIT_Y (PIXELSIZE * WIDGET_UNIT)

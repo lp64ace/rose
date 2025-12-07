@@ -7,8 +7,6 @@
 #include "rna_internal_types.h"
 #include "rna_internal.h"
 
-#include <stdio.h>
-
 StructRNA *RNA_id_code_to_rna_type(int type) {
 	switch (type) {
 		case ID_OB: return &RNA_Object;

@@ -244,6 +244,16 @@ ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmW
 	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 512.0f);
 }
 
+void WM_keyconfig_init(struct rContext *C) {
+	WindowManager *wm = CTX_wm_manager(C);
+
+	if (wm->runtime.defaultconf == NULL) {
+		wm->runtime.defaultconf = WM_keyconfig_new(wm, "Rose");
+	}
+
+	ED_spacetypes_keymap(wm->runtime.defaultconf);
+}
+
 ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	WindowManager *wm = (WindowManager *)KER_id_new(main, ID_WM, "WindowManager");
 	if (!wm) {
@@ -263,6 +273,8 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	GTK_window_manager_button_up_callback(wm->handle, wm_handle_button_up_event, C);
 	GTK_window_manager_key_down_callback(wm->handle, wm_handle_key_down_event, C);
 	GTK_window_manager_key_up_callback(wm->handle, wm_handle_key_up_event, C);
+
+	WM_keyconfig_init(C);
 
 	wmWindow *window = WM_window_open(C, "Rose", SPACE_EMPTY, false);
 	if (!window) {
@@ -323,6 +335,7 @@ void WM_exit(struct rContext *C) {
 	RNA_exit();
 
 	ED_spacetypes_exit();
+	WM_operatortype_clear();
 
 	CTX_free(C);
 	exit(0);
@@ -379,7 +392,6 @@ ROSE_INLINE void window_manager_init_data(struct ID *id) {
 
 	wm->handle = GTK_window_manager_new(GTK_WINDOW_MANAGER_NONE);
 	if (!wm->handle) {
-		printf("[WindowManager] Suitable backend was not found, running headless...\n");
 		return;
 	}
 
@@ -391,6 +403,16 @@ ROSE_INLINE void window_manager_free_data(struct ID *id) {
 
 	while (!LIB_listbase_is_empty(&wm->windows)) {
 		WM_window_free(wm, (wmWindow *)wm->windows.first);
+	}
+
+	wmOperator *op;
+	while ((op = LIB_pophead(&wm->runtime.operators))) {
+		WM_operator_free(op);
+	}
+
+	wmKeyConfig *keyconf;
+	while ((keyconf = LIB_pophead(&wm->runtime.keyconfigs))) {
+		WM_keyconfig_free(keyconf);
 	}
 
 	DRW_render_context_destroy(wm);

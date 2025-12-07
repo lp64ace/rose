@@ -35,7 +35,7 @@ bool rna_builtin_properties_lookup_string(PointerRNA *ptr, const char *key, Poin
 		}
 		else {
 			LISTBASE_FOREACH(PropertyRNA *, property, &nstruct->container.properties) {
-				if ((property->flag & PROP_INTERN_BUILTIN) != 0) {
+				if ((property->flagex & PROP_INTERN_BUILTIN) != 0) {
 					continue;
 				}
 

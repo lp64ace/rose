@@ -32,6 +32,7 @@ void ED_region_floating_init(ARegion *region) {
 
 void ED_region_pixelspace(ARegion *region) {
 	GPU_matrix_ortho_2d_set(0.0f, region->sizex, 0.0f, region->sizey);
+	GPU_matrix_identity_set();
 }
 
 void ED_region_exit(struct rContext *C, ARegion *region) {
@@ -117,6 +118,7 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 
 	UI_SetTheme((area) ? area->spacetype : SPACE_EMPTY, region->regiontype);
 
+	GPU_matrix_push();
 	GPU_matrix_push_projection();
 
 	region_clear(C, region);
@@ -132,6 +134,7 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 	}
 
 	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
 
 	region->flag &= ~RGN_FLAG_REDRAW;
 }

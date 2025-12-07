@@ -48,6 +48,56 @@ ScrEdge *screen_geom_edge_add(Screen *screen, ScrVert *v1, ScrVert *v2) {
 	return screen_geom_edge_add_ex(AREAMAP_FROM_SCREEN(screen), v1, v2);
 }
 
+bool screen_geom_edge_is_horizontal(const ScrEdge *se) {
+	return (se->v1->vec.y == se->v2->vec.y);
+}
+
+ScrEdge *screen_geom_area_map_find_active_scredge(const ScrAreaMap *areamap, const rcti *bounds, const int mx, const int my, int safety) {
+	CLAMP_MIN(safety, 2);
+
+	LISTBASE_FOREACH(ScrEdge *, se, &areamap->edgebase) {
+		if (screen_geom_edge_is_horizontal(se)) {
+			if ((se->v1->vec.y > bounds->ymin) && (se->v1->vec.y < (bounds->ymax - 1))) {
+				float min, max;
+				min = ROSE_MIN(se->v1->vec.x, se->v2->vec.x);
+				max = ROSE_MAX(se->v1->vec.x, se->v2->vec.x);
+
+				if (abs(my - se->v1->vec.y) <= safety && mx >= min && mx <= max) {
+					return se;
+				}
+			}
+		}
+		else {
+			if ((se->v1->vec.x > bounds->xmin) && (se->v1->vec.x < (bounds->xmax - 1))) {
+				float min, max;
+				min = ROSE_MIN(se->v1->vec.y, se->v2->vec.y);
+				max = ROSE_MAX(se->v1->vec.y, se->v2->vec.y);
+
+				if (abs(mx - se->v1->vec.x) <= safety && my >= min && my <= max) {
+					return se;
+				}
+			}
+		}
+	}
+
+	return NULL;
+}
+
+ScrEdge *screen_geom_find_active_scredge(const wmWindow *win, const Screen *screen, const int mx, const int my) {
+	/* Use layout size (screen excluding global areas) for screen-layout area edges */
+	rcti screen_rect;
+	WM_window_screen_rect_calc(win, &screen_rect);
+	ScrEdge *se = screen_geom_area_map_find_active_scredge(AREAMAP_FROM_SCREEN(screen), &screen_rect, mx, my, BORDERPADDING);
+
+	if (!se) {
+		/* Use entire window size (screen including global areas) for global area edges */
+		rcti win_rect;
+		WM_window_rect_calc(win, &win_rect);
+		se = screen_geom_area_map_find_active_scredge(&win->global_areas, &win_rect, mx, my, BORDERPADDING_GLOBAL);
+	}
+	return se;
+}
+
 void screen_area_set_geometry_rect(ScrArea *area, const rcti *rect) {
 	area->v1->vec.x = rect->xmin;
 	area->v1->vec.y = rect->ymin;
@@ -65,10 +115,10 @@ void screen_geom_select_connected_edge(const wmWindow *window, ScrEdge *edge) {
 	/* 'dir_axis' is the direction of EDGE */
 	char axis;
 	if (edge->v1->vec.x == edge->v2->vec.x) {
-		axis = 'v';
+		axis = SCREEN_AXIS_V;
 	}
 	else {
-		axis = 'h';
+		axis = SCREEN_AXIS_H;
 	}
 
 	ED_screen_verts_iter(window, screen, vert) {

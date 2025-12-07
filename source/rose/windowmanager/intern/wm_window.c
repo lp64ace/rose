@@ -138,6 +138,9 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 	}
 	
 	wm_window_tiny_window_ensure(wm, window, name, window->sizex, window->sizey);
+
+	wmKeyMap *keymap = WM_keymap_ensure(wm->runtime.defaultconf, "Screen Editing", SPACE_EMPTY, RGN_TYPE_WINDOW);
+	WM_event_add_keymap_handler(&window->handlers, keymap);
 	
 	Screen *screen = WM_window_screen_get(window);
 

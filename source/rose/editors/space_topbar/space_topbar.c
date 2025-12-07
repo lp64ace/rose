@@ -73,7 +73,7 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_quit_but, NULL, NULL);
 		block->direction = UI_DIR_DOWN;
 		UI_block_end(C, block);
@@ -98,7 +98,7 @@ ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
-		but = uiDefBut(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, 0);
+		but = uiDefBut(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_file_menu, NULL);
 		UI_block_end(C, block);
 	}

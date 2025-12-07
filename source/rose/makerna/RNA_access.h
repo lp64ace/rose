@@ -61,9 +61,11 @@ ePropertyType RNA_property_type(const struct PropertyRNA *property);
  * definition), not on the actual data itself.
  */
 bool RNA_property_animateable(const struct PointerRNA *ptr, struct PropertyRNA *property);
+bool RNA_property_editable(const struct PointerRNA *ptr, struct PropertyRNA *property);
 
 /** Returns the length of the array defined by the property. */
 int RNA_property_array_length(const struct PointerRNA *ptr, struct PropertyRNA *property);
+bool RNA_property_array_check(const struct PropertyRNA *property);
 
 /**
  * Searches for the specified string key in a collection property.
@@ -84,15 +86,39 @@ const char *RNA_property_description(const struct PropertyRNA *property);
 /** \name PropertyRNA Data
  * \{ */
 
-int RNA_property_float_clamp(struct PointerRNA *ptr, struct PropertyRNA *property, float *value);
+/* int */
+
+int RNA_property_int_get(struct PointerRNA *ptr, struct PropertyRNA *property);
+void RNA_property_int_set(struct PointerRNA *ptr, struct PropertyRNA *property, int value);
+void RNA_property_int_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_value);
+void RNA_property_int_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *f_value);
+
+int RNA_int_get(struct PointerRNA *ptr, const char *name);
+void RNA_int_set(struct PointerRNA *ptr, const char *name, int value);
+
+void RNA_property_int_range(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_hardmin, int *r_hardmax);
+void RNA_property_int_ui_range(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_softmin, int *r_softmax, int *r_step);
+
+int RNA_property_int_clamp(struct PointerRNA *ptr, struct PropertyRNA *property, int *value);
+
+/* float */
 
 float RNA_property_float_get(struct PointerRNA *ptr, struct PropertyRNA *property);
 void RNA_property_float_set(struct PointerRNA *ptr, struct PropertyRNA *property, float value);
 void RNA_property_float_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_value);
-void RNA_property_float_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, float *f_value);
+void RNA_property_float_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const float *f_value);
 
 float RNA_property_float_get_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index);
 void RNA_property_float_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, float value);
+
+void RNA_property_float_range(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_hardmin, float *r_hardmax);
+void RNA_property_float_ui_range(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_softmin, float *r_softmax, float *r_step, float *r_precision);
+
+int RNA_property_float_clamp(struct PointerRNA *ptr, struct PropertyRNA *property, float *value);
+
+/* string */
+
+int RNA_property_string_max_length(struct PropertyRNA *property);
 
 /** \} */
 
@@ -112,6 +138,8 @@ struct PropertyRNA *RNA_struct_find_property(struct PointerRNA *ptr, const char 
 struct IDProperty *RNA_struct_idprops(struct PointerRNA *ptr);
 
 /** \} */
+
+extern struct RoseRNA ROSE_RNA;
 
 #ifdef __cplusplus
 }

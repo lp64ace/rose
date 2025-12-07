@@ -31,7 +31,7 @@ void RNA_init() {
 			rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter> *ptr = MEM_new<rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter>>(__func__);
 
 			LISTBASE_FOREACH(PropertyRNA *, property, &nstruct->container.properties) {
-				if (!(property->flag & PROP_INTERN_BUILTIN)) {
+				if (!(property->flagex & PROP_INTERN_BUILTIN)) {
 					ptr->add(property);
 				}
 			}

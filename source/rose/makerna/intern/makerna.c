@@ -26,6 +26,7 @@ RNAProcessItem RNAItems[] = {
 	{.filename = "rna_id.c", .define = RNA_def_ID},
 	{.filename = "rna_ob.c", .define = RNA_def_Object},
 	{.filename = "rna_pose.c", .define = RNA_def_Pose},
+	{.filename = "rna_wm.c", .define = RNA_def_wm},
 };
 
 ROSE_INLINE void rna_print_c_float(FILE *f, float num) {
@@ -1443,6 +1444,8 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 
 	fprintf(fpout, "\t.refine = %s,\n", rna_function_string(nstruct->refine));
 	fprintf(fpout, "\t.path = %s,\n", rna_function_string(nstruct->path));
+	fprintf(fpout, "\t.idproperties = %s,\n", rna_function_string(nstruct->idproperties));
+	fprintf(fpout, "\t.system_idproperties = %s,\n", rna_function_string(nstruct->system_idproperties));
 
 	fprintf(fpout, "};\n");
 	fprintf(fpout, "\n");

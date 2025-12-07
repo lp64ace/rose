@@ -35,8 +35,8 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 			case SPACE_STATUSBAR: {
 				ts = &theme->space_statusbar;
 			} break;
-			case SPACE_USERPREF: {
-				ts = &theme->space_userpref;
+			case SPACE_PROPERTIES: {
+				ts = &theme->space_properties;
 			} break;
 			default: {
 				ROSE_assert_unreachable();

@@ -69,6 +69,13 @@ enum {
 	KM_CLICK_DRAG = 5,
 };
 
+/**
+ * Alternate define for #wmKeyMapItem::shift and other modifiers.
+ * While this matches the value of #KM_PRESS, modifiers should only be compared with:
+ * (#KM_ANY, #KM_NOTHING, #KM_MOD_HELD).
+ */
+#define KM_MOD_HELD 1
+
 /** #wmEvent->modifier */
 enum {
 	KM_SHIFT = 1 << 0,
@@ -91,6 +98,8 @@ typedef struct wmEventHandler {
 /** #wmHandler->type */
 enum {
 	WM_HANDLER_TYPE_UI = 1,
+	WM_HANDLER_TYPE_OP = 2,
+	WM_HANDLER_TYPE_KEYMAP = 3,
 };
 
 /** #wmHandler->flag */
@@ -121,6 +130,31 @@ typedef struct wmEventHandler_UI {
 	} context;
 } wmEventHandler_UI;
 
+typedef struct wmEventHandler_Op {
+	wmEventHandler head;
+
+	struct wmOperator *op;
+
+	struct {
+		/**
+		 * To override the window, and hence the screen.
+		 * Set for few cases only, usually window/screen can be taken from current context.
+		 */
+		wmWindow *window;
+
+		ScrArea *area;
+		ARegion *region;
+		short regiontype;
+	} context;
+} wmEventHandler_Op;
+
+typedef struct wmEventHandler_Keymap {
+	wmEventHandler head;
+
+	/** Pointer to builtin/custom keymaps (never NULL). */
+	wmKeyMap *keymap;
+} wmEventHandler_Keymap;
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -138,9 +172,28 @@ void WM_event_modal_handler_region_replace(struct wmWindow *win, const struct AR
 /** \name UI Handle Methods
  * \{ */
 
-wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *userdata, int flag);
+struct wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *userdata, int flag);
 void WM_event_remove_ui_handler(ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, bool postpone);
 void WM_event_free_ui_handler_all(struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Keymap Handle Methods
+ * \{ */
+
+struct wmEventHandler_Keymap *WM_event_add_keymap_handler(struct ListBase *handlers, struct wmKeyMap *keymap);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Op Handle Methods
+ * \{ */
+
+struct wmEventHandler_Op *WM_event_add_modal_handler_ex(struct wmWindow *window, struct ScrArea *area, struct ARegion *region, struct wmOperator *op);
+struct wmEventHandler_Op *WM_event_add_modal_handler(struct rContext *C, struct wmOperator *op);
+void WM_event_remove_modal_handler(struct ListBase *handlers, struct wmOperator *op, bool postpone);
+void WM_event_free_modal_handler_all(struct wmWindow *window, struct wmOperator *op, bool postpone);
 
 /** \} */
 

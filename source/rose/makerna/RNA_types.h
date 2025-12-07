@@ -1,7 +1,7 @@
 #ifndef RNA_TYPES_H
 #define RNA_TYPES_H
 
-#include "LIB_utildefines.h"
+#include "LIB_listbase.h"
 
 struct ID;
 
@@ -9,6 +9,7 @@ struct ID;
 extern "C" {
 #endif
 
+typedef struct PropertyRNA PropertyRNA;
 
 /* -------------------------------------------------------------------- */
 /** \name Pointer RNA
@@ -200,6 +201,25 @@ typedef enum eStructFlag {
 	STRUCT_RUNTIME = (1 << 10),
 	STRUCT_FREE_POINTERS = (1 << 11),
 } eStructFlag;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose RNA Data Structures
+ * \{ */
+
+typedef struct RoseRNA {
+	ListBase srnabase;
+	/**
+	 * A map of structs: `{StructRNA.identifier -> StructRNA}`
+	 * These are ensured to have unique names (with #STRUCT_PUBLIC_NAMESPACE enabled).
+	 */
+	struct GHash *srnahash;
+	/** Needed because types with an empty identifier aren't included in `srnahash`. */
+	unsigned int totsrna;
+} RoseRNA;
+
+#define CONTAINER_RNA_ID(container) (*(const char **)(((ContainerRNA *)(container)) + 1))
 
 /** \} */
 

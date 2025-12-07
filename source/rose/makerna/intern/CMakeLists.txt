@@ -43,6 +43,7 @@ set(RUN_SRC
 	rna_pose_runtime.c
 	rna_rna_runtime.c
 	rna_rna_runtime.cc
+	rna_wm_runtime.c
 )
 
 # -----------------------------------------------------------------------------
@@ -53,6 +54,7 @@ set(IN_SRC
 	rna_ob.c
 	rna_pose.c
 	rna_rna.c
+	rna_wm.c
 
 )
 
@@ -128,6 +130,7 @@ set(LIB
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::rosekernel
 	PUBLIC rose::source::dna
+	PUBLIC rose::source::windowmanager
 	
 	# External Library Dependencies
 	
