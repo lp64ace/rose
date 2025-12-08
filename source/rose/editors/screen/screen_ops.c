@@ -41,7 +41,7 @@ ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int dire
 
 	LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
 		if (direction == SCREEN_AXIS_H) {
-			const int y1 = area->sizex - WIDGET_UNIT;
+			const int y1 = area->sizey - WIDGET_UNIT;
 			/* if top or down edge selected, test height */
 			if (area->v1->edit_flag && area->v4->edit_flag) {
 				*bigger = ROSE_MIN(*bigger, y1);
@@ -51,7 +51,7 @@ ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int dire
 			}
 		}
 		else {
-			const int x1 = area->sizey - AREAMINX - 1;
+			const int x1 = area->sizex - AREAMINX - 1;
 			/* if left or right edge selected, test width */
 			if (area->v1->edit_flag && area->v2->edit_flag) {
 				*bigger = ROSE_MIN(*bigger, x1);
@@ -104,6 +104,8 @@ ROSE_INLINE void area_move_apply_do(struct rContext *C, int delta, int original,
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = CTX_wm_window(C);
 	Screen *screen = CTX_wm_screen(C);
+
+	CLAMP(delta, -smaller, bigger);
 
 	int final = original + delta;
 
