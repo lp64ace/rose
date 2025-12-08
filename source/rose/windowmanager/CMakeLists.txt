@@ -43,12 +43,12 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::native
+	rose::source::rna
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::rosemesh
 	rose::source::rosefont
 	rose::source::gpu
-	rose::source::rna
 	rose::source::draw
 	rose::source::io::fbx
 	rose::source::editors::space_api
@@ -68,3 +68,5 @@ set(LIB
 
 rose_add_lib(windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::windowmanager ALIAS windowmanager)
+
+add_dependencies(windowmanager rna)

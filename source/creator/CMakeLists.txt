@@ -34,6 +34,7 @@ set(LIB
 	rose::intern::native
 	
 	rose::source::dna
+	rose::source::rna
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::rosefont

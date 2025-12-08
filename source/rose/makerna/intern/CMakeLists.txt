@@ -145,4 +145,4 @@ list(APPEND LIB_SRC ${OUT_SRC})
 rose_add_lib(rna "${LIB_SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::rna ALIAS rna)
 
-target_compile_definitions(rna PRIVATE RNA_RUNTIME)
+target_compile_definitions(rna PUBLIC RNA_RUNTIME)
