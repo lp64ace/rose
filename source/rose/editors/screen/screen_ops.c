@@ -219,6 +219,7 @@ ROSE_INLINE void area_move_modal(struct rContext *C, wmOperator *op, const wmEve
 
 			area_move_apply(C, op);
 		} break;
+		case EVT_ESCKEY:
 		case RIGHTMOUSE: {
 			area_move_cancel(C, op);
 			return OPERATOR_CANCELLED;
