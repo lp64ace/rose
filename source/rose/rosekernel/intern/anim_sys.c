@@ -218,7 +218,7 @@ bool KER_animsys_rna_path_resolve_ex(PointerRNA *ptr, const char *path, int inde
 			cached->property = result->property;
 			cached->ptr = result->ptr;
 
-			LIB_ghash_insert(cache, path, cached);
+			LIB_ghash_insert(cache, (void *)path, (void *)cached);
 		}
 	}
 	else if (cache) {

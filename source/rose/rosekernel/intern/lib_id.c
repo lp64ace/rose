@@ -7,6 +7,7 @@
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
 #include "KER_lib_remap.h"
+#include "KER_lib_query.h"
 #include "KER_main.h"
 #include "KER_main_name_map.h"
 
@@ -108,6 +109,152 @@ void *KER_id_new(struct Main *main, short type, const char *name) {
 	KER_libblock_init_empty(id);
 
 	return id;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Datablock Copy
+ * \{ */
+
+void KER_libblock_copy_ex(Main *main, const ID *id, ID **new_id_p, int flag) {
+	ID *new_id = *new_id_p;
+
+	ROSE_assert((flag & LIB_ID_CREATE_NO_MAIN) != 0 || main != NULL);
+
+	if (!new_id) {
+		new_id = KER_libblock_alloc(main, GS(id->name), KER_id_name(id), flag);
+	}
+	ROSE_assert(new_id != NULL);
+
+	const size_t id_size = KER_libblock_get_alloc_info(GS(id->name), NULL);
+	const size_t id_offset = sizeof(ID);
+
+	if (id_size > id_offset) {
+		const char *cp = (const char *)id;
+		char *cpn = (char *)new_id;
+
+		memcpy(cpn + id_offset, cp + id_offset, id_size - id_offset);
+	}
+
+	const int copy_flag = flag | LIB_ID_CREATE_NO_USER_REFCOUNT;
+
+	if (id->properties) {
+		new_id->properties = IDP_DuplicateProperty_ex(id->properties, copy_flag);
+	}
+
+	 if (id_can_have_animdata(new_id)) {
+		IdAdtTemplate *iat = (IdAdtTemplate *)new_id;
+
+		/* the duplicate should get a copy of the animdata */
+		if ((flag & LIB_ID_COPY_NO_ANIMDATA) == 0) {
+			/**
+			 * Note that even though horrors like root node-trees are not in main, 
+			 * the actions they use in their anim data *are* in main...
+			 * super-mega-hooray.
+			 */
+
+			iat->adt = KER_animdata_copy_ex(main, iat->adt, copy_flag);
+		}
+		else {
+			iat->adt = NULL;
+		}
+	}
+
+	 if (flag & LIB_ID_COPY_ID_NEW_SET) {
+		ID_NEW_SET(id, new_id);
+	}
+
+	*new_id_p = new_id;
+}
+
+void *KER_libblock_copy(Main *main, const ID *id) {
+	ID *new_id = NULL;
+	KER_libblock_copy_ex(main, id, &new_id, 0);
+	return new_id;
+}
+
+typedef struct IDCopyLibManagementData {
+	const ID *id_src;
+	ID *id_dst;
+	int flag;
+} IDCopyLibManagementData;
+
+ROSE_INLINE int id_copy_libmanagement_cb(LibraryIDLinkCallbackData *cb_data) {
+	ID **id_pointer = cb_data->self_ptr;
+	ID *id = *id_pointer;
+
+	const int cb_flag = cb_data->cb_flag;
+	IDCopyLibManagementData *data = (IDCopyLibManagementData *)(cb_data->user_data);
+
+	/* Remap self-references to new copied ID. */
+	if (id == data->id_src) {
+		/* We cannot use self_id here, it is not *always* id_dst (thanks to confounded node-trees!). */
+		id = *id_pointer = data->id_dst;
+	}
+
+	/* Increase used IDs refcount if needed and required. */
+	if ((data->flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0 && (cb_flag & IDWALK_CB_USER)) {
+		if ((data->flag & LIB_ID_CREATE_NO_MAIN) != 0) {
+			ROSE_assert(cb_data->self_id->tag & ID_TAG_NO_MAIN);
+			id_us_add(id);
+		}
+		else {
+			id_us_add(id);
+		}
+	}
+
+	return IDWALK_RET_NOP;
+}
+
+ID *KER_id_copy_ex(Main *main, const ID *id, ID **new_id_p, int flag) {
+	ID *new_id = (new_id_p) ? *new_id_p : NULL;
+
+	if (id == NULL) {
+		return NULL;
+	}
+
+	const IDTypeInfo *idtype_info = KER_idtype_get_info_from_id(id);
+
+	if (idtype_info != NULL) {
+		if ((idtype_info->flag & IDTYPE_FLAGS_NO_COPY) != 0) {
+			return NULL;
+		}
+
+		KER_libblock_copy_ex(main, id, &new_id, flag);
+
+		if (idtype_info->copy_data != NULL) {
+			idtype_info->copy_data(main, new_id, id, flag);
+		}
+	}
+	else {
+		ROSE_assert_msg(0, "IDType Missing IDTypeInfo");
+	}
+
+	ROSE_assert_msg(new_id, "Could not get an allocated new ID to copy into");
+
+	if (!new_id) {
+		return NULL;
+	}
+
+	/* Update ID refcount, remap pointers to self in new ID. */
+
+	IDCopyLibManagementData data = {
+		.id_src = id,
+		.id_dst = new_id,
+		.flag = 0,
+	};
+	KER_library_foreach_ID_link(main, new_id, id_copy_libmanagement_cb, &data, 0);
+
+	if (new_id_p != NULL) {
+		*new_id_p = new_id;
+	}
+
+	return new_id;
+}
+
+void *KER_id_copy(Main *main, const ID *id) {
+	return KER_id_copy_ex(main, id, NULL, 0);
 }
 
 /** \} */

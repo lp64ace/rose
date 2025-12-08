@@ -3,6 +3,8 @@
 #include "KER_action.h"
 #include "KER_anim_data.h"
 #include "KER_idtype.h"
+#include "KER_lib_id.h"
+#include "KER_main.h"
 #include "KER_fcurve.h"
 
 #include "LIB_utildefines.h"
@@ -40,6 +42,28 @@ AnimData *KER_animdata_ensure_id(ID *id) {
 		return iat->adt;
 	}
 	return NULL;
+}
+
+AnimData *KER_animdata_copy_ex(Main *main, AnimData *adt, int flag) {
+	const bool do_action = (flag & LIB_ID_COPY_ACTIONS) == 0 && (flag & LIB_ID_CREATE_NO_MAIN) == 0;
+	const bool do_user = (flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0;
+
+	if (adt == NULL) {
+		return NULL;
+	}
+
+	AnimData *new_adt = (AnimData *)MEM_dupallocN(adt);
+
+	if (do_action) {
+		const int id_copy_flag = (flag & LIB_ID_CREATE_NO_MAIN) == 0 ? (flag & ~LIB_ID_CREATE_NO_USER_REFCOUNT) : flag;
+
+		new_adt->action = (Action *)KER_id_copy_ex(main, (ID *)adt->action, NULL, id_copy_flag);
+	}
+	else if (do_user) {
+		id_us_add((ID *)new_adt->action);
+	}
+
+	return new_adt;
 }
 
 void KER_animdata_free(ID *id, const bool do_id_user) {
