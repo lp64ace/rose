@@ -41,7 +41,7 @@ ScrArea *screen_addarea(Screen *screen, ScrVert *v1, ScrVert *v2, ScrVert *v3, S
 	return screen_addarea_ex(AREAMAP_FROM_SCREEN(screen), v1, v2, v3, v4, spacetype);
 }
 
-Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, int *space_types, int totspaces) {
+Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, const int *space_types, int totspaces) {
 	Screen *screen = KER_libblock_alloc(main, ID_SCR, name, 0);
 
 	ScrVert *sv1 = screen_geom_vertex_add(screen, rect->xmin, rect->ymin);
@@ -56,12 +56,11 @@ Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, int *sp
 		screen_geom_edge_add(screen, sv3, sv4);
 		screen_geom_edge_add(screen, sv4, sv1);
 
-		int space_type = space_types[i - 1];
+		int spacetype = space_types ? space_types[i - 1] : SPACE_EMPTY;
 
-		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, space_type);
-
-		if (space_type) {
-			screen_area_spacelink_add(area, space_type);
+		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, spacetype);
+		if (area->spacetype != SPACE_EMPTY) {
+			screen_area_spacelink_add(area, area->spacetype);
 		}
 
 		sv1 = sv4;
@@ -75,7 +74,7 @@ Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, int *sp
 }
 
 Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
-	return ED_screen_add_ex(main, name, rect, (int[]){SPACE_EMPTY, SPACE_PROPERTIES}, 2);
+	return ED_screen_add_ex(main, name, rect, (const int[]){SPACE_EMPTY, SPACE_EMPTY}, 2);
 }
 
 /** \} */
