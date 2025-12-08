@@ -814,7 +814,7 @@ void RNA_property_int_set(PointerRNA *ptr, PropertyRNA *property, int value) {
 
 	ROSE_assert(!p.is_array);
 
-	IntPropertyRNA *iproperty = (FloatPropertyRNA *)p.rnaprop;
+	IntPropertyRNA *iproperty = (IntPropertyRNA *)p.rnaprop;
 
 	if (p.idprop) {
 		RNA_property_int_clamp(ptr, &iproperty->property, &value);

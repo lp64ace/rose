@@ -91,7 +91,7 @@ const char *RNA_property_description(const struct PropertyRNA *property);
 int RNA_property_int_get(struct PointerRNA *ptr, struct PropertyRNA *property);
 void RNA_property_int_set(struct PointerRNA *ptr, struct PropertyRNA *property, int value);
 void RNA_property_int_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_value);
-void RNA_property_int_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *f_value);
+void RNA_property_int_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *i_value);
 
 int RNA_int_get(struct PointerRNA *ptr, const char *name);
 void RNA_int_set(struct PointerRNA *ptr, const char *name, int value);

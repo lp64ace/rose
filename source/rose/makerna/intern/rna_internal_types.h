@@ -325,7 +325,7 @@ typedef struct ContainerRNA {
 
 typedef struct StructRNA *(*StructRefineFunc)(struct PointerRNA *ptr);
 typedef char *(*StructPathFunc)(const struct PointerRNA *ptr);
-typedef struct IDPRoperty **(*IDPropertiesFunc)(struct PointerRNA *ptr);
+typedef struct IDProperty **(*IDPropertiesFunc)(struct PointerRNA *ptr);
 
 typedef struct StructRNA {
 	ContainerRNA container;
