@@ -157,8 +157,6 @@ ROSE_INLINE void area_move_apply(struct rContext *C, wmOperator *op) {
 ROSE_INLINE void area_move_exit(struct rContext *C, wmOperator *op) {
 	sAreaMoveData *md = (sAreaMoveData *)(op->customdata);
 
-	op->customdata = NULL;
-
 	/* this makes sure aligned edges will result in aligned grabbing */
 	KER_screen_remove_double_scrverts(CTX_wm_screen(C));
 	KER_screen_remove_double_scredges(CTX_wm_screen(C));
