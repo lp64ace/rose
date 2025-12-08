@@ -458,8 +458,6 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 
 	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
 
-	static int a = 0;
-
 	/**
 	 * Definetely not the fucking place to update the mesh here,
 	 * we should evaluate the depsgraph instead.
