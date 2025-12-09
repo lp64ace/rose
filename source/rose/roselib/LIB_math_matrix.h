@@ -150,7 +150,7 @@ void size_to_mat3(float R[3][3], const float size[3]);
 void size_to_mat4(float R[4][4], const float size[3]);
 
 void mat3_to_size(float size[3], const float M[3][3]);
-void mat4_to_size(float size[4], const float M[4][4]);
+void mat4_to_size(float size[3], const float M[4][4]);
 
 void scale_m3_fl(float R[3][3], float scale);
 void scale_m4_fl(float R[4][4], float scale);

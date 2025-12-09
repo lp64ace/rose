@@ -834,7 +834,7 @@ void mat3_to_size(float size[3], const float M[3][3]) {
 	size[2] = len_v3(M[2]);
 }
 
-void mat4_to_size(float size[4], const float M[4][4]) {
+void mat4_to_size(float size[3], const float M[4][4]) {
 	size[0] = len_v3(M[0]);
 	size[1] = len_v3(M[1]);
 	size[2] = len_v3(M[2]);
