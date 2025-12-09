@@ -23,7 +23,7 @@ void KER_modifier_init(void) {
 }
 
 const ModifierTypeInfo *KER_modifier_get_info(eModifierType type) {
-	if (MODIFIER_TYPE_NONE <= type && type < NUM_MODIFIER_TYPES && mod_types[type]->name != '\0') {
+	if (MODIFIER_TYPE_NONE <= type && type < NUM_MODIFIER_TYPES && mod_types[type]->name[0] != '\0') {
 		return mod_types[type];
 	}
 

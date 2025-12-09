@@ -6,6 +6,8 @@
 struct Armature;
 struct Main;
 struct Object;
+struct Pose;
+struct PoseChannel;
 
 #ifdef __cplusplus
 extern "C" {

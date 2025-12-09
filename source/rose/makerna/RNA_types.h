@@ -29,6 +29,8 @@ extern const PointerRNA PointerRNA_NULL;
 /** \name Public API
  * \{ */
 
+struct CollectionPropertyIterator;
+
 typedef struct PathResolvedRNA {
 	struct PointerRNA ptr;
 	struct PropertyRNA *property;

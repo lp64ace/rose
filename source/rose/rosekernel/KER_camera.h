@@ -5,6 +5,9 @@
 #include "DNA_vector_types.h"
 
 struct Camera;
+struct Main;
+struct Object;
+struct RenderData;
 
 #ifdef __cplusplus
 extern "C" {

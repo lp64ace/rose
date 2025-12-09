@@ -9,6 +9,7 @@
 #include "rna_internal_types.h"
 #include "rna_internal.h"
 
+#include <limits.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -12,11 +12,22 @@
 #	include "win32/gtk_win32_window_manager.hh"
 #endif
 
+#ifdef WITH_X11
+#	include "x11/gtk_x11_render.hh"
+#	include "x11/gtk_x11_window.hh"
+#	include "x11/gtk_x11_window_manager.hh"
+#endif
+
 GTKManagerInterface *GTK_window_manager_new_ex(int backend) {
 	switch (backend) {
 #ifdef WIN32
 		case GTK_WINDOW_MANAGER_WIN32: {
 			return static_cast<GTKManagerInterface *>(MEM_new<GTKManagerWin32>("GTKManagerWin32"));
+		} break;
+#endif
+#ifdef WITH_X11
+		case GTK_WINDOW_MANAGER_X11: {
+			return static_cast<GTKManagerInterface *>(MEM_new<GTKManagerX11>("GTKManagerX11"));
 		} break;
 #endif
 	}
