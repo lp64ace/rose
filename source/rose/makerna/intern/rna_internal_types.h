@@ -375,7 +375,7 @@ typedef struct StructRNA {
 #include "LIB_string_ref.hh"
 
 struct PropertyRNAIdentifierGetter {
-	rose::StringRef PropertyRNAIdentifierGetter::operator()(const PropertyRNA *prop) const {
+	rose::StringRef operator()(const PropertyRNA *prop) const {
 		return prop->identifier;
 	}
 };
