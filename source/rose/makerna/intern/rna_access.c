@@ -16,6 +16,7 @@
 #include "rna_internal_types.h"
 #include "rna_internal.h"
 
+#include <limits.h>
 #include <stdio.h>
 
 /* NOTE: Initializing this object here is find for now, as it should not allocate any memory. */
@@ -97,6 +98,20 @@ IDProperty *rna_system_idproperty_find(PointerRNA *ptr, const char *name) {
 	}
 
 	return NULL;
+}
+
+ROSE_INLINE int rna_ensure_property_array_length(const PointerRNA *ptr, PropertyRNA *property) {
+	if (property->magic == RNA_MAGIC) {
+		/** We need to add custom get length here if one is implemented! */
+		return property->totarraylength;
+	}
+
+	/**
+	 * We ought to map IDProperty too!
+	 */
+	ROSE_assert_unreachable();
+
+	return 0;
 }
 
 ROSE_INLINE bool rna_idproperty_verify_valid(PointerRNA *ptr, PropertyRNA *prop, IDProperty *idprop) {
@@ -595,20 +610,6 @@ ROSE_INLINE bool rna_property_editable_do(const PointerRNA *ptr, PropertyRNA *or
 
 bool RNA_property_editable(const PointerRNA *ptr, PropertyRNA *property) {
 	return rna_property_editable_do(ptr, property, -1);
-}
-
-ROSE_INLINE int rna_ensure_property_array_length(const PointerRNA *ptr, PropertyRNA *property) {
-	if (property->magic == RNA_MAGIC) {
-		/** We need to add custom get length here if one is implemented! */
-		return property->totarraylength;
-	}
-
-	/**
-	 * We ought to map IDProperty too!
-	 */
-	ROSE_assert_unreachable();
-
-	return 0;
 }
 
 ePropertyType RNA_property_type(const PropertyRNA *property) {
