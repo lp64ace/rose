@@ -11,6 +11,7 @@ struct IDProperty;
 extern "C" {
 #endif
 
+struct rContext;
 struct wmEvent;
 
 typedef struct wmWindow {

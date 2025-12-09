@@ -221,7 +221,7 @@ template<typename BitSpanT, typename Fn> inline void foreach_0_index(const BitSp
 }
 
 template<typename ExprFn, typename FirstBitSpanT, typename... BitSpanT> inline std::optional<size_t> find_first_1_index_expr(ExprFn &&Expr, const FirstBitSpanT &first_arg, const BitSpanT &...args) {
-	return detail::find_first_1_index_expr(Expr, to_best_bit_span(first_arg), to_best_bit_span(args)...);
+	return find_first_1_index_expr(Expr, to_best_bit_span(first_arg), to_best_bit_span(args)...);
 }
 
 template<typename BitSpanT> inline std::optional<size_t> find_first_1_index(const BitSpanT &data) {
