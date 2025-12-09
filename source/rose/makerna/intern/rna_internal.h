@@ -148,10 +148,6 @@ PointerRNA rna_builtin_properties_get(struct CollectionPropertyIterator *iter);
  */
 void rna_pointer_create_with_ancestors(const struct PointerRNA *parent, struct StructRNA *type, void *data, struct PointerRNA *r_ptr);
 
-struct PointerRNA RNA_pointer_create_discrete(struct ID *id, struct StructRNA *type, void *data);
-struct PointerRNA RNA_pointer_create_with_parent(const struct PointerRNA *parent, struct StructRNA *type, void *data);
-struct PointerRNA RNA_property_pointer_get(struct PointerRNA *ptr, struct  PropertyRNA *property);
-
 /** \} */
 
 #ifdef __cplusplus

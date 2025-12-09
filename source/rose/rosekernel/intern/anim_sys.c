@@ -11,6 +11,7 @@
 #include "RNA_access.h"
 #include "RNA_types.h"
 
+#include "LIB_ghash.h"
 #include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"

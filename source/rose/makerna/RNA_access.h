@@ -139,6 +139,16 @@ struct IDProperty *RNA_struct_idprops(struct PointerRNA *ptr);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Pointer Handling
+ * \{ */
+
+struct PointerRNA RNA_pointer_create_discrete(struct ID *id, struct StructRNA *type, void *data);
+struct PointerRNA RNA_pointer_create_with_parent(const struct PointerRNA *parent, struct StructRNA *type, void *data);
+struct PointerRNA RNA_property_pointer_get(struct PointerRNA *ptr, struct PropertyRNA *property);
+
+/** \} */
+
 extern struct RoseRNA ROSE_RNA;
 
 #ifdef __cplusplus
