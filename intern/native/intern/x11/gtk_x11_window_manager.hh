@@ -39,7 +39,7 @@ class GTKManagerX11 final : public GTKManagerInterface {
 	XIM xim;
 
 	/* Separe function from the constructor since it may not always be available. */
-	bool XImmediateInit();
+	bool InitXIM();
 #endif
 
 	bool XExtensionsInit();
@@ -53,8 +53,8 @@ public:
 	
 	GTKWindowX11 *GetWindowByHandle(Window window);
 	
-	bool SetClipboard(const char *buffer, unsigned int length, bool selection);
-	bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
+	// bool SetClipboard(const char *buffer, unsigned int length, bool selection);
+	// bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
 
 public:
 
@@ -65,12 +65,13 @@ public:
 
 protected:
 	inline GTKWindowInterface *AllocateWindow(GTKManagerInterface *manager) {
-		return static_cast<GTKWindowInterface *>(MEM_new<GTKWindowX11>("GTKWindowX11", static_cast<GTKManagerInterface *>(manager)));
+		return static_cast<GTKWindowInterface *>(MEM_new<GTKWindowX11>("GTKWindowX11", static_cast<GTKManagerX11 *>(manager)));
 	}
 	
 	void EventProcedure(XEvent *evt);
 	
 	friend class GTKWindowX11;
+	friend class GTKRenderXGL;
 };
 
 #endif

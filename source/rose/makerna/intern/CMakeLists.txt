@@ -28,7 +28,7 @@ set(LIB_SRC
 	../RNA_types.h
 	
 	rna_define.c
-	rna_define_inline.c
+	rna_define_dna_compat.c
 	rna_internal_types.h
 	rna_internal.h
 	

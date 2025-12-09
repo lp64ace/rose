@@ -14,6 +14,8 @@ extern "C" {
 
 struct Main;
 struct Mesh;
+struct Object;
+struct Scene;
 
 /* -------------------------------------------------------------------- */
 /** \name Draw Cache

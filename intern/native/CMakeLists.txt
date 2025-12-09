@@ -73,6 +73,8 @@ if(ROSE_BUILD_X11)
 		intern/x11/gtk_x11_window_manager.hh
 	)
 	
+	add_definitions(-DWITH_X11)
+	
 	if(WITH_X11_XINPUT)
 		add_definitions(-DWITH_X11_XINPUT)
 		

@@ -12,6 +12,7 @@ struct Mesh;
 struct ModifierData;
 struct ModifierEvalContext;
 struct Object;
+struct Scene;
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,8 +24,20 @@ extern "C" {
 
 typedef void (*IDWalkFunc)(void *userdata, struct Object *object, struct ID **idpointer, int flag);
 
-enum eModifierInfoType;
-enum eModifierInfoFlag;
+typedef enum eModifierInfoType {
+	/**
+	 * Modifier only does deformation, implies that modifier type should have a 
+	 * valid deform_verts function. OnlyDeform style modifiers implicitly accept either mesh 
+	 * input but should still declare flags appropriately.
+	 */
+	OnlyDeform,
+} eModifierInfoType;
+
+typedef enum eModifierInfoFlag {
+	eModifierTypeFlag_AcceptsMesh = (1 << 0),
+} eModifierInfoFlag;
+
+ENUM_OPERATORS(eModifierInfoFlag, eModifierTypeFlag_AcceptsMesh)
 
 typedef struct ModifierTypeInfo {
 	/**
@@ -41,8 +54,8 @@ typedef struct ModifierTypeInfo {
 
 	size_t size;
 
-	enum eModifierInfoType type;
-	enum eModifierInfoFlag flag;
+	eModifierInfoType type;
+	eModifierInfoFlag flag;
 
 	/********************* Non-optional functions *********************/
 
@@ -142,21 +155,6 @@ typedef struct ModifierTypeInfo {
 	void (*free_runtime_data)(void *runtime_data);
 
 } ModifierTypeInfo;
-
-typedef enum eModifierInfoType {
-	/**
-	 * Modifier only does deformation, implies that modifier type should have a 
-	 * valid deform_verts function. OnlyDeform style modifiers implicitly accept either mesh 
-	 * input but should still declare flags appropriately.
-	 */
-	OnlyDeform,
-} eModifierInfoType;
-
-typedef enum eModifierInfoFlag {
-	eModifierTypeFlag_AcceptsMesh = (1 << 0),
-} eModifierInfoFlag;
-
-ENUM_OPERATORS(eModifierInfoFlag, eModifierTypeFlag_AcceptsMesh)
 
 /** \} */
 

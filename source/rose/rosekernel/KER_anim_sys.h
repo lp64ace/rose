@@ -4,6 +4,7 @@
 struct AnimData;
 struct ID;
 struct PathResolvedRNA;
+struct PointerRNA;
 struct Scene;
 
 #ifdef __cplusplus

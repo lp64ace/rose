@@ -4,6 +4,9 @@
 #include "intern/gtk_window.hh"
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+class GTKManagerX11;
 
 class GTKWindowX11 : public GTKWindowInterface {
     Display *display;
@@ -11,6 +14,11 @@ class GTKWindowX11 : public GTKWindowInterface {
 	
 	int state;
 	int active;
+	
+	int x;
+	int y;
+	int sizex;
+	int sizey;
 	
 	XVisualInfo *visual_info;
 	
@@ -68,9 +76,7 @@ public:
 #endif
 
 protected:
-	GTKRenderInterface *AllocateRender(int render) {
-		return NULL;
-	}
+	GTKRenderInterface *AllocateRender(int render);
 
     friend class GTKManagerX11;
 };

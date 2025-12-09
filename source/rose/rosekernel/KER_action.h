@@ -9,6 +9,7 @@
 
 struct Action;
 struct ActionSlot;
+struct FCurveDescriptor;
 struct Main;
 struct Pose;
 struct PoseChannel;

@@ -9,6 +9,7 @@
 #include "rna_internal_types.h"
 #include "rna_internal.h"
 
+#include <limits.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -781,7 +782,7 @@ ROSE_INLINE char *rna_def_property_begin_func(FILE *fpout, StructRNA *srna, Prop
 
 	fprintf(fpout, "\tmemset(iter, 0, sizeof(CollectionPropertyIterator));\n");
 	fprintf(fpout, "\titer->parent = *ptr;\n");
-	fprintf(fpout, "\titer->property = &rna_%s_%s_;\n", srna->identifier, property->identifier);
+	fprintf(fpout, "\titer->property = (PropertyRNA *)&rna_%s_%s_;\n", srna->identifier, property->identifier);
 	fprintf(fpout, "\n");
 
 	if (defproperty->dnalengthname || defproperty->dnalengthfixed) {
@@ -1053,7 +1054,7 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 		fprintf(fpout, "\t\t.prev = ");
 		do {
 			if (property->prev) {
-				fprintf(fpout, "&rna_%s%s_%s_", srna->identifier, strnest, property->prev->identifier);
+				fprintf(fpout, "(PropertyRNA *)&rna_%s%s_%s_", srna->identifier, strnest, property->prev->identifier);
 			}
 			else {
 				fprintf(fpout, "NULL");
@@ -1064,7 +1065,7 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 		fprintf(fpout, "\t\t.next = ");
 		do {
 			if (property->next) {
-				fprintf(fpout, "&rna_%s%s_%s_", srna->identifier, strnest, property->next->identifier);
+				fprintf(fpout, "(PropertyRNA *)&rna_%s%s_%s_", srna->identifier, strnest, property->next->identifier);
 			}
 			else {
 				fprintf(fpout, "NULL");

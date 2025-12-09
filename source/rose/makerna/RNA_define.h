@@ -3,6 +3,7 @@
 
 #include "RNA_types.h"
 
+struct DNAType;
 struct RoseRNA;
 struct StructRNA;
 
@@ -132,14 +133,12 @@ bool rna_PoseBones_lookup_string(struct PointerRNA *ptr, const char *key, struct
 
 /** \} */
 
-ROSE_INLINE bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type);
-ROSE_INLINE bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type);
-ROSE_INLINE bool IS_DNATYPE_BOOLEAN_COMPAT(const struct DNAType *type);
+bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type);
+bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type);
+bool IS_DNATYPE_BOOLEAN_COMPAT(const struct DNAType *type);
 
 #ifdef __cplusplus
 }
 #endif
-
-#include "intern/rna_define_inline.c"
 
 #endif	// RNA_DEFINE_H

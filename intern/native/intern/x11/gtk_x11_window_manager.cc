@@ -1,5 +1,12 @@
 #include "gtk_x11_window_manager.hh"
 
+#include <limits.h>
+#include <stdio.h>
+
+static int convert_key(const KeySym x11_key);
+static int convert_code(XkbDescPtr xkb_descr, const KeyCode x11_code);
+static int convert_key_ex(const KeySym x11_key, XkbDescPtr xkb_descr, const KeyCode x11_code);
+
 GTKManagerX11::GTKManagerX11() : display(XOpenDisplay(NULL)) {
     if (!display) {
         return;
@@ -8,7 +15,7 @@ GTKManagerX11::GTKManagerX11() : display(XOpenDisplay(NULL)) {
     setlocale(LC_ALL, "");
 
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
-    if (!this->XImmediateInit()){
+    if (!this->InitXIM()){
         // Not really a reason to abort since some systems do not have it completely.
     }
 #endif
@@ -50,7 +57,7 @@ static void XImmediateDestroyCallback(XIM xim, XPointer ptr, XPointer data) {
     }
 }
 
-bool GTKManagerX11::XImmediateInit() {
+bool GTKManagerX11::InitXIM() {
     XSetLocaleModifiers("");
 
     if (!(this->xim = XOpenIM(this->display, NULL, NULL, NULL))) {
@@ -84,7 +91,7 @@ bool GTKManagerX11::XExtensionsInit() {
 
 GTKWindowX11 *GTKManagerX11::GetWindowByHandle(Window window) {
 	for (auto window : this->GetWindows()) {
-		if (static_cast<GTKWindowX11 *>(window)->GetHandle() == window) {
+		if ((void *)static_cast<GTKWindowX11 *>(window)->GetHandle() == (void *)window) {
 			return static_cast<GTKWindowX11 *>(window);
 		}
 	}
@@ -149,10 +156,10 @@ void GTKManagerX11::Poll() {
          *                                .%#  %-
 		 */
 		if (evt.type == FocusIn || evt.type == KeyPress) {
-			if (!this->xim_) {
+			if (!this->xim) {
 				this->InitXIM();
 			}
-			if (this->xim_) {
+			if (this->xim) {
 				GTKWindowX11 *window = this->GetWindowByHandle(evt.xany.window);
 				if (window && !window->xic && window->InitXIC(this)) {
 					if (evt.type == KeyPress) {
@@ -171,6 +178,10 @@ void GTKManagerX11::Poll() {
 	}
 }
 
+static unsigned char bit_is_on(const unsigned char *ptr, int bit) {
+	return ptr[bit >> 3] & (1 << (bit & 7));
+}
+
 void GTKManagerX11::EventProcedure(XEvent *evt) {
 	GTKWindowX11 *window = this->GetWindowByHandle(evt->xany.window);
 	
@@ -183,40 +194,40 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 		} break;
 		
 		case DestroyNotify: {
-			if (DestroyEvent != nullptr) {
-				DestroyEvent(window);
+			if (DispatchDestroy != nullptr) {
+				DispatchDestroy(window);
 			}
 		} break;
 		
 		// when a request to resize the window is made either by dragging out the window or programmatically
 		case ResizeRequest: {
-			window->clientx = evt->xresizerequest.width;
-			window->clienty = evt->xresizerequest.height;
+			window->sizex = evt->xresizerequest.width;
+			window->sizey = evt->xresizerequest.height;
 			
-			if (ResizeEvent) {
-				ResizeEvent(window, window->clientx, window->clienty);
+			if (DispatchResize) {
+				DispatchResize(window, window->sizex, window->sizey);
 			}
 		} break;
 
 		// when a request to configure the window is made
 		case ConfigureNotify: {
 			// check if window was resized
-			if (evt->xconfigure.width != window->clientx || evt->xconfigure.height != window->clienty) {
-				window->clientx = evt->xconfigure.width;
-				window->clienty = evt->xconfigure.height;
+			if (evt->xconfigure.width != window->sizex || evt->xconfigure.height != window->sizey) {
+				window->sizex = evt->xconfigure.width;
+				window->sizey = evt->xconfigure.height;
 				
-				if (ResizeEvent) {
-					ResizeEvent(window, window->clientx, window->clienty);
+				if (DispatchResize) {
+					DispatchResize(window, window->sizex, window->sizey);
 				}
 			}
 			
 			// check if window was moved
-			if (evt->xconfigure.x != window->posx || evt->xconfigure.y != window->posy) {
-				window->posx = evt->xconfigure.x;
-				window->posy = evt->xconfigure.y;
+			if (evt->xconfigure.x != window->x || evt->xconfigure.y != window->y) {
+				window->x = evt->xconfigure.x;
+				window->y = evt->xconfigure.y;
 				
-				if (MoveEvent) {
-					MoveEvent(window, window->posx, window->posy);
+				if (DispatchMove) {
+					DispatchMove(window, window->x, window->y);
 				}
 			}
 		} break;
@@ -236,17 +247,17 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 			XGetWindowProperty(this->display, evt->xproperty.window, window->AtomState, 0, LONG_MAX, false, AnyPropertyType, &type, &format, &numItems, &bytesAfter, &properties);
 
 			if (properties && (format == 32)) {
-				window->state_ = State::normal;
+				window->state = GTK_STATE_RESTORED;
 				// go through each property and match it to an existing Atomic state
 				for (unsigned int itemIndex = 0; itemIndex < numItems; itemIndex++) {
 					Atom currentProperty = ((long *)(properties))[itemIndex];
 
 					if (currentProperty == window->AtomHidden) {
-						window->state_ = State::minimized;
+						window->state = GTK_STATE_MINIMIZED;
 					}
 
 					if (currentProperty == window->AtomMaxVert || currentProperty == window->AtomMaxVert) {
-						window->state_ = State::maximized;
+						window->state = GTK_STATE_MAXIMIZED;
 					}
 
 					if (currentProperty == window->AtomFocused) {
@@ -262,7 +273,7 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 		
 		case KeyPress:
 		case KeyRelease: {
-			if(!window->active_) {
+			if(!window->active) {
 				break;
 			}
 			
@@ -324,44 +335,44 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 	
 			int mkey = convert_key_ex(key_sym, this->xkb_descr, xke->keycode);
 			switch (mkey) {
-				case WTK_KEY_LEFT_ALT:
-				case WTK_KEY_RIGHT_ALT:
-				case WTK_KEY_LEFT_CTRL:
-				case WTK_KEY_RIGHT_CTRL:
-				case WTK_KEY_LEFT_SHIFT:
-				case WTK_KEY_RIGHT_SHIFT:
-				case WTK_KEY_LEFT_OS:
-				case WTK_KEY_RIGHT_OS:
-				case WTK_KEY_0:
-				case WTK_KEY_1:
-				case WTK_KEY_2:
-				case WTK_KEY_3:
-				case WTK_KEY_4:
-				case WTK_KEY_5:
-				case WTK_KEY_6:
-				case WTK_KEY_7:
-				case WTK_KEY_8:
-				case WTK_KEY_9:
-				case WTK_KEY_NUMPAD_0:
-				case WTK_KEY_NUMPAD_1:
-				case WTK_KEY_NUMPAD_2:
-				case WTK_KEY_NUMPAD_3:
-				case WTK_KEY_NUMPAD_4:
-				case WTK_KEY_NUMPAD_5:
-				case WTK_KEY_NUMPAD_6:
-				case WTK_KEY_NUMPAD_7:
-				case WTK_KEY_NUMPAD_8:
-				case WTK_KEY_NUMPAD_9:
-				case WTK_KEY_NUMPAD_PERIOD:
-				case WTK_KEY_NUMPAD_ENTER:
-				case WTK_KEY_NUMPAD_PLUS:
-				case WTK_KEY_NUMPAD_MINUS:
-				case WTK_KEY_NUMPAD_ASTERISK:
-				case WTK_KEY_NUMPAD_SLASH:
+				case GTK_KEY_LEFT_ALT:
+				case GTK_KEY_RIGHT_ALT:
+				case GTK_KEY_LEFT_CTRL:
+				case GTK_KEY_RIGHT_CTRL:
+				case GTK_KEY_LEFT_SHIFT:
+				case GTK_KEY_RIGHT_SHIFT:
+				case GTK_KEY_LEFT_OS:
+				case GTK_KEY_RIGHT_OS:
+				case GTK_KEY_0:
+				case GTK_KEY_1:
+				case GTK_KEY_2:
+				case GTK_KEY_3:
+				case GTK_KEY_4:
+				case GTK_KEY_5:
+				case GTK_KEY_6:
+				case GTK_KEY_7:
+				case GTK_KEY_8:
+				case GTK_KEY_9:
+				case GTK_KEY_NUMPAD_0:
+				case GTK_KEY_NUMPAD_1:
+				case GTK_KEY_NUMPAD_2:
+				case GTK_KEY_NUMPAD_3:
+				case GTK_KEY_NUMPAD_4:
+				case GTK_KEY_NUMPAD_5:
+				case GTK_KEY_NUMPAD_6:
+				case GTK_KEY_NUMPAD_7:
+				case GTK_KEY_NUMPAD_8:
+				case GTK_KEY_NUMPAD_9:
+				case GTK_KEY_NUMPAD_PERIOD:
+				case GTK_KEY_NUMPAD_ENTER:
+				case GTK_KEY_NUMPAD_PLUS:
+				case GTK_KEY_NUMPAD_MINUS:
+				case GTK_KEY_NUMPAD_ASTERISK:
+				case GTK_KEY_NUMPAD_SLASH:
 					break;
 				default: {
 					int mkey_str = convert_key(key_sym_str);
-					if (mkey_str != WTK_KEY_UNKOWN) {
+					if (mkey_str != GTK_KEY_UNKOWN) {
 						mkey = mkey_str;
 					}
 				} break;
@@ -375,7 +386,7 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 			
 #if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
 			if (xke->type == KeyPress) {
-				xic = window->xic_;
+				xic = window->xic;
 				if (xic) {
 					Status status;
 					
@@ -433,13 +444,13 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 					bool is_repeat_keycode = false;
 					if (this->xkb_descr != nullptr) {
 						if ((xke->keycode < (XkbPerKeyBitArraySize << 3)) && bit_is_on(this->xkb_descr->ctrls->per_key_repeat, xke->keycode)) {
-							is_repeat_keycode = (this->keycode_last_repeat_key_ == xke->keycode);
+							is_repeat_keycode = (this->keycode_last_repeat_key == xke->keycode);
 						}
 					}
-					this->keycode_last_repeat_key_ = xke->keycode;
+					this->keycode_last_repeat_key = xke->keycode;
 
-					if (KeyDownEvent) {
-						KeyDownEvent(window, mkey, is_repeat_keycode, utf8_buf, time);
+					if (DispatchKeyDown) {
+						DispatchKeyDown(window, mkey, is_repeat_keycode, utf8_buf, time);
 					}
 
 					if (xic) {
@@ -457,17 +468,17 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 								break;
 							}
 
-							if (KeyDownEvent) {
-								KeyDownEvent(window, mkey, is_repeat_keycode, &utf8_buf[i], time);
+							if (DispatchKeyDown) {
+								DispatchKeyDown(window, mkey, is_repeat_keycode, &utf8_buf[i], time);
 							}
 						}
 					}
 				} break;
 				case KeyRelease: {
-					this->keycode_last_repeat_key_ = -1;
+					this->keycode_last_repeat_key = -1;
 					
-					if (KeyUpEvent) {
-						KeyUpEvent(window, mkey, time);
+					if (DispatchKeyUp) {
+						DispatchKeyUp(window, mkey, time);
 					}
 				} break;
 			}
@@ -486,18 +497,18 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 			
 			switch(evt->xbutton.button) {
 				case 1: {
-					if (ButtonDownEvent) {
-						ButtonDownEvent(window, WTK_BTN_LEFT, evt->xbutton.x, evt->xbutton.y, time);
+					if (DispatchButtonDown) {
+						DispatchButtonDown(window, GTK_BTN_LEFT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 2: {
-					if (ButtonDownEvent) {
-						ButtonDownEvent(window, WTK_BTN_MIDDLE, evt->xbutton.x, evt->xbutton.y, time);
+					if (DispatchButtonDown) {
+						DispatchButtonDown(window, GTK_BTN_MIDDLE, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 3: {
-					if (ButtonDownEvent) {
-						ButtonDownEvent(window, WTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
+					if (DispatchButtonDown) {
+						DispatchButtonDown(window, GTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 			}
@@ -512,28 +523,28 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 			
 			switch(evt->xbutton.button) {
 				case 1: {
-					if (ButtonUpEvent) {
-						ButtonUpEvent(window, WTK_BTN_LEFT, evt->xbutton.x, evt->xbutton.y, time);
+					if (DispatchButtonUp) {
+						DispatchButtonUp(window, GTK_BTN_LEFT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 2: {
-					if (ButtonUpEvent) {
-						ButtonUpEvent(window, WTK_BTN_MIDDLE, evt->xbutton.x, evt->xbutton.y, time);
+					if (DispatchButtonUp) {
+						DispatchButtonUp(window, GTK_BTN_MIDDLE, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 3: {
-					if (ButtonUpEvent) {
-						ButtonUpEvent(window, WTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
+					if (DispatchButtonUp) {
+						DispatchButtonUp(window, GTK_BTN_RIGHT, evt->xbutton.x, evt->xbutton.y, time);
 					}
 				} break;
 				case 4: {
-					if (WheelEvent) {
-						WheelEvent(window, 0, 1, time);
+					if (DispatchWheel) {
+						DispatchWheel(window, 0, 1, time);
 					}
 				} break;
 				case 5: {
-					if (WheelEvent) {
-						WheelEvent(window, 0, -1, time);
+					if (DispatchWheel) {
+						DispatchWheel(window, 0, -1, time);
 					}
 				} break;
 			}
@@ -545,8 +556,8 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 				XSetICFocus(window->xic);
 			}
 #endif
-			if(ActivateEvent) {
-				ActivateEvent(window, true);
+			if(DispatchFocus) {
+				DispatchFocus(window, true);
 			}
 			window->active = true;
 		} break;
@@ -557,8 +568,8 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 				XUnsetICFocus(window->xic);
 			}
 #endif
-			if(ActivateEvent) {
-				ActivateEvent(window, false);
+			if(DispatchFocus) {
+				DispatchFocus(window, false);
 			}
 			window->active = false;
 		} break;
@@ -570,8 +581,8 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 			
 			double time = static_cast<double>(evt->xmotion.time) / 1000.0;
 			
-			if (MouseEvent) {
-				MouseEvent(window, evt->xmotion.x, evt->xmotion.y, time);
+			if (DispatchMouse) {
+				DispatchMouse(window, evt->xmotion.x, evt->xmotion.y, time);
 			}
 		} break;
 		
@@ -583,9 +594,8 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 		// check for events that were created by the TinyWindow manager
 		case ClientMessage: {
 			if ((Atom)evt->xclient.data.l[0] == window->AtomClose) {
-				window->should_close_ = true;
-				if (DestroyEvent) {
-					DestroyEvent(window);
+				if (DispatchDestroy) {
+					DispatchDestroy(window);
 				}
 				break;
 			}
@@ -601,4 +611,129 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 			}
 		} break;
 	}
+}
+
+static int convert_key(const KeySym x11_key) {
+	int key = GTK_KEY_UNKOWN;
+	
+	if ((x11_key >= XK_A) && (x11_key <= XK_Z)) {
+		key = (x11_key - XK_A + GTK_KEY_A);
+	}
+	else if ((x11_key >= XK_a) && (x11_key <= XK_z)) {
+		key = (x11_key - XK_a + GTK_KEY_A);
+	}
+	else if ((x11_key >= XK_0) && (x11_key <= XK_9)) {
+		key = (x11_key - XK_0 + GTK_KEY_0);
+	}
+	else if ((x11_key >= XK_F1) && (x11_key <= XK_F24)) {
+		key = (x11_key - XK_F1 + GTK_KEY_F1);
+	}
+	else {
+		
+#define ASSOCIATE(store, what, to) case what: store = to; break;
+		
+		switch(x11_key) {
+			ASSOCIATE(key, XK_BackSpace, GTK_KEY_BACKSPACE);
+			ASSOCIATE(key, XK_Tab, GTK_KEY_TAB);
+			ASSOCIATE(key, XK_ISO_Left_Tab, GTK_KEY_TAB);
+			ASSOCIATE(key, XK_Return, GTK_KEY_ENTER);
+			ASSOCIATE(key, XK_Escape, GTK_KEY_ESC);
+			ASSOCIATE(key, XK_space, GTK_KEY_SPACE);
+			
+			ASSOCIATE(key, XK_semicolon, GTK_KEY_SEMICOLON);
+			ASSOCIATE(key, XK_period, GTK_KEY_PERIOD);
+			ASSOCIATE(key, XK_comma, GTK_KEY_COMMA);
+			ASSOCIATE(key, XK_quoteright, GTK_KEY_QUOTE);
+			ASSOCIATE(key, XK_quoteleft, GTK_KEY_ACCENTGRAVE);
+			ASSOCIATE(key, XK_minus, GTK_KEY_MINUS);
+			ASSOCIATE(key, XK_plus, GTK_KEY_PLUS);
+			ASSOCIATE(key, XK_slash, GTK_KEY_SLASH);
+			ASSOCIATE(key, XK_backslash, GTK_KEY_BACKSLASH);
+			ASSOCIATE(key, XK_equal, GTK_KEY_EQUAL);
+			ASSOCIATE(key, XK_bracketleft, GTK_KEY_LEFT_BRACKET);
+			ASSOCIATE(key, XK_bracketright, GTK_KEY_RIGHT_BRACKET);
+			ASSOCIATE(key, XK_Pause, GTK_KEY_PAUSE);
+			
+			ASSOCIATE(key, XK_Shift_L, GTK_KEY_LEFT_SHIFT);
+			ASSOCIATE(key, XK_Shift_R, GTK_KEY_RIGHT_SHIFT);
+			ASSOCIATE(key, XK_Control_L, GTK_KEY_LEFT_CTRL);
+			ASSOCIATE(key, XK_Control_R, GTK_KEY_RIGHT_CTRL);
+			ASSOCIATE(key, XK_Alt_L, GTK_KEY_LEFT_ALT);
+			ASSOCIATE(key, XK_Alt_R, GTK_KEY_RIGHT_ALT);
+			ASSOCIATE(key, XK_Super_L, GTK_KEY_LEFT_OS);
+			ASSOCIATE(key, XK_Super_R, GTK_KEY_RIGHT_OS);
+			
+			ASSOCIATE(key, XK_Insert, GTK_KEY_INSERT);
+			ASSOCIATE(key, XK_Delete, GTK_KEY_DELETE);
+			ASSOCIATE(key, XK_Home, GTK_KEY_HOME);
+			ASSOCIATE(key, XK_End, GTK_KEY_END);
+			ASSOCIATE(key, XK_Page_Up, GTK_KEY_PAGEUP);
+			ASSOCIATE(key, XK_Page_Down, GTK_KEY_PAGEDOWN);
+			
+			ASSOCIATE(key, XK_Left, GTK_KEY_LEFT);
+			ASSOCIATE(key, XK_Right, GTK_KEY_RIGHT);
+			ASSOCIATE(key, XK_Up, GTK_KEY_UP);
+			ASSOCIATE(key, XK_Down, GTK_KEY_DOWN);
+			
+			ASSOCIATE(key, XK_Caps_Lock, GTK_KEY_CAPSLOCK);
+			ASSOCIATE(key, XK_Scroll_Lock, GTK_KEY_SCRLOCK);
+			ASSOCIATE(key, XK_Num_Lock, GTK_KEY_NUMLOCK);
+			ASSOCIATE(key, XK_Menu, GTK_KEY_APP);
+			
+			ASSOCIATE(key, XK_KP_0, GTK_KEY_NUMPAD_0);
+			ASSOCIATE(key, XK_KP_1, GTK_KEY_NUMPAD_1);
+			ASSOCIATE(key, XK_KP_2, GTK_KEY_NUMPAD_2);
+			ASSOCIATE(key, XK_KP_3, GTK_KEY_NUMPAD_3);
+			ASSOCIATE(key, XK_KP_4, GTK_KEY_NUMPAD_4);
+			ASSOCIATE(key, XK_KP_5, GTK_KEY_NUMPAD_5);
+			ASSOCIATE(key, XK_KP_6, GTK_KEY_NUMPAD_6);
+			ASSOCIATE(key, XK_KP_7, GTK_KEY_NUMPAD_7);
+			ASSOCIATE(key, XK_KP_8, GTK_KEY_NUMPAD_8);
+			ASSOCIATE(key, XK_KP_9, GTK_KEY_NUMPAD_9);
+			ASSOCIATE(key, XK_KP_Decimal, GTK_KEY_NUMPAD_PERIOD);
+			
+			ASSOCIATE(key, XK_KP_Insert, GTK_KEY_NUMPAD_0);
+			ASSOCIATE(key, XK_KP_End, GTK_KEY_NUMPAD_1);
+			ASSOCIATE(key, XK_KP_Down, GTK_KEY_NUMPAD_2);
+			ASSOCIATE(key, XK_KP_Page_Down, GTK_KEY_NUMPAD_3);
+			ASSOCIATE(key, XK_KP_Left, GTK_KEY_NUMPAD_4);
+			ASSOCIATE(key, XK_KP_Begin, GTK_KEY_NUMPAD_5);
+			ASSOCIATE(key, XK_KP_Right, GTK_KEY_NUMPAD_6);
+			ASSOCIATE(key, XK_KP_Home, GTK_KEY_NUMPAD_7);
+			ASSOCIATE(key, XK_KP_Up, GTK_KEY_NUMPAD_8);
+			ASSOCIATE(key, XK_KP_Page_Up, GTK_KEY_NUMPAD_9);
+			ASSOCIATE(key, XK_KP_Delete, GTK_KEY_NUMPAD_PERIOD);
+			
+			ASSOCIATE(key, XK_KP_Enter, GTK_KEY_NUMPAD_ENTER);
+			ASSOCIATE(key, XK_KP_Add, GTK_KEY_NUMPAD_PLUS);
+			ASSOCIATE(key, XK_KP_Subtract, GTK_KEY_NUMPAD_MINUS);
+			ASSOCIATE(key, XK_KP_Multiply, GTK_KEY_NUMPAD_ASTERISK);
+			ASSOCIATE(key, XK_KP_Divide, GTK_KEY_NUMPAD_SLASH);
+
+			default: {
+				// fprintf(stdout, "[Linux/Key] Warning! Failed to associate %lu with any key.\n", x11_key);
+			} break;
+		}
+		
+#undef ASSOCIATE
+	}
+	
+	return key;
+}
+
+static int convert_code(XkbDescPtr xkb_descr, const KeyCode x11_code) {
+	if (x11_code >= xkb_descr->min_key_code && x11_code <= xkb_descr->max_key_code) {
+		const char *id_str = xkb_descr->names->keys[x11_code].name;
+	}
+	return GTK_KEY_UNKOWN;
+}
+
+static int convert_key_ex(const KeySym x11_key, XkbDescPtr xkb_descr, const KeyCode x11_code) {
+	int key = convert_key(x11_key);
+	if (key == GTK_KEY_UNKOWN) {
+		if (xkb_descr) {
+			key = convert_code(xkb_descr, x11_code);
+		}
+	}
+	return key;
 }

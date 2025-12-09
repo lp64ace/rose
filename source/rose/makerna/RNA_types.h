@@ -9,6 +9,7 @@ struct ID;
 extern "C" {
 #endif
 
+typedef struct PropertyRNA PropertyRNA;
 
 /* -------------------------------------------------------------------- */
 /** \name Pointer RNA
@@ -27,6 +28,8 @@ extern const PointerRNA PointerRNA_NULL;
 /* -------------------------------------------------------------------- */
 /** \name Public API
  * \{ */
+
+struct CollectionPropertyIterator;
 
 typedef struct PathResolvedRNA {
 	struct PointerRNA ptr;

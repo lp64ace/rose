@@ -14,7 +14,7 @@ extern RoseDefRNA DefRNA;
 extern "C" {
 #endif
 
-ROSE_INLINE bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type) {
+bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type) {
 	if (ELEM(DNA_sdna_type_kind(DefRNA.sdna, type), DNA_FLOAT, DNA_DOUBLE, DNA_CHAR)) {
 		return true;
 	}
@@ -27,7 +27,7 @@ ROSE_INLINE bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type) {
 	return false;
 }
 
-ROSE_INLINE bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type) {
+bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type) {
 	if (ELEM(DNA_sdna_type_kind(DefRNA.sdna, type), DNA_INT, DNA_SHORT, DNA_CHAR)) {
 		return true;
 	}
@@ -38,7 +38,7 @@ ROSE_INLINE bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type) {
 	return false;
 }
 
-ROSE_INLINE bool IS_DNATYPE_BOOLEAN_COMPAT(const struct DNAType *type) {
+bool IS_DNATYPE_BOOLEAN_COMPAT(const struct DNAType *type) {
 	if (ELEM(DNA_sdna_type_kind(DefRNA.sdna, type), DNA_LLONG) || IS_DNATYPE_INT_COMPAT(type)) {
 		return true;
 	}
