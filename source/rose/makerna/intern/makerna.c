@@ -1500,6 +1500,7 @@ ROSE_INLINE void rna_generate(RoseRNA *rna, FILE *fpout, const char *filename) {
 	fprintf(fpout, "#include \"KER_lib_id.h\"\n");
 	fprintf(fpout, "#include \"KER_main.h\"\n");
 	fprintf(fpout, "\n");
+	fprintf(fpout, "#include \"RNA_access.h\"\n");
 	fprintf(fpout, "#include \"RNA_prototypes.h\"\n");
 	fprintf(fpout, "\n");
 	fprintf(fpout, "#include \"rna_internal_types.h\"\n");
