@@ -73,9 +73,7 @@ bool GTK_window_manager_has_events(struct GTKWindowManager *vmanager) {
 void GTK_window_manager_poll(struct GTKWindowManager *vmanager) {
 	GTKManagerInterface *manager = reinterpret_cast<GTKManagerInterface *>(vmanager);
 
-	if (manager) {
-		manager->Poll();
-	}
+	manager->Poll();
 }
 
 double GTK_elapsed_time(struct GTKWindowManager *vmanager) {
