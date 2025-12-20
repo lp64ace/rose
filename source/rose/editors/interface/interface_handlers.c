@@ -36,7 +36,7 @@
 /** \name UI Event Handlers
  * \{ */
 
-ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *user_data);
+ROSE_STATIC int ui_region_handler(rContext *C, const wmEvent *evt, void *user_data);
 
 typedef struct uiHandleButtonData {
 	struct wmWindow *window;
@@ -301,10 +301,10 @@ ROSE_INLINE bool ui_button_modal_state(uiBut *but) {
 	return button_modal_state(data->state);
 }
 
-ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data);
+ROSE_STATIC int ui_handler_region_menu(rContext *C, const wmEvent *evt, void *user_data);
 
-void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, int state);
-void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but);
+void ui_do_but_activate_init(rContext *C, ARegion *region, uiBut *but, int state);
+void ui_do_but_activate_exit(rContext *C, ARegion *region, uiBut *but);
 
 ROSE_STATIC void ui_but_tag_redraw(uiBut *but) {
 	uiHandleButtonData *data = but->active;
@@ -318,7 +318,7 @@ ROSE_STATIC void ui_but_tag_redraw(uiBut *but) {
 	ED_region_tag_redraw_no_rebuild(data->region);
 }
 
-ROSE_STATIC void button_activate_state(struct rContext *C, uiBut *but, int state) {
+ROSE_STATIC void button_activate_state(rContext *C, uiBut *but, int state) {
 	uiHandleButtonData *data = but->active;
 	if (!data || data->state == state) {
 		return;
@@ -356,7 +356,7 @@ ROSE_STATIC void button_activate_state(struct rContext *C, uiBut *but, int state
 	}
 }
 
-void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, int state) {
+void ui_do_but_activate_init(rContext *C, ARegion *region, uiBut *but, int state) {
 	/* Only ever one active button! */
 	ROSE_assert(ui_region_find_active_but(region) == NULL);
 
@@ -396,7 +396,7 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, in
 	}
 }
 
-void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but) {
+void ui_do_but_activate_exit(rContext *C, ARegion *region, uiBut *but) {
 	if (!but || !but->active) {
 		return;
 	}
@@ -419,14 +419,14 @@ void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but) {
 	MEM_SAFE_FREE(but->active);
 }
 
-void ui_but_active_free(struct rContext *C, uiBut *but) {
+void ui_but_active_free(rContext *C, uiBut *but) {
 	if (but->active) {
 		uiHandleButtonData *data = but->active;
 		button_activate_state(C, but, BUTTON_STATE_EXIT);
 	}
 }
 
-ROSE_STATIC void ui_but_activate(struct rContext *C, ARegion *region, uiBut *but, int state) {
+ROSE_STATIC void ui_but_activate(rContext *C, ARegion *region, uiBut *but, int state) {
 	uiBut *old = ui_region_find_active_but(region);
 	if (old) {
 		uiHandleButtonData *data = old->active;
@@ -435,7 +435,7 @@ ROSE_STATIC void ui_but_activate(struct rContext *C, ARegion *region, uiBut *but
 	ui_do_but_activate_init(C, region, but, state);
 }
 
-ROSE_STATIC void ui_do_but_menu_exit(struct rContext *C, uiBut *but) {
+ROSE_STATIC void ui_do_but_menu_exit(rContext *C, uiBut *but) {
 	if (but->block && but->block->handle) {
 		uiPopupBlockHandle *handle = but->block->handle;
 
@@ -451,7 +451,7 @@ ROSE_STATIC void ui_do_but_menu_exit(struct rContext *C, uiBut *but) {
 	}
 }
 
-ROSE_STATIC void ui_apply_but_func(struct rContext *C, uiBut *but, void *arg1, void *arg2) {
+ROSE_STATIC void ui_apply_but_func(rContext *C, uiBut *but, void *arg1, void *arg2) {
 	if (but->handle_func) {
 		but->handle_func(C, but, arg1, arg2);
 	}
@@ -485,7 +485,7 @@ ROSE_STATIC bool ui_scroll_set_thumb_pos(uiBut *but, const ARegion *region, cons
 	return old_value != new_value;
 }
 
-ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const wmEvent *evt) {
+ROSE_STATIC int ui_do_but(rContext *C, uiBlock *block, uiBut *but, const wmEvent *evt) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 
 	ARegion *region = CTX_wm_region(C);
@@ -690,7 +690,7 @@ ROSE_STATIC bool ui_textedit_delete(uiBut *but, const wmEvent *evt) {
 	return changed;
 }
 
-ROSE_STATIC bool ui_textedit_insert_buf(struct rContext *C, uiBut *but, const char *input, unsigned int step) {
+ROSE_STATIC bool ui_textedit_insert_buf(rContext *C, uiBut *but, const char *input, unsigned int step) {
 	unsigned int length = (unsigned int)LIB_strlen(but->drawstr);
 	unsigned int cpy = length - (but->selend - but->selsta) + 1;
 
@@ -725,7 +725,7 @@ enum {
 	UI_TEXTEDIT_CUT,
 };
 
-ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int mode) {
+ROSE_STATIC bool ui_textedit_copypaste(rContext *C, uiBut *but, const int mode) {
 	bool changed = false;
 
 	unsigned int length = 0;
@@ -764,7 +764,7 @@ ROSE_STATIC bool ui_but_is_editing_set(uiBut *but, const char *text) {
 	return false;
 }
 
-ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
+ROSE_STATIC int ui_do_but_textsel(rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 	switch (evt->type) {
 		case MOUSEMOVE: {
@@ -838,7 +838,7 @@ ROSE_STATIC uiBut *ui_textedit_prev_but(uiBlock *block, uiBut *but, uiHandleButt
 	return NULL;
 }
 
-ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
+ROSE_STATIC int ui_do_but_textedit(rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
 	if (!ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 		return WM_UI_HANDLER_CONTINUE;
 	}
@@ -998,9 +998,9 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 	return retval;
 }
 
-ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but);
+ROSE_STATIC int ui_handle_button_event(rContext *C, const wmEvent *evt, uiBut *but);
 
-ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, ARegion *region) {
+ROSE_STATIC int ui_handle_button_over(rContext *C, const wmEvent *evt, ARegion *region) {
 	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
 	if (but) {
 		switch (but->type) {
@@ -1014,7 +1014,7 @@ ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, AR
 	return WM_UI_HANDLER_CONTINUE;
 }
 
-ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but) {
+ROSE_STATIC int ui_handle_button_event(rContext *C, const wmEvent *evt, uiBut *but) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 
 	uiHandleButtonData *data = but->active;
@@ -1140,7 +1140,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 	return retval;
 }
 
-ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data) {
+ROSE_STATIC int ui_handler_region_menu(rContext *C, const wmEvent *evt, void *user_data) {
 	uiHandleButtonData *data = (uiHandleButtonData *)user_data;
 
 	int retval = WM_UI_HANDLER_CONTINUE;
@@ -1155,7 +1155,7 @@ ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, v
 	return retval;
 }
 
-ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *user_data) {
+ROSE_STATIC int ui_region_handler(rContext *C, const wmEvent *evt, void *user_data) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = CTX_wm_region(C);
 	int retval = WM_UI_HANDLER_CONTINUE;
@@ -1198,7 +1198,7 @@ ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *
 	return retval;
 }
 
-ROSE_STATIC void ui_region_handler_remove(struct rContext *C, void *user_data) {
+ROSE_STATIC void ui_region_handler_remove(rContext *C, void *user_data) {
 }
 
 void UI_region_handlers_add(ListBase *handlers) {

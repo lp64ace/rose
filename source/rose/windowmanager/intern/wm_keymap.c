@@ -2,6 +2,7 @@
 
 #include "LIB_string.h"
 
+#include "KER_context.h"
 #include "KER_idprop.h"
 
 #include "RNA_access.h"
@@ -50,7 +51,7 @@ wmKeyMap *WM_keymap_ensure(wmKeyConfig *keyconf, const char *idname, int spaceid
 	return km;
 }
 
-wmKeyMap *WM_keymap_active(const WindowManager *wm, wmKeyMap *keymap) {
+wmKeyMap *WM_keymap_active(WindowManager *wm, wmKeyMap *keymap) {
 	if (!keymap) {
 		return NULL;
 	}
@@ -79,8 +80,8 @@ ROSE_INLINE void keymap_event_set(wmKeyMapItem *kmi, const KeyMapItem_Params *pa
 		kmi->shift = kmi->ctrl = kmi->alt = kmi->oskey = KM_ANY;
 	}
 	else {
-		const int8_t mod = params->modifier & 0xff;
-		const int8_t mod_any = KMI_PARAMS_MOD_FROM_ANY(params->modifier);
+		const int mod = params->modifier & 0xff;
+		const int mod_any = KMI_PARAMS_MOD_FROM_ANY(params->modifier);
 
 		/* Only one of the flags should be set. */
 		ROSE_assert((mod & mod_any) == 0);
@@ -129,7 +130,7 @@ void WM_keymap_clear(wmKeyMap *keymap) {
 	LIB_listbase_clear(&keymap->items);
 }
 
-bool WM_keymap_poll(struct rContext *C, wmKeyMap *keymap) {
+bool WM_keymap_poll(rContext *C, wmKeyMap *keymap) {
 	if (keymap->poll != NULL) {
 		return keymap->poll(C);
 	}

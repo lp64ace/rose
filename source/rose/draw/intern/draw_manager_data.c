@@ -33,23 +33,10 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 	copy_m4_m4(matrix->model, mat);
 	if (ob) {
 		copy_m4_m4(matrix->modelinverse, KER_object_world_to_object(ob));
-
-		const Object *obarm = DRW_batch_cache_device_armature(ob);
-		if (obarm) {
-			copy_m4_m4(matrix->armature, KER_object_object_to_world(obarm));
-			copy_m4_m4(matrix->armatureinverse, KER_object_world_to_object(obarm));
-		}
-		else {
-			unit_m4(matrix->armature);
-			unit_m4(matrix->armatureinverse);
-		}
 	}
 	else {
 		/* WATCH: Can be costly. */
 		invert_m4_m4(matrix->modelinverse, matrix->model);
-
-		unit_m4(matrix->armature);
-		unit_m4(matrix->armatureinverse);
 	}
 }
 

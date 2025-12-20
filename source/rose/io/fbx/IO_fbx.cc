@@ -188,7 +188,7 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	ufbx_free_scene(fbx);
 }
 
-void FBX_import(struct rContext *C, const char *filepath, float unit) {
+void FBX_import(rContext *C, const char *filepath, float unit) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);
@@ -196,7 +196,7 @@ void FBX_import(struct rContext *C, const char *filepath, float unit) {
 	importer_file(main, scene, view_layer, filepath, unit);
 }
 
-void FBX_import_memory(struct rContext *C, const void *memory, size_t size, float unit) {
+void FBX_import_memory(rContext *C, const void *memory, size_t size, float unit) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);

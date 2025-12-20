@@ -12,6 +12,7 @@
 #include "KER_mesh.h"
 #include "KER_modifier.h"
 #include "KER_object.h"
+#include "KER_scene.h"
 
 #include <stdio.h>
 
@@ -26,7 +27,10 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 
 	// Transform
 
-	ob->rotmode = ROT_MODE_EUL;
+	ob->rotmode = ROT_MODE_QUAT;
+	unit_qt(ob->quat);
+	unit_qt(ob->dquat);
+
 	copy_v3_fl(ob->scale, 1.0f);
 	copy_v3_fl(ob->dscale, 1.0f);
 
@@ -221,13 +225,13 @@ void KER_object_get_parent_matrix(const Object *ob, Object *par, float r_parentm
 /** \name Object Transform
  * \{ */
 
-void KER_object_scale_to_mat3(Object *ob, float r_mat[3][3]) {
+void KER_object_scale_to_mat3(const Object *ob, float r_mat[3][3]) {
 	float vec[3];
 	mul_v3_v3v3(vec, ob->scale, ob->dscale);
 	size_to_mat3(r_mat, vec);
 }
 
-void KER_object_rot_to_mat3(Object *ob, float r_mat[3][3], bool use_drot) {
+void KER_object_rot_to_mat3(const Object *ob, float r_mat[3][3], bool use_drot) {
 	float rmat[3][3], dmat[3][3];
 
 	/**
@@ -262,7 +266,7 @@ void KER_object_rot_to_mat3(Object *ob, float r_mat[3][3], bool use_drot) {
 	}
 }
 
-void KER_object_to_mat3(Object *ob, float r_mat[3][3]) {
+void KER_object_to_mat3(const Object *ob, float r_mat[3][3]) {
 	float smat[3][3];
 	float rmat[3][3];
 
@@ -274,7 +278,7 @@ void KER_object_to_mat3(Object *ob, float r_mat[3][3]) {
 	mul_m3_m3m3(r_mat, rmat, smat);
 }
 
-void KER_object_to_mat4(Object *ob, float r_mat[4][4]) {
+void KER_object_to_mat4(const Object *ob, float r_mat[4][4]) {
 	float tmat[3][3];
 
 	KER_object_to_mat3(ob, tmat);
@@ -404,6 +408,42 @@ void KER_object_apply_mat4_ex(Object *object, const float mat[4][4], Object *par
 
 void KER_object_apply_mat4(Object *object, const float mat[4][4], bool use_compat, bool use_parent) {
 	KER_object_apply_mat4_ex(object, mat, use_parent ? object->parent : NULL, object->parentinv, use_compat);
+}
+
+ROSE_STATIC void solve_parenting(const Object *object, Object *parent, float r_obmat[4][4], float r_originmat[3][3]) {
+	float totmat[4][4];
+	float tmat[4][4];
+	float locmat[4][4];
+
+	KER_object_to_mat4(object, locmat);
+
+	KER_object_get_parent_matrix(object, parent, totmat);
+
+	/* total */
+	mul_m4_m4m4(tmat, totmat, object->parentinv);
+	mul_m4_m4m4(r_obmat, tmat, locmat);
+
+	if (r_originmat) {
+		/* Usable `r_originmat`. */
+		copy_m3_m4(r_originmat, tmat);
+	}
+}
+
+void KER_object_where_is_calc_ex(Object *object, float r_originmat[3][3]) {
+	if (object->parent) {
+		Object *parent = object->parent;
+
+		/* calculate parent matrix */
+		solve_parenting(object, parent, object->runtime.object_to_world, r_originmat);
+	}
+	else {
+		KER_object_to_mat4(object, object->runtime.object_to_world);
+	}
+}
+
+void KER_object_where_is_calc(Object *object) {
+	float originmat[3][3];
+	KER_object_where_is_calc_ex(object, originmat);
 }
 
 /** \} */

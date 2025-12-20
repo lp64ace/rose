@@ -60,7 +60,7 @@ ROSE_INLINE void properties_exit(WindowManager *wm, ScrArea *area) {
 /** \name Properties Main Region Methods
  * \{ */
 
-ROSE_INLINE void propeties_main_region_layout(struct rContext *C, ARegion *region) {
+ROSE_INLINE void propeties_main_region_layout(rContext *C, ARegion *region) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "PROPERTIES_main"))) {

@@ -35,7 +35,7 @@ ARegion *ui_region_temp_add(Screen *screen) {
 	return region;
 }
 
-void ui_region_temp_remove(struct rContext *C, Screen *screen, ARegion *region) {
+void ui_region_temp_remove(rContext *C, Screen *screen, ARegion *region) {
 	wmWindow *win = CTX_wm_window(C);
 
 	ROSE_assert(region->regiontype == RGN_TYPE_TEMPORARY);

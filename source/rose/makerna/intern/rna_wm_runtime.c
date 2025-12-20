@@ -13,7 +13,7 @@
 /** \name WM Exposed Functions
  * \{ */
 
-struct IDPRoperty **rna_OperatorProperties_idprops(PointerRNA *ptr) {
+struct IDProperty **rna_OperatorProperties_idprops(PointerRNA *ptr) {
 	return (struct IDProperty **)&ptr->data;
 }
 

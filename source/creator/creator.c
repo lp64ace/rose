@@ -14,7 +14,7 @@ int main(void) {
 	MEM_use_guarded_allocator();
 #endif
 
-	struct rContext *C = CTX_new();
+	rContext *C = CTX_new();
 
 	KER_modifier_init();
 

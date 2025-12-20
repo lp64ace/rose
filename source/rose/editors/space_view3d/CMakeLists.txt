@@ -22,6 +22,10 @@ set(INC_SYS
 
 set(SRC
 	space_view3d.c
+	view3d_intern.h
+	view3d_navigate.c
+	view3d_navigate.h
+	view3d_ops.c
 	
 )
 

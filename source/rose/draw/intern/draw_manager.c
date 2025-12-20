@@ -6,6 +6,7 @@
 
 #include "DNA_ID_enums.h"
 #include "DNA_userdef_types.h"
+#include "DNA_view3d_types.h"
 
 #include "KER_anim_sys.h"
 #include "KER_camera.h"
@@ -38,6 +39,8 @@
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
 #include "shaders/draw_shader_shared.h"
+
+#include <stdio.h>
 
 struct Object;
 
@@ -84,7 +87,7 @@ DrawEngineType *DRW_engine_find(const char *name) {
 	return engine;
 }
 
-DrawEngineType *DRW_engine_type(const struct rContext *C, struct Scene *scene) {
+DrawEngineType *DRW_engine_type(const rContext *C, struct Scene *scene) {
 	return DRW_engine_find(U.engine);
 }
 
@@ -215,7 +218,7 @@ ROSE_STATIC void DRW_engine_use(DrawEngineType *engine_type) {
 }
 
 // Called once before starting rendering using our (used/active) draw engines
-void DRW_engines_init(const struct rContext *C) {
+void DRW_engines_init(const rContext *C) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		const DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
 
@@ -227,7 +230,7 @@ void DRW_engines_init(const struct rContext *C) {
 	}
 }
 
-void DRW_engines_exit(const struct rContext *C) {
+void DRW_engines_exit(const rContext *C) {
 }
 
 DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
@@ -273,7 +276,7 @@ ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
 	LIB_memory_block_clear(ddata->obmats, NULL);
 }
 
-void DRW_manager_init(DRWManager *manager, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
+void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
 	manager->viewport = viewport;
 	manager->scene = scene;
 	manager->view_layer = view_layer;
@@ -315,16 +318,26 @@ void DRW_manager_init(DRWManager *manager, struct Scene *scene, struct ViewLayer
 
 	ViewInfos *storage = &GDrawManager.vdata_engine->storage;
 	if (scene->camera) {
-		KER_camera_multiview_window_matrix(&scene->r, scene->camera, storage->winmat);
+		Object *camera = scene->camera;
 
-		/** Calculate the inverted window matrix */
+		float projmat[4][4], viewmat[4][4];
+		KER_camera_multiview_view_matrix(&scene->r, camera, viewmat);
+		KER_camera_multiview_window_matrix(&scene->r, camera, manager->size, projmat);
+		mul_m4_m4m4(storage->winmat, projmat, viewmat);
+
 		invert_m4_m4(storage->wininv, storage->winmat);
 	}
 	else {
-		unit_m4(storage->winmat);
+		RegionView3D *rv3d = region->regiondata;
 
-		/** Calculate the inverted window matrix */
-		invert_m4_m4(storage->wininv, storage->winmat);
+		if (rv3d) {
+			mul_m4_m4m4(storage->winmat, rv3d->winmat, rv3d->viewmat);
+			invert_m4_m4(storage->wininv, storage->winmat);
+		}
+		else {
+			unit_m4(storage->winmat);
+			unit_m4(storage->wininv);
+		}
 	}
 
 	GDrawManager.resource_handle = 0;
@@ -449,11 +462,11 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GPU_framebuffer_restore();
 }
 
-void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct ViewLayer *view_layer, struct ARegion *region, struct GPUViewport *viewport) {
+void DRW_draw_render_loop(const rContext *C, struct Scene *scene, struct ViewLayer *view_layer, struct ARegion *region, struct GPUViewport *viewport) {
 	/** No framebuffer is allowed to be bound the moment we are rendering! */
 	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
 
-	DRW_manager_init(&GDrawManager, scene, view_layer, viewport, NULL);
+	DRW_manager_init(&GDrawManager, region, scene, view_layer, viewport, NULL);
 	DRW_engines_init(C);
 
 	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
@@ -464,6 +477,7 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 	 */
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		KER_animsys_eval_animdata(scene, &object->id);
+		KER_object_where_is_calc(object);
 	}
 	LISTBASE_FOREACH(struct Object *, object, listbase) {
 		if (object->type == OB_ARMATURE) {
@@ -490,7 +504,7 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 	drw_engine_draw_scene();
 }
 
-void DRW_draw_view(const struct rContext *C) {
+void DRW_draw_view(const rContext *C) {
 	struct ARegion *region = CTX_wm_region(C);
 
 	if (!region) {

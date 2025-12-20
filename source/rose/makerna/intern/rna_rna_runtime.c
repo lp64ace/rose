@@ -123,6 +123,36 @@ struct PointerRNA rna_Struct_properties_get(CollectionPropertyIterator *iter) {
 	return RNA_pointer_create_discrete(NULL, &RNA_Property, internal->link);
 }
 
+void rna_Struct_name_get(PointerRNA *ptr, char *value) {
+	StructRNA *data = (StructRNA *)ptr->data;
+	strcpy(value, data->name ? data->name : "");
+}
+
+int rna_Struct_name_length(PointerRNA *ptr) {
+	StructRNA *data = (StructRNA *)ptr->data;
+	return strlen(data->name);
+}
+
+void rna_Struct_identifier_get(PointerRNA *ptr, char *value) {
+	StructRNA *data = (StructRNA *)ptr->data;
+	strcpy(value, data->identifier ? data->identifier : "");
+}
+
+int rna_Struct_identifier_length(PointerRNA *ptr) {
+	StructRNA *data = (StructRNA *)ptr->data;
+	return strlen(data->identifier);
+}
+
+void rna_Struct_description_get(PointerRNA *ptr, char *value) {
+	StructRNA *data = (StructRNA *)ptr->data;
+	strcpy(value, data->description ? data->description : "");
+}
+
+int rna_Struct_description_length(PointerRNA *ptr) {
+	StructRNA *data = (StructRNA *)ptr->data;
+	return strlen(data->description);
+}
+
 void rna_Property_name_get(PointerRNA *ptr, char *value) {
 	PropertyRNA *data = (PropertyRNA *)ptr->data;
 	strcpy(value, data->name ? data->name : "");
@@ -131,6 +161,26 @@ void rna_Property_name_get(PointerRNA *ptr, char *value) {
 int rna_Property_name_length(PointerRNA *ptr) {
 	PropertyRNA *data = (PropertyRNA *)ptr->data;
 	return strlen(data->name);
+}
+
+void rna_Property_identifier_get(PointerRNA *ptr, char *value) {
+	PropertyRNA *data = (PropertyRNA *)ptr->data;
+	strcpy(value, data->identifier ? data->identifier : "");
+}
+
+int rna_Property_identifier_length(PointerRNA *ptr) {
+	PropertyRNA *data = (PropertyRNA *)ptr->data;
+	return strlen(data->identifier);
+}
+
+void rna_Property_description_get(PointerRNA *ptr, char *value) {
+	PropertyRNA *data = (PropertyRNA *)ptr->data;
+	strcpy(value, data->description ? data->description : "");
+}
+
+int rna_Property_description_length(PointerRNA *ptr) {
+	PropertyRNA *data = (PropertyRNA *)ptr->data;
+	return strlen(data->description);
 }
 
 /** \} */

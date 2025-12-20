@@ -33,10 +33,10 @@ void *KER_object_obdata_add_from_type(struct Main *main, int type, const char *n
 /** \name Object Transform
  * \{ */
 
-void KER_object_scale_to_mat3(struct Object *object, float r_mat[3][3]);
-void KER_object_rot_to_mat3(struct Object *object, float r_mat[3][3], bool use_drot);
-void KER_object_to_mat3(struct Object *object, float r_mat[3][3]);
-void KER_object_to_mat4(struct Object *object, float r_mat[4][4]);
+void KER_object_scale_to_mat3(const struct Object *object, float r_mat[3][3]);
+void KER_object_rot_to_mat3(const struct Object *object, float r_mat[3][3], bool use_drot);
+void KER_object_to_mat3(const struct Object *object, float r_mat[3][3]);
+void KER_object_to_mat4(const struct Object *object, float r_mat[4][4]);
 
 void KER_object_matrix_parent_get(struct Object *object, struct Object *parent, float r_mat[4][4]);
 void KER_object_matrix_local_get(struct Object *object, float r_mat[4][4]);
@@ -46,6 +46,8 @@ const float (*KER_object_world_to_object(const struct Object *object))[4];
 
 void KER_object_apply_mat4_ex(struct Object *object, const float mat[4][4], Object *parent, const float parentinv[4][4], bool use_compat);
 void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool use_compat, bool use_parent);
+
+void KER_object_where_is_calc(struct Object *object);
 
 /** \} */
 

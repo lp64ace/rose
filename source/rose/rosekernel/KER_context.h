@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-struct rContext;
+typedef struct rContext rContext;
 
 /* -------------------------------------------------------------------- */
 /** \name Create/Destroy Methods

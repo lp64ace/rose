@@ -109,7 +109,7 @@ void screen_area_set_geometry_rect(ScrArea *area, const rcti *rect) {
 	area->v4->vec.y = rect->ymin;
 }
 
-void screen_geom_select_connected_edge(const wmWindow *window, ScrEdge *edge) {
+void screen_geom_select_connected_edge(wmWindow *window, ScrEdge *edge) {
 	Screen *screen = WM_window_screen_get(window);
 
 	/* 'dir_axis' is the direction of EDGE */

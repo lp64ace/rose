@@ -1,5 +1,6 @@
 #include "MEM_guardedalloc.h"
 
+#include "KER_context.h"
 #include "KER_idprop.h"
 #include "KER_global.h"
 #include "KER_main.h"
@@ -70,7 +71,7 @@ wmOperatorType *WM_operatortype_find(const char *idname, bool quiet) {
 /** \name Operator
  * \{ */
 
-bool WM_operator_poll(struct rContext *C, wmOperatorType *ot) {
+bool WM_operator_poll(rContext *C, wmOperatorType *ot) {
 	if (ot->poll) {
 		return ot->poll(C);
 	}

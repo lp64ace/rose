@@ -766,7 +766,7 @@ ROSE_INLINE char *rna_def_property_begin_func(FILE *fpout, StructRNA *srna, Prop
 
 	if (!manual) {
 		if (!defproperty->dnastructname || !defproperty->dnaname) {
-			fprintf(stderr, "[RNA] %s.%s has no valid dna info.\n", srna->identifier, property->identifier);
+			fprintf(stderr, "[RNA] \"%s.%s\" has no valid dna info.\n", srna->identifier, property->identifier);
 			DefRNA.error = true;
 			return NULL;
 		}
@@ -1589,8 +1589,6 @@ ROSE_INLINE int rna_preprocess(const char *source, const char *binary) {
 	if (DefRNA.error) {
 		fprintf(stderr, "[RNA] There was an error while generating the RNA for RoseRNA.\n");
 	}
-
-	fprintf(stdout, "[RNA] Writing RNA output in \"%s\"\n", binary);
 
 	char prototype[1024];
 	LIB_path_join(prototype, ARRAY_SIZE(prototype), binary, "../RNA_prototypes.h");

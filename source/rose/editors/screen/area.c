@@ -339,7 +339,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	region_rect_recursive(area, region->next, remainder, overlap_remainder, quad);
 }
 
-ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const rcti *rect, int space_type) {
+ScrArea *ED_screen_temp_space_open(rContext *C, const char *title, const rcti *rect, int space_type) {
 	ScrArea *area = NULL;
 
 	wmWindow *window;
@@ -351,7 +351,7 @@ ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const 
 	return area;
 }
 
-void ED_area_newspace(struct rContext *C, ScrArea *area, int space_type) {
+void ED_area_newspace(rContext *C, ScrArea *area, int space_type) {
 	wmWindow *win = CTX_wm_window(C);
 	SpaceType *st = KER_spacetype_from_id(space_type);
 	
@@ -447,7 +447,7 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 
 		if (region->visible) {
 			if (region->type->init) {
-				region->type->init(region);
+				region->type->init(wm, region);
 			}
 
 			ED_region_tag_redraw(region);
@@ -460,7 +460,7 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	}
 }
 
-void ED_area_exit(struct rContext *C, ScrArea *area) {
+void ED_area_exit(rContext *C, ScrArea *area) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = CTX_wm_window(C);
 	ScrArea *prevsa = CTX_wm_area(C);
@@ -552,7 +552,7 @@ void ED_area_update_region_sizes(WindowManager *wm, wmWindow *window, ScrArea *a
 		region_evaulate_visibility(region);
 
 		if (region->type->init) {
-			region->type->init(region);
+			region->type->init(wm, region);
 		}
 	}
 	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;

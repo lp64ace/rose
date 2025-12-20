@@ -219,13 +219,13 @@ ROSE_STATIC void ui_popup_block_position(wmWindow *window, ARegion *butregion, u
 /** \name Menu Block Creation
  * \{ */
 
-ROSE_STATIC void ui_block_region_draw(struct rContext *C, ARegion *region) {
+ROSE_STATIC void ui_block_region_draw(rContext *C, ARegion *region) {
 	float back[4];
 	UI_GetThemeColor4fv(TH_BACK, back);
 	GPU_clear_color(back[0], back[1], back[2], back[3]);
 }
 
-ROSE_STATIC void ui_popup_block_remove(struct rContext *C, uiPopupBlockHandle *handle) {
+ROSE_STATIC void ui_popup_block_remove(rContext *C, uiPopupBlockHandle *handle) {
 	wmWindow *ctx_win = CTX_wm_window(C);
 	ScrArea *ctx_area = CTX_wm_area(C);
 	ARegion *ctx_region = CTX_wm_region(C);
@@ -255,7 +255,7 @@ ROSE_STATIC void ui_popup_block_remove(struct rContext *C, uiPopupBlockHandle *h
 	CTX_wm_region_set(C, ctx_region);
 }
 
-ROSE_STATIC uiBlock *ui_popup_block_refresh(struct rContext *C, uiPopupBlockHandle *handle, ARegion *butregion, uiBut *but) {
+ROSE_STATIC uiBlock *ui_popup_block_refresh(rContext *C, uiPopupBlockHandle *handle, ARegion *butregion, uiBut *but) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = handle->region;
 
@@ -327,7 +327,7 @@ ROSE_STATIC uiBlock *ui_popup_block_refresh(struct rContext *C, uiPopupBlockHand
 	return block;
 }
 
-ROSE_STATIC void ui_block_region_refresh(struct rContext *C, ARegion *region) {
+ROSE_STATIC void ui_block_region_refresh(rContext *C, ARegion *region) {
 	ROSE_assert(region->regiontype == RGN_TYPE_TEMPORARY);
 
 	ScrArea *prev_area = CTX_wm_area(C);
@@ -350,7 +350,7 @@ ROSE_STATIC void ui_block_region_refresh(struct rContext *C, ARegion *region) {
 	CTX_wm_area_set(C, prev_area);
 }
 
-uiPopupBlockHandle *ui_popup_block_create(struct rContext *C, ARegion *butregion, uiBut *but, uiBlockCreateFunc block_create_fn, uiBlockHandleCreateFunc handle_create_fn, void *arg) {
+uiPopupBlockHandle *ui_popup_block_create(rContext *C, ARegion *butregion, uiBut *but, uiBlockCreateFunc block_create_fn, uiBlockHandleCreateFunc handle_create_fn, void *arg) {
 	wmWindow *window = CTX_wm_window(C);
 
 	uiPopupBlockHandle *handle = MEM_callocN(sizeof(uiPopupBlockHandle), "uiPopupBlockHandle");
@@ -383,7 +383,7 @@ uiPopupBlockHandle *ui_popup_block_create(struct rContext *C, ARegion *butregion
 	return handle;
 }
 
-void ui_popup_block_free(struct rContext *C, uiPopupBlockHandle *handle) {
+void ui_popup_block_free(rContext *C, uiPopupBlockHandle *handle) {
 	ui_popup_block_remove(C, handle);
 
 	MEM_freeN(handle);

@@ -68,8 +68,6 @@ list(APPEND OUT_SRC
 )
 set_source_files_properties(${OUT_SRC} PROPERTIES GENERATED TRUE)
 
-message(STATUS "OUT ${OUT_SRC}")
-
 # -----------------------------------------------------------------------------
 # Define Executable Source Files
 

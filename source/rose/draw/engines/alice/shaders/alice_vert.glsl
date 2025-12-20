@@ -19,10 +19,10 @@ void main() {
 
     if (contrib > 1e-7) {
         co += (1.0 / contrib) * dv;
-        no = normalize((1.0 / contrib) * dn);
+        no = normalize(dn);
     }
 
-    gl_Position = ProjectionMatrix * ArmatureMatrix * ModelMatrix * float4(co.xzy, 1.0);
+    gl_Position = ProjectionMatrix * ModelMatrix * float4(co.xzy, 1.0);
 
-    normal = normalize(transpose(mat3(ModelMatrixInverse * ArmatureMatrixInverse)) * no.xzy);
+    normal = normalize(transpose(mat3(ModelMatrixInverse)) * no.xzy);
 }

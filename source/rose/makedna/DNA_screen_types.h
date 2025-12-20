@@ -165,6 +165,8 @@ typedef struct ARegion {
 	struct ARegionType *type;
 	struct wmDrawBuffer *draw_buffer;
 
+	void *regiondata;
+
 	ListBase uiblocks;
 	ListBase uilists;
 	ListBase handlers;

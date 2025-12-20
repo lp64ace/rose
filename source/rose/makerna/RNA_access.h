@@ -86,6 +86,13 @@ const char *RNA_property_description(const struct PropertyRNA *property);
 /** \name PropertyRNA Data
  * \{ */
 
+/* boolean */
+
+bool RNA_property_boolean_get(struct PointerRNA *ptr, struct PropertyRNA *property);
+// void RNA_property_boolean_set(struct PointerRNA *ptr, struct PropertyRNA *property, bool value);
+// void RNA_property_boolean_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, bool *r_value);
+// void RNA_property_boolean_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const bool *i_value);
+
 /* int */
 
 int RNA_property_int_get(struct PointerRNA *ptr, struct PropertyRNA *property);

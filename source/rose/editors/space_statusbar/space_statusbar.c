@@ -61,7 +61,7 @@ ROSE_INLINE void statusbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name StatusBar Main Region Methods
  * \{ */
 
-ROSE_STATIC void statusbar_header_region_layout(struct rContext *C, ARegion *region) {
+ROSE_STATIC void statusbar_header_region_layout(rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
 
 	uiBlock *block;

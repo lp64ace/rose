@@ -17,7 +17,7 @@
 /** \name UI Handle Methods
  * \{ */
 
-wmEventHandler_UI *WM_event_add_ui_handler(const struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, int flag) {
+wmEventHandler_UI *WM_event_add_ui_handler(const rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn, void *user_data, int flag) {
 	wmEventHandler_UI *handler = MEM_callocN(sizeof(wmEventHandler_UI), "wmEventHandler_UI");
 
 	handler->head.type = WM_HANDLER_TYPE_UI;
@@ -57,7 +57,7 @@ void WM_event_remove_ui_handler(ListBase *handlers, wmUIHandlerFunc handle_fn, w
 	}
 }
 
-void WM_event_free_ui_handler_all(struct rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn) {
+void WM_event_free_ui_handler_all(rContext *C, ListBase *handlers, wmUIHandlerFunc handle_fn, wmUIHandlerRemoveFunc remove_fn) {
 	LISTBASE_FOREACH_MUTABLE(wmEventHandler *, handler_base, handlers) {
 		if (handler_base->type == WM_HANDLER_TYPE_UI) {
 			wmEventHandler_UI *handler = (wmEventHandler_UI *)handler_base;
@@ -119,7 +119,7 @@ wmEventHandler_Op *WM_event_add_modal_handler_ex(wmWindow *window, ScrArea *area
 	return handler;
 }
 
-struct wmEventHandler_Op *WM_event_add_modal_handler(struct rContext *C, struct wmOperator *op) {
+struct wmEventHandler_Op *WM_event_add_modal_handler(rContext *C, struct wmOperator *op) {
 	wmWindow *win = CTX_wm_window(C);
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);
@@ -159,7 +159,7 @@ void WM_event_free_modal_handler_all(wmWindow *window, wmOperator *op, bool post
 /** \name Handle Methods
  * \{ */
 
-void WM_event_remove_handlers(struct rContext *C, ListBase *handlers) {
+void WM_event_remove_handlers(rContext *C, ListBase *handlers) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	for (wmEventHandler *handler_base; handler_base = LIB_pophead(handlers);) {

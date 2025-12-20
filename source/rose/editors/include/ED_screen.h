@@ -45,12 +45,12 @@ void ED_region_update_rect(struct ARegion *region);
 void ED_region_tag_redraw(struct ARegion *region);
 void ED_region_tag_redraw_no_rebuild(struct ARegion *region);
 
-void ED_region_header_init(struct ARegion *region);
-void ED_region_header_exit(struct ARegion *region);
+void ED_region_header_init(struct WindowManager *wm, struct ARegion *region);
+void ED_region_header_exit(struct WindowManager *wm, struct ARegion *region);
 void ED_region_header_draw(struct rContext *C, struct ARegion *region);
 
-void ED_region_default_init(struct ARegion *region);
-void ED_region_default_exit(struct ARegion *region);
+void ED_region_default_init(struct WindowManager *wm, struct ARegion *region);
+void ED_region_default_exit(struct WindowManager *wm, struct ARegion *region);
 void ED_region_default_draw(struct rContext *C, struct ARegion *region);
 
 /**

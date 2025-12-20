@@ -393,7 +393,7 @@ ROSE_STATIC void ui_draw_widget(uiWidgetColors *wcol, uiBut *but, const rcti *re
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
 }
 
-void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
+void ui_draw_but(const rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
 	if (but->type == UI_BTYPE_SEPR) {
 		return;
 	}

@@ -35,13 +35,13 @@ void ED_region_pixelspace(ARegion *region) {
 	GPU_matrix_identity_set();
 }
 
-void ED_region_exit(struct rContext *C, ARegion *region) {
+void ED_region_exit(rContext *C, ARegion *region) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *prevar = CTX_wm_region(C);
 
 	if (region->type && region->type->exit) {
-		region->type->exit(region);
+		region->type->exit(wm, region);
 	}
 
 	CTX_wm_region_set(C, region);
@@ -64,7 +64,7 @@ void ED_region_update_rect(ARegion *region) {
 	region->sizey = LIB_rcti_size_y(&region->winrct);
 }
 
-void ED_region_do_layout(struct rContext *C, ARegion *region) {
+void ED_region_do_layout(rContext *C, ARegion *region) {
 	if ((region->flag & (RGN_FLAG_LAYOUT | RGN_FLAG_ALWAYS_REBUILD)) == 0) {
 		return;
 	}
@@ -87,7 +87,7 @@ void ED_region_do_layout(struct rContext *C, ARegion *region) {
 	region->flag &= ~RGN_FLAG_LAYOUT;
 }
 
-ROSE_INLINE void region_clear(struct rContext *C, ARegion *region) {
+ROSE_INLINE void region_clear(rContext *C, ARegion *region) {
 	ScrArea *area = CTX_wm_area(C);
 	
 	float back[4];
@@ -109,7 +109,7 @@ ROSE_INLINE void region_clear(struct rContext *C, ARegion *region) {
 	}
 }
 
-void ED_region_do_draw(struct rContext *C, ARegion *region) {
+void ED_region_do_draw(rContext *C, ARegion *region) {
 	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REDRAW)) == 0) {
 		return;
 	}
@@ -139,24 +139,24 @@ void ED_region_do_draw(struct rContext *C, ARegion *region) {
 	region->flag &= ~RGN_FLAG_REDRAW;
 }
 
-void ED_region_header_init(ARegion *region) {
+void ED_region_header_init(WindowManager *wm, ARegion *region) {
 	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_HEADER, region->sizex, region->sizey);
 }
 
-void ED_region_header_exit(ARegion *region) {
+void ED_region_header_exit(WindowManager *wm, ARegion *region) {
 }
 
-void ED_region_header_draw(struct rContext *C, ARegion *region) {
+void ED_region_header_draw(rContext *C, ARegion *region) {
 }
 
-void ED_region_default_init(ARegion *region) {
+void ED_region_default_init(WindowManager *wm, ARegion *region) {
 	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_STANDARD, region->sizex, region->sizey);
 }
 
-void ED_region_default_exit(ARegion *region) {
+void ED_region_default_exit(WindowManager *wm, ARegion *region) {
 }
 
-void ED_region_default_draw(struct rContext *C, ARegion *region) {
+void ED_region_default_draw(rContext *C, ARegion *region) {
 	region_clear(C, region);
 }
 

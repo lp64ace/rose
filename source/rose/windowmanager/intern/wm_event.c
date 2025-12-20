@@ -120,7 +120,7 @@ typedef enum eHandlerActionFlag {
 } eHandlerActionFlag;
 #define WM_HANDLER_CONTINUE ((eHandlerActionFlag)0)
 
-ROSE_INLINE void wm_region_mouse_co(struct rContext *C, wmEvent *event) {
+ROSE_INLINE void wm_region_mouse_co(rContext *C, wmEvent *event) {
 	ARegion *region = CTX_wm_region(C);
 	if (region) {
 		/* Compatibility convention. */
@@ -145,7 +145,7 @@ ROSE_INLINE bool wm_event_inside_rect(const wmEvent *evt, const rcti *rect) {
 	return false;
 }
 
-ROSE_INLINE ScrArea *area_event_inside(struct rContext *C, const int xy[2]) {
+ROSE_INLINE ScrArea *area_event_inside(rContext *C, const int xy[2]) {
 	wmWindow *win = CTX_wm_window(C);
 	Screen *screen = CTX_wm_screen(C);
 
@@ -158,7 +158,7 @@ ROSE_INLINE ScrArea *area_event_inside(struct rContext *C, const int xy[2]) {
 	}
 	return NULL;
 }
-ROSE_INLINE ARegion *region_event_inside(struct rContext *C, const int xy[2]) {
+ROSE_INLINE ARegion *region_event_inside(rContext *C, const int xy[2]) {
 	Screen *screen = CTX_wm_screen(C);
 	ScrArea *area = CTX_wm_area(C);
 
@@ -191,7 +191,7 @@ ROSE_INLINE wmOperator *wm_operator_create(WindowManager *wm, wmOperatorType *ot
 	return op;
 }
 
-ROSE_INLINE void wm_handler_op_context_get_if_valid(struct rContext *C, wmEventHandler_Op *handler, const wmEvent *event, ScrArea **r_area, ARegion **r_region) {
+ROSE_INLINE void wm_handler_op_context_get_if_valid(rContext *C, wmEventHandler_Op *handler, const wmEvent *event, ScrArea **r_area, ARegion **r_region) {
 	wmWindow *window = handler->context.window ? handler->context.window : CTX_wm_window(C);
 	/* It's probably fine to always use #WM_window_get_active_screen() to get the screen. But this
 	 * code has been getting it through context since forever, so play safe and stick to that when
@@ -254,7 +254,7 @@ ROSE_INLINE void wm_handler_op_context_get_if_valid(struct rContext *C, wmEventH
 	}
 }
 
-ROSE_INLINE void wm_handler_op_context(struct rContext *C, wmEventHandler_Op *handler, wmEvent *event) {
+ROSE_INLINE void wm_handler_op_context(rContext *C, wmEventHandler_Op *handler, wmEvent *event) {
 	ScrArea *area = NULL;
 	ARegion *region = NULL;
 	wm_handler_op_context_get_if_valid(C, handler, event, &area, &region);
@@ -262,11 +262,11 @@ ROSE_INLINE void wm_handler_op_context(struct rContext *C, wmEventHandler_Op *ha
 	CTX_wm_region_set(C, region);
 }
 
-ROSE_INLINE void wm_operator_finished(struct rContext *C, wmOperator *op) {
+ROSE_INLINE void wm_operator_finished(rContext *C, wmOperator *op) {
 	WM_operator_free(op);
 }
 
-ROSE_INLINE wmOperatorStatus wm_operator_invoke(struct rContext *C, wmOperatorType *ot, const wmEvent *event, PointerRNA *properties, const bool poll_only) {
+ROSE_INLINE wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot, const wmEvent *event, PointerRNA *properties, const bool poll_only) {
 	wmOperatorStatus retval = OPERATOR_PASS_THROUGH;
 
 	/* This is done because complicated setup is done to call this function
@@ -315,7 +315,7 @@ ROSE_INLINE wmOperatorStatus wm_operator_invoke(struct rContext *C, wmOperatorTy
 	return retval;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(struct rContext *C, ListBase *handlers, wmEventHandler *handler_base, wmEvent *event, PointerRNA *properties, const char *kmi_idname) {
+ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(rContext *C, ListBase *handlers, wmEventHandler *handler_base, wmEvent *event, PointerRNA *properties, const char *kmi_idname) {
 	wmOperatorStatus retval = OPERATOR_PASS_THROUGH;
 
 	if ((handler_base->type == WM_HANDLER_TYPE_OP) && (((wmEventHandler_Op *)handler_base)->op != NULL)) {
@@ -379,7 +379,7 @@ ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(struct rContext *C, List
 	return WM_HANDLER_BREAK;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(struct rContext *C, wmEventHandler_UI *handler, wmEvent *event) {
+ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(rContext *C, wmEventHandler_UI *handler, wmEvent *event) {
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);
 
@@ -459,7 +459,7 @@ ROSE_INLINE bool wm_eventmatch(const wmEvent *winevent, const wmKeyMapItem *kmi)
 	return true;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(struct rContext *C, wmEvent *event, ListBase *handlers, wmEventHandler_Keymap *handler, wmKeyMap *keymap) {
+ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(rContext *C, wmEvent *event, ListBase *handlers, wmEventHandler_Keymap *handler, wmKeyMap *keymap) {
 	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
 	if (keymap == NULL) {
@@ -474,9 +474,11 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(struct 
 			}
 		}
 	}
+
+	return action;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_handlers_do(struct rContext *C, wmEvent *event, ListBase *handlers) {
+ROSE_INLINE eHandlerActionFlag wm_handlers_do(rContext *C, wmEvent *event, ListBase *handlers) {
 	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
 	if (handlers == NULL) {
@@ -543,13 +545,13 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do(struct rContext *C, wmEvent *event
 	return action;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_event_do_region_handlers(struct rContext *C, wmEvent *event, ARegion *region) {
+ROSE_INLINE eHandlerActionFlag wm_event_do_region_handlers(rContext *C, wmEvent *event, ARegion *region) {
 	CTX_wm_region_set(C, region);
 	wm_region_mouse_co(C, event);
 	return wm_handlers_do(C, event, &region->handlers);
 }
 
-ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(struct rContext *C, wmEvent *event, ScrArea *area) {
+ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(rContext *C, wmEvent *event, ScrArea *area) {
 	if (wm_event_always_pass(event)) {
 		eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
@@ -566,7 +568,7 @@ ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(struct rContext
 	return wm_event_do_region_handlers(C, event, region_hovered);
 }
 
-void WM_do_handlers(struct rContext *C) {
+void WM_do_handlers(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	LISTBASE_FOREACH_MUTABLE(wmWindow *, window, &wm->windows) {

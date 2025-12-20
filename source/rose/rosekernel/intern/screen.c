@@ -184,6 +184,10 @@ void KER_screen_remove_unused_scrverts(Screen *screen) {
 
 ROSE_STATIC ListBase space_types;
 
+ListBase *KER_spacetype_list(void) {
+	return &space_types;
+}
+
 SpaceType *KER_spacetype_from_id(int spaceid) {
 	return LIB_findbytes(&space_types, &spaceid, sizeof(int), offsetof(SpaceType, spaceid));
 }
@@ -240,6 +244,10 @@ void KER_area_region_free(SpaceType *st, ARegion *region) {
 	}
 	else if (region->type && region->type->free) {
 		region->type->free(region);
+	}
+
+	if (region->regiondata) {
+		fprintf(stderr, "[Kernel] SpaceType failed to free #regiondata.\n");
 	}
 
 	if (region->runtime.block_name_map != NULL) {

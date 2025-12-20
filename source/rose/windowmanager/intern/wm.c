@@ -9,6 +9,7 @@
 
 #include "KER_action.h"
 #include "KER_anim_data.h"
+#include "KER_camera.h"
 #include "KER_context.h"
 #include "KER_cpp_types.h"
 #include "KER_idtype.h"
@@ -81,7 +82,7 @@ ROSE_INLINE wmWindow *wm_window_find(WindowManager *wm, void *handle) {
 }
 
 ROSE_INLINE void wm_handle_destroy_event(struct GTKWindow *handle, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -96,7 +97,7 @@ ROSE_INLINE void wm_handle_destroy_event(struct GTKWindow *handle, void *userdat
 }
 
 ROSE_INLINE void wm_handle_size_event(struct GTKWindow *handle, int x, int y, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -117,7 +118,7 @@ ROSE_INLINE void wm_handle_size_event(struct GTKWindow *handle, int x, int y, vo
 }
 
 ROSE_INLINE void wm_handle_move_event(struct GTKWindow *handle, int x, int y, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -138,7 +139,7 @@ ROSE_INLINE void wm_handle_move_event(struct GTKWindow *handle, int x, int y, vo
 }
 
 ROSE_INLINE void wm_handle_activate_event(struct GTKWindow *handle, bool activate, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -151,7 +152,7 @@ ROSE_INLINE void wm_handle_activate_event(struct GTKWindow *handle, bool activat
 }
 
 ROSE_INLINE void wm_handle_mouse_event(struct GTKWindow *handle, int x, int y, float time, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -164,7 +165,7 @@ ROSE_INLINE void wm_handle_mouse_event(struct GTKWindow *handle, int x, int y, f
 }
 
 ROSE_INLINE void wm_handle_wheel_event(struct GTKWindow *handle, int dx, int dy, float time, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -177,7 +178,7 @@ ROSE_INLINE void wm_handle_wheel_event(struct GTKWindow *handle, int dx, int dy,
 }
 
 ROSE_INLINE void wm_handle_button_down_event(struct GTKWindow *handle, int button, int x, int y, float time, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -190,7 +191,7 @@ ROSE_INLINE void wm_handle_button_down_event(struct GTKWindow *handle, int butto
 }
 
 ROSE_INLINE void wm_handle_button_up_event(struct GTKWindow *handle, int button, int x, int y, float time, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -203,7 +204,7 @@ ROSE_INLINE void wm_handle_button_up_event(struct GTKWindow *handle, int button,
 }
 
 ROSE_INLINE void wm_handle_key_down_event(struct GTKWindow *handle, int key, bool repeat, char utf8[4], float time, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -216,7 +217,7 @@ ROSE_INLINE void wm_handle_key_down_event(struct GTKWindow *handle, int key, boo
 }
 
 ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float time, void *userdata) {
-	struct rContext *C = (struct rContext *)userdata;
+	rContext *C = (struct rContext *)userdata;
 
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -237,14 +238,14 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 extern const int datatoc_six_fbx_size;
 extern const char datatoc_six_fbx[];
 
-ROSE_INLINE void wm_init_scene(struct rContext *C, struct Main *main, struct wmWindow *window) {
+ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 512.0f);
+	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 48.0f);
 }
 
-void WM_keyconfig_init(struct rContext *C) {
+void WM_keyconfig_init(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	if (wm->runtime.defaultconf == NULL) {
@@ -254,7 +255,7 @@ void WM_keyconfig_init(struct rContext *C) {
 	ED_spacetypes_keymap(wm->runtime.defaultconf);
 }
 
-ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
+ROSE_INLINE void wm_init_manager(rContext *C, struct Main *main) {
 	WindowManager *wm = (WindowManager *)KER_id_new(main, ID_WM, "WindowManager");
 	if (!wm) {
 		return;
@@ -286,7 +287,7 @@ ROSE_INLINE void wm_init_manager(struct rContext *C, struct Main *main) {
 	CTX_wm_window_set(C, NULL);
 }
 
-void WM_init(struct rContext *C) {
+void WM_init(rContext *C) {
 	KER_cpp_types_init();
 	KER_idtype_init();
 
@@ -306,7 +307,7 @@ void WM_init(struct rContext *C) {
 	wm_init_manager(C, main);
 }
 
-void WM_main(struct rContext *C) {
+void WM_main(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	while (true) {
@@ -324,7 +325,7 @@ void WM_main(struct rContext *C) {
 	}
 }
 
-void WM_exit(struct rContext *C) {
+void WM_exit(rContext *C) {
 	KER_rose_globals_clear();
 	KER_rose_userdef_clear();
 
@@ -347,7 +348,7 @@ void WM_exit(struct rContext *C) {
 /** \name Clipboard
  * \{ */
 
-char *WM_clipboard_text_get_firstline(struct rContext *C, bool selection, unsigned int *r_len) {
+char *WM_clipboard_text_get_firstline(rContext *C, bool selection, unsigned int *r_len) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	char *ret;
@@ -361,7 +362,7 @@ char *WM_clipboard_text_get_firstline(struct rContext *C, bool selection, unsign
 	return ret;
 }
 
-void WM_clipboard_text_set(struct rContext *C, const char *buf, bool selection) {
+void WM_clipboard_text_set(rContext *C, const char *buf, bool selection) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	if (!GTK_set_clipboard(wm->handle, buf, LIB_strlen(buf), selection)) {
@@ -375,7 +376,7 @@ void WM_clipboard_text_set(struct rContext *C, const char *buf, bool selection) 
 /** \name Clipboard
  * \{ */
 
-float WM_time(struct rContext *C) {
+float WM_time(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	return GTK_elapsed_time(wm->handle);

@@ -781,6 +781,32 @@ const char *RNA_property_description(const PropertyRNA *property) {
 /** \name PropertyRNA Data
  * \{ */
 
+/* boolean */
+
+bool RNA_property_boolean_get(struct PointerRNA *ptr, struct PropertyRNA *property) {
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(!p.is_array);
+
+	if (p.idprop) {
+		IDProperty *idproperty = p.idprop;
+		return IDP_Bool(idproperty);
+	}
+
+	BoolPropertyRNA *bproperty = (BoolPropertyRNA *)p.rnaprop;
+
+	if (bproperty->get) {
+		return bproperty->get(ptr);
+	}
+	if (bproperty->get_ex) {
+		return bproperty->get_ex(ptr, p.rnaprop);
+	}
+	return bproperty->defaultvalue;
+}
+
 /* int */
 
 int RNA_property_int_get(PointerRNA *ptr, PropertyRNA *property) {

@@ -74,7 +74,7 @@ Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, const i
 }
 
 Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
-	return ED_screen_add_ex(main, name, rect, (const int[]){SPACE_EMPTY, SPACE_EMPTY}, 2);
+	return ED_screen_add_ex(main, name, rect, NULL, 1);
 }
 
 /** \} */
@@ -83,7 +83,7 @@ Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
 /** \name Screen Utils
  * \{ */
 
-void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int xy[2]) {
+void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2]) {
 	Screen *screen = WM_window_screen_get(window);
 	if (screen == NULL) {
 		return;
@@ -139,7 +139,7 @@ void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int
 /** \name Screen Exit
  * \{ */
 
-void ED_screen_exit(struct rContext *C, wmWindow *window, Screen *screen) {
+void ED_screen_exit(rContext *C, wmWindow *window, Screen *screen) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *prevwin = CTX_wm_window(C);
 

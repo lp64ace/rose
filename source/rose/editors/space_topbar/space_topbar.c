@@ -64,11 +64,11 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name TopBar Header Region Methods
  * \{ */
 
-ROSE_INLINE void topbar_header_file_menu_quit_but(struct rContext *C, uiBut *but, void *unused1, void *unused2) {
+ROSE_INLINE void topbar_header_file_menu_quit_but(rContext *C, uiBut *but, void *unused1, void *unused2) {
 	WM_window_post_quit_event(CTX_wm_window(C));
 }
 
-ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, uiBut *owner, void *arg) {
+ROSE_INLINE uiBlock *topbar_header_file_menu(rContext *C, ARegion *region, uiBut *owner, void *arg) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
@@ -81,7 +81,7 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region
 	return block;
 }
 
-ROSE_INLINE uiBlock *topbar_header_debug_menu(struct rContext *C, ARegion *region, uiBut *owner, void *arg) {
+ROSE_INLINE uiBlock *topbar_header_debug_menu(rContext *C, ARegion *region, uiBut *owner, void *arg) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_debug"))) {
@@ -92,7 +92,7 @@ ROSE_INLINE uiBlock *topbar_header_debug_menu(struct rContext *C, ARegion *regio
 	return block;
 }
 
-ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region) {
+ROSE_INLINE void topbar_header_region_layout(rContext *C, ARegion *region) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu"))) {
@@ -110,7 +110,7 @@ ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region
 /** \name TopBar Main Region Methods
  * \{ */
 
-void topbar_main_region_draw(struct rContext *C, ARegion *region) {
+void topbar_main_region_draw(rContext *C, ARegion *region) {
 }
 
 void topbar_main_region_init(ARegion *region) {

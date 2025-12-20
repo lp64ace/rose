@@ -40,7 +40,7 @@
 /** \name UI Button
  * \{ */
 
-ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but);
+ROSE_STATIC void ui_but_free(rContext *C, uiBut *but);
 
 ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->type != but_old->type) {
@@ -99,7 +99,7 @@ ROSE_INLINE void ui_but_update_new_from_old_inactive(uiBut *but, uiBut *old) {
 	}
 }
 
-ROSE_STATIC bool ui_but_update_from_old_block(struct rContext *C, uiBlock *block, uiBut **but_p, uiBut **old_p) {
+ROSE_STATIC bool ui_but_update_from_old_block(rContext *C, uiBlock *block, uiBut **but_p, uiBut **old_p) {
 	uiBlock *oldblock = block->oldblock;
 
 	uiBut *but = *but_p;
@@ -143,7 +143,7 @@ ROSE_STATIC void ui_but_mem_delete(uiBut *but) {
 	MEM_freeN(but);
 }
 
-ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but) {
+ROSE_STATIC void ui_but_free(rContext *C, uiBut *but) {
 	if (but->active) {
 		if (C) {
 			ui_but_active_free(C, but);
@@ -427,7 +427,7 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 /** \name Builtin UI Functions
  * \{ */
 
-bool uiButHandleTextFunc_Integer(struct rContext *C, uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Integer(rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	if (but->hardmin < 0) {
 		long long value = strtoll(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
@@ -446,7 +446,7 @@ bool uiButHandleTextFunc_Integer(struct rContext *C, uiBut *but, const char *edi
 	return false;
 }
 
-bool uiButHandleTextFunc_Decimal(struct rContext *C, uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Decimal(rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	long double value = strtold(edit, &end);
 	while (isspace((unsigned char)*end)) {
@@ -478,7 +478,7 @@ ROSE_INLINE void ui_update_window_matrix(wmWindow *window, ARegion *region, uiBl
 	}
 }
 
-uiBlock *UI_block_begin(struct rContext *C, ARegion *region, const char *name) {
+uiBlock *UI_block_begin(rContext *C, ARegion *region, const char *name) {
 	wmWindow *window = CTX_wm_window(C);
 
 	uiBlock *block = MEM_callocN(sizeof(uiBlock), "uiBlock");
@@ -499,7 +499,7 @@ uiBlock *UI_block_begin(struct rContext *C, ARegion *region, const char *name) {
 	return block;
 }
 
-void UI_block_update_from_old(struct rContext *C, uiBlock *block) {
+void UI_block_update_from_old(rContext *C, uiBlock *block) {
 	if (!block->oldblock) {
 		return;
 	}
@@ -531,7 +531,7 @@ ROSE_INLINE void ui_block_bounds_calc(uiBlock *block) {
 	block->rect.xmax = block->rect.xmin + ROSE_MAX(LIB_rctf_size_x(&block->rect), block->minbounds);
 }
 
-void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_xy[2]) {
+void UI_block_end_ex(rContext *C, uiBlock *block, const int xy[2], int r_xy[2]) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = CTX_wm_region(C);
 
@@ -545,7 +545,7 @@ void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_
 	block->closed = true;
 }
 
-void UI_block_end(struct rContext *C, uiBlock *block) {
+void UI_block_end(rContext *C, uiBlock *block) {
 	wmWindow *window = CTX_wm_window(C);
 
 	UI_block_end_ex(C, block, window->event_state->mouse_xy, NULL);
@@ -554,7 +554,7 @@ void UI_block_end(struct rContext *C, uiBlock *block) {
 ROSE_INLINE void ui_draw_menu_back(ARegion *region, uiBlock *block, const rcti *rect) {
 }
 
-void UI_block_draw(const struct rContext *C, uiBlock *block) {
+void UI_block_draw(const rContext *C, uiBlock *block) {
 	ARegion *region = CTX_wm_region(C);
 
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
@@ -614,7 +614,7 @@ void UI_block_translate(uiBlock *block, float dx, float dy) {
 	LIB_rctf_translate(&block->rect, dx, dy);
 }
 
-void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {
+void UI_blocklist_update_window_matrix(rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
 
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
@@ -624,7 +624,7 @@ void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_blocklist_free(struct rContext *C, ARegion *region) {
+void UI_blocklist_free(rContext *C, ARegion *region) {
 	ListBase *lb = &region->uiblocks;
 	for (uiBlock *block; block = (uiBlock *)LIB_pophead(lb);) {
 		UI_block_free(C, block);
@@ -635,7 +635,7 @@ void UI_blocklist_free(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
+void UI_region_free_active_but_all(rContext *C, ARegion *region) {
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 			if (but->active == NULL) {
@@ -646,7 +646,7 @@ void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_blocklist_free_inactive(struct rContext *C, ARegion *region) {
+void UI_blocklist_free_inactive(rContext *C, ARegion *region) {
 	ListBase *lb = &region->uiblocks;
 
 	LISTBASE_FOREACH_MUTABLE(uiBlock *, block, lb) {
@@ -666,7 +666,7 @@ void UI_blocklist_free_inactive(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_block_free(struct rContext *C, uiBlock *block) {
+void UI_block_free(rContext *C, uiBlock *block) {
 	for (uiBut *but; but = (uiBut *)LIB_pophead(&block->buttons);) {
 		ui_but_free(C, but);
 	}

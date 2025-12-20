@@ -131,6 +131,7 @@ void axis_angle_to_mat3(float R[3][3], const float axis[3], const float angle);
 void axis_angle_to_mat4(float R[4][4], const float axis[3], float angle);
 
 void axis_angle_to_quat(float r[4], const float axis[3], const float angle);
+void axis_angle_to_quat_single(float r[4], const char axis, const float angle);
 
 void quat_to_axis_angle(float axis[3], float *angle, const float q[4]);
 

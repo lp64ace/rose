@@ -55,6 +55,8 @@ typedef struct Theme {
 typedef struct UserDef {
 	char engine[64];
 
+	float view_rotate_sensitivity_turntable;
+
 	ListBase themes;
 } UserDef;
 

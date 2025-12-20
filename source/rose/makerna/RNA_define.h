@@ -127,8 +127,23 @@ bool rna_builtin_properties_lookup_string(struct PointerRNA *ptr, const char *ke
 /** \name RNA Exposed Functions
  * \{ */
 
+void rna_Struct_name_get(struct PointerRNA *ptr, char *value);
+int rna_Struct_name_length(struct PointerRNA *ptr);
+
+void rna_Struct_identifier_get(struct PointerRNA *ptr, char *value);
+int rna_Struct_identifier_length(struct PointerRNA *ptr);
+
+void rna_Struct_description_get(struct PointerRNA *ptr, char *value);
+int rna_Struct_description_length(struct PointerRNA *ptr);
+
 void rna_Property_name_get(struct PointerRNA *ptr, char *value);
 int rna_Property_name_length(struct PointerRNA *ptr);
+
+void rna_Property_identifier_get(struct PointerRNA *ptr, char *value);
+int rna_Property_identifier_length(struct PointerRNA *ptr);
+
+void rna_Property_description_get(struct PointerRNA *ptr, char *value);
+int rna_Property_description_length(struct PointerRNA *ptr);
 
 /** \} */
 
@@ -145,7 +160,7 @@ struct StructRNA *rna_ID_refine(struct PointerRNA *ptr);
  * \{ */
 
 struct StructRNA *rna_OperatorProperties_refine(struct PointerRNA *ptr);
-struct IDPRoperty **rna_OperatorProperties_idprops(struct PointerRNA *ptr);
+struct IDProperty **rna_OperatorProperties_idprops(struct PointerRNA *ptr);
 
 /** \} */
 

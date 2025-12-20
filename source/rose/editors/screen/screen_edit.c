@@ -150,7 +150,7 @@ void ED_screen_global_areas_refresh(wmWindow *window) {
 	}
 }
 
-bool ED_screen_area_active(struct rContext *C) {
+bool ED_screen_area_active(rContext *C) {
 	wmWindow *window = CTX_wm_window(C);
 	Screen *screen = CTX_wm_screen(C);
 	ScrArea *area = CTX_wm_area(C);
@@ -172,7 +172,7 @@ bool ED_screen_area_active(struct rContext *C) {
 /** \name Scene
  * \{ */
 
-void ED_screen_scene_change(struct rContext *C, wmWindow *window, Scene *scene) {
+void ED_screen_scene_change(rContext *C, wmWindow *window, Scene *scene) {
 	window->scene = scene;
 	if (CTX_wm_window(C) == window) {
 		CTX_data_scene_set(C, scene);

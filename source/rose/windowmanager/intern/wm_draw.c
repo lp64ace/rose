@@ -223,7 +223,7 @@ void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
 	}
 }
 
-ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) {
+ROSE_INLINE void wm_draw_window_offscreen(rContext *C, wmWindow *window) {
 	Screen *screen = WM_window_screen_get(window);
 	if (!screen) {
 		return;
@@ -290,7 +290,7 @@ ROSE_INLINE void wm_draw_window_offscreen(struct rContext *C, wmWindow *window) 
 	screen->do_draw = false;
 }
 
-ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, int view) {
+ROSE_INLINE void wm_draw_window_onscreen(rContext *C, wmWindow *window, int view) {
 	Screen *screen = WM_window_screen_get(window);
 
 	GPU_clear_color(0.0f, 0.0f, 0.0f, 1.0f);
@@ -339,12 +339,12 @@ ROSE_INLINE void wm_draw_window_onscreen(struct rContext *C, wmWindow *window, i
 	}
 }
 
-void wm_window_draw(struct rContext *C, wmWindow *window) {
+void wm_window_draw(rContext *C, wmWindow *window) {
 	wm_draw_window_offscreen(C, window);
 	wm_draw_window_onscreen(C, window, -1);
 }
 
-void WM_do_draw(struct rContext *C) {
+void WM_do_draw(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	GPU_context_main_lock();
@@ -355,12 +355,12 @@ void WM_do_draw(struct rContext *C) {
 			continue;
 		}
 
-		float t = GTK_elapsed_time(wm->handle);
-		float dt = t - window->last_draw;
+		double t = GTK_elapsed_time(wm->handle);
+		double dt = t - window->last_draw;
 
 		CTX_wm_window_set(C, window);
-		window->delta_time = dt;
-		window->fps = 1.0f / dt;
+		window->delta_time = (float)dt;
+		window->fps = 1.0f / (float)dt;
 
 		Scene *scene;
 		if ((scene = WM_window_get_active_scene(window))) {

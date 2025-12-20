@@ -17,8 +17,6 @@ typedef unsigned int DRWResourceHandle;
 typedef struct DRWObjectMatrix {
 	float model[4][4];
 	float modelinverse[4][4];
-	float armature[4][4];
-	float armatureinverse[4][4];
 } DRWObjectMatrix;
 
 ROSE_INLINE DRWResourceHandle DRW_handle_increment(DRWResourceHandle *handle) {

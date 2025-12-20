@@ -143,7 +143,7 @@ typedef struct wmEventHandler_KeymapResult {
 } wmEventHandler_KeymapResult;
 
 struct wmKeyMap *WM_keymap_ensure(struct wmKeyConfig *keyconf, const char *idname, int spaceid, int regionid);
-struct wmKeyMap *WM_keymap_active(const struct WindowManager *wm, struct wmKeyMap *keymap);
+struct wmKeyMap *WM_keymap_active(struct WindowManager *wm, struct wmKeyMap *keymap);
 
 bool WM_keymap_poll(struct rContext *C, struct wmKeyMap *keymap);
 

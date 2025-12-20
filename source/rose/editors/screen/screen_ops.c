@@ -21,8 +21,6 @@
 
 #include "screen_intern.h"
 
-#include <stdio.h>
-
 typedef struct sAreaMoveData {
 	int bigger;
 	int smaller;
@@ -30,6 +28,7 @@ typedef struct sAreaMoveData {
 	int step;
 
 	int direction;
+	int event;
 } sAreaMoveData;
 
 ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int direction, int *bigger, int *smaller) {
@@ -63,7 +62,7 @@ ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int dire
 	}
 }
 
-ROSE_INLINE bool area_move_init(struct rContext *C, wmOperator *op) {
+ROSE_INLINE bool area_move_init(rContext *C, wmOperator *op) {
 	Screen *screen = CTX_wm_screen(C);
 	wmWindow *window = CTX_wm_window(C);
 	ScrArea *area = CTX_wm_area(C);
@@ -100,7 +99,7 @@ ROSE_INLINE bool area_move_init(struct rContext *C, wmOperator *op) {
 	return true;
 }
 
-ROSE_INLINE void area_move_apply_do(struct rContext *C, int delta, int original, int direction, int bigger, int smaller) {
+ROSE_INLINE void area_move_apply_do(rContext *C, int delta, int original, int direction, int bigger, int smaller) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = CTX_wm_window(C);
 	Screen *screen = CTX_wm_screen(C);
@@ -147,14 +146,14 @@ ROSE_INLINE void area_move_apply_do(struct rContext *C, int delta, int original,
 	}
 }
 
-ROSE_INLINE void area_move_apply(struct rContext *C, wmOperator *op) {
+ROSE_INLINE void area_move_apply(rContext *C, wmOperator *op) {
 	sAreaMoveData *md = (sAreaMoveData *)(op->customdata);
 	int delta = RNA_int_get(op->ptr, "delta");
 
 	area_move_apply_do(C, delta, md->original, md->direction, md->bigger, md->smaller);
 }
 
-ROSE_INLINE void area_move_exit(struct rContext *C, wmOperator *op) {
+ROSE_INLINE void area_move_exit(rContext *C, wmOperator *op) {
 	sAreaMoveData *md = (sAreaMoveData *)(op->customdata);
 
 	/* this makes sure aligned edges will result in aligned grabbing */
@@ -162,7 +161,7 @@ ROSE_INLINE void area_move_exit(struct rContext *C, wmOperator *op) {
 	KER_screen_remove_double_scredges(CTX_wm_screen(C));
 }
 
-ROSE_INLINE void area_move_exec(struct rContext *C, wmOperator *op) {
+ROSE_INLINE wmOperatorStatus area_move_exec(rContext *C, wmOperator *op) {
 	if (!area_move_init(C, op)) {
 		return OPERATOR_CANCELLED;
 	}
@@ -173,7 +172,7 @@ ROSE_INLINE void area_move_exec(struct rContext *C, wmOperator *op) {
 	return OPERATOR_FINISHED;
 }
 
-ROSE_INLINE wmOperatorStatus area_move_invoke(struct rContext *C, wmOperator *op, const wmEvent *event) {
+ROSE_INLINE wmOperatorStatus area_move_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
 	RNA_int_set(op->ptr, "x", event->mouse_xy[0]);
 	RNA_int_set(op->ptr, "y", event->mouse_xy[1]);
 
@@ -182,6 +181,7 @@ ROSE_INLINE wmOperatorStatus area_move_invoke(struct rContext *C, wmOperator *op
 	}
 
 	sAreaMoveData *md = (sAreaMoveData *)(op->customdata);
+	md->event = event->type;
 
 	/* add temp handler */
 	WM_event_add_modal_handler(C, op);
@@ -189,23 +189,22 @@ ROSE_INLINE wmOperatorStatus area_move_invoke(struct rContext *C, wmOperator *op
 	return OPERATOR_RUNNING_MODAL;
 }
 
-ROSE_INLINE void area_move_cancel(struct rContext *C, wmOperator *op) {
+ROSE_INLINE void area_move_cancel(rContext *C, wmOperator *op) {
 	RNA_int_set(op->ptr, "delta", 0);
 
 	area_move_apply(C, op);
 	area_move_exit(C, op);
 }
 
-ROSE_INLINE void area_move_modal(struct rContext *C, wmOperator *op, const wmEvent *event) {
+ROSE_INLINE wmOperatorStatus area_move_modal(rContext *C, wmOperator *op, const wmEvent *event) {
 	sAreaMoveData *md = (sAreaMoveData *)(op->customdata);
+
+	if (event->type == md->event && event->value == KM_RELEASE) {
+		return OPERATOR_FINISHED;
+	}
 
 	/* execute the events */
 	switch (event->type) {
-		case LEFTMOUSE: {
-			area_move_apply(C, op);
-
-			return OPERATOR_FINISHED;
-		} break;
 		case MOUSEMOVE: {
 			int x = RNA_int_get(op->ptr, "x");
 			int y = RNA_int_get(op->ptr, "y");
@@ -269,15 +268,15 @@ void ED_keymap_screen(wmKeyConfig *keyconf) {
 	/* Screen Editing ------------------------------------------------ */
 	wmKeyMap *keymap = WM_keymap_ensure(keyconf, "Screen Editing", SPACE_EMPTY, RGN_TYPE_WINDOW);
 
-	do {
-		KeyMapItem_Params params = {
-			.type = LEFTMOUSE,
-			.value = KM_PRESS,
-			.modifier = 0,
-		};
+	/* clang-format off */
 
-		WM_keymap_add_item(keymap, "SCREEN_OT_area_move", &params);
-	} while (false);
+	WM_keymap_add_item(keymap, "SCREEN_OT_area_move", &(KeyMapItem_Params){
+		.type = LEFTMOUSE,
+		.value = KM_PRESS,
+		.modifier = KM_NOTHING,
+	});
+
+	/* clang-format on */
 }
 
 /** \} */

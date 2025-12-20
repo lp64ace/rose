@@ -29,8 +29,6 @@ GPU_SHADER_CREATE_INFO(draw_modelmat)
     .define("ModelMatrixInverse", "(drw_matrices[resource_id].drw_modelMatrixInverse)")
 	.define("ProjectionMatrix", "(drw_view.winmat)")
     .define("ProjectionMatrixInverse", "(drw_view.wininv)")
-    .define("ArmatureMatrix", "(drw_matrices[resource_id].drw_armatureMatrix)")
-    .define("ArmatureMatrixInverse", "(drw_matrices[resource_id].drw_armatureMatrixInverse)")
     .additional_info("draw_view");
 
 /** \} */
