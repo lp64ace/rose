@@ -97,7 +97,7 @@ bool GTKRenderXGL::MakeCurrent(void) {
 	GTKWindowX11 *window = static_cast<GTKWindowX11 *>(this->GetWindowInterface());
 	GTKManagerX11 *manager = static_cast<GTKManagerX11 *>(window->GetManagerInterface());
 	
-	glXMakeCurrent(manager->display, window->GetHandle(), this->context);
+	return glXMakeCurrent(manager->display, window->GetHandle(), this->context) == True;
 }
 
 bool GTKRenderXGL::SwapBuffers(void) {
@@ -105,6 +105,7 @@ bool GTKRenderXGL::SwapBuffers(void) {
 	GTKManagerX11 *manager = static_cast<GTKManagerX11 *>(window->GetManagerInterface());
 	
 	glXSwapBuffers(manager->display, window->GetHandle());
+	return true;
 }
 
 bool GTKRenderXGL::SwapInterval(int interval) {

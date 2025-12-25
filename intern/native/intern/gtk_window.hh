@@ -57,7 +57,9 @@ public:
 	GTKRenderInterface *GetRenderInterface();
 	
 protected:
-	virtual GTKRenderInterface *AllocateRender(int render) = 0;
+	virtual GTKRenderInterface *AllocateRender(int render) {
+		return NULL;
+	}
 	
 };
 
