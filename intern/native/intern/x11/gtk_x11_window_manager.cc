@@ -89,9 +89,9 @@ bool GTKManagerX11::XExtensionsInit() {
 	return true;
 }
 
-GTKWindowX11 *GTKManagerX11::GetWindowByHandle(Window window) {
+GTKWindowX11 *GTKManagerX11::GetWindowByHandle(Window handle) {
 	for (auto window : this->GetWindows()) {
-		if ((void *)static_cast<GTKWindowX11 *>(window)->GetHandle() == (void *)window) {
+		if ((void *)static_cast<GTKWindowX11 *>(window)->GetHandle() == (void *)handle) {
 			return static_cast<GTKWindowX11 *>(window);
 		}
 	}
