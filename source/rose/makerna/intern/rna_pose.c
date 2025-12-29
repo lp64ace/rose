@@ -58,7 +58,7 @@ void RNA_def_Pose(RoseRNA *rna) {
 		RNA_def_struct_ui_text(pose, "Pose", "A collection of pose channels, including settings for animating bones");
 
 		do {
-			PropertyRNA *bones = RNA_def_property(pose, "bones", PROP_COLLECTION, PROP_NONE);
+			PropertyRNA *bones = RNA_def_property(pose, "bone", PROP_COLLECTION, PROP_NONE);
 			RNA_def_property_collection_sdna(bones, NULL, "channelbase", NULL);
 			RNA_def_property_struct_type(bones, "PoseBone");
 			RNA_def_property_ui_text(bones, "Pose Bones", "Individual pose bones for the armature");

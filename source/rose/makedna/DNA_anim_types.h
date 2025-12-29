@@ -38,6 +38,9 @@ typedef struct FCurve {
 	 */
 	char *path;
 	int index;
+
+	/** This is only handled internally and is to not be touched! */
+	char *path_canonical;
 } FCurve;
 
 /** \} */

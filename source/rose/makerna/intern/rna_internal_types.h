@@ -24,6 +24,18 @@ typedef struct PropertyRNA {
 
 	/** Unique identifier for the property, not exposed to the user. */
 	const char *identifier;
+	
+#ifdef RNA_USE_CANONICAL_PATH
+	/**
+	 * Since the identifier set by us might be too long and result 
+	 * in slow path resolving we use a canonical hash that converts ALL 
+	 * valid identifiers to UNIQUE names.
+	 * 
+	 * identifiers are only allowed to have [a-z][_] therefore 
+	 * we can encode up to 9 charachters into this canonical name using hashing.
+	 */
+	unsigned int canonical;
+#endif
 
 	ePropertyFlag flag;
 	ePropertyType type;
@@ -316,7 +328,8 @@ typedef struct ContainerRNA {
 
 	ListBase properties;
 	/* rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter> */
-	void *property_lookup_set;
+	void *property_identifier_lookup_set;
+	void *property_canonical_lookup_set;
 } ContainerRNA;
 
 /* -------------------------------------------------------------------- */
@@ -379,6 +392,15 @@ struct PropertyRNAIdentifierGetter {
 		return prop->identifier;
 	}
 };
+
+#	ifdef RNA_USE_CANONICAL_PATH
+struct PropertyRNACanonicalGetter {
+	unsigned int operator()(const PropertyRNA *prop) const {
+		return prop->canonical;
+	}
+};
+#	endif
+
 #endif
 
 #endif	// RNA_INTERNAL_TYPES_H

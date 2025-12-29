@@ -168,6 +168,13 @@ GHash *LIB_ghash_str_new(const char *info) {
 	return LIB_ghash_str_new_ex(info, 0);
 }
 
+GHash *LIB_ghash_int_new_ex(const char *info, size_t reserve) {
+	return LIB_ghash_new_ex(LIB_ghashutil_inthash_p, LIB_ghashutil_intcmp, info, reserve);
+}
+GHash *LIB_ghash_int_new(const char *info) {
+	return LIB_ghash_str_new_ex(info, 0);
+}
+
 GSet *LIB_gset_ptr_new_ex(const char *info, size_t reserve) {
 	return LIB_gset_new_ex(LIB_ghashutil_ptrhash, LIB_ghashutil_ptrcmp, info, reserve);
 }

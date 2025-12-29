@@ -44,6 +44,8 @@ void RNA_exit();
  */
 bool RNA_path_resolve_property(const struct PointerRNA *ptr, const char *path, struct PointerRNA *r_ptr, struct PropertyRNA **r_property);
 
+char *RNA_path_canonicalize(const char *path);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

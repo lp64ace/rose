@@ -662,8 +662,9 @@ ROSE_INLINE bool fcurve_lookup_cmp(const void *vleft, const void *vright) {
 
 ROSE_STATIC FCurve *create_fcurve_for_channel(const FCurveDescriptor *descriptor) {
 	FCurve *fcurve = KER_fcurve_new();
-	fcurve->path = LIB_strdupN(descriptor->path);
 	fcurve->index = descriptor->index;
+
+	KER_fcurve_path_set_ex(fcurve, descriptor->path, true);
 	
 	if (descriptor->type >= 0) {
 		// Note the type within the flag of the FCurve.

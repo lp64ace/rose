@@ -146,7 +146,8 @@ void KER_anim_evaluate_fcurves(PointerRNA pointer, FCurve **fcurves, int totcurv
 	for (int index = 0; index < totcurve; index++) {
 		FCurve *fcurve = fcurves[index];
 
-		if (KER_animsys_rna_path_resolve(&pointer, fcurve->path, fcurve->index, &resolved)) {
+		const char *path = (fcurve->path_canonical) ? fcurve->path_canonical : fcurve->path;
+		if (KER_animsys_rna_path_resolve(&pointer, path, fcurve->index, &resolved)) {
 			int skip = KER_anim_evaluate_fcurves_optimize(resolved, fcurves, totcurve, ctime, index);
 
 			/**

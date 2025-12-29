@@ -49,6 +49,8 @@ void RNA_def_struct_system_idprops_func(struct StructRNA *srna, const char *syst
 /** \name Property RNA Definition
  * \{ */
 
+unsigned int RNA_property_canonical_token(const char *identifier);
+
 #define RNA_TRANSLATION_PREC_DEFAULT 3
 
 struct PropertyRNA *RNA_def_property(void *container, const char *identifier, int type, int subtype);

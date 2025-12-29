@@ -290,7 +290,8 @@ StructRNA *RNA_def_struct_ex(RoseRNA *rna, const char *identifier, StructRNA *fr
 
 	if (fromstruct) {
 		memcpy(newstruct, fromstruct, sizeof(StructRNA));
-		newstruct->container.property_lookup_set = NULL;
+		newstruct->container.property_identifier_lookup_set = NULL;
+		newstruct->container.property_canonical_lookup_set = NULL;
 		LIB_listbase_clear(&newstruct->container.properties);
 
 		newstruct->base = fromstruct;
@@ -1177,7 +1178,7 @@ void RNA_def_property_collection_sdna(PropertyRNA *property, const char *structn
 	StructRNA *srna = DefRNA.nstruct;
 
 	if (!DefRNA.preprocess) {
-		fprintf(stderr, "[RNA] #%s is only available during preprocessing.", __func__);
+		fprintf(stderr, "[RNA] #%s is only available during preprocessing.\n", __func__);
 		return;
 	}
 
@@ -1215,6 +1216,43 @@ ROSE_INLINE PropertyDefRNA *rna_def_findlink(ListBase *lb, const char *identifie
 		}
 	}
 	return NULL;
+}
+
+ROSE_INLINE unsigned int rna_as_canonical(char c) {
+	/** For optimization purposes we do not allow capital letters or digits. */
+	ROSE_assert('a' <= c && c <= 'z' || c == '_');
+
+	if ('a' <= c && c <= 'z') {
+		return c - 'a';
+	}
+	return 26;
+}
+
+unsigned int RNA_property_canonical_token(const char *identifier) {
+	unsigned int canonical = 1;
+
+	for (size_t i = 0; identifier[i] != '\0'; i++) {
+		canonical = canonical * 27 + rna_as_canonical(identifier[i]);
+
+		if (i == 10) {
+			/**
+			 * We support up to 10 letters in an identifier anything extra is lost information!
+			 */
+			fprintf(stderr, "[RNA] PropertyRNA identifier \"%s\" is too long and might cause issues!\n", identifier);
+			break;
+		}
+	}
+
+	return canonical;
+}
+
+void RNA_def_property_identifier(PropertyRNA *property, const char *identifier) {
+#ifdef RNA_USE_CANONICAL_PATH
+	if (!(property->flagex & PROP_INTERN_BUILTIN)) {
+		property->canonical = RNA_property_canonical_token(identifier);
+	}
+#endif
+	property->identifier = identifier;
 }
 
 PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type, int subtype) {
@@ -1326,7 +1364,6 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 	}
 
 	property->magic = RNA_MAGIC;
-	property->identifier = identifier;
 	property->type = type;
 	property->subtype = subtype;
 	property->name = identifier;
@@ -1385,6 +1422,8 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 		 */
 		property->flagex |= PROP_INTERN_RUNTIME;
 	}
+
+	RNA_def_property_identifier(property, identifier);
 
 	LIB_addtail(&container->properties, property);
 

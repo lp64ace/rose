@@ -227,11 +227,17 @@ IDProperty *rna_idproperty_check(PropertyRNA **prop, PointerRNA *ptr) {
 /** \name Path API
  * \{ */
 
-ROSE_INLINE char *rna_path_token(const char **path, char *fixedbuf, size_t fixedlen) {
+char *rna_path_token(const char **path, char *fixedbuf, size_t fixedlen) {
 	size_t length = 0;
 
 	const char *p = *path;
 	while (*p && !ELEM(*p, '.', '[')) {
+#ifdef RNA_USE_CANONICAL_PATH
+		if (ELEM(*p, '&')) {
+			length += sizeof(unsigned int);
+			p += sizeof(unsigned int);
+		}
+#endif
 		length++;
 		p++;
 	}
@@ -252,7 +258,7 @@ ROSE_INLINE char *rna_path_token(const char **path, char *fixedbuf, size_t fixed
 	return buf;
 }
 
-ROSE_INLINE char *rna_path_token_in_brackets(const char **path, char *fixedbuf, size_t fixedlen, bool *quoted) {
+char *rna_path_token_in_brackets(const char **path, char *fixedbuf, size_t fixedlen, bool *quoted) {
 	size_t length = 0;
 
 	ROSE_assert(quoted != NULL);
@@ -320,7 +326,7 @@ ROSE_INLINE char *rna_path_token_in_brackets(const char **path, char *fixedbuf, 
 	return buf;
 }
 
-ROSE_INLINE bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyRNA *prop, PointerRNA *r_nextptr) {
+bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyRNA *prop, PointerRNA *r_nextptr) {
 	char fixedbuf[256];
 	int intkey;
 

@@ -61,6 +61,8 @@ float KER_fcurve_evaluate(struct PathResolvedRNA *rna, struct FCurve *fcurve, fl
  * should be considered invalid / dangling.
  */
 void KER_fcurve_bezt_resize(struct FCurve *fcurve, int totvert);
+void KER_fcurve_path_set_ex(struct FCurve *fcurve, const char *newpath, bool canonicalize);
+void KER_fcurve_path_set(struct FCurve *fcurve, const char *newpath);
 
 /** \} */
 

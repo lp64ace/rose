@@ -120,18 +120,18 @@ char *LIB_strncat(char *dst, size_t dst_maxncpy, const char *src, size_t length)
  * the terminating null character (without including the terminating null character
  * itself).
  */
-// size_t LIB_strlen(const char *text);
+size_t LIB_strlen(const char *text);
 /** Some compilers have optimization for static strings. */
-#define LIB_strlen strlen
+// #define LIB_strlen strlen
 
 /**
  * The length of a C string is determined by the terminating null-character:
  * A C string is as long as the number of characters between the beginning of the string and
  * the terminating null character (without including the terminating null character itself).
  */
-// size_t LIB_strnlen(const char *text, const size_t maxlen);
+size_t LIB_strnlen(const char *text, const size_t maxlen);
 /** Some compilers have optimization for static strings. */
-#define LIB_strnlen strnlen
+// #define LIB_strnlen strnlen
 
 /**
  * \brief Checks if the given string starts with the specified prefix.

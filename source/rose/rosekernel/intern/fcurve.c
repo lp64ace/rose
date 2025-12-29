@@ -7,6 +7,7 @@
 #include "LIB_math_solvers.h"
 #include "LIB_math_vector.h"
 #include "LIB_listbase.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "KER_fcurve.h"
@@ -46,6 +47,7 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_SAFE_FREE(fcurve->bezt);
 	MEM_SAFE_FREE(fcurve->fpt);
 	MEM_SAFE_FREE(fcurve->path);
+	MEM_SAFE_FREE(fcurve->path_canonical);
 
 	MEM_freeN(fcurve);
 }
@@ -548,6 +550,26 @@ void KER_fcurve_bezt_resize(FCurve *fcurve, int totvert) {
 	}
 
 	fcurve->totvert = totvert;
+}
+
+void KER_fcurve_path_set_ex(FCurve *fcurve, const char *newpath, bool canonicalize) {
+	if (fcurve->path == NULL || !STREQ(fcurve->path, newpath)) {
+		MEM_SAFE_FREE(fcurve->path_canonical);
+		MEM_SAFE_FREE(fcurve->path);
+
+		/**
+		 * Copy the new path over and invalidate the runtime canonical path.
+		 */
+		fcurve->path = LIB_strdupN(newpath);
+
+		if (canonicalize) {
+			fcurve->path_canonical = RNA_path_canonicalize(fcurve->path);
+		}
+	}
+}
+
+void KER_fcurve_path_set(FCurve *fcurve, const char *newpath) {
+	KER_fcurve_path_set_ex(fcurve, newpath, false);
 }
 
 /** \} */

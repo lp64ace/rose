@@ -126,7 +126,7 @@ void create_transform_curve_desc(FbxElementMapping *mapping, const ElementAnimat
 	const bool is_bone = mapping->node_is_rose_bone.contains(fnode);
 	if (is_bone) {
 		group = mapping->node_to_name.lookup_default(fnode, "");
-		prefix = std::string("pose.bones[\"") + group + "\"].";
+		prefix = std::string("pose.bone[\"") + group + "\"].";
 	}
 
 	const char *groupname = static_cast<const char *>(LIB_memory_arena_strdup(names, &group[0]));
