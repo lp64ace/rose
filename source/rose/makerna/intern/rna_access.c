@@ -232,12 +232,6 @@ char *rna_path_token(const char **path, char *fixedbuf, size_t fixedlen) {
 
 	const char *p = *path;
 	while (*p && !ELEM(*p, '.', '[')) {
-#ifdef RNA_USE_CANONICAL_PATH
-		if (ELEM(*p, '&')) {
-			length += sizeof(unsigned int);
-			p += sizeof(unsigned int);
-		}
-#endif
 		length++;
 		p++;
 	}
@@ -326,7 +320,9 @@ char *rna_path_token_in_brackets(const char **path, char *fixedbuf, size_t fixed
 	return buf;
 }
 
-bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyRNA *prop, PointerRNA *r_nextptr) {
+typedef bool (*PathResolveCb)(const PointerRNA *ptr, PropertyRNA *property, const char *token, bool quoted, void *userdata);
+
+bool rna_path_parse_collection_key_callback(const char **path, PointerRNA *ptr, PropertyRNA *prop, PointerRNA *r_nextptr, PathResolveCb callback, void *userdata) {
 	char fixedbuf[256];
 	int intkey;
 
@@ -337,7 +333,7 @@ bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyR
 		return true;
 	}
 
-	 bool found = false;
+	bool found = false;
 	if (**path == '[') {
 		bool quoted;
 		char *token;
@@ -353,6 +349,10 @@ bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyR
 		if (quoted) {
 			if (RNA_property_collection_lookup_string(ptr, prop, token, r_nextptr)) {
 				found = true;
+
+				if (callback) {
+					found &= callback(r_nextptr, prop, token, quoted, userdata);
+				}
 			}
 			else {
 				r_nextptr->data = NULL;
@@ -366,6 +366,10 @@ bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyR
 			}
 			if (RNA_property_collection_lookup_int(ptr, prop, intkey, r_nextptr)) {
 				found = true;
+
+				if (callback) {
+					found &= callback(r_nextptr, prop, token, quoted, userdata);
+				}
 			}
 			else {
 				r_nextptr->data = NULL;
@@ -379,6 +383,10 @@ bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyR
 	else {
 		if (RNA_property_collection_type_get(ptr, prop, r_nextptr)) {
 			found = true;
+
+			if (callback) {
+				found &= callback(r_nextptr, prop, NULL, false, userdata);
+			}
 		}
 		else {
 			/* ensure we quit on invalid values */
@@ -389,7 +397,7 @@ bool rna_path_parse_collection_key(const char **path, PointerRNA *ptr, PropertyR
 	return found;
 }
 
-ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, PointerRNA *r_ptr, PropertyRNA **r_property) {
+ROSE_INLINE bool rna_path_parse_callback(const PointerRNA *ptr, const char *path, PathResolveCb callback, void *userdata, PointerRNA *r_ptr, PropertyRNA **r_property) {
 	PointerRNA curptr, nextptr;
 	PropertyRNA *property = NULL;
 
@@ -426,20 +434,26 @@ ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, Pointer
 			property = RNA_struct_find_property(&curptr, token);
 		}
 
-		if (token != fixedbuf) {
-			MEM_freeN(token);
-		}
-
 		if (!property) {
 			return false;
 		}
 
 		ePropertyType type = RNA_property_type(property);
 
+		if (token != fixedbuf) {
+			MEM_freeN(token);
+		}
+
 		switch (type) {
 			case PROP_POINTER: {
 				if (*path != '\0') {
 					curptr = RNA_property_pointer_get(&curptr, property);
+
+					if (callback) {
+						if (!callback(&curptr, property, NULL, false, userdata)) {
+							return false;
+						}
+					}
 
 					/* now we have a PointerRNA, the #property is our parent so forget it */
 					property = NULL;
@@ -451,7 +465,7 @@ ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, Pointer
 				 * so do_item_ptr is of no use in that case.
 				 */
 				if (*path) {
-					if (!rna_path_parse_collection_key(&path, &curptr, property, &nextptr)) {
+					if (!rna_path_parse_collection_key_callback(&path, &curptr, property, &nextptr, callback, userdata)) {
 						return false;
 					}
 
@@ -473,15 +487,169 @@ ROSE_INLINE bool rna_path_parse(const PointerRNA *ptr, const char *path, Pointer
 		*r_property = property;
 	}
 
+	if (callback) {
+		if (!callback(&curptr, property, NULL, false, userdata)) {
+			return false;
+		}
+	}
+
 	return true;
 }
 
+typedef struct StaticPathComponentRNA {
+	struct StaticPathComponentRNA *prev, *next;
+
+	struct StructRNA *type;
+	struct PropertyRNA *property;
+
+	/** This token is only used for collection properties. */
+	char *token;
+
+	int flag;
+} StaticPathComponentRNA;
+
+enum {
+	STATIC_PATH_COMPONENT_USE_TOKEN = 1 << 0,
+	STATIC_PATH_COMPONENT_HAS_QUOTE = 1 << 1,
+};
+
+typedef struct StaticPathRNA {
+	StructRNA *type;
+
+	ListBase components;
+} StaticPathRNA;
+
 bool RNA_path_resolve_property(const PointerRNA *ptr, const char *path, PointerRNA *r_ptr, PropertyRNA **r_property) {
-	if (!rna_path_parse(ptr, path, r_ptr, r_property)) {
+	if (!rna_path_parse_callback(ptr, path, NULL, NULL, r_ptr, r_property)) {
 		return false;
 	}
 
 	return r_ptr->data != NULL && *r_property != NULL;
+}
+
+bool RNA_static_path_resolve_property(const struct PointerRNA *ptr, const struct StaticPathRNA *path, struct PointerRNA *r_ptr, struct PropertyRNA **r_property) {
+	PointerRNA curptr, nextptr = PointerRNA_NULL;
+	PropertyRNA *property = NULL;
+
+	curptr = *ptr;
+
+	ROSE_assert(path->type == ptr->type);
+
+	LISTBASE_FOREACH(StaticPathComponentRNA *, component, &path->components) {
+		property = component->property;
+
+		if (!component->property) {
+			return false;
+		}
+
+		ePropertyType type = RNA_property_type(property);
+
+		switch (type) {
+			case PROP_POINTER: {
+				curptr = RNA_property_pointer_get(&curptr, property);
+
+				/* now we have a PointerRNA, the #property is our parent so forget it */
+				property = NULL;
+			} break;
+			case PROP_COLLECTION: {
+				if (component->flag & STATIC_PATH_COMPONENT_USE_TOKEN) {
+					if (component->flag & STATIC_PATH_COMPONENT_HAS_QUOTE) {
+						if (!RNA_property_collection_lookup_string(&curptr, property, component->token, &nextptr)) {
+							return false;
+						}
+					}
+					else {
+						int intkey = atoi(component->token);
+						if (!RNA_property_collection_lookup_int(&curptr, property, intkey, &nextptr)) {
+							return false;
+						}
+					}
+				}
+				else {
+					if (!RNA_property_collection_type_get(&curptr, property, &nextptr)) {
+						return false;
+					}
+				}
+
+				curptr = nextptr;
+
+				/* now we have a PointerRNA, the prop is our parent so forget it */
+				property = NULL;
+			} break;
+		}
+	}
+
+	*r_ptr = curptr;
+	*r_property = property;
+
+	return r_ptr->data != NULL && *r_property != NULL;
+}
+
+ROSE_INLINE bool rna_path_property_can_do_static_compilation(const PointerRNA *ptr, PropertyRNA *property, const char *token, bool quoted, void *userdata) {
+	if (ptr->type->refine || (RNA_property_type(property) == PROP_COLLECTION && token == NULL)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool RNA_path_can_do_static_compilation(const struct PointerRNA *ptr, const char *path) {
+	if (!rna_path_parse_callback(ptr, path, rna_path_property_can_do_static_compilation, NULL, NULL, NULL)) {
+		return false;
+	}
+
+	return true;
+}
+
+ROSE_INLINE bool rna_path_property_do_static_compilation(const PointerRNA *ptr, PropertyRNA *property, const char *token, bool quoted, void *userdata) {
+	StaticPathRNA *newpath = (StaticPathRNA *)userdata;
+
+	if (!rna_path_property_can_do_static_compilation(ptr, property, token, quoted, NULL)) {
+		return false;
+	}
+
+	StaticPathComponentRNA *component = MEM_mallocN(sizeof(StaticPathComponentRNA), "StaticPathComponentRNA");
+
+	component->type = ptr->type;
+	component->property = property;
+	component->flag = 0;
+
+	component->token = NULL;
+	
+	if (token) {
+		component->token = LIB_strdupN(token);
+		if (quoted) {
+			component->flag |= STATIC_PATH_COMPONENT_HAS_QUOTE;
+		}
+		component->flag |= STATIC_PATH_COMPONENT_USE_TOKEN;
+	}
+
+	LIB_addtail(&newpath->components, component);
+
+	return true;
+}
+
+StaticPathRNA *RNA_path_new(const PointerRNA *ptr, const char *path, PointerRNA *r_ptr, PropertyRNA **r_property) {
+	StaticPathRNA *newpath = MEM_mallocN(sizeof(StaticPathRNA), "StaticPathRNA");
+
+	newpath->type = ptr->type;
+	LIB_listbase_clear(&newpath->components);
+
+	if (!rna_path_parse_callback(ptr, path, rna_path_property_do_static_compilation, (void *)newpath, r_ptr, r_property)) {
+		RNA_path_free(newpath);
+		newpath = NULL;
+	}
+
+	return newpath;
+}
+
+void RNA_path_free(StaticPathRNA *path) {
+	LISTBASE_FOREACH(StaticPathComponentRNA *, component, &path->components) {
+		MEM_SAFE_FREE(component->token);
+	}
+	LIB_freelistN(&path->components);
+
+	MEM_freeN(path);
 }
 
 /** \} */

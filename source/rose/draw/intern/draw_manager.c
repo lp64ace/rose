@@ -324,19 +324,15 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 		KER_camera_multiview_view_matrix(&scene->r, camera, viewmat);
 		KER_camera_multiview_window_matrix(&scene->r, camera, manager->size, projmat);
 		mul_m4_m4m4(storage->winmat, projmat, viewmat);
-
-		invert_m4_m4(storage->wininv, storage->winmat);
 	}
 	else {
 		RegionView3D *rv3d = region->regiondata;
 
 		if (rv3d) {
 			mul_m4_m4m4(storage->winmat, rv3d->winmat, rv3d->viewmat);
-			invert_m4_m4(storage->wininv, storage->winmat);
 		}
 		else {
 			unit_m4(storage->winmat);
-			unit_m4(storage->wininv);
 		}
 	}
 

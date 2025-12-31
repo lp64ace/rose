@@ -47,7 +47,10 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_SAFE_FREE(fcurve->bezt);
 	MEM_SAFE_FREE(fcurve->fpt);
 	MEM_SAFE_FREE(fcurve->path);
-	MEM_SAFE_FREE(fcurve->path_canonical);
+	
+	if (fcurve->runtime.static_path) {
+		RNA_path_free(fcurve->runtime.static_path);
+	}
 
 	MEM_freeN(fcurve);
 }
@@ -552,19 +555,18 @@ void KER_fcurve_bezt_resize(FCurve *fcurve, int totvert) {
 	fcurve->totvert = totvert;
 }
 
-void KER_fcurve_path_set_ex(FCurve *fcurve, const char *newpath, bool canonicalize) {
+void KER_fcurve_path_set_ex(FCurve *fcurve, const char *newpath, bool compile) {
 	if (fcurve->path == NULL || !STREQ(fcurve->path, newpath)) {
-		MEM_SAFE_FREE(fcurve->path_canonical);
 		MEM_SAFE_FREE(fcurve->path);
+
+		if (fcurve->runtime.static_path) {
+			RNA_path_free(fcurve->runtime.static_path);
+		}
 
 		/**
 		 * Copy the new path over and invalidate the runtime canonical path.
 		 */
 		fcurve->path = LIB_strdupN(newpath);
-
-		if (canonicalize) {
-			fcurve->path_canonical = RNA_path_canonicalize(fcurve->path);
-		}
 	}
 }
 

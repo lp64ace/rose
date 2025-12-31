@@ -146,8 +146,7 @@ void KER_anim_evaluate_fcurves(PointerRNA pointer, FCurve **fcurves, int totcurv
 	for (int index = 0; index < totcurve; index++) {
 		FCurve *fcurve = fcurves[index];
 
-		const char *path = (fcurve->path_canonical) ? fcurve->path_canonical : fcurve->path;
-		if (KER_animsys_rna_path_resolve(&pointer, path, fcurve->index, &resolved)) {
+		if (KER_animsys_rna_curve_resolve(&pointer, fcurve, &resolved)) {
 			int skip = KER_anim_evaluate_fcurves_optimize(resolved, fcurves, totcurve, ctime, index);
 
 			/**
@@ -201,31 +200,15 @@ void KER_animsys_eval_animdata(Scene *scene, ID *id) {
 	KER_animsys_evaluate_animdata(id, adt, KER_scene_frame(scene), ADT_RECALC_ANIM);
 }
 
-bool KER_animsys_rna_path_resolve_ex(PointerRNA *ptr, const char *path, int index, PathResolvedRNA *result, GHash *cache) {
+bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, PathResolvedRNA *result) {
 	if (path == NULL) {
 		return false;
 	}
 
-	PathResolvedRNA *cached = NULL;
-	if (!cache || !(cached = LIB_ghash_lookup(cache, path))) {
-		/** The path is not the same as the already resolved one, resolve the property again! */
-		if (!RNA_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
-			fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", path, index);
-			return false;
-		}
-
-		if (cache) {
-			cached = MEM_mallocN(sizeof(PathResolvedRNA), "PathResolvedRNA");
-
-			cached->property = result->property;
-			cached->ptr = result->ptr;
-
-			LIB_ghash_insert(cache, (void *)path, (void *)cached);
-		}
-	}
-	else if (cache) {
-		result->property = cached->property;
-		result->ptr = cached->ptr;
+	/** The path is not the same as the already resolved one, resolve the property again! */
+	if (!RNA_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
+		fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", path, index);
+		return false;
 	}
 
 	if (ptr->owner == NULL || !RNA_property_animateable(&result->ptr, result->property)) {
@@ -242,6 +225,45 @@ bool KER_animsys_rna_path_resolve_ex(PointerRNA *ptr, const char *path, int inde
 	return true;
 }
 
-bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, PathResolvedRNA *result) {
-	return KER_animsys_rna_path_resolve_ex(ptr, path, index, result, NULL);
+bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolvedRNA *result) {
+	if (fcurve->runtime.static_path != NULL) {
+		StaticPathRNA *path = (StaticPathRNA *)fcurve->runtime.static_path;
+
+		if (!RNA_static_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
+			fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index);
+			return false;
+		}
+
+		if (ptr->owner == NULL || !RNA_property_animateable(&result->ptr, result->property)) {
+			return false;
+		}
+
+		int length = RNA_property_array_length(&result->ptr, result->property);
+		if (length && fcurve->index >= length) {
+			fprintf(stderr, "[Kernel] Invalid array index, ID = '%s', '%s[%d]', array length is %d.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index, length - 1);
+			return false;
+		}
+
+		result->index = length ? fcurve->index : -1;
+		return true;
+	}
+	else {
+		if (!RNA_path_can_do_static_compilation(ptr, fcurve->path)) {
+			return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
+		}
+
+		fcurve->runtime.static_path = RNA_path_new(ptr, fcurve->path, NULL, NULL);
+
+		if (!fcurve->runtime.static_path) {
+			/**
+			 * Since #RNA_path_can_do_static_compilation returned true, #RNA_path_new should 
+			 * not return NULL!
+			 */
+			ROSE_assert_unreachable();
+
+			return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
+		}
+	}
+
+	return KER_animsys_rna_curve_resolve(ptr, fcurve, result);
 }

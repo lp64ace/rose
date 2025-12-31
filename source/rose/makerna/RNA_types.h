@@ -168,8 +168,6 @@ typedef enum ePropertyFlag {
 	PROP_ID_REFCOUNT = (1 << 5),
 } ePropertyFlag;
 
-ENUM_OPERATORS(ePropertyFlag, PROP_PTR_NO_OWNERSHIP);
-
 typedef enum ePropertyInternalFlag {
 	PROP_INTERN_RUNTIME = (1 << 0),
 	PROP_INTERN_FREE_POINTERS = (1 << 1),
@@ -177,8 +175,6 @@ typedef enum ePropertyInternalFlag {
 	PROP_INTERN_PTR_OWNERSHIP_FORCED = (1 << 3),
 	PROP_INTERN_BUILTIN = (1 << 4),
 } ePropertyInternalFlag;
-
-ENUM_OPERATORS(ePropertyInternalFlag, PROP_INTERN_FREE_POINTERS);
 
 /** \} */
 

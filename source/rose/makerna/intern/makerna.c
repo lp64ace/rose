@@ -1082,10 +1082,6 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 			fprintf(fpout, ",\n");
 		} while (false);
 
-#ifdef RNA_USE_CANONICAL_PATH
-		fprintf(fpout, "\t\t.canonical = %u,\n", property->canonical);
-#endif
-
 		do {
 			fprintf(fpout, "\t\t.flag = ");
 			rna_print_property_flag(fpout, property->flag);
@@ -1369,7 +1365,6 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 			fprintf(fpout, "\t\t},\n");
 		}
 		fprintf(fpout, "\t\t.property_identifier_lookup_set = NULL,\n");
-		fprintf(fpout, "\t\t.property_canonical_lookup_set = NULL,\n");
 	} while (false);
 	fprintf(fpout, "\t},\n");
 

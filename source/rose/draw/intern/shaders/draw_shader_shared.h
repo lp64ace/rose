@@ -27,7 +27,6 @@ struct DVertGroupMatrices {
 struct ViewInfos {
 	/* View matrices */
 	float4x4 winmat;
-	float4x4 wininv;
 };
 
 #define resource_id drw_ResourceID

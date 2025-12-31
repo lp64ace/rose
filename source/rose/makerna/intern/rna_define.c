@@ -291,7 +291,6 @@ StructRNA *RNA_def_struct_ex(RoseRNA *rna, const char *identifier, StructRNA *fr
 	if (fromstruct) {
 		memcpy(newstruct, fromstruct, sizeof(StructRNA));
 		newstruct->container.property_identifier_lookup_set = NULL;
-		newstruct->container.property_canonical_lookup_set = NULL;
 		LIB_listbase_clear(&newstruct->container.properties);
 
 		newstruct->base = fromstruct;
@@ -1247,11 +1246,6 @@ unsigned int RNA_property_canonical_token(const char *identifier) {
 }
 
 void RNA_def_property_identifier(PropertyRNA *property, const char *identifier) {
-#ifdef RNA_USE_CANONICAL_PATH
-	if (!(property->flagex & PROP_INTERN_BUILTIN)) {
-		property->canonical = RNA_property_canonical_token(identifier);
-	}
-#endif
 	property->identifier = identifier;
 }
 

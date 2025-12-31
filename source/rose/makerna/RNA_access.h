@@ -34,6 +34,8 @@ void RNA_exit();
 /** \name Path API
  * \{ */
 
+typedef struct StaticPathRNA StaticPathRNA;
+
 /**
  * Resolve the given RNA Path to find both the pointer AND property
  * indicated by fully resolving the path.
@@ -43,8 +45,13 @@ void RNA_exit();
  * \return True only if both a valid pointer and property are found after resolving the path
  */
 bool RNA_path_resolve_property(const struct PointerRNA *ptr, const char *path, struct PointerRNA *r_ptr, struct PropertyRNA **r_property);
+bool RNA_static_path_resolve_property(const struct PointerRNA *ptr, const struct StaticPathRNA *path, struct PointerRNA *r_ptr, struct PropertyRNA **r_property);
 
-char *RNA_path_canonicalize(const char *path);
+bool RNA_path_can_do_static_compilation(const struct PointerRNA *ptr, const char *path);
+
+struct StaticPathRNA *RNA_path_new(const struct PointerRNA *ptr, const char *path, struct PointerRNA *r_ptr, struct PropertyRNA **r_property);
+
+void RNA_path_free(struct StaticPathRNA *path);
 
 /** \} */
 
