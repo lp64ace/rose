@@ -37,6 +37,7 @@
  * \{ */
 
 ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4]) {
+	/* default, human vertical fov is 120 degrees. */
 	const float fov = M_PI_2 * 2.0f / 3.0f;
 	const float clip_start = 1e-3f;
 	const float clip_end = 1e+3f;
