@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 struct AnimData;
+struct Main;
 
 #ifdef __cplusplus
 extern "C" {

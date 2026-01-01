@@ -5,6 +5,7 @@
 
 struct Armature;
 struct Main;
+struct Mesh;
 struct Object;
 struct Pose;
 struct PoseChannel;

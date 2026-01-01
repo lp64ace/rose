@@ -21,6 +21,8 @@
 
 #include "screen_intern.h"
 
+#include <limits.h>
+
 typedef struct sAreaMoveData {
 	int bigger;
 	int smaller;
@@ -33,7 +35,7 @@ typedef struct sAreaMoveData {
 
 ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int direction, int *bigger, int *smaller) {
 	/* we check all areas and test for free space with MINSIZE */
-	*bigger = *smaller = SHRT_MAX;
+	*bigger = *smaller = INT_MAX;
 
 	rcti window_rect;
 	WM_window_rect_calc(window, &window_rect);

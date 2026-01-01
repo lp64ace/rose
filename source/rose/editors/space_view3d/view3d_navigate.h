@@ -31,6 +31,8 @@ typedef enum eV3D_OpEvent {
 	VIEW_CANCEL,
 } eV3D_OpEvent;
 
+struct ViewOpsData;
+
 typedef struct ViewOpsType {
 	eViewOpsFlag flag;
 	const char *idname;

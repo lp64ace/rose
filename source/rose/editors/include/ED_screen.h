@@ -16,6 +16,7 @@ struct Screen;
 struct Scene;
 struct WindowManager;
 struct rContext;
+struct wmKeyConfig;
 struct wmWindow;
 
 /* -------------------------------------------------------------------- */

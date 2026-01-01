@@ -109,6 +109,13 @@ bool GTKRenderXGL::SwapBuffers(void) {
 }
 
 bool GTKRenderXGL::SwapInterval(int interval) {
+	GTKWindowX11 *window = static_cast<GTKWindowX11 *>(this->GetWindowInterface());
+	GTKManagerX11 *manager = static_cast<GTKManagerX11 *>(window->GetManagerInterface());
+	
+	if (manager->glxSwapIntervalEXT) {
+		manager->glxSwapIntervalEXT(manager->display, window->GetHandle(), interval);
+		return true;
+	}
 	return false;
 }
 
