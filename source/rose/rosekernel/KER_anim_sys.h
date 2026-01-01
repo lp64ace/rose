@@ -3,6 +3,7 @@
 
 struct AnimData;
 struct ID;
+struct FCurve;
 struct PathResolvedRNA;
 struct PointerRNA;
 struct Scene;
