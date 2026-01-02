@@ -14,6 +14,12 @@ extern "C" {
 struct rContext;
 struct wmEvent;
 
+typedef struct wmWindow_Runtime {
+	double last_frames_per_second_reset;
+	float last_frames_per_second;
+	float next_frames_per_second;
+} wmWindow_Runtime;
+
 typedef struct wmWindow {
 	struct wmWindow *prev, *next;
 
@@ -56,6 +62,8 @@ typedef struct wmWindow {
 	ListBase event_queue;
 	ListBase modalhandlers;
 	ListBase handlers;
+
+	wmWindow_Runtime runtime;
 } wmWindow;
 
 typedef struct WindowManager_Runtime {

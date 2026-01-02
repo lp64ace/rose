@@ -516,7 +516,8 @@ enum {
 typedef struct StaticPathRNA {
 	StructRNA *type;
 
-	ListBase components;
+	struct StaticPathComponentRNA *components;
+	int totcomponents;
 } StaticPathRNA;
 
 bool RNA_path_resolve_property(const PointerRNA *ptr, const char *path, PointerRNA *r_ptr, PropertyRNA **r_property) {
@@ -535,7 +536,7 @@ bool RNA_static_path_resolve_property(const struct PointerRNA *ptr, const struct
 
 	ROSE_assert(path->type == ptr->type);
 
-	LISTBASE_FOREACH(StaticPathComponentRNA *, component, &path->components) {
+	for (StaticPathComponentRNA *component = path->components; component != path->components + path->totcomponents; component++) {
 		property = component->property;
 
 		if (!component->property) {
@@ -608,7 +609,10 @@ ROSE_INLINE bool rna_path_property_do_static_compilation(const PointerRNA *ptr, 
 		return false;
 	}
 
-	StaticPathComponentRNA *component = MEM_mallocN(sizeof(StaticPathComponentRNA), "StaticPathComponentRNA");
+	newpath->totcomponents++;
+	newpath->components = MEM_reallocN_id(newpath->components, sizeof(StaticPathComponentRNA) * newpath->totcomponents, "StaticPathComponentRNA");
+
+	StaticPathComponentRNA *component = &newpath->components[newpath->totcomponents - 1];
 
 	component->type = ptr->type;
 	component->property = property;
@@ -624,8 +628,6 @@ ROSE_INLINE bool rna_path_property_do_static_compilation(const PointerRNA *ptr, 
 		component->flag |= STATIC_PATH_COMPONENT_USE_TOKEN;
 	}
 
-	LIB_addtail(&newpath->components, component);
-
 	return true;
 }
 
@@ -633,7 +635,8 @@ StaticPathRNA *RNA_path_new(const PointerRNA *ptr, const char *path, PointerRNA 
 	StaticPathRNA *newpath = MEM_mallocN(sizeof(StaticPathRNA), "StaticPathRNA");
 
 	newpath->type = ptr->type;
-	LIB_listbase_clear(&newpath->components);
+	newpath->components = NULL;
+	newpath->totcomponents = 0;
 
 	if (!rna_path_parse_callback(ptr, path, rna_path_property_do_static_compilation, (void *)newpath, r_ptr, r_property)) {
 		RNA_path_free(newpath);
@@ -644,11 +647,10 @@ StaticPathRNA *RNA_path_new(const PointerRNA *ptr, const char *path, PointerRNA 
 }
 
 void RNA_path_free(StaticPathRNA *path) {
-	LISTBASE_FOREACH(StaticPathComponentRNA *, component, &path->components) {
+	for (StaticPathComponentRNA *component = path->components; component != path->components + path->totcomponents; component++) {
 		MEM_SAFE_FREE(component->token);
 	}
-	LIB_freelistN(&path->components);
-
+	MEM_SAFE_FREE(path->components);
 	MEM_freeN(path);
 }
 

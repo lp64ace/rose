@@ -362,6 +362,14 @@ void WM_do_draw(rContext *C) {
 		window->delta_time = (float)dt;
 		window->fps = 1.0f / (float)dt;
 
+		if (t - window->runtime.last_frames_per_second_reset > 1.0f) {
+			double duration = t - window->runtime.last_frames_per_second_reset;
+			window->runtime.last_frames_per_second = window->runtime.next_frames_per_second / duration;
+			window->runtime.next_frames_per_second = 0;
+			window->runtime.last_frames_per_second_reset = t;
+		}
+		window->runtime.next_frames_per_second++;
+
 		Scene *scene;
 		if ((scene = WM_window_get_active_scene(window))) {
 			KER_scene_time_step(scene, dt);
