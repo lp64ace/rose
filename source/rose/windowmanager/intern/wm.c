@@ -248,15 +248,30 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	ED_screen_scene_change(C, window, scene);
 	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 96.0f);
 
+	Action *action = KER_main_id_lookup(main, ID_AC, "Six|ANIM_Player_Run");
+
+	Object *six = KER_main_id_lookup(main, ID_OB, "Six");
 	Object *sixmesh = KER_main_id_lookup(main, ID_OB, "SixMesh");
 	for (int count = 2; count <= 9; count++) {
-		Object *sevenmesh = KER_id_copy(main, &sixmesh->id);
+		Object *newsixmesh = KER_id_copy(main, &sixmesh->id);
 
-		sevenmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
-		sevenmesh->loc[1] = 0.0f;
-		sevenmesh->loc[2] = 0.0f;
+		newsixmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
+		newsixmesh->loc[1] = 0.0f;
+		newsixmesh->loc[2] = 0.0f;
 	
-		KER_collection_object_add(main, scene->master_collection, sevenmesh);
+		KER_collection_object_add(main, scene->master_collection, newsixmesh);
+		KER_object_free_modifiers(newsixmesh, 0);
+
+		Object *newsix = KER_id_copy(main, &six->id);
+
+		ArmatureModifierData *amd = (ArmatureModifierData*)KER_modifier_new(MODIFIER_TYPE_ARMATURE);
+		amd->modifier.flag |= MODIFIER_DEVICE_ONLY;
+		amd->object = newsix;
+		
+		LIB_addtail(&newsixmesh->modifiers, &amd->modifier);
+		KER_action_assign(action, &newsix->id);
+
+		KER_collection_object_add(main, scene->master_collection, newsix);
 	}
 }
 

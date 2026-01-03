@@ -40,12 +40,6 @@ ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*ma
 	}
 }
 
-ROSE_STATIC void draw_call_dvinfo_init(DRWDVertGroupInfo *dinfo, Object *ob) {
-	if (ob) {
-		dinfo->matrices = DRW_cache_object_deform_group_ubo_get(ob);
-	}
-}
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -55,10 +49,8 @@ ROSE_STATIC void draw_call_dvinfo_init(DRWDVertGroupInfo *dinfo, Object *ob) {
 ROSE_STATIC DRWResourceHandle draw_resource_handle_new(const float (*mat)[4], Object *ob) {
 	DRWResourceHandle handle = DRW_handle_increment(&GDrawManager.resource_handle);
 	DRWObjectMatrix *obmat = LIB_memory_block_alloc(GDrawManager.vdata_pool->obmats);
-	DRWDVertGroupInfo *dinfo = LIB_memory_block_alloc(GDrawManager.vdata_pool->dvinfo);
 
 	draw_call_matrix_init(obmat, mat, ob);
-	draw_call_dvinfo_init(dinfo, ob);
 
 	return handle;
 }

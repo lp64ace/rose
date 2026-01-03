@@ -83,7 +83,7 @@ ModifierData *KER_modifier_new(eModifierType type) {
 	return modifier_allocate_and_init(type);
 }
 
-ModifierData *KER_modifier_copy_ex(ModifierData *md, int flag) {
+ModifierData *KER_modifier_copy_ex(const ModifierData *md, int flag) {
 	ModifierData *md_dst = modifier_allocate_and_init(md->type);
 
 	LIB_strcpy(md_dst->name, ARRAY_SIZE(md_dst->name), md->name);
@@ -102,7 +102,7 @@ ROSE_STATIC void modifier_free_data_id_us_cb(void *userdata, struct Object *obje
 void KER_modifier_free_ex(ModifierData *md, int flag) {
 	const ModifierTypeInfo *mti = KER_modifier_get_info((eModifierType)md->type);
 
-	if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
+	if ((flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0) {
 		if (mti->foreach_ID_link) {
 			mti->foreach_ID_link(md, NULL, modifier_free_data_id_us_cb, NULL);
 		}

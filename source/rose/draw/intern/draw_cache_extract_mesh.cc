@@ -9,10 +9,6 @@
 void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
 	const Object *obarm = DRW_batch_cache_device_armature(object);
 
-	if (DRW_ubo_requested(cache->buffers.ubo.defgroup)) {
-		extract_matrices(obarm, object, mesh, cache->buffers.ubo.defgroup);
-	}
-
 	if (!DRW_vbo_requested(cache->buffers.vbo.pos) && !DRW_ibo_requested(cache->buffers.ibo.tris) && !DRW_vbo_requested(cache->buffers.vbo.weights)) {
 		return;
 	}

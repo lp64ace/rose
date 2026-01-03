@@ -12,6 +12,8 @@
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
+#include <stdio.h>
+
 typedef struct DRWCache {
 	GPUBatch *draw_fullscreen_quad;
 } DRWCache;
@@ -109,16 +111,6 @@ ROSE_STATIC GPUBatch *mesh_batch_cache_request_surface_batches(MeshBatchCache *c
 	return cache->surface;
 }
 
-ROSE_STATIC GPUUniformBuf *mesh_batch_cache_request_deform_group_ubo(MeshBatchCache *cache) {
-	DRW_batch_request(&cache->surface);
-
-	/**
-	 * We create all the sub-surface (per material) batches too, yet we only return the
-	 * deform group uniform buffer...
-	 */
-	return cache->buffers.ubo.defgroup;
-}
-
 ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache) {
 	for (size_t index = 0; index < cache->materials; index++) {
 		GPU_BATCH_DISCARD_SAFE(cache->surfaces[index]);
@@ -152,11 +144,6 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
 	}
 
-	// In case of device vertex deformation do the matrices!
-	if (DRW_batch_cache_device_armature(object)) {
-		DRW_ubo_request(&cache->buffers.ubo.defgroup);
-	}
-
 	DRW_cache_mesh_create(cache, object, mesh);
 }
 
@@ -164,12 +151,6 @@ GPUBatch *DRW_cache_mesh_surface_get(Object *object) {
 	ROSE_assert(object->type == OB_MESH);
 	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
 	return mesh_batch_cache_request_surface_batches(cache);
-}
-
-GPUUniformBuf *DRW_cache_mesh_deform_group_ubo_get(Object *object) {
-	ROSE_assert(object->type == OB_MESH);
-	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
-	return mesh_batch_cache_request_deform_group_ubo(cache);
 }
 
 /** \} */
@@ -214,15 +195,6 @@ GPUBatch *DRW_cache_object_surface_get(Object *object) {
 	switch (object->type) {
 		case OB_MESH:
 			return DRW_cache_mesh_surface_get(object);
-	}
-
-	return NULL;
-}
-
-GPUUniformBuf *DRW_cache_object_deform_group_ubo_get(Object *object) {
-	switch (object->type) {
-		case OB_MESH:
-			return DRW_cache_mesh_deform_group_ubo_get(object);
 	}
 
 	return NULL;

@@ -24,13 +24,6 @@ typedef struct MeshBufferList {
 	struct {
 		GPUIndexBuf *tris;
 	} ibo;
-	struct {
-		/**
-		 * Device armature modifier matrices, keep the genric name 
-		 * in case we use with something else too!
-		 */
-		GPUUniformBuf *defgroup;
-	} ubo;
 } MeshBufferList;
 
 typedef struct MeshBatchCache {

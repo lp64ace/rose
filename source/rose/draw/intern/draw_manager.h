@@ -11,7 +11,6 @@ typedef struct DRWData {
 	struct MemBlock *uniforms;
 
 	struct MemBlock *obmats;
-	struct MemBlock *dvinfo;
 
 	struct DRWViewData *vdata_engine[2];
 
