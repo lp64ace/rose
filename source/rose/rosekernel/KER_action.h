@@ -143,6 +143,8 @@ void KER_pose_channel_free_ex(struct PoseChannel *pchan, bool do_id_user);
 /** \name Pose Action
  * \{ */
 
+void KER_pose_copy_data(struct Pose **dst_p, const struct Pose *src, const int flag);
+
 /**
  * Removes the hash for quick lookup of channels, must be done when adding/removing channels.
  */

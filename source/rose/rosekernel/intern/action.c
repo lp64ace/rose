@@ -571,6 +571,26 @@ void KER_pose_channel_free_ex(PoseChannel *pchan, bool do_id_user) {
 /** \name Pose Action
  * \{ */
 
+void KER_pose_copy_data(Pose **dst_p, const Pose *src, const int flag) {
+	Pose *dst = *(Pose **)dst_p;
+
+	ListBase lb;
+	if (!src) {
+		*dst_p = NULL;
+		return;
+	}
+
+	dst = MEM_callocN(sizeof(Pose), "Pose");
+
+	LIB_duplicatelist(&dst->channelbase, &src->channelbase);
+	if (dst->channelbase.first != dst->channelbase.last) {
+		dst->channelhash = NULL;
+		KER_pose_channels_hash_ensure(dst);
+	}
+
+	*dst_p = dst;
+}
+
 void KER_pose_channels_hash_ensure(Pose *pose) {
 	if (!pose->channelhash) {
 		pose->channelhash = LIB_ghash_str_new("Pose::channelhash");

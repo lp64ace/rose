@@ -18,6 +18,7 @@
 #include "KER_lib_query.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
+#include "KER_modifier.h"
 #include "KER_rose.h"
 #include "KER_scene.h"
 #include "KER_object.h"
@@ -247,27 +248,15 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	ED_screen_scene_change(C, window, scene);
 	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 96.0f);
 
-	do {
-		Object *six = KER_main_id_lookup(main, ID_OB, "Six");
-		Action *action = KER_main_id_lookup(main, ID_AC, "Six|ANIM_Player_CrouchRun");
+	Object *sixmesh = KER_main_id_lookup(main, ID_OB, "SixMesh");
+	for (int count = 2; count <= 9; count++) {
+		Object *sevenmesh = KER_id_copy(main, &sixmesh->id);
 
-		if (action) {
-			KER_action_assign(action, &six->id);
-
-			scene->r.sframe = action->frame_start;
-			scene->r.eframe = action->frame_end;
-		}
-	} while(false);
-
-	Object *six = KER_main_id_lookup(main, ID_OB, "SixMesh");
-	for (int count = 2; count <= 15; count++) {
-		Object *seven = KER_id_copy(main, &six->id);
-
-		seven->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
-		seven->loc[1] = 0.0f;
-		seven->loc[2] = 0.0f;
+		sevenmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
+		sevenmesh->loc[1] = 0.0f;
+		sevenmesh->loc[2] = 0.0f;
 	
-		KER_collection_object_add(main, scene->master_collection, seven);
+		KER_collection_object_add(main, scene->master_collection, sevenmesh);
 	}
 }
 

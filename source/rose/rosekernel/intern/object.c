@@ -80,12 +80,25 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 	unit_m4(ob->runtime.world_to_object);
 }
 
+ROSE_INLINE void copy_object_pose(Object *obnew, const Object *obold, const int flag) {
+	obnew->pose = NULL;
+	KER_pose_copy_data(&obnew->pose, obold->pose, flag);
+}
+
 ROSE_STATIC void object_copy_data(struct Main *main, struct ID *dst, const struct ID *src, int flag) {
 	const Object *ob_src = (const Object *)src;
 	Object *ob_dst = (Object *)dst;
 
 	/* We never handle user-count here for own data. */
 	const int flag_subdata = flag | LIB_ID_CREATE_NO_USER_REFCOUNT;
+
+	if (ob_src->pose) {
+		copy_object_pose(ob_dst, ob_src, flag_subdata);
+		if (ob_src->type == OB_ARMATURE) {
+			const bool do_pose_id_user = (flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0;
+			KER_pose_rebuild(main, ob_dst, (Armature *)ob_dst->data, do_pose_id_user);
+		}
+	}
 
 	LIB_listbase_clear(&ob_dst->modifiers);
 	KER_object_modifier_stack_copy(ob_dst, ob_src, true, flag_subdata);
