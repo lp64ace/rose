@@ -249,7 +249,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 
 	do {
 		Object *six = KER_main_id_lookup(main, ID_OB, "Six");
-		Action *action = KER_main_id_lookup(main, ID_AC, "Six|ANIM_Player_DarkSixFastWalk");
+		Action *action = KER_main_id_lookup(main, ID_AC, "Six|ANIM_Player_CrouchRun");
 
 		if (action) {
 			KER_action_assign(action, &six->id);
@@ -260,7 +260,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	} while(false);
 
 	Object *six = KER_main_id_lookup(main, ID_OB, "SixMesh");
-	for (int count = 2; count <= 11; count++) {
+	for (int count = 2; count <= 15; count++) {
 		Object *seven = KER_id_copy(main, &six->id);
 
 		seven->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);

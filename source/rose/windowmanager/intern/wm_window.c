@@ -60,7 +60,7 @@ ROSE_STATIC void wm_window_tiny_window_ensure(WindowManager *wm, wmWindow *windo
 	window->context = GPU_context_create(window->handle, NULL);
 
 	/** Windows have the habbit of setting the swap interval to one by default. */
-	GTK_window_set_swap_interval(window->handle, 1);
+	GTK_window_set_swap_interval(window->handle, 0);
 	GTK_window_pos(window->handle, &window->posx, &window->posy);
 	GTK_window_size(window->handle, &window->sizex, &window->sizey);
 	GTK_window_show(window->handle);
