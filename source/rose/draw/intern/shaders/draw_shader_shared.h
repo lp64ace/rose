@@ -16,8 +16,6 @@ typedef struct ViewInfos ViewInfos;
 struct ObjectMatrices {
 	float4x4 drw_modelMatrix;
 	float4x4 drw_modelMatrixInverse;
-	float4x4 drw_armatureMatrix;
-	float4x4 drw_armatureMatrixInverse;
 };
 
 struct DVertGroupMatrices {
