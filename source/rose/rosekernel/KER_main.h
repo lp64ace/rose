@@ -19,6 +19,7 @@ struct Main;
 typedef struct Main {
 	struct Main *prev, *next;
 
+	struct IDNameLib_Map *id_map;
 	struct UniqueName_Map *name_map;
 
 	/**
@@ -88,7 +89,7 @@ void KER_main_free(struct Main *main);
 /** \name Lookup Methods
  * \{ */
 
-struct ID *KER_main_id_lookup(struct Main *main, short type, const char *name);
+void *KER_main_id_lookup(struct Main *main, short type, const char *name);
 
 /** \} */
 
@@ -132,7 +133,7 @@ void KER_main_unlock(struct Main *main);
 			_id_next = (ID *)((_id)->next);
 
 #define FOREACH_MAIN_LISTBASE_ID_END \
-	}                                \
+		}                            \
 	}                                \
 	((void)0)
 

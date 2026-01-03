@@ -9,6 +9,7 @@
 #include "KER_lib_remap.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_main_id_name_map.h"
 #include "KER_main_name_map.h"
 
 /* -------------------------------------------------------------------- */
@@ -416,7 +417,16 @@ bool KER_id_new_name_validate(Main *main, ListBase *lb, ID *id, const char *tnam
 
 	result = KER_main_name_map_get_unique_name(main, id, name);
 
+	if (main->id_map) {
+		KER_main_idmap_remove_id(main->id_map, id);
+	}
+
 	LIB_strcpy(id->name + 2, ARRAY_SIZE(id->name) - 2, name);
+	
+	if (main->id_map) {
+		KER_main_idmap_insert_id(main->id_map, id);
+	}
+
 	return result;
 }
 

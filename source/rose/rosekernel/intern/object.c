@@ -564,7 +564,7 @@ IDTypeInfo IDType_ID_OB = {
 	.name = "Object",
 	.name_plural = "Objects",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = 0,
 
 	.init_data = object_init_data,
 	.copy_data = NULL,

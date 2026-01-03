@@ -25,7 +25,7 @@ uint LIB_ghashutil_strhash_n(const char *key, size_t n) {
 
 	uint64_t h = 0xCBF29CE484222325ULL;	 // 64-bit FNV offset basis
 
-	while (n >= 8) {
+	while (p[0] && p[1] && p[2] && p[3] && p[4] && p[5] && p[6] && p[7] && n >= 8) {
 		uint64_t v = *(const uint64_t *)p;
 		h ^= v;
 		h *= 0x100000001B3ULL;	// 64-bit FNV prime
@@ -33,7 +33,7 @@ uint LIB_ghashutil_strhash_n(const char *key, size_t n) {
 		n -= 8;
 	}
 
-	while (n >= 4) {
+	while (p[0] && p[1] && p[2] && p[3] && n >= 4) {
 		uint32_t v = *(const uint32_t *)p;
 		h ^= v;
 		h *= 0x100000001B3ULL;	// 32-bit FNV prime
@@ -42,9 +42,10 @@ uint LIB_ghashutil_strhash_n(const char *key, size_t n) {
 	}
 
 	// Remaining <8 bytes
-	while (n--) {
+	while (p[0] && n >= 1) {
 		h ^= *p++;
 		h *= 0x100000001B3ULL;
+		n -= 1;
 	}
 
 	// Final avalanche (excellent for reducing bias)

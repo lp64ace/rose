@@ -2,6 +2,7 @@
 
 #include "KER_lib_id.h"
 #include "KER_main.h"
+#include "KER_main_id_name_map.h"
 #include "KER_main_name_map.h"
 
 #include "DNA_ID.h"
@@ -43,6 +44,10 @@ void KER_main_clear(Main *main) {
 		LIB_listbase_clear(lb);
 	}
 
+	if (main->id_map) {
+		KER_main_idmap_free(main->id_map);
+	}
+
 	KER_main_namemap_destroy(&main->name_map);
 }
 
@@ -75,16 +80,12 @@ void KER_main_free(Main *main) {
 /** \name Lookup Methods
  * \{ */
 
-ID *KER_main_id_lookup(Main *main, short type, const char *name) {
-	ListBase *lb = which_libbase(main, type);
-
-	LISTBASE_FOREACH(ID *, id, lb) {
-		if (STREQ(id->name + 2, name)) {
-			return id;
-		}
+void *KER_main_id_lookup(Main *main, short idtype, const char *name) {
+	if (!main->id_map) {
+		main->id_map = KER_main_idmap_create(main, true, NULL);
 	}
 
-	return NULL;
+	return KER_main_idmap_lookup_name(main->id_map, idtype, name);
 }
 
 /** \} */

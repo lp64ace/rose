@@ -10,6 +10,7 @@
 #include "KER_action.h"
 #include "KER_anim_data.h"
 #include "KER_camera.h"
+#include "KER_collection.h"
 #include "KER_context.h"
 #include "KER_cpp_types.h"
 #include "KER_idtype.h"
@@ -43,6 +44,8 @@
 
 #include "RFT_api.h"
 #include "GTK_api.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
@@ -242,7 +245,18 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 48.0f);
+	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 96.0f);
+
+	Object *orig = KER_main_id_lookup(main, ID_OB, "SixMesh");
+	for (int count = 2; count <= 11; count++) {
+		Object *cpy = KER_id_copy(main, &orig->id);
+
+		cpy->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
+		cpy->loc[1] = 0.0f;
+		cpy->loc[2] = 0.0f;
+	
+		KER_collection_object_add(main, scene->master_collection, cpy);
+	}
 }
 
 void WM_keyconfig_init(rContext *C) {
