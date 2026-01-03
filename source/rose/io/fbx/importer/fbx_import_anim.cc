@@ -344,6 +344,8 @@ void import_animations(Main *main, Scene *scene, const ufbx_scene *fbx, FbxEleme
 			Action *action = static_cast<Action *>(KER_id_new(main, ID_AC, &action_name[0]));
 			KER_action_keystrip_ensure(action);
 
+			fprintf(stdout, "[FBX] Imported action \"%s\" as animation.\n", KER_id_name(&action->id));
+
 			ActionLayer *layer = action->layers[0];
 			ActionStrip *strip = layer->strips[0];
 			ActionStripKeyframeData *strip_data = KER_action_strip_data(action, strip);

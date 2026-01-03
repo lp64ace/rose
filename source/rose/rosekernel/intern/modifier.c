@@ -55,8 +55,41 @@ ROSE_STATIC ModifierData *modifier_allocate_and_init(eModifierType type) {
 	return md;
 }
 
+
+ROSE_INLINE void modifier_copy_data_id_us_cb(void *user_data, struct Object *ob, struct ID **idpoin, const int cb_flag) {
+	ID *id = *idpoin;
+	if (id != NULL && (cb_flag & IDWALK_CB_USER) != 0) {
+		id_us_add(id);
+	}
+}
+
+void KER_modifier_copy_data_ex(ModifierData *target, const ModifierData *md, const int flag) {
+	const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+
+	target->flag = md->flag;
+
+	if (mti->copy_data) {
+		mti->copy_data(md, target, flag);
+	}
+
+	if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
+    if (mti->foreach_ID_link) {
+      mti->foreach_ID_link(target, NULL, modifier_copy_data_id_us_cb, NULL);
+    }
+  }
+}
+
 ModifierData *KER_modifier_new(eModifierType type) {
 	return modifier_allocate_and_init(type);
+}
+
+ModifierData *KER_modifier_copy_ex(ModifierData *md, int flag) {
+	ModifierData *md_dst = modifier_allocate_and_init(md->type);
+
+	LIB_strcpy(md_dst->name, ARRAY_SIZE(md_dst->name), md->name);
+	KER_modifier_copy_data_ex(md_dst, md, flag);
+
+	return md_dst;
 }
 
 ROSE_STATIC void modifier_free_data_id_us_cb(void *userdata, struct Object *object, struct ID **idpoint, const int flag) {
@@ -113,6 +146,23 @@ bool KER_modifier_deform_verts(ModifierData *md, const ModifierEvalContext *ctx,
 	}
 
 	return false;
+}
+
+/** \} */
+
+
+/* -------------------------------------------------------------------- */
+/** \name ModifierData for each Query
+ * \{ */
+
+void KER_modifiers_foreach_ID_link(Object *object, IDWalkFunc walk, void *user_data) {
+	LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
+		const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+
+		if (mti->foreach_ID_link) {
+			mti->foreach_ID_link(md, object, walk, user_data);
+		}
+	}
 }
 
 /** \} */

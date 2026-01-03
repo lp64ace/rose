@@ -16,6 +16,7 @@ struct ScrAreaMap;
 struct Screen;
 struct rContext;
 struct WindowManager;
+struct wmKeyConfig;
 
 /* -------------------------------------------------------------------- */
 /** \name SpaceType

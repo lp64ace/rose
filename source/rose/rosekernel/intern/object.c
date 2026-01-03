@@ -17,6 +17,48 @@
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
+/** \name Modifier Data-Block Functions
+ * \{ */
+
+ROSE_INLINE bool object_modifier_type_copy_check(int md_type) {
+  return !ELEM(md_type, MODIFIER_TYPE_NONE);
+}
+
+bool KER_object_support_modifier_type_check(const Object *ob, int md_type) {
+	const ModifierTypeInfo *mti = KER_modifier_get_info(md_type);
+
+	/** Objects that reference mesh can always deform vertices! (obviously) */
+	if (ELEM(ob->type, OB_MESH)) {
+		return true;
+	}
+
+	return false;
+}
+
+bool KER_object_modifier_stack_copy(Object *ob_dst, const Object *ob_src, const bool do_copy_all, const int flag) {
+	if (!LIB_listbase_is_empty(&ob_dst->modifiers)) {
+		ROSE_assert_msg(false, "Trying to copy a modifier stack into an object having a non-empty modifier stack.");
+		return false;
+	}
+
+	LISTBASE_FOREACH(const ModifierData *, md_src, &ob_src->modifiers) {
+		if (!do_copy_all && !object_modifier_type_copy_check(md_src->type)) {
+			continue;
+		}
+		if (!KER_object_support_modifier_type_check(ob_dst, md_src->type)) {
+			continue;
+		}
+
+		ModifierData *md_dst = KER_modifier_copy_ex(md_src, flag);
+		LIB_addtail(&ob_dst->modifiers, md_dst);
+	}
+
+	return true;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Data-Block Functions
  * \{ */
 
@@ -38,6 +80,17 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 	unit_m4(ob->runtime.world_to_object);
 }
 
+ROSE_STATIC void object_copy_data(struct Main *main, struct ID *dst, const struct ID *src, int flag) {
+	const Object *ob_src = (const Object *)src;
+	Object *ob_dst = (Object *)dst;
+
+	/* We never handle user-count here for own data. */
+	const int flag_subdata = flag | LIB_ID_CREATE_NO_USER_REFCOUNT;
+
+	LIB_listbase_clear(&ob_dst->modifiers);
+	KER_object_modifier_stack_copy(ob_dst, ob_src, true, flag_subdata);
+}
+
 ROSE_STATIC void object_free_data(struct ID *id) {
 	Object *ob = (Object *)id;
 
@@ -47,6 +100,11 @@ ROSE_STATIC void object_free_data(struct ID *id) {
 		KER_pose_free_ex(ob->pose, false);
 		ob->pose = NULL;
 	}
+}
+
+ROSE_STATIC void library_foreach_modifiersForeachIDLink(void *user_data, Object *object, ID **id_pointer, const int cb_flag) {
+	struct LibraryForeachIDData *data = (struct LibraryForeachIDData *)user_data;
+	KER_LIB_FOREACHID_PROCESS_FUNCTION_CALL(data, KER_lib_query_foreachid_process(data, id_pointer, cb_flag));
 }
 
 ROSE_STATIC void object_foreach_id(struct ID *id, struct LibraryForeachIDData *data) {
@@ -66,6 +124,8 @@ ROSE_STATIC void object_foreach_id(struct ID *id, struct LibraryForeachIDData *d
 	
 	KER_LIB_FOREACHID_PROCESS_IDSUPER(data, ob->parent, IDWALK_CB_NEVER_SELF);
 	KER_LIB_FOREACHID_PROCESS_IDSUPER(data, ob->track, IDWALK_CB_NEVER_SELF);
+
+	KER_LIB_FOREACHID_PROCESS_FUNCTION_CALL(data, KER_modifiers_foreach_ID_link(ob, library_foreach_modifiersForeachIDLink, data));
 }
 
 ROSE_STATIC void object_init(Object *ob, int type) {
@@ -567,7 +627,7 @@ IDTypeInfo IDType_ID_OB = {
 	.flag = 0,
 
 	.init_data = object_init_data,
-	.copy_data = NULL,
+	.copy_data = object_copy_data,
 	.free_data = object_free_data,
 
 	.foreach_id = object_foreach_id,

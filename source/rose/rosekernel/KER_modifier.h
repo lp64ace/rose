@@ -173,6 +173,7 @@ const struct ModifierTypeInfo *KER_modifier_get_info(eModifierType type);
  * \{ */
 
 struct ModifierData *KER_modifier_new(eModifierType type);
+struct ModifierData *KER_modifier_copy_ex(ModifierData *md, int flag);
 
 void KER_modifier_free_ex(struct ModifierData *md, int flag);
 void KER_modifier_free(struct ModifierData *md);
@@ -188,6 +189,14 @@ typedef struct ModifierEvalContext {
  * \return False if the modifier did not support deforming the positions.
  */
 bool KER_modifier_deform_verts(ModifierData *md, const ModifierEvalContext *ctx, struct Mesh *mesh, float (*positions)[3], size_t length);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name ModifierData for each Query
+ * \{ */
+
+void KER_modifiers_foreach_ID_link(struct Object *object, IDWalkFunc walk, void *user_data);
 
 /** \} */
 

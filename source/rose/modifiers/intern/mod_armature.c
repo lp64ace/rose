@@ -3,15 +3,20 @@
 #include "LIB_listbase.h"
 
 #include "KER_armature.h"
+#include "KER_lib_query.h"
 #include "KER_object.h"
 #include "KER_mesh.h"
 
-#include <stdio.h>
+ROSE_STATIC void deform_foreach_id(ModifierData *md, Object *ob, IDWalkFunc walk, void *user_data) {
+	ArmatureModifierData *amd = (ArmatureModifierData *)md;
+
+	walk(user_data, ob, (ID **)&amd->object, IDWALK_CB_NOP);
+}
 
 ROSE_STATIC void deform_verts(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh, float (*positions)[3], size_t length) {
-	ArmatureModifierData *ad = (ArmatureModifierData *)md;
+	ArmatureModifierData *amd = (ArmatureModifierData *)md;
 
-	KER_armature_deform_coords_with_mesh(ad->object, ctx->object, positions, length, mesh);
+	KER_armature_deform_coords_with_mesh(amd->object, ctx->object, positions, length, mesh);
 }
 
 ModifierTypeInfo MODType_ARMATURE = {
