@@ -1,5 +1,7 @@
 #pragma once
 
+#include "LIB_sys_types.h"
+
 #if defined(__cplusplus)
 extern "C" {
 #endif

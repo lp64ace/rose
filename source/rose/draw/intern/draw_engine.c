@@ -8,6 +8,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "KER_lib_id.h"
+
 #include "DRW_render.h"
 
 #include "draw_engine.h"

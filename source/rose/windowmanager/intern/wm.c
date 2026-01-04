@@ -252,7 +252,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 
 	Object *six = KER_main_id_lookup(main, ID_OB, "Six");
 	Object *sixmesh = KER_main_id_lookup(main, ID_OB, "SixMesh");
-	for (int count = 2; count <= 9; count++) {
+	for (int count = 2; count <= 11; count++) {
 		Object *newsixmesh = KER_id_copy(main, &sixmesh->id);
 
 		newsixmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
@@ -265,6 +265,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 		Object *newsix = KER_id_copy(main, &six->id);
 
 		ArmatureModifierData *amd = (ArmatureModifierData*)KER_modifier_new(MODIFIER_TYPE_ARMATURE);
+		
 		amd->modifier.flag |= MODIFIER_DEVICE_ONLY;
 		amd->object = newsix;
 		

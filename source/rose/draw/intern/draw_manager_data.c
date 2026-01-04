@@ -124,7 +124,7 @@ ROSE_STATIC void *draw_command_new(DRWShadingGroup *shgroup, DRWResourceHandle h
 }
 
 ROSE_STATIC void *draw_command_clear(DRWShadingGroup *shgroup, unsigned char bits, unsigned char r, unsigned char g, unsigned char b, unsigned char a, float depth, unsigned char stencil) {
-	DRWCommandClear *cmd = draw_command_new(shgroup, 0, DRW_COMMAND_CLEAR);
+	DRWCommandClear *cmd = draw_command_new(shgroup, -1, DRW_COMMAND_CLEAR);
 
 	cmd->bits = bits;
 	cmd->r = r;
@@ -170,6 +170,13 @@ void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, Object *ob, const
 	DRWResourceHandle handle = draw_resource_handle(shgroup, obmat, ob);
 	
 	draw_command_draw_range(shgroup, handle, batch, vfirst, vcount);
+}
+
+void DRW_shading_group_bind_uniform_block(DRWShadingGroup *shgroup, GPUUniformBuf *block, unsigned int location) {
+	DRWCommandUniformBlock *cmd = draw_command_new(shgroup, -1, DRW_COMMAND_UNIFORM_BLOCK);
+
+	cmd->block = block;
+	cmd->location = location;
 }
 
 ROSE_STATIC DRWShadingGroup *draw_shading_group_new_ex(GPUShader *shader, DRWPass *pass) {

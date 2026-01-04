@@ -10,6 +10,7 @@
 #include "GPU_viewport.h"
 
 #include "KER_object.h"
+#include "KER_modifier.h"
 
 #include "LIB_assert.h"
 #include "LIB_math_vector.h"
@@ -21,6 +22,7 @@
 #include "alice_engine.h"
 #include "alice_private.h"
 
+#include "intern/draw_defines.h"
 #include "intern/draw_manager.h"
 
 /* -------------------------------------------------------------------- */
@@ -75,6 +77,10 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 	}
 }
 
+ROSE_INLINE bool alice_modifier_supported(int mdtype) {
+	return ELEM(mdtype, MODIFIER_TYPE_ARMATURE);
+}
+
 ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
 	DRWAliceViewportPrivateData *impl = stl->data;
@@ -86,6 +92,25 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	GPUBatch *batch = DRW_cache_object_surface_get(object);
 
 	if (impl->opaque_shgroup) {
+		/**
+		 * Since this engine is capable of handing deform modifier on the device 
+		 * instead of the CPU we need to create the uniform buffers for the bone 
+		 * (pose channel) matrices.
+		 */
+		LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
+			if ((md->flag & MODIFIER_DEVICE_ONLY) == 0 || !alice_modifier_supported(md->type)) {
+				continue;
+			}
+
+			switch (md->type) {
+				case MODIFIER_TYPE_ARMATURE: {
+					GPUUniformBuf *block = DRW_alice_defgroup_ubo(object, md);
+
+					DRW_shading_group_bind_uniform_block(impl->opaque_shgroup, block, DRW_DVGROUP_UBO_SLOT);
+				} break;
+			}
+		}
+
 		const float (*obmat)[4] = KER_object_object_to_world(object);
 
 		DRW_shading_group_call_ex(impl->opaque_shgroup, object, obmat, batch);

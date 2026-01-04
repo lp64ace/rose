@@ -308,6 +308,9 @@ ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group) {
 			case DRW_COMMAND_DRAW_INSTANCE_RANGE: {
 				draw_call_single_do(group, &state, cmd, cmd->draw_instance_range.batch, 0, 0, cmd->draw_instance_range.ifirst, cmd->draw_instance_range.icount);
 			} break;
+			case DRW_COMMAND_UNIFORM_BLOCK: {
+				GPU_uniformbuf_bind(cmd->uniform_block.block, cmd->uniform_block.location);
+			} break;
 		}
 	}
 }

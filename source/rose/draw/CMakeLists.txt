@@ -24,6 +24,7 @@ set(ALICE
 	# And yes... you are right... this is inspired through Alice in Madness
 	engines/alice/alice_engine.h
 	engines/alice/alice_engine.c
+	engines/alice/alice_modifier.c
 	engines/alice/alice_private.h
 	engines/alice/alice_shader.c
 )

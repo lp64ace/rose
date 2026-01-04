@@ -6,12 +6,15 @@
 
 #include <stdbool.h>
 
-struct rContext;
+struct DrawData;
+struct DrawDataList;
 struct DrawEngineType;
 struct GPUBatch;
+struct GPUUniformBuf;
 struct Mesh;
 struct Scene;
 struct Object;
+struct rContext;
 struct WindowManager;
 
 #ifdef __cplusplus
@@ -61,6 +64,8 @@ struct DRWShadingGroup *DRW_shading_group_new(struct GPUShader *shader, struct D
 void DRW_shading_group_clear_ex(struct DRWShadingGroup *shgroup, unsigned char bits, const unsigned char rgba[4], float depth, unsigned char stencil);
 void DRW_shading_group_call_ex(struct DRWShadingGroup *shgroup, struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch);
 void DRW_shading_group_call_range_ex(struct DRWShadingGroup *shgroup, struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount);
+/** Not to be confused with shading group uniforms this will be bound in order. */
+void DRW_shading_group_bind_uniform_block(struct DRWShadingGroup *shgroup, struct GPUUniformBuf *block, unsigned int location);
 
 struct DRWData *DRW_viewport_data_new(void);
 void DRW_viewport_data_free(struct DRWData *);

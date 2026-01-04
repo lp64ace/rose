@@ -153,7 +153,6 @@ typedef struct ModifierTypeInfo {
 	 *    more like "ensure the data is freed".
 	 */
 	void (*free_runtime_data)(void *runtime_data);
-
 } ModifierTypeInfo;
 
 /** \} */

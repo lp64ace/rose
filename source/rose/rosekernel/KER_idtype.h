@@ -117,6 +117,8 @@ enum {
 	IDTYPE_FLAGS_NO_COPY = 1 << 0,
 	/** Indicates that the given IDType cannot have animation data. */
 	IDTYPE_FLAGS_NO_ANIMDATA = 1 << 1,
+	/** Indicates that the given IDType does support DrawData. */
+	IDTYPE_FLAGS_DRAWDATA = 1 << 2,
 };
 
 /* -------------------------------------------------------------------- */

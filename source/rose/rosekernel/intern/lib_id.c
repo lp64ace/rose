@@ -13,6 +13,100 @@
 #include "KER_main_name_map.h"
 
 /* -------------------------------------------------------------------- */
+/** \name Datablock DrawData
+ * 
+ * These draw data are not always used, only specific engines use them to 
+ * support rarely used operations, they are not the same as the draw data 
+ * that the #Mesh structure has in #MeshRuntime since they are used by all
+ * engines!
+ * 
+ * \note They are currently used to handle modifiers running on the device.
+ * \{ */
+
+typedef struct IdDdtTempalte {
+	ID id;
+	AnimData *adt;
+	DrawDataList drawdata;
+} IdDdtTempalte;
+
+ROSE_INLINE bool id_can_have_draw_data(const ID *id) {
+	const IDTypeInfo *info = KER_idtype_get_info_from_id(id);
+
+	if (info == NULL) {
+		return false;
+	}
+
+	/** Cannot have draw data without having animation data, see #IdDdtTemplate. */
+	ROSE_assert((info->flag & IDTYPE_FLAGS_DRAWDATA) == 0 || (info->flag & IDTYPE_FLAGS_NO_ANIMDATA) == 0);
+
+	return (info->flag & IDTYPE_FLAGS_DRAWDATA) != 0;
+}
+
+DrawDataList *KER_drawdatalst_get(ID *id) {
+	if (id_can_have_draw_data(id)) {
+		IdDdtTempalte *idt = (IdDdtTempalte *)id;
+		return &idt->drawdata;
+	}
+	return NULL;
+}
+
+DrawData *KER_drawdata_ensure(ID *id, struct DrawEngineType *engine, size_t size, DrawDataInitCb init_cb, DrawDataFreeCb free_cb) {
+	ROSE_assert(size > sizeof(DrawData) && id_can_have_draw_data(id));
+
+	DrawData *dd = KER_drawdata_get(id, engine);
+	if (dd) {
+		return dd;
+	}
+
+	DrawDataList *drawdata = KER_drawdatalst_get(id);
+
+	dd = MEM_callocN(size, "DrawData");
+	dd->engine = engine;
+	dd->free = free_cb;
+	/** Perform user side initialzation if needed. */
+	if (init_cb) {
+		init_cb(dd);
+	}
+	LIB_addtail((ListBase *)drawdata, dd);
+
+	return dd;
+}
+
+DrawData *KER_drawdata_get(ID *id, struct DrawEngineType *engine) {
+	DrawDataList *drawdata = KER_drawdatalst_get(id);
+
+	if (drawdata == NULL) {
+		return NULL;
+	}
+
+	LISTBASE_FOREACH(DrawData *, dd, drawdata) {
+		if (dd->engine == engine) {
+			return dd;
+		}
+	}
+
+	return NULL;
+}
+
+void KER_drawdata_free(ID *id) {
+	DrawDataList *drawdata = KER_drawdatalst_get(id);
+
+	if (drawdata == NULL) {
+		return;
+	}
+
+	LISTBASE_FOREACH(DrawData *, dd, drawdata) {
+		if (dd->free) {
+			dd->free(dd);
+		}
+	}
+
+	LIB_freelistN((ListBase *)drawdata);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Datablock Creation
  * \{ */
 
@@ -285,6 +379,7 @@ void KER_libblock_free_data(ID *id, bool do_id_user) {
 	}
 
 	KER_animdata_free(id, do_id_user);
+	KER_drawdata_free(id);
 }
 
 ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idtag) {

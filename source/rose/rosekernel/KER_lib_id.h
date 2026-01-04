@@ -16,6 +16,31 @@ struct Library;
 struct Main;
 
 /* -------------------------------------------------------------------- */
+/** \name Datablock DrawData
+ * 
+ * These draw data are not always used, only specific engines use them to 
+ * support rarely used operations, they are not the same as the draw data 
+ * that the #Mesh structure has in #MeshRuntime since they are used by all
+ * engines!
+ * 
+ * \note They are currently used to handle modifiers running on the device.
+ * \{ */
+
+struct DrawData;
+struct DrawDataList;
+
+struct DrawEngineType;
+
+struct DrawDataList *KER_drawdatalist_get(struct ID *id);
+
+struct DrawData *KER_drawdata_ensure(struct ID *id, struct DrawEngineType *engine, size_t size, DrawDataInitCb init_cb, DrawDataFreeCb free_cb);
+struct DrawData *KER_drawdata_get(struct ID *id, struct DrawEngineType *engine);
+
+void KER_drawdata_free(struct ID *id);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Datablock Creation
  * \{ */
 
