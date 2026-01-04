@@ -316,7 +316,7 @@ ROSE_STATIC ActionSlot *generic_slot_for_autoassign(Action *action, ID *id) {
 	 * and the assignment of the Action. */
 	if (action->totslot == 1) {
 		ActionSlot *slot = action->slots[0];
-		if (slot->idtype == 0) {
+		if (KER_action_slot_suitable_for_id(slot, id)) {
 			return slot;
 		}
 	}
