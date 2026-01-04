@@ -197,7 +197,14 @@ void KER_animsys_evaluate_animdata(ID *id, AnimData *adt, float ctime, int recal
 void KER_animsys_eval_animdata(Scene *scene, ID *id) {
 	AnimData *adt = KER_animdata_from_id(id);
 
-	KER_animsys_evaluate_animdata(id, adt, KER_scene_frame(scene), ADT_RECALC_ANIM);
+	float ctime = 0.0f;
+	if (adt && adt->action) {
+		Action *ac = adt->action;
+
+		ctime = fmod(KER_scene_frame(scene) - adt->stime, ac->frame_end - ac->frame_start) + ac->frame_start;
+	}
+
+	KER_animsys_evaluate_animdata(id, adt, ctime, ADT_RECALC_ANIM);
 }
 
 bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, PathResolvedRNA *result) {

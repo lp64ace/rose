@@ -256,7 +256,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	for (int count = 2; count <= 15; count++) {
 		Object *newsixmesh = KER_id_copy(main, &sixmesh->id);
 
-		newsixmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 48.0f * (count / 2);
+		newsixmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 64.0f * (count / 2);
 		newsixmesh->loc[1] = 0.0f;
 		newsixmesh->loc[2] = 0.0f;
 	

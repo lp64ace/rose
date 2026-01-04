@@ -7,6 +7,8 @@
 #include "KER_main.h"
 #include "KER_scene.h"
 
+#include <limits.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Scene Creation
  * \{ */
@@ -59,7 +61,7 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	Scene *scene = (Scene *)id;
 
 	scene->r.sframe = 0;
-	scene->r.eframe = 27;
+	scene->r.eframe = INT_MAX;
 	scene->r.fps = 24;
 
 	/* Master Collection */

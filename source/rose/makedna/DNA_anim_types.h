@@ -63,6 +63,15 @@ typedef struct AnimData {
 	struct Action *action;
 
 	int handle;
+
+	/**
+	 * The animation time is computed using the following formula,
+	 * #fmod(scene->r.ctime - adt->stime, action->frame_end - action->frame_start).
+	 * 
+	 * This allows animations looping independently and also starting in different frames.
+	 * \example Defining `stime = scene->r.ctime` at the start would start the animation from the beginning.
+	 */
+	float stime;
 } AnimData;
 
 /** \} */
