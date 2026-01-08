@@ -51,26 +51,11 @@ template<> inline short4 convert_normal(const float3 &src) {
 }
 
 template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, rose::MutableSpan<T> normals) {
-	rose::Span<float3> poly_normals = KER_mesh_poly_normals_span(mesh);
-	rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
-	rose::OffsetIndices<int> polys = KER_mesh_poly_offsets_span(mesh);
+	rose::Span<float3> corner_normals = KER_mesh_corner_normals_span(mesh);
 
-	/**
-	 * Should we even bother to copy the loose geometry too?
-	 */
-	rose::threading::parallel_for(polys.index_range(), 2048, [&](const rose::IndexRange range) {
-		/**
-		 * These are the poly normals indexed per loop, "flat" normals!
-		 * 
-		 * Each polygon in #polys[poly_i] contains a range of loops [polys[poly_i], polys[poly_i] + 1], 
-		 * we iterate for each of these loops and we copy the normals from the poly there.
-		 */
-		for (const int poly_i : range) {
-			T n = convert_normal<T>(poly_normals[poly_i]);
-
-			for (const int loop_i : polys[poly_i]) {
-				normals[loop_i] = n;
-			}
+	rose::threading::parallel_for(corner_normals.index_range(), 1024, [&](const rose::IndexRange range) {
+		for (size_t i : range) {
+			normals[i] = convert_normal<T>(corner_normals[i]);
 		}
 	});
 }

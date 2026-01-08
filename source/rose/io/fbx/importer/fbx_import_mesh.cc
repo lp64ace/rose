@@ -34,6 +34,18 @@ ROSE_INLINE void import_vertex_positions(const ufbx_mesh *fmesh, Mesh *mesh) {
 	}
 }
 
+ROSE_INLINE void import_face_smoothing(const ufbx_mesh *fmesh, Mesh *mesh) {
+	if (fmesh->face_smoothing.count > 0 && fmesh->face_smoothing.count == fmesh->num_faces) {
+		rose::MutableSpan<bool> smooth = rose::MutableSpan<bool>{
+			static_cast<bool *>(CustomData_get_layer_named_for_write(&mesh->vdata, CD_PROP_BOOL, "sharp_face", mesh->totpoly)),
+			(size_t)mesh->totpoly
+		};
+		for (size_t i = 0; i < fmesh->face_smoothing.count; i++) {
+			smooth[i] = !fmesh->face_smoothing[i];
+		}
+	}
+}
+
 ROSE_INLINE void import_faces(const ufbx_mesh *fmesh, Mesh *mesh) {
 	rose::MutableSpan<int> face_offsets = KER_mesh_poly_offsets_for_write_span(mesh);
 	rose::MutableSpan<int> corner_verts = KER_mesh_corner_verts_for_write_span(mesh);
@@ -142,6 +154,7 @@ void import_meshes(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMa
 
 		import_vertex_positions(fmesh, mesh);
 		import_faces(fmesh, mesh);
+		import_face_smoothing(fmesh, mesh);
 		import_edges(fmesh, mesh);
 		import_skin_vertex_groups(mapping, fmesh, mesh);
 

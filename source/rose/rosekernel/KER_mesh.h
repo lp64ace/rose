@@ -117,6 +117,7 @@ float (*KER_mesh_poly_normals_for_write(struct Mesh *mesh))[3];
 
 const float (*KER_mesh_vert_normals_ensure(const struct Mesh *mesh))[3];
 const float (*KER_mesh_poly_normals_ensure(const struct Mesh *mesh))[3];
+const float (*KER_mesh_corner_normals_ensure(const struct Mesh *mesh))[3];
 
 void KER_mesh_clear_derived_normals(struct Mesh *mesh);
 

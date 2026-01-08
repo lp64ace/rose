@@ -79,9 +79,51 @@ public:
 	}
 };
 
+/**
+ * References many separate spans in a larger contiguous array. This gives a more efficient way to
+ * store many grouped arrays, without requiring many small allocations, giving the general benefits
+ * of using contiguous memory.
+ *
+ * \note If the offsets are shared between many #GroupedSpan objects, it will be more efficient
+ * to retrieve the #IndexRange only once and slice each span.
+ */
+template<typename T> struct GroupedSpan {
+	OffsetIndices<int> offsets;
+	Span<T> data;
+
+	GroupedSpan() = default;
+	GroupedSpan(OffsetIndices<int> offsets, Span<T> data) : offsets(offsets), data(data) {
+		ROSE_assert(this->offsets.total_size() == this->data.size());
+	}
+
+	Span<T> operator[](const int64_t index) const {
+		return this->data.slice(this->offsets[index]);
+	}
+
+	int64_t size() const {
+		return this->offsets.size();
+	}
+
+	IndexRange index_range() const {
+		return this->offsets.index_range();
+	}
+
+	bool is_empty() const {
+		return this->data.size() == 0;
+	}
+};
+
+OffsetIndices<int> accumulate_counts_to_offsets(MutableSpan<int> counts_to_offsets, const int start_offset = 0);
+
+/**
+ * Build offsets to group the elements of \a indices pointing to the same index.
+ */
+void build_reverse_offsets(Span<int> indices, MutableSpan<int> offsets);
+
 }  // namespace rose::offset_indices
 
 namespace rose {
+using offset_indices::GroupedSpan;
 using offset_indices::OffsetIndices;
 }  // namespace rose
 

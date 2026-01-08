@@ -242,17 +242,25 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 extern const int datatoc_six_fbx_size;
 extern const char datatoc_six_fbx[];
 
+ROSE_INLINE Action *wm_init_scene_next_action(struct Main *main, Action *action) {
+	if (action && action->id.next) {
+		return (Action *)action->id.next;
+	}
+
+	ListBase *lb = which_libbase(main, ID_AC);
+	return (Action *)lb->first;
+}
+
 ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
 	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 96.0f);
 
-	ListBase *lb = which_libbase(main, ID_AC);
-	Action *action = lb->first;
-
+	Action *action = wm_init_scene_next_action(main, NULL);
 	Object *six = KER_main_id_lookup(main, ID_OB, "Six");
 	Object *sixmesh = KER_main_id_lookup(main, ID_OB, "SixMesh");
+
 	for (int count = 2; count <= 15; count++) {
 		Object *newsixmesh = KER_id_copy(main, &sixmesh->id);
 
@@ -260,8 +268,14 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 		newsixmesh->loc[1] = 0.0f;
 		newsixmesh->loc[2] = 0.0f;
 	
-		KER_collection_object_add(main, scene->master_collection, newsixmesh);
+		/** Free the old modifiers, we want to assign new armatures. */
 		KER_object_free_modifiers(newsixmesh, 0);
+
+		/**
+		 * In order to have multiple animations running at the same time 
+		 * and not have each object do the exact same animation, we need 
+		 * to define armature objects for each one to deform separately.
+		 */
 
 		Object *newsix = KER_id_copy(main, &six->id);
 
@@ -270,15 +284,12 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 		amd->modifier.flag |= MODIFIER_DEVICE_ONLY;
 		amd->object = newsix;
 		
-		action = (Action *)action->id.next;
-		if (!action) {
-			action = (Action *)lb->first;
-		}
+		action = wm_init_scene_next_action(main, action);
 
 		LIB_addtail(&newsixmesh->modifiers, &amd->modifier);
 		KER_action_assign(action, &newsix->id);
 
-
+		KER_collection_object_add(main, scene->master_collection, newsixmesh);
 		KER_collection_object_add(main, scene->master_collection, newsix);
 	}
 }

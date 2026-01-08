@@ -36,6 +36,19 @@ struct MeshRuntime {
 	bool poly_normals_dirty = true;
 	mutable Vector<float3> vert_normals = {};
 	mutable Vector<float3> poly_normals = {};
+
+	// TODO; convert #vert_normals, #poly_normals to SharedCache too!
+
+	/** Lazily computed face corner normals (#KER_mesh_corner_normals()). */
+	SharedCache<Vector<float3>> corner_normals_cache = {};
+
+	/**
+	 * Cache of offsets for vert to face/corner maps. The same offsets array is used to group
+	 * indices for both the vertex to face and vertex to corner maps.
+	 */
+	SharedCache<Array<int>> vert_to_face_offset_cache = {};
+	/** Cache of indices for vert to face map. */
+	SharedCache<Array<int>> vert_to_face_map_cache = {};
 	
 	/**
      * Data used to efficiently draw the mesh in the viewport, especially useful when 

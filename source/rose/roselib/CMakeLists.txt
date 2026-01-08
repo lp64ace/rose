@@ -198,6 +198,7 @@ set(SRC
 	intern/memarena.c
 	intern/memblock.c
 	intern/mempool.c
+	intern/offset_indices.cc
 	intern/path_utils.c
 	intern/polyfill_2d.c
 	intern/rect.c

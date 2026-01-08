@@ -60,9 +60,13 @@ float KER_scene_frame(const Scene *scene) {
 ROSE_STATIC void scene_init_data(ID *id) {
 	Scene *scene = (Scene *)id;
 
+	/**
+	 * Running smoothly for almost 2 years on 30 frames per second.
+	 * Should honestly be more than enough.
+	 */
 	scene->r.sframe = 0;
 	scene->r.eframe = INT_MAX;
-	scene->r.fps = 24;
+	scene->r.fps = 30;
 
 	/* Master Collection */
 	scene->master_collection = KER_collection_master_add();
