@@ -15,8 +15,6 @@
 namespace rose::kernel {
 
 struct MeshRuntime {
-	/** Needed to ensure some thread-safety during normal calculation. */
-	std::mutex normals_mutex = {};
 	/** Needed to ensure some thread-safety during render data pre-processing. */
 	std::mutex render_mutex = {};
 
@@ -32,14 +30,10 @@ struct MeshRuntime {
 	 * #CustomData because they can be calculated on a `const` mesh, and adding custom data layers
 	 * on a `const` mesh is not thread-safe.
 	 */
-	bool vert_normals_dirty = true;
-	bool poly_normals_dirty = true;
-	mutable Vector<float3> vert_normals = {};
-	mutable Vector<float3> poly_normals = {};
-
-	// TODO; convert #vert_normals, #poly_normals to SharedCache too!
 
 	/** Lazily computed face corner normals (#KER_mesh_corner_normals()). */
+	SharedCache<Vector<float3>> vert_normals_cache = {};
+	SharedCache<Vector<float3>> poly_normals_cache = {};
 	SharedCache<Vector<float3>> corner_normals_cache = {};
 
 	/**

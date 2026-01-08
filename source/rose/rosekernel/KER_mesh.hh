@@ -51,16 +51,8 @@ ROSE_INLINE rose::Span<float3> KER_mesh_vert_normals_span(const Mesh *mesh) {
 	return rose::Span<float3>(reinterpret_cast<const float3 *>(KER_mesh_vert_normals_ensure(mesh)), mesh->totvert);
 }
 
-ROSE_INLINE rose::MutableSpan<float3> KER_mesh_vert_normals_for_write_span(Mesh *mesh) {
-	return rose::MutableSpan<float3>(reinterpret_cast<float3 *>(KER_mesh_vert_normals_for_write(mesh)), mesh->totvert);
-}
-
 ROSE_INLINE rose::Span<float3> KER_mesh_poly_normals_span(const Mesh *mesh) {
 	return rose::Span<float3>(reinterpret_cast<const float3 *>(KER_mesh_poly_normals_ensure(mesh)), mesh->totpoly);
-}
-
-ROSE_INLINE rose::MutableSpan<float3> KER_mesh_poly_normals_for_write_span(Mesh *mesh) {
-	return rose::MutableSpan<float3>(reinterpret_cast<float3 *>(KER_mesh_poly_normals_for_write(mesh)), mesh->totpoly);
 }
 
 ROSE_INLINE rose::Span<float3> KER_mesh_corner_normals_span(const Mesh *mesh) {

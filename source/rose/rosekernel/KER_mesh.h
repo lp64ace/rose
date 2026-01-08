@@ -112,9 +112,6 @@ void KER_mesh_normals_tag_dirty(struct Mesh *mesh);
 bool KER_mesh_vertex_normals_are_dirty(const struct Mesh *mesh);
 bool KER_mesh_poly_normals_are_dirty(const struct Mesh *mesh);
 
-float (*KER_mesh_vert_normals_for_write(struct Mesh *mesh))[3];
-float (*KER_mesh_poly_normals_for_write(struct Mesh *mesh))[3];
-
 const float (*KER_mesh_vert_normals_ensure(const struct Mesh *mesh))[3];
 const float (*KER_mesh_poly_normals_ensure(const struct Mesh *mesh))[3];
 const float (*KER_mesh_corner_normals_ensure(const struct Mesh *mesh))[3];

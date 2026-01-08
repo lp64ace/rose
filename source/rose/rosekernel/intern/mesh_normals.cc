@@ -485,80 +485,49 @@ void normals_calc_poly_vert(const Span<float3> positions, const OffsetIndices<in
 }  // namespace rose::kernel::mesh
 
 void KER_mesh_normals_tag_dirty(Mesh *mesh) {
-	mesh->runtime->vert_normals_dirty = true;
-	mesh->runtime->poly_normals_dirty = true;
+	mesh->runtime->vert_normals_cache.tag_dirty();
+	mesh->runtime->poly_normals_cache.tag_dirty();
+	mesh->runtime->corner_normals_cache.tag_dirty();
 }
 
 bool KER_mesh_vertex_normals_are_dirty(const Mesh *mesh) {
-	return mesh->runtime->vert_normals_dirty;
+	return mesh->runtime->vert_normals_cache.is_dirty();
 }
 
 bool KER_mesh_poly_normals_are_dirty(const Mesh *mesh) {
-	return mesh->runtime->poly_normals_dirty;
-}
-
-float (*KER_mesh_vert_normals_for_write(struct Mesh *mesh))[3] {
-	mesh->runtime->vert_normals.reinitialize(mesh->totvert);
-	return reinterpret_cast<float(*)[3]>(mesh->runtime->vert_normals.data());
-}
-float (*KER_mesh_poly_normals_for_write(struct Mesh *mesh))[3] {
-	mesh->runtime->poly_normals.reinitialize(mesh->totpoly);
-	return reinterpret_cast<float(*)[3]>(mesh->runtime->poly_normals.data());
+	return mesh->runtime->poly_normals_cache.is_dirty();
 }
 
 const float (*KER_mesh_vert_normals_ensure(const struct Mesh *mesh))[3] {
-	if (!mesh->runtime->vert_normals_dirty) {
-		ROSE_assert(mesh->runtime->vert_normals.size() == mesh->totvert);
-		return reinterpret_cast<const float(*)[3]>(mesh->runtime->vert_normals.data());
-	}
-
 	const rose::Span<float3> poly_normals = KER_mesh_poly_normals_span(mesh);
 
-	std::lock_guard lock{mesh->runtime->normals_mutex};
-	if (!mesh->runtime->vert_normals_dirty) {
-		ROSE_assert(mesh->runtime->vert_normals.size() == mesh->totvert);
-		return reinterpret_cast<const float(*)[3]>(mesh->runtime->vert_normals.data());
-	}
-
-	rose::threading::isolate_task([&]() {
+	mesh->runtime->vert_normals_cache.ensure([&](rose::Vector<float3> &r_data) {
 		const rose::Span<float3> positions = KER_mesh_vert_positions_span(mesh);
 		const rose::OffsetIndices<int> polys = KER_mesh_poly_offsets_span(mesh);
 		const rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
 		const rose::GroupedSpan<int> vert_to_face = KER_mesh_vert_to_face_map_span(mesh);
 
-		mesh->runtime->vert_normals.reinitialize(positions.size());
-		rose::kernel::mesh::normals_calc_verts(positions, polys, corner_verts, vert_to_face, poly_normals, mesh->runtime->vert_normals);
-		mesh->runtime->vert_normals_dirty = false;
+		r_data.reinitialize(positions.size());
+
+		rose::kernel::mesh::normals_calc_verts(positions, polys, corner_verts, vert_to_face, poly_normals, r_data);
 	});
 
-	return reinterpret_cast<const float(*)[3]>(mesh->runtime->vert_normals.data());
+	const rose::Vector<float3> &vert_normals = mesh->runtime->vert_normals_cache.data();
+	return reinterpret_cast<const float (*)[3]>(vert_normals.data());
 }
 const float (*KER_mesh_poly_normals_ensure(const struct Mesh *mesh))[3] {
-	using namespace rose;
-	if (!mesh->runtime->poly_normals_dirty) {
-		ROSE_assert(mesh->runtime->poly_normals.size() == mesh->totpoly);
-		return reinterpret_cast<const float(*)[3]>(mesh->runtime->poly_normals.data());
-	}
-
-	std::lock_guard lock{mesh->runtime->normals_mutex};
-	if (!mesh->runtime->poly_normals_dirty) {
-		ROSE_assert(mesh->runtime->poly_normals.size() == mesh->totpoly);
-		return reinterpret_cast<const float(*)[3]>(mesh->runtime->poly_normals.data());
-	}
-
-	/* Isolate task because a mutex is locked and computing normals is multi-threaded. */
-	threading::isolate_task([&]() {
+	mesh->runtime->poly_normals_cache.ensure([&](rose::Vector<float3> &r_data) {
 		const rose::Span<float3> positions = KER_mesh_vert_positions_span(mesh);
 		const rose::OffsetIndices<int> polys = KER_mesh_poly_offsets_span(mesh);
 		const rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
 
-		mesh->runtime->poly_normals.reinitialize(polys.size());
-		kernel::mesh::normals_calc_polys(positions, polys, corner_verts, mesh->runtime->poly_normals);
+		r_data.reinitialize(polys.size());
 
-		mesh->runtime->poly_normals_dirty = false;
+		rose::kernel::mesh::normals_calc_polys(positions, polys, corner_verts, r_data);
 	});
 
-	return reinterpret_cast<const float(*)[3]>(mesh->runtime->poly_normals.data());
+	const rose::Vector<float3> &poly_normals = mesh->runtime->poly_normals_cache.data();
+	return reinterpret_cast<const float (*)[3]>(poly_normals.data());
 }
 const float (*KER_mesh_corner_normals_ensure(const struct Mesh *mesh))[3] {
 	if (mesh->totpoly == 0) {
@@ -590,10 +559,9 @@ const float (*KER_mesh_corner_normals_ensure(const struct Mesh *mesh))[3] {
 	return reinterpret_cast<const float(*)[3]>(corner_normals.data());
 }
 
+/** This does not actually clear anything, fix the name! */
 void KER_mesh_clear_derived_normals(Mesh *mesh) {
-	mesh->runtime->vert_normals.clear_and_shrink();
-	mesh->runtime->poly_normals.clear_and_shrink();
-
-	mesh->runtime->vert_normals_dirty = true;
-	mesh->runtime->poly_normals_dirty = true;
+	mesh->runtime->vert_normals_cache.tag_dirty();
+	mesh->runtime->poly_normals_cache.tag_dirty();
+	mesh->runtime->corner_normals_cache.tag_dirty();
 }
