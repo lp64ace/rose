@@ -116,6 +116,12 @@ template<typename T> struct GroupedSpan {
 OffsetIndices<int> accumulate_counts_to_offsets(MutableSpan<int> counts_to_offsets, const int start_offset = 0);
 
 /**
+ * Create a map from indexed elements to the source indices, in other words from the larger array
+ * to the smaller array.
+ */
+void build_reverse_map(OffsetIndices<int> offsets, MutableSpan<int> r_map);
+
+/**
  * Build offsets to group the elements of \a indices pointing to the same index.
  */
 void build_reverse_offsets(Span<int> indices, MutableSpan<int> offsets);

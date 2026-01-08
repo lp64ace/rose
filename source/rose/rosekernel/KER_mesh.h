@@ -56,6 +56,14 @@ ROSE_INLINE float (*KER_mesh_vert_positions_for_write(Mesh *mesh))[3] {
 	return (float (*)[3])CustomData_get_layer_named_for_write(&mesh->vdata, CD_PROP_FLOAT3, "position", mesh->totvert);
 }
 
+ROSE_INLINE const bool *KER_mesh_edge_sharp_edge(const Mesh *mesh) {
+	return (const bool *)CustomData_get_layer_named(&mesh->edata, CD_PROP_BOOL, "sharp_edge");
+}
+
+ROSE_INLINE bool *KER_mesh_edge_sharp_edge_for_write(Mesh *mesh) {
+	return (bool *)CustomData_get_layer_named_for_write(&mesh->edata, CD_PROP_BOOL, "sharp_edge", mesh->totedge);
+}
+
 ROSE_INLINE const int (*KER_mesh_edges(const Mesh *mesh))[2] {
 	return (const int (*)[2])CustomData_get_layer_named(&mesh->edata, CD_PROP_INT32_2D, ".edge_verts");
 }
@@ -69,6 +77,14 @@ ROSE_INLINE const int *KER_mesh_poly_offsets(const Mesh *mesh) {
 }
 /** Since we use implicit sharing for these data we need to define it in a C++ source file. */
 int *KER_mesh_poly_offsets_for_write(Mesh *mesh);
+
+ROSE_INLINE const bool *KER_mesh_poly_sharp_face(const Mesh *mesh) {
+	return (const bool *)CustomData_get_layer_named(&mesh->fdata, CD_PROP_BOOL, "sharp_face");
+}
+
+ROSE_INLINE bool *KER_mesh_poly_sharp_face_for_write(Mesh *mesh) {
+	return (bool *)CustomData_get_layer_named_for_write(&mesh->fdata, CD_PROP_BOOL, "sharp_face", mesh->totpoly);
+}
 
 ROSE_INLINE const int *KER_mesh_corner_verts(const Mesh *mesh) {
 	return (const int *)CustomData_get_layer_named(&mesh->ldata, CD_PROP_INT32, ".corner_vert");
@@ -115,6 +131,8 @@ bool KER_mesh_poly_normals_are_dirty(const struct Mesh *mesh);
 const float (*KER_mesh_vert_normals_ensure(const struct Mesh *mesh))[3];
 const float (*KER_mesh_poly_normals_ensure(const struct Mesh *mesh))[3];
 const float (*KER_mesh_corner_normals_ensure(const struct Mesh *mesh))[3];
+
+void KER_mesh_set_custom_normals(struct Mesh *mesh, float (*r_normals)[3]);
 
 void KER_mesh_clear_derived_normals(struct Mesh *mesh);
 

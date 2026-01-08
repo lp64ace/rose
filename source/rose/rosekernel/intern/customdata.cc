@@ -877,17 +877,19 @@ static const LayerTypeInfo LAYERTYPEINFO[CD_NUMTYPES] = {
 	{sizeof(int), "void", 1, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
 	/* CD_PROP_INT8 = 45 */
 	{sizeof(int8_t), "MInt8Property", 1, "Int8", nullptr, nullptr, nullptr, nullptr, nullptr},
-	/* CD_PROP_INT32_2D = 46 */
+	/* CD_PROP_INT16_2D = 46 */
+	{sizeof(vec2s), "vec2s", 1, "2D 16-Bit Intege", nullptr, nullptr, nullptr, nullptr, nullptr},
+	/* CD_PROP_INT32_2D = 47 */
 	{sizeof(vec2i), "vec2i", 1, "Int 2D", nullptr, nullptr, nullptr, nullptr, nullptr},
-	/* CD_PROP_COLOR = 47 */
+	/* CD_PROP_COLOR = 48 */
 	{sizeof(MPropCol), "MPropCol", 1, "Color", nullptr, nullptr, layerInterp_propcol, nullptr, layerDefault_propcol, nullptr, nullptr, layerEqual_propcol, layerMultiply_propcol, layerInitMinMax_propcol, layerAdd_propcol, layerDoMinMax_propcol, layerCopyValue_propcol, nullptr},
-	/* CD_PROP_FLOAT3 = 48 */
+	/* CD_PROP_FLOAT3 = 49 */
 	{sizeof(float[3]), "vec3f", 1, "Float3", nullptr, nullptr, layerInterp_propfloat3, nullptr, nullptr, nullptr, layerValidate_propfloat3, nullptr, layerMultiply_propfloat3, nullptr, layerAdd_propfloat3},
-	/* CD_PROP_FLOAT2 = 49 */
+	/* CD_PROP_FLOAT2 = 50 */
 	{sizeof(float[2]), "vec2f", 1, "Float2", nullptr, nullptr, layerInterp_propfloat2, nullptr, nullptr, nullptr, layerValidate_propfloat2, layerEqual_propfloat2, layerMultiply_propfloat2, layerInitMinMax_propfloat2, layerAdd_propfloat2, layerDoMinMax_propfloat2, layerCopyValue_propfloat2},
-	/* CD_PROP_BOOL = 50 */
+	/* CD_PROP_BOOL = 51 */
 	{sizeof(bool), "bool", 1, "Boolean", nullptr, nullptr, layerInterp_propbool, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
-	/* CD_HAIRLENGTH = 51 */
+	/* CD_HAIRLENGTH = 52 */
 	{sizeof(float), "float", 1, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
 };
 
@@ -982,17 +984,19 @@ static const char *LAYERTYPENAMES[CD_NUMTYPES] = {
 	"Unkown",
 	/* CD_PROP_INT8 = 45 */
 	"CDHairMapping",
-	/* CD_PROP_INT32_2D = 46 */
+	/* CD_PROP_INT16_2D = 46 */
+	"CDPropShort2",
+	/* CD_PROP_INT32_2D = 47 */
 	"CDPoint",
-	/* CD_PROP_COLOR = 47 */
+	/* CD_PROP_COLOR = 48 */
 	"CDPropCol",
-	/* CD_PROP_FLOAT3 = 48 */
+	/* CD_PROP_FLOAT3 = 49 */
 	"CDPropFloat3",
-	/* CD_PROP_FLOAT2 = 49 */
+	/* CD_PROP_FLOAT2 = 50 */
 	"CDPropFloat2",
-	/* CD_PROP_BOOL = 50 */
+	/* CD_PROP_BOOL = 51 */
 	"CDPropBoolean",
-	/* CD_HAIRLENGTH = 51 */
+	/* CD_HAIRLENGTH = 52 */
 	"CDHairLength",
 };
 

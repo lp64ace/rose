@@ -26,6 +26,14 @@ OffsetIndices<int> accumulate_counts_to_offsets(MutableSpan<int> counts_to_offse
 	return OffsetIndices<int>(counts_to_offsets);
 }
 
+void build_reverse_map(OffsetIndices<int> offsets, MutableSpan<int> r_map) {
+	threading::parallel_for(offsets.index_range(), 1024, [&](const IndexRange range) {
+		for (const int64_t i : range) {
+			r_map.slice(offsets[i]).fill(i);
+		}
+	});
+}
+
 void build_reverse_offsets(Span<int> indices, MutableSpan<int> offsets) {
 	ROSE_assert(std::all_of(offsets.begin(), offsets.end(), [](int value) { return value == 0; }));
 	array_utils::count_indices(indices, offsets);

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <type_traits>
 
+#include "LIB_math_base.h"
 #include "LIB_math_numbers.hh"
 #include "LIB_utildefines.h"
 
