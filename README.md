@@ -1,15 +1,11 @@
 # Rose
 
-Cross-platform library that enables easy customizability of the application during both runtime and develop-time.
-It's the fact that there are limits that make life interesting, wouldn't it be boring to be able to do ANYTHING, 
-it would definately be scary!
+The most common phrase I hear when describing the purpose of a software is "World Domination", shall we then...
 
 ## Quick Information
 
-Rose aims to be a software development tool that allows easy development and management of an application both in runtime and develop-time. 
-By employing the intergrated c99 interperter we can quickly view/edit data in runtime and store them in the application's database file for later usage.
-
-Yet another library that feels like fighting with it rather than your project! You're welcome!
+Yet another graphics engine developed by a single student with too much free time in his hands (kinda). 
+Drawing inspiration from differential geometry for normal calculation, triangulation and animation of objects, I am a math student after all.
 
 ## How to Build
 
