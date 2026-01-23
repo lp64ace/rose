@@ -12,8 +12,6 @@
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
-#include <stdio.h>
-
 typedef struct DRWCache {
 	GPUBatch *draw_fullscreen_quad;
 } DRWCache;

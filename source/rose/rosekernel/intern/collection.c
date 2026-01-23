@@ -515,7 +515,7 @@ bool collection_object_rem(Main *main, Collection *collection, Object *object, c
 	if (cobject == NULL) {
 		return false;
 	}
-	LIB_remlink(&collection->objects, cobject);
+	LIB_freelinkN(&collection->objects, cobject);
 	KER_collection_object_cache_free(collection);
 
 	if (us) {

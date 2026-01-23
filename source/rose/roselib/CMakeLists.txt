@@ -16,6 +16,7 @@ set(INC
 set(INC_SYS
 	# External System Include Directories
 	${PTHREADS_INCLUDE_DIRS}
+	${TBB_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
 	
 )
@@ -230,6 +231,7 @@ set(LIB
 	
 	# External Library Dependencies
 	PUBLIC ${PTHREADS_LIBRARIES}
+	PUBLIC ${TBB_LIBRARIES}
 	
 )
 

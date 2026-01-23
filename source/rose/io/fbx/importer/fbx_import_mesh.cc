@@ -240,7 +240,7 @@ void import_meshes(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMa
 							break;
 						}
 					}
-					
+
 					if (armature != NULL) {
 						ModifierData *md = KER_modifier_new(MODIFIER_TYPE_ARMATURE);
 

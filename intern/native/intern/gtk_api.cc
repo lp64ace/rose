@@ -18,6 +18,8 @@
 #	include "x11/gtk_x11_window_manager.hh"
 #endif
 
+#include <thread>
+
 GTKManagerInterface *GTK_window_manager_new_ex(int backend) {
 	switch (backend) {
 #ifdef WIN32
@@ -84,6 +86,10 @@ double GTK_elapsed_time(struct GTKWindowManager *vmanager) {
 	}
 
 	return 0.0;
+}
+
+void GTK_sleep(unsigned int ms) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 bool GTK_set_clipboard(struct GTKWindowManager *vmanager, const char *buffer, unsigned int len, bool selection) {

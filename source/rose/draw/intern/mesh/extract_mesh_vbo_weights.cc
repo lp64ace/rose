@@ -36,21 +36,32 @@ struct ArmatureDeviceDeformParams {
 ROSE_INLINE ArmatureDeviceDeformParams get_armature_device_deform_params(const Object *obarmature, const Object *obtarget, const ListBase *defbase) {
 	ArmatureDeviceDeformParams deform_params;
 
-	deform_params.pose_channels = &obarmature->pose->channelbase;
-
 	const size_t defbase_length = LIB_listbase_count(defbase);
 
 	deform_params.pose_channel_by_vertex_group.reinitialize(defbase_length);
 
-	size_t index;
-	LISTBASE_FOREACH_INDEX(DeformGroup *, dg, defbase, index) {
-		PoseChannel *pchannel = KER_pose_channel_find_name(obarmature->pose, dg->name);
+	if (obarmature) {
+		deform_params.pose_channels = &obarmature->pose->channelbase;
 
-		deform_params.pose_channel_by_vertex_group[index] = (pchannel && !(pchannel->bone->flag & BONE_NO_DEFORM)) ? pchannel : NULL;
+		size_t index;
+		LISTBASE_FOREACH_INDEX(DeformGroup *, dg, defbase, index) {
+			PoseChannel *pchannel = KER_pose_channel_find_name(obarmature->pose, dg->name);
+
+			deform_params.pose_channel_by_vertex_group[index] = (pchannel && !(pchannel->bone->flag & BONE_NO_DEFORM)) ? pchannel : NULL;
+		}
+
+		deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget)) * float4x4(KER_object_object_to_world(obarmature));
+		deform_params.target_to_armature = float4x4(KER_object_world_to_object(obarmature)) * float4x4(KER_object_object_to_world(obtarget));
 	}
+	else {
+		size_t index;
+		LISTBASE_FOREACH_INDEX(DeformGroup *, dg, defbase, index) {
+			deform_params.pose_channel_by_vertex_group[index] = NULL;
+		}
 
-	deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget)) * float4x4(KER_object_object_to_world(obarmature));
-	deform_params.target_to_armature = float4x4(KER_object_world_to_object(obarmature)) * float4x4(KER_object_object_to_world(obtarget));
+		deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget));
+		deform_params.target_to_armature = float4x4(KER_object_object_to_world(obtarget));
+	}
 
 	return deform_params;
 }
@@ -70,10 +81,6 @@ struct MDeformDeviceData {
 };
 
 void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, rose::Vector<float4x4>& ubo_data) {
-	if (obarmature == nullptr) {
-		return;
-	}
-
 	const ListBase *defbase = NULL;
 	if (metarget) {
 		defbase = KER_id_defgroup_list_get(&metarget->id);
@@ -98,11 +105,12 @@ void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, 
 		for (const size_t group : range) {
 			const PoseChannel *pchannel = def_nr_range.contains(group) ? params.pose_channel_by_vertex_group[group] : NULL;
 
-			if (pchannel == NULL) {
-				continue;
-			}
+			/**
+			 * Since we need to support no armature deformation, we use identity matrices
+			 * \note This isn't the rest pose, it is the raw mesh without deformation applied.
+			 */
 
-			ubo_data[group] = float4x4(pchannel->chan_mat);
+			ubo_data[group] = (pchannel) ? float4x4(pchannel->chan_mat)  : float4x4::identity();
 		}
 	});
 }

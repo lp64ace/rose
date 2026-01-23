@@ -255,6 +255,8 @@ set(INFO_SRC
 	infos/gpu_shader_test_info.hh
 
 	../draw/engines/alice/shaders/infos/opaque_mesh_info.hh
+	../draw/engines/basic/shaders/infos/normal_mesh_info.hh
+	../draw/engines/basic/shaders/infos/opaque_mesh_info.hh
 	../draw/intern/shaders/infos/draw_view_info.hh
 )
 

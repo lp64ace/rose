@@ -16,7 +16,6 @@
 #include "ED_space_api.h"
 
 #include "UI_interface.h"
-#include "UI_resource.h"
 
 #include "LIB_listbase.h"
 #include "LIB_math_geom.h"
@@ -39,7 +38,7 @@
 ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4]) {
 	/* default, human vertical fov is 120 degrees. */
 	const float fov = M_PI_2 * 2.0f / 3.0f;
-	const float clip_start = 1e-2f;
+	const float clip_start = 1e-1f;
 	const float clip_end = 1e+3f;
 
 	float tangent = tanf(fov * 0.5f);
@@ -58,7 +57,7 @@ ROSE_INLINE RegionView3D *region_view3d_init(RegionView3D *rv3d) {
 	unit_m4(rv3d->winmat);
 	unit_m4(rv3d->viewmat);
 	unit_qt(rv3d->viewquat);
-	copy_v3_fl3(rv3d->viewloc, 0.0f, 1.0f, 5.0f);
+	copy_v3_fl3(rv3d->viewloc, 0.0f, 1.0f, 1.0f);
 	return rv3d;
 }
 
@@ -73,7 +72,6 @@ ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 
 		RegionView3D *rv3d = MEM_callocN(sizeof(RegionView3D), "RegionView3D");
 		region->regiondata = region_view3d_init(rv3d);
-
 		region->flag |= RGN_FLAG_ALWAYS_REDRAW;
 	}
 	view3d->spacetype = SPACE_VIEW3D;

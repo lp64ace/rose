@@ -430,6 +430,11 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 		KER_main_unlock(main);
 	}
 
+	if ((flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0) {
+		/** Remove any references to us. */
+		KER_libblock_remap(main, id, NULL, ID_REMAP_FORCE_INTERNAL_RUNTIME_POINTERS);
+	}
+
 	MEM_freeN(id);
 
 	return flag;

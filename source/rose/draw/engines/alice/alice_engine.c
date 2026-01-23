@@ -92,11 +92,8 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	GPUBatch *batch = DRW_cache_object_surface_get(object);
 
 	if (impl->opaque_shgroup) {
-		/**
-		 * Since this engine is capable of handing deform modifier on the device 
-		 * instead of the CPU we need to create the uniform buffers for the bone 
-		 * (pose channel) matrices.
-		 */
+		bool has_defgroup_modifier = false;
+
 		LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
 			if ((md->flag & MODIFIER_DEVICE_ONLY) == 0 || !alice_modifier_supported(md->type)) {
 				continue;
@@ -107,8 +104,15 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 					GPUUniformBuf *block = DRW_alice_defgroup_ubo(object, md);
 
 					DRW_shading_group_bind_uniform_block(impl->opaque_shgroup, block, DRW_DVGROUP_UBO_SLOT);
+					has_defgroup_modifier |= (block != NULL);
 				} break;
 			}
+		}
+
+		if (!has_defgroup_modifier) {
+			GPUUniformBuf *block = DRW_alice_defgroup_ubo(object, NULL);
+
+			DRW_shading_group_bind_uniform_block(impl->opaque_shgroup, block, DRW_DVGROUP_UBO_SLOT);
 		}
 
 		const float (*obmat)[4] = KER_object_object_to_world(object);

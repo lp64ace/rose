@@ -98,8 +98,7 @@ ROSE_INLINE rose::Span<bool> KER_mesh_edge_sharp_edge_span(const Mesh *mesh) {
 }
 
 ROSE_INLINE rose::MutableSpan<bool> KER_mesh_edge_sharp_edge_for_write_span(Mesh *mesh) {
-	bool *ptr = KER_mesh_edge_sharp_edge_for_write(mesh);
-	return (ptr) ? rose::MutableSpan<bool>(ptr, mesh->totedge) : rose::MutableSpan<bool>();
+	return rose::MutableSpan<bool>(KER_mesh_edge_sharp_edge_for_write(mesh), mesh->totedge);
 }
 
 ROSE_INLINE rose::Span<int> KER_mesh_corner_verts_span(const Mesh *mesh) {
@@ -132,8 +131,7 @@ ROSE_INLINE rose::Span<bool> KER_mesh_poly_sharp_face_span(const Mesh *mesh) {
 }
 
 ROSE_INLINE rose::MutableSpan<bool> KER_mesh_poly_sharp_face_for_write_span(Mesh *mesh) {
-	bool *ptr = KER_mesh_poly_sharp_face_for_write(mesh);
-	return (ptr) ? rose::MutableSpan<bool>(ptr, mesh->totpoly) : rose::MutableSpan<bool>();
+	return rose::MutableSpan<bool>(KER_mesh_poly_sharp_face_for_write(mesh), mesh->totpoly);
 }
 
 ROSE_INLINE rose::Span<float3> KER_mesh_vert_normals_span(const Mesh *mesh) {

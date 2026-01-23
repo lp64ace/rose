@@ -36,6 +36,14 @@ ROSE_STATIC GPUVertFormat *extract_normals_format() {
 	return &format;
 }
 
+ROSE_STATIC GPUVertFormat *extract_normal_lines_format() {
+	static GPUVertFormat format = {0};
+	if (GPU_vertformat_empty(&format)) {
+		GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
+	}
+	return &format;
+}
+
 template<typename T> inline T convert_normal(const float3 &src);
 
 template<> inline GPUPackedNormal convert_normal(const float3 &src) {

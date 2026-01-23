@@ -35,6 +35,7 @@
 #include "GPU_init_exit.h"
 #include "GPU_context.h"
 
+#include "LIB_math_base.h"
 #include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
 #include "LIB_listbase.h"
@@ -255,43 +256,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 96.0f);
-
-	Action *action = wm_init_scene_next_action(main, NULL);
-	Object *six = KER_main_id_lookup(main, ID_OB, "Six");
-	Object *sixmesh = KER_main_id_lookup(main, ID_OB, "SixMesh");
-
-	for (int count = 2; count <= 15; count++) {
-		Object *newsixmesh = KER_id_copy(main, &sixmesh->id);
-
-		newsixmesh->loc[0] = ((count & 1) ? -1.0f : 1.0f) * 64.0f * (count / 2);
-		newsixmesh->loc[1] = 0.0f;
-		newsixmesh->loc[2] = 0.0f;
-	
-		/** Free the old modifiers, we want to assign new armatures. */
-		KER_object_free_modifiers(newsixmesh, 0);
-
-		/**
-		 * In order to have multiple animations running at the same time 
-		 * and not have each object do the exact same animation, we need 
-		 * to define armature objects for each one to deform separately.
-		 */
-
-		Object *newsix = KER_id_copy(main, &six->id);
-
-		ArmatureModifierData *amd = (ArmatureModifierData*)KER_modifier_new(MODIFIER_TYPE_ARMATURE);
-		
-		amd->modifier.flag |= MODIFIER_DEVICE_ONLY;
-		amd->object = newsix;
-		
-		action = wm_init_scene_next_action(main, action);
-
-		LIB_addtail(&newsixmesh->modifiers, &amd->modifier);
-		KER_action_assign(action, &newsix->id);
-
-		KER_collection_object_add(main, scene->master_collection, newsixmesh);
-		KER_collection_object_add(main, scene->master_collection, newsix);
-	}
+	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 128.0f);
 }
 
 void WM_keyconfig_init(rContext *C) {
@@ -369,7 +334,7 @@ void WM_main(rContext *C) {
 		WM_do_draw(C);
 
 		if (!poll && /* is not in rendering - we do not throttle render loop */ 0) {
-			// GTK_sleep(1);
+			GTK_sleep(1);
 		}
 	}
 }

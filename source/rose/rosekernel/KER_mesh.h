@@ -61,7 +61,11 @@ ROSE_INLINE const bool *KER_mesh_edge_sharp_edge(const Mesh *mesh) {
 }
 
 ROSE_INLINE bool *KER_mesh_edge_sharp_edge_for_write(Mesh *mesh) {
-	return (bool *)CustomData_get_layer_named_for_write(&mesh->edata, CD_PROP_BOOL, "sharp_edge", mesh->totedge);
+	bool *ptr = (bool *)CustomData_get_layer_named_for_write(&mesh->edata, CD_PROP_BOOL, "sharp_edge", mesh->totedge);
+	if (ptr == NULL) {
+		ptr = (bool *)CustomData_add_layer(&mesh->edata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totedge);
+	}
+	return ptr;
 }
 
 ROSE_INLINE const int (*KER_mesh_edges(const Mesh *mesh))[2] {
@@ -83,7 +87,11 @@ ROSE_INLINE const bool *KER_mesh_poly_sharp_face(const Mesh *mesh) {
 }
 
 ROSE_INLINE bool *KER_mesh_poly_sharp_face_for_write(Mesh *mesh) {
-	return (bool *)CustomData_get_layer_named_for_write(&mesh->fdata, CD_PROP_BOOL, "sharp_face", mesh->totpoly);
+	bool *ptr = (bool *)CustomData_get_layer_named_for_write(&mesh->fdata, CD_PROP_BOOL, "sharp_face", mesh->totpoly);
+	if (ptr == NULL) {
+		ptr = (bool *)CustomData_add_layer(&mesh->fdata, CD_PROP_BOOL, CD_SET_DEFAULT, mesh->totpoly);
+	}
+	return ptr;
 }
 
 ROSE_INLINE const int *KER_mesh_corner_verts(const Mesh *mesh) {

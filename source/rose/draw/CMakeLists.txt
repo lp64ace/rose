@@ -14,6 +14,7 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
+	${TBB_INCLUDE_DIRS}
 	
 )
 
@@ -30,12 +31,16 @@ set(ALICE
 )
 
 set(BASIC
-	engines/basic/basic_engine.h
 	engines/basic/basic_engine.c
+	engines/basic/basic_engine.h
+	engines/basic/basic_modifier.c
+	engines/basic/basic_private.h
+	engines/basic/basic_shader.c
 )
 
 set(GLSL_SRC
 	engines/alice/shaders/alice_vert.glsl
+	engines/basic/shaders/basic_vert.glsl
 
 	intern/shaders/draw_shader_shared.h
 

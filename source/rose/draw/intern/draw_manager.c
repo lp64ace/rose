@@ -40,8 +40,6 @@
 #include "engines/basic/basic_engine.h"
 #include "shaders/draw_shader_shared.h"
 
-#include <stdio.h>
-
 struct Object;
 
 /* -------------------------------------------------------------------- */

@@ -289,10 +289,6 @@ ROSE_INLINE wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot,
 		else if (op->type->exec) {
 			retval = op->type->exec(C, op);
 		}
-		else {
-			/* Debug, important to leave a while, should never happen. */
-			ROSE_assert_unreachable();
-		}
 
 		if (retval & OPERATOR_HANDLED) {
 			/* Do nothing, #wm_operator_exec() has been called somewhere. */

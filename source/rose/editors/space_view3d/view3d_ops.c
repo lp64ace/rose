@@ -163,7 +163,7 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 	/* clang-format off */
 
 	WM_keymap_add_item(keymap, "VIEW3D_OT_rotate", &(KeyMapItem_Params){
-		.type = MIDDLEMOUSE,
+		.type = RIGHTMOUSE,
 		.value = KM_PRESS,
 		.modifier = KM_NOTHING,
 	});

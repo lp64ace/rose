@@ -64,6 +64,9 @@ if(UNIX)
 	mark_as_advanced(WITH_COMPILER_CCACHE)
 endif()
 
+option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." OFF)
+mark_as_advanced(WITH_TBB)
+
 # ----------------------------------------------------------------------------
 # Main Platform Checks
 
@@ -85,10 +88,15 @@ option(BUILD_GRAPHIC_TESTS "Enable graphics related tests" ON)
 if(ROSE_BUILD_WIN32)
 	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including Win32 support")
 endif()
+
 if(ROSE_BUILD_X11)
 	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including X11 support")
 	
 	option(WITH_X11_XINPUT "Enable X11 Xinput (tablet support and unicode input)" ON)
+endif()
+
+if(WITH_TBB)
+	# add_definitions(-DWITH_TBB)
 endif()
 
 # -----------------------------------------------------------------------------

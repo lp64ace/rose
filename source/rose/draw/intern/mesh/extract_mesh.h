@@ -26,6 +26,12 @@ extern "C" {
 void extract_positions(const struct Mesh *mesh, struct GPUVertBuf *vbo);
 void extract_normals(const Mesh *mesh, struct GPUVertBuf *vbo, bool use_hq);
 
+/**
+ * Instead of filling the VBO with the positions of each vertex, 
+ * the VBO receives line segments representing the normals at each face.
+ */
+void extract_normal_lines(const Mesh *mesh, struct GPUVertBuf *vbo);
+
 void extract_weights(const Object *obarmature, const Object *obtarget, const Mesh *mesh, struct GPUVertBuf *vbo);
 void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, struct GPUUniformBuf *ubo);
 

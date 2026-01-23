@@ -15,6 +15,7 @@ set(INC
 set(INC_SYS
 	# External System Include Directories
 	${PTHREADS_INCLUDE_DIRS}
+	${TBB_INCLUDE_DIRS}
 	
 )
 
