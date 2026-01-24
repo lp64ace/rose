@@ -1002,7 +1002,7 @@ static const char *LAYERTYPENAMES[CD_NUMTYPES] = {
 
 const CustomData_MeshMasks CD_MASK_MESH = {
 	/*vmask*/
-	(CD_MASK_PROP_FLOAT3 | CD_MASK_PROP_ALL),
+	(CD_MASK_PROP_FLOAT3 | CD_MASK_MDEFORMVERT | CD_MASK_PROP_ALL),
 	/*emask*/
 	(CD_MASK_PROP_ALL),
 	/*fmask*/

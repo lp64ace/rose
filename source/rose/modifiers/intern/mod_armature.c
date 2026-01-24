@@ -19,6 +19,14 @@ ROSE_STATIC void deform_verts(ModifierData *md, const ModifierEvalContext *ctx, 
 	KER_armature_deform_coords_with_mesh(amd->object, ctx->object, positions, length, mesh);
 }
 
+void KER_armature_modifier_copy_data(const ArmatureModifierData *source, ArmatureModifierData *target, int flag) {
+	target->object = source->object;
+}
+
+ROSE_STATIC void deform_copy_data(const ModifierData *source, ModifierData *target, int flag) {
+	KER_armature_modifier_copy_data((const ArmatureModifierData *)source, (ArmatureModifierData *)target, flag);
+}
+
 ModifierTypeInfo MODType_ARMATURE = {
 	.idname = "Armature",
 	.name = "Armature",
@@ -27,7 +35,7 @@ ModifierTypeInfo MODType_ARMATURE = {
 	.type = OnlyDeform,
 	.flag = 0,
 
-	.copy_data = NULL,
+	.copy_data = deform_copy_data,
 
 	.deform_verts = deform_verts,
 
@@ -35,6 +43,6 @@ ModifierTypeInfo MODType_ARMATURE = {
 	.free_data = NULL,
 	.depends_on_time = NULL,
 	.depends_on_normals = NULL,
-	.foreach_ID_link = NULL,
+	.foreach_ID_link = deform_foreach_id,
 	.free_runtime_data = NULL,
 };

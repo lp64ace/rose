@@ -89,7 +89,9 @@ typedef enum eCustomDataType {
 } eCustomDataType;
 
 /* Bits for eCustomDataMask */
-#define CD_MASK_NORMAL (1 << CD_NORMAL)
+#define CD_MASK_MDEFORMVERT (1ULL << CD_MDEFORMVERT)
+
+#define CD_MASK_NORMAL (1ULL << CD_NORMAL)
 
 #define CD_MASK_PROP_FLOAT (1ULL << CD_PROP_FLOAT)
 #define CD_MASK_PROP_INT32 (1ULL << CD_PROP_INT32)

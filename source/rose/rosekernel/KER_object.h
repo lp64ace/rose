@@ -63,6 +63,7 @@ void KER_armature_data_update(struct Object *object);
 /** \name Object Modifiers
  * \{ */
 
+bool KER_object_modifier_stack_copy(struct Object *ob_dst, const struct Object *ob_src, const bool do_copy_all, const int flag);
 void KER_object_free_modifiers(struct Object *object, const int flag);
 
 /** \} */

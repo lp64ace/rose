@@ -243,20 +243,27 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 extern const int datatoc_six_fbx_size;
 extern const char datatoc_six_fbx[];
 
-ROSE_INLINE Action *wm_init_scene_next_action(struct Main *main, Action *action) {
-	if (action && action->id.next) {
-		return (Action *)action->id.next;
-	}
-
-	ListBase *lb = which_libbase(main, ID_AC);
-	return (Action *)lb->first;
-}
-
 ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
 	FBX_import_memory(C, datatoc_six_fbx, datatoc_six_fbx_size, 128.0f);
+
+	Mesh *mesh = (Mesh *)KER_main_id_lookup(main, ID_ME, "SixMesh");
+	Object *object = (Object *)KER_main_id_lookup(main, ID_OB, "SixMesh");
+	if (mesh) {
+		Mesh *mecopy = (Mesh *)KER_id_copy(main, &mesh->id);
+		Object *obcopy = KER_object_add_for_data(main, scene, OB_MESH, "SixMesh", mecopy, false);
+
+		copy_v3_fl3(obcopy->loc, 96.0f, 0.0f, 0.0f);
+
+		obcopy->parent = object->parent;
+
+		copy_m4_m4(obcopy->parentinv, object->parentinv);
+
+		KER_object_modifier_stack_copy(obcopy, object, true, 0);
+		KER_collection_object_add(main, scene->master_collection, obcopy);
+	}
 }
 
 void WM_keyconfig_init(rContext *C) {
