@@ -344,6 +344,30 @@ void wm_window_draw(rContext *C, wmWindow *window) {
 	wm_draw_window_onscreen(C, window, -1);
 }
 
+void wm_window_update_animation_time(WindowManager *wm, wmWindow *window) {
+	double t = GTK_elapsed_time(wm->handle);
+	double dt = t - window->last_draw;
+
+	window->delta_time = (float)dt;
+	window->fps = 1.0f / (float)dt;
+
+	/** 30 frames per second updates for the statistics. */
+	if (t - window->runtime.last_frames_per_second_reset >= 33e-3f) {
+		double duration = t - window->runtime.last_frames_per_second_reset;
+		window->runtime.last_frames_per_second = window->runtime.next_frames_per_second / duration;
+		window->runtime.next_frames_per_second = 0;
+		window->runtime.last_frames_per_second_reset = t;
+	}
+	window->runtime.next_frames_per_second++;
+
+	Scene *scene;
+	if ((scene = WM_window_get_active_scene(window))) {
+		KER_scene_time_step(scene, dt);
+	}
+
+	window->last_draw += dt;
+}
+
 void WM_do_draw(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
@@ -355,32 +379,11 @@ void WM_do_draw(rContext *C) {
 			continue;
 		}
 
-		double t = GTK_elapsed_time(wm->handle);
-		double dt = t - window->last_draw;
-
 		CTX_wm_window_set(C, window);
-		window->delta_time = (float)dt;
-		window->fps = 1.0f / (float)dt;
-
-		if (t - window->runtime.last_frames_per_second_reset > 1.0f) {
-			double duration = t - window->runtime.last_frames_per_second_reset;
-			window->runtime.last_frames_per_second = window->runtime.next_frames_per_second / duration;
-			window->runtime.next_frames_per_second = 0;
-			window->runtime.last_frames_per_second_reset = t;
-		}
-		window->runtime.next_frames_per_second++;
-
-		Scene *scene;
-		if ((scene = WM_window_get_active_scene(window))) {
-			KER_scene_time_step(scene, dt);
-		}
-
+		wm_window_update_animation_time(wm, window);
 		wm_window_make_drawable(wm, window);
 		wm_window_draw(C, window);
-
 		GTK_window_swap_buffers(window->handle);
-
-		window->last_draw += dt;
 		CTX_wm_window_set(C, NULL);
 	}
 
