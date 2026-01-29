@@ -74,6 +74,8 @@ void KER_layer_collection_set_flag(struct LayerCollection *collection, int flag,
 
 void KER_base_eval_flags(struct Base *base);
 
+void KER_layer_eval_view_layer_indexed(struct Depsgraph *depsgraph, struct Scene *scene, int view_layer_index);
+
 #ifdef __cplusplus
 }
 #endif

@@ -249,6 +249,12 @@ enum {
 /** \name Action Pose
  * \{ */
 
+typedef struct PoseChannel_Runtime {
+	SessionUUID uuid;
+
+	struct PoseChannel *orig_pchannel;
+} PoseChannel_Runtime;
+
 typedef struct PoseChannel {
 	struct PoseChannel *prev, *next;
 
@@ -282,6 +288,8 @@ typedef struct PoseChannel {
 	 * Channel matrix in the armature object space, i.e. `pose_mat = bone->arm_mat * chan_mat`.
 	 */
 	float pose_mat[4][4];
+
+	PoseChannel_Runtime runtime;
 } PoseChannel;
 
 enum {

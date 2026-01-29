@@ -39,6 +39,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::rosefont
 	rose::source::functions
+	rose::source::depsgraph
 	rose::source::gpu
 	rose::source::io::fbx
 	rose::source::windowmanager

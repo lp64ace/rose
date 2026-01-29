@@ -1,11 +1,16 @@
+#include "MEM_guardedalloc.h"
+
 #include "LIB_math_matrix.h"
 #include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
+#include "LIB_string.h"
 
 #include "KER_action.h"
 #include "KER_armature.h"
 #include "KER_camera.h"
+#include "KER_derived_mesh.h"
 #include "KER_idtype.h"
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
@@ -13,6 +18,9 @@
 #include "KER_modifier.h"
 #include "KER_object.h"
 #include "KER_scene.h"
+
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
 
 #include <stdio.h>
 
@@ -522,76 +530,162 @@ void KER_object_where_is_calc(Object *object) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Object Evaluation
+/** \name Object Runtime
  * \{ */
 
-void KER_object_build_armature_bonebase(ListBase *bonebase) {
-	LISTBASE_FOREACH(Bone *, bone, bonebase) {
-		KER_object_build_armature_bonebase(&bone->childbase);
-	}
-}
-
-void KER_object_build_armature(Armature *armature) {
-	KER_object_build_armature_bonebase(&armature->bonebase);
-}
-
-void KER_armature_data_update(Object *object) {
-	ROSE_assert(object->type == OB_ARMATURE);
-
-	Armature *armature = (Armature *)object->data;
-
-	/** Without an armature there is nothing we can do! */
-	if (armature == NULL) {
+void KER_object_to_mesh_clear(Object *object) {
+	if (object->runtime.temp_mesh_object == NULL) {
 		return;
 	}
+	KER_id_free(NULL, object->runtime.temp_mesh_object);
+	object->runtime.temp_mesh_object = NULL;
+}
 
-	KER_object_build_armature(armature);
+void KER_object_free_derived_caches(Object *ob) {
+	MEM_SAFE_FREE(ob->runtime.bb);
 
-	if (object->pose == NULL || (object->pose->flag & POSE_RECALC) != 0) {
-		/* By definition, no need to tag depsgraph as dirty from here, so we can pass NULL main. */
-		KER_pose_rebuild(NULL, object, armature, true);
+	if (ob->runtime.data_eval != NULL) {
+		if (ob->runtime.is_data_eval_owned) {
+			ID *data_eval = ob->runtime.data_eval;
+			if (GS(data_eval->name) == ID_ME) {
+				KER_mesh_eval_delete((Mesh *)data_eval);
+			}
+			else {
+				KER_libblock_free_data(data_eval, false);
+				KER_libblock_free_datablock(data_eval, 0);
+				MEM_freeN(data_eval);
+			}
+		}
+		ob->runtime.data_eval = NULL;
 	}
-	if (object->pose != NULL) {
-		KER_pose_channels_hash_ensure(object->pose);
-		KER_pose_channel_index_rebuild(object->pose);
+	if (ob->runtime.mesh_eval_deform != NULL) {
+		Mesh *mesh_deform_eval = ob->runtime.mesh_eval_deform;
+		KER_mesh_eval_delete(mesh_deform_eval);
+		ob->runtime.mesh_eval_deform = NULL;
 	}
 
 	/**
-	 * Pose Rig Graph
-	 * ==============
-	 *
-	 * Pose Component:
-	 * - Mainly used for referencing Bone components.
-	 * - This is where the evaluation operations for init/exec/cleanup
-	 *   (ik) solvers live, and are later hooked up (so that they can be
-	 *   interleaved during runtime) with bone-operations they depend on/affect.
-	 * - init_pose_eval() and cleanup_pose_eval() are absolute first and last
-	 *   steps of pose eval process. ALL bone operations must be performed
-	 *   between these two...
-	 *
-	 * Bone Component:
-	 * - Used for representing each bone within the rig
-	 * - Acts to encapsulate the evaluation operations (base matrix + parenting,
-	 *   and constraint stack) so that they can be easily found.
-	 * - Everything else which depends on bone-results hook up to the component
-	 *   only so that we can redirect those to point at either the
-	 *   post-IK/post-constraint/post-matrix steps, as needed.
+	 * Restore initial pointer for copy-on-write data-blocks, object->data
+	 * might be pointing to an evaluated data-block data was just freed above.
 	 */
+	if (ob->runtime.data_orig != NULL) {
+		ob->data = ob->runtime.data_orig;
+	}
 
-	/* Pose eval context. */
+	KER_object_to_mesh_clear(ob);
+}
 
-	KER_pose_eval_init(object);
-	KER_pose_eval_init_ik(object);
-	KER_pose_eval_cleanup(object);
-	KER_pose_eval_done(object);
+void KER_object_free_caches(Object *object) {
+}
 
-	if (object->pose) {
-		size_t index;
-		LISTBASE_FOREACH_INDEX(PoseChannel *, pchannel, &object->pose->channelbase, index) {
-			KER_pose_eval_bone(object, index);
-			KER_pose_bone_done(object, index);
+void KER_object_runtime_reset(Object *object) {
+	memset(&object->runtime, 0, sizeof(object->runtime));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Evaluation
+ * \{ */
+
+void KER_object_eval_local_transform(Depsgraph *depsgraph, Object *ob) {
+	KER_object_to_mat4(ob, ob->obmat);
+}
+
+void KER_object_eval_parent(Depsgraph *depsgraph, Object *ob) {
+	Object *par = ob->parent;
+
+	float totmat[4][4];
+	float tmat[4][4];
+	float locmat[4][4];
+
+	copy_m4_m4(locmat, ob->obmat);
+
+	/* get parent effect matrix */
+	KER_object_get_parent_matrix(ob, par, totmat);
+	
+	/* total */
+	mul_m4_m4m4(tmat, totmat, ob->parentinv);
+	mul_m4_m4m4(ob->obmat, tmat, locmat);
+}
+
+void KER_object_eval_transform_final(Depsgraph *depsgraph, Object *ob) {
+	/* Make sure inverse matrix is always up to date. This way users of it
+	 * do not need to worry about recalculating it. */
+	invert_m4_m4_safe(ob->invmat, ob->obmat);
+}
+
+void KER_object_handle_data_update(Depsgraph *depsgraph, Scene *scene, Object *ob) {
+	switch (ob->type) {
+		case OB_MESH: {
+			CustomData_MeshMasks cddata_masks = CD_MASK_MESH;
+			/* Custom attributes should not be removed automatically. They might be used by the render
+			 * engine or scripts. They can still be removed explicitly using geometry nodes. */
+			cddata_masks.vmask |= CD_MASK_PROP_ALL;
+			cddata_masks.emask |= CD_MASK_PROP_ALL;
+			cddata_masks.fmask |= CD_MASK_PROP_ALL;
+			cddata_masks.pmask |= CD_MASK_PROP_ALL;
+			cddata_masks.lmask |= CD_MASK_PROP_ALL;
+
+			/* Also copy over normal layers to avoid recomputation. */
+			cddata_masks.pmask |= CD_MASK_NORMAL;
+			cddata_masks.vmask |= CD_MASK_NORMAL;
+
+			KER_derived_mesh_make(depsgraph, scene, ob, &cddata_masks);
+		} break;
+		case OB_ARMATURE: {
+			KER_pose_where_is(depsgraph, scene, ob);
+		} break;
+	}
+}
+
+void KER_object_eval_uber_data(Depsgraph *depsgraph, Scene *scene, Object *ob) {
+	ROSE_assert(ob->type != OB_ARMATURE);
+	KER_object_handle_data_update(depsgraph, scene, ob);
+	KER_object_batch_cache_dirty_tag(ob);
+}
+
+void KER_object_eval_eval_base_flags(Depsgraph *depsgraph, Scene *scene, int view_layer_index, Object *object, int base_index, bool is_from_set) {
+	ROSE_assert(view_layer_index >= 0);
+	ViewLayer *view_layer = LIB_findlink(&scene->view_layers, view_layer_index);
+	ROSE_assert(view_layer != NULL);
+	ROSE_assert(view_layer->object_bases_array != NULL);
+	ROSE_assert(base_index >= 0);
+	ROSE_assert(base_index < MEM_allocN_length(view_layer->object_bases_array) / sizeof(Base *));
+	Base *base = view_layer->object_bases_array[base_index];
+	ROSE_assert(base->object == object);
+
+	KER_base_eval_flags(base);
+	/* Copy flags and settings from base. */
+	object->flag_base = base->flag;
+	if (is_from_set) {
+		object->flag_base &= ~(BASE_SELECTED | BASE_SELECTABLE);
+	}
+}
+
+void KER_object_sync_to_original(Depsgraph *depsgraph, Object *object) {
+	if (!DEG_is_active(depsgraph)) {
+		return;
+	}
+	Object *object_orig = DEG_get_original_object(object);
+	/* Base flags. */
+	object_orig->flag_base = object->flag_base;
+	/* Transformation flags. */
+	copy_m4_m4(object_orig->obmat, object->obmat);
+	copy_m4_m4(object_orig->invmat, object->invmat);
+	object_orig->flag = object->flag;
+
+	/* Copy back error messages from modifiers. */
+	for (ModifierData *md = object->modifiers.first, *md_orig = object_orig->modifiers.first; md != NULL && md_orig != NULL; md = md->next, md_orig = md_orig->next) {
+		ROSE_assert(md->type == md_orig->type && STREQ(md->name, md_orig->name));
+		MEM_SAFE_FREE(md_orig->error);
+		if (md->error != NULL) {
+			md_orig->error = LIB_strdupN(md->error);
 		}
 	}
+
+	// TODO;
+	// object_sync_boundbox_to_original(object_orig, object);
 }
 
 /** \} */
@@ -604,6 +698,8 @@ void KER_object_free_modifiers(Object *object, const int flag) {
 	for (ModifierData *md; md = (ModifierData *)LIB_pophead(&object->modifiers);) {
 		KER_modifier_free_ex(md, flag);
 	}
+
+	KER_object_free_derived_caches(object);
 }
 
 /** \} */

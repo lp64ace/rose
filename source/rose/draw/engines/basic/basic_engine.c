@@ -166,9 +166,7 @@ ROSE_STATIC void basic_cache_populate(void *vdata, struct Object *object) {
 	}
 
 	if (impl->opaque_shgroup) {
-		const float (*obmat)[4] = KER_object_object_to_world(object);
-
-		DRW_shading_group_call_ex(impl->opaque_shgroup, object, obmat, surface);
+		DRW_shading_group_call_ex(impl->opaque_shgroup, object, object->obmat, surface);
 	}
 }
 

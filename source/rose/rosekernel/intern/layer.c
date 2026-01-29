@@ -14,6 +14,8 @@
 #include "LIB_string_utils.h"
 #include "LIB_thread.h"
 
+#include "DEG_depsgraph.h"
+
 #include <stdio.h>
 
 static const short g_base_collection_flags = (BASE_VISIBLE_DEPSGRAPH | BASE_VISIBLE_VIEWLAYER | BASE_SELECTABLE | BASE_ENABLED_VIEWPORT | BASE_ENABLED_RENDER);
@@ -1280,6 +1282,24 @@ void KER_base_eval_flags(Base *base) {
 	if (!(base->flag & BASE_SELECTABLE)) {
 		base->flag &= ~BASE_SELECTED;
 	}
+}
+
+static void layer_eval_view_layer(struct Depsgraph *depsgraph, struct Scene *UNUSED(scene), ViewLayer *view_layer) {
+	/* Create array of bases, for fast index-based lookup. */
+	const size_t num_object_bases = LIB_listbase_count(&view_layer->bases);
+	MEM_SAFE_FREE(view_layer->object_bases_array);
+	view_layer->object_bases_array = MEM_mallocN(sizeof(Base *) * num_object_bases, "view_layer->object_bases_array");
+	size_t base_index;
+	LISTBASE_FOREACH_INDEX(Base *, base, &view_layer->bases, base_index) {
+		view_layer->object_bases_array[base_index] = base;
+	}
+}
+
+void KER_layer_eval_view_layer_indexed(Depsgraph *depsgraph, Scene *scene, int view_layer_index) {
+	ROSE_assert(view_layer_index >= 0);
+	ViewLayer *view_layer = LIB_findlink(&scene->view_layers, view_layer_index);
+	ROSE_assert(view_layer != NULL);
+	layer_eval_view_layer(depsgraph, scene, view_layer);
 }
 
 /** \} */

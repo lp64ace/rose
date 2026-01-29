@@ -10,11 +10,15 @@
 #include "KER_mesh.h"
 #include "KER_object.h"
 #include "KER_object_deform.h"
+#include "KER_scene.h"
 
 #include "LIB_ghash.h"
 #include "LIB_math_matrix.h"
 #include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
+
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_build.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Armature Edit Routines
@@ -238,9 +242,15 @@ ROSE_STATIC size_t rebuild_pose_bone(Pose *pose, Bone *bone, PoseChannel *parcha
 }
 
 void KER_pose_clear_pointers(Pose *pose) {
-	LISTBASE_FOREACH(PoseChannel *, pchan, &pose->channelbase) {
-		pchan->bone = NULL;
-		pchan->child = NULL;
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+		pchannel->bone = NULL;
+		pchannel->child = NULL;
+	}
+}
+
+void KER_pose_remap_bone_pointers(Armature *armature, Pose *pose) {
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+		pchannel->bone = KER_armature_find_bone_name(armature, pchannel->name);
 	}
 }
 
@@ -277,7 +287,7 @@ void KER_pose_rebuild(Main *main, Object *object, Armature *armature, bool do_id
 	pose->flag |= POSE_WAS_REBUILT;
 
 	if (main != NULL) {
-		// Tag depsgraph to update
+		DEG_relations_tag_update(main);
 	}
 }
 
@@ -292,7 +302,7 @@ void KER_pose_channel_index_rebuild(Pose *pose) {
 	}
 }
 
-void KER_pose_eval_init(Object *object) {
+void KER_pose_eval_init(Depsgraph *depsgraph, Scene *scene, Object *object) {
 	Pose *pose = object->pose;
 	ROSE_assert(pose != NULL);
 	ROSE_assert(object->type == OB_ARMATURE);
@@ -304,7 +314,7 @@ void KER_pose_eval_init(Object *object) {
 	ROSE_assert(pose->channels != NULL || LIB_listbase_is_empty(&pose->channelbase));
 }
 
-void KER_pose_eval_init_ik(Object *object) {
+void KER_pose_eval_init_ik(Depsgraph *depsgraph, Scene *scene, Object *object) {
 	ROSE_assert(object->type == OB_ARMATURE);
 
 	/* construct the IK tree (standard IK) */
@@ -320,7 +330,7 @@ ROSE_INLINE PoseChannel *pose_pchannel_get_indexed(Object *object, size_t index)
 	return pose->channels[index];
 }
 
-void KER_pose_eval_bone(Object *object, size_t index) {
+void KER_pose_eval_bone(Depsgraph *depsgraph, Scene *scene, Object *object, size_t index) {
 	const Armature *armature = (Armature *)object->data;
 
 	if (armature->ebonebase != NULL) {
@@ -335,12 +345,27 @@ void KER_pose_eval_bone(Object *object, size_t index) {
 	}
 	else {
 		if ((pchannel->flag & POSE_DONE) == 0) {
-			KER_pose_where_is_bone(object, pchannel, 0.0f);
+			/* TODO(lp64ace): Use time source node for time. */
+			float ctime = KER_scene_frame_get(scene);
+			KER_pose_where_is_bone(depsgraph, scene, object, pchannel, ctime);
 		}
 	}
 }
 
-void KER_pose_bone_done(Object *object, size_t index) {
+static void pose_channel_flush_to_orig_if_needed(struct Depsgraph *depsgraph, struct Object *object, PoseChannel *pchan) {
+	if (!DEG_is_active(depsgraph)) {
+		return;
+	}
+	const Armature *armature = (Armature *)object->data;
+	if (armature->ebonebase != NULL) {
+		return;
+	}
+	PoseChannel *pchan_orig = pchan->runtime.orig_pchannel;
+	copy_m4_m4(pchan_orig->pose_mat, pchan->pose_mat);
+	copy_m4_m4(pchan_orig->chan_mat, pchan->chan_mat);
+}
+
+void KER_pose_bone_done(Depsgraph *depsgraph, Object *object, size_t index) {
 	const Armature *armature = (Armature *)object->data;
 
 	if (armature->ebonebase != NULL) {
@@ -355,9 +380,10 @@ void KER_pose_bone_done(Object *object, size_t index) {
 		invert_m4_m4(imat, pchannel->bone->arm_mat);
 		mul_m4_m4m4(pchannel->chan_mat, pchannel->pose_mat, imat);
 	}
+	pose_channel_flush_to_orig_if_needed(depsgraph, object, pchannel);
 }
 
-void KER_pose_eval_cleanup(Object *object) {
+void KER_pose_eval_cleanup(Depsgraph *depsgraph, Scene *scene, Object *object) {
 	Pose *pose = object->pose;
 	ROSE_assert(pose != NULL);
 	UNUSED_VARS_NDEBUG(pose);
@@ -366,7 +392,7 @@ void KER_pose_eval_cleanup(Object *object) {
 	// RIK_release_tree(scene, object, ctime);
 }
 
-void KER_pose_eval_done(Object *object) {
+void KER_pose_eval_done(Depsgraph *depsgraph, Object *object) {
 	Pose *pose = object->pose;
 	ROSE_assert(pose != NULL);
 	UNUSED_VARS_NDEBUG(pose);
@@ -682,7 +708,7 @@ void KER_armature_where_is_bone(Bone *bone, const Bone *parbone, bool use_recurs
 	}
 }
 
-void KER_pose_where_is(Object *object) {
+void KER_pose_where_is(Depsgraph *depsgraph, Scene *scene, Object *object) {
 	if (object->type != OB_ARMATURE) {
 		return;
 	}
@@ -709,7 +735,7 @@ void KER_pose_where_is(Object *object) {
 
 		LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
 			if (!(pchannel->flag & POSE_DONE)) {
-				KER_pose_where_is_bone(object, pchannel, 0.0f);
+				KER_pose_where_is_bone(depsgraph, scene, object, pchannel, 0.0f);
 			}
 		}
 	}
@@ -725,7 +751,7 @@ void KER_pose_where_is(Object *object) {
 	}
 }
 
-void KER_pose_where_is_bone(Object *object, PoseChannel *pchannel, float time) {
+void KER_pose_where_is_bone(Depsgraph *depsgraph, Scene *scene, Object *object, PoseChannel *pchannel, float time) {
 	KER_pose_channel_do_mat4(pchannel);
 
 	/* Construct the posemat based on PoseChannels, that we do before applying constraints. */
@@ -805,8 +831,48 @@ bool KER_armature_bone_flag_test_recursive(const Bone *bone, int flag) {
 
 ROSE_STATIC void armature_init_data(struct ID *id) {
 	Armature *armature = (Armature *)id;
+}
 
+static void copy_bonechildren(Bone *bone_dst, const Bone *bone_src, const int flag) {
+	Bone *bone_src_child, *bone_dst_child;
 
+	if (bone_src->prop) {
+		bone_dst->prop = IDP_DuplicateProperty_ex(bone_src->prop, flag);
+	}
+
+	/* Copy this bone's list */
+	LIB_duplicatelist(&bone_dst->childbase, &bone_src->childbase);
+
+	/* For each child in the list, update its children */
+	for (bone_src_child = bone_src->childbase.first, bone_dst_child = bone_dst->childbase.first; bone_src_child; bone_src_child = bone_src_child->next, bone_dst_child = bone_dst_child->next) {
+		bone_dst_child->parent = bone_dst;
+		copy_bonechildren(bone_dst_child, bone_src_child, flag);
+	}
+}
+
+void KER_armature_copy_data(Main *main, Armature *arm_dst, const Armature *arm_src, const int flag) {
+	Bone *bone_src, *bone_dst;
+
+	/* We never handle usercount here for own data. */
+	const int flag_subdata = flag | LIB_ID_CREATE_NO_USER_REFCOUNT;
+
+	arm_dst->bonehash = NULL;
+
+	LIB_duplicatelist(&arm_dst->bonebase, &arm_src->bonebase);
+
+	/* Duplicate the childrens' lists */
+	bone_dst = arm_dst->bonebase.first;
+	for (bone_src = arm_src->bonebase.first; bone_src; bone_src = bone_src->next) {
+		bone_dst->parent = NULL;
+		copy_bonechildren(bone_dst, bone_src, flag_subdata);
+		bone_dst = bone_dst->next;
+	}
+
+	KER_armature_bone_hash_make(arm_dst);
+}
+
+ROSE_STATIC void armature_copy_data(Main *main, ID *id_dst, const ID *id_src, const int flag) {
+	KER_armature_copy_data(main, id_dst, id_src, flag);
 }
 
 ROSE_STATIC void armature_free_data(struct ID *id) {
@@ -868,10 +934,10 @@ IDTypeInfo IDType_ID_AR = {
 	.name = "Armature",
 	.name_plural = "Armatures",
 
-	.flag = IDTYPE_FLAGS_NO_COPY,
+	.flag = 0,
 
 	.init_data = armature_init_data,
-	.copy_data = NULL,
+	.copy_data = armature_copy_data,
 	.free_data = armature_free_data,
 
 	.foreach_id = armature_foreach_id,

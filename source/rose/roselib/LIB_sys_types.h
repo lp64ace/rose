@@ -2,6 +2,7 @@
 #define LIB_SYS_TYPES_H
 
 #include <float.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

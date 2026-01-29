@@ -28,6 +28,7 @@ struct Screen;
 struct WindowManager;
 struct wmWindow;
 
+struct Depsgraph;
 struct Main;
 struct Scene;
 struct ViewLayer;
@@ -48,6 +49,36 @@ void CTX_wm_area_set(struct rContext *C, struct ScrArea *);
 void CTX_wm_region_set(struct rContext *C, struct ARegion *);
 void CTX_data_main_set(struct rContext *C, struct Main *);
 void CTX_data_scene_set(struct rContext *C, struct Scene *);
+
+/**
+ * Gets pointer to the dependency graph.
+ * If it doesn't exist yet, it will be allocated.
+ *
+ * The result dependency graph is NOT guaranteed to be up-to-date neither from relation nor from
+ * evaluated data points of view.
+ *
+ * \note Can not be used if access to a fully evaluated data-block is needed.
+ */
+struct Depsgraph *CTX_data_depsgraph_pointer(const struct rContext *C);
+
+/**
+ * Get dependency graph which is expected to be fully evaluated.
+ *
+ * In the release builds it is the same as CTX_data_depsgraph_pointer(). In the debug builds extra
+ * sanity checks are done. Additionally, this provides more semantic meaning to what is exactly
+ * expected to happen.
+ */
+struct Depsgraph *CTX_data_expect_evaluated_depsgraph(const struct rContext *C);
+
+/**
+ * Gets fully updated and evaluated dependency graph.
+ *
+ * All the relations and evaluated objects are guaranteed to be up to date.
+ *
+ * \note Will be expensive if there are relations or objects tagged for update.
+ * \note If there are pending updates depsgraph hooks will be invoked.
+ */
+struct Depsgraph *CTX_data_ensure_evaluated_depsgraph(const struct rContext *C);
 
 /** \} */
 

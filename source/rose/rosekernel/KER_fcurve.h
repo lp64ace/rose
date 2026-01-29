@@ -36,6 +36,7 @@ typedef struct FCurveDescriptor {
  * \{ */
 
 struct FCurve *KER_fcurve_new(void);
+struct FCurve *KER_fcurve_copy(const struct FCurve *fcurve);
 
 void KER_fcurves_free(struct ListBase *list);
 void KER_fcurve_free(struct FCurve *fcurve);

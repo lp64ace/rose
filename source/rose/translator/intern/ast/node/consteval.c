@@ -211,6 +211,10 @@ long long RT_node_evaluate_integer(const RTNode *expr) {
 				case UNARY_NOT: {
 					MANAGE_UNARY(long long, node, !);
 				} break;
+				case UNARY_BITNOT: {
+					ROSE_assert(isint(node));
+					return ~RT_node_evaluate_integer(node);
+				} break;
 			}
 		}
 		if (ELEM(expr->kind, NODE_COND)) {

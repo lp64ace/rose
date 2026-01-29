@@ -16,7 +16,14 @@
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
+
 #include <stdio.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Animation Data Evaluation
+ * \{ */
 
 bool KER_anim_read_from_rna_path(PathResolvedRNA *resolved, float *r_value) {
 	PropertyRNA *property = resolved->property;
@@ -184,25 +191,28 @@ void KER_animsys_evaluate_animdata(ID *id, AnimData *adt, float ctime, int recal
 
 	if (recalc & ADT_RECALC_ANIM) {
 		if (adt->action) {
+			Action *action = adt->action;
+
+			/**
+			 * Action time, the local time within the action that we are to compute!
+			 */
+			const float aduration = action->frame_end - action->frame_start;
+			const float atime = fmod(ctime - adt->stime, aduration);
+			const float time = action->frame_start + atime;
+
 			if (KER_action_is_layered(adt->action)) {
-				KER_anim_evaluate_and_apply_action(idptr, adt->action, adt->handle, ctime);
+				KER_anim_evaluate_and_apply_action(idptr, adt->action, adt->handle, time);
 			}
 			else {
-				KER_anim_evaluate_action(idptr, adt->action, 0, ctime);
+				KER_anim_evaluate_action(idptr, adt->action, 0, time);
 			}
 		}
 	}
 }
 
-void KER_animsys_eval_animdata(Scene *scene, ID *id) {
+void KER_animsys_eval_animdata(Depsgraph *depsgraph, ID *id) {
+	float ctime = DEG_get_ctime(depsgraph);
 	AnimData *adt = KER_animdata_from_id(id);
-
-	float ctime = 0.0f;
-	if (adt && adt->action) {
-		Action *ac = adt->action;
-
-		ctime = fmod(KER_scene_frame(scene) - adt->stime, ac->frame_end - ac->frame_start) + ac->frame_start;
-	}
 
 	KER_animsys_evaluate_animdata(id, adt, ctime, ADT_RECALC_ANIM);
 }
@@ -274,3 +284,57 @@ bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolved
 
 	return KER_animsys_rna_curve_resolve(ptr, fcurve, result);
 }
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Animation Data Iteration
+ * \{ */
+
+/* "User-Data" wrapper used by BKE_fcurves_main_cb() */
+typedef struct AllFCurvesCbWrapper {
+	ID_FCurve_Edit_Callback func; /* Operation to apply on F-Curve */
+	void *user_data;			  /* Custom data for that operation */
+} AllFCurvesCbWrapper;
+
+/* Helper for adt_apply_all_fcurves_cb() - Apply wrapped operator to list of F-Curves */
+static void fcurves_listbase_apply_cb(ID *id, ListBase *fcurves, ID_FCurve_Edit_Callback func, void *user_data) {
+	FCurve *fcu;
+
+	for (fcu = fcurves->first; fcu; fcu = fcu->next) {
+		func(id, fcu, user_data);
+	}
+}
+
+static void fcurves_array_apply_cb(ID *id, FCurve **fcurves, int totcurve, ID_FCurve_Edit_Callback func, void *user_data) {
+	FCurve **fcu_p;
+
+	for (fcu_p = &fcurves[0]; fcu_p != &fcurves[totcurve]; fcu_p++) {
+		func(id, *fcu_p, user_data);
+	}
+}
+
+/* Helper for KER_fcurves_main_cb() - Dispatch wrapped operator to all F-Curves */
+static void adt_apply_all_fcurves_cb(ID *id, AnimData *adt, void *wrapper_data) {
+	AllFCurvesCbWrapper *wrapper = wrapper_data;
+
+	if (adt->action) {
+		ActionChannelBag *bag;
+		if ((bag = KER_action_channelbag_for_action_slot_ex(adt->action, adt->handle))) {
+			fcurves_array_apply_cb(id, bag->fcurves, bag->totcurve, wrapper->func, wrapper->user_data);
+		}
+	}
+}
+
+void KER_fcurves_id_cb(struct ID *id, ID_FCurve_Edit_Callback func, void *user_data) {
+	AnimData *adt = KER_animdata_from_id(id);
+	if (adt != NULL) {
+		AllFCurvesCbWrapper wrapper = {
+			.func = func,
+			.user_data = user_data,
+		};
+		adt_apply_all_fcurves_cb(id, adt, &wrapper);
+	}
+}
+
+/** \} */

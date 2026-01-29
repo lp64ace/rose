@@ -124,12 +124,14 @@ set(SRC
 	LIB_random_access_iterator_mixin.hh
 	LIB_rect.h
 	LIB_resource_scope.hh
+	LIB_session_uuid.h
 	LIB_set.hh
 	LIB_set_slots.hh
 	LIB_shared_cache.hh
 	LIB_sort.hh
 	LIB_sort_utils.h
 	LIB_span.hh
+	LIB_stack.h
 	LIB_stack.hh
 	LIB_string.h
 	LIB_string_ref.hh
@@ -203,7 +205,9 @@ set(SRC
 	intern/path_utils.c
 	intern/polyfill_2d.c
 	intern/rect.c
+	intern/session_uuid.c
 	intern/sort_utils.c
+	intern/stack.c
 	intern/string.c
 	intern/string_ref.cc
 	intern/string_utf.c

@@ -14,6 +14,7 @@
 #include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
 #include "LIB_hash.h"
+#include "LIB_session_uuid.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
@@ -58,6 +59,21 @@ ActionLayer *KER_action_layer_add(Action *action, const char *name) {
 	action->actlayer = action->totlayer - 1;
 
 	return nlayer;
+}
+
+ActionLayer *KER_action_layer_duplicate_with_shallow_strip_copies(const ActionLayer *layer) {
+	ActionLayer *newlayer = MEM_mallocN(sizeof(ActionLayer), __func__);
+	memcpy(newlayer, layer, sizeof(ActionLayer));
+
+	newlayer->strips = MEM_callocN(sizeof(ActionStrip *) * layer->totstrip, __func__);
+	for (int i = 0; i < layer->totstrip; i++) {
+		ActionStrip *newstrip = MEM_mallocN(sizeof(ActionStrip), __func__);
+		memcpy(newstrip, layer->strips[i], sizeof(ActionStrip));
+
+		newlayer->strips[i] = newstrip;
+	}
+
+	return newlayer;
 }
 
 void KER_action_layer_free(ActionLayer *layer) {
@@ -494,6 +510,13 @@ bool KER_action_slot_suitable_for_id(ActionSlot *slot, ID *id) {
 /* -------------------------------------------------------------------- */
 /** \name PoseChannel Action
  * \{ */
+
+void KER_pose_channel_runtime_reset(PoseChannel_Runtime *runtime) {
+	memset(&runtime->uuid, 0, sizeof(PoseChannel_Runtime));
+}
+
+void KER_pose_channel_runtime_free(PoseChannel_Runtime *runtime) {
+}
 
 void KER_pose_tag_recalc(Pose *pose) {
 	pose->flag |= POSE_RECALC;
@@ -932,6 +955,99 @@ ROSE_STATIC void action_init_data(ID *id) {
 	action->uidslot = 0x37627bf5;
 }
 
+ROSE_INLINE void action_channel_bag_restore_channel_group_invariants(ActionChannelBag *self) {
+	/* Shift channel groups. */
+	{
+		int start_index = 0;
+		for (int i = 0; i < self->totgroup; i++) {
+			ActionGroup *group = self->groups[i];
+			group->fcurve_range_start = start_index;
+			start_index += group->fcurve_range_length;
+		}
+
+		/* Double-check that this didn't push any of the groups off the end of the
+		 * fcurve array. */
+		ROSE_assert(start_index <= self->totcurve);
+	}
+
+	 /* Recompute fcurves' group pointers. */
+	{
+		for (int i = 0; i < self->totcurve; i++) {
+			self->fcurves[i]->group = NULL;
+		}
+		for (int i = 0; i < self->totgroup; i++) {
+			ActionGroup *group = self->groups[i];
+			for (int j = 0; j < group->fcurve_range_length; j++) {
+				FCurve *fcurve = self->fcurves[group->fcurve_range_start + j];
+				fcurve->group = group;
+			}
+		}
+	}
+}
+
+ROSE_INLINE void action_channel_bag_copy(ActionChannelBag *dst, const ActionChannelBag *src) {
+	dst->handle = src->handle;
+
+	dst->fcurves = MEM_callocN(sizeof(FCurve *) * src->totcurve, __func__);
+	for (int i = 0; i < src->totcurve; i++) {
+		dst->fcurves[i] = KER_fcurve_copy(src->fcurves[i]);
+	}
+	dst->totcurve = src->totcurve;
+
+	dst->groups = MEM_callocN(sizeof(ActionGroup *) * src->totgroup, __func__);
+	for (int i = 0; i < src->totgroup; i++) {
+		dst->groups[i] = MEM_dupallocN(src->groups[i]);
+
+		/** update the pointer to the channelbag since we know it already! */
+		dst->groups[i]->channelbag = dst;
+	}
+	dst->totgroup = src->totgroup;
+
+	action_channel_bag_restore_channel_group_invariants(dst);
+}
+
+ROSE_INLINE void action_strip_keyframe_data_copy(ActionStripKeyframeData *dst, const ActionStripKeyframeData *src) {
+	dst->channelbags = MEM_callocN(sizeof(ActionChannelBag *) * src->totchannelbag, __func__);
+	for (int i = 0; i < src->totchannelbag; i++) {
+		dst->channelbags[i] = MEM_mallocN(sizeof(ActionChannelBag), __func__);
+		action_channel_bag_copy(dst->channelbags[i], src->channelbags[i]);
+	}
+	dst->totchannelbag = src->totchannelbag;
+}
+
+ROSE_INLINE void action_slot_copy(ActionSlot *dst, const ActionSlot *src) {
+	memcpy(dst, src, sizeof(ActionSlot));
+
+	/** Obviously do not keep the runtime data of the old one! */
+	KER_action_slot_runtime_init(dst);
+}
+
+void KER_action_copy_data(Main *main, Action *ac_dst, const Action *ac_src, const int flag) {
+	/* Layers, and (recursively) Strips. */
+	ac_dst->layers = MEM_callocN(sizeof(ActionLayer *) * ac_src->totlayer, __func__);
+	for (int i = 0; i < ac_src->totlayer; i++) {
+		ac_dst->layers[i] = KER_action_layer_duplicate_with_shallow_strip_copies(ac_src->layers[i]);
+	}
+	ac_dst->totlayer = ac_src->totlayer;
+
+	ac_dst->stripkeyframedata = MEM_callocN(sizeof(ActionStripKeyframeData *) * ac_src->totstripkeyframedata, __func__);
+	for (int i = 0; i < ac_src->totstripkeyframedata; i++) {
+		ac_dst->stripkeyframedata[i] = MEM_mallocN(sizeof(ActionStripKeyframeData), __func__);
+		action_strip_keyframe_data_copy(ac_dst->stripkeyframedata[i], ac_src->stripkeyframedata[i]);
+	}
+	ac_dst->totstripkeyframedata = ac_src->totstripkeyframedata;
+
+	ac_dst->slots = MEM_callocN(sizeof(ActionSlot *) * ac_dst->totslot, __func__);
+	for (int i = 0; i < ac_dst->totslot; i++) {
+		ac_dst->slots[i] = MEM_mallocN(sizeof(ActionSlot), __func__);
+		action_slot_copy(ac_dst->slots[i], ac_src->slots[i]);
+	}
+}
+
+ROSE_STATIC void action_copy_data(Main *main, ID *id_dst, const ID *id_src, const int flag) {
+	KER_action_copy_data(main, id_dst, id_src, flag);
+}
+
 ROSE_STATIC void action_free_data(ID *id) {
 	Action *action = (Action *)id;
 	
@@ -983,10 +1099,10 @@ IDTypeInfo IDType_ID_AC = {
 	.name = "Action",
 	.name_plural = "Actions",
 
-	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
+	.flag = IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = action_init_data,
-	.copy_data = NULL,
+	.copy_data = action_copy_data,
 	.free_data = action_free_data,
 
 	.foreach_id = action_foreach_id,

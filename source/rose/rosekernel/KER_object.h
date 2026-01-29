@@ -55,7 +55,18 @@ void KER_object_where_is_calc(struct Object *object);
 /** \name Object Evaluation
  * \{ */
 
-void KER_armature_data_update(struct Object *object);
+void KER_object_eval_local_transform(struct Depsgraph *depsgraph, struct Object *ob);
+void KER_object_eval_parent(struct Depsgraph *depsgraph, struct Object *ob);
+void KER_object_eval_transform_final(struct Depsgraph *depsgraph, struct Object *ob);
+void KER_object_eval_uber_data(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *ob);
+
+/**
+ * Assign #Object.data after modifier stack evaluation.
+ */
+void KER_object_eval_assign_data(struct Object *object, struct ID *data, bool is_data_eval_owned);
+
+void KER_object_eval_eval_base_flags(struct Depsgraph *depsgraph, struct Scene *scene, int view_layer_index, struct Object *object, int base_index, bool is_from_set);
+void KER_object_sync_to_original(struct Depsgraph *depsgraph, struct Object *object);
 
 /** \} */
 
@@ -65,6 +76,17 @@ void KER_armature_data_update(struct Object *object);
 
 bool KER_object_modifier_stack_copy(struct Object *ob_dst, const struct Object *ob_src, const bool do_copy_all, const int flag);
 void KER_object_free_modifiers(struct Object *object, const int flag);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Runtime
+ * \{ */
+
+void KER_object_free_derived_caches(struct Object *ob);
+void KER_object_free_caches(struct Object *object);
+
+void KER_object_runtime_reset(struct Object *object);
 
 /** \} */
 

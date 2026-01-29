@@ -89,7 +89,7 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 		return;
 	}
 
-	GPUBatch *batch = DRW_cache_object_surface_get(object);
+	GPUBatch *surface = DRW_cache_object_surface_get(object);
 
 	if (impl->opaque_shgroup) {
 		bool has_defgroup_modifier = false;
@@ -115,9 +115,7 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 			DRW_shading_group_bind_uniform_block(impl->opaque_shgroup, block, DRW_DVGROUP_UBO_SLOT);
 		}
 
-		const float (*obmat)[4] = KER_object_object_to_world(object);
-
-		DRW_shading_group_call_ex(impl->opaque_shgroup, object, obmat, batch);
+		DRW_shading_group_call_ex(impl->opaque_shgroup, object, object->obmat, surface);
 	}
 }
 

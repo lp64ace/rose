@@ -5,6 +5,8 @@
 #include "KER_context.h"
 #include "KER_modifier.h"
 
+#include "DEG_depsgraph.h"
+
 #include "WM_api.h"
 
 int main(void) {
@@ -17,6 +19,7 @@ int main(void) {
 	rContext *C = CTX_new();
 
 	KER_modifier_init();
+	DEG_register_node_types();
 
 	WM_init(C);
 	do {

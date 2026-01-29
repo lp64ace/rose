@@ -162,6 +162,7 @@ typedef struct wmEventHandler_Keymap {
  * \{ */
 
 void WM_do_handlers(struct rContext *C);
+void WM_do_notifiers(struct rContext *C);
 void WM_event_remove_handlers(struct rContext *C, ListBase *handlers);
 void WM_event_modal_handler_area_replace(struct wmWindow *win, const struct ScrArea *old_area, struct ScrArea *new_area);
 void WM_event_modal_handler_region_replace(struct wmWindow *win, const struct ARegion *old_region, struct ARegion *new_region);

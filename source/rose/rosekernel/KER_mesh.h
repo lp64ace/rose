@@ -35,10 +35,19 @@ extern void (*KER_mesh_batch_cache_free_cb)(struct Mesh *mesh);
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Mesh Creation
+/** \name Mesh Creation/Deletion
  * \{ */
 
 struct Mesh *KER_mesh_add(struct Main *main, const char *name);
+
+/**
+ * Performs copy for use during evaluation,
+ * optional referencing original arrays to reduce memory.
+ */
+struct Mesh *KER_mesh_copy_for_eval(const struct Mesh *source, bool reference);
+
+void KER_mesh_eval_geometry(struct Depsgraph *depsgraph, struct Mesh *mesh);
+void KER_mesh_eval_delete(struct Mesh *eval);
 
 /** \} */
 
@@ -128,9 +137,19 @@ ROSE_INLINE MDeformVert *KER_mesh_deform_verts_for_write(Mesh *mesh) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Mesh Vertex Coords
+ * \{ */
+
+float (*KER_mesh_vert_coords_alloc(const struct Mesh *mesh, int *r_vert_len))[3];
+void KER_mesh_vert_coords_get(const struct Mesh *mesh, float (*vert_coords)[3]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Mesh Normals
  * \{ */
 
+void KER_mesh_assert_normals_dirty_or_calculated(const struct Mesh *mesh);
 void KER_mesh_normals_tag_dirty(struct Mesh *mesh);
 
 bool KER_mesh_vertex_normals_are_dirty(const struct Mesh *mesh);
@@ -175,6 +194,19 @@ const MLoopTri *KER_mesh_looptris(const struct Mesh *mesh);
 /* -------------------------------------------------------------------- */
 /** \name Mesh Depsgraph Update
  * \{ */
+
+/**
+ * A version of #KER_mesh_copy_parameters that is intended for evaluated output
+ * (the modifier stack for example).
+ *
+ * \warning User counts are not handled for ID's.
+ */
+void KER_mesh_copy_parameters_for_eval(struct Mesh *me_dst, const struct Mesh *me_src);
+/**
+ * Copy user editable settings that we want to preserve
+ * when a new mesh is based on an existing mesh.
+ */
+void KER_mesh_copy_parameters(struct Mesh *me_dst, const struct Mesh *me_src);
 
 void KER_mesh_data_update(struct Scene *scene, struct Object *object);
 

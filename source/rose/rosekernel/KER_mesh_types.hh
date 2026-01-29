@@ -12,6 +12,8 @@
 
 #include <mutex>
 
+struct Mesh;
+
 namespace rose::kernel {
 
 struct MeshRuntime {
@@ -43,6 +45,8 @@ struct MeshRuntime {
 	SharedCache<Array<int>> vert_to_face_offset_cache = {};
 	/** Cache of indices for vert to face map. */
 	SharedCache<Array<int>> vert_to_face_map_cache = {};
+
+	Mesh *mesh_eval;
 	
 	/**
      * Data used to efficiently draw the mesh in the viewport, especially useful when 

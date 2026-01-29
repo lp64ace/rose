@@ -229,6 +229,8 @@ void wm_event_add_tiny_window_activate(struct WindowManager *wm, struct wmWindow
 void wm_event_add_tiny_window_mouse_button(struct WindowManager *wm, struct wmWindow *window, int type, int button, int x, int y, double time);
 void wm_event_add_tiny_window_key(struct WindowManager *wm, struct wmWindow *window, int type, int key, bool repeat, char utf8[4], double event_time);
 
+void wm_event_do_refresh_wm_and_depsgraph(struct rContext *C);
+
 /** \} */
 
 #ifdef __cplusplus

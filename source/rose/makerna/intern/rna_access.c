@@ -794,6 +794,10 @@ ePropertyType RNA_property_type(const PropertyRNA *property) {
 	return p->type;
 }
 
+bool RNA_property_is_idprop(const PropertyRNA *property) {
+	return (property->magic != RNA_MAGIC);
+}
+
 int RNA_property_array_length(const PointerRNA *ptr, PropertyRNA *property) {
 	return rna_ensure_property_array_length(ptr, property);
 }
@@ -1498,6 +1502,27 @@ bool RNA_struct_is_ID(const StructRNA *type) {
 	return (type->flag & STRUCT_ID) != 0;
 }
 
+bool RNA_struct_is_a(const StructRNA *type, const StructRNA *srna) {
+	const StructRNA *base;
+
+	if (srna == &RNA_AnyType) {
+		return true;
+	}
+
+	if (!type) {
+		return false;
+	}
+
+	/* ptr->type is always maximally refined */
+	for (base = type; base; base = base->base) {
+		if (base == srna) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 PropertyRNA *RNA_struct_find_property(PointerRNA *ptr, const char *identifier) {
 	if (identifier[0] == '[' && identifier[1] == '"') {
 		PropertyRNA *newprop = NULL;
@@ -1523,6 +1548,20 @@ PropertyRNA *RNA_struct_find_property(PointerRNA *ptr, const char *identifier) {
 		}
 	}
 
+	return NULL;
+}
+
+PropertyRNA *RNA_struct_type_find_property_no_base(StructRNA *srna, const char *identifier) {
+	return LIB_findstr_pointer(&srna->container.properties, identifier, offsetof(PropertyRNA, identifier));
+}
+
+PropertyRNA *RNA_struct_type_find_property(StructRNA *srna, const char *identifier) {
+	for (; srna; srna = srna->base) {
+		PropertyRNA *prop = RNA_struct_type_find_property_no_base(srna, identifier);
+		if (prop != NULL) {
+			return prop;
+		}
+	}
 	return NULL;
 }
 

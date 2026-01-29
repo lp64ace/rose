@@ -33,6 +33,7 @@ set(SRC
 	KER_cpp_types.h
 	KER_collection.h
 	KER_customdata.h
+	KER_derived_mesh.h
 	KER_deform.h
 	KER_fcurve.h
 	KER_global.h
@@ -70,6 +71,7 @@ set(SRC
 	intern/collection.c
 	intern/customdata.cc
 	intern/deform.c
+	intern/derived_mesh.cc
 	intern/fcurve.c
 	intern/idprop.c
 	intern/idtype.c
@@ -105,6 +107,7 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::atomic
+	PUBLIC rose::source::depsgraph
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::dna
 	PUBLIC rose::source::rna

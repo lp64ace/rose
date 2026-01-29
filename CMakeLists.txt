@@ -96,7 +96,7 @@ if(ROSE_BUILD_X11)
 endif()
 
 if(WITH_TBB)
-	# add_definitions(-DWITH_TBB)
+	add_definitions(-DWITH_TBB)
 endif()
 
 # -----------------------------------------------------------------------------

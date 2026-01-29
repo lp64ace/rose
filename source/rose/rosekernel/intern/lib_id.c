@@ -8,9 +8,12 @@
 #include "KER_lib_id.h"
 #include "KER_lib_remap.h"
 #include "KER_lib_query.h"
+#include "KER_mesh.h"
 #include "KER_main.h"
 #include "KER_main_id_name_map.h"
 #include "KER_main_name_map.h"
+
+#include "atomic_ops.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Datablock DrawData
@@ -42,7 +45,7 @@ ROSE_INLINE bool id_can_have_draw_data(const ID *id) {
 	return (info->flag & IDTYPE_FLAGS_DRAWDATA) != 0;
 }
 
-DrawDataList *KER_drawdatalst_get(ID *id) {
+DrawDataList *KER_drawdatalist_get(ID *id) {
 	if (id_can_have_draw_data(id)) {
 		IdDdtTempalte *idt = (IdDdtTempalte *)id;
 		return &idt->drawdata;
@@ -58,7 +61,7 @@ DrawData *KER_drawdata_ensure(ID *id, struct DrawEngineType *engine, size_t size
 		return dd;
 	}
 
-	DrawDataList *drawdata = KER_drawdatalst_get(id);
+	DrawDataList *drawdata = KER_drawdatalist_get(id);
 
 	dd = MEM_callocN(size, "DrawData");
 	dd->engine = engine;
@@ -73,7 +76,7 @@ DrawData *KER_drawdata_ensure(ID *id, struct DrawEngineType *engine, size_t size
 }
 
 DrawData *KER_drawdata_get(ID *id, struct DrawEngineType *engine) {
-	DrawDataList *drawdata = KER_drawdatalst_get(id);
+	DrawDataList *drawdata = KER_drawdatalist_get(id);
 
 	if (drawdata == NULL) {
 		return NULL;
@@ -89,7 +92,7 @@ DrawData *KER_drawdata_get(ID *id, struct DrawEngineType *engine) {
 }
 
 void KER_drawdata_free(ID *id) {
-	DrawDataList *drawdata = KER_drawdatalst_get(id);
+	DrawDataList *drawdata = KER_drawdatalist_get(id);
 
 	if (drawdata == NULL) {
 		return;
@@ -140,6 +143,7 @@ void *KER_libblock_alloc(Main *main, short type, const char *name, int flag) {
 	/**
 	 * Main data-base is allowed to be NULL only if #LIB_ID_CREATE_NO_MAIN is specified.
 	 */
+	ROSE_assert((flag & LIB_ID_CREATE_NO_ALLOCATE) == 0);
 	ROSE_assert((flag & LIB_ID_CREATE_NO_MAIN) != 0 || main != NULL);
 
 	ID *id = KER_libblock_alloc_notest(type);
@@ -177,6 +181,13 @@ void *KER_libblock_alloc(Main *main, short type, const char *name, int flag) {
 		}
 	}
 
+	/* We also need to ensure a valid `session_uuid` for some non-main data (like embedded IDs).
+	 * IDs not allocated however should not need those (this would e.g. avoid generating session
+	 * uuids for depsgraph CoW IDs, if it was using this function). */
+	if ((flag & LIB_ID_CREATE_NO_ALLOCATE) == 0) {
+		KER_lib_libblock_session_uuid_ensure(id);
+	}
+
 	return id;
 }
 
@@ -209,6 +220,29 @@ void *KER_id_new(struct Main *main, short type, const char *name) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name ID session-wise UUID management
+ * \{ */
+
+static unsigned int global_session_uuid = 0;
+
+void KER_lib_libblock_session_uuid_ensure(ID *id) {
+	if (id->uuid == MAIN_ID_SESSION_UUID_UNSET) {
+		id->uuid = atomic_add_and_fetch_uint32(&global_session_uuid, 1);
+		/* In case overflow happens, still assign a valid ID. This way opening files many times works correctly. */
+		if (id->uuid == MAIN_ID_SESSION_UUID_UNSET) {
+			id->uuid = atomic_add_and_fetch_uint32(&global_session_uuid, 1);
+		}
+	}
+}
+
+void KER_lib_libblock_session_uuid_renew(ID *id) {
+	id->uuid = MAIN_ID_SESSION_UUID_UNSET;
+	KER_lib_libblock_session_uuid_ensure(id);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Datablock Copy
  * \{ */
 
@@ -216,8 +250,14 @@ void KER_libblock_copy_ex(Main *main, const ID *id, ID **new_id_p, int flag) {
 	ID *new_id = *new_id_p;
 
 	ROSE_assert((flag & LIB_ID_CREATE_NO_MAIN) != 0 || main != NULL);
+	ROSE_assert((flag & LIB_ID_CREATE_NO_MAIN) != 0 || (flag & LIB_ID_CREATE_NO_ALLOCATE) == 0);
 
-	if (!new_id) {
+	if ((flag & LIB_ID_CREATE_NO_ALLOCATE) != 0) {
+		LIB_strcpy(new_id->name, ARRAY_SIZE(new_id->name), id->name);
+		new_id->user = 0;
+		new_id->tag |= ID_TAG_NOT_ALLOCATED | ID_TAG_NO_MAIN | ID_TAG_NO_USER_REFCOUNT;
+	}
+	else {
 		new_id = KER_libblock_alloc(main, GS(id->name), KER_id_name(id), flag);
 	}
 	ROSE_assert(new_id != NULL);
@@ -238,13 +278,13 @@ void KER_libblock_copy_ex(Main *main, const ID *id, ID **new_id_p, int flag) {
 		new_id->properties = IDP_DuplicateProperty_ex(id->properties, copy_flag);
 	}
 
-	 if (id_can_have_animdata(new_id)) {
+	if (id_can_have_animdata(new_id)) {
 		IdAdtTemplate *iat = (IdAdtTemplate *)new_id;
 
 		/* the duplicate should get a copy of the animdata */
 		if ((flag & LIB_ID_COPY_NO_ANIMDATA) == 0) {
 			/**
-			 * Note that even though horrors like root node-trees are not in main, 
+			 * Note that even though horrors like root node-trees are not in main,
 			 * the actions they use in their anim data *are* in main...
 			 * super-mega-hooray.
 			 */
@@ -256,7 +296,7 @@ void KER_libblock_copy_ex(Main *main, const ID *id, ID **new_id_p, int flag) {
 		}
 	}
 
-	 if (flag & LIB_ID_COPY_ID_NEW_SET) {
+	if (flag & LIB_ID_COPY_ID_NEW_SET) {
 		ID_NEW_SET(id, new_id);
 	}
 
@@ -303,7 +343,18 @@ ROSE_INLINE int id_copy_libmanagement_cb(LibraryIDLinkCallbackData *cb_data) {
 }
 
 ID *KER_id_copy_ex(Main *main, const ID *id, ID **new_id_p, int flag) {
-	ID *new_id = (new_id_p) ? *new_id_p : NULL;
+	ID *new_id = (new_id_p != NULL) ? *new_id_p : NULL;
+	/* Make sure destination pointer is all good. */
+	if ((flag & LIB_ID_CREATE_NO_ALLOCATE) == 0) {
+		new_id = NULL;
+	}
+	else {
+		if (new_id != NULL) {
+			/* Allow some garbage non-initialized memory to go in, and clean it up here. */
+			const size_t size = KER_libblock_get_alloc_info(GS(id->name), NULL);
+			memset(new_id, 0, size);
+		}
+	}
 
 	if (id == NULL) {
 		return NULL;
@@ -428,11 +479,11 @@ ROSE_STATIC int id_free(Main *main, void *idv, int flag, bool use_flag_from_idta
 
 	if ((flag & LIB_ID_FREE_NO_MAIN) == 0) {
 		KER_main_unlock(main);
-	}
 
-	if ((flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0) {
-		/** Remove any references to us. */
-		KER_libblock_remap(main, id, NULL, ID_REMAP_FORCE_INTERNAL_RUNTIME_POINTERS);
+		if ((flag & LIB_ID_FREE_NO_USER_REFCOUNT) == 0) {
+			/** Remove any references to us. */
+			KER_libblock_remap(main, id, NULL, ID_REMAP_FORCE_INTERNAL_RUNTIME_POINTERS);
+		}
 	}
 
 	MEM_freeN(id);
@@ -532,6 +583,29 @@ bool KER_id_new_name_validate(Main *main, ListBase *lb, ID *id, const char *tnam
 
 const char *KER_id_name(const ID *id) {
 	return id->name + 2;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Datablock Evaluation Utils
+ * \{ */
+
+/**
+ * Copy relatives parameters, from `id` to `id_cow`.
+ * Use handle the #ID_RECALC_PARAMETERS tag.
+ * \note Keep in sync with #ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW.
+ */
+void KER_id_eval_properties_copy(struct ID *id_cow, struct ID *id) {
+	const ID_Type id_type = GS(id->name);
+	ROSE_assert((id_cow->tag & ID_TAG_COPIED_ON_WRITE) && !(id->tag & ID_TAG_COPIED_ON_WRITE));
+	ROSE_assert(ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW(id_type));
+	if (id_type == ID_ME) {
+		KER_mesh_copy_parameters((Mesh *)id_cow, (const Mesh *)id);
+	}
+	else {
+		ROSE_assert_unreachable();
+	}
 }
 
 /** \} */

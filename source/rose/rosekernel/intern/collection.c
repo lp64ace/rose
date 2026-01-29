@@ -9,7 +9,7 @@
 #include "KER_scene.h"
 #include "KER_object.h"
 
-#include <stdio.h>
+#include "DEG_depsgraph.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Prototypes
@@ -433,7 +433,7 @@ ROSE_STATIC void collection_tag_update_parent_recursive(Main *main, Collection *
 		return;
 	}
 
-	fprintf(stdout, "[%s:%d] Update dependency graph here for %p.", __FILE__, __LINE__, &collection->id);
+	DEG_id_tag_update_ex(main, &collection->id, flag);
 
 	LISTBASE_FOREACH(CollectionParent *, cparent, &collection->parents) {
 		if (cparent->collection->flag & COLLECTION_IS_MASTER) {
@@ -547,7 +547,8 @@ bool KER_collection_object_add_notest(Main *main, Collection *collection, Object
 		KER_main_collection_sync(main);
 	}
 
-	fprintf(stdout, "[%s:%d] Update dependency graph here for %p (geometry).\n", __FILE__, __LINE__, &collection->id);
+
+	DEG_id_tag_update(&collection->id, ID_RECALC_GEOMETRY);
 
 	return true;
 }
@@ -583,7 +584,7 @@ bool KER_collection_object_rem(Main *main, Collection *collection, Object *ob, b
 		KER_main_collection_sync(main);
 	}
 
-	fprintf(stdout, "[%s:%d] Update dependency graph here for %p (geometry).", __FILE__, __LINE__, &collection->id);
+	DEG_id_tag_update(&collection->id, ID_RECALC_GEOMETRY);
 
 	return true;
 }
@@ -605,7 +606,7 @@ IDTypeInfo IDType_ID_GR = {
 	.name = "Collection",
 	.name_plural = "Collections",
 
-	.flag = IDTYPE_FLAGS_NO_COPY | IDTYPE_FLAGS_NO_ANIMDATA,
+	.flag = IDTYPE_FLAGS_NO_ANIMDATA,
 
 	.init_data = NULL,
 	.copy_data = collection_copy_data,

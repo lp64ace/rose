@@ -115,11 +115,11 @@ void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, 
 	});
 }
 
-void extract_weights_mesh_vbo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, rose::MutableSpan<MDeformDeviceData> vbo_data) {
+void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose::MutableSpan<MDeformDeviceData> vbo_data) {
 	rose::Span<MDeformVert> dverts = KER_mesh_deform_verts_span(metarget);
 	rose::Span<int> vcorners = KER_mesh_corner_verts_span(metarget);
 
-	if (obarmature == nullptr || dverts.is_empty()) {
+	if (dverts.is_empty()) {
 		vbo_data.fill(MDeformDeviceData());
 		return;
 	}
@@ -146,7 +146,7 @@ void extract_weights_mesh_vbo(const Object *obarmature, const Object *obtarget, 
 	});
 }
 
-void extract_weights(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {
+void extract_weights(const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {
 	GPU_vertbuf_init_with_format(vbo, extract_weights_format());
 	GPU_vertbuf_data_alloc(vbo, mesh->totloop);
 
@@ -155,7 +155,7 @@ void extract_weights(const Object *obarmature, const Object *obtarget, const Mes
 
 	rose::Vector<float4x4> ubo_data;
 
-	extract_weights_mesh_vbo(obarmature, obtarget, mesh, vbo_data);
+	extract_weights_mesh_vbo(obtarget, mesh, vbo_data);
 }
 
 void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUUniformBuf *ubo) {

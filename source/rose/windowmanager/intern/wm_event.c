@@ -17,7 +17,11 @@
 #include "KER_context.h"
 #include "KER_idprop.h"
 #include "KER_global.h"
+#include "KER_layer.h"
 #include "KER_main.h"
+#include "KER_scene.h"
+
+#include "DEG_depsgraph.h"
 
 #include <GTK_api.h>
 
@@ -646,6 +650,39 @@ void WM_do_handlers(rContext *C) {
 		CTX_wm_screen_set(C, NULL);
 		CTX_wm_window_set(C, NULL);
 	}
+}
+
+void wm_event_do_depsgraph(rContext *C, bool force_visible_tag) {
+	WindowManager *wm = CTX_wm_manager(C);
+
+	/* Update all the dependency graphs of visible view layers. */
+	LISTBASE_FOREACH(wmWindow *, win, &wm->windows) {
+		Scene *scene = WM_window_get_active_scene(win);
+		ViewLayer *view_layer = KER_view_layer_default_view(scene);
+		Main *main = CTX_data_main(C);
+
+		Depsgraph *depsgraph = KER_scene_ensure_depsgraph(main, scene, view_layer);
+		if (force_visible_tag) {
+			DEG_graph_tag_on_visible_update(depsgraph, true);
+		}
+		DEG_make_active(depsgraph);
+		KER_scene_graph_update_tagged(depsgraph, main);
+	}
+}
+
+void wm_event_do_refresh_wm_and_depsgraph(rContext *C) {
+	wm_event_do_depsgraph(C, false);
+}
+
+void WM_do_notifiers(rContext *C) {
+	WindowManager *wm = CTX_wm_manager(C);
+	if (wm == NULL) {
+		return;
+	}
+
+	// TODO; notifiers
+
+	wm_event_do_refresh_wm_and_depsgraph(C);
 }
 
 void WM_window_post_quit_event(wmWindow *window) {

@@ -24,6 +24,30 @@ FCurve *KER_fcurve_new(void) {
 	return curve;
 }
 
+FCurve *KER_fcurve_copy(const struct FCurve *fcu) {
+	FCurve *fcu_d;
+
+	/* Sanity check. */
+	if (fcu == NULL) {
+		return NULL;
+	}
+
+	/* Make a copy. */
+	fcu_d = MEM_dupallocN(fcu);
+	fcu_d->next = fcu_d->prev = NULL;
+	fcu_d->group = NULL;
+
+	/* Copy curve data. */
+	fcu_d->bezt = MEM_dupallocN(fcu_d->bezt);
+	fcu_d->fpt = MEM_dupallocN(fcu_d->fpt);
+
+	/* Copy rna-path. */
+	fcu_d->path = MEM_dupallocN(fcu_d->path);
+	fcu_d->runtime.static_path = NULL;
+
+	return fcu_d;
+}
+
 void KER_fcurves_free(ListBase *list) {
 	LISTBASE_FOREACH_MUTABLE(FCurve *, fcurve, list) {
 		KER_fcurve_free(fcurve);

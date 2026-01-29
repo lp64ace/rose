@@ -924,6 +924,18 @@ ROSE_INLINE void mesh_set_custom_normals(Mesh *mesh, rose::MutableSpan<float3> r
 
 }  // namespace rose::kernel::mesh
 
+void KER_mesh_assert_normals_dirty_or_calculated(const Mesh *mesh) {
+	if (!mesh->runtime->vert_normals_cache.is_dirty()) {
+		ROSE_assert(mesh->totvert == 0);
+	}
+	if (!mesh->runtime->poly_normals_cache.is_dirty()) {
+		ROSE_assert(mesh->totpoly == 0);
+	}
+	if (!mesh->runtime->corner_normals_cache.is_dirty()) {
+		ROSE_assert(mesh->totloop == 0);
+	}
+}
+
 void KER_mesh_normals_tag_dirty(Mesh *mesh) {
 	mesh->runtime->vert_normals_cache.tag_dirty();
 	mesh->runtime->poly_normals_cache.tag_dirty();

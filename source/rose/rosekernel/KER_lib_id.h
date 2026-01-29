@@ -6,6 +6,11 @@
 #include "DNA_ID.h"
 #include "DNA_ID_enums.h"
 
+/**
+ * When an ID's uuid is of that value, it is unset/invalid (e.g. for runtime IDs, etc.).
+ */
+#define MAIN_ID_SESSION_UUID_UNSET 0
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,7 +52,10 @@ void KER_drawdata_free(struct ID *id);
 /* 0 - 7 */
 enum {
 	LIB_ID_CREATE_NO_MAIN = 1 << 0,
-	LIB_ID_CREATE_NO_USER_REFCOUNT = 1 << 1,
+	LIB_ID_CREATE_NO_ALLOCATE = 1 << 1,
+	LIB_ID_CREATE_NO_USER_REFCOUNT = 1 << 2,
+
+	LIB_ID_CREATE_LOCALIZE = LIB_ID_CREATE_NO_MAIN,
 };
 
 /**
@@ -88,6 +96,15 @@ void *KER_id_new(struct Main *main, short type, const char *name);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name ID session-wise UUID management
+ * \{ */
+
+void KER_lib_libblock_session_uuid_ensure(struct ID *id);
+void KER_lib_libblock_session_uuid_renew(struct ID *id);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Datablock Copy
  * \{ */
 
@@ -96,6 +113,8 @@ enum {
 	LIB_ID_COPY_ID_NEW_SET = 1 << 8,
 	LIB_ID_COPY_NO_ANIMDATA = 1 << 9,
 	LIB_ID_COPY_ACTIONS = 1 << 10,
+
+	LIB_ID_COPY_LOCALIZE = LIB_ID_CREATE_LOCALIZE,
 };
 
 /**
@@ -204,6 +223,19 @@ void id_us_rem(struct ID *id);
 bool KER_id_new_name_validate(struct Main *main, struct ListBase *lb, struct ID *id, const char *name);
 
 const char *KER_id_name(const struct ID *id);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Datablock Evaluation Utils
+ * \{ */
+
+/**
+ * Copy relatives parameters, from `id` to `id_cow`.
+ * Use handle the #ID_RECALC_PARAMETERS tag.
+ * \note Keep in sync with #ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW.
+ */
+void KER_id_eval_properties_copy(struct ID *id_cow, struct ID *id);
 
 /** \} */
 

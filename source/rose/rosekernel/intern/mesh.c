@@ -2,7 +2,9 @@
 
 #include "LIB_listbase.h"
 
+#include "KER_deform.h"
 #include "KER_idtype.h"
+#include "KER_lib_id.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
 
@@ -93,5 +95,29 @@ IDTypeInfo IDType_ID_ME = {
 	.write = NULL,
 	.read_data = NULL,
 };
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Mesh Creation/Deletion
+ * \{ */
+
+Mesh *KER_mesh_copy_for_eval(const Mesh *source, bool reference) {
+	int flags = LIB_ID_COPY_LOCALIZE;
+
+	if (reference) {
+		// flags |= LIB_ID_COPY_CD_REFERENCE;
+	}
+
+	Mesh *result = (Mesh *)KER_id_copy_ex(NULL, &source->id, NULL, flags);
+	return result;
+}
+
+void KER_mesh_eval_delete(Mesh *eval) {
+	/* Evaluated mesh may point to edit mesh, but never owns it. */
+	mesh_free_data(&eval->id);
+	KER_libblock_free_data(&eval->id, false);
+	MEM_freeN(eval);
+}
 
 /** \} */

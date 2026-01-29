@@ -60,6 +60,7 @@ void RNA_path_free(struct StaticPathRNA *path);
  * \{ */
 
 ePropertyType RNA_property_type(const struct PropertyRNA *property);
+bool RNA_property_is_idprop(const struct PropertyRNA *property);
 
 /**
  * A property is animateable if its ID and the RNA property itself are defined as editable.
@@ -145,8 +146,10 @@ int RNA_property_string_max_length(struct PropertyRNA *property);
 struct PropertyRNA *RNA_struct_iterator_property(struct StructRNA *type);
 
 bool RNA_struct_is_ID(const struct StructRNA *type);
+bool RNA_struct_is_a(const struct StructRNA *type, const struct StructRNA *srna);
 
 struct PropertyRNA *RNA_struct_find_property(struct PointerRNA *ptr, const char *identifier);
+struct PropertyRNA *RNA_struct_type_find_property(struct StructRNA *srna, const char *identifier);
 
 /**
  * Returns the IDProperty group stored in the given PointerRNA's ID, or NULL if none.

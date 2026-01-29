@@ -33,6 +33,9 @@
 #include "WM_api.h"
 #include "WM_draw.h"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
+
 #include "draw_engine.h"
 #include "draw_manager.h"
 
@@ -214,7 +217,7 @@ ROSE_STATIC void DRW_engine_use(DrawEngineType *engine_type) {
 }
 
 // Called once before starting rendering using our (used/active) draw engines
-void DRW_engines_init(const rContext *C) {
+void DRW_engines_init(Depsgraph *depsgraph) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		const DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
 
@@ -226,7 +229,7 @@ void DRW_engines_init(const rContext *C) {
 	}
 }
 
-void DRW_engines_exit(const rContext *C) {
+void DRW_engines_exit(Depsgraph *depsgraph) {
 }
 
 DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
@@ -453,33 +456,16 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GPU_framebuffer_restore();
 }
 
-void DRW_draw_render_loop(const rContext *C, struct Scene *scene, struct ViewLayer *view_layer, struct ARegion *region, struct GPUViewport *viewport) {
+void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct GPUViewport *viewport) {
 	/** No framebuffer is allowed to be bound the moment we are rendering! */
 	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
 
+	Main *main = DEG_get_main(depsgraph);
+	Scene *scene = DEG_get_evaluated_scene(depsgraph);
+	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
+
 	DRW_manager_init(&GDrawManager, region, scene, view_layer, viewport, NULL);
-	DRW_engines_init(C);
-
-	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
-
-	/**
-	 * Definetely not the fucking place to update the mesh here,
-	 * we should evaluate the depsgraph instead.
-	 */
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		KER_animsys_eval_animdata(scene, &object->id);
-		KER_object_where_is_calc(object);
-	}
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		if (object->type == OB_ARMATURE) {
-			KER_armature_data_update(object);
-		}
-	}
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		if (object->type == OB_MESH) {
-			KER_mesh_data_update(scene, object);
-		}
-	}
+	DRW_engines_init(depsgraph);
 
 	drw_engine_cache_init();
 
@@ -488,7 +474,7 @@ void DRW_draw_render_loop(const rContext *C, struct Scene *scene, struct ViewLay
 		drw_engine_cache_populate(base->object);
 	}
 
-	DRW_engines_exit(C);
+	DRW_engines_exit(depsgraph);
 	DRW_manager_exit(&GDrawManager);
 
 	drw_engine_cache_finish();
@@ -512,11 +498,10 @@ void DRW_draw_view(const rContext *C) {
 
 	struct WindowManager *wm = CTX_wm_manager(C);
 
-	struct Scene *scene = CTX_data_scene(C);
-	struct ViewLayer *view_layer = CTX_data_view_layer(C);
+	Depsgraph *depsgraph = CTX_data_expect_evaluated_depsgraph(C);
 
 	DRW_render_context_enable();
-	DRW_draw_render_loop(C, scene, view_layer, region, viewport);
+	DRW_draw_render_loop(depsgraph, region, viewport);
 	DRW_render_context_disable();
 
 	wm_window_reset_drawable(wm);

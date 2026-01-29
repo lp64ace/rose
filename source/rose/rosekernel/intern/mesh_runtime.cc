@@ -4,6 +4,7 @@
 #include "LIB_offset_indices.hh"
 #include "LIB_thread.h"
 
+#include "KER_lib_id.h"
 #include "KER_mesh_types.hh"
 #include "KER_mesh.hh"
 
@@ -31,6 +32,10 @@ void KER_mesh_runtime_free_data(Mesh *mesh) {
 }
 
 void KER_mesh_runtime_clear_cache(Mesh *mesh) {
+	if (mesh->runtime->mesh_eval != nullptr) {
+		KER_id_free(nullptr, mesh->runtime->mesh_eval);
+		mesh->runtime->mesh_eval = nullptr;
+	}
 	KER_mesh_runtime_clear_geometry(mesh);
 	KER_mesh_clear_derived_normals(mesh);
 }

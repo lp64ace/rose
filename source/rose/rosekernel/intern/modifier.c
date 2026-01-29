@@ -111,6 +111,9 @@ void KER_modifier_free_ex(ModifierData *md, int flag) {
 	if (mti->free_data) {
 		mti->free_data(md);
 	}
+	if (md->error) {
+		MEM_freeN(md->error);
+	}
 
 	MEM_freeN(md);
 }

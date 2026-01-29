@@ -28,6 +28,9 @@ typedef struct Scene {
 
     struct RenderData r;
 
+    /** None of the dependency graph vars is mean to be saved. */
+    struct GHash *depsgraph_hash;
+
     ListBase view_layers;
     struct Collection *master_collection;
 } Scene;
