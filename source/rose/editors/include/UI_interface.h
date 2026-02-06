@@ -200,11 +200,16 @@ enum {
 	UI_BUT_HEX = 1 << 20,
 	UI_BUT_FILTER = 1 << 21,
 	/**
+	 * The button will use #uiBut->name as the format for displaying the pointer data.
+	 * \note That the format will be done using the following arguments; <precision>, <float>, see #ui_but_update!
+	 */
+	UI_BUT_TEXT_FORMAT = 1 << 22,
+	/**
 	 * The button is inside a grid layout that has a static number of columns, 
 	 * which means that a full rows should be displayed as hovered when a single item in that row is hovered.
 	 */
-	UI_BUT_GRID = 1 << 22,
-	UI_BUT_ROW = 1 << 23,
+	UI_BUT_GRID = 1 << 23,
+	UI_BUT_ROW = 1 << 24,
 };
 
 #define DRAW_FLAG(draw) ((draw) & 0xffff0000)

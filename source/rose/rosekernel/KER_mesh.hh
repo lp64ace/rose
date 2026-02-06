@@ -3,6 +3,7 @@
 
 #include "KER_mesh.h"
 
+#include "LIB_bounds_types.hh"
 #include "LIB_math_vector_types.hh"
 #include "LIB_offset_indices.hh"
 #include "LIB_span.hh"
@@ -155,6 +156,15 @@ ROSE_INLINE rose::MutableSpan<MDeformVert> KER_mesh_deform_verts_for_write_span(
 }
 
 rose::GroupedSpan<int> KER_mesh_vert_to_face_map_span(const Mesh *mesh);
+
+
+/* -------------------------------------------------------------------- */
+/** \name Mesh Geometry Evaluation
+ * \{ */
+
+std::optional<rose::Bounds<float3>> KER_mesh_evaluated_geometry_bounds(Mesh *mesh);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Topology Queries

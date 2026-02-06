@@ -9,6 +9,7 @@
 #include "GPU_state.h"
 #include "GPU_viewport.h"
 
+#include "KER_armature.h"
 #include "KER_object.h"
 #include "KER_modifier.h"
 
@@ -77,45 +78,25 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 	}
 }
 
-ROSE_INLINE bool alice_modifier_supported(int mdtype) {
-	return ELEM(mdtype, MODIFIER_TYPE_ARMATURE);
+ROSE_STATIC void alice_cache_populate_mesh(void *vdata, Object *object) {
+	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
+	DRWAliceViewportPrivateData *impl = stl->data;
+
+	GPUBatch *surface = DRW_cache_object_surface_get(object);
+
+	if (impl->opaque_shgroup) {
+		/** Ready all the required modifier data blocks for rendering on this group. */
+		DRW_alice_modifier_list_build(impl->opaque_shgroup, object);
+		DRW_shading_group_call_ex(impl->opaque_shgroup, object, object->obmat, surface);
+	}
 }
 
 ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
 	DRWAliceViewportPrivateData *impl = stl->data;
 
-	if (!ELEM(object->type, OB_MESH)) {
-		return;
-	}
-
-	GPUBatch *surface = DRW_cache_object_surface_get(object);
-
-	if (impl->opaque_shgroup) {
-		bool has_defgroup_modifier = false;
-
-		LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
-			if ((md->flag & MODIFIER_DEVICE_ONLY) == 0 || !alice_modifier_supported(md->type)) {
-				continue;
-			}
-
-			switch (md->type) {
-				case MODIFIER_TYPE_ARMATURE: {
-					GPUUniformBuf *block = DRW_alice_defgroup_ubo(object, md);
-
-					DRW_shading_group_bind_uniform_block(impl->opaque_shgroup, block, DRW_DVGROUP_UBO_SLOT);
-					has_defgroup_modifier |= (block != NULL);
-				} break;
-			}
-		}
-
-		if (!has_defgroup_modifier) {
-			GPUUniformBuf *block = DRW_alice_defgroup_ubo(object, NULL);
-
-			DRW_shading_group_bind_uniform_block(impl->opaque_shgroup, block, DRW_DVGROUP_UBO_SLOT);
-		}
-
-		DRW_shading_group_call_ex(impl->opaque_shgroup, object, object->obmat, surface);
+	switch (object->type) {
+		case OB_MESH: return alice_cache_populate_mesh(vdata, object);
 	}
 }
 

@@ -17,8 +17,6 @@ void ObjectRuntimeBackup::init_from_object(Object *object) {
 	runtime = object->runtime;
 	KER_object_runtime_reset(object);
 
-	/* Keep bbox (for now at least). */
-	object->runtime.bb = runtime.bb;
 	/**
 	 * Object update will override actual object->data to an evaluated version.
 	 * Need to make sure we don't have data set to evaluated one before free
@@ -60,10 +58,8 @@ void ObjectRuntimeBackup::backup_pose_channel_runtime_data(Object *object) {
 void ObjectRuntimeBackup::restore_to_object(Object *object) {
 	ID *data_orig = static_cast<ID *>(object->runtime.data_orig);
 	ID *data_eval = static_cast<ID *>(runtime.data_eval);
-	BoundBox *bb = object->runtime.bb;
 	object->runtime = runtime;
 	object->runtime.data_orig = data_orig;
-	object->runtime.bb = bb;
 	if (ELEM(object->type, OB_MESH) && data_eval != nullptr) {
 		if (object->id.recalc & ID_RECALC_GEOMETRY) {
 			/* If geometry is tagged for update it means, that part of

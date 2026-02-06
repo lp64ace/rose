@@ -11,11 +11,25 @@
 extern "C" {
 #endif
 
+struct Main;
+struct Scene;
 struct StructRNA;
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Data Structures
  * \{ */
+
+/**
+ * Update callback for an RNA property.
+ *
+ * \note This is NOT called automatically when writing into the property, it needs to be called
+ * manually (through #RNA_property_update or #RNA_property_update_main) when needed.
+ *
+ * \param main: the Main data-base to which `ptr` data belongs.
+ * \param scene: The current active scene (may be NULL in some cases).
+ * \param ptr: The RNA pointer data to update.
+ */
+typedef void (*PropertyUpdateFunc)(struct Main *main, struct Scene *scene, struct PointerRNA *ptr);
 
 typedef struct PropertyRNA {
 	struct PropertyRNA *prev, *next;
@@ -41,6 +55,9 @@ typedef struct PropertyRNA {
 	unsigned int totarraylength;
 
 	ePropertyInternalFlag flagex;
+
+	/** Callback for updates on change. */
+	PropertyUpdateFunc update;
 
 	/* Raw access. */
 

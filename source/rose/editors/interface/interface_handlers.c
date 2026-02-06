@@ -281,7 +281,12 @@ void ui_but_update(uiBut *but, bool validate) {
 				UI_GET_BUT_VALUE_INIT(but, value);
 				const int precision = ui_but_calc_float_precision(but, value);
 
-				LIB_strnformat(but->drawstr, but->maxlength, "%.*f", precision, (float)value);
+				if ((but->draw & UI_BUT_TEXT_FORMAT) != 0) {
+					LIB_strnformat(but->drawstr, but->maxlength, but->name, precision, (float)value);
+				}
+				else {
+					LIB_strnformat(but->drawstr, but->maxlength, "%.*f", precision, (float)value);
+				}
 			}
 		} break;
 	}

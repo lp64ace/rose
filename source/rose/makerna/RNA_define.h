@@ -59,6 +59,7 @@ struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int def
 void RNA_def_property_ui_text(struct PropertyRNA *prop, const char *name, const char *description);
 void RNA_def_property_ui_range(struct PropertyRNA *prop, double vmin, double vmax, double step, int precision);
 void RNA_def_property_range(struct PropertyRNA *prop, double vmin, double vmax);
+void RNA_def_property_update(struct PropertyRNA *prop, const char *funcname);
 
 void RNA_def_property_flag(struct PropertyRNA *prop, ePropertyFlag flag);
 void RNA_def_property_clear_flag(struct PropertyRNA *prop, ePropertyFlag flag);
@@ -171,6 +172,9 @@ struct IDProperty **rna_OperatorProperties_idprops(struct PointerRNA *ptr);
  * \{ */
 
 bool rna_PoseBones_lookup_string(struct PointerRNA *ptr, const char *key, struct PointerRNA *r_ptr);
+
+/** We need to tag the dependency graph for update since the geometry changed! */
+void rna_Pose_update(struct Main *main, struct Scene *scene, struct PointerRNA *ptr);
 
 /** \} */
 

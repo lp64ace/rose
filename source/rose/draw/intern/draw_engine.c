@@ -131,3 +131,21 @@ ViewportEngineData *DRW_view_data_engine_data_get_ensure(DRWViewData *view_data,
 
 	return NULL;
 }
+
+ViewportEngineData *DRW_view_data_engine_data_get(DRWViewData *view_data, DrawEngineType *engine_type) {
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &view_data->viewport_engine_data) {
+		if (vdata->engine != engine_type) {
+			continue;
+		}
+
+		const DrawEngineDataSize *data_size = engine_type->vdata_size;
+
+		if (vdata->fbl == NULL || vdata->txl == NULL || vdata->psl == NULL || vdata->stl == NULL) {
+			break;
+		}
+
+		return vdata;
+	}
+
+	return NULL;
+}

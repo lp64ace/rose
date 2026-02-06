@@ -5,6 +5,10 @@
  * \{ */
 
 typedef struct DRWData {
+	/** Instance data. */
+	struct DRWInstanceDataList *ibuffers;
+	/** Memory-pools for draw-calls. */
+	struct MemBlock *calls;
 	struct MemBlock *commands;
 	struct MemBlock *passes;
 	struct MemBlock *shgroups;

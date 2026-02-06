@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LIB_assert.h"
+#include "LIB_utildefines.h"
 
 #if defined(__cplusplus)
 extern "C" {

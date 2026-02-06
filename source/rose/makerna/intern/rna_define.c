@@ -1509,6 +1509,15 @@ void RNA_def_property_range(struct PropertyRNA *property, double vmin, double vm
 	}
 }
 
+void RNA_def_property_update(PropertyRNA *prop, const char *funcname) {
+	if (!DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] #%s is only available during preprocessing.", __func__);
+		return;
+	}
+
+	prop->update = funcname;
+}
+
 void RNA_def_property_flag(PropertyRNA *property, ePropertyFlag flag) {
 	property->flag |= flag;
 }

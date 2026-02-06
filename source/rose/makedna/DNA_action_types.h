@@ -252,6 +252,11 @@ enum {
 typedef struct PoseChannel_Runtime {
 	SessionUUID uuid;
 
+	/** For display, pose_mat with bone length applied. */
+	float disp_mat[4][4];
+	/** For display, pose_mat with bone length applied and translated to tail. */
+	float disp_tail_mat[4][4];
+
 	struct PoseChannel *orig_pchannel;
 } PoseChannel_Runtime;
 

@@ -166,6 +166,12 @@ typedef struct DRWCommand {
 	DRWResourceHandle handle;
 } DRWCommand;
 
+/** Used for aggregating calls into #GPUVertBuf's. */
+typedef struct DRWCallBuffer {
+	struct GPUVertBuf *buffer;
+	int count;
+} DRWCallBuffer;
+
 typedef struct DRWShadingGroup {
 	struct DRWShadingGroup *prev, *next;
 

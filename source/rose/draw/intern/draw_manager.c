@@ -37,10 +37,12 @@
 #include "DEG_depsgraph_query.h"
 
 #include "draw_engine.h"
+#include "draw_instance_data.h"
 #include "draw_manager.h"
 
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
+#include "engines/overlay/overlay_engine.h"
 #include "shaders/draw_shader_shared.h"
 
 struct Object;
@@ -57,6 +59,7 @@ DRWGlobal GDraw;
 void DRW_engines_register(void) {
 	// DRW_engine_register(&draw_engine_basic_type);
 	DRW_engine_register(&draw_engine_alice_type);
+	DRW_engine_register(&draw_engine_overlay_type);
 
 	{
 		KER_mesh_batch_cache_tag_dirty_cb = DRW_mesh_batch_cache_tag_dirty;
@@ -174,6 +177,9 @@ ROSE_STATIC void drw_drawdata_free(struct ID *id) {
 DRWData *DRW_viewport_data_new(void) {
 	DRWData *ddata = MEM_callocN(sizeof(DRWData), "DRWData");
 
+	ddata->ibuffers = DRW_instance_data_list_create();
+
+	ddata->calls = LIB_memory_block_create_ex(sizeof(DRWCallBuffer), sizeof(DRWCallBuffer[DRW_RESOURCE_CHUNK_LEN]));
 	ddata->commands = LIB_memory_block_create_ex(sizeof(DRWCommand), sizeof(DRWCommand[DRW_RESOURCE_CHUNK_LEN]));
 	ddata->passes = LIB_memory_block_create_ex(sizeof(DRWPass), sizeof(DRWPass[DRW_RESOURCE_CHUNK_LEN]));
 	ddata->shgroups = LIB_memory_block_create_ex(sizeof(DRWShadingGroup), sizeof(DRWShadingGroup[DRW_RESOURCE_CHUNK_LEN]));
@@ -191,6 +197,9 @@ DRWData *DRW_viewport_data_new(void) {
 }
 
 void DRW_viewport_data_free(DRWData *ddata) {
+	DRW_instance_data_list_free(ddata->ibuffers);
+
+	LIB_memory_block_destroy(ddata->calls, NULL);
 	LIB_memory_block_destroy(ddata->commands, NULL);
 	LIB_memory_block_destroy(ddata->passes, NULL);
 	LIB_memory_block_destroy(ddata->shgroups, NULL);
@@ -216,9 +225,17 @@ ROSE_STATIC void DRW_engine_use(DrawEngineType *engine_type) {
 	DRW_view_data_use_engine(GDrawManager.vdata_engine, engine_type);
 }
 
+ROSE_STATIC bool DRW_engine_used(DrawEngineType *engine_type) {
+	return DRW_view_data_engine_data_get(GDrawManager.vdata_engine, engine_type) != NULL;
+}
+
 // Called once before starting rendering using our (used/active) draw engines
 void DRW_engines_init(Depsgraph *depsgraph) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		const DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
 
 		memset(vdata->psl->passes, 0, sizeof(*vdata->psl->passes) * vdata_size->psl_len);
@@ -266,12 +283,17 @@ ROSE_STATIC DRWData *draw_viewport_data_ensure(GPUViewport *viewport) {
 }
 
 ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
+	LIB_memory_block_clear(ddata->calls, NULL);
 	LIB_memory_block_clear(ddata->commands, NULL);
 	LIB_memory_block_clear(ddata->passes, NULL);
 	LIB_memory_block_clear(ddata->shgroups, NULL);
 	LIB_memory_block_clear(ddata->uniforms, NULL);
 
 	LIB_memory_block_clear(ddata->obmats, NULL);
+
+	DRW_instance_data_list_free_unused(ddata->ibuffers);
+	DRW_instance_data_list_resize(ddata->ibuffers);
+	DRW_instance_data_list_reset(ddata->ibuffers);
 }
 
 void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
@@ -409,6 +431,10 @@ void DRW_render_context_disable_ex(bool restore) {
 
 ROSE_STATIC void drw_engine_cache_init(void) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->cache_init) {
 			vdata->engine->cache_init(vdata);
 		}
@@ -421,6 +447,10 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 	DRW_batch_cache_validate(object);
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->cache_populate) {
 			vdata->engine->cache_populate(vdata, object);
 		}
@@ -434,6 +464,10 @@ ROSE_STATIC void drw_engine_cache_finish(void) {
 	// @TODO wait for any threads that have beed dispatched by #drw_engine_cache_populate
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->cache_finish) {
 			vdata->engine->cache_finish(vdata);
 		}
@@ -448,12 +482,21 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GPU_framebuffer_bind(dfbl->default_fb);
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->draw) {
 			vdata->engine->draw(vdata);
 		}
 	}
 
 	GPU_framebuffer_restore();
+}
+
+void DRW_render_instance_buffer_finish(void) {
+	DRWData *ddata = GDrawManager.vdata_pool;
+	DRW_instance_buffer_finish(ddata->ibuffers);
 }
 
 void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct GPUViewport *viewport) {
@@ -478,6 +521,9 @@ void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct G
 	DRW_manager_exit(&GDrawManager);
 
 	drw_engine_cache_finish();
+
+	DRW_render_instance_buffer_finish();
+
 	drw_engine_draw_scene();
 }
 

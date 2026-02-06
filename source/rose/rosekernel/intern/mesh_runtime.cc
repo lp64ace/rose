@@ -41,19 +41,22 @@ void KER_mesh_runtime_clear_cache(Mesh *mesh) {
 }
 
 void KER_mesh_runtime_clear_geometry(Mesh *mesh) {
+	mesh->runtime->bounds_cache.tag_dirty();
 	mesh->runtime->looptris_cache.tag_dirty();
 	mesh->runtime->looptri_polys_cache.tag_dirty();
 }
 
 void KER_mesh_positions_changed(Mesh *mesh) {
 	KER_mesh_normals_tag_dirty(mesh);
-	KER_mesh_batch_cache_free(mesh);
+	KER_mesh_batch_cache_tag_dirty(mesh, KER_MESH_BATCH_DIRTY_ALL);
 
+	mesh->runtime->bounds_cache.tag_dirty();
 	mesh->runtime->looptris_cache.tag_dirty();
 }
 
 void KER_mesh_positions_changed_uniformly(Mesh *mesh) {
 	/* The normals and triangulation didn't change, since all verts moved by the same amount. */
+	mesh->runtime->bounds_cache.tag_dirty();
 }
 
 /** \} */
@@ -120,6 +123,25 @@ rose::GroupedSpan<int> KER_mesh_vert_to_face_map_span(const Mesh *mesh) {
 		rose::kernel::mesh::build_vert_to_face_indices(polys, corner_verts, offsets, r_data);
 	});
 	return rose::GroupedSpan<int>(offsets, mesh->runtime->vert_to_face_map_cache.data());
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Mesh Geometry Evaluation
+ * \{ */
+
+std::optional<rose::Bounds<float3>> KER_mesh_evaluated_geometry_bounds(Mesh *mesh) {
+	if (mesh->totvert == 0) {
+		return std::nullopt;
+	}
+
+	mesh->runtime->bounds_cache.ensure([&](rose::Bounds<float3> &r_bounds) {
+		const rose::Span<float3> vertices = KER_mesh_vert_positions_span(mesh);
+
+		r_bounds = *rose::bounds::min_max(vertices);
+	});
+	return mesh->runtime->bounds_cache.data();
 }
 
 /** \} */

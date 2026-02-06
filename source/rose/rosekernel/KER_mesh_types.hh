@@ -4,6 +4,7 @@
 #include "DNA_meshdata_types.h"
 
 #include "LIB_array.hh"
+#include "LIB_bounds_types.hh"
 #include "LIB_math_vector_types.hh"
 #include "LIB_implicit_sharing.hh"
 #include "LIB_shared_cache.hh"
@@ -19,6 +20,14 @@ namespace rose::kernel {
 struct MeshRuntime {
 	/** Needed to ensure some thread-safety during render data pre-processing. */
 	std::mutex render_mutex = {};
+
+	/**
+	 * A cache of bounds shared between data-blocks with unchanged positions. When changing positions
+	 * affect the bounds, the cache is "un-shared" with other geometries. See #SharedCache comments.
+	 */
+	SharedCache<Bounds<float3>> bounds_cache;
+
+	Mesh *mesh_eval;
 
 	/** Implicit sharing user count for #Mesh::poly_offset_indices. */
 	const ImplicitSharingInfo *poly_offsets_sharing_info = nullptr;
@@ -45,8 +54,6 @@ struct MeshRuntime {
 	SharedCache<Array<int>> vert_to_face_offset_cache = {};
 	/** Cache of indices for vert to face map. */
 	SharedCache<Array<int>> vert_to_face_map_cache = {};
-
-	Mesh *mesh_eval;
 	
 	/**
      * Data used to efficiently draw the mesh in the viewport, especially useful when 

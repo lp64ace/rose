@@ -117,17 +117,7 @@ void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 	opts.pivot_handling = UFBX_PIVOT_HANDLING_ADJUST_TO_ROTATION_PIVOT;
 
 	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
-	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
 	opts.target_unit_meters = unit;
-
-	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_camera_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_camera_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_light_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_light_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_light_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
 
 	/* Setup ufbx threading to go through our own task system. */
 	opts.thread_opts.pool.run_fn = fbx_task_run_fn;
@@ -159,17 +149,7 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	opts.pivot_handling = UFBX_PIVOT_HANDLING_ADJUST_TO_ROTATION_PIVOT;
 
 	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
-	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
 	opts.target_unit_meters = unit;
-
-	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_camera_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_camera_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_light_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_light_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_light_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
 
 	/* Setup ufbx threading to go through our own task system. */
 	opts.thread_opts.pool.run_fn = fbx_task_run_fn;

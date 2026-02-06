@@ -119,6 +119,7 @@ public:
 	virtual void build_armature_bones(ListBase *bones);
 	virtual void build_collection(LayerCollection *from_layer_collection, Object *object, Collection *collection);
 	virtual void build_object(Object *object);
+	virtual void build_object_dimensions(Object *object);
 	virtual void build_object_from_view_layer_base(Object *object);
 	virtual void build_object_layer_component_relations(Object *object);
 	virtual void build_object_data(Object *object);

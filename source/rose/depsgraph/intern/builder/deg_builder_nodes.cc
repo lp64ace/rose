@@ -718,6 +718,7 @@ void DepsgraphNodeBuilder::build_object_data_geometry(Object *object) {
 	op_node->set_as_exit();
 	/* Geometry. */
 	build_object_data_geometry_datablock((ID *)object->data);
+	build_object_dimensions(object);
 }
 
 void DepsgraphNodeBuilder::build_object_data_geometry_datablock(ID *obdata) {
@@ -747,6 +748,11 @@ void DepsgraphNodeBuilder::build_object_data_geometry_datablock(ID *obdata) {
 	op_node->set_as_exit();
 	/* Parameters for driver sources. */
 	build_parameters(obdata);
+}
+
+void DepsgraphNodeBuilder::build_object_dimensions(Object *object) {
+	/* Object dimensions (bounding box) node. Will depend on both geometry and transform. */
+	add_operation_node(&object->id, NodeType::PARAMETERS, OperationCode::DIMENSIONS);
 }
 
 void DepsgraphNodeBuilder::build_object_flags(int base_index, Object *object, eDepsNode_LinkedState_Type linked_state) {

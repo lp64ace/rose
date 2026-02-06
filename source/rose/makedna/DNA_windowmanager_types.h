@@ -15,9 +15,13 @@ struct rContext;
 struct wmEvent;
 
 typedef struct wmWindow_Runtime {
-	double last_frames_per_second_reset;
-	float last_frames_per_second;
-	float next_frames_per_second;
+	struct statistics {
+		float frames_per_second;
+		float frame_min_time;  // ms
+		float frame_max_time;  // ms
+	} last, next;
+
+	float last_frame_statistics_reset_time;
 } wmWindow_Runtime;
 
 typedef struct wmWindow {

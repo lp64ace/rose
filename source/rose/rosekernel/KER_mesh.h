@@ -137,15 +137,6 @@ ROSE_INLINE MDeformVert *KER_mesh_deform_verts_for_write(Mesh *mesh) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Mesh Vertex Coords
- * \{ */
-
-float (*KER_mesh_vert_coords_alloc(const struct Mesh *mesh, int *r_vert_len))[3];
-void KER_mesh_vert_coords_get(const struct Mesh *mesh, float (*vert_coords)[3]);
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Mesh Normals
  * \{ */
 

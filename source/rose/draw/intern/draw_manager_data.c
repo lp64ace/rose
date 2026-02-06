@@ -6,6 +6,7 @@
 
 #include "KER_object.h"
 #include "KER_mesh.h"
+#include "KER_modifier.h"
 
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
@@ -20,6 +21,7 @@
 #include "draw_state.h"
 
 #include "draw_cache_private.h"
+#include "draw_instance_data.h"
 
 #include "shaders/draw_shader_shared.h"
 
@@ -29,10 +31,10 @@
 /** \name Draw Resource Data
  * \{ */
 
-ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*mat)[4], const Object *ob) {
+ROSE_STATIC void draw_call_matrix_init(DRWObjectMatrix *matrix, const float (*mat)[4], const Object *object) {
 	copy_m4_m4(matrix->model, mat);
-	if (ob) {
-		copy_m4_m4(matrix->modelinverse, KER_object_world_to_object(ob));
+	if (object) {
+		copy_m4_m4(matrix->modelinverse, KER_object_world_to_object(object));
 	}
 	else {
 		/* WATCH: Can be costly. */
@@ -172,6 +174,37 @@ void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, Object *ob, const
 	draw_command_draw_range(shgroup, handle, batch, vfirst, vcount);
 }
 
+DRWCallBuffer *DRW_shading_group_call_buffer(DRWShadingGroup *shgroup, GPUVertFormat *format, PrimType prim_type) {
+	ROSE_assert(ELEM(prim_type, GPU_PRIM_POINTS, GPU_PRIM_LINES, GPU_PRIM_TRI_FAN));
+	ROSE_assert(format != NULL);
+
+	DRWResourceHandle handle = draw_resource_handle(shgroup, NULL, NULL);
+	DRWData *dd = GDrawManager.vdata_pool;
+
+	DRWCallBuffer *callbuf = LIB_memory_block_alloc(dd->calls);
+	callbuf->buffer = DRW_temp_buffer_request(dd->ibuffers, format, &callbuf->count);
+	callbuf->count = 0;
+
+	GPUBatch *batch = DRW_temp_batch_request(dd->ibuffers, callbuf->buffer, prim_type);
+	draw_command_draw(shgroup, handle, batch, 0);
+
+	return callbuf;
+}
+
+DRWCallBuffer *DRW_shading_group_call_buffer_instance(DRWShadingGroup *shgroup, GPUVertFormat *format, GPUBatch *geometry) {
+	DRWResourceHandle handle = draw_resource_handle(shgroup, NULL, NULL);
+	DRWData *dd = GDrawManager.vdata_pool;
+
+	DRWCallBuffer *call = LIB_memory_block_alloc(dd->calls);
+	call->buffer = DRW_temp_buffer_request(dd->ibuffers, format, &call->count);
+	call->count = 0;
+
+	GPUBatch *batch = DRW_temp_batch_instance_request(dd->ibuffers, call->buffer, NULL, geometry);
+
+	draw_command_draw(shgroup, handle, batch, 0);
+	return call;
+}
+
 void DRW_shading_group_bind_uniform_block(DRWShadingGroup *shgroup, GPUUniformBuf *block, unsigned int location) {
 	DRWCommandUniformBlock *cmd = draw_command_new(shgroup, -1, DRW_COMMAND_UNIFORM_BLOCK);
 
@@ -267,4 +300,26 @@ DRWShadingGroup *DRW_shading_group_new(GPUShader *shader, DRWPass *pass) {
 	DRWShadingGroup *shgroup = draw_shading_group_new_ex(shader, pass);
 	draw_shading_group_init(shgroup);
 	return shgroup;
+}
+
+void DRW_buffer_add_entry_struct(DRWCallBuffer* callbuf, const void* data) {
+	GPUVertBuf *buf = callbuf->buffer;
+	const bool resize = (callbuf->count >= GPU_vertbuf_get_vertex_alloc(buf));
+
+	if (resize) {
+		GPU_vertbuf_data_resize(buf, callbuf->count + DRW_BUFFER_VERTS_CHUNK);
+	}
+
+	GPU_vertbuf_vert_set(buf, callbuf->count, data);
+	callbuf->count++;
+}
+
+void DRW_buffer_add_entry_array(DRWCallBuffer *callbuf, const void *attr[], size_t attr_len) {
+	GPUVertBuf *buf = callbuf->buffer;
+	const bool resize = (callbuf->count >= GPU_vertbuf_get_vertex_alloc(buf));
+
+	for (size_t i = 0; i < attr_len; i++) {
+		GPU_vertbuf_attr_set(buf, i, callbuf->count, attr[i]);
+	}
+	callbuf->count++;
 }

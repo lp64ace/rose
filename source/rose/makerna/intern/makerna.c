@@ -1106,6 +1106,7 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 		fprintf(fpout, "\t\t.totarraylength = %u,\n", property->totarraylength);
 
 		fprintf(fpout, "\t\t.flagex = %u,\n", 0);
+		fprintf(fpout, "\t\t.update = %s,\n", rna_function_string(property->update));
 
 		if ((property->flagex & PROP_INTERN_RAW_ACCESS) != 0) {
 			PropertyDefRNA *defproperty = rna_find_struct_property_def(srna, property);

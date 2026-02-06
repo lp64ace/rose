@@ -47,6 +47,7 @@ ROSE_INLINE void rna_def_pose_channel(RoseRNA *rna) {
 			RNA_def_property_float_sdna(euler, NULL, "euler");
 			RNA_def_property_ui_text(euler, "Euler Rotation", "Rotation in Eulers");
 			RNA_def_property_ui_range(euler, -FLT_MAX, FLT_MAX, 100, RNA_TRANSLATION_PREC_DEFAULT);
+			RNA_def_property_update(euler, "rna_Pose_update");
 		} while (false);
 
 	} while (false);

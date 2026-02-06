@@ -32,6 +32,7 @@ ROSE_INLINE void import_vertex_positions(const ufbx_mesh *fmesh, Mesh *mesh) {
 	ROSE_assert(positions.size() == fmesh->vertex_position.values.count);
 	for (size_t index = 0; index < fmesh->vertex_position.values.count; index++) {
 		ufbx_vec3 val = fmesh->vertex_position.values[index];
+
 		positions[index] = float3(val.x, val.y, val.z);
 	}
 }

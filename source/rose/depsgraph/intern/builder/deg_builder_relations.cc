@@ -458,6 +458,14 @@ void DepsgraphRelationBuilder::build_object(Object *object) {
 	build_parameters(&object->id);
 }
 
+void DepsgraphRelationBuilder::build_object_dimensions(Object *object) {
+	OperationKey dimensions_key(&object->id, NodeType::PARAMETERS, OperationCode::DIMENSIONS);
+	ComponentKey geometry_key(&object->id, NodeType::GEOMETRY);
+	ComponentKey transform_key(&object->id, NodeType::TRANSFORM);
+	add_relation(geometry_key, dimensions_key, "Geometry -> Dimensions");
+	add_relation(transform_key, dimensions_key, "Transform -> Dimensions");
+}
+
 void DepsgraphRelationBuilder::build_object_from_view_layer_base(Object *object) {
 	/* It is possible to have situation when an object is pulled into the dependency graph in a
 	 * few different ways:
@@ -648,6 +656,7 @@ void DepsgraphRelationBuilder::build_object_data_geometry(Object *object) {
 	}
 	/* Object data data-block. */
 	build_object_data_geometry_datablock((ID *)object->data);
+	build_object_dimensions(object);
 	/* Synchronization back to original object. */
 	ComponentKey final_geometry_key(&object->id, NodeType::GEOMETRY);
 	OperationKey synchronize_key(&object->id, NodeType::SYNCHRONIZATION, OperationCode::SYNCHRONIZE_TO_ORIGINAL);

@@ -15,6 +15,23 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------- */
+/** \name Draw Cache
+ * This is primarily part of the DRAW module but we export functions!
+ * \{ */
+
+enum {
+	KER_ARMATURE_BATCH_DIRTY_ALL = 0,
+};
+
+void KER_armature_batch_cache_tag_dirty(struct Armature *mesh, int mode);
+void KER_armature_batch_cache_free(struct Armature *mesh);
+
+extern void (*KER_armature_batch_cache_tag_dirty_cb)(struct Armature *mesh, int mode);
+extern void (*KER_armature_batch_cache_free_cb)(struct Armature *mesh);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Armature Edit Structures
  * \{ */
 
@@ -151,6 +168,15 @@ void KER_pose_remap_bone_pointers(struct Armature *armature, struct Pose *pose);
 
 void KER_pose_channel_to_mat4(const struct PoseChannel *pchannel, float r_mat[4][4]);
 void KER_pose_channel_do_mat4(struct PoseChannel *pchannel);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Armature Runtime
+ * \{ */
+
+/** Clear the required caches related to the armature geometry. */
+void KER_armature_geometry_changed(struct Armature *armature);
 
 /** \} */
 

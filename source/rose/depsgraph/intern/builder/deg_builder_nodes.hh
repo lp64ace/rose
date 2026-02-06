@@ -103,6 +103,7 @@ public:
 	virtual void build_object_data_armature(Object *ob);
 	virtual void build_object_data_geometry(Object *ob);
 	virtual void build_object_data_geometry_datablock(ID *obdata);
+	virtual void build_object_dimensions(Object *ob);
 	virtual void build_object_flags(int base_index, Object *ob, eDepsNode_LinkedState_Type linked_state);
 	virtual void build_object_from_layer(int base_index, Object *ob, eDepsNode_LinkedState_Type linked_state);
 	virtual void build_object_transform(Object *ob);

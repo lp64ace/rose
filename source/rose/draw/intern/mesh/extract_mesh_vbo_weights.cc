@@ -11,6 +11,7 @@
 #include "KER_object_deform.h"
 
 #include "GPU_index_buffer.h"
+#include "GPU_info.h"
 #include "GPU_uniform_buffer.h"
 #include "GPU_vertex_buffer.h"
 
@@ -24,13 +25,15 @@
 
 #include "extract_mesh.h"
 
+#include "intern/shaders/draw_shader_shared.h"
+
 struct ArmatureDeviceDeformParams {
-	const ListBase *pose_channels;
+	const ListBase *pose_channels = NULL;
 
 	rose::Array<PoseChannel *> pose_channel_by_vertex_group;
 
-	float4x4 target_to_armature;
-	float4x4 armature_to_target;
+	float4x4 target_to_armature = float4x4::identity();
+	float4x4 armature_to_target = float4x4::identity();
 };
 
 ROSE_INLINE ArmatureDeviceDeformParams get_armature_device_deform_params(const Object *obarmature, const Object *obtarget, const ListBase *defbase) {
@@ -76,11 +79,11 @@ ROSE_STATIC GPUVertFormat *extract_weights_format() {
 }
 
 struct MDeformDeviceData {
-	int4 defgroup = int4(-1, -1, -1, -1);
+	int4 defgroup = int4(0, 0, 0, 0);
 	float4 weight = float4(0, 0, 0, 0);
 };
 
-void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, rose::Vector<float4x4>& ubo_data) {
+void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, DVertGroupMatrices *r_ubo_data) {
 	const ListBase *defbase = NULL;
 	if (metarget) {
 		defbase = KER_id_defgroup_list_get(&metarget->id);
@@ -97,8 +100,7 @@ void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, 
 
 	ArmatureDeviceDeformParams params = get_armature_device_deform_params(obarmature, obtarget, defbase);
 
-	ubo_data.resize(params.pose_channel_by_vertex_group.size());
-
+	ROSE_assert(params.pose_channel_by_vertex_group.size() <= ARRAY_SIZE(r_ubo_data->drw_poseMatrix));
 	rose::threading::parallel_for(params.pose_channel_by_vertex_group.index_range(), 64, [&](const rose::IndexRange range) {
 		const rose::IndexRange def_nr_range = params.pose_channel_by_vertex_group.index_range();
 
@@ -110,9 +112,12 @@ void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, 
 			 * \note This isn't the rest pose, it is the raw mesh without deformation applied.
 			 */
 
-			ubo_data[group] = (pchannel) ? float4x4(pchannel->chan_mat)  : float4x4::identity();
+			r_ubo_data->drw_poseMatrix[group] = (pchannel) ? float4x4(pchannel->chan_mat) : float4x4::identity();
 		}
 	});
+
+	r_ubo_data->drw_ArmatureToTarget = params.armature_to_target;
+	r_ubo_data->drw_TargetToArmature = params.target_to_armature;
 }
 
 void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose::MutableSpan<MDeformDeviceData> vbo_data) {
@@ -153,15 +158,15 @@ void extract_weights(const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) 
 	MDeformDeviceData *data = static_cast<MDeformDeviceData *>(GPU_vertbuf_get_data(vbo));
 	rose::MutableSpan<MDeformDeviceData> vbo_data = rose::MutableSpan<MDeformDeviceData>(data, mesh->totloop);
 
-	rose::Vector<float4x4> ubo_data;
-
 	extract_weights_mesh_vbo(obtarget, mesh, vbo_data);
 }
 
-void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUUniformBuf *ubo) {
-	rose::Vector<float4x4> ubo_data;
+GPUUniformBuf *extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh) {
+	DVertGroupMatrices ubo_data;
 
-	extract_weights_mesh_ubo(obarmature, obtarget, mesh, ubo_data);
+	ubo_data.drw_ArmatureToTarget = float4x4::identity();
+	ubo_data.drw_TargetToArmature = float4x4::identity();
 
-	GPU_uniformbuf_update_ex(ubo, ubo_data.data(), ubo_data.size_in_bytes());
+	extract_weights_mesh_ubo(obarmature, obtarget, mesh, &ubo_data);
+	return GPU_uniformbuf_create_ex(sizeof(DVertGroupMatrices), &ubo_data, "DVertGroupMatrices");
 }

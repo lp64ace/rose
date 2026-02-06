@@ -15,6 +15,10 @@ struct GPUVertBuf;
 extern "C" {
 #endif
 
+/* -------------------------------------------------------------------- */
+/** \name Mesh Batch Cache
+ * \{ */
+
 typedef struct MeshBufferList {
 	struct {
 		GPUVertBuf *pos;
@@ -39,10 +43,6 @@ typedef struct MeshBatchCache {
 
 	size_t materials;
 } MeshBatchCache;
-
-/* -------------------------------------------------------------------- */
-/** \name Mesh Batch Cache
- * \{ */
 
 struct MeshBatchCache *mesh_batch_cache_get(struct Mesh *mesh);
 

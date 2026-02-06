@@ -212,12 +212,13 @@ enum {
 	 * transforms on any of the objects in the collection are updated.
 	 */
 	ID_RECALC_GEOMETRY = (1 << 1),
+	ID_RECALC_PARAMETERS = (1 << 2),
 
 	/* ** Animation or time changed and animation is to be re-evaluated. ** */
-	ID_RECALC_ANIMATION = (1 << 2),
+	ID_RECALC_ANIMATION = (1 << 3),
 
 	/* Runs on frame-change (used for seeking audio too). */
-	ID_RECALC_FRAME_CHANGE = (1 << 3),
+	ID_RECALC_FRAME_CHANGE = (1 << 4),
 
 	/**
 	 * Update copy on write component.
@@ -225,7 +226,7 @@ enum {
 	 * This is most generic tag which should only be used when nothing else
 	 * matches.
 	 */
-	ID_RECALC_COPY_ON_WRITE = (1 << 4),
+	ID_RECALC_COPY_ON_WRITE = (1 << 5),
 
 	/* Identifies that SOMETHING has been changed in this ID. */
 	ID_RECALC_ALL = ~(0),

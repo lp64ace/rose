@@ -19,6 +19,7 @@ typedef struct MeshBatchCache MeshBatchCache;
  * \{ */
 
 struct GPUBatch *DRW_cache_fullscreen_quad_get(void);
+struct GPUBatch *DRW_cache_bone_octahedral_get(void);
 
 void DRW_global_cache_free(void);
 

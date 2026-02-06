@@ -92,6 +92,7 @@ set(SRC
 	intern/modifier.c
 	intern/object.c
 	intern/object_deform.c
+	intern/object_runtime.cc
 	intern/rose.c
 	intern/rosefile.c
 	intern/scene.c

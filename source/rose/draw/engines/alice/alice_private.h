@@ -36,7 +36,10 @@ void DRW_alice_shaders_free();
  * Returns the uniform buffer that should be used to deform the vertex group using 
  * the specified modifier data.
  */
-GPUUniformBuf *DRW_alice_defgroup_ubo(struct Object *object, struct ModifierData *md);
+struct GPUUniformBuf *DRW_alice_defgroup_ubo(struct Object *object, struct ModifierData *md);
+struct AliceDrawData *DRW_alice_drawdata(struct Object *object);
+
+void DRW_alice_modifier_list_build(struct DRWShadingGroup *shgroup, struct Object *object);
 
 #ifdef __cplusplus
 }

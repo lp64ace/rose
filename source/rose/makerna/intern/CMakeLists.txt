@@ -127,6 +127,7 @@ set(LIB
 	rose::intern::atomic
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::rosekernel
+	PUBLIC rose::source::depsgraph
 	PUBLIC rose::source::dna
 	PUBLIC rose::source::windowmanager
 	

@@ -27,7 +27,8 @@ void extract_positions(const struct Mesh *mesh, struct GPUVertBuf *vbo);
 void extract_normals(const Mesh *mesh, struct GPUVertBuf *vbo, bool use_hq);
 
 void extract_weights(const Object *obtarget, const Mesh *mesh, struct GPUVertBuf *vbo);
-void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, struct GPUUniformBuf *ubo);
+/** Extract the uniform buffer with the matrices for deformation. */
+struct GPUUniformBuf *extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh);
 
 /** \} */
 

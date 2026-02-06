@@ -109,6 +109,9 @@ void depsgraph_tag_to_component_opcode(const ID *id, int recalc, NodeType *compo
 		case ID_RECALC_ANIMATION:
 			*component_type = NodeType::ANIMATION;
 			break;
+		case ID_RECALC_PARAMETERS:
+			*component_type = NodeType::PARAMETERS;
+			break;
 		case ID_RECALC_COPY_ON_WRITE:
 			*component_type = NodeType::COPY_ON_WRITE;
 			break;

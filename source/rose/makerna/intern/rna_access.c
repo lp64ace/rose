@@ -2,9 +2,12 @@
 
 #include "LIB_string.h"
 
+#include "KER_context.h"
 #include "KER_idtype.h"
 #include "KER_idprop.h"
 #include "KER_lib_id.h"
+#include "KER_main.h"
+#include "KER_scene.h"
 
 #include "RNA_access.h"
 #include "RNA_types.h"
@@ -12,6 +15,8 @@
 #ifdef RNA_RUNTIME
 #	include "RNA_prototypes.h"
 #endif
+
+#include "DEG_depsgraph.h"
 
 #include "rna_internal_types.h"
 #include "rna_internal.h"
@@ -763,6 +768,30 @@ bool RNA_property_animateable(const PointerRNA *ptr, PropertyRNA *property) {
 	}
 
 	return true;
+}
+
+ROSE_INLINE void rna_property_update(rContext *C, Main *main, Scene *scene, PointerRNA *ptr, PropertyRNA *property) {
+	const bool is_rna = (property->magic == RNA_MAGIC);
+	property = rna_ensure_property(property);
+
+	if (is_rna) {
+		if (property->update) {
+			property->update(main, scene, ptr);
+		}
+	}
+
+	if (!is_rna || (property->flag & PROP_IDPROPERTY)) {
+		DEG_id_tag_update(ptr->owner, ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY | ID_RECALC_PARAMETERS);
+	}
+}
+
+void RNA_property_update(rContext *C, PointerRNA *ptr, PropertyRNA *prop) {
+	rna_property_update(C, CTX_data_main(C), CTX_data_scene(C), ptr, prop);
+}
+
+void RNA_property_update_main(Main *main, Scene *scene, PointerRNA *ptr, PropertyRNA *prop) {
+	ROSE_assert(main != NULL);
+	rna_property_update(NULL, main, scene, ptr, prop);
 }
 
 ROSE_INLINE bool rna_property_editable_do(const PointerRNA *ptr, PropertyRNA *original, const int index) {

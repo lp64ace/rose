@@ -15,37 +15,14 @@ typedef struct DeformGroup {
 	char name[64];
 } DeformGroup;
 
-/**
- * The following illustates the orientation of the bounding box in local space.
- *
- * Z  Y
- * | /
- * |/
- * .------X
- *
- *    2----------6
- *   /|         /|
- *  / |        / |
- * 1----------5  |
- * |  |       |  |
- * |  3-------|--7
- * | /        | /
- * |/         |/
- * 0----------4
- */
 typedef struct BoundBox {
-	float vec[8][3];
-	int flag;
+	float min[3];
+	float max[3];
 } BoundBox;
-
-/** #BoundBox->flag */
-enum {
-	BOUNDBOX_DIRTY = 1 << 0,
-};
 
 typedef struct Object_Runtime {
 	/** Axis aligned bound-box (in local-space). */
-	struct BoundBox *bb;
+	BoundBox *bb;
 
 	void *data_orig;
 	void *data_eval;
@@ -54,9 +31,6 @@ typedef struct Object_Runtime {
 
 	int is_data_eval_owned;
 	int local_collections_bits;
-
-	float object_to_world[4][4];
-	float world_to_object[4][4];
 } Object_Runtime;
 
 typedef struct Object {
@@ -132,6 +106,7 @@ enum {
 	OB_ARMATURE,
 	OB_CAMERA,
 	OB_MESH,
+	OB_BOUNDBOX,
 };
 
 #define OB_TYPE_SUPPORT_VGROUP(_type) (ELEM(_type, OB_MESH))

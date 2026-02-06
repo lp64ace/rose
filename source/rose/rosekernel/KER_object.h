@@ -33,6 +33,9 @@ void *KER_object_obdata_add_from_type(struct Main *main, int type, const char *n
 /** \name Object Transform
  * \{ */
 
+void KER_object_parent_object_set(struct Object *object, struct Object *parent);
+void KER_object_parent_bone_set(struct Object *object, struct Object *armature, const char *bonename);
+
 void KER_object_scale_to_mat3(const struct Object *object, float r_mat[3][3]);
 void KER_object_rot_to_mat3(const struct Object *object, float r_mat[3][3], bool use_drot);
 void KER_object_to_mat3(const struct Object *object, float r_mat[3][3]);
@@ -47,7 +50,14 @@ const float (*KER_object_world_to_object(const struct Object *object))[4];
 void KER_object_apply_mat4_ex(struct Object *object, const float mat[4][4], Object *parent, const float parentinv[4][4], bool use_compat);
 void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool use_compat, bool use_parent);
 
-void KER_object_where_is_calc(struct Object *object);
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Geometry Evaluation
+ * \{ */
+
+/** Note that the resulting bound box has no transform applied. */
+void KER_object_evaluated_geometry_bounds(struct Object *object, struct BoundBox **r_bb, bool use_subdivision);
 
 /** \} */
 

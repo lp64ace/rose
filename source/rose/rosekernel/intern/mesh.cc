@@ -128,25 +128,3 @@ int *KER_mesh_poly_offsets_for_write(Mesh *mesh) {
 }
 
 /** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Mesh Vertex Coords
- * \{ */
-
-float (*KER_mesh_vert_coords_alloc(const struct Mesh *mesh, int *r_vert_len))[3] {
-	float (*vert_coords)[3] = (float (*)[3])MEM_mallocN(sizeof(float[3]) * mesh->totvert, __func__);
-	KER_mesh_vert_coords_get(mesh, vert_coords);
-	if (r_vert_len) {
-		*r_vert_len = mesh->totvert;
-	}
-	return vert_coords;
-}
-
-void KER_mesh_vert_coords_get(const struct Mesh *mesh, float (*vert_coords)[3]) {
-	const float (*co)[3] = KER_mesh_vert_positions(mesh);
-	for (int i = 0; i < mesh->totvert; i++, co++) {
-		copy_v3_v3(vert_coords[i], co[0]);
-	}
-}
-
-/** \} */
