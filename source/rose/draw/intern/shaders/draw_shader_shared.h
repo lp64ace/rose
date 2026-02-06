@@ -6,6 +6,7 @@
 #endif
 
 #ifndef GPU_SHADER
+typedef struct DVertGroupMatrices DVertGroupMatrices;
 typedef struct ObjectMatrices ObjectMatrices;
 typedef struct ViewInfos ViewInfos;
 #endif

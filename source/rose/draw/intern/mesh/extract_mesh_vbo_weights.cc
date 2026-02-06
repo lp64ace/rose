@@ -161,12 +161,12 @@ void extract_weights(const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) 
 	extract_weights_mesh_vbo(obtarget, mesh, vbo_data);
 }
 
-GPUUniformBuf *extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh) {
+void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUUniformBuf *ubo) {
 	DVertGroupMatrices ubo_data;
 
 	ubo_data.drw_ArmatureToTarget = float4x4::identity();
 	ubo_data.drw_TargetToArmature = float4x4::identity();
 
 	extract_weights_mesh_ubo(obarmature, obtarget, mesh, &ubo_data);
-	return GPU_uniformbuf_create_ex(sizeof(DVertGroupMatrices), &ubo_data, "DVertGroupMatrices");
+	GPU_uniformbuf_update(ubo, &ubo_data);
 }
