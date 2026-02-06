@@ -131,7 +131,7 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 
 	/* gather the deform vertices for each vertex. */
 
-	rose::threading::parallel_for(vcorners.index_range(), 1024, [&](const rose::IndexRange range) {
+	rose::threading::parallel_for(vcorners.index_range(), 4096, [&](const rose::IndexRange range) {
 		for (const size_t corner : range) {
 			const MDeformVert *dvert = &dverts[vcorners[corner]];
 
