@@ -17,9 +17,12 @@
 #include "intern/draw_state.h"
 
 #include "intern/mesh/extract_mesh.h"
+#include "intern/shaders/draw_shader_shared.h"
 
 ROSE_INLINE void alice_draw_data_init(DrawData *dd) {
     AliceDrawData *add = (AliceDrawData *)dd;
+
+	add->defgroup = GPU_uniformbuf_create_ex(sizeof(DVertGroupMatrices), NULL, "DVertGroupMatrices");
 }
 
 ROSE_INLINE void alice_draw_data_free(DrawData *dd) {
@@ -37,9 +40,6 @@ AliceDrawData *DRW_alice_drawdata(Object *object) {
 GPUUniformBuf *DRW_alice_defgroup_ubo(Object *object, ModifierData *md) {
 	AliceDrawData *add = DRW_alice_drawdata(object);
 
-	/** Delete the old uniform buffer. */
-	GPU_UNIFORMBUF_DISCARD_SAFE(add->defgroup);
-
     if (md) {
 		ArmatureModifierData *amd = (ArmatureModifierData *)md;
 		ROSE_assert((md->type == MODIFIER_TYPE_ARMATURE) && (md->flag & MODIFIER_DEVICE_ONLY) != 0);
@@ -50,10 +50,10 @@ GPUUniformBuf *DRW_alice_defgroup_ubo(Object *object, ModifierData *md) {
 		 *
 		 * \note This is intended since this is the purpose of device modifiers (always running).
 		 */
-		add->defgroup = extract_matrices(amd->object, object, object->data);
+		extract_matrices(amd->object, object, object->data, add->defgroup);
 	}
 	else {
-		add->defgroup = extract_matrices(NULL, object, object->data);
+		extract_matrices(NULL, object, object->data, add->defgroup);
 	}
 
     return add->defgroup;

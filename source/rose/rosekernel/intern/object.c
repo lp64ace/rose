@@ -83,6 +83,9 @@ ROSE_STATIC void object_init_data(struct ID *id) {
 
 	copy_v3_fl(ob->scale, 1.0f);
 	copy_v3_fl(ob->dscale, 1.0f);
+
+	unit_m4(ob->runtime.object_to_world);
+	unit_m4(ob->runtime.world_to_object);
 }
 
 ROSE_INLINE void copy_object_pose(Object *obnew, const Object *obold, const int flag) {
@@ -409,11 +412,11 @@ void KER_object_matrix_local_get(Object *ob, float r_mat[4][4]) {
 }
 
 const float (*KER_object_object_to_world(const Object *object))[4] {
-	return object->obmat;
+	return object->runtime.object_to_world;
 }
 
 const float (*KER_object_world_to_object(const Object *object))[4] {
-	return object->invmat;
+	return object->runtime.world_to_object;
 }
 
 void KER_object_mat3_to_rot(Object *object, float mat[3][3], bool use_compat) {
@@ -516,6 +519,23 @@ ROSE_STATIC void solve_parenting(const Object *object, Object *parent, float r_o
 		/* Usable `r_originmat`. */
 		copy_m3_m4(r_originmat, tmat);
 	}
+}
+
+void KER_object_where_is_calc_ex(Object *object, float r_originmat[3][3]) {
+	if (object->parent) {
+		Object *parent = object->parent;
+
+		/* calculate parent matrix */
+		solve_parenting(object, parent, object->runtime.object_to_world, r_originmat);
+	}
+	else {
+		KER_object_to_mat4(object, object->runtime.object_to_world);
+	}
+}
+
+void KER_object_where_is_calc(Object *object) {
+	float originmat[3][3];
+	KER_object_where_is_calc_ex(object, originmat);
 }
 
 /** \} */

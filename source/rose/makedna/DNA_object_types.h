@@ -31,6 +31,9 @@ typedef struct Object_Runtime {
 
 	int is_data_eval_owned;
 	int local_collections_bits;
+
+	float object_to_world[4][4];
+	float world_to_object[4][4];
 } Object_Runtime;
 
 typedef struct Object {

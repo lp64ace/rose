@@ -309,6 +309,8 @@ void KER_pose_eval_init(Depsgraph *depsgraph, Scene *scene, Object *object) {
 	ROSE_assert(object->pose != NULL);
 	ROSE_assert((object->pose->flag & POSE_RECALC) == 0);
 
+	invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
+
 	ROSE_assert(pose->channels != NULL || LIB_listbase_is_empty(&pose->channelbase));
 }
 
@@ -729,6 +731,8 @@ void KER_pose_where_is(Depsgraph *depsgraph, Scene *scene, Object *object) {
 		}
 	}
 	else {
+		invert_m4_m4(object->runtime.world_to_object, object->runtime.object_to_world);
+
 		LISTBASE_FOREACH(PoseChannel *, pchannel, &object->pose->channelbase) {
 			if (!(pchannel->flag & POSE_DONE)) {
 				KER_pose_where_is_bone(depsgraph, scene, object, pchannel, 0.0f);
