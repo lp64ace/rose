@@ -446,6 +446,10 @@ void DepsgraphRelationBuilder::build_object(Object *object) {
 		data.builder = this;
 		KER_modifiers_foreach_ID_link(object, modifier_walk, &data);
 	}
+
+	add_relation(base_op_key, ob_eval_key, "Eval");
+	add_relation(ob_eval_key, final_transform_key, "Eval -> Final Transform");
+
 	build_idproperties(object->id.properties);
 	/* Animation data */
 	build_animdata(&object->id);

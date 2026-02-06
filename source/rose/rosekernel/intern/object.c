@@ -579,6 +579,8 @@ void KER_object_runtime_reset(Object *object) {
 /** \name Object Evaluation
  * \{ */
 
+ThreadMutex mutex = ROSE_MUTEX_INITIALIZER;
+
 void KER_object_eval_local_transform(Depsgraph *depsgraph, Object *ob) {
 	KER_object_to_mat4(ob, ob->obmat);
 }
