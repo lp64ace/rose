@@ -22,7 +22,7 @@ struct Scene;
 void rna_Pose_update(struct Main *main, struct Scene *scene, PointerRNA *ptr) {
 	Object *ob = (Object *)ptr->owner;
 
-	DEG_id_tag_update(ob, ID_RECALC_GEOMETRY);
+	DEG_id_tag_update(&ob->id, ID_RECALC_GEOMETRY);
 }
 
 bool rna_PoseBones_lookup_string(PointerRNA *ptr, const char *key, PointerRNA *r_ptr) {

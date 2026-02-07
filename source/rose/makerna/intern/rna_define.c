@@ -1515,7 +1515,7 @@ void RNA_def_property_update(PropertyRNA *prop, const char *funcname) {
 		return;
 	}
 
-	prop->update = funcname;
+	prop->update = (PropertyUpdateFunc)funcname;
 }
 
 void RNA_def_property_flag(PropertyRNA *property, ePropertyFlag flag) {

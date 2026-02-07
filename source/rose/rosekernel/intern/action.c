@@ -1045,7 +1045,7 @@ void KER_action_copy_data(Main *main, Action *ac_dst, const Action *ac_src, cons
 }
 
 ROSE_STATIC void action_copy_data(Main *main, ID *id_dst, const ID *id_src, const int flag) {
-	KER_action_copy_data(main, id_dst, id_src, flag);
+	KER_action_copy_data(main, (Action *)id_dst, (const Action *)id_src, flag);
 }
 
 ROSE_STATIC void action_free_data(ID *id) {

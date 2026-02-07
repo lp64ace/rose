@@ -55,10 +55,10 @@ void overlay_armature_cache_init(DRWOverlayData *vdata) {
 void overlay_armature_context_init(DRWArmatureContext *ctx, DRWOverlayViewportPrivateData *pd, Object *object) {
 	Armature *armature = (Armature *)object->data;
 
-	DRWOverlayArmatureCallBuffersInner *cb = &pd->armature_call_buffers;
+	DRWOverlayArmatureCallBuffers *cb = &pd->armature_call_buffers;
 
 	ctx->outline = NULL;
-	ctx->solid = cb->octahaedron;
+	ctx->solid = cb->solid.octahaedron;
 	ctx->object = object;
 }
 

@@ -4,11 +4,13 @@
 #include "DNA_armature_types.h"
 
 struct Armature;
+struct Depsgraph;
 struct Main;
 struct Mesh;
 struct Object;
 struct Pose;
 struct PoseChannel;
+struct Scene;
 
 #ifdef __cplusplus
 extern "C" {

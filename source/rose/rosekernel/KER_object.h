@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+struct Depsgraph;
 struct ID;
 struct Main;
 struct Object;

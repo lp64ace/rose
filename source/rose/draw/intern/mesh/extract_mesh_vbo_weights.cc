@@ -27,6 +27,8 @@
 
 #include "intern/shaders/draw_shader_shared.h"
 
+#include <atomic>
+
 struct ArmatureDeviceDeformParams {
 	const ListBase *pose_channels = NULL;
 
@@ -132,7 +134,7 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 	size_t total[127];
 	memset(&total, 0, sizeof(total));
 
-	std::atomic<bool> too_many_deform_verts_warning = false;
+	std::atomic<bool> too_many_deform_verts_warning(false);
 
 	/* gather the deform vertices for each vertex. */
 	rose::threading::parallel_for(vcorners.index_range(), 4096, [&](const rose::IndexRange range) {
@@ -151,7 +153,7 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 				}
 			}
 			else {
-				MDeformWeight top[4] = {{-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}};
+				MDeformWeight top[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 				for (const size_t index : dweights.index_range()) {
 					int m = 0;
 					m = top[1].weight < top[m].weight ? 1 : m;

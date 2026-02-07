@@ -8,6 +8,7 @@
 
 #include "KER_lib_id.h"
 
+struct DRWShadingGroup;
 struct ModifierData;
 struct Object;
 struct GPUShader;

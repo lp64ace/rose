@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+struct Depsgraph;
 struct Main;
 struct Mesh;
 struct Object;

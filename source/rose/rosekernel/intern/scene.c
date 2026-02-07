@@ -12,6 +12,7 @@
 #include "KER_scene.h"
 
 #include "DEG_depsgraph.h"
+#include "DEG_depsgraph_build.h"
 #include "DEG_depsgraph_query.h"
 
 /* -------------------------------------------------------------------- */
@@ -271,7 +272,7 @@ void KER_scene_copy_data(Main *main, Scene *scene_dst, const Scene *scene_src, c
 }
 
 ROSE_STATIC void scene_copy_data(Main *main, ID *id_dst, const ID *id_src, const int flag) {
-	KER_scene_copy_data(main, id_dst, id_src, flag);
+	KER_scene_copy_data(main, (Scene *)id_dst, (const Scene *)id_src, flag);
 }
 
 ROSE_STATIC void scene_free_data(ID *id) {

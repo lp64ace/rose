@@ -4,7 +4,9 @@
 #include "RNA_types.h"
 
 struct DNAType;
+struct Main;
 struct RoseRNA;
+struct Scene;
 struct StructRNA;
 
 #define RNA_MAX_ARRAY_LENGTH 64

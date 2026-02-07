@@ -3,6 +3,7 @@
 
 #include "DEG_depsgraph.h"
 
+struct CustomData_MeshMasks;
 struct Depsgraph;
 struct Main;
 struct Scene;

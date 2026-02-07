@@ -872,7 +872,7 @@ void KER_armature_copy_data(Main *main, Armature *arm_dst, const Armature *arm_s
 }
 
 ROSE_STATIC void armature_copy_data(Main *main, ID *id_dst, const ID *id_src, const int flag) {
-	KER_armature_copy_data(main, id_dst, id_src, flag);
+	KER_armature_copy_data(main, (Armature *)id_dst, (Armature *)id_src, flag);
 }
 
 ROSE_STATIC void armature_free_data(struct ID *id) {

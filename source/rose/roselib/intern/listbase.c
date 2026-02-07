@@ -222,10 +222,10 @@ void LIB_freelinkN(ListBase *lb, void *vlink) {
 /** \name Find Methods
  * \{ */
 
-bool LIB_haslink(const ListBase *lb, void *vlink) {
+bool LIB_haslink(const ListBase *lb, const void *vlink) {
 	if (vlink) {
-		for (Link *link = lb->first; link; link = link->next) {
-			if (link == (Link *)vlink) {
+		for (const Link *link = lb->first; link; link = link->next) {
+			if (link == (const Link *)vlink) {
 				return true;
 			}
 		}

@@ -2,6 +2,7 @@
 #define KER_ANIM_SYS_H
 
 struct AnimData;
+struct Depsgraph;
 struct ID;
 struct FCurve;
 struct PathResolvedRNA;
