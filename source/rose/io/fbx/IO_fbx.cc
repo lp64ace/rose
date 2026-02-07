@@ -29,6 +29,12 @@ struct FbxImportContext {
 
 	FbxImportContext(Main *main, Scene *scene, const ufbx_scene *fbx, const char *filepath) : main(main), scene(scene), fbx(fbx) {
 		fps = (float)fbx->settings.frames_per_second;
+
+		ufbx_transform root_tr;
+		root_tr.translation = ufbx_zero_vec3;
+		root_tr.rotation = fbx->metadata.root_rotation;
+		root_tr.scale.x = root_tr.scale.y = root_tr.scale.z = fbx->metadata.root_scale;
+		this->mapping.global_conv_matrix = ufbx_transform_to_matrix(&root_tr);
 	}
 
 	void import_globals();

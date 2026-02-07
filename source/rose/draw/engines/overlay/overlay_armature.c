@@ -115,7 +115,7 @@ ROSE_INLINE void draw_shading_group_bone_octahedral(DRWArmatureContext *context,
 	mul_m4_m4m4(data.mat, context->object->obmat, bone_mat);
 
 	if (context->solid) {
-		overlay_bone_instance_data_set_color(&data, (const float[4]){0.5f, 1.0f, 0.5f, 1.0f});
+		overlay_bone_instance_data_set_color(&data, (const float[4]){0.0f, 1.0f, 0.0f, 1.0f});
 		overlay_bone_instance_data_set_color_hint(&data, (const float[4]){0.0f, 0.0f, 0.0f, 1.0f});
 		DRW_buffer_add_entry_struct(context->solid, &data);
 	}

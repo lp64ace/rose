@@ -129,8 +129,9 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 		return;
 	}
 
-	/* gather the deform vertices for each vertex. */
+	std::atomic<bool> too_many_deform_verts_warning = false;
 
+	/* gather the deform vertices for each vertex. */
 	rose::threading::parallel_for(vcorners.index_range(), 4096, [&](const rose::IndexRange range) {
 		for (const size_t corner : range) {
 			const MDeformVert *dvert = &dverts[vcorners[corner]];
@@ -138,17 +139,37 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 			vbo_data[corner] = MDeformDeviceData();
 
 			const rose::Span<MDeformWeight> dweights(dvert->dw, dvert->totweight);
-			for (const size_t index : dweights.index_range()) {
-				if (index >= 4) {
-					fprintf(stderr, "[Draw] Warning, too many deform vertices.\n");
-					break;
+			if (dweights.size() <= 4) {
+				for (const size_t index : dweights.index_range()) {
+					vbo_data[corner].defgroup[index] = dweights[index].def_nr;
+					vbo_data[corner].weight[index] = dweights[index].weight;
+				}
+			}
+			else {
+				MDeformWeight top[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+				for (const size_t index : dweights.index_range()) {
+					int m = 0;
+					m = top[1].weight < top[m].weight ? 1 : m;
+					m = top[2].weight < top[m].weight ? 2 : m;
+					m = top[3].weight < top[m].weight ? 3 : m;
+
+					if (dweights[index].weight > top[m].weight) {
+						top[m] = dweights[index];
+					}
+				}
+				for (const size_t index : rose::IndexRange(4)) {
+					vbo_data[corner].defgroup[index] = top[index].def_nr;
+					vbo_data[corner].weight[index] = top[index].weight;
 				}
 
-				vbo_data[corner].defgroup[index] = dweights[index].def_nr;
-				vbo_data[corner].weight[index] = dweights[index].weight;
+				too_many_deform_verts_warning.store(true, std::memory_order_relaxed);
 			}
 		}
 	});
+
+	if (too_many_deform_verts_warning.load(std::memory_order_relaxed)) {
+		fprintf(stderr, "[Draw] Warning, too many deform vertices for \"%s\".\n", metarget->id.name);
+	}
 }
 
 void extract_weights(const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {

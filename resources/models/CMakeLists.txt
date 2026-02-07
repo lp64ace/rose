@@ -3,7 +3,6 @@
 
 set(MODELS_SRC
 	sarah.fbx
-	six.fbx
 )
 
 set(MODELS_C

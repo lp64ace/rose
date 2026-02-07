@@ -123,6 +123,10 @@ void KER_mesh_ensure_required_data_layers(Mesh *mesh) {
 }
 
 int *KER_mesh_poly_offsets_for_write(Mesh *mesh) {
+	if (!mesh->totpoly) {
+		return nullptr;
+	}
+
 	rose::implicit_sharing::make_trivial_data_mutable(&mesh->poly_offset_indices, &mesh->runtime->poly_offsets_sharing_info, mesh->totpoly + 1);
 	return mesh->poly_offset_indices;
 }

@@ -247,7 +247,7 @@ ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_sarah_fbx, datatoc_sarah_fbx_size, 3.0f);
+	FBX_import_memory(C, datatoc_sarah_fbx, datatoc_sarah_fbx_size, 1.0f);
 }
 
 void WM_keyconfig_init(rContext *C) {

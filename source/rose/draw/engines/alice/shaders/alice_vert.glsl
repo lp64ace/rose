@@ -24,7 +24,7 @@ void main() {
         }
     }
 
-    if (contrib > 1e-7) {
+    if (contrib > 1e-3) {
         co += (1.0 / contrib) * dv;
         no = normalize(dn);
     }

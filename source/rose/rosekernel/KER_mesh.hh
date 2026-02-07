@@ -119,11 +119,13 @@ ROSE_INLINE rose::MutableSpan<int> KER_mesh_corner_edges_for_write_span(Mesh *me
 }
 
 ROSE_INLINE rose::Span<int> KER_mesh_poly_offsets_span(const Mesh *mesh) {
-	return rose::Span<int>(KER_mesh_poly_offsets(mesh), mesh->totpoly + 1);
+	const int *ptr = KER_mesh_poly_offsets(mesh);
+	return (ptr) ? rose::Span<int>(ptr, mesh->totpoly + 1) : rose::Span<int>();
 }
 
 ROSE_INLINE rose::MutableSpan<int> KER_mesh_poly_offsets_for_write_span(Mesh *mesh) {
-	return rose::MutableSpan<int>(KER_mesh_poly_offsets_for_write(mesh), mesh->totpoly + 1);
+	int *ptr = KER_mesh_poly_offsets_for_write(mesh);
+	return (ptr) ? rose::MutableSpan<int>(ptr, mesh->totpoly + 1) : rose::MutableSpan<int>();
 }
 
 ROSE_INLINE rose::Span<bool> KER_mesh_poly_sharp_face_span(const Mesh *mesh) {
@@ -148,7 +150,8 @@ ROSE_INLINE rose::Span<float3> KER_mesh_corner_normals_span(const Mesh *mesh) {
 }
 
 ROSE_INLINE rose::Span<MDeformVert> KER_mesh_deform_verts_span(const Mesh *mesh) {
-	return rose::Span<MDeformVert>(KER_mesh_deform_verts(mesh), mesh->totvert);
+	const MDeformVert *ptr = KER_mesh_deform_verts(mesh);
+	return (ptr) ? rose::Span<MDeformVert>(ptr, mesh->totvert) : rose::Span<MDeformVert>();
 }
 
 ROSE_INLINE rose::MutableSpan<MDeformVert> KER_mesh_deform_verts_for_write_span(Mesh *mesh) {
