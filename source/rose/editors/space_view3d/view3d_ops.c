@@ -140,6 +140,101 @@ static void VIEW3D_OT_rotate(wmOperatorType *ot) {
 	ot->flag = 0;
 }
 
+ROSE_INLINE void viewpan_apply(ViewOpsData *vod, const int event_xy[2]) {
+	RegionView3D *rv3d = (RegionView3D *)vod->region->regiondata;
+
+	if (true) {
+		const float sensitivity = U.view_rotate_sensitivity_turntable / PIXELSIZE;
+
+		/* Camera forward vector (Z axis in camera space) */
+		float dX[3], dY[3];
+		float mat[3][3];
+
+		quat_to_mat3(mat, vod->current.viewquat);
+
+		mul_v3_v3fl(dX, mat[0], sensitivity * -(event_xy[0] - vod->prev_xy[0]));
+		mul_v3_v3fl(dY, mat[1], sensitivity * -(event_xy[1] - vod->prev_xy[1]));
+
+		add_v3_v3(vod->current.viewloc, dX);
+		add_v3_v3(vod->current.viewloc, dY);
+	}
+
+	/**
+	 * use a working copy so view location locking doesn't overwrite the locked
+	 * location back into the view we calculate with
+	 */
+	copy_v3_v3(rv3d->viewloc, vod->current.viewloc);
+
+	vod->prev_xy[0] = event_xy[0];
+	vod->prev_xy[1] = event_xy[1];
+
+	ED_region_tag_redraw(vod->region);
+}
+
+/**
+ * Return's false if we should deny move to the user of the View3D!
+ */
+ROSE_INLINE int view3d_pan_poll(rContext *C) {
+	return true;
+}
+
+ROSE_INLINE wmOperatorStatus viewpan_invoke_impl(rContext *C, ViewOpsData *vod, const wmEvent *event, PointerRNA *ptr) {
+	eV3D_OpEvent event_code = ELEM(event->type, MOUSEROTATE, MOUSEPAN) ? VIEW_CONFIRM : VIEW_PASS;
+
+	if (event_code == VIEW_CONFIRM) {
+		viewpan_apply(vod, event->mouse_xy);
+
+		return OPERATOR_FINISHED;
+	}
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+ROSE_INLINE wmOperatorStatus viewpan_modal_impl(rContext *C, ViewOpsData *vod, const eV3D_OpEvent event_code, const int xy[2]) {
+	if (ELEM(event_code, VIEW_APPLY, VIEW_CONFIRM)) {
+		viewpan_apply(vod, xy);
+	}
+
+	switch (event_code) {
+		case VIEW_CONFIRM: {
+			return OPERATOR_FINISHED;
+		} break;
+		case VIEW_CANCEL: {
+			return OPERATOR_CANCELLED;
+		} break;
+	}
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+const ViewOpsType ViewOpsType_pan = {
+	.flag = VIEWOPS_FLAG_NONE,
+	.idname = "VIEW3D_OT_pan",
+	.poll_fn = view3d_pan_poll,
+	.init_fn = viewpan_invoke_impl,
+	.apply_fn = viewpan_modal_impl,
+};
+
+static wmOperatorStatus viewpan_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	return view3d_navigate_invoke_impl(C, op, event, &ViewOpsType_pan);
+}
+
+static void VIEW3D_OT_pan(wmOperatorType *ot) {
+/* identifiers */
+	ot->name = "Pan View";
+	ot->description = "Pan the view";
+	ot->idname = ViewOpsType_pan.idname;
+
+	/* API callbacks. */
+	ot->invoke = viewpan_invoke;
+	ot->modal = view3d_navigate_modal_fn;
+	ot->poll = view3d_pan_poll;
+	ot->cancel = view3d_navigate_cancel_fn;
+
+	/* flags */
+	ot->flag = 0;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -148,6 +243,7 @@ static void VIEW3D_OT_rotate(wmOperatorType *ot) {
 
 void view3d_operatortypes() {
 	WM_operatortype_append(VIEW3D_OT_rotate);
+	WM_operatortype_append(VIEW3D_OT_pan);
 }
 
 /** \} */
@@ -166,6 +262,12 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 		.type = RIGHTMOUSE,
 		.value = KM_PRESS,
 		.modifier = KM_NOTHING,
+	});
+
+	WM_keymap_add_item(keymap, "VIEW3D_OT_pan", &(KeyMapItem_Params){
+		.type = RIGHTMOUSE,
+		.value = KM_PRESS,
+		.modifier = KM_SHIFT,
 	});
 
 	/* clang-format on */

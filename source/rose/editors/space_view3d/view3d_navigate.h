@@ -51,10 +51,12 @@ typedef struct ViewOpsData {
 
 	struct {
 		float viewquat[4];
+		float viewloc[3];
 	} initial;
 
 	struct {
 		float viewquat[4];
+		float viewloc[3];
 	} current;
 
 	int event_type;

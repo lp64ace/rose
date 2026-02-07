@@ -29,6 +29,9 @@ ROSE_INLINE void viewops_data_init_navigation(rContext *C, ViewOpsData *vod, con
 	if (rv3d) {
 		copy_qt_qt(vod->initial.viewquat, rv3d->viewquat);
 		copy_qt_qt(vod->current.viewquat, rv3d->viewquat);
+
+		copy_v3_v3(vod->current.viewloc, rv3d->viewloc);
+		copy_v3_v3(vod->current.viewloc, rv3d->viewloc);
 	}
 
 	vod->nav_type = nav_type;
@@ -109,5 +112,6 @@ void view3d_navigate_cancel_fn(rContext *C, wmOperator *op) {
 	RegionView3D *rv3d = (RegionView3D *)vod->region->regiondata;
 	if (rv3d) {
 		copy_qt_qt(rv3d->viewquat, vod->initial.viewquat);
+		copy_qt_qt(rv3d->viewloc, vod->initial.viewloc);
 	}
 }
