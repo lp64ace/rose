@@ -11,8 +11,8 @@ typedef struct ObjectMatrices ObjectMatrices;
 typedef struct ViewInfos ViewInfos;
 #endif
 
-#define DRW_RESOURCE_CHUNK_LEN 127
-#define DRW_RESOURCE_BONES_LEN 127
+#define DRW_RESOURCE_CHUNK_LEN 168
+#define DRW_RESOURCE_BONES_LEN 168
 
 struct ObjectMatrices {
 	float4x4 drw_modelMatrix;
