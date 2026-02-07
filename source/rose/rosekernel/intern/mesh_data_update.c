@@ -1,3 +1,6 @@
+#include "LIB_listbase.h"
+
+#include "KER_deform.h"
 #include "KER_object.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
@@ -64,6 +67,22 @@ ROSE_STATIC void mesh_calc_modifiers(Scene *scene, Object *object, const bool us
 
 ROSE_STATIC void mesh_build_data(Scene *scene, Object *object, Mesh *mesh) {
 	mesh_calc_modifiers(scene, object, true, true);
+}
+
+void KER_mesh_copy_parameters(Mesh *me_dst, const Mesh *me_src) {
+	me_dst->flag = me_src->flag;
+}
+
+void KER_mesh_copy_parameters_for_eval(Mesh *me_dst, const Mesh *me_src) {
+	/* User counts aren't handled, don't copy into a mesh from #G_MAIN. */
+	ROSE_assert(me_dst->id.tag & (ID_TAG_NO_MAIN | ID_TAG_COPIED_ON_WRITE));
+
+	KER_mesh_copy_parameters(me_dst, me_src);
+	KER_mesh_assert_normals_dirty_or_calculated(me_dst);
+
+	/* Copy vertex group names. */
+	ROSE_assert(LIB_listbase_is_empty(&me_dst->vertex_group_names));
+	KER_defgroup_copy_list(&me_dst->vertex_group_names, &me_src->vertex_group_names);
 }
 
 void KER_mesh_data_update(Scene *scene, Object *object) {

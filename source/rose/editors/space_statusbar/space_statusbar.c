@@ -61,22 +61,20 @@ ROSE_INLINE void statusbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name StatusBar Main Region Methods
  * \{ */
 
-ROSE_STATIC void statusbar_header_region_layout(struct rContext *C, ARegion *region) {
+ROSE_STATIC void statusbar_header_region_layout(rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
-
-	char memory[64];
-	LIB_strnformat_byte_size(memory, ARRAY_SIZE(memory), MEM_num_memory_in_use(), 1);
 
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "statusbar"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 1, region->sizey, 0, 1);
-		uiDefBut(block, UI_BTYPE_TEXT, "(null)", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->fps, UI_POINTER_DBL, 16, UI_BUT_TEXT_LEFT);
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
+		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
+
+		uiDefBut(block, UI_BTYPE_TEXT, "", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frames_per_second, UI_POINTER_FLT, 0, FLT_MAX, UI_BUT_TEXT_LEFT);
+		// uiDefBut(block, UI_BTYPE_TEXT, "[%.*fms, ", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frame_min_time, UI_POINTER_FLT, 0, FLT_MAX, UI_BUT_TEXT_LEFT | UI_BUT_TEXT_FORMAT);
+		// uiDefBut(block, UI_BTYPE_TEXT, "%.*fms]  ", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frame_max_time, UI_POINTER_FLT, 0, FLT_MAX, UI_BUT_TEXT_LEFT | UI_BUT_TEXT_FORMAT);
+		
 		UI_block_end(C, block);
 	}
-}
-
-ROSE_STATIC void statusbar_header_region_draw(struct rContext *C, ARegion *region) {
-	ED_region_header_draw(C, region);
 }
 
 /** \} */
@@ -104,7 +102,7 @@ void ED_spacetype_statusbar() {
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
 		art->layout = statusbar_header_region_layout;
-		art->draw = statusbar_header_region_draw;
+		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 	}
@@ -113,7 +111,7 @@ void ED_spacetype_statusbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "StatusBar::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = ED_region_default_draw;
+		art->draw = NULL;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
 	}

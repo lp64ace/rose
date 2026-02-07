@@ -52,6 +52,8 @@ void GTK_window_manager_poll(struct GTKWindowManager *vmanager);
 
 double GTK_elapsed_time(struct GTKWindowManager *vmanager);
 
+void GTK_sleep(unsigned int ms);
+
 bool GTK_set_clipboard(struct GTKWindowManager *, const char *buffer, unsigned int len, bool selection);
 bool GTK_get_clipboard(struct GTKWindowManager *, char **r_buffer, unsigned int *r_len, bool selection);
 

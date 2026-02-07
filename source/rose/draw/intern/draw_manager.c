@@ -6,6 +6,7 @@
 
 #include "DNA_ID_enums.h"
 #include "DNA_userdef_types.h"
+#include "DNA_view3d_types.h"
 
 #include "KER_anim_sys.h"
 #include "KER_camera.h"
@@ -32,11 +33,16 @@
 #include "WM_api.h"
 #include "WM_draw.h"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
+
 #include "draw_engine.h"
+#include "draw_instance_data.h"
 #include "draw_manager.h"
 
 #include "engines/alice/alice_engine.h"
 #include "engines/basic/basic_engine.h"
+#include "engines/overlay/overlay_engine.h"
 #include "shaders/draw_shader_shared.h"
 
 struct Object;
@@ -53,6 +59,7 @@ DRWGlobal GDraw;
 void DRW_engines_register(void) {
 	// DRW_engine_register(&draw_engine_basic_type);
 	DRW_engine_register(&draw_engine_alice_type);
+	DRW_engine_register(&draw_engine_overlay_type);
 
 	{
 		KER_mesh_batch_cache_tag_dirty_cb = DRW_mesh_batch_cache_tag_dirty;
@@ -84,7 +91,7 @@ DrawEngineType *DRW_engine_find(const char *name) {
 	return engine;
 }
 
-DrawEngineType *DRW_engine_type(const struct rContext *C, struct Scene *scene) {
+DrawEngineType *DRW_engine_type(const rContext *C, struct Scene *scene) {
 	return DRW_engine_find(U.engine);
 }
 
@@ -170,15 +177,17 @@ ROSE_STATIC void drw_drawdata_free(struct ID *id) {
 DRWData *DRW_viewport_data_new(void) {
 	DRWData *ddata = MEM_callocN(sizeof(DRWData), "DRWData");
 
-	ddata->commands = LIB_memory_pool_create(sizeof(DRWCommand), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
-	ddata->passes = LIB_memory_pool_create(sizeof(DRWPass), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
-	ddata->shgroups = LIB_memory_pool_create(sizeof(DRWShadingGroup), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
-	ddata->uniforms = LIB_memory_pool_create(sizeof(DRWUniform), DRW_RESOURCE_CHUNK_LEN, 0, ROSE_MEMPOOL_NOP);
+	ddata->ibuffers = DRW_instance_data_list_create();
+
+	ddata->calls = LIB_memory_block_create_ex(sizeof(DRWCallBuffer), sizeof(DRWCallBuffer[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->commands = LIB_memory_block_create_ex(sizeof(DRWCommand), sizeof(DRWCommand[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->passes = LIB_memory_block_create_ex(sizeof(DRWPass), sizeof(DRWPass[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->shgroups = LIB_memory_block_create_ex(sizeof(DRWShadingGroup), sizeof(DRWShadingGroup[DRW_RESOURCE_CHUNK_LEN]));
+	ddata->uniforms = LIB_memory_block_create_ex(sizeof(DRWUniform), sizeof(DRWUniform[DRW_RESOURCE_CHUNK_LEN]));
 
 	// Resource Data Pool(s)
 
 	ddata->obmats = LIB_memory_block_create_ex(sizeof(DRWObjectMatrix), sizeof(DRWObjectMatrix[DRW_RESOURCE_CHUNK_LEN]));
-	ddata->dvinfo = LIB_memory_block_create_ex(sizeof(DRWDVertGroupInfo), sizeof(DRWDVertGroupInfo[DRW_RESOURCE_CHUNK_LEN]));
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		ddata->vdata_engine[index] = DRW_view_data_new(&GEngineList);
@@ -188,13 +197,15 @@ DRWData *DRW_viewport_data_new(void) {
 }
 
 void DRW_viewport_data_free(DRWData *ddata) {
-	LIB_memory_pool_destroy(ddata->commands);
-	LIB_memory_pool_destroy(ddata->passes);
-	LIB_memory_pool_destroy(ddata->shgroups);
-	LIB_memory_pool_destroy(ddata->uniforms);
+	DRW_instance_data_list_free(ddata->ibuffers);
+
+	LIB_memory_block_destroy(ddata->calls, NULL);
+	LIB_memory_block_destroy(ddata->commands, NULL);
+	LIB_memory_block_destroy(ddata->passes, NULL);
+	LIB_memory_block_destroy(ddata->shgroups, NULL);
+	LIB_memory_block_destroy(ddata->uniforms, NULL);
 
 	LIB_memory_block_destroy(ddata->obmats, NULL);
-	LIB_memory_block_destroy(ddata->dvinfo, NULL);
 
 	for (size_t index = 0; index < sizeof(ddata->vdata_engine) / sizeof(ddata->vdata_engine[0]); index++) {
 		DRW_view_data_free(ddata->vdata_engine[index]);
@@ -214,9 +225,17 @@ ROSE_STATIC void DRW_engine_use(DrawEngineType *engine_type) {
 	DRW_view_data_use_engine(GDrawManager.vdata_engine, engine_type);
 }
 
+ROSE_STATIC bool DRW_engine_used(DrawEngineType *engine_type) {
+	return DRW_view_data_engine_data_get(GDrawManager.vdata_engine, engine_type) != NULL;
+}
+
 // Called once before starting rendering using our (used/active) draw engines
-void DRW_engines_init(const struct rContext *C) {
+void DRW_engines_init(Depsgraph *depsgraph) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		const DrawEngineDataSize *vdata_size = vdata->engine->vdata_size;
 
 		memset(vdata->psl->passes, 0, sizeof(*vdata->psl->passes) * vdata_size->psl_len);
@@ -227,14 +246,13 @@ void DRW_engines_init(const struct rContext *C) {
 	}
 }
 
-void DRW_engines_exit(const struct rContext *C) {
+void DRW_engines_exit(Depsgraph *depsgraph) {
 }
 
 DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
-	DRWPass *npass = LIB_memory_pool_calloc(GDrawManager.vdata_pool->passes);
+	DRWPass *npass = LIB_memory_block_alloc(GDrawManager.vdata_pool->passes);
 
-	npass->groups.first = NULL;
-	npass->groups.last = NULL;
+	LIB_listbase_clear(&npass->groups);
 
 	npass->original = original;
 	npass->state = state;
@@ -265,16 +283,20 @@ ROSE_STATIC DRWData *draw_viewport_data_ensure(GPUViewport *viewport) {
 }
 
 ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
-	LIB_memory_pool_clear(ddata->commands, DRW_RESOURCE_CHUNK_LEN);
-	LIB_memory_pool_clear(ddata->passes, DRW_RESOURCE_CHUNK_LEN);
-	LIB_memory_pool_clear(ddata->shgroups, DRW_RESOURCE_CHUNK_LEN);
-	LIB_memory_pool_clear(ddata->uniforms, DRW_RESOURCE_CHUNK_LEN);
+	LIB_memory_block_clear(ddata->calls, NULL);
+	LIB_memory_block_clear(ddata->commands, NULL);
+	LIB_memory_block_clear(ddata->passes, NULL);
+	LIB_memory_block_clear(ddata->shgroups, NULL);
+	LIB_memory_block_clear(ddata->uniforms, NULL);
 
-	LIB_memory_block_clear(ddata->dvinfo, NULL);
 	LIB_memory_block_clear(ddata->obmats, NULL);
+
+	DRW_instance_data_list_free_unused(ddata->ibuffers);
+	DRW_instance_data_list_resize(ddata->ibuffers);
+	DRW_instance_data_list_reset(ddata->ibuffers);
 }
 
-void DRW_manager_init(DRWManager *manager, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
+void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
 	manager->viewport = viewport;
 	manager->scene = scene;
 	manager->view_layer = view_layer;
@@ -316,16 +338,22 @@ void DRW_manager_init(DRWManager *manager, struct Scene *scene, struct ViewLayer
 
 	ViewInfos *storage = &GDrawManager.vdata_engine->storage;
 	if (scene->camera) {
-		KER_camera_multiview_window_matrix(&scene->r, scene->camera, storage->winmat);
+		Object *camera = scene->camera;
 
-		/** Calculate the inverted window matrix */
-		invert_m4_m4(storage->wininv, storage->winmat);
+		float projmat[4][4], viewmat[4][4];
+		KER_camera_multiview_view_matrix(&scene->r, camera, viewmat);
+		KER_camera_multiview_window_matrix(&scene->r, camera, manager->size, projmat);
+		mul_m4_m4m4(storage->winmat, projmat, viewmat);
 	}
 	else {
-		unit_m4(storage->winmat);
+		RegionView3D *rv3d = region->regiondata;
 
-		/** Calculate the inverted window matrix */
-		invert_m4_m4(storage->wininv, storage->winmat);
+		if (rv3d) {
+			mul_m4_m4m4(storage->winmat, rv3d->winmat, rv3d->viewmat);
+		}
+		else {
+			unit_m4(storage->winmat);
+		}
 	}
 
 	GDrawManager.resource_handle = 0;
@@ -403,6 +431,10 @@ void DRW_render_context_disable_ex(bool restore) {
 
 ROSE_STATIC void drw_engine_cache_init(void) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->cache_init) {
 			vdata->engine->cache_init(vdata);
 		}
@@ -415,6 +447,10 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 	DRW_batch_cache_validate(object);
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->cache_populate) {
 			vdata->engine->cache_populate(vdata, object);
 		}
@@ -428,6 +464,10 @@ ROSE_STATIC void drw_engine_cache_finish(void) {
 	// @TODO wait for any threads that have beed dispatched by #drw_engine_cache_populate
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->cache_finish) {
 			vdata->engine->cache_finish(vdata);
 		}
@@ -442,6 +482,10 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GPU_framebuffer_bind(dfbl->default_fb);
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		if (!DRW_engine_used(vdata->engine)) {
+			continue;
+		}
+
 		if (vdata->engine && vdata->engine->draw) {
 			vdata->engine->draw(vdata);
 		}
@@ -450,32 +494,21 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 	GPU_framebuffer_restore();
 }
 
-void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct ViewLayer *view_layer, struct ARegion *region, struct GPUViewport *viewport) {
+void DRW_render_instance_buffer_finish(void) {
+	DRWData *ddata = GDrawManager.vdata_pool;
+	DRW_instance_buffer_finish(ddata->ibuffers);
+}
+
+void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct GPUViewport *viewport) {
 	/** No framebuffer is allowed to be bound the moment we are rendering! */
 	ROSE_assert(GPU_framebuffer_active_get() == GPU_framebuffer_back_get());
 
-	DRW_manager_init(&GDrawManager, scene, view_layer, viewport, NULL);
-	DRW_engines_init(C);
+	Main *main = DEG_get_main(depsgraph);
+	Scene *scene = DEG_get_evaluated_scene(depsgraph);
+	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
 
-	ListBase *listbase = which_libbase(CTX_data_main(C), ID_OB);
-
-	/**
-	 * Definetely not the fucking place to update the mesh here,
-	 * we should evaluate the depsgraph instead.
-	 */
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		KER_animsys_eval_animdata(scene, &object->id);
-	}
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		if (object->type == OB_ARMATURE) {
-			KER_object_build_rig(object);
-		}
-	}
-	LISTBASE_FOREACH(struct Object *, object, listbase) {
-		if (object->type == OB_MESH) {
-			KER_mesh_data_update(NULL, object);
-		}
-	}
+	DRW_manager_init(&GDrawManager, region, scene, view_layer, viewport, NULL);
+	DRW_engines_init(depsgraph);
 
 	drw_engine_cache_init();
 
@@ -484,15 +517,17 @@ void DRW_draw_render_loop(const struct rContext *C, struct Scene *scene, struct 
 		drw_engine_cache_populate(base->object);
 	}
 
-	DRW_engines_exit(C);
+	DRW_engines_exit(depsgraph);
 	DRW_manager_exit(&GDrawManager);
 
 	drw_engine_cache_finish();
 
+	DRW_render_instance_buffer_finish();
+
 	drw_engine_draw_scene();
 }
 
-void DRW_draw_view(const struct rContext *C) {
+void DRW_draw_view(const rContext *C) {
 	struct ARegion *region = CTX_wm_region(C);
 
 	if (!region) {
@@ -508,13 +543,11 @@ void DRW_draw_view(const struct rContext *C) {
 	}
 
 	struct WindowManager *wm = CTX_wm_manager(C);
-	struct wmWindow *win = CTX_wm_window(C);
 
-	struct Scene *scene = CTX_data_scene(C);
-	struct ViewLayer *view_layer = CTX_data_view_layer(C);
+	Depsgraph *depsgraph = CTX_data_expect_evaluated_depsgraph(C);
 
 	DRW_render_context_enable();
-	DRW_draw_render_loop(C, scene, view_layer, region, viewport);
+	DRW_draw_render_loop(depsgraph, region, viewport);
 	DRW_render_context_disable();
 
 	wm_window_reset_drawable(wm);

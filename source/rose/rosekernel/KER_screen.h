@@ -16,6 +16,7 @@ struct ScrAreaMap;
 struct Screen;
 struct rContext;
 struct WindowManager;
+struct wmKeyConfig;
 
 /* -------------------------------------------------------------------- */
 /** \name SpaceType
@@ -40,6 +41,12 @@ typedef struct SpaceType {
 	/** Called when the mouse exits the area. */
 	void (*deactivate)(struct ScrArea *area);
 
+	/** Register operator types on startup. */
+	void (*operatortypes)();
+
+	/** Add default items to WM keymap. */
+	void (*keymap)(struct wmKeyConfig *keyconf);
+
 	/* region type definitions */
 	ListBase regiontypes;
 } SpaceType;
@@ -57,13 +64,16 @@ typedef struct ARegionType {
 
 	int regionid;
 
-	void (*init)(struct ARegion *region);
-	void (*exit)(struct ARegion *region);
+	void (*init)(struct WindowManager *wm, struct ARegion *region);
+	void (*exit)(struct WindowManager *wm, struct ARegion *region);
 	/** Does not free the #ARegion itself. */
 	void (*free)(struct ARegion *region);
 
 	void (*layout)(struct rContext *C, struct ARegion *region);
 	void (*draw)(struct rContext *C, struct ARegion *region);
+
+	/** Add default items to WM keymap. */
+	void (*keymap)(struct wmKeyConfig *keyconf);
 
 	int minsizex;
 	int minsizey;
@@ -94,6 +104,8 @@ void KER_screen_remove_unused_scrverts(struct Screen *screen);
 /* -------------------------------------------------------------------- */
 /** \name SpaceType
  * \{ */
+
+struct ListBase *KER_spacetype_list(void);
 
 void KER_spacetype_register(struct SpaceType *st);
 bool KER_spacetype_exist(int spaceid);

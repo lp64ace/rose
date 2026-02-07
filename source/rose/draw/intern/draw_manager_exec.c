@@ -174,13 +174,6 @@ ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResour
 
 		int id = (int)DRW_handle_elem_get(handle);
 		GPU_shader_uniform_int_ex(shader, state->resourceid_loc, 1, 1, &id);
-		
-		DRWDVertGroupInfo *info = LIB_memory_block_elem_get(GDrawManager.vdata_pool->dvinfo, chunk, elem);
-		if (info) {
-			if (info->matrices) {
-				GPU_uniformbuf_bind(info->matrices, DRW_DVGROUP_UBO_SLOT);
-			}
-		}
 	}
 }
 
@@ -314,6 +307,9 @@ ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group) {
 			} break;
 			case DRW_COMMAND_DRAW_INSTANCE_RANGE: {
 				draw_call_single_do(group, &state, cmd, cmd->draw_instance_range.batch, 0, 0, cmd->draw_instance_range.ifirst, cmd->draw_instance_range.icount);
+			} break;
+			case DRW_COMMAND_UNIFORM_BLOCK: {
+				GPU_uniformbuf_bind(cmd->uniform_block.block, cmd->uniform_block.location);
 			} break;
 		}
 	}

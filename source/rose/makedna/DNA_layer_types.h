@@ -9,6 +9,10 @@ struct Object;
 extern "C" {
 #endif
 
+typedef struct Base_Runtime {
+	struct Base *base_orig;
+} Base_Runtime;
+
 typedef struct Base {
     struct Base *prev, *next;
 
@@ -19,6 +23,8 @@ typedef struct Base {
 	unsigned int local_collections_bits;
 
     struct Object *object;
+	
+    Base_Runtime runtime;
 } Base;
 
 /** #Base->flag */

@@ -630,6 +630,9 @@ GHash *LIB_ghash_ptr_new(const char *info);
 GHash *LIB_ghash_str_new_ex(const char *info, size_t nentries_reserve);
 GHash *LIB_ghash_str_new(const char *info);
 
+GHash *LIB_ghash_int_new_ex(const char *info, size_t nentries_reserve);
+GHash *LIB_ghash_int_new(const char *info);
+
 GSet *LIB_gset_ptr_new_ex(const char *info, size_t nentries_reserve);
 GSet *LIB_gset_ptr_new(const char *info);
 

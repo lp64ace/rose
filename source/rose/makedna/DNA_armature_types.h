@@ -45,6 +45,7 @@ enum {
 	BONE_RELATIVE_PARENTING = (1 << 0),
 	BONE_CONNECTED = (1 << 1),
 	BONE_NO_DEFORM = (1 << 2),
+	BONE_HIDDEN = (1 << 3),
 };
 
 enum {

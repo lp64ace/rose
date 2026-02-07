@@ -28,6 +28,7 @@ bool KER_id_foreach_action_slot_use(struct ID *animated, fnActionSlotCallback ca
 
 /** Allocates and appends a new layer for the specified #Action. */
 struct ActionLayer *KER_action_layer_add(struct Action *action, const char *name);
+struct ActionLayer *KER_action_layer_duplicate_with_shallow_strip_copies(const struct ActionLayer *layer);
 
 void KER_action_layer_free(struct ActionLayer *layer);
 
@@ -114,6 +115,8 @@ void KER_action_slot_runtime_free(struct ActionSlot *slot);
 /** \name PoseChannel Action
  * \{ */
 
+void KER_pose_channel_runtime_reset(struct PoseChannel_Runtime *runtime);
+void KER_pose_channel_runtime_free(struct PoseChannel_Runtime *runtime);
 void KER_pose_tag_recalc(struct Pose *pose);
 
 /**
@@ -142,6 +145,8 @@ void KER_pose_channel_free_ex(struct PoseChannel *pchan, bool do_id_user);
 /* -------------------------------------------------------------------- */
 /** \name Pose Action
  * \{ */
+
+void KER_pose_copy_data(struct Pose **dst_p, const struct Pose *src, const int flag);
 
 /**
  * Removes the hash for quick lookup of channels, must be done when adding/removing channels.

@@ -34,10 +34,12 @@ set(LIB
 	rose::intern::native
 	
 	rose::source::dna
+	rose::source::rna
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::rosefont
 	rose::source::functions
+	rose::source::depsgraph
 	rose::source::gpu
 	rose::source::io::fbx
 	rose::source::windowmanager
@@ -46,6 +48,7 @@ set(LIB
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar
 	rose::source::editors::space_view3d
+	rose::source::editors::space_properties
 	rose::source::rosemesh
 	rose::source::roseloader
 
@@ -65,9 +68,23 @@ rose_target_link_libraries(rose "${LIB}")
 rose_target_include_dirs(rose "${INC}")
 
 if(GLEW_BINARIES)
-	add_custom_command(TARGET rose POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${GLEW_BINARIES}
-            $<TARGET_FILE_DIR:rose>/glew32.dll
-	)
+	foreach(BINARY_PATH ${GLEW_BINARIES})
+		get_filename_component(BINARY_NAME ${BINARY_PATH} NAME)
+		add_custom_command(TARGET rose POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				${BINARY_PATH}
+				$<TARGET_FILE_DIR:rose>/${BINARY_NAME}
+		)
+	endforeach()
+endif()
+
+if(TBB_BINARIES)
+	foreach(BINARY_PATH ${TBB_BINARIES})
+		get_filename_component(BINARY_NAME ${BINARY_PATH} NAME)
+		add_custom_command(TARGET rose POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				${BINARY_PATH}
+				$<TARGET_FILE_DIR:rose>/${BINARY_NAME}
+		)
+	endforeach()
 endif()

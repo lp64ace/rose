@@ -22,6 +22,8 @@ extern "C" {
 typedef struct CameraParams {
 	unsigned int use_orthographic : 1;
 
+	float fov;
+
 	 /* clipping */
 	float clip_start;
 	float clip_end;
@@ -48,7 +50,7 @@ struct Camera *KER_camera_add(struct Main *main, const char *name);
 void KER_camera_multiview_view_matrix(const struct RenderData *rd, const struct Object *obcamera, float r_viewmat[4][4]);
 void KER_camera_multiview_model_matrix(const struct RenderData *rd, const struct Object *obcamera, float r_modelmat[4][4]);
 
-void KER_camera_multiview_window_matrix(const struct RenderData *rd, const struct Object *obcamera, float r_modelmat[4][4]);
+void KER_camera_multiview_window_matrix(const struct RenderData *rd, const struct Object *obcamera, const float size[2], float r_modelmat[4][4]);
 
 /** \} */
 

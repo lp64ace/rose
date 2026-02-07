@@ -93,7 +93,7 @@ ROSE_STATIC void wm_window_tiny_window_destroy(WindowManager *wm, wmWindow *wind
 	window->handle = NULL;
 }
 
-ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const char *name, int width, int height) {
+ROSE_INLINE wmWindow *wm_window_new(rContext *C, wmWindow *parent, const char *name, int width, int height) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = MEM_callocN(sizeof(wmWindow), "wmWindow");
 	window->parent = parent;
@@ -104,7 +104,7 @@ ROSE_INLINE wmWindow *wm_window_new(struct rContext *C, wmWindow *parent, const 
 	return window;
 }
 
-wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, bool temp) {
+wmWindow *WM_window_open(rContext *C, const char *name, int space_type, bool temp) {
 	Main *main = CTX_data_main(C);
 	WindowManager *wm = CTX_wm_manager(C);
 	
@@ -138,6 +138,9 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
 	}
 	
 	wm_window_tiny_window_ensure(wm, window, name, window->sizex, window->sizey);
+
+	wmKeyMap *keymap = WM_keymap_ensure(wm->runtime.defaultconf, "Screen Editing", SPACE_EMPTY, RGN_TYPE_WINDOW);
+	WM_event_add_keymap_handler(&window->handlers, keymap);
 	
 	Screen *screen = WM_window_screen_get(window);
 
@@ -179,7 +182,7 @@ wmWindow *WM_window_open(struct rContext *C, const char *name, int space_type, b
  *
  * Note: Kernel code does not handle GPU contexts, #WM_window_free does not handle draw buffers either.
  */
-void WM_window_close(struct rContext *C, wmWindow *window, bool do_free) {
+void WM_window_close(rContext *C, wmWindow *window, bool do_free) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	CTX_wm_window_set(C, window);
@@ -246,7 +249,7 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 /** \name Window Screen
  * \{ */
 
-void WM_window_screen_set(struct rContext *C, wmWindow *window, Screen *screen) {
+void WM_window_screen_set(rContext *C, wmWindow *window, Screen *screen) {
 	if (window->screen == screen) {
 		return;
 	}

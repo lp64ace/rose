@@ -211,6 +211,25 @@ TEST(Socket, Full) {
 	/**
 	 * Using a different port to avoid binding issues on Linux due to TIME_WAIT state.
 	 * On Linux, recently closed sockets may keep ports in TIME_WAIT; using different ports avoids binding failures between tests.
+	 * 
+	 * \note The address the server listens to does not always have to be 0.0.0.0, 
+	 * for example using 192.168.X.X will restrict connections using the 127.0.0.1 address.
+	 * 
+	 * e.g.
+	 * 
+	 * The following code will fail to connect;
+	 * 
+	 * \code{.c}
+	 * NetAddressIn *addri = NET_address_in_new_ex("192.168.1.101", 42069, AF_INET);
+	 * NetAddress *addrr = NET_address_new_ex("127.0.0.1", "42069", AF_INET, SOCK_STREAM);
+	 * \endcode
+	 * 
+	 * But using the local address in both server and client will work;
+	 * 
+	 * \code{.c}
+	 * NetAddressIn *addri = NET_address_in_new_ex("192.168.1.101", 42069, AF_INET);
+	 * NetAddress *addrr = NET_address_new_ex("192.168.1.101", "42069", AF_INET, SOCK_STREAM);
+	 * \endcode
 	 */
 	NetAddressIn *addri = NET_address_in_new_ex("0.0.0.0", 42069, AF_INET);
 	NetAddress *addrr = NET_address_new_ex("127.0.0.1", "42069", AF_INET, SOCK_STREAM);
@@ -232,7 +251,7 @@ TEST(Socket, Full) {
 	ASSERT_EQ(NET_socket_send(peer, bufferout, sizeof(bufferout)), sizeof(bufferout));
 	ASSERT_EQ(NET_socket_recv(client, bufferin, sizeof(bufferin)), sizeof(bufferin));
 	
-	EXPECT_EQ(memcmp(bufferin, bufferout, sizeof(bufferout)), 0);
+	ASSERT_EQ(memcmp(bufferin, bufferout, sizeof(bufferout)), 0);
 
 	NET_socket_free(peer);
 	NET_socket_free(client);

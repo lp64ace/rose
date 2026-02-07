@@ -24,14 +24,52 @@
 
 namespace rose::io::fbx {
 
+static constexpr const char *temp_custom_normals_name = "fbx_temp_custom_normals";
+
 ROSE_INLINE void import_vertex_positions(const ufbx_mesh *fmesh, Mesh *mesh) {
 	rose::MutableSpan<float3> positions = KER_mesh_vert_positions_for_write_span(mesh);
 
 	ROSE_assert(positions.size() == fmesh->vertex_position.values.count);
 	for (size_t index = 0; index < fmesh->vertex_position.values.count; index++) {
 		ufbx_vec3 val = fmesh->vertex_position.values[index];
+
 		positions[index] = float3(val.x, val.y, val.z);
 	}
+}
+
+ROSE_INLINE void import_face_smoothing(const ufbx_mesh *fmesh, Mesh *mesh) {
+	if (fmesh->face_smoothing.count > 0 && fmesh->face_smoothing.count == fmesh->num_faces) {
+		rose::MutableSpan<bool> smooth = KER_mesh_poly_sharp_face_for_write_span(mesh);
+
+		for (size_t i = 0; i < fmesh->face_smoothing.count; i++) {
+			smooth[i] = !fmesh->face_smoothing[i];
+		}
+	}
+}
+
+ROSE_INLINE bool import_normals_into_temp_attribute(const ufbx_mesh *fmesh, Mesh *mesh) {
+	if (!fmesh->vertex_normal.exists) {
+		return false;
+	}
+
+	rose::MutableSpan<float3> normals = rose::MutableSpan<float3>(
+		static_cast<float3 *>(CustomData_add_layer_named(&mesh->ldata, CD_PROP_FLOAT3, CD_CONSTRUCT, mesh->totloop, temp_custom_normals_name)),
+		mesh->totloop
+	);
+
+	ROSE_assert(fmesh->vertex_normal.indices.count == mesh->totloop);
+	ROSE_assert(fmesh->vertex_normal.indices.count == normals.size());
+
+	for (int i = 0; i < mesh->totloop; i++) {
+		int val_idx = fmesh->vertex_normal.indices[i];
+		const ufbx_vec3 &normal = fmesh->vertex_normal.values[val_idx];
+
+		normals[i].x = normal.x;
+		normals[i].y = normal.y;
+		normals[i].z = normal.z;
+	}
+
+	return true;
 }
 
 ROSE_INLINE void import_faces(const ufbx_mesh *fmesh, Mesh *mesh) {
@@ -142,8 +180,18 @@ void import_meshes(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMa
 
 		import_vertex_positions(fmesh, mesh);
 		import_faces(fmesh, mesh);
+		import_face_smoothing(fmesh, mesh);
 		import_edges(fmesh, mesh);
 		import_skin_vertex_groups(mapping, fmesh, mesh);
+		
+		bool has_custom_normals = import_normals_into_temp_attribute(fmesh, mesh);
+
+		if (has_custom_normals) {
+			float (*normals)[3] = static_cast<float (*)[3]>(CustomData_get_layer_named_for_write(&mesh->ldata, CD_PROP_FLOAT3, temp_custom_normals_name, mesh->totloop));
+			
+			KER_mesh_set_custom_normals(mesh, normals);
+			CustomData_free_layer_named(&mesh->ldata, temp_custom_normals_name, mesh->totloop);
+		}
 
 		meshes[index] = mesh;
 	});
@@ -193,7 +241,7 @@ void import_meshes(Main *main, Scene *scene, const ufbx_scene *fbx, FbxElementMa
 							break;
 						}
 					}
-					
+
 					if (armature != NULL) {
 						ModifierData *md = KER_modifier_new(MODIFIER_TYPE_ARMATURE);
 

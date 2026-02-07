@@ -18,6 +18,8 @@
 #	include "x11/gtk_x11_window_manager.hh"
 #endif
 
+#include <thread>
+
 GTKManagerInterface *GTK_window_manager_new_ex(int backend) {
 	switch (backend) {
 #ifdef WIN32
@@ -73,9 +75,7 @@ bool GTK_window_manager_has_events(struct GTKWindowManager *vmanager) {
 void GTK_window_manager_poll(struct GTKWindowManager *vmanager) {
 	GTKManagerInterface *manager = reinterpret_cast<GTKManagerInterface *>(vmanager);
 
-	if (manager) {
-		manager->Poll();
-	}
+	manager->Poll();
 }
 
 double GTK_elapsed_time(struct GTKWindowManager *vmanager) {
@@ -86,6 +86,10 @@ double GTK_elapsed_time(struct GTKWindowManager *vmanager) {
 	}
 
 	return 0.0;
+}
+
+void GTK_sleep(unsigned int ms) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 bool GTK_set_clipboard(struct GTKWindowManager *vmanager, const char *buffer, unsigned int len, bool selection) {
@@ -276,6 +280,11 @@ void GTK_window_swap_buffers(struct GTKWindow *vwindow) {
 
 void GTK_window_make_context_current(struct GTKWindow *vwindow) {
 	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
+
+	if (!window) {
+		return;
+	}
+
 	GTKRenderInterface *render = window->GetRenderInterface();
 
 	if (!render) {

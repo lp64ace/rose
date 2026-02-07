@@ -27,6 +27,7 @@ RNAProcessItem RNAItems[] = {
 	{.filename = "rna_id.c", .define = RNA_def_ID},
 	{.filename = "rna_ob.c", .define = RNA_def_Object},
 	{.filename = "rna_pose.c", .define = RNA_def_Pose},
+	{.filename = "rna_wm.c", .define = RNA_def_wm},
 };
 
 ROSE_INLINE void rna_print_c_float(FILE *f, float num) {
@@ -765,7 +766,7 @@ ROSE_INLINE char *rna_def_property_begin_func(FILE *fpout, StructRNA *srna, Prop
 
 	if (!manual) {
 		if (!defproperty->dnastructname || !defproperty->dnaname) {
-			fprintf(stderr, "[RNA] %s.%s has no valid dna info.\n", srna->identifier, property->identifier);
+			fprintf(stderr, "[RNA] \"%s.%s\" has no valid dna info.\n", srna->identifier, property->identifier);
 			DefRNA.error = true;
 			return NULL;
 		}
@@ -1105,6 +1106,7 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 		fprintf(fpout, "\t\t.totarraylength = %u,\n", property->totarraylength);
 
 		fprintf(fpout, "\t\t.flagex = %u,\n", 0);
+		fprintf(fpout, "\t\t.update = %s,\n", rna_function_string(property->update));
 
 		if ((property->flagex & PROP_INTERN_RAW_ACCESS) != 0) {
 			PropertyDefRNA *defproperty = rna_find_struct_property_def(srna, property);
@@ -1355,7 +1357,7 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 			fprintf(fpout, "\t\t.properties = {\n");
 			fprintf(fpout, "\t\t\t.first = (PropertyRNA *)&rna_%s_%s_,\n", nstruct->identifier, first->identifier);
 			fprintf(fpout, "\t\t\t.last = (PropertyRNA *)&rna_%s_%s_,\n", nstruct->identifier, last->identifier);
-			fprintf(fpout, "\t\t}\n");
+			fprintf(fpout, "\t\t},\n");
 		}
 		else {
 			fprintf(fpout, "\t\t.properties = {\n");
@@ -1363,6 +1365,7 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 			fprintf(fpout, "\t\t\t.last = %s,\n", "NULL");
 			fprintf(fpout, "\t\t},\n");
 		}
+		fprintf(fpout, "\t\t.property_identifier_lookup_set = NULL,\n");
 	} while (false);
 	fprintf(fpout, "\t},\n");
 
@@ -1443,9 +1446,35 @@ ROSE_INLINE void rna_generate_struct(FILE *fpout, RoseRNA *rna, StructRNA *nstru
 
 	fprintf(fpout, "\t.refine = %s,\n", rna_function_string(nstruct->refine));
 	fprintf(fpout, "\t.path = %s,\n", rna_function_string(nstruct->path));
+	fprintf(fpout, "\t.idproperties = %s,\n", rna_function_string(nstruct->idproperties));
+	fprintf(fpout, "\t.system_idproperties = %s,\n", rna_function_string(nstruct->system_idproperties));
 
 	fprintf(fpout, "};\n");
 	fprintf(fpout, "\n");
+}
+
+ROSE_INLINE void rna_generate_rose(RoseRNA *rna, FILE *fpout) {
+	fprintf(fpout, "RoseRNA ROSE_RNA = {\n");
+	fprintf(fpout, "\t.srnabase = {\n");
+	LISTBASE_FOREACH(StructRNA *, nstruct, &rna->srnabase) {
+		fprintf(fpout, "\t\t/* %s */\n", nstruct->identifier);
+	}
+	if (rna->srnabase.first) {
+		fprintf(fpout, "\t\t.first = &RNA_%s,\n", ((StructRNA *)rna->srnabase.first)->identifier);
+	}
+	else {
+		fprintf(fpout, "\t\t.first = NULL,\n");
+	}
+	if (rna->srnabase.last) {
+		fprintf(fpout, "\t\t.last = &RNA_%s,\n", ((StructRNA *)rna->srnabase.last)->identifier);
+	}
+	else {
+		fprintf(fpout, "\t\t.last = NULL,\n");
+	}
+	fprintf(fpout, "\t},\n");
+	fprintf(fpout, "\t.srnahash = NULL,\n");
+	fprintf(fpout, "\t.totsrna = 0,\n");
+	fprintf(fpout, "};\n");
 }
 
 ROSE_INLINE void rna_generate(RoseRNA *rna, FILE *fpout, const char *filename) {
@@ -1491,6 +1520,10 @@ ROSE_INLINE void rna_generate(RoseRNA *rna, FILE *fpout, const char *filename) {
 		if (!filename || STREQ(defstruct->filename, filename)) {
 			rna_generate_struct(fpout, rna, defstruct->ptr);
 		}
+	}
+
+	if (filename && STREQ(filename, "rna_rna.c")) {
+		rna_generate_rose(rna, fpout);
 	}
 }
 
@@ -1557,8 +1590,6 @@ ROSE_INLINE int rna_preprocess(const char *source, const char *binary) {
 	if (DefRNA.error) {
 		fprintf(stderr, "[RNA] There was an error while generating the RNA for RoseRNA.\n");
 	}
-
-	fprintf(stdout, "[RNA] Writing RNA output in \"%s\"\n", binary);
 
 	char prototype[1024];
 	LIB_path_join(prototype, ARRAY_SIZE(prototype), binary, "../RNA_prototypes.h");

@@ -4,7 +4,9 @@
 #include "KER_lib_id.h"
 #include "KER_mesh_types.hh"
 #include "KER_mesh.h"
+#include "KER_object.h"
 
+#include "LIB_math_vector.h"
 #include "LIB_implicit_sharing.hh"
 
 /* -------------------------------------------------------------------- */
@@ -32,11 +34,40 @@ void (*KER_mesh_batch_cache_free_cb)(Mesh *mesh) = NULL;
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Mesh Creation
+/** \name Mesh Creation/Deletion
  * \{ */
 
 Mesh *KER_mesh_add(Main *main, const char *name) {
 	return (Mesh *)KER_id_new(main, ID_ME, name);
+}
+
+void KER_object_eval_assign_data(Object *object_eval, ID *data_eval, bool is_data_eval_owned) {
+	ROSE_assert(object_eval->id.tag & ID_TAG_COPIED_ON_WRITE);
+	ROSE_assert(object_eval->runtime.data_eval == nullptr);
+	ROSE_assert(data_eval->tag & ID_TAG_NO_MAIN);
+
+	/** Do not set own data as evaluated data. */
+	ROSE_assert(data_eval != object_eval->data);
+
+	object_eval->runtime.data_eval = data_eval;
+	object_eval->runtime.is_data_eval_owned = is_data_eval_owned;
+	
+	/* Overwrite data of evaluated object, if the data-block types match. */
+	ID *data = (ID *)object_eval->data;
+	if (GS(data->name) == GS(data_eval->name)) {
+		/* NOTE: we are not supposed to invoke evaluation for original objects,
+		 * but some areas are still being ported, so we play safe here. */
+		if (object_eval->id.tag & ID_TAG_COPIED_ON_WRITE) {
+			object_eval->data = data_eval;
+		}
+	}
+}
+
+void KER_mesh_eval_geometry(Depsgraph *depsgraph, Mesh *mesh) {
+	if (mesh->runtime->mesh_eval != NULL) {
+		KER_id_free(NULL, mesh->runtime->mesh_eval);
+		mesh->runtime->mesh_eval = NULL;
+	}
 }
 
 /** \} */
@@ -92,6 +123,10 @@ void KER_mesh_ensure_required_data_layers(Mesh *mesh) {
 }
 
 int *KER_mesh_poly_offsets_for_write(Mesh *mesh) {
+	if (!mesh->totpoly) {
+		return nullptr;
+	}
+
 	rose::implicit_sharing::make_trivial_data_mutable(&mesh->poly_offset_indices, &mesh->runtime->poly_offsets_sharing_info, mesh->totpoly + 1);
 	return mesh->poly_offset_indices;
 }

@@ -11,6 +11,7 @@
 #include "KER_object_deform.h"
 
 #include "GPU_index_buffer.h"
+#include "GPU_info.h"
 #include "GPU_uniform_buffer.h"
 #include "GPU_vertex_buffer.h"
 
@@ -24,33 +25,48 @@
 
 #include "extract_mesh.h"
 
+#include "intern/shaders/draw_shader_shared.h"
+
+#include <atomic>
+
 struct ArmatureDeviceDeformParams {
-	const ListBase *pose_channels;
+	const ListBase *pose_channels = NULL;
 
 	rose::Array<PoseChannel *> pose_channel_by_vertex_group;
 
-	float4x4 target_to_armature;
-	float4x4 armature_to_target;
+	float4x4 target_to_armature = float4x4::identity();
+	float4x4 armature_to_target = float4x4::identity();
 };
 
 ROSE_INLINE ArmatureDeviceDeformParams get_armature_device_deform_params(const Object *obarmature, const Object *obtarget, const ListBase *defbase) {
 	ArmatureDeviceDeformParams deform_params;
 
-	deform_params.pose_channels = &obarmature->pose->channelbase;
-
 	const size_t defbase_length = LIB_listbase_count(defbase);
 
 	deform_params.pose_channel_by_vertex_group.reinitialize(defbase_length);
 
-	size_t index;
-	LISTBASE_FOREACH_INDEX(DeformGroup *, dg, defbase, index) {
-		PoseChannel *pchannel = KER_pose_channel_find_name(obarmature->pose, dg->name);
+	if (obarmature) {
+		deform_params.pose_channels = &obarmature->pose->channelbase;
 
-		deform_params.pose_channel_by_vertex_group[index] = (pchannel && !(pchannel->bone->flag & BONE_NO_DEFORM)) ? pchannel : NULL;
+		size_t index;
+		LISTBASE_FOREACH_INDEX(DeformGroup *, dg, defbase, index) {
+			PoseChannel *pchannel = KER_pose_channel_find_name(obarmature->pose, dg->name);
+
+			deform_params.pose_channel_by_vertex_group[index] = (pchannel && !(pchannel->bone->flag & BONE_NO_DEFORM)) ? pchannel : NULL;
+		}
+
+		deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget)) * float4x4(KER_object_object_to_world(obarmature));
+		deform_params.target_to_armature = float4x4(KER_object_world_to_object(obarmature)) * float4x4(KER_object_object_to_world(obtarget));
 	}
+	else {
+		size_t index;
+		LISTBASE_FOREACH_INDEX(DeformGroup *, dg, defbase, index) {
+			deform_params.pose_channel_by_vertex_group[index] = NULL;
+		}
 
-	deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget)) * float4x4(KER_object_object_to_world(obarmature));
-	deform_params.target_to_armature = float4x4(KER_object_world_to_object(obarmature)) * float4x4(KER_object_object_to_world(obtarget));
+		deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget));
+		deform_params.target_to_armature = float4x4(KER_object_object_to_world(obtarget));
+	}
 
 	return deform_params;
 }
@@ -69,11 +85,7 @@ struct MDeformDeviceData {
 	float4 weight = float4(0, 0, 0, 0);
 };
 
-void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, rose::Vector<float4x4>& ubo_data) {
-	if (obarmature == nullptr) {
-		return;
-	}
-
+void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, DVertGroupMatrices *r_ubo_data) {
 	const ListBase *defbase = NULL;
 	if (metarget) {
 		defbase = KER_id_defgroup_list_get(&metarget->id);
@@ -90,69 +102,101 @@ void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, 
 
 	ArmatureDeviceDeformParams params = get_armature_device_deform_params(obarmature, obtarget, defbase);
 
-	ubo_data.resize(params.pose_channel_by_vertex_group.size());
-
+	ROSE_assert(params.pose_channel_by_vertex_group.size() <= ARRAY_SIZE(r_ubo_data->drw_poseMatrix));
 	rose::threading::parallel_for(params.pose_channel_by_vertex_group.index_range(), 64, [&](const rose::IndexRange range) {
 		const rose::IndexRange def_nr_range = params.pose_channel_by_vertex_group.index_range();
 
 		for (const size_t group : range) {
 			const PoseChannel *pchannel = def_nr_range.contains(group) ? params.pose_channel_by_vertex_group[group] : NULL;
 
-			if (pchannel == NULL) {
-				continue;
-			}
+			/**
+			 * Since we need to support no armature deformation, we use identity matrices
+			 * \note This isn't the rest pose, it is the raw mesh without deformation applied.
+			 */
 
-			ubo_data[group] = float4x4(pchannel->chan_mat);
+			r_ubo_data->drw_poseMatrix[group] = (pchannel) ? float4x4(pchannel->chan_mat) : float4x4::identity();
 		}
 	});
+
+	r_ubo_data->drw_ArmatureToTarget = params.armature_to_target;
+	r_ubo_data->drw_TargetToArmature = params.target_to_armature;
 }
 
-void extract_weights_mesh_vbo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, rose::MutableSpan<MDeformDeviceData> vbo_data) {
+void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose::MutableSpan<MDeformDeviceData> vbo_data) {
 	rose::Span<MDeformVert> dverts = KER_mesh_deform_verts_span(metarget);
 	rose::Span<int> vcorners = KER_mesh_corner_verts_span(metarget);
 
-	if (obarmature == nullptr || dverts.is_empty()) {
+	if (dverts.is_empty()) {
 		vbo_data.fill(MDeformDeviceData());
 		return;
 	}
 
-	/* gather the deform vertices for each vertex. */
+	size_t total[127];
+	memset(&total, 0, sizeof(total));
 
-	rose::threading::parallel_for(vcorners.index_range(), 1024, [&](const rose::IndexRange range) {
+	std::atomic<bool> too_many_deform_verts_warning(false);
+
+	/* gather the deform vertices for each vertex. */
+	rose::threading::parallel_for(vcorners.index_range(), 4096, [&](const rose::IndexRange range) {
 		for (const size_t corner : range) {
 			const MDeformVert *dvert = &dverts[vcorners[corner]];
 
 			vbo_data[corner] = MDeformDeviceData();
 
 			const rose::Span<MDeformWeight> dweights(dvert->dw, dvert->totweight);
-			for (const size_t index : dweights.index_range()) {
-				if (index >= 4) {
-					break;
+			if (dweights.size() <= 4) {
+				for (const size_t index : dweights.index_range()) {
+					vbo_data[corner].defgroup[index] = dweights[index].def_nr;
+					vbo_data[corner].weight[index] = dweights[index].weight;
+
+					total[vbo_data[corner].defgroup[index]]++;
+				}
+			}
+			else {
+				MDeformWeight top[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+				for (const size_t index : dweights.index_range()) {
+					int m = 0;
+					m = top[1].weight < top[m].weight ? 1 : m;
+					m = top[2].weight < top[m].weight ? 2 : m;
+					m = top[3].weight < top[m].weight ? 3 : m;
+
+					if (dweights[index].weight > top[m].weight) {
+						top[m] = dweights[index];
+					}
+				}
+				for (const size_t index : rose::IndexRange(4)) {
+					vbo_data[corner].defgroup[index] = top[index].def_nr;
+					vbo_data[corner].weight[index] = top[index].weight;
+
+					total[vbo_data[corner].defgroup[index]]++;
 				}
 
-				vbo_data[corner].defgroup[index] = dweights[index].def_nr;
-				vbo_data[corner].weight[index] = dweights[index].weight;
+				too_many_deform_verts_warning.store(true, std::memory_order_relaxed);
 			}
 		}
 	});
+
+	if (too_many_deform_verts_warning.load(std::memory_order_relaxed)) {
+		fprintf(stderr, "[Draw] Warning, too many deform vertices for \"%s\".\n", metarget->id.name);
+	}
 }
 
-void extract_weights(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {
+void extract_weights(const Object *obtarget, const Mesh *mesh, GPUVertBuf *vbo) {
 	GPU_vertbuf_init_with_format(vbo, extract_weights_format());
 	GPU_vertbuf_data_alloc(vbo, mesh->totloop);
 
 	MDeformDeviceData *data = static_cast<MDeformDeviceData *>(GPU_vertbuf_get_data(vbo));
 	rose::MutableSpan<MDeformDeviceData> vbo_data = rose::MutableSpan<MDeformDeviceData>(data, mesh->totloop);
 
-	rose::Vector<float4x4> ubo_data;
-
-	extract_weights_mesh_vbo(obarmature, obtarget, mesh, vbo_data);
+	extract_weights_mesh_vbo(obtarget, mesh, vbo_data);
 }
 
 void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, GPUUniformBuf *ubo) {
-	rose::Vector<float4x4> ubo_data;
+	DVertGroupMatrices ubo_data;
 
-	extract_weights_mesh_ubo(obarmature, obtarget, mesh, ubo_data);
+	ubo_data.drw_ArmatureToTarget = float4x4::identity();
+	ubo_data.drw_TargetToArmature = float4x4::identity();
 
-	GPU_uniformbuf_update_ex(ubo, ubo_data.data(), ubo_data.size_in_bytes());
+	extract_weights_mesh_ubo(obarmature, obtarget, mesh, &ubo_data);
+	GPU_uniformbuf_update(ubo, &ubo_data);
 }

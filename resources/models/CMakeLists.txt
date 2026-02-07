@@ -2,7 +2,7 @@
 # Make Resource
 
 set(MODELS_SRC
-	six.fbx
+	sarah.fbx
 )
 
 set(MODELS_C

@@ -4,14 +4,34 @@
 #include "DNA_armature_types.h"
 
 struct Armature;
+struct Depsgraph;
 struct Main;
+struct Mesh;
 struct Object;
 struct Pose;
 struct PoseChannel;
+struct Scene;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Cache
+ * This is primarily part of the DRAW module but we export functions!
+ * \{ */
+
+enum {
+	KER_ARMATURE_BATCH_DIRTY_ALL = 0,
+};
+
+void KER_armature_batch_cache_tag_dirty(struct Armature *mesh, int mode);
+void KER_armature_batch_cache_free(struct Armature *mesh);
+
+extern void (*KER_armature_batch_cache_tag_dirty_cb)(struct Armature *mesh, int mode);
+extern void (*KER_armature_batch_cache_free_cb)(struct Armature *mesh);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Armature Edit Structures
@@ -90,15 +110,15 @@ struct Armature *KER_armature_from_object(struct Object *object);
  * \param main: May be NULL, only used to tag depsgraph as being dirty.
  */
 void KER_pose_rebuild(struct Main *main, struct Object *ob, struct Armature *arm, bool do_id_user);
-void KER_pose_pchannel_index_rebuild(struct Pose *pose);
+void KER_pose_channel_index_rebuild(struct Pose *pose);
 
-void KER_pose_eval_init(struct Object *object);
-void KER_pose_eval_init_ik(struct Object *object);
-void KER_pose_eval_cleanup(struct Object *object);
-void KER_pose_eval_done(struct Object *object);
+void KER_pose_eval_init(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *object);
+void KER_pose_eval_init_ik(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *object);
+void KER_pose_eval_cleanup(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *object);
+void KER_pose_eval_done(struct Depsgraph *depsgraph, struct Object *object);
 
-void KER_pose_eval_bone(struct Object *object, size_t index);
-void KER_pose_bone_done(struct Object *object, size_t index);
+void KER_pose_eval_bone(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *object, size_t index);
+void KER_pose_bone_done(struct Depsgraph *depsgraph, struct Object *object, size_t index);
 
 /** \} */
 
@@ -138,11 +158,27 @@ void KER_pose_ensure(struct Main *main, struct Object *object, struct Armature *
 void KER_armature_where_is(struct Armature *armature);
 void KER_armature_where_is_bone(struct Bone *bone, const Bone *parbone, bool use_recursion);
 
-void KER_pose_where_is(struct Object *object);
-void KER_pose_where_is_bone(struct Object *object, struct PoseChannel *pchannel ,float time);
+void KER_pose_where_is(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *object);
+void KER_pose_where_is_bone(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *object, struct PoseChannel *pchannel, float time);
+
+/**
+ * Clear pointers of object's pose
+ * (needed in remap case, since we cannot always wait for a complete pose rebuild).
+ */
+void KER_pose_clear_pointers(struct Pose *pose);
+void KER_pose_remap_bone_pointers(struct Armature *armature, struct Pose *pose);
 
 void KER_pose_channel_to_mat4(const struct PoseChannel *pchannel, float r_mat[4][4]);
 void KER_pose_channel_do_mat4(struct PoseChannel *pchannel);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Armature Runtime
+ * \{ */
+
+/** Clear the required caches related to the armature geometry. */
+void KER_armature_geometry_changed(struct Armature *armature);
 
 /** \} */
 

@@ -2,6 +2,7 @@
 #define DNA_ID_H
 
 #include "DNA_ID_enums.h"
+#include "DNA_session_uuid_types.h"
 
 #include "DNA_listbase.h"
 
@@ -22,6 +23,9 @@ typedef struct DrawData {
 	struct DrawEngineType *engine;
 	/** Only nested data, NOT the engine data itself. */
 	DrawDataFreeCb free;
+
+	/* Accumulated recalc flags, which corresponds to ID->recalc flags. */
+	int recalc;
 } DrawData;
 
 typedef struct DrawDataList {
@@ -60,7 +64,14 @@ typedef struct ID {
 
 	int flag;
 	int tag;
+	int recalc;
 	int user;
+	
+	/**
+	 * A session-wide unique identifier for a given ID, that remain the same across potential
+	 * re-allocations (e.g. due to undo/redo steps).
+	 */
+	unsigned int uuid;
 
 	/** The first two bytes of the name are always used to determine the type of the ID. */
 	char name[66];
@@ -76,10 +87,17 @@ typedef struct ID {
 	struct Library *lib;
 } ID;
 
+typedef struct Library_Runtime {
+	/* Used for efficient calculations of unique names. */
+	struct UniqueName_Map *name_map;
+} Library_Runtime;
+
 typedef struct Library {
 	ID id;
 
 	char filepath[1024];
+
+	struct Library_Runtime runtime;
 } Library;
 
 /** \} */
@@ -118,6 +136,14 @@ enum {
 	}                                   \
 	((void)0)
 
+/* Check whether datablock type is covered by copy-on-write. */
+#define ID_TYPE_IS_COW(_id_type) (!ELEM(_id_type, ID_LI, ID_SCR, ID_WM))
+/**
+ * Check whether data-block type requires copy-on-write from #ID_RECALC_PARAMETERS.
+ * Keep in sync with #KER_id_eval_properties_copy.
+ */
+#define ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW(id_type) ELEM(id_type, ID_ME)
+
 enum {
 	/**
 	 * ID is not listed/stored in any #Main database.
@@ -131,6 +157,22 @@ enum {
 	 * RESET_NEVER
 	 */
 	ID_TAG_NO_USER_REFCOUNT = 1 << 1,
+	/**
+	 * The data-block is a copy-on-write/localized version.
+	 *
+	 * RESET_NEVER
+	 *
+	 * \warning This should not be cleared on existing data.
+	 * If support for this is needed, see T88026 as this flag controls memory ownership 
+	 * of physics *shared* pointers.
+	 */
+	ID_TAG_COPIED_ON_WRITE = 1 << 2,
+	ID_TAG_COPIED_ON_WRITE_EVAL_RESULT = 1 << 3,
+	/**
+	 * Datablock was not allocated by standard system (KER_libblock_alloc), do not free its memory
+	 * (usual type-specific freeing is called though).
+	 */
+	ID_TAG_NOT_ALLOCATED = 1 << 18,
 
 	/**
 	 * ID is newly duplicated/copied (see #ID_NEW_SET macro above).
@@ -144,6 +186,50 @@ enum {
 	 * RESET_BEFORE_USE
 	 */
 	ID_TAG_DOIT = 1 << 31,
+};
+
+enum {
+	/* ** Object transformation changed. ** */
+	ID_RECALC_TRANSFORM = (1 << 0),
+
+	/**
+	 * Geometry changed.
+	 *
+	 * When object of armature type gets tagged with this flag, its pose is re-evaluated.
+	 *
+	 * When object of other type is tagged with this flag it makes the modifier
+	 * stack to be re-evaluated.
+	 *
+	 * When object data type (mesh, curve, ...) gets tagged with this flag it
+	 * makes all objects which shares this data-block to be updated.
+	 *
+	 * Note that the evaluation depends on the object-mode.
+	 * So edit-mesh data for example only reevaluate with the updated edit-mesh.
+	 * When geometry in the original ID has been modified #ID_RECALC_GEOMETRY_ALL_MODES
+	 * must be used instead.
+	 *
+	 * When a collection gets tagged with this flag, all objects depending on the geometry and
+	 * transforms on any of the objects in the collection are updated.
+	 */
+	ID_RECALC_GEOMETRY = (1 << 1),
+	ID_RECALC_PARAMETERS = (1 << 2),
+
+	/* ** Animation or time changed and animation is to be re-evaluated. ** */
+	ID_RECALC_ANIMATION = (1 << 3),
+
+	/* Runs on frame-change (used for seeking audio too). */
+	ID_RECALC_FRAME_CHANGE = (1 << 4),
+
+	/**
+	 * Update copy on write component.
+	 * 
+	 * This is most generic tag which should only be used when nothing else
+	 * matches.
+	 */
+	ID_RECALC_COPY_ON_WRITE = (1 << 5),
+
+	/* Identifies that SOMETHING has been changed in this ID. */
+	ID_RECALC_ALL = ~(0),
 };
 
 #define FILTER_ID_LI (1 << 0)

@@ -32,8 +32,8 @@ void ufbx_matrix_to_obj(const ufbx_matrix &mtx, Object *obj) {
 	float obmat[4][4];
 	matrix_to_mat4(mtx, obmat);
 	KER_object_apply_mat4(obj, obmat, true, false);
-	KER_object_to_mat4(obj, obj->runtime.object_to_world);
-	invert_m4_m4(obj->runtime.world_to_object, obj->runtime.object_to_world);
+	KER_object_to_mat4(obj, obj->obmat);
+	invert_m4_m4(obj->obmat, obj->invmat);
 }
 
 void node_matrix_to_obj(const ufbx_node *node, Object *obj, const FbxElementMapping *mapping) {

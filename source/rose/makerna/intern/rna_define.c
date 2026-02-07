@@ -290,6 +290,7 @@ StructRNA *RNA_def_struct_ex(RoseRNA *rna, const char *identifier, StructRNA *fr
 
 	if (fromstruct) {
 		memcpy(newstruct, fromstruct, sizeof(StructRNA));
+		newstruct->container.property_identifier_lookup_set = NULL;
 		LIB_listbase_clear(&newstruct->container.properties);
 
 		newstruct->base = fromstruct;
@@ -361,7 +362,7 @@ StructRNA *RNA_def_struct_ex(RoseRNA *rna, const char *identifier, StructRNA *fr
 				"rna_builtin_properties_get",
 				NULL,
 				NULL,
-				NULL
+				"rna_builtin_properties_lookup_string"
 			);
 
 			/* clang-format on */
@@ -484,10 +485,35 @@ void RNA_struct_free(RoseRNA *rna, StructRNA *nstruct) {
 			nextproperty = property->next;
 
 			RNA_def_property_free_pointers(rna, property);
+
+			if (property->flagex & PROP_INTERN_RUNTIME) {
+				LIB_freelinkN(&nstruct->container.properties, property);
+			}
 		}
 	}
 
 	rna_structs_remove_and_free(rna, nstruct);
+}
+
+void RNA_def_struct_identifier(RoseRNA *rna, StructRNA *srna, const char *identifier) {
+	if (DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] Error \"%s\" is only available at runtime.\n", identifier);
+		return;
+	}
+
+	/* Operator registration may set twice, see: operator_properties_init */
+	if (srna->flag & STRUCT_PUBLIC_NAMESPACE) {
+		if (identifier != srna->identifier) {
+			if (srna->identifier[0] != '\0') {
+				LIB_ghash_remove(rna->srnahash, (void *)srna->identifier, NULL, NULL);
+			}
+			if (identifier[0] != '\0') {
+				LIB_ghash_insert(rna->srnahash, (void *)identifier, srna);
+			}
+		}
+	}
+
+	srna->identifier = identifier;
 }
 
 void RNA_def_struct_ui_text(StructRNA *srna, const char *name, const char *description) {
@@ -526,6 +552,30 @@ void RNA_def_struct_refine_func(StructRNA *srna, const char *func) {
 	if (func) {
 		srna->refine = (StructRefineFunc)func;
 	}
+}
+
+void RNA_def_struct_idprops_func(StructRNA *srna, const char *idproperties) {
+	if (!DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] #%s is available only during preprocessing.\n", __func__);
+		return;
+	}
+
+	if (idproperties) {
+		srna->idproperties = (IDPropertiesFunc)idproperties;
+	}
+}
+
+void RNA_def_struct_system_idprops_func(StructRNA *srna, const char *system_idproperties) {
+	if (!DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] #%s is available only during preprocessing.\n", __func__);
+		return;
+	}
+
+	if (!system_idproperties) {
+		return;
+	}
+
+	srna->system_idproperties = (IDPropertiesFunc)system_idproperties;
 }
 
 /** \} */
@@ -1127,7 +1177,7 @@ void RNA_def_property_collection_sdna(PropertyRNA *property, const char *structn
 	StructRNA *srna = DefRNA.nstruct;
 
 	if (!DefRNA.preprocess) {
-		fprintf(stderr, "[RNA] #%s is only available during preprocessing.", __func__);
+		fprintf(stderr, "[RNA] #%s is only available during preprocessing.\n", __func__);
 		return;
 	}
 
@@ -1165,6 +1215,38 @@ ROSE_INLINE PropertyDefRNA *rna_def_findlink(ListBase *lb, const char *identifie
 		}
 	}
 	return NULL;
+}
+
+ROSE_INLINE unsigned int rna_as_canonical(char c) {
+	/** For optimization purposes we do not allow capital letters or digits. */
+	ROSE_assert('a' <= c && c <= 'z' || c == '_');
+
+	if ('a' <= c && c <= 'z') {
+		return c - 'a';
+	}
+	return 26;
+}
+
+unsigned int RNA_property_canonical_token(const char *identifier) {
+	unsigned int canonical = 1;
+
+	for (size_t i = 0; identifier[i] != '\0'; i++) {
+		canonical = canonical * 27 + rna_as_canonical(identifier[i]);
+
+		if (i == 10) {
+			/**
+			 * We support up to 10 letters in an identifier anything extra is lost information!
+			 */
+			fprintf(stderr, "[RNA] PropertyRNA identifier \"%s\" is too long and might cause issues!\n", identifier);
+			break;
+		}
+	}
+
+	return canonical;
+}
+
+void RNA_def_property_identifier(PropertyRNA *property, const char *identifier) {
+	property->identifier = identifier;
 }
 
 PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type, int subtype) {
@@ -1276,7 +1358,6 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 	}
 
 	property->magic = RNA_MAGIC;
-	property->identifier = identifier;
 	property->type = type;
 	property->subtype = subtype;
 	property->name = identifier;
@@ -1336,9 +1417,41 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 		property->flagex |= PROP_INTERN_RUNTIME;
 	}
 
+	RNA_def_property_identifier(property, identifier);
+
 	LIB_addtail(&container->properties, property);
 
 	return property;
+}
+
+PropertyRNA *RNA_def_int(void *vcontainer, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_INT, PROP_NONE);
+	RNA_def_property_int_default(prop, default_value);
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
+void RNA_def_property_int_default(PropertyRNA *prop, int value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_INT: {
+			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
+			iprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
 }
 
 void RNA_def_property_ui_text(PropertyRNA *prop, const char *name, const char *description) {
@@ -1368,6 +1481,41 @@ void RNA_def_property_ui_range(PropertyRNA *prop, double min, double max, double
 			DefRNA.error = true;
 		} break;
 	}
+}
+
+void RNA_def_property_range(struct PropertyRNA *property, double vmin, double vmax) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (property->type) {
+		case PROP_INT: {
+			IntPropertyRNA *iproperty = (IntPropertyRNA *)property;
+			iproperty->hardmin = (int)vmin;
+			iproperty->hardmax = (int)vmax;
+			iproperty->softmin = ROSE_MAX((int)vmin, iproperty->hardmin);
+			iproperty->softmax = ROSE_MIN((int)vmax, iproperty->hardmax);
+			break;
+		}
+		case PROP_FLOAT: {
+			FloatPropertyRNA *fproperty = (FloatPropertyRNA *)property;
+			fproperty->hardmin = (float)vmin;
+			fproperty->hardmax = (float)vmax;
+			fproperty->softmin = ROSE_MAX((float)vmin, fproperty->hardmin);
+			fproperty->softmax = ROSE_MIN((float)vmax, fproperty->hardmax);
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_update(PropertyRNA *prop, const char *funcname) {
+	if (!DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] #%s is only available during preprocessing.", __func__);
+		return;
+	}
+
+	prop->update = (PropertyUpdateFunc)funcname;
 }
 
 void RNA_def_property_flag(PropertyRNA *property, ePropertyFlag flag) {

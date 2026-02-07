@@ -17,8 +17,6 @@ typedef unsigned int DRWResourceHandle;
 typedef struct DRWObjectMatrix {
 	float model[4][4];
 	float modelinverse[4][4];
-	float armature[4][4];
-	float armatureinverse[4][4];
 } DRWObjectMatrix;
 
 ROSE_INLINE DRWResourceHandle DRW_handle_increment(DRWResourceHandle *handle) {
@@ -137,12 +135,18 @@ typedef struct DRWCommandDrawInstanceRange {
 	unsigned int icount;
 } DRWCommandDrawInstanceRange;
 
+typedef struct DRWCommandUniformBlock {
+	struct GPUUniformBuf *block;
+	unsigned int location;
+} DRWCommandUniformBlock;
+
 enum {
 	DRW_COMMAND_CLEAR,
 	DRW_COMMAND_DRAW,
 	DRW_COMMAND_DRAW_RANGE,
 	DRW_COMMAND_DRAW_INSTANCE,
 	DRW_COMMAND_DRAW_INSTANCE_RANGE,
+	DRW_COMMAND_UNIFORM_BLOCK,
 };
 
 typedef struct DRWCommand {
@@ -156,10 +160,17 @@ typedef struct DRWCommand {
 		struct DRWCommandDrawRange draw_range;
 		struct DRWCommandDrawInstance draw_instance;
 		struct DRWCommandDrawInstanceRange draw_instance_range;
+		struct DRWCommandUniformBlock uniform_block;
 	};
 
 	DRWResourceHandle handle;
 } DRWCommand;
+
+/** Used for aggregating calls into #GPUVertBuf's. */
+typedef struct DRWCallBuffer {
+	struct GPUVertBuf *buffer;
+	int count;
+} DRWCallBuffer;
 
 typedef struct DRWShadingGroup {
 	struct DRWShadingGroup *prev, *next;
@@ -169,19 +180,6 @@ typedef struct DRWShadingGroup {
 	ListBase uniforms;	// #DRWUniform
 	ListBase commands;	// #DRWCommand
 } DRWShadingGroup;
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Draw Deform Vert
- * \{ */
-
-typedef struct DRWDVertGroupInfo {
-	/**
-	 * The uniform buffer that stores the matrices for ecah deform group.
-	 */
-	GPUUniformBuf *matrices;
-} DRWDVertGroupInfo;
 
 /** \} */
 

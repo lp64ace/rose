@@ -83,7 +83,7 @@ void GPU_matrix_reset() {
 
 void GPU_matrix_push() {
 	ROSE_assert(ModelViewStack.top + 1 < MATRIX_STACK_DEPTH);
-	ModelViewStack.top++;
+	++ModelViewStack.top;
 	copy_m4_m4(ModelView, ModelViewStack.stack[ModelViewStack.top - 1]);
 }
 
@@ -95,7 +95,7 @@ void GPU_matrix_pop() {
 
 void GPU_matrix_push_projection() {
 	ROSE_assert(ProjectionStack.top + 1 < MATRIX_STACK_DEPTH);
-	ProjectionStack.top++;
+	++ProjectionStack.top;
 	copy_m4_m4(Projection, ProjectionStack.stack[ProjectionStack.top - 1]);
 }
 

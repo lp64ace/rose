@@ -728,6 +728,10 @@ template<typename T, int A_NumCol, int A_NumRow, int B_NumCol, int B_NumRow, int
 
 }  // namespace rose
 
+using int2x2 = rose::MatBase<float, 2, 2>;
+using int3x3 = rose::MatBase<float, 3, 3>;
+using int4x4 = rose::MatBase<float, 4, 4>;
+
 using float2x2 = rose::MatBase<float, 2, 2>;
 using float2x3 = rose::MatBase<float, 2, 3>;
 using float2x4 = rose::MatBase<float, 2, 4>;

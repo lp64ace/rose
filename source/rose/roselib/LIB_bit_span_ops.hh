@@ -220,6 +220,18 @@ template<typename BitSpanT, typename Fn> inline void foreach_0_index(const BitSp
 	foreach_1_index_expr([](const BitInt x) { return ~x; }, fn, data);
 }
 
+template<typename ExprFn, typename FirstBitSpanT, typename... BitSpanT> inline std::optional<size_t> find_first_1_index_expr(ExprFn &&Expr, const FirstBitSpanT &first_arg, const BitSpanT &...args) {
+	return find_first_1_index_expr(Expr, to_best_bit_span(first_arg), to_best_bit_span(args)...);
+}
+
+template<typename BitSpanT> inline std::optional<size_t> find_first_1_index(const BitSpanT &data) {
+	return find_first_1_index_expr([](const BitInt x) { return x; }, data);
+}
+
+template<typename BitSpanT> inline std::optional<size_t> find_first_0_index(const BitSpanT &data) {
+	return find_first_1_index_expr([](const BitInt x) { return ~x; }, data);
+}
+
 template<typename BitSpanT1, typename BitSpanT2> inline bool spans_equal(const BitSpanT1 &a, const BitSpanT2 &b) {
 	if (a.size() != b.size()) {
 		return false;

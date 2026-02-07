@@ -15,6 +15,7 @@ set(INC
 set(INC_SYS
 	# External System Include Directories
 	${PTHREADS_INCLUDE_DIRS}
+	${TBB_INCLUDE_DIRS}
 	
 )
 
@@ -32,6 +33,7 @@ set(SRC
 	KER_cpp_types.h
 	KER_collection.h
 	KER_customdata.h
+	KER_derived_mesh.h
 	KER_deform.h
 	KER_fcurve.h
 	KER_global.h
@@ -43,6 +45,8 @@ set(SRC
 	KER_lib_query.h
 	KER_lib_remap.h
 	KER_main.h
+	KER_main_id_name_map.h
+	KER_main_name_map.h
 	KER_mesh.h
 	KER_mesh.hh
 	KER_mesh_types.hh
@@ -67,6 +71,7 @@ set(SRC
 	intern/collection.c
 	intern/customdata.cc
 	intern/deform.c
+	intern/derived_mesh.cc
 	intern/fcurve.c
 	intern/idprop.c
 	intern/idtype.c
@@ -76,6 +81,8 @@ set(SRC
 	intern/lib_query.c
 	intern/lib_remap.c
 	intern/main.c
+	intern/main_id_name_map.cc
+	intern/main_name_map.cc
 	intern/mesh.c
 	intern/mesh.cc
 	intern/mesh_data_update.c
@@ -85,6 +92,7 @@ set(SRC
 	intern/modifier.c
 	intern/object.c
 	intern/object_deform.c
+	intern/object_runtime.cc
 	intern/rose.c
 	intern/rosefile.c
 	intern/scene.c
@@ -100,6 +108,7 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::atomic
+	PUBLIC rose::source::depsgraph
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::dna
 	PUBLIC rose::source::rna

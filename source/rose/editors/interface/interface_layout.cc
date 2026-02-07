@@ -85,7 +85,7 @@ ROSE_INLINE void ui_layout_add_padding_button(uiLayoutRoot *root) {
 		uiLayout *prev_layout = block->layout;
 
 		block->layout = root->layout;
-		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0);
+		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0, 0);
 		block->layout = prev_layout;
 	}
 }
@@ -436,8 +436,6 @@ ROSE_INLINE void ui_item_position(uiItem *vitem, const int x, const int y, const
 		item->but->rect.ymin = y;
 		item->but->rect.xmax = x + w;
 		item->but->rect.ymax = y + h;
-
-		ui_but_update(item->but);
 	}
 	else {
 		uiLayout *item = static_cast<uiLayout *>(vitem);

@@ -41,23 +41,27 @@ ScrArea *screen_addarea(Screen *screen, ScrVert *v1, ScrVert *v2, ScrVert *v3, S
 	return screen_addarea_ex(AREAMAP_FROM_SCREEN(screen), v1, v2, v3, v4, spacetype);
 }
 
-Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, int space_type) {
+Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, const int *space_types, int totspaces) {
 	Screen *screen = KER_libblock_alloc(main, ID_SCR, name, 0);
 
 	ScrVert *sv1 = screen_geom_vertex_add(screen, rect->xmin, rect->ymin);
 	ScrVert *sv2 = screen_geom_vertex_add(screen, rect->xmin, rect->ymax);
 
-	const int cnt = 1; // Mostly for debug purposes to test more aras!
-	for (int i = 1; i <= cnt; i++) {
-		ScrVert *sv3 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymax);
-		ScrVert *sv4 = screen_geom_vertex_add(screen, (rect->xmax * i) / cnt, rect->ymin);
+	for (int i = 1; i <= totspaces; i++) {
+		ScrVert *sv3 = screen_geom_vertex_add(screen, (rect->xmax * i) / totspaces, rect->ymax);
+		ScrVert *sv4 = screen_geom_vertex_add(screen, (rect->xmax * i) / totspaces, rect->ymin);
 
 		screen_geom_edge_add(screen, sv1, sv2);
 		screen_geom_edge_add(screen, sv2, sv3);
 		screen_geom_edge_add(screen, sv3, sv4);
 		screen_geom_edge_add(screen, sv4, sv1);
 
-		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, space_type);
+		int spacetype = space_types ? space_types[i - 1] : SPACE_EMPTY;
+
+		ScrArea *area = screen_addarea(screen, sv1, sv2, sv3, sv4, spacetype);
+		if (area->spacetype != SPACE_EMPTY) {
+			screen_area_spacelink_add(area, area->spacetype);
+		}
 
 		sv1 = sv4;
 		sv2 = sv3;
@@ -70,7 +74,7 @@ Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, int spa
 }
 
 Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
-	return ED_screen_add_ex(main, name, rect, SPACE_EMPTY);
+	return ED_screen_add_ex(main, name, rect, NULL, 2);
 }
 
 /** \} */
@@ -79,7 +83,7 @@ Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
 /** \name Screen Utils
  * \{ */
 
-void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int xy[2]) {
+void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2]) {
 	Screen *screen = WM_window_screen_get(window);
 	if (screen == NULL) {
 		return;
@@ -135,7 +139,7 @@ void ED_screen_set_active_region(struct rContext *C, wmWindow *window, const int
 /** \name Screen Exit
  * \{ */
 
-void ED_screen_exit(struct rContext *C, wmWindow *window, Screen *screen) {
+void ED_screen_exit(rContext *C, wmWindow *window, Screen *screen) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *prevwin = CTX_wm_window(C);
 

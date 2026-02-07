@@ -6,6 +6,8 @@
 
 #include "DNA_windowmanager_types.h"
 
+#include "DEG_depsgraph.h"
+
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
  * \{ */
@@ -79,6 +81,38 @@ struct ViewLayer *CTX_data_view_layer(const rContext *C) {
 	}
 
 	return KER_view_layer_default_view(scene);
+}
+
+Depsgraph *CTX_data_depsgraph_pointer(const rContext *C) {
+	Main *main = CTX_data_main(C);
+	Scene *scene = CTX_data_scene(C);
+	ViewLayer *view_layer = CTX_data_view_layer(C);
+	Depsgraph *depsgraph = KER_scene_ensure_depsgraph(main, scene, view_layer);
+	/**
+	 * Dependency graph might have been just allocated, and hence it will not be marked.
+	 * This confuses redo system due to the lack of flushing changes back to the original data.
+	 * In the future we would need to check whether the CTX_wm_window(C)  is in editing mode (as an
+	 * opposite of playback-preview-only) and set active flag based on that.
+	 */
+	DEG_make_active(depsgraph);
+	return depsgraph;
+}
+
+Depsgraph *CTX_data_expect_evaluated_depsgraph(const rContext *C) {
+	Depsgraph *depsgraph = CTX_data_depsgraph_pointer(C);
+	/* TODO(lp64ace): Assert that the dependency graph is fully evaluated.
+	 * Note that first the depsgraph and scene post-eval hooks needs to run extra round of updates
+	 * first to make check here really reliable. */
+	return depsgraph;
+}
+
+Depsgraph *CTX_data_ensure_evaluated_depsgraph(const rContext *C) {
+	Depsgraph *depsgraph = CTX_data_depsgraph_pointer(C);
+	Main *main = CTX_data_main(C);
+
+	KER_scene_graph_evaluated_ensure(depsgraph, main);
+
+	return depsgraph;
 }
 
 void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {

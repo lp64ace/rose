@@ -36,6 +36,19 @@ void LIB_memory_block_destroy(MemBlock *block, MemblockValFreeFP free_callback);
  */
 void *LIB_memory_block_elem_get(MemBlock *block, size_t chunk, size_t elem);
 
+typedef struct MemBlockIter {
+	void **chunk_list;
+	size_t current_index;
+	size_t end_index;
+	size_t chunk_max_offset;
+	size_t chunk_idx;
+	size_t element_size;
+	size_t element_offset;
+} MemBlockIter;
+
+void LIB_memory_block_iternew(MemBlock *mblk, MemBlockIter *iter);
+void *LIB_memory_block_iterstep(MemBlockIter *iter);
+
 #ifdef __cplusplus
 }
 #endif

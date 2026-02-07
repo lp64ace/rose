@@ -69,3 +69,25 @@ set(FREETYPE_INCLUDE_DIRS ${LIBDIR}/freetype/include ${LIBDIR}/freetype/include/
 set(FREETYPE_LIBRARIES ${LIBDIR}/freetype/lib/freetype.lib)
 
 set(EIGEN3_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/Eigen3)
+
+set(TBB_INCLUDE_DIRS ${LIBDIR}/tbb/include)
+set(TBB_LIBRARIES
+	${LIBDIR}/tbb/lib/tbb_debug.lib
+	${LIBDIR}/tbb/lib/tbb12_debug.lib
+	${LIBDIR}/tbb/lib/tbbmalloc_debug.lib
+	${LIBDIR}/tbb/lib/tbbmalloc_proxy_debug.lib
+	
+	${LIBDIR}/tbb/lib/tbb.lib
+	${LIBDIR}/tbb/lib/tbb12.lib
+	${LIBDIR}/tbb/lib/tbbmalloc.lib
+	${LIBDIR}/tbb/lib/tbbmalloc_proxy.lib
+)
+set(TBB_BINARIES
+	${LIBDIR}/tbb/bin/tbb12_debug.dll
+	${LIBDIR}/tbb/bin/tbbmalloc_debug.dll
+	${LIBDIR}/tbb/bin/tbbmalloc_proxy_debug.dll
+
+	${LIBDIR}/tbb/bin/tbb12.dll
+	${LIBDIR}/tbb/bin/tbbmalloc.dll
+	${LIBDIR}/tbb/bin/tbbmalloc_proxy.dll
+)

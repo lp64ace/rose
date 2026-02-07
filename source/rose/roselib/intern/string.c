@@ -315,7 +315,7 @@ const char *LIB_strrfind(const char *begin, const char *end, const char *word) {
 }
 
 const char *LIB_strnext(const char *begin, const char *end, const char *itr, int c) {
-	for (; begin <= itr && itr < end; itr++) {
+	for (; begin <= itr && *itr && itr < end; itr++) {
 		if (itr[0] == c) {
 			return itr;
 		}
@@ -324,7 +324,7 @@ const char *LIB_strnext(const char *begin, const char *end, const char *itr, int
 }
 
 const char *LIB_strprev(const char *begin, const char *end, const char *itr, int c) {
-	for (; begin <= itr && itr < end; itr--) {
+	for (; begin <= itr && *itr && itr < end; itr--) {
 		if (itr[0] == c) {
 			return itr;
 		}

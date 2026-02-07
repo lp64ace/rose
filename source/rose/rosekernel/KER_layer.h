@@ -7,11 +7,12 @@
 
 #include "LIB_utildefines.h"
 
+struct Depsgraph;
+struct Scene;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct Scene;
 
 /** Returns the default view layer to view in work-spaces if there is none liked to the workspace yet. */
 struct ViewLayer *KER_view_layer_default_view(const struct Scene *scene);
@@ -73,6 +74,8 @@ void KER_layer_collection_set_visible(struct ViewLayer *view_layer, struct Layer
 void KER_layer_collection_set_flag(struct LayerCollection *collection, int flag, bool value);
 
 void KER_base_eval_flags(struct Base *base);
+
+void KER_layer_eval_view_layer_indexed(struct Depsgraph *depsgraph, struct Scene *scene, int view_layer_index);
 
 #ifdef __cplusplus
 }

@@ -222,15 +222,27 @@ void LIB_freelinkN(ListBase *lb, void *vlink) {
 /** \name Find Methods
  * \{ */
 
-bool LIB_haslink(const ListBase *lb, void *vlink) {
+bool LIB_haslink(const ListBase *lb, const void *vlink) {
 	if (vlink) {
-		for (Link *link = lb->first; link; link = link->next) {
-			if (link == (Link *)vlink) {
+		for (const Link *link = lb->first; link; link = link->next) {
+			if (link == (const Link *)vlink) {
 				return true;
 			}
 		}
 	}
 	return false;
+}
+
+void *LIB_findlink(const ListBase *lb, size_t index) {
+	Link *link = NULL;
+
+	link = lb->first;
+	while (link != NULL && index != 0) {
+		index--;
+		link = link->next;
+	}
+
+	return link;
 }
 
 void *LIB_findptr(const ListBase *lb, const void *ptr, const size_t offset) {
@@ -246,7 +258,21 @@ void *LIB_findptr(const ListBase *lb, const void *ptr, const size_t offset) {
 
 void *LIB_findstr(const ListBase *lb, const char *str, const size_t offset) {
 	for (Link *iter = lb->first; iter; iter = iter->next) {
-		if (strcmp(POINTER_OFFSET(iter, offset), str) == 0) {
+		const char *p = (const char *)POINTER_OFFSET(iter, offset);
+
+		if (p[0] == str[0] && STREQ(p, str)) {
+			return iter;
+		}
+	}
+
+	return NULL;
+}
+
+void *LIB_findstr_pointer(const ListBase *lb, const char *str, const size_t offset) {
+	for (Link *iter = lb->first; iter; iter = iter->next) {
+		const char *p = *(const char **)POINTER_OFFSET(iter, offset);
+
+		if (p[0] == str[0] && STREQ(p, str)) {
 			return iter;
 		}
 	}

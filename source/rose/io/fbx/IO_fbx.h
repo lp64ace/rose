@@ -7,8 +7,8 @@ struct rContext;
 extern "C" {
 #endif
 
-void FBX_import(struct rContext *C, const char *filepath);
-void FBX_import_memory(struct rContext *C, const void *memory, size_t size);
+void FBX_import(struct rContext *C, const char *filepath, float unit);
+void FBX_import_memory(struct rContext *C, const void *memory, size_t size, float unit);
 
 #ifdef __cplusplus
 }

@@ -254,7 +254,8 @@ set(INFO_SRC
 	
 	infos/gpu_shader_test_info.hh
 
-	../draw/engines/alice/shaders/infos/opaque_mesh_info.hh
+	../draw/engines/alice/shaders/infos/draw_opaque_mesh_info.hh
+	../draw/engines/overlay/shaders/infos/draw_armature_info.hh
 	../draw/intern/shaders/infos/draw_view_info.hh
 )
 
@@ -297,6 +298,14 @@ set(LIB
 
 rose_add_lib(gpu "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::gpu ALIAS gpu)
+
+# -----------------------------------------------------------------------------
+# Declare Library
+
+add_library(gpu_shaders_info INTERFACE "${INFO_SRC}")
+add_library(rose::source::editors::gpu_shaders_info ALIAS gpu_shaders_info)
+
+rose_source_group(gpu_shaders_info "${INFO_SRC}")
 
 # -----------------------------------------------------------------------------
 # Define Include Directories (Test)

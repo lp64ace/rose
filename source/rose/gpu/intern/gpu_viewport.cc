@@ -131,11 +131,13 @@ static GPUBatch *gpu_viewport_batch_create(const rctf *rect_pos, const rctf *rec
 	copy_v2_fl2(static_cast<float *>(GPU_vertbuf_raw_step(&pos_step)), rect_pos->xmax, rect_pos->ymax);
 	copy_v2_fl2(static_cast<float *>(GPU_vertbuf_raw_step(&tex_coord_step)), rect_uv->xmax, rect_uv->ymax);
 
-	return GPU_batch_create_ex(GPU_PRIM_TRI_STRIP, vbo, nullptr, GPU_BATCH_OWNS_VBO);
+	GPUBatch *newbatch = GPU_batch_create_ex(GPU_PRIM_TRI_STRIP, vbo, nullptr, GPU_BATCH_OWNS_VBO);
+	GPU_batch_program_set_builtin(newbatch, GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE);
+	return newbatch;
 }
 
 static GPUBatch *gpu_viewport_batch_get(GPUViewport *viewport, const rctf *rect_pos, const rctf *rect_uv) {
-	const float compare_limit = 1e-4f;
+	const float compare_limit = 1e-3f;
 	const bool changed_pos = !LIB_rctf_compare(&viewport->batch.last_used_parameters.rect_pos, rect_pos, compare_limit);
 	const bool changed_uv = !LIB_rctf_compare(&viewport->batch.last_used_parameters.rect_uv, rect_uv, compare_limit);
 
@@ -149,6 +151,7 @@ static GPUBatch *gpu_viewport_batch_get(GPUViewport *viewport, const rctf *rect_
 		viewport->batch.last_used_parameters.rect_pos = *rect_pos;
 		viewport->batch.last_used_parameters.rect_uv = *rect_uv;
 	}
+
 	return viewport->batch.batch;
 }
 
@@ -207,16 +210,26 @@ static void gpu_viewport_draw(GPUViewport *viewport, int view, const rctf *rect_
 
 	GPUBatch *batch = gpu_viewport_batch_get(viewport, rect_pos, rect_uv);
 
-	GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE);
-	GPU_batch_uniform_1i(batch, "overlay", false);
-	GPU_batch_uniform_1i(batch, "display_transform", false);
-	GPU_batch_uniform_1i(batch, "use_hdr", false);
+	if (viewport->overlay_fb) {
+		GPU_batch_uniform_1i(batch, "overlay", true);
+		GPU_batch_uniform_1i(batch, "display_transform", false);
+		// GPU_batch_uniform_1i(batch, "use_hdr", false);
 
-	GPU_texture_bind(color, 0);
-	GPU_texture_bind(color_overlay, 1);
-	GPU_batch_draw(batch);
-	GPU_texture_unbind(color_overlay);
-	GPU_texture_unbind(color);
+		GPU_texture_bind(color, 0);
+		GPU_texture_bind(color_overlay, 1);
+		GPU_batch_draw(batch);
+		GPU_texture_unbind(color_overlay);
+		GPU_texture_unbind(color);
+	}
+	else {
+		GPU_batch_uniform_1i(batch, "overlay", false);
+		GPU_batch_uniform_1i(batch, "display_transform", false);
+		// GPU_batch_uniform_1i(batch, "use_hdr", false);
+
+		GPU_texture_bind(color, 0);
+		GPU_batch_draw(batch);
+		GPU_texture_unbind(color);
+	}
 }
 
 void GPU_viewport_draw_to_screen(GPUViewport *viewport, int view, const rcti *rect) {

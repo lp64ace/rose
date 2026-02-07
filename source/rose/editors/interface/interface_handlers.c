@@ -13,6 +13,7 @@
 
 #include "LIB_ghash.h"
 #include "LIB_listbase.h"
+#include "LIB_math_base.h"
 #include "LIB_rect.h"
 #include "LIB_string.h"
 #include "LIB_string_utf.h"
@@ -35,12 +36,14 @@
 /** \name UI Event Handlers
  * \{ */
 
-ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *user_data);
+ROSE_STATIC int ui_region_handler(rContext *C, const wmEvent *evt, void *user_data);
 
 typedef struct uiHandleButtonData {
 	struct wmWindow *window;
 	struct ScrArea *area;
 	struct ARegion *region;
+
+	float value;
 
 	int state;
 
@@ -70,6 +73,225 @@ bool ui_but_is_editing(uiBut *but) {
 	return (data && data->state == BUTTON_STATE_TEXT_EDITING);
 }
 
+void ui_but_value_set(uiBut *but, double value) {
+	if (but->rna_property) {
+		PropertyRNA *property = but->rna_property;
+
+		if (RNA_property_editable(&but->rna_pointer, property)) {
+			switch (RNA_property_type(property)) {
+				case PROP_FLOAT: {
+					if (RNA_property_array_check(property)) {
+						RNA_property_float_set_index(&but->rna_pointer, property, but->rna_index, value);
+					}
+				} break;
+				default: {
+					ROSE_assert_unreachable();
+				} break;
+			}
+		}
+	}
+	else if (but->pointype != UI_POINTER_NIL) {
+		switch (but->pointype) {
+			case UI_POINTER_BYTE: {
+				value = round_db_to_uchar_clamp(value);
+			} break;
+			case UI_POINTER_INT: {
+				value = round_db_to_int_clamp(value);
+			} break;
+			case UI_POINTER_FLT: {
+				float fval = value;
+				if (fval >= -0.00001f && fval <= 0.00001f) {
+					/* prevent negative zero */
+					fval = 0.0f;
+				}
+				value = fval;
+			} break;
+		}
+
+		switch (but->pointype) {
+			case UI_POINTER_BYTE: {
+				*((unsigned char *)but->poin) = (unsigned char)(value);
+			} break;
+			case UI_POINTER_INT: {
+				*((int *)but->poin) = (int)(value);
+			} break;
+			case UI_POINTER_FLT: {
+				*((float *)but->poin) = (float)(value);
+			} break;
+		}
+	}
+}
+
+void ui_but_value_get(uiBut *but, double *r_value) {
+	double value = 0.0;
+
+	if (but->poin == NULL && but->rna_pointer.data == NULL) {
+		if (r_value) {
+			*r_value = value;
+		}
+		return;
+	}
+
+	if (but->rna_pointer.data) {
+		PropertyRNA *property = but->rna_property;
+
+		ROSE_assert(but->rna_index != -1);
+
+		switch (RNA_property_type(property)) {
+			case PROP_FLOAT: {
+				if (RNA_property_array_check(property)) {
+					value = RNA_property_float_get_index(&but->rna_pointer, property, but->rna_index);
+				}
+				else {
+					value = RNA_property_float_get(&but->rna_pointer, property);
+				}
+			} break;
+			default: {
+				ROSE_assert_unreachable();
+			} break;
+		}
+	}
+	else if (but->pointype == UI_POINTER_BYTE) {
+		value = *(char *)but->poin;
+	}
+	else if (but->pointype == UI_POINTER_INT) {
+		value = *(int *)but->poin;
+	}
+	else if (but->pointype == UI_POINTER_FLT) {
+		value = *(float *)but->poin;
+	}
+
+	if (r_value) {
+		*r_value = value;
+	}
+}
+
+/* avoid unneeded calls to ui_but_value_get */
+#define UI_BUT_VALUE_UNSET DBL_MAX
+#define UI_GET_BUT_VALUE_INIT(_but, _value) \
+	if (_value == DBL_MAX) {                \
+		ui_but_value_get(_but, &(_value));  \
+	}                                       \
+	((void)0)
+
+ROSE_INLINE bool ui_but_is_float(uiBut *but) {
+	if (but->pointype == UI_POINTER_FLT && but->poin) {
+		return true;
+	}
+	if (but->rna_property && RNA_property_type(but->rna_property) == PROP_FLOAT) {
+		return true;
+	}
+
+	return false;
+}
+
+/* Maximum number of digits of precision (not number of decimal places)
+ * to display for float values. Note that the UI_FLOAT_VALUE_DISPLAY_*
+ * defines that follow depend on this. */
+#define UI_PRECISION_FLOAT_MAX 6
+
+ROSE_INLINE int ui_calc_float_precision(int precision, double value) {
+	static const double pow10_neg[UI_PRECISION_FLOAT_MAX + 1] = {1e0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6};
+	static const double max_pow = 10000000.0; /* pow(10, UI_PRECISION_FLOAT_MAX) */
+
+	ROSE_assert(precision <= UI_PRECISION_FLOAT_MAX);
+	ROSE_assert(fabs(pow10_neg[precision] - pow(10, -precision)) < 1e-16);
+
+	/* Check on the number of decimal places need to display the number,
+	 * this is so 0.00001 is not displayed as 0.00,
+	 * _but_, this is only for small values as 10.0001 will not get the same treatment.
+	 */
+	value = fabs(value);
+	if ((value < pow10_neg[precision]) && (value > (1.0 / max_pow))) {
+		int value_i = round(value * max_pow);
+		if (value_i != 0) {
+			const int prec_span = 3; /* show: 0.01001, 5 would allow 0.0100001 for eg. */
+			int test_prec;
+			int prec_min = -1;
+			int dec_flag = 0;
+			int i = UI_PRECISION_FLOAT_MAX;
+			while (i && value_i) {
+				if (value_i % 10) {
+					dec_flag |= 1 << i;
+					prec_min = i;
+				}
+				value_i /= 10;
+				i--;
+			}
+
+			/* even though its a small value, if the second last digit is not 0, use it */
+			test_prec = prec_min;
+
+			dec_flag = (dec_flag >> (prec_min + 1)) & ((1 << prec_span) - 1);
+
+			while (dec_flag) {
+				test_prec++;
+				dec_flag = dec_flag >> 1;
+			}
+
+			precision = ROSE_MAX(test_prec, precision);
+		}
+	}
+
+	CLAMP(precision, 0, UI_PRECISION_FLOAT_MAX);
+
+	return precision;
+}
+
+ROSE_INLINE int ui_but_get_float_precision(uiBut *but) {
+	if (but->type == UI_BTYPE_TEXT || but->type == UI_BTYPE_EDIT) {
+		return but->precision;
+	}
+	return 1.0f;
+}
+
+ROSE_INLINE int ui_but_calc_float_precision(uiBut *but, double value) {
+	int precision = ui_but_get_float_precision(but);
+
+	if (precision < 0) {
+		precision = (but->hardmax < 10) ? 3 : 2;
+	}
+	return ui_calc_float_precision(precision, value);
+
+}
+
+void ui_but_update(uiBut *but, bool validate) {
+	double value = UI_BUT_VALUE_UNSET;
+
+	switch (but->type) {
+		case UI_BTYPE_SCROLL: {
+			if (validate) {
+				UI_GET_BUT_VALUE_INIT(but, value);
+				if (value < but->hardmin) {
+					ui_but_value_set(but, but->hardmin);
+				}
+				else if (value > but->hardmax) {
+					ui_but_value_set(but, but->hardmax);
+				}
+
+				/* max must never be smaller than min! Both being equal is allowed though */
+				ROSE_assert(but->softmin <= but->softmax && but->hardmin <= but->hardmax);
+			}
+		} break;
+	}
+
+	switch (but->type) {
+		case UI_BTYPE_TEXT: {
+			if (ui_but_is_float(but)) {
+				UI_GET_BUT_VALUE_INIT(but, value);
+				const int precision = ui_but_calc_float_precision(but, value);
+
+				if ((but->draw & UI_BUT_TEXT_FORMAT) != 0) {
+					LIB_strnformat(but->drawstr, but->maxlength, but->name, precision, (float)value);
+				}
+				else {
+					LIB_strnformat(but->drawstr, but->maxlength, "%.*f", precision, (float)value);
+				}
+			}
+		} break;
+	}
+}
+
 ROSE_INLINE bool button_modal_state(int state) {
 	return IN_RANGE_INCL(state, _BUTTON_MODAL_STATE_BEGIN, _BUTTON_MODAL_STATE_END);
 }
@@ -84,10 +306,10 @@ ROSE_INLINE bool ui_button_modal_state(uiBut *but) {
 	return button_modal_state(data->state);
 }
 
-ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data);
+ROSE_STATIC int ui_handler_region_menu(rContext *C, const wmEvent *evt, void *user_data);
 
-void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, int state);
-void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but);
+void ui_do_but_activate_init(rContext *C, ARegion *region, uiBut *but, int state);
+void ui_do_but_activate_exit(rContext *C, ARegion *region, uiBut *but);
 
 ROSE_STATIC void ui_but_tag_redraw(uiBut *but) {
 	uiHandleButtonData *data = but->active;
@@ -101,7 +323,7 @@ ROSE_STATIC void ui_but_tag_redraw(uiBut *but) {
 	ED_region_tag_redraw_no_rebuild(data->region);
 }
 
-ROSE_STATIC void button_activate_state(struct rContext *C, uiBut *but, int state) {
+ROSE_STATIC void button_activate_state(rContext *C, uiBut *but, int state) {
 	uiHandleButtonData *data = but->active;
 	if (!data || data->state == state) {
 		return;
@@ -139,7 +361,7 @@ ROSE_STATIC void button_activate_state(struct rContext *C, uiBut *but, int state
 	}
 }
 
-void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, int state) {
+void ui_do_but_activate_init(rContext *C, ARegion *region, uiBut *but, int state) {
 	/* Only ever one active button! */
 	ROSE_assert(ui_region_find_active_but(region) == NULL);
 
@@ -179,7 +401,7 @@ void ui_do_but_activate_init(struct rContext *C, ARegion *region, uiBut *but, in
 	}
 }
 
-void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but) {
+void ui_do_but_activate_exit(rContext *C, ARegion *region, uiBut *but) {
 	if (!but || !but->active) {
 		return;
 	}
@@ -202,14 +424,14 @@ void ui_do_but_activate_exit(struct rContext *C, ARegion *region, uiBut *but) {
 	MEM_SAFE_FREE(but->active);
 }
 
-void ui_but_active_free(struct rContext *C, uiBut *but) {
+void ui_but_active_free(rContext *C, uiBut *but) {
 	if (but->active) {
 		uiHandleButtonData *data = but->active;
 		button_activate_state(C, but, BUTTON_STATE_EXIT);
 	}
 }
 
-ROSE_STATIC void ui_but_activate(struct rContext *C, ARegion *region, uiBut *but, int state) {
+ROSE_STATIC void ui_but_activate(rContext *C, ARegion *region, uiBut *but, int state) {
 	uiBut *old = ui_region_find_active_but(region);
 	if (old) {
 		uiHandleButtonData *data = old->active;
@@ -218,7 +440,7 @@ ROSE_STATIC void ui_but_activate(struct rContext *C, ARegion *region, uiBut *but
 	ui_do_but_activate_init(C, region, but, state);
 }
 
-ROSE_STATIC void ui_do_but_menu_exit(struct rContext *C, uiBut *but) {
+ROSE_STATIC void ui_do_but_menu_exit(rContext *C, uiBut *but) {
 	if (but->block && but->block->handle) {
 		uiPopupBlockHandle *handle = but->block->handle;
 
@@ -234,7 +456,7 @@ ROSE_STATIC void ui_do_but_menu_exit(struct rContext *C, uiBut *but) {
 	}
 }
 
-ROSE_STATIC void ui_apply_but_func(struct rContext *C, uiBut *but, void *arg1, void *arg2) {
+ROSE_STATIC void ui_apply_but_func(rContext *C, uiBut *but, void *arg1, void *arg2) {
 	if (but->handle_func) {
 		but->handle_func(C, but, arg1, arg2);
 	}
@@ -260,11 +482,15 @@ ROSE_STATIC bool ui_scroll_set_thumb_pos(uiBut *but, const ARegion *region, cons
 	}
 	mv = but->softmin + mv * (but->softmax - but->softmin + 1) - 0.5;
 
-	double prev = ui_but_get_value(but), next = ui_but_set_value(but, mv);
-	return prev != next;
+	double old_value, new_value;
+	ui_but_value_get(but, &old_value);
+	ui_but_value_set(but, mv);
+	ui_but_value_get(but, &new_value);
+
+	return old_value != new_value;
 }
 
-ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const wmEvent *evt) {
+ROSE_STATIC int ui_do_but(rContext *C, uiBlock *block, uiBut *but, const wmEvent *evt) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 
 	ARegion *region = CTX_wm_region(C);
@@ -276,8 +502,13 @@ ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const 
 		case UI_BTYPE_SCROLL: {
 			if (ELEM(evt->type, WHEELDOWNMOUSE, WHEELUPMOUSE, EVT_PAGEDOWNKEY, EVT_PAGEUPKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				double move = ELEM(evt->type, WHEELUPMOUSE, EVT_PAGEUPKEY) ? -15e-2f : 15e-2f;
-				double prev = ui_but_get_value(but), next = ui_but_set_value(but, prev + move);
-				if (prev != next) {
+
+				double old_value, new_value;
+				ui_but_value_get(but, &old_value);
+				ui_but_value_set(but, old_value + move);
+				ui_but_value_get(but, &new_value);
+
+				if (old_value != new_value) {
 					ED_region_tag_redraw(region);
 					// ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
@@ -286,8 +517,13 @@ ROSE_STATIC int ui_do_but(struct rContext *C, uiBlock *block, uiBut *but, const 
 			}
 			if (ELEM(evt->type, EVT_ENDKEY, EVT_HOMEKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				double nval = ELEM(evt->type, EVT_HOMEKEY) ? but->softmin : but->softmax;
-				double prev = ui_but_get_value(but), next = ui_but_set_value(but, nval);
-				if (prev != next) {
+				
+				double old_value, new_value;
+				ui_but_value_get(but, &old_value);
+				ui_but_value_set(but, nval);
+				ui_but_value_get(but, &new_value);
+
+				if (old_value != new_value) {
 					ED_region_tag_redraw(region);
 					// ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
@@ -459,7 +695,7 @@ ROSE_STATIC bool ui_textedit_delete(uiBut *but, const wmEvent *evt) {
 	return changed;
 }
 
-ROSE_STATIC bool ui_textedit_insert_buf(struct rContext *C, uiBut *but, const char *input, unsigned int step) {
+ROSE_STATIC bool ui_textedit_insert_buf(rContext *C, uiBut *but, const char *input, unsigned int step) {
 	unsigned int length = (unsigned int)LIB_strlen(but->drawstr);
 	unsigned int cpy = length - (but->selend - but->selsta) + 1;
 
@@ -494,7 +730,7 @@ enum {
 	UI_TEXTEDIT_CUT,
 };
 
-ROSE_STATIC bool ui_textedit_copypaste(struct rContext *C, uiBut *but, const int mode) {
+ROSE_STATIC bool ui_textedit_copypaste(rContext *C, uiBut *but, const int mode) {
 	bool changed = false;
 
 	unsigned int length = 0;
@@ -533,7 +769,7 @@ ROSE_STATIC bool ui_but_is_editing_set(uiBut *but, const char *text) {
 	return false;
 }
 
-ROSE_STATIC int ui_do_but_textsel(struct rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
+ROSE_STATIC int ui_do_but_textsel(rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 	switch (evt->type) {
 		case MOUSEMOVE: {
@@ -607,7 +843,7 @@ ROSE_STATIC uiBut *ui_textedit_prev_but(uiBlock *block, uiBut *but, uiHandleButt
 	return NULL;
 }
 
-ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
+ROSE_STATIC int ui_do_but_textedit(rContext *C, uiBlock *block, uiBut *but, uiHandleButtonData *data, const wmEvent *evt) {
 	if (!ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 		return WM_UI_HANDLER_CONTINUE;
 	}
@@ -639,7 +875,6 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 					retval |= WM_UI_HANDLER_BREAK;
 				}
 				else {
-					ui_but_update(but);
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
 					ui_apply_but_func(C, but, but->arg1, but->arg2);
 				}
@@ -655,7 +890,6 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 		} break;
 		case EVT_RETKEY:
 		case EVT_PADENTER: {
-			ui_but_update(but);
 			button_activate_state(C, but, BUTTON_STATE_EXIT);
 			ui_apply_but_func(C, but, but->arg1, but->arg2);
 			retval |= WM_UI_HANDLER_BREAK;
@@ -769,9 +1003,9 @@ ROSE_STATIC int ui_do_but_textedit(struct rContext *C, uiBlock *block, uiBut *bu
 	return retval;
 }
 
-ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but);
+ROSE_STATIC int ui_handle_button_event(rContext *C, const wmEvent *evt, uiBut *but);
 
-ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, ARegion *region) {
+ROSE_STATIC int ui_handle_button_over(rContext *C, const wmEvent *evt, ARegion *region) {
 	uiBut *but = ui_but_find_mouse_over_ex(region, evt->mouse_xy);
 	if (but) {
 		switch (but->type) {
@@ -785,7 +1019,7 @@ ROSE_STATIC int ui_handle_button_over(struct rContext *C, const wmEvent *evt, AR
 	return WM_UI_HANDLER_CONTINUE;
 }
 
-ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, uiBut *but) {
+ROSE_STATIC int ui_handle_button_event(rContext *C, const wmEvent *evt, uiBut *but) {
 	int retval = WM_UI_HANDLER_CONTINUE;
 
 	uiHandleButtonData *data = but->active;
@@ -911,7 +1145,7 @@ ROSE_STATIC int ui_handle_button_event(struct rContext *C, const wmEvent *evt, u
 	return retval;
 }
 
-ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, void *user_data) {
+ROSE_STATIC int ui_handler_region_menu(rContext *C, const wmEvent *evt, void *user_data) {
 	uiHandleButtonData *data = (uiHandleButtonData *)user_data;
 
 	int retval = WM_UI_HANDLER_CONTINUE;
@@ -926,7 +1160,7 @@ ROSE_STATIC int ui_handler_region_menu(struct rContext *C, const wmEvent *evt, v
 	return retval;
 }
 
-ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *user_data) {
+ROSE_STATIC int ui_region_handler(rContext *C, const wmEvent *evt, void *user_data) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = CTX_wm_region(C);
 	int retval = WM_UI_HANDLER_CONTINUE;
@@ -969,7 +1203,7 @@ ROSE_STATIC int ui_region_handler(struct rContext *C, const wmEvent *evt, void *
 	return retval;
 }
 
-ROSE_STATIC void ui_region_handler_remove(struct rContext *C, void *user_data) {
+ROSE_STATIC void ui_region_handler_remove(rContext *C, void *user_data) {
 }
 
 void UI_region_handlers_add(ListBase *handlers) {

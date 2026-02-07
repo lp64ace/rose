@@ -155,11 +155,41 @@ template<> struct DefaultHash<bool> {
 };
 
 inline uint64_t hash_string(StringRef str) {
-	uint64_t hash = 5381;
-	for (char c : str) {
-		hash = hash * 33 + c;
+	const uint8_t *p = (const uint8_t *)str.data();
+	size_t n = str.size();
+
+	uint64_t h = 0xCBF29CE484222325ULL;	 // 64-bit FNV offset basis
+
+	while (n >= 8) {
+		uint64_t v = *(const uint64_t *)p;
+		h ^= v;
+		h *= 0x100000001B3ULL;	// 64-bit FNV prime
+		p += 8;
+		n -= 8;
 	}
-	return hash;
+
+	while (n >= 4) {
+		uint32_t v = *(const uint32_t *)p;
+		h ^= v;
+		h *= 0x100000001B3ULL;	// 32-bit FNV prime
+		p += 4;
+		n -= 4;
+	}
+
+	// Remaining <8 bytes
+	while (n--) {
+		h ^= *p++;
+		h *= 0x100000001B3ULL;
+	}
+
+	// Final avalanche (excellent for reducing bias)
+	h ^= h >> 33;
+	h *= 0xff51afd7ed558ccdULL;
+	h ^= h >> 33;
+	h *= 0xc4ceb9fe1a85ec53ULL;
+	h ^= h >> 33;
+
+	return h;
 }
 
 template<> struct DefaultHash<std::string> {

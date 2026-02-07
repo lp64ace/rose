@@ -52,16 +52,12 @@ ROSE_STATIC bool mesh_batch_cache_valid(Object *object, Mesh *mesh) {
 ROSE_INLINE void mesh_buffer_list_clear(MeshBufferList *list) {
 	GPUVertBuf **vbos = (GPUVertBuf **)&list->vbo;
 	GPUIndexBuf **ibos = (GPUIndexBuf **)&list->ibo;
-	GPUUniformBuf **ubos = (GPUUniformBuf **)&list->ubo;
 
 	for (int i = 0; i < sizeof(list->vbo) / sizeof(GPUVertBuf *); i++) {
 		GPU_VERTBUF_DISCARD_SAFE(vbos[i]);
 	}
 	for (int i = 0; i < sizeof(list->ibo) / sizeof(GPUIndexBuf *); i++) {
 		GPU_INDEXBUF_DISCARD_SAFE(ibos[i]);
-	}
-	for (int i = 0; i < sizeof(list->ubo) / sizeof(GPUUniformBuf *); i++) {
-		GPU_UNIFORMBUF_DISCARD_SAFE(ubos[i]);
 	}
 }
 

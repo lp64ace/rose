@@ -2,6 +2,8 @@
 
 #include "KER_lib_id.h"
 #include "KER_main.h"
+#include "KER_main_id_name_map.h"
+#include "KER_main_name_map.h"
 
 #include "DNA_ID.h"
 #include "DNA_ID_enums.h"
@@ -41,6 +43,12 @@ void KER_main_clear(Main *main) {
 		}
 		LIB_listbase_clear(lb);
 	}
+
+	if (main->id_map) {
+		KER_main_idmap_free(main->id_map);
+	}
+
+	KER_main_namemap_destroy(&main->name_map);
 }
 
 /** \} */
@@ -64,6 +72,20 @@ void KER_main_free(Main *main) {
 
 	KER_main_destroy(main);
 	MEM_freeN(main);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Lookup Methods
+ * \{ */
+
+void *KER_main_id_lookup(Main *main, short idtype, const char *name) {
+	if (!main->id_map) {
+		main->id_map = KER_main_idmap_create(main, true, NULL);
+	}
+
+	return KER_main_idmap_lookup_name(main->id_map, idtype, name);
 }
 
 /** \} */

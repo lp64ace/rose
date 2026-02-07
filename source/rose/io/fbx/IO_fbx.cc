@@ -29,6 +29,12 @@ struct FbxImportContext {
 
 	FbxImportContext(Main *main, Scene *scene, const ufbx_scene *fbx, const char *filepath) : main(main), scene(scene), fbx(fbx) {
 		fps = (float)fbx->settings.frames_per_second;
+
+		ufbx_transform root_tr;
+		root_tr.translation = ufbx_zero_vec3;
+		root_tr.rotation = fbx->metadata.root_rotation;
+		root_tr.scale.x = root_tr.scale.y = root_tr.scale.z = fbx->metadata.root_scale;
+		this->mapping.global_conv_matrix = ufbx_transform_to_matrix(&root_tr);
 	}
 
 	void import_globals();
@@ -97,10 +103,10 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 	}
 }
 
-void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath) {
+void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath, float unit) {
 	FILE *file = fopen(filepath, "rb");
 	if (!file) {
-		fprintf(stderr, "[FBX] Cannot open resource file '%s'", filepath);
+		fprintf(stderr, "[FBX] Cannot open resource file '%s'\n", filepath);
 		return;
 	}
 
@@ -117,17 +123,7 @@ void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 	opts.pivot_handling = UFBX_PIVOT_HANDLING_ADJUST_TO_ROTATION_PIVOT;
 
 	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
-	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
-	opts.target_unit_meters = 128.0f;
-
-	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_camera_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_camera_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_light_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_light_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_light_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+	opts.target_unit_meters = unit;
 
 	/* Setup ufbx threading to go through our own task system. */
 	opts.thread_opts.pool.run_fn = fbx_task_run_fn;
@@ -138,7 +134,7 @@ void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 	fclose(file);
 
 	if (!fbx) {
-		fprintf(stderr, "[FBX] Cannot import resource file '%s': %s", filepath, fbx_error.description.data);
+		fprintf(stderr, "[FBX] Cannot import resource file '%s': %s\n", filepath, fbx_error.description.data);
 		return;
 	}
 
@@ -147,7 +143,7 @@ void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 	ufbx_free_scene(fbx);
 }
 
-void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void *memory, size_t size) {
+void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void *memory, size_t size, float unit) {
 	ufbx_load_opts opts = {};
 	opts.evaluate_skinning = false;
 	opts.evaluate_caches = false;
@@ -159,17 +155,7 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	opts.pivot_handling = UFBX_PIVOT_HANDLING_ADJUST_TO_ROTATION_PIVOT;
 
 	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
-	opts.target_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_axes.front = UFBX_COORDINATE_AXIS_NEGATIVE_Y;
-	opts.target_unit_meters = 128.0f;
-
-	opts.target_camera_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_camera_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_camera_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
-	opts.target_light_axes.right = UFBX_COORDINATE_AXIS_POSITIVE_X;
-	opts.target_light_axes.up = UFBX_COORDINATE_AXIS_POSITIVE_Y;
-	opts.target_light_axes.front = UFBX_COORDINATE_AXIS_POSITIVE_Z;
+	opts.target_unit_meters = unit;
 
 	/* Setup ufbx threading to go through our own task system. */
 	opts.thread_opts.pool.run_fn = fbx_task_run_fn;
@@ -179,7 +165,7 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	ufbx_scene *fbx = ufbx_load_memory(memory, size, &opts, &fbx_error);
 
 	if (!fbx) {
-		fprintf(stderr, "[FBX] Cannot import resource file : %s", fbx_error.description.data);
+		fprintf(stderr, "[FBX] Cannot import resource file : %s\n", fbx_error.description.data);
 		return;
 	}
 
@@ -188,18 +174,18 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	ufbx_free_scene(fbx);
 }
 
-void FBX_import(struct rContext *C, const char *filepath) {
+void FBX_import(rContext *C, const char *filepath, float unit) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);
 
-	importer_file(main, scene, view_layer, filepath);
+	importer_file(main, scene, view_layer, filepath, unit);
 }
 
-void FBX_import_memory(struct rContext *C, const void *memory, size_t size) {
+void FBX_import_memory(rContext *C, const void *memory, size_t size, float unit) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);
 
-	importer_memory(main, scene, view_layer, memory, size);
+	importer_memory(main, scene, view_layer, memory, size, unit);
 }

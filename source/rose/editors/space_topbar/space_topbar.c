@@ -64,16 +64,16 @@ ROSE_INLINE void topbar_exit(WindowManager *wm, ScrArea *area) {
 /** \name TopBar Header Region Methods
  * \{ */
 
-ROSE_INLINE void topbar_header_file_menu_quit_but(struct rContext *C, uiBut *but, void *unused1, void *unused2) {
+ROSE_INLINE void topbar_header_file_menu_quit_but(rContext *C, uiBut *but, void *unused1, void *unused2) {
 	WM_window_post_quit_event(CTX_wm_window(C));
 }
 
-ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region, uiBut *owner, void *arg) {
+ROSE_INLINE uiBlock *topbar_header_file_menu(rContext *C, ARegion *region, uiBut *owner, void *arg) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_quit_but, NULL, NULL);
 		block->direction = UI_DIR_DOWN;
 		UI_block_end(C, block);
@@ -81,7 +81,7 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(struct rContext *C, ARegion *region
 	return block;
 }
 
-ROSE_INLINE uiBlock *topbar_header_debug_menu(struct rContext *C, ARegion *region, uiBut *owner, void *arg) {
+ROSE_INLINE uiBlock *topbar_header_debug_menu(rContext *C, ARegion *region, uiBut *owner, void *arg) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_debug"))) {
@@ -92,13 +92,13 @@ ROSE_INLINE uiBlock *topbar_header_debug_menu(struct rContext *C, ARegion *regio
 	return block;
 }
 
-ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region) {
+ROSE_INLINE void topbar_header_region_layout(rContext *C, ARegion *region) {
 	uiBlock *block;
 	uiBut *but;
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
-		but = uiDefBut(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 64, 0);
+		but = uiDefBut(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_file_menu, NULL);
 		UI_block_end(C, block);
 	}
@@ -110,7 +110,7 @@ ROSE_INLINE void topbar_header_region_layout(struct rContext *C, ARegion *region
 /** \name TopBar Main Region Methods
  * \{ */
 
-void topbar_main_region_draw(struct rContext *C, ARegion *region) {
+void topbar_main_region_draw(rContext *C, ARegion *region) {
 }
 
 void topbar_main_region_init(ARegion *region) {
@@ -137,7 +137,7 @@ void ED_spacetype_topbar() {
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
 		art->layout = topbar_header_region_layout;
-		art->draw = ED_region_header_draw;
+		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 	}
@@ -146,7 +146,7 @@ void ED_spacetype_topbar() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "SpaceTopBar::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = ED_region_default_draw;
+		art->draw = NULL;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
 	}

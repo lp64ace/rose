@@ -38,9 +38,12 @@ set(RUN_SRC
 	../RNA_access.h
 
 	rna_access.c
+	rna_access.cc
 	rna_id_runtime.c
 	rna_pose_runtime.c
 	rna_rna_runtime.c
+	rna_rna_runtime.cc
+	rna_wm_runtime.c
 )
 
 # -----------------------------------------------------------------------------
@@ -51,6 +54,7 @@ set(IN_SRC
 	rna_ob.c
 	rna_pose.c
 	rna_rna.c
+	rna_wm.c
 
 )
 
@@ -63,8 +67,6 @@ list(APPEND OUT_SRC
 	"${CMAKE_CURRENT_BINARY_DIR}/../RNA_prototypes.h"
 )
 set_source_files_properties(${OUT_SRC} PROPERTIES GENERATED TRUE)
-
-message(STATUS "OUT ${OUT_SRC}")
 
 # -----------------------------------------------------------------------------
 # Define Executable Source Files
@@ -125,7 +127,9 @@ set(LIB
 	rose::intern::atomic
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::rosekernel
+	PUBLIC rose::source::depsgraph
 	PUBLIC rose::source::dna
+	PUBLIC rose::source::windowmanager
 	
 	# External Library Dependencies
 	
@@ -140,4 +144,4 @@ list(APPEND LIB_SRC ${OUT_SRC})
 rose_add_lib(rna "${LIB_SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::rna ALIAS rna)
 
-target_compile_definitions(rna PRIVATE RNA_RUNTIME)
+target_compile_definitions(rna PUBLIC RNA_RUNTIME)

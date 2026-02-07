@@ -104,10 +104,20 @@ typedef struct RoseDefRNA {
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name RNA Path Functions
+ * \{ */
+
+char *rna_path_token(const char **path, char *fixedbuf, size_t fixedlen);
+char *rna_path_token_in_brackets(const char **path, char *fixedbuf, size_t fixedlen, bool *quoted);
+
+/** \} */
+
 void RNA_def_rna(struct RoseRNA *rna);
 void RNA_def_ID(struct RoseRNA *rna);
 void RNA_def_Object(struct RoseRNA *rna);
 void RNA_def_Pose(struct RoseRNA *rna);
+void RNA_def_wm(struct RoseRNA *rna);
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Definition Functions
@@ -146,10 +156,6 @@ PointerRNA rna_builtin_properties_get(struct CollectionPropertyIterator *iter);
  * data to modify, instead of returning a new one.
  */
 void rna_pointer_create_with_ancestors(const struct PointerRNA *parent, struct StructRNA *type, void *data, struct PointerRNA *r_ptr);
-
-struct PointerRNA RNA_pointer_create_discrete(struct ID *id, struct StructRNA *type, void *data);
-struct PointerRNA RNA_pointer_create_with_parent(const struct PointerRNA *parent, struct StructRNA *type, void *data);
-struct PointerRNA RNA_property_pointer_get(struct PointerRNA *ptr, struct  PropertyRNA *property);
 
 /** \} */
 

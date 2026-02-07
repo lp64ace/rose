@@ -40,7 +40,7 @@
 /** \name UI Button
  * \{ */
 
-ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but);
+ROSE_STATIC void ui_but_free(rContext *C, uiBut *but);
 
 ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->type != but_old->type) {
@@ -56,7 +56,10 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->menu_create_func != but_old->menu_create_func || but_new->arg != but_old->arg) {
 		return false;
 	}
-	if (but_new->pointer != but_old->pointer || but_new->pointype != but_old->pointype) {
+	if (but_new->rna_pointer.data != but_old->rna_pointer.data || but_new->rna_property != but_old->rna_property || but_new->rna_index != but_old->rna_index) {
+		return false;
+	}
+	if (but_new->poin != but_old->poin || but_new->pointype != but_old->pointype) {
 		return false;
 	}
 	if (!STREQ(but_new->name, but_old->name)) {
@@ -91,12 +94,12 @@ ROSE_INLINE void ui_but_update_new_from_old_inactive(uiBut *but, uiBut *old) {
 	 * Thus allowing text gathering straight from the button buffers (even though it is not 
 	 * recommended).
 	 */
-	if (!but->pointer) {
+	if (!but->poin) {
 		SWAP(char *, but->drawstr, old->drawstr);
 	}
 }
 
-ROSE_STATIC bool ui_but_update_from_old_block(struct rContext *C, uiBlock *block, uiBut **but_p, uiBut **old_p) {
+ROSE_STATIC bool ui_but_update_from_old_block(rContext *C, uiBlock *block, uiBut **but_p, uiBut **old_p) {
 	uiBlock *oldblock = block->oldblock;
 
 	uiBut *but = *but_p;
@@ -140,7 +143,7 @@ ROSE_STATIC void ui_but_mem_delete(uiBut *but) {
 	MEM_freeN(but);
 }
 
-ROSE_STATIC void ui_but_free(struct rContext *C, uiBut *but) {
+ROSE_STATIC void ui_but_free(rContext *C, uiBut *but) {
 	if (but->active) {
 		if (C) {
 			ui_but_active_free(C, but);
@@ -212,53 +215,28 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 	memcpy(rect, &recti, sizeof(recti));
 }
 
-ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, int maxlen) {
-	ROSE_assert(w >= 0 && h >= 0 || (ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)));
-
-	uiBut *but = MEM_callocN(sizeof(uiBut), "uiBut");
+ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max) {
+	uiBut *but = (uiBut *)MEM_callocN(sizeof(uiBut), "uiBut");
 
 	but->name = LIB_strdupN(name);
-	but->pointer = pointer;
-	/** We only care about maxlength for string buffers. */
-	if (pointer && but->pointype == UI_POINTER_STR) {
-		but->maxlength = maxlen;
-	}
-	else {
-		but->pointype = pointer ? pointype : UI_POINTER_NIL;
-		but->maxlength = maxlen ? maxlen : 64;
-	}
 
-	switch (but->pointype) {
-		case UI_POINTER_INT: {
-			but->hardmin = INT_MIN;
-			but->hardmax = INT_MAX;
-		} break;
-		case UI_POINTER_FLT: {
-			but->hardmin = -FLT_MAX;
-			but->hardmax = FLT_MAX;
-		} break;
-		case UI_POINTER_DBL: {
-			but->hardmin = DBL_MIN;
-			but->hardmax = DBL_MAX;
-		} break;
-		case UI_POINTER_UINT: {
-			but->hardmin = 0;
-			but->hardmax = UINT_MAX;
+	switch (pointype) {
+		case UI_POINTER_STR: {
+			but->maxlength = (int)(max) ? (int)(max) : 64;
 		} break;
 		default: {
-			/**
-			 * Fallback limits for unsupported or unknown pointer types.
-			 * These are used for text input validation (e.g. integer parsing) and scroll values.
-			 * INT_MIN/INT_MAX are chosen because they safely cover all reasonable UI use cases.
-			 * No display is known to exceed the pixel range of a 32-bit int.
-			 */
-			but->hardmin = INT_MIN;
-			but->hardmax = INT_MAX;
+			but->maxlength = 16;
 		} break;
 	}
-	
+
 	but->drawstr = MEM_mallocN(but->maxlength, "uiBut::DrawStr");
 	LIB_strcpy(but->drawstr, but->maxlength, but->name);
+
+	but->pointype = pointype;
+	but->poin = poin;
+	but->hardmin = but->softmin = min;
+	but->hardmax = but->softmax = max;
+	but->precision = -1.0;
 
 	but->rect.xmin = x;
 	but->rect.ymin = y;
@@ -276,19 +254,76 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	return but;
 }
 
-uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, int maxlen, int draw) {
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h, pointer, pointype, maxlen);
-	but->draw = draw;
+ROSE_INLINE uiBut *ui_def_but_rna(uiBlock *block, int type, const char *name, int x, int y, int w, int h, PointerRNA *pointer, PropertyRNA *property, int index) {
+	ROSE_assert(w >= 0 && h >= 0 || (ELEM(type, UI_BTYPE_SEPR, UI_BTYPE_HSPR, UI_BTYPE_VSPR)));
+
+	float min = 0;
+	float max = 0;
+
+	float precision = -1.0f;
+	switch (RNA_property_type(property)) {
+		case PROP_INT: {
+			int hardmin, hardmax, softmin, softmax, step;
+
+			RNA_property_int_range(pointer, property, &hardmin, &hardmax);
+			RNA_property_int_ui_range(pointer, property, &softmin, &softmax, &step);
+		} break;
+		case PROP_FLOAT: {
+			float hardmin, hardmax, softmin, softmax, step;
+
+			RNA_property_float_range(pointer, property, &hardmin, &hardmax);
+			RNA_property_float_ui_range(pointer, property, &softmin, &softmax, &step, &precision);
+		} break;
+		case PROP_STRING: {
+			max = RNA_property_string_max_length(property);
+		} break;
+	}
+
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h, NULL, UI_POINTER_NIL, min, max);
+
+	if (pointer) {
+		but->rna_pointer = *pointer;
+		but->rna_property = property;
+
+		if (RNA_property_array_check(but->rna_property)) {
+			but->rna_index = index;
+		}
+		else {
+			but->rna_index = 0;
+		}
+
+		but->precision = precision;
+	}
+	else {
+		but->rna_pointer = PointerRNA_NULL;
+	}
+
 	return but;
 }
 
-uiBut *uiDefButEx(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int pointype, double softmin, double softmax, int maxlen, int draw) {
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h, pointer, pointype, maxlen);
-	but->draw = draw;
-	but->softmin = softmin;
-	but->softmax = softmax;
-	if (!ELEM(pointype, UI_POINTER_NIL)) {
-		ui_but_set_value(but, ui_but_get_value(but));
+uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw) {
+	uiBut *but = ui_def_but(block, type, name, x, y, w, h, poin, pointype, min, max);
+	if (but) {
+		but->draw = draw;
+	}
+	return but;
+}
+
+uiBut *uiDefBut_RNA(uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, const char *property, int index, int draw) {
+	PathResolvedRNA rna = {
+		.index = index,
+	};
+
+	if (RNA_path_resolve_property(pointer, property, &rna.ptr, &rna.property)) {
+		return uiDefButEx_RNA(block, type, name, x, y, w, h, &rna.ptr, rna.property, rna.index, draw);
+	}
+	return NULL;
+}
+
+uiBut *uiDefButEx_RNA(uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, struct PropertyRNA *property, int index, int draw) {
+	uiBut *but = ui_def_but_rna(block, type, name, x, y, w, h, pointer, property, index);
+	if (but) {
+		but->draw = draw;
 	}
 	return but;
 }
@@ -351,71 +386,6 @@ bool ui_but_contains_rect(const uiBut *but, const rctf *rect) {
 	return LIB_rctf_isect(&but->rect, rect, NULL);
 }
 
-void ui_but_update(uiBut *but) {
-	if (!ui_but_is_editing(but)) {
-		but->scroll = 0;
-	}
-
-	if (but->pointer) {
-		but->drawstr = MEM_reallocN(but->drawstr, but->maxlength + 1);
-		switch (but->pointype) {
-			case UI_POINTER_BYTE:
-				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%02x" : "%d", *(unsigned char *)but->pointer);
-				}
-				else {
-					char *itr = but->drawstr;
-					*(unsigned char *)but->pointer = strtol(itr, &itr, 0);
-				}
-				break;
-			case UI_POINTER_STR:
-				if (!ui_but_is_editing(but)) {
-					/** Update the draw sting from the pointer data. */
-					LIB_strcpy(but->drawstr, but->maxlength, but->pointer);
-				}
-				else {
-					/** Update the pointer data from the draw string. */
-					LIB_strcpy(but->pointer, but->maxlength, but->drawstr);
-				}
-				break;
-			case UI_POINTER_INT:
-				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%08x" : "%d", *(int *)but->pointer);
-				}
-				else {
-					char *itr = but->drawstr;
-					*(int *)but->pointer = strtol(itr, &itr, 0);
-				}
-				break;
-			case UI_POINTER_UINT:
-				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, (but->draw & UI_BUT_HEX) ? "0x%08x" : "%d", *(int *)but->pointer);
-				}
-				else {
-					char *itr = but->drawstr;
-					*(int *)but->pointer = strtoul(itr, &itr, 0);
-				}
-				break;
-			case UI_POINTER_FLT:
-				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, "%f", *(float *)but->pointer);
-				}
-				else {
-					*(float *)but->pointer = atof(but->drawstr);
-				}
-				break;
-			case UI_POINTER_DBL:
-				if (!ui_but_is_editing(but)) {
-					LIB_strnformat(but->drawstr, but->maxlength, "%lf", *(double *)but->pointer);
-				}
-				else {
-					*(double *)but->pointer = atof(but->drawstr);
-				}
-				break;
-		}
-	}
-}
-
 uiBut *ui_block_active_but_get(const uiBlock *block) {
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 		if (but->active) {
@@ -451,65 +421,13 @@ uiBut *ui_but_find_mouse_over_ex(const ARegion *region, const int xy[2]) {
 	return NULL;
 }
 
-double ui_but_get_value(struct uiBut *but) {
-	if (but->pointer == NULL) {
-		return 0;
-	}
-
-	char *end = NULL;
-	const int base = but->flag & UI_BUT_HEX ? 16 : 0;
-
-	switch (but->pointype) {
-		case UI_POINTER_BYTE:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const unsigned char *)but->pointer;
-		case UI_POINTER_INT:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtol(but->drawstr, &end, base) : (double)*(const int *)but->pointer;
-		case UI_POINTER_FLT:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtof(but->drawstr, &end) : (double)*(const float *)but->pointer;
-		case UI_POINTER_DBL:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtod(but->drawstr, &end) : (double)*(const double *)but->pointer;
-		case UI_POINTER_UINT:
-			return (but->drawstr && ui_but_is_editing(but)) ? (double)strtoul(but->drawstr, &end, base) : (double)*(const unsigned int *)but->pointer;
-	}
-
-	return 0;
-}
-
-double ui_but_set_value(struct uiBut *but, double nvalue) {
-	ROSE_assert(but->hardmin <= but->softmin && but->softmax <= but->hardmax);
-
-	nvalue = ROSE_MAX(but->softmin, ROSE_MIN(nvalue, but->softmax));
-
-	switch (but->pointype) {
-		case UI_POINTER_BYTE: {
-			*(unsigned char *)but->pointer = (unsigned char)round(nvalue);
-		} break;
-		case UI_POINTER_INT: {
-			*(int *)but->pointer = (int)round(nvalue);
-		} break;
-		case UI_POINTER_FLT: {
-			*(float *)but->pointer = (float)nvalue;
-		} break;
-		case UI_POINTER_DBL: {
-			*(double *)but->pointer = (double)nvalue;
-		} break;
-		case UI_POINTER_UINT: {
-			*(unsigned int *)but->pointer = (unsigned int)round(nvalue);
-		} break;
-		default:
-			ROSE_assert_unreachable();
-	}
-
-	return nvalue;
-}
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Builtin UI Functions
  * \{ */
 
-bool uiButHandleTextFunc_Integer(struct rContext *C, uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Integer(rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	if (but->hardmin < 0) {
 		long long value = strtoll(edit, &end, (but->flag & UI_BUT_HEX) ? 16 : 0);
@@ -528,7 +446,7 @@ bool uiButHandleTextFunc_Integer(struct rContext *C, uiBut *but, const char *edi
 	return false;
 }
 
-bool uiButHandleTextFunc_Decimal(struct rContext *C, uiBut *but, const char *edit) {
+bool uiButHandleTextFunc_Decimal(rContext *C, uiBut *but, const char *edit) {
 	char *end;
 	long double value = strtold(edit, &end);
 	while (isspace((unsigned char)*end)) {
@@ -560,7 +478,7 @@ ROSE_INLINE void ui_update_window_matrix(wmWindow *window, ARegion *region, uiBl
 	}
 }
 
-uiBlock *UI_block_begin(struct rContext *C, ARegion *region, const char *name) {
+uiBlock *UI_block_begin(rContext *C, ARegion *region, const char *name) {
 	wmWindow *window = CTX_wm_window(C);
 
 	uiBlock *block = MEM_callocN(sizeof(uiBlock), "uiBlock");
@@ -581,7 +499,7 @@ uiBlock *UI_block_begin(struct rContext *C, ARegion *region, const char *name) {
 	return block;
 }
 
-void UI_block_update_from_old(struct rContext *C, uiBlock *block) {
+void UI_block_update_from_old(rContext *C, uiBlock *block) {
 	if (!block->oldblock) {
 		return;
 	}
@@ -590,7 +508,7 @@ void UI_block_update_from_old(struct rContext *C, uiBlock *block) {
 
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 		if (ui_but_update_from_old_block(C, block, &but, &but_old)) {
-			ui_but_update(but);
+			ui_but_update(but, false);
 		}
 	}
 
@@ -613,7 +531,7 @@ ROSE_INLINE void ui_block_bounds_calc(uiBlock *block) {
 	block->rect.xmax = block->rect.xmin + ROSE_MAX(LIB_rctf_size_x(&block->rect), block->minbounds);
 }
 
-void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_xy[2]) {
+void UI_block_end_ex(rContext *C, uiBlock *block, const int xy[2], int r_xy[2]) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = CTX_wm_region(C);
 
@@ -627,7 +545,7 @@ void UI_block_end_ex(struct rContext *C, uiBlock *block, const int xy[2], int r_
 	block->closed = true;
 }
 
-void UI_block_end(struct rContext *C, uiBlock *block) {
+void UI_block_end(rContext *C, uiBlock *block) {
 	wmWindow *window = CTX_wm_window(C);
 
 	UI_block_end_ex(C, block, window->event_state->mouse_xy, NULL);
@@ -636,12 +554,12 @@ void UI_block_end(struct rContext *C, uiBlock *block) {
 ROSE_INLINE void ui_draw_menu_back(ARegion *region, uiBlock *block, const rcti *rect) {
 }
 
-void UI_block_draw(const struct rContext *C, uiBlock *block) {
+void UI_block_draw(const rContext *C, uiBlock *block) {
 	ARegion *region = CTX_wm_region(C);
 
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 		/** Before drawing we update the buttons so that all the content is curernt. */
-		ui_but_update(but);
+		ui_but_update(but, false);
 	}
 
 	GPU_blend(GPU_BLEND_ALPHA);
@@ -696,26 +614,7 @@ void UI_block_translate(uiBlock *block, float dx, float dy) {
 	LIB_rctf_translate(&block->rect, dx, dy);
 }
 
-void UI_block_scroll(ARegion *region, uiBlock *block, uiLayout *layout) {
-	uiBut *but;
-
-	int w, h;
-	UI_layout_estimate(layout, &w, &h);
-	UI_block_layout_set_current(block, NULL);
-
-	int x = region->sizex - V2D_SCROLL_WIDTH + 1;
-	double pages = ROSE_MAX(((float)h / (float)region->sizey), 1);
-
-	if (((float)h / (float)region->sizey) > 1) {
-		but = uiDefButEx(block, UI_BTYPE_SCROLL, "", x, 0, V2D_SCROLL_WIDTH, region->sizey, &region->vscroll, UI_POINTER_FLT, 1, pages, 0, 0);
-		uiButEnableFlag(but, UI_DEFAULT);
-	}
-	else {
-		region->vscroll = 1;
-	}
-}
-
-void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {
+void UI_blocklist_update_window_matrix(rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
 
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
@@ -725,7 +624,7 @@ void UI_blocklist_update_window_matrix(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_blocklist_free(struct rContext *C, ARegion *region) {
+void UI_blocklist_free(rContext *C, ARegion *region) {
 	ListBase *lb = &region->uiblocks;
 	for (uiBlock *block; block = (uiBlock *)LIB_pophead(lb);) {
 		UI_block_free(C, block);
@@ -736,7 +635,7 @@ void UI_blocklist_free(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
+void UI_region_free_active_but_all(rContext *C, ARegion *region) {
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 			if (but->active == NULL) {
@@ -747,7 +646,7 @@ void UI_region_free_active_but_all(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_blocklist_free_inactive(struct rContext *C, ARegion *region) {
+void UI_blocklist_free_inactive(rContext *C, ARegion *region) {
 	ListBase *lb = &region->uiblocks;
 
 	LISTBASE_FOREACH_MUTABLE(uiBlock *, block, lb) {
@@ -767,7 +666,7 @@ void UI_blocklist_free_inactive(struct rContext *C, ARegion *region) {
 	}
 }
 
-void UI_block_free(struct rContext *C, uiBlock *block) {
+void UI_block_free(rContext *C, uiBlock *block) {
 	for (uiBut *but; but = (uiBut *)LIB_pophead(&block->buttons);) {
 		ui_but_free(C, but);
 	}

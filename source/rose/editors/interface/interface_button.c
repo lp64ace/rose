@@ -348,7 +348,10 @@ ROSE_STATIC void ui_draw_scroll_thumb(uiWidgetColors *wcol, uiBut *but, const rc
 	}
 
 	if (alpha > 1e-3f) {
-		double thumby = (but->softmax - ui_but_get_value(but)) / (but->softmax - but->softmin + 1);
+		double value;
+		ui_but_value_get(but, &value);
+
+		double thumby = (but->softmax - value) / (but->softmax - but->softmin + 1);
 		double thumbr = 1.0 / (but->softmax - but->softmin + 1);
 
 		rctf rect;
@@ -390,7 +393,7 @@ ROSE_STATIC void ui_draw_widget(uiWidgetColors *wcol, uiBut *but, const rcti *re
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
 }
 
-void ui_draw_but(const struct rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
+void ui_draw_but(const rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
 	if (but->type == UI_BTYPE_SEPR) {
 		return;
 	}

@@ -21,12 +21,39 @@ bool LIB_ghashutil_ptrcmp(const void *a, const void *b) {
 }
 
 uint LIB_ghashutil_strhash_n(const char *key, size_t n) {
-	const signed char *p;
-	uint h = 5381;
+	const uint8_t *p = (const uint8_t *)key;
 
-	for (p = (const signed char *)key; n-- && *p != '\0'; p++) {
-		h = (uint)((h << 5) + h) + (uint)*p;
+	uint64_t h = 0xCBF29CE484222325ULL;	 // 64-bit FNV offset basis
+
+	while (p[0] && p[1] && p[2] && p[3] && p[4] && p[5] && p[6] && p[7] && n >= 8) {
+		uint64_t v = *(const uint64_t *)p;
+		h ^= v;
+		h *= 0x100000001B3ULL;	// 64-bit FNV prime
+		p += 8;
+		n -= 8;
 	}
+
+	while (p[0] && p[1] && p[2] && p[3] && n >= 4) {
+		uint32_t v = *(const uint32_t *)p;
+		h ^= v;
+		h *= 0x100000001B3ULL;	// 32-bit FNV prime
+		p += 4;
+		n -= 4;
+	}
+
+	// Remaining <8 bytes
+	while (p[0] && n >= 1) {
+		h ^= *p++;
+		h *= 0x100000001B3ULL;
+		n -= 1;
+	}
+
+	// Final avalanche (excellent for reducing bias)
+	h ^= h >> 33;
+	h *= 0xff51afd7ed558ccdULL;
+	h ^= h >> 33;
+	h *= 0xc4ceb9fe1a85ec53ULL;
+	h ^= h >> 33;
 
 	return h;
 }
@@ -34,12 +61,36 @@ uint LIB_ghashutil_strhash(const char *key) {
 	return LIB_ghashutil_strhash_n(key, LIB_strlen(key));
 }
 uint LIB_ghashutil_strhash_p(const void *ptr) {
-	const signed char *p;
-	uint h = 5381;
+	const uint8_t *p = (const uint8_t *)ptr;
 
-	for (p = ptr; *p != '\0'; p++) {
-		h = (uint)(((h << 5) + h) + (uint)*p);
+	uint64_t h = 0xCBF29CE484222325ULL;	 // 64-bit FNV offset basis
+
+	while (p[0] && p[1] && p[2] && p[3] && p[4] && p[5] && p[6] && p[7]) {
+		uint64_t v = *(const uint64_t *)p;
+		h ^= v;
+		h *= 0x100000001B3ULL;	// 64-bit FNV prime
+		p += 8;
 	}
+
+	while (p[0] && p[1] && p[2] && p[3]) {
+		uint32_t v = *(const uint32_t *)p;
+		h ^= v;
+		h *= 0x100000001B3ULL;	// 32-bit FNV prime
+		p += 4;
+	}
+
+	// Remaining <8 bytes
+	while (p[0]) {
+		h ^= *p++;
+		h *= 0x100000001B3ULL;
+	}
+
+	// Final avalanche (excellent for reducing bias)
+	h ^= h >> 33;
+	h *= 0xff51afd7ed558ccdULL;
+	h ^= h >> 33;
+	h *= 0xc4ceb9fe1a85ec53ULL;
+	h ^= h >> 33;
 
 	return h;
 }
@@ -115,6 +166,13 @@ GHash *LIB_ghash_str_new_ex(const char *info, size_t reserve) {
 	return LIB_ghash_new_ex(LIB_ghashutil_strhash_p, LIB_ghashutil_strcmp, info, reserve);
 }
 GHash *LIB_ghash_str_new(const char *info) {
+	return LIB_ghash_str_new_ex(info, 0);
+}
+
+GHash *LIB_ghash_int_new_ex(const char *info, size_t reserve) {
+	return LIB_ghash_new_ex(LIB_ghashutil_inthash_p, LIB_ghashutil_intcmp, info, reserve);
+}
+GHash *LIB_ghash_int_new(const char *info) {
 	return LIB_ghash_str_new_ex(info, 0);
 }
 

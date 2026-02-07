@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+struct Depsgraph;
 struct ID;
 struct Main;
 struct Object;
@@ -33,10 +34,13 @@ void *KER_object_obdata_add_from_type(struct Main *main, int type, const char *n
 /** \name Object Transform
  * \{ */
 
-void KER_object_scale_to_mat3(struct Object *object, float r_mat[3][3]);
-void KER_object_rot_to_mat3(struct Object *object, float r_mat[3][3], bool use_drot);
-void KER_object_to_mat3(struct Object *object, float r_mat[3][3]);
-void KER_object_to_mat4(struct Object *object, float r_mat[4][4]);
+void KER_object_parent_object_set(struct Object *object, struct Object *parent);
+void KER_object_parent_bone_set(struct Object *object, struct Object *armature, const char *bonename);
+
+void KER_object_scale_to_mat3(const struct Object *object, float r_mat[3][3]);
+void KER_object_rot_to_mat3(const struct Object *object, float r_mat[3][3], bool use_drot);
+void KER_object_to_mat3(const struct Object *object, float r_mat[3][3]);
+void KER_object_to_mat4(const struct Object *object, float r_mat[4][4]);
 
 void KER_object_matrix_parent_get(struct Object *object, struct Object *parent, float r_mat[4][4]);
 void KER_object_matrix_local_get(struct Object *object, float r_mat[4][4]);
@@ -50,10 +54,30 @@ void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool us
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Object Geometry Evaluation
+ * \{ */
+
+/** Note that the resulting bound box has no transform applied. */
+void KER_object_evaluated_geometry_bounds(struct Object *object, struct BoundBox **r_bb, bool use_subdivision);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Object Evaluation
  * \{ */
 
-void KER_object_build_rig(struct Object *object);
+void KER_object_eval_local_transform(struct Depsgraph *depsgraph, struct Object *ob);
+void KER_object_eval_parent(struct Depsgraph *depsgraph, struct Object *ob);
+void KER_object_eval_transform_final(struct Depsgraph *depsgraph, struct Object *ob);
+void KER_object_eval_uber_data(struct Depsgraph *depsgraph, struct Scene *scene, struct Object *ob);
+
+/**
+ * Assign #Object.data after modifier stack evaluation.
+ */
+void KER_object_eval_assign_data(struct Object *object, struct ID *data, bool is_data_eval_owned);
+
+void KER_object_eval_eval_base_flags(struct Depsgraph *depsgraph, struct Scene *scene, int view_layer_index, struct Object *object, int base_index, bool is_from_set);
+void KER_object_sync_to_original(struct Depsgraph *depsgraph, struct Object *object);
 
 /** \} */
 
@@ -61,7 +85,19 @@ void KER_object_build_rig(struct Object *object);
 /** \name Object Modifiers
  * \{ */
 
+bool KER_object_modifier_stack_copy(struct Object *ob_dst, const struct Object *ob_src, const bool do_copy_all, const int flag);
 void KER_object_free_modifiers(struct Object *object, const int flag);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Object Runtime
+ * \{ */
+
+void KER_object_free_derived_caches(struct Object *ob);
+void KER_object_free_caches(struct Object *object);
+
+void KER_object_runtime_reset(struct Object *object);
 
 /** \} */
 

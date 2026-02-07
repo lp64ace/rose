@@ -36,6 +36,14 @@ ROSE_STATIC GPUVertFormat *extract_normals_format() {
 	return &format;
 }
 
+ROSE_STATIC GPUVertFormat *extract_normal_lines_format() {
+	static GPUVertFormat format = {0};
+	if (GPU_vertformat_empty(&format)) {
+		GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
+	}
+	return &format;
+}
+
 template<typename T> inline T convert_normal(const float3 &src);
 
 template<> inline GPUPackedNormal convert_normal(const float3 &src) {
@@ -50,7 +58,13 @@ template<> inline short4 convert_normal(const float3 &src) {
 	return normal.high;
 }
 
+/** Her for debugging the normal calculation */
+#define DRAW_POLY_NORMALS 0
+#define DRAW_VERT_NORMALS 0
+
 template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, rose::MutableSpan<T> normals) {
+
+#if DEBUG_POLY_NORMALS
 	rose::Span<float3> poly_normals = KER_mesh_poly_normals_span(mesh);
 	rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
 	rose::OffsetIndices<int> polys = KER_mesh_poly_offsets_span(mesh);
@@ -61,8 +75,8 @@ template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, ros
 	rose::threading::parallel_for(polys.index_range(), 2048, [&](const rose::IndexRange range) {
 		/**
 		 * These are the poly normals indexed per loop, "flat" normals!
-		 * 
-		 * Each polygon in #polys[poly_i] contains a range of loops [polys[poly_i], polys[poly_i] + 1], 
+		 *
+		 * Each polygon in #polys[poly_i] contains a range of loops [polys[poly_i], polys[poly_i] + 1],
 		 * we iterate for each of these loops and we copy the normals from the poly there.
 		 */
 		for (const int poly_i : range) {
@@ -71,6 +85,39 @@ template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, ros
 			for (const int loop_i : polys[poly_i]) {
 				normals[loop_i] = n;
 			}
+		}
+	});
+
+	return;
+#endif
+
+#if DEBUG_VERT_NORMALS
+	rose::Span<float3> vert_normals = KER_mesh_vert_normals_span(mesh);
+	rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
+
+	/**
+	 * Should we even bother to copy the loose geometry too?
+	 */
+	rose::threading::parallel_for(corner_verts.index_range(), 2048, [&](const rose::IndexRange range) {
+		/**
+		 * These are the poly normals indexed per loop, "flat" normals!
+		 *
+		 * Each polygon in #polys[poly_i] contains a range of loops [polys[poly_i], polys[poly_i] + 1],
+		 * we iterate for each of these loops and we copy the normals from the poly there.
+		 */
+		for (const int vert_i : range) {
+			normals[vert_i] = convert_normal<T>(vert_normals[corner_verts[vert_i]]);
+		}
+	});
+
+	return;
+#endif
+
+	rose::Span<float3> corner_normals = KER_mesh_corner_normals_span(mesh);
+
+	rose::threading::parallel_for(corner_normals.index_range(), 1024, [&](const rose::IndexRange range) {
+		for (size_t i : range) {
+			normals[i] = convert_normal<T>(corner_normals[i]);
 		}
 	});
 }

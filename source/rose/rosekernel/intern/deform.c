@@ -62,6 +62,23 @@ MDeformWeight *KER_defvert_ensure_index(MDeformVert *dvert, int defgroup) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Deform Group List
+ * \{ */
+
+void KER_defgroup_copy_list(ListBase *outbase, const ListBase *inbase) {
+	DeformGroup *defgroup, *defgroupn;
+
+	LIB_listbase_clear(outbase);
+
+	for (defgroup = inbase->first; defgroup; defgroup = defgroup->next) {
+		defgroupn = KER_defgroup_duplicate(defgroup);
+		LIB_addtail(outbase, defgroupn);
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Deform Group
  * \{ */
 
@@ -78,6 +95,24 @@ DeformGroup *KER_object_defgroup_new(Object *object, const char *name) {
 	KER_object_batch_cache_dirty_tag(object);
 
 	return defgroup;
+}
+
+DeformGroup *KER_defgroup_duplicate(const DeformGroup *ingroup) {
+	DeformGroup *outgroup;
+
+	if (!ingroup) {
+		ROSE_assert_unreachable();
+		return NULL;
+	}
+
+	outgroup = MEM_callocN(sizeof(DeformGroup), "DeformGroup::Copy");
+
+	/* For now, just copy everything over. */
+	memcpy(outgroup, ingroup, sizeof(DeformGroup));
+
+	outgroup->prev = outgroup->next = NULL;
+
+	return outgroup;
 }
 
 /** \} */

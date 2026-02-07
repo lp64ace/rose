@@ -1,7 +1,7 @@
 #ifndef RNA_TYPES_H
 #define RNA_TYPES_H
 
-#include "LIB_utildefines.h"
+#include "LIB_listbase.h"
 
 struct ID;
 
@@ -168,8 +168,6 @@ typedef enum ePropertyFlag {
 	PROP_ID_REFCOUNT = (1 << 5),
 } ePropertyFlag;
 
-ENUM_OPERATORS(ePropertyFlag, PROP_PTR_NO_OWNERSHIP);
-
 typedef enum ePropertyInternalFlag {
 	PROP_INTERN_RUNTIME = (1 << 0),
 	PROP_INTERN_FREE_POINTERS = (1 << 1),
@@ -177,8 +175,6 @@ typedef enum ePropertyInternalFlag {
 	PROP_INTERN_PTR_OWNERSHIP_FORCED = (1 << 3),
 	PROP_INTERN_BUILTIN = (1 << 4),
 } ePropertyInternalFlag;
-
-ENUM_OPERATORS(ePropertyInternalFlag, PROP_INTERN_FREE_POINTERS);
 
 /** \} */
 
@@ -203,6 +199,25 @@ typedef enum eStructFlag {
 	STRUCT_RUNTIME = (1 << 10),
 	STRUCT_FREE_POINTERS = (1 << 11),
 } eStructFlag;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose RNA Data Structures
+ * \{ */
+
+typedef struct RoseRNA {
+	ListBase srnabase;
+	/**
+	 * A map of structs: `{StructRNA.identifier -> StructRNA}`
+	 * These are ensured to have unique names (with #STRUCT_PUBLIC_NAMESPACE enabled).
+	 */
+	struct GHash *srnahash;
+	/** Needed because types with an empty identifier aren't included in `srnahash`. */
+	unsigned int totsrna;
+} RoseRNA;
+
+#define CONTAINER_RNA_ID(container) (*(const char **)(((ContainerRNA *)(container)) + 1))
 
 /** \} */
 

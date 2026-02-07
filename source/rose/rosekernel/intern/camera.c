@@ -5,6 +5,7 @@
 #include "KER_object.h"
 #include "KER_scene.h"
 
+#include "LIB_math_base.h"
 #include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
 #include "LIB_rect.h"
@@ -26,9 +27,12 @@ Camera *KER_camera_add(Main *main, const char *name) {
 void KER_camera_params_init(CameraParams *params) {
 	memset(params, 0, sizeof(CameraParams));
 
+	/* default, human vertical fov is 120 degrees. */
+	params->fov = M_PI_2 * 2.0f / 3.0f;
+
 	/* fallback for non camera objects */
-	params->clip_start = 1e-3f;
-	params->clip_end = 1e+3f;
+	params->clip_start = 1e-2f;
+	params->clip_end = 1e+2f;
 }
 
 void KER_camera_params_from_object(CameraParams *params, const Object *obcamera) {
@@ -76,12 +80,20 @@ void KER_camera_multiview_model_matrix(const RenderData *rd, const Object *obcam
 	camera_model_matrix(obcamera, r_modelmat);
 }
 
-void KER_camera_multiview_window_matrix(const struct RenderData *rd, const struct Object *obcamera, float r_winmat[4][4]) {
+void KER_camera_multiview_window_matrix(const struct RenderData *rd, const struct Object *obcamera, const float size[2], float r_winmat[4][4]) {
 	CameraParams params;
 
 	/* Setup parameters */
 	KER_camera_params_init(&params);
 	KER_camera_params_from_object(&params, obcamera);
+
+	float tangent = tanf(params.fov * 0.5f);
+	float aspect = size[0] / size[1];
+
+	params.viewplane.xmin = -tangent * aspect * params.clip_start;
+	params.viewplane.xmax = +tangent * aspect * params.clip_start;
+	params.viewplane.ymin = -tangent * params.clip_start;
+	params.viewplane.ymax = +tangent * params.clip_start;
 
 	/* Compute matrix, view-plane, etc. */
 	KER_camera_params_compute_matrix(&params);

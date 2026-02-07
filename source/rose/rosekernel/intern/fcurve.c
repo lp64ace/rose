@@ -7,6 +7,7 @@
 #include "LIB_math_solvers.h"
 #include "LIB_math_vector.h"
 #include "LIB_listbase.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "KER_fcurve.h"
@@ -21,6 +22,30 @@ FCurve *KER_fcurve_new(void) {
 	FCurve *curve = MEM_mallocN(sizeof(FCurve), "FCurve");
 	memset(curve, 0, sizeof(FCurve));
 	return curve;
+}
+
+FCurve *KER_fcurve_copy(const struct FCurve *fcu) {
+	FCurve *fcu_d;
+
+	/* Sanity check. */
+	if (fcu == NULL) {
+		return NULL;
+	}
+
+	/* Make a copy. */
+	fcu_d = MEM_dupallocN(fcu);
+	fcu_d->next = fcu_d->prev = NULL;
+	fcu_d->group = NULL;
+
+	/* Copy curve data. */
+	fcu_d->bezt = MEM_dupallocN(fcu_d->bezt);
+	fcu_d->fpt = MEM_dupallocN(fcu_d->fpt);
+
+	/* Copy rna-path. */
+	fcu_d->path = MEM_dupallocN(fcu_d->path);
+	fcu_d->runtime.static_path = NULL;
+
+	return fcu_d;
 }
 
 void KER_fcurves_free(ListBase *list) {
@@ -46,6 +71,10 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_SAFE_FREE(fcurve->bezt);
 	MEM_SAFE_FREE(fcurve->fpt);
 	MEM_SAFE_FREE(fcurve->path);
+	
+	if (fcurve->runtime.static_path) {
+		RNA_path_free(fcurve->runtime.static_path);
+	}
 
 	MEM_freeN(fcurve);
 }
@@ -384,7 +413,7 @@ static float fcurve_eval_keyframes_interpolate(const FCurve *fcu, const BezTripl
 		return bezt->vec[1][1];
 	}
 
-	if (evaltime < prevbezt->vec[1][0] || bezt->vec[1][0] < evaltime) {
+	if (!(prevbezt->vec[1][0] <= evaltime && evaltime <= bezt->vec[1][0])) {
 		return 0.0f;
 	}
 
@@ -450,12 +479,12 @@ static float fcurve_eval_keyframes_interpolate(const FCurve *fcu, const BezTripl
 
 /* Calculate F-Curve value for 'evaltime' using #BezTriple keyframes. */
 ROSE_INLINE float fcurve_eval_keyframes(const FCurve *fcu, const BezTriple *bezts, float evaltime) {
-	if (evaltime <= bezts->vec[1][0]) {
+	if (evaltime < bezts->vec[1][0]) {
 		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, 0, +1);
 	}
 
 	const BezTriple *lastbezt = bezts + fcu->totvert - 1;
-	if (lastbezt->vec[1][0] <= evaltime) {
+	if (lastbezt->vec[1][0] < evaltime) {
 		return fcurve_eval_keyframes_extrapolate(fcu, bezts, evaltime, fcu->totvert - 1, -1);
 	}
 
@@ -548,6 +577,25 @@ void KER_fcurve_bezt_resize(FCurve *fcurve, int totvert) {
 	}
 
 	fcurve->totvert = totvert;
+}
+
+void KER_fcurve_path_set_ex(FCurve *fcurve, const char *newpath, bool compile) {
+	if (fcurve->path == NULL || !STREQ(fcurve->path, newpath)) {
+		MEM_SAFE_FREE(fcurve->path);
+
+		if (fcurve->runtime.static_path) {
+			RNA_path_free(fcurve->runtime.static_path);
+		}
+
+		/**
+		 * Copy the new path over and invalidate the runtime canonical path.
+		 */
+		fcurve->path = LIB_strdupN(newpath);
+	}
+}
+
+void KER_fcurve_path_set(FCurve *fcurve, const char *newpath) {
+	KER_fcurve_path_set_ex(fcurve, newpath, false);
 }
 
 /** \} */

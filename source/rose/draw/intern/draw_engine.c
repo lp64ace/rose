@@ -8,6 +8,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "KER_lib_id.h"
+
 #include "DRW_render.h"
 
 #include "draw_engine.h"
@@ -122,6 +124,24 @@ ViewportEngineData *DRW_view_data_engine_data_get_ensure(DRWViewData *view_data,
 			vdata->txl = MEM_callocN(sizeof(DRWViewportEngineDataTextureList) * data_size->txl_len, "DRWEngine::TextureList");
 			vdata->psl = MEM_callocN(sizeof(DRWViewportEngineDataPassList) * data_size->psl_len, "DRWEngine::PassList");
 			vdata->stl = MEM_callocN(sizeof(DRWViewportEngineDataStorageList) * data_size->stl_len, "DRWEngine::StorageList");
+		}
+
+		return vdata;
+	}
+
+	return NULL;
+}
+
+ViewportEngineData *DRW_view_data_engine_data_get(DRWViewData *view_data, DrawEngineType *engine_type) {
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &view_data->viewport_engine_data) {
+		if (vdata->engine != engine_type) {
+			continue;
+		}
+
+		const DrawEngineDataSize *data_size = engine_type->vdata_size;
+
+		if (vdata->fbl == NULL || vdata->txl == NULL || vdata->psl == NULL || vdata->stl == NULL) {
+			break;
 		}
 
 		return vdata;

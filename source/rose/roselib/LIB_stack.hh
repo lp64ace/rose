@@ -280,6 +280,7 @@ public:
 		this->destruct_all_elements();
 		top_chunk_ = &inline_chunk_;
 		top_ = top_chunk_->begin;
+		size_ = 0;
 	}
 
 	/**

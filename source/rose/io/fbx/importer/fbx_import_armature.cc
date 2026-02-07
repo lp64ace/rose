@@ -227,7 +227,17 @@ void ArmatureImportContext::create_armature_bones(const ufbx_node *node, Object 
 			continue;
 		}
 
-		create_armature_bones(fchild, object, bone_nodes, bone, bone_mat, world_to_arm, bone_size);
+		bool skip_child = false;
+		if (node->children.count == 1 && fchild->children.count == 0 && !this->mapping->bone_is_skinned.contains(fchild)) {
+			skip_child = true;
+			/* We are skipping this bone, but still record it --
+			 * so that later code does not try to create an empty for it. */
+			this->mapping->node_is_rose_bone.add(fchild);
+		}
+
+		if (!skip_child) {
+			create_armature_bones(fchild, object, bone_nodes, bone, bone_mat, world_to_arm, bone_size);
+		}
 	}
 }
 

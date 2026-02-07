@@ -4,6 +4,7 @@
 #include "DNA_meshdata_types.h"
 
 #include "LIB_array.hh"
+#include "LIB_bounds_types.hh"
 #include "LIB_math_vector_types.hh"
 #include "LIB_implicit_sharing.hh"
 #include "LIB_shared_cache.hh"
@@ -12,13 +13,21 @@
 
 #include <mutex>
 
+struct Mesh;
+
 namespace rose::kernel {
 
 struct MeshRuntime {
-	/** Needed to ensure some thread-safety during normal calculation. */
-	std::mutex normals_mutex = {};
 	/** Needed to ensure some thread-safety during render data pre-processing. */
 	std::mutex render_mutex = {};
+
+	/**
+	 * A cache of bounds shared between data-blocks with unchanged positions. When changing positions
+	 * affect the bounds, the cache is "un-shared" with other geometries. See #SharedCache comments.
+	 */
+	SharedCache<Bounds<float3>> bounds_cache;
+
+	Mesh *mesh_eval;
 
 	/** Implicit sharing user count for #Mesh::poly_offset_indices. */
 	const ImplicitSharingInfo *poly_offsets_sharing_info = nullptr;
@@ -32,10 +41,19 @@ struct MeshRuntime {
 	 * #CustomData because they can be calculated on a `const` mesh, and adding custom data layers
 	 * on a `const` mesh is not thread-safe.
 	 */
-	bool vert_normals_dirty = true;
-	bool poly_normals_dirty = true;
-	mutable Vector<float3> vert_normals = {};
-	mutable Vector<float3> poly_normals = {};
+
+	/** Lazily computed face corner normals (#KER_mesh_corner_normals()). */
+	SharedCache<Vector<float3>> vert_normals_cache = {};
+	SharedCache<Vector<float3>> poly_normals_cache = {};
+	SharedCache<Vector<float3>> corner_normals_cache = {};
+
+	/**
+	 * Cache of offsets for vert to face/corner maps. The same offsets array is used to group
+	 * indices for both the vertex to face and vertex to corner maps.
+	 */
+	SharedCache<Array<int>> vert_to_face_offset_cache = {};
+	/** Cache of indices for vert to face map. */
+	SharedCache<Array<int>> vert_to_face_map_cache = {};
 	
 	/**
      * Data used to efficiently draw the mesh in the viewport, especially useful when 

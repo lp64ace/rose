@@ -23,6 +23,7 @@ typedef struct SpaceLink {
 
 typedef struct SpaceLink SpaceTopBar;
 typedef struct SpaceLink SpaceStatusBar;
+typedef struct SpaceLink SpacePropeties;
 
 /** \} */
 
@@ -58,7 +59,7 @@ enum {
 	SPACE_STATUSBAR,
 	SPACE_TOPBAR,
 	SPACE_VIEW3D,
-	SPACE_USERPREF,
+	SPACE_PROPERTIES,
 };
 
 /** \} */

@@ -11,9 +11,19 @@
 #include "RNA_access.h"
 #include "RNA_types.h"
 
+#include "LIB_ghash.h"
+#include "LIB_math_rotation.h"
+#include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
+
 #include <stdio.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Animation Data Evaluation
+ * \{ */
 
 bool KER_anim_read_from_rna_path(PathResolvedRNA *resolved, float *r_value) {
 	PropertyRNA *property = resolved->property;
@@ -83,34 +93,93 @@ bool KER_anim_write_to_rna_path(PathResolvedRNA *resolved, float value, bool for
 	return true;
 }
 
-bool KER_anim_evaluate_fcurves(PointerRNA pointer, FCurve **fcurves, int totcurve, float ctime) {
-	bool updated = false;
+void KER_anim_vector_evaluate_fcurves(PathResolvedRNA resolved, FCurve **fcurves, int totcurve, float ctime, float r_vec[4]) {
+	ROSE_assert(totcurve <= 4);
 
 	for (int index = 0; index < totcurve; index++) {
 		FCurve *fcurve = fcurves[index];
 
-		PathResolvedRNA resolved;
-		if (KER_animsys_rna_path_resolve(&pointer, fcurve->path, fcurve->index, &resolved)) {
-			const float curval = KER_fcurve_evaluate(&resolved, fcurve, ctime);
+		const int array_index = fcurve->index;
+		resolved.index = array_index;
+		r_vec[array_index] = KER_fcurve_evaluate(&resolved, fcurve, ctime);
+	}
 
-			updated |= KER_anim_write_to_rna_path(&resolved, curval, false);
+	if (totcurve < 4 && STREQ(RNA_property_identifier(resolved.property), "quaternion")) {
+		/* This quaternion was incompletely keyed, so the result is a mixture of the unit quaternion
+		 * and values from FCurves. This means that it's almost certainly no longer of unit length. */
+		normalize_qt(r_vec);
+	}
+}
+
+ROSE_INLINE int KER_anim_evaluate_fcurves_optimize(PathResolvedRNA resolved, FCurve **fcurves, int totcurve, float ctime, int index) {
+	if (RNA_property_type(resolved.property) != PROP_FLOAT) {
+		return 0;
+	}
+
+	float inlinebuf[4];
+
+	int totarray = RNA_property_array_length(&resolved.ptr, resolved.property);
+	if (1 < totarray && totarray <= 4) {
+		int sequencial = 1;
+
+		/**
+		 * This optimization is faster than the cache optimization but it 
+		 * requires that the indexed properties are sequencial to one another
+		 */
+		while (sequencial < totarray && index + sequencial < totcurve) {
+			if (!STREQ(fcurves[index]->path, fcurves[index + sequencial]->path)) {
+				break;
+			}
+
+			sequencial++;
+		}
+
+		if (sequencial <= 1) {
+			return 0;
+		}
+
+		RNA_property_float_get_array(&resolved.ptr, resolved.property, inlinebuf);
+		KER_anim_vector_evaluate_fcurves(resolved, &fcurves[index], sequencial, ctime, inlinebuf);
+		RNA_property_float_set_array(&resolved.ptr, resolved.property, inlinebuf);
+
+		return sequencial - 1;
+	}
+
+	return 0;
+}
+
+void KER_anim_evaluate_fcurves(PointerRNA pointer, FCurve **fcurves, int totcurve, float ctime) {
+	PathResolvedRNA resolved;
+	for (int index = 0; index < totcurve; index++) {
+		FCurve *fcurve = fcurves[index];
+
+		if (KER_animsys_rna_curve_resolve(&pointer, fcurve, &resolved)) {
+			int skip = KER_anim_evaluate_fcurves_optimize(resolved, fcurves, totcurve, ctime, index);
+
+			/**
+			 * We didn't manage to optimize the writting procedure for the property, 
+			 * use the old fashion way!
+			 */
+			if (skip == 0) {
+				const float curval = KER_fcurve_evaluate(&resolved, fcurve, ctime);
+
+				KER_anim_write_to_rna_path(&resolved, curval, false);
+			}
+
+			index += skip;
 		}
 	}
-
-	return updated;
 }
 
-bool KER_anim_evaluate_action(PointerRNA pointer, Action *action, int slot, float ctime) {
+void KER_anim_evaluate_action(PointerRNA pointer, Action *action, int slot, float ctime) {
 	ActionChannelBag *bag;
 	if ((bag = KER_action_channelbag_for_action_slot_ex(action, slot))) {
-		return KER_anim_evaluate_fcurves(pointer, bag->fcurves, bag->totcurve, ctime);
+		KER_anim_evaluate_fcurves(pointer, bag->fcurves, bag->totcurve, ctime);
 	}
-
-	return false;
 }
 
-bool KER_anim_evaluate_and_apply_action(PointerRNA pointer, Action *action, int slot, float ctime) {
-	return KER_anim_evaluate_action(pointer, action, slot, ctime);
+void KER_anim_evaluate_and_apply_action(PointerRNA pointer, Action *action, int slot, float ctime) {
+	KER_anim_evaluate_action(pointer, action, slot, ctime);
 }
 
 void KER_animsys_evaluate_animdata(ID *id, AnimData *adt, float ctime, int recalc) {
@@ -122,20 +191,30 @@ void KER_animsys_evaluate_animdata(ID *id, AnimData *adt, float ctime, int recal
 
 	if (recalc & ADT_RECALC_ANIM) {
 		if (adt->action) {
+			Action *action = adt->action;
+
+			/**
+			 * Action time, the local time within the action that we are to compute!
+			 */
+			const float aduration = action->frame_end - action->frame_start;
+			const float atime = fmod(ctime - adt->stime, aduration);
+			const float time = action->frame_start + atime;
+
 			if (KER_action_is_layered(adt->action)) {
-				KER_anim_evaluate_and_apply_action(idptr, adt->action, adt->handle, ctime);
+				KER_anim_evaluate_and_apply_action(idptr, adt->action, adt->handle, time);
 			}
 			else {
-				KER_anim_evaluate_action(idptr, adt->action, 0, ctime);
+				KER_anim_evaluate_action(idptr, adt->action, 0, time);
 			}
 		}
 	}
 }
 
-void KER_animsys_eval_animdata(Scene *scene, ID *id) {
+void KER_animsys_eval_animdata(Depsgraph *depsgraph, ID *id) {
+	float ctime = DEG_get_ctime(depsgraph);
 	AnimData *adt = KER_animdata_from_id(id);
 
-	KER_animsys_evaluate_animdata(id, adt, KER_scene_frame(scene), ADT_RECALC_ANIM);
+	KER_animsys_evaluate_animdata(id, adt, ctime, ADT_RECALC_ANIM);
 }
 
 bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, PathResolvedRNA *result) {
@@ -143,8 +222,9 @@ bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, 
 		return false;
 	}
 
+	/** The path is not the same as the already resolved one, resolve the property again! */
 	if (!RNA_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
-		// fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", path, index);
+		fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", path, index);
 		return false;
 	}
 
@@ -154,10 +234,107 @@ bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, 
 
 	int length = RNA_property_array_length(&result->ptr, result->property);
 	if (length && index >= length) {
-		// fprintf(stderr, "[Kernel] Invalid array index, ID = '%s', '%s[%d]', array length is %d.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", path, index, length - 1);
+		fprintf(stderr, "[Kernel] Invalid array index, ID = '%s', '%s[%d]', array length is %d.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", path, index, length - 1);
 		return false;
 	}
 
 	result->index = length ? index : -1;
 	return true;
 }
+
+bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolvedRNA *result) {
+	if (fcurve->runtime.static_path != NULL) {
+		StaticPathRNA *path = (StaticPathRNA *)fcurve->runtime.static_path;
+
+		if (!RNA_static_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
+			fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index);
+			return false;
+		}
+
+		if (ptr->owner == NULL || !RNA_property_animateable(&result->ptr, result->property)) {
+			return false;
+		}
+
+		int length = RNA_property_array_length(&result->ptr, result->property);
+		if (length && fcurve->index >= length) {
+			fprintf(stderr, "[Kernel] Invalid array index, ID = '%s', '%s[%d]', array length is %d.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index, length - 1);
+			return false;
+		}
+
+		result->index = length ? fcurve->index : -1;
+		return true;
+	}
+	else {
+		if (!RNA_path_can_do_static_compilation(ptr, fcurve->path)) {
+			return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
+		}
+
+		fcurve->runtime.static_path = RNA_path_new(ptr, fcurve->path, NULL, NULL);
+
+		if (!fcurve->runtime.static_path) {
+			/**
+			 * Since #RNA_path_can_do_static_compilation returned true, #RNA_path_new should 
+			 * not return NULL!
+			 */
+			ROSE_assert_unreachable();
+
+			return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
+		}
+	}
+
+	return KER_animsys_rna_curve_resolve(ptr, fcurve, result);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Animation Data Iteration
+ * \{ */
+
+/* "User-Data" wrapper used by BKE_fcurves_main_cb() */
+typedef struct AllFCurvesCbWrapper {
+	ID_FCurve_Edit_Callback func; /* Operation to apply on F-Curve */
+	void *user_data;			  /* Custom data for that operation */
+} AllFCurvesCbWrapper;
+
+/* Helper for adt_apply_all_fcurves_cb() - Apply wrapped operator to list of F-Curves */
+static void fcurves_listbase_apply_cb(ID *id, ListBase *fcurves, ID_FCurve_Edit_Callback func, void *user_data) {
+	FCurve *fcu;
+
+	for (fcu = fcurves->first; fcu; fcu = fcu->next) {
+		func(id, fcu, user_data);
+	}
+}
+
+static void fcurves_array_apply_cb(ID *id, FCurve **fcurves, int totcurve, ID_FCurve_Edit_Callback func, void *user_data) {
+	FCurve **fcu_p;
+
+	for (fcu_p = &fcurves[0]; fcu_p != &fcurves[totcurve]; fcu_p++) {
+		func(id, *fcu_p, user_data);
+	}
+}
+
+/* Helper for KER_fcurves_main_cb() - Dispatch wrapped operator to all F-Curves */
+static void adt_apply_all_fcurves_cb(ID *id, AnimData *adt, void *wrapper_data) {
+	AllFCurvesCbWrapper *wrapper = wrapper_data;
+
+	if (adt->action) {
+		ActionChannelBag *bag;
+		if ((bag = KER_action_channelbag_for_action_slot_ex(adt->action, adt->handle))) {
+			fcurves_array_apply_cb(id, bag->fcurves, bag->totcurve, wrapper->func, wrapper->user_data);
+		}
+	}
+}
+
+void KER_fcurves_id_cb(struct ID *id, ID_FCurve_Edit_Callback func, void *user_data) {
+	AnimData *adt = KER_animdata_from_id(id);
+	if (adt != NULL) {
+		AllFCurvesCbWrapper wrapper = {
+			.func = func,
+			.user_data = user_data,
+		};
+		adt_apply_all_fcurves_cb(id, adt, &wrapper);
+	}
+}
+
+/** \} */

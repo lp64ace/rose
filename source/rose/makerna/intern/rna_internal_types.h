@@ -11,11 +11,25 @@
 extern "C" {
 #endif
 
+struct Main;
+struct Scene;
 struct StructRNA;
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Data Structures
  * \{ */
+
+/**
+ * Update callback for an RNA property.
+ *
+ * \note This is NOT called automatically when writing into the property, it needs to be called
+ * manually (through #RNA_property_update or #RNA_property_update_main) when needed.
+ *
+ * \param main: the Main data-base to which `ptr` data belongs.
+ * \param scene: The current active scene (may be NULL in some cases).
+ * \param ptr: The RNA pointer data to update.
+ */
+typedef void (*PropertyUpdateFunc)(struct Main *main, struct Scene *scene, struct PointerRNA *ptr);
 
 typedef struct PropertyRNA {
 	struct PropertyRNA *prev, *next;
@@ -41,6 +55,9 @@ typedef struct PropertyRNA {
 	unsigned int totarraylength;
 
 	ePropertyInternalFlag flagex;
+
+	/** Callback for updates on change. */
+	PropertyUpdateFunc update;
 
 	/* Raw access. */
 
@@ -164,8 +181,8 @@ typedef struct IntPropertyRNA {
 
 	PropIntGetFuncEx get_ex;
 	PropIntSetFuncEx set_ex;
-	PropIntArrayGetFunc getarray_ex;
-	PropIntArraySetFunc setarray_ex;
+	PropIntArrayGetFuncEx getarray_ex;
+	PropIntArraySetFuncEx setarray_ex;
 	PropIntRangeFuncEx range_ex;
 
 	int softmin, softmax;
@@ -173,7 +190,7 @@ typedef struct IntPropertyRNA {
 	int step;
 
 	PropIntGetFuncEx get_default;
-	PropIntArrayGetFunc get_default_array;
+	PropIntArrayGetFuncEx get_default_array;
 	int defaultvalue;
 	const int *defaultarray;
 } IntPropertyRNA;
@@ -315,6 +332,8 @@ typedef struct ContainerRNA {
 	void *prev, *next;
 
 	ListBase properties;
+	/* rose::CustomIDVectorSet<PropertyRNA *, PropertyRNAIdentifierGetter> */
+	void *property_identifier_lookup_set;
 } ContainerRNA;
 
 /* -------------------------------------------------------------------- */
@@ -323,6 +342,7 @@ typedef struct ContainerRNA {
 
 typedef struct StructRNA *(*StructRefineFunc)(struct PointerRNA *ptr);
 typedef char *(*StructPathFunc)(const struct PointerRNA *ptr);
+typedef struct IDProperty **(*IDPropertiesFunc)(struct PointerRNA *ptr);
 
 typedef struct StructRNA {
 	ContainerRNA container;
@@ -356,31 +376,35 @@ typedef struct StructRNA {
 
 	/** Function to find path to this struct in an ID. */
 	StructPathFunc path;
+
+	/** Return the location of the struct's pointer to the system-defined root group IDProperty. */
+	IDPropertiesFunc system_idproperties;
+	IDPropertiesFunc idproperties;
 } StructRNA;
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
-/** \name Rose RNA Data Structures
- * \{ */
-
-typedef struct RoseRNA {
-	ListBase srnabase;
-	/**
-	 * A map of structs: `{StructRNA.identifier -> StructRNA}`
-	 * These are ensured to have unique names (with #STRUCT_PUBLIC_NAMESPACE enabled).
-	 */
-	GHash *srnahash;
-	/** Needed because types with an empty identifier aren't included in `srnahash`. */
-	unsigned int totsrna;
-} RoseRNA;
-
-#define CONTAINER_RNA_ID(container) (*(const char **)(((ContainerRNA *)(container)) + 1))
 
 /** \} */
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+#include "LIB_string_ref.hh"
+
+struct PropertyRNAIdentifierGetter {
+	rose::StringRef operator()(const PropertyRNA *prop) const {
+		return prop->identifier;
+	}
+};
+
+#	ifdef RNA_USE_CANONICAL_PATH
+struct PropertyRNACanonicalGetter {
+	unsigned int operator()(const PropertyRNA *prop) const {
+		return prop->canonical;
+	}
+};
+#	endif
+
 #endif
 
 #endif	// RNA_INTERNAL_TYPES_H

@@ -14,6 +14,7 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
+	${TBB_INCLUDE_DIRS}
 	
 )
 

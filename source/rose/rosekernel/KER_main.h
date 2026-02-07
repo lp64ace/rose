@@ -19,6 +19,9 @@ struct Main;
 typedef struct Main {
 	struct Main *prev, *next;
 
+	struct IDNameLib_Map *id_map;
+	struct UniqueName_Map *name_map;
+
 	/**
 	 * The file-path of this rose file, an empty string indicates an unsaved file.
 	 *
@@ -83,19 +86,27 @@ void KER_main_free(struct Main *main);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Lookup Methods
+ * \{ */
+
+void *KER_main_id_lookup(struct Main *main, short type, const char *name);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Util Methods
  * \{ */
 
 /** Check whether given \a main is empty or contains some IDs. */
 bool KER_main_is_empty(struct Main *main);
 
-int set_listbasepointers(struct Main *main, struct ListBase *lb[]);
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Data-Block Access Methods
  * \{ */
+
+int set_listbasepointers(struct Main *main, struct ListBase *lb[]);
 
 /** \return A pointer to the \a ListBase of given \a main for requested \a type ID type. */
 struct ListBase *which_libbase(struct Main *main, short type);
@@ -108,6 +119,56 @@ struct ListBase *which_libbase(struct Main *main, short type);
 
 void KER_main_lock(struct Main *main);
 void KER_main_unlock(struct Main *main);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Generic utils to loop over whole Main database.
+ * \{ */
+
+#define FOREACH_MAIN_LISTBASE_ID_BEGIN(_lb, _id)                  \
+	{                                                             \
+		ID *_id_next = (ID *)((_lb)->first);                      \
+		for ((_id) = _id_next; (_id) != NULL; (_id) = _id_next) { \
+			_id_next = (ID *)((_id)->next);
+
+#define FOREACH_MAIN_LISTBASE_ID_END \
+		}                            \
+	}                                \
+	((void)0)
+
+#define FOREACH_MAIN_LISTBASE_BEGIN(_main, _lb)           \
+	{                                                     \
+		ListBase *_lbarray[INDEX_ID_MAX];                 \
+		int _i = set_listbasepointers((_main), _lbarray); \
+		while (_i--) {                                    \
+			(_lb) = _lbarray[_i];
+
+#define FOREACH_MAIN_LISTBASE_END \
+		}                         \
+	}                             \
+	((void)0)
+
+/**
+ * Top level `foreach`-like macro allowing to loop over all IDs in a given #Main data-base.
+ *
+ * NOTE: Order tries to go from 'user IDs' to 'used IDs' (e.g. collections will be processed
+ * before objects, which will be processed before obdata types, etc.).
+ *
+ * WARNING: DO NOT use break statement with that macro, use #FOREACH_MAIN_LISTBASE and
+ * #FOREACH_MAIN_LISTBASE_ID instead if you need that kind of control flow. */
+#define FOREACH_MAIN_ID_BEGIN(_main, _id)           \
+	{                                                \
+		ListBase *_lb;                               \
+		FOREACH_MAIN_LISTBASE_BEGIN((_main), _lb) { \
+			FOREACH_MAIN_LISTBASE_ID_BEGIN(_lb, (_id))
+
+#define FOREACH_MAIN_ID_END							\
+			FOREACH_MAIN_LISTBASE_ID_END;			\
+		}											\
+		FOREACH_MAIN_LISTBASE_END;					\
+	}												\
+	((void)0)
 
 /** \} */
 

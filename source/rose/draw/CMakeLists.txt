@@ -14,27 +14,40 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
+	${TBB_INCLUDE_DIRS}
 	
 )
 
 # -----------------------------------------------------------------------------
 # Define Source Files
 
+set(OVERLAY
+	engines/overlay/overlay_engine.c
+	engines/overlay/overlay_engine.h
+	engines/overlay/overlay_private.h
+	engines/overlay/overlay_shader.c
+
+	engines/overlay/overlay_armature.c
+)
+
 set(ALICE
 	# And yes... you are right... this is inspired through Alice in Madness
 	engines/alice/alice_engine.h
 	engines/alice/alice_engine.c
+	engines/alice/alice_modifier.c
 	engines/alice/alice_private.h
 	engines/alice/alice_shader.c
 )
 
 set(BASIC
-	engines/basic/basic_engine.h
 	engines/basic/basic_engine.c
+	engines/basic/basic_engine.h
 )
 
 set(GLSL_SRC
 	engines/alice/shaders/alice_vert.glsl
+	engines/overlay/shaders/armature_shape_solid_frag.glsl
+	engines/overlay/shaders/armature_shape_solid_vert.glsl
 
 	intern/shaders/draw_shader_shared.h
 
@@ -58,6 +71,8 @@ set(SRC
 	intern/draw_defines.h
 	intern/draw_engine.c
 	intern/draw_engine.h
+	intern/draw_instance_data.c
+	intern/draw_instance_data.h
 	intern/draw_manager.c
 	intern/draw_manager.h
 	intern/draw_manager_data.c
@@ -69,6 +84,7 @@ set(SRC
 	
 )
 
+list(APPEND SRC ${OVERLAY})
 list(APPEND SRC ${ALICE}) # Save myself? From death? is that it? Is that why I've come here? I'm not afraid to die. Times I've welcomed death!
 list(APPEND SRC ${BASIC}) # Another day, a different dream perhaps.
 

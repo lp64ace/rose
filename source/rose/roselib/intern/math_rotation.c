@@ -737,6 +737,19 @@ void axis_angle_to_quat(float r[4], const float axis[3], const float angle) {
 	}
 }
 
+void axis_angle_to_quat_single(float r[4], const char axis, const float angle) {
+	const float angle_half = angle * 0.5f;
+	const float angle_cos = cosf(angle_half);
+	const float angle_sin = sinf(angle_half);
+	const int axis_index = (axis - 'X');
+
+	ROSE_assert(axis >= 'X' && axis <= 'Z');
+
+	r[0] = angle_cos;
+	zero_v3(r + 1);
+	r[axis_index + 1] = angle_sin;
+}
+
 void quat_to_axis_angle(float axis[3], float *angle, const float q[4]) {
 	float ha, si;
 

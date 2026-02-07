@@ -9,7 +9,9 @@
 #include "GPU_state.h"
 #include "GPU_viewport.h"
 
+#include "KER_armature.h"
 #include "KER_object.h"
+#include "KER_modifier.h"
 
 #include "LIB_assert.h"
 #include "LIB_math_vector.h"
@@ -21,6 +23,7 @@
 #include "alice_engine.h"
 #include "alice_private.h"
 
+#include "intern/draw_defines.h"
 #include "intern/draw_manager.h"
 
 /* -------------------------------------------------------------------- */
@@ -75,20 +78,25 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 	}
 }
 
+ROSE_STATIC void alice_cache_populate_mesh(void *vdata, Object *object) {
+	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
+	DRWAliceViewportPrivateData *impl = stl->data;
+
+	GPUBatch *surface = DRW_cache_object_surface_get(object);
+
+	if (impl->opaque_shgroup) {
+		/** Ready all the required modifier data blocks for rendering on this group. */
+		DRW_alice_modifier_list_build(impl->opaque_shgroup, object);
+		DRW_shading_group_call_ex(impl->opaque_shgroup, object, object->obmat, surface);
+	}
+}
+
 ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	DRWAliceViewportStorageList *stl = ((DRWAliceData *)vdata)->stl;
 	DRWAliceViewportPrivateData *impl = stl->data;
 
-	if (!ELEM(object->type, OB_MESH)) {
-		return;
-	}
-
-	GPUBatch *batch = DRW_cache_object_surface_get(object);
-
-	if (impl->opaque_shgroup) {
-		const float (*obmat)[4] = KER_object_object_to_world(object);
-
-		DRW_shading_group_call_ex(impl->opaque_shgroup, object, obmat, batch);
+	switch (object->type) {
+		case OB_MESH: return alice_cache_populate_mesh(vdata, object);
 	}
 }
 

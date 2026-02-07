@@ -30,7 +30,9 @@ set(SRC
 	intern/wm.c
 	intern/wm_draw.c
 	intern/wm_event.c
+	intern/wm_keymap.c
 	intern/wm_handler.c
+	intern/wm_operator.c
 	intern/wm_window.c
 )
 
@@ -41,6 +43,7 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::native
+	rose::source::rna
 	rose::source::roselib
 	rose::source::rosekernel
 	rose::source::rosemesh
@@ -65,3 +68,5 @@ set(LIB
 
 rose_add_lib(windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_library(rose::source::windowmanager ALIAS windowmanager)
+
+add_dependencies(windowmanager rna)

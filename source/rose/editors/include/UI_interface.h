@@ -1,6 +1,8 @@
 #ifndef ED_INTERFACE_H
 #define ED_INTERFACE_H
 
+#include "RNA_access.h"
+
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
@@ -16,6 +18,7 @@ struct uiBlock;
 struct uiBut;
 struct uiLayout;
 struct uiPopupBlockHandle;
+struct PointerRNA;
 
 /* -------------------------------------------------------------------- */
 /** \name UI Enums
@@ -93,7 +96,6 @@ void UI_block_draw(const struct rContext *C, struct uiBlock *block);
 void UI_block_region_set(struct uiBlock *block, struct ARegion *region);
 
 void UI_block_translate(struct uiBlock *block, float dx, float dy);
-void UI_block_scroll(struct ARegion *region, struct uiBlock *block, struct uiLayout *layout);
 
 void UI_blocklist_update_window_matrix(struct rContext *C, struct ARegion *region);
 void UI_blocklist_free(struct rContext *C, struct ARegion *region);
@@ -119,13 +121,19 @@ typedef struct uiBut {
 	char *drawstr;
 	void *active;
 
-	void *pointer;
 	int pointype;
+	void *poin;
+
+	/* RNA data */
+	PointerRNA rna_pointer;
+	PropertyRNA *rna_property;
+	int rna_index;
 
 	double hardmin;
 	double hardmax;
 	double softmin;
 	double softmax;
+	double precision;
 
 	rctf rect;
 	int type;
@@ -157,11 +165,9 @@ typedef struct uiBut {
 enum {
 	UI_POINTER_NIL = 0,
 	UI_POINTER_BYTE,
-	UI_POINTER_STR,
 	UI_POINTER_INT,
 	UI_POINTER_FLT,
-	UI_POINTER_DBL,
-	UI_POINTER_UINT,
+	UI_POINTER_STR,
 };
 
 /** #uiBut->type */
@@ -194,18 +200,24 @@ enum {
 	UI_BUT_HEX = 1 << 20,
 	UI_BUT_FILTER = 1 << 21,
 	/**
+	 * The button will use #uiBut->name as the format for displaying the pointer data.
+	 * \note That the format will be done using the following arguments; <precision>, <float>, see #ui_but_update!
+	 */
+	UI_BUT_TEXT_FORMAT = 1 << 22,
+	/**
 	 * The button is inside a grid layout that has a static number of columns, 
 	 * which means that a full rows should be displayed as hovered when a single item in that row is hovered.
 	 */
-	UI_BUT_GRID = 1 << 22,
-	UI_BUT_ROW = 1 << 23,
+	UI_BUT_GRID = 1 << 23,
+	UI_BUT_ROW = 1 << 24,
 };
 
 #define DRAW_FLAG(draw) ((draw) & 0xffff0000)
 #define DRAW_INDX(draw) ((draw) & 0x0000ffff)
 
-struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int ptype, int maxlen, int draw);
-struct uiBut *uiDefButEx(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *pointer, int ptype, double softmin, double softmax, int maxlen, int draw);
+struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw);
+struct uiBut *uiDefBut_RNA(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, const char *property, int index, int draw);
+struct uiBut *uiDefButEx_RNA(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, struct PropertyRNA *property, int index, int draw);
 
 void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double softmin, double softmax);
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
@@ -261,7 +273,7 @@ void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
 /** \name UI Handlers
  * \{ */
 
-void UI_region_handlers_add(ListBase *handlers);
+void UI_region_handlers_add(struct ListBase *handlers);
 
 /** \} */
 

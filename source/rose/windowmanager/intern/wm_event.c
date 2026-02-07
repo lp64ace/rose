@@ -2,16 +2,26 @@
 
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
+#include "LIB_string.h"
+
+#include "RNA_access.h"
+#include "RNA_define.h"
 
 #include "ED_screen.h"
 
+#include "WM_api.h"
 #include "WM_draw.h"
 #include "WM_handler.h"
 #include "WM_window.h"
 
 #include "KER_context.h"
+#include "KER_idprop.h"
 #include "KER_global.h"
+#include "KER_layer.h"
 #include "KER_main.h"
+#include "KER_scene.h"
+
+#include "DEG_depsgraph.h"
 
 #include <GTK_api.h>
 
@@ -88,6 +98,21 @@ void wm_event_free_and_remove_from_queue_if_valid(wmEvent *evt) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Event / Keymap Matching API
+ * \{ */
+
+void WM_event_get_keymaps_from_handler(WindowManager *wm, wmWindow *win, wmEventHandler_Keymap *handler, wmEventHandler_KeymapResult *km_result) {
+	memset(km_result, 0x0, sizeof(*km_result));
+	wmKeyMap *keymap = WM_keymap_active(wm, handler->keymap);
+	ROSE_assert(keymap != NULL);
+	if (keymap != NULL) {
+		km_result->keymaps[km_result->totkeymaps++] = keymap;
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Main Methods
  * \{ */
 
@@ -99,7 +124,7 @@ typedef enum eHandlerActionFlag {
 } eHandlerActionFlag;
 #define WM_HANDLER_CONTINUE ((eHandlerActionFlag)0)
 
-ROSE_INLINE void wm_region_mouse_co(struct rContext *C, wmEvent *event) {
+ROSE_INLINE void wm_region_mouse_co(rContext *C, wmEvent *event) {
 	ARegion *region = CTX_wm_region(C);
 	if (region) {
 		/* Compatibility convention. */
@@ -124,7 +149,7 @@ ROSE_INLINE bool wm_event_inside_rect(const wmEvent *evt, const rcti *rect) {
 	return false;
 }
 
-ROSE_INLINE ScrArea *area_event_inside(struct rContext *C, const int xy[2]) {
+ROSE_INLINE ScrArea *area_event_inside(rContext *C, const int xy[2]) {
 	wmWindow *win = CTX_wm_window(C);
 	Screen *screen = CTX_wm_screen(C);
 
@@ -137,7 +162,7 @@ ROSE_INLINE ScrArea *area_event_inside(struct rContext *C, const int xy[2]) {
 	}
 	return NULL;
 }
-ROSE_INLINE ARegion *region_event_inside(struct rContext *C, const int xy[2]) {
+ROSE_INLINE ARegion *region_event_inside(rContext *C, const int xy[2]) {
 	Screen *screen = CTX_wm_screen(C);
 	ScrArea *area = CTX_wm_area(C);
 
@@ -151,7 +176,210 @@ ROSE_INLINE ARegion *region_event_inside(struct rContext *C, const int xy[2]) {
 	return NULL;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(struct rContext *C, wmEventHandler_UI *handler, wmEvent *event) {
+ROSE_INLINE wmOperator *wm_operator_create(WindowManager *wm, wmOperatorType *ot, PointerRNA *properties) {
+	wmOperator *op = MEM_callocN(sizeof(wmOperator), "wmOperator");
+	
+	op->type = ot;
+	LIB_strcpy(op->idname, ARRAY_SIZE(op->idname), ot->idname);
+
+	/* Initialize properties, either copy or create. */
+	op->ptr = MEM_callocN(sizeof(PointerRNA), "wmOperatorPtrRNA");
+	if (properties && properties->data) {
+		op->properties = IDP_DuplicateProperty((const IDProperty *)(properties->data));
+	}
+	else {
+		op->properties = IDP_New(IDP_GROUP, NULL, 0, "wmOperatorProperties", 0);
+	}
+	*op->ptr = RNA_pointer_create_discrete(&wm->id, ot->srna, op->properties);
+
+	return op;
+}
+
+ROSE_INLINE void wm_handler_op_context_get_if_valid(rContext *C, wmEventHandler_Op *handler, const wmEvent *event, ScrArea **r_area, ARegion **r_region) {
+	wmWindow *window = handler->context.window ? handler->context.window : CTX_wm_window(C);
+	/* It's probably fine to always use #WM_window_get_active_screen() to get the screen. But this
+	 * code has been getting it through context since forever, so play safe and stick to that when
+	 * possible. */
+	Screen *screen = handler->context.window ? WM_window_screen_get(window) : CTX_wm_screen(C);
+
+	*r_area = NULL;
+	*r_region = NULL;
+
+	if (screen == NULL || handler->op == NULL) {
+		return;
+	}
+
+	if (handler->context.area == NULL) {
+		/* Pass. */
+	}
+	else {
+		ScrArea *area = NULL;
+
+		ED_screen_areas_iter(window, screen, area_iter) {
+			if (area_iter == handler->context.area) {
+				area = area_iter;
+				break;
+			}
+		}
+
+		if (area == NULL) {
+			/* When changing screen layouts with running modal handlers (like render display), this
+			 * is not an error to print. */
+			if (handler->op == NULL) {
+				ROSE_assert_unreachable();
+			}
+		}
+		else {
+			ARegion *region;
+			wmOperator *op = handler->op;
+			*r_area = area;
+
+			if (op && (op->flag & OP_IS_MODAL_CURSOR_REGION)) {
+				region = ED_area_find_region_xy_visual(area, handler->context.regiontype, event->mouse_xy);
+				if (region) {
+					handler->context.region = region;
+				}
+			}
+			else {
+				region = NULL;
+			}
+
+			if ((region == NULL) && handler->context.region) {
+				if (LIB_haslink(&area->regionbase, handler->context.region)) {
+					region = handler->context.region;
+				}
+			}
+
+			/* No warning print here, after full-area and back regions are remade. */
+			if (region) {
+				*r_region = region;
+			}
+		}
+	}
+}
+
+ROSE_INLINE void wm_handler_op_context(rContext *C, wmEventHandler_Op *handler, wmEvent *event) {
+	ScrArea *area = NULL;
+	ARegion *region = NULL;
+	wm_handler_op_context_get_if_valid(C, handler, event, &area, &region);
+	CTX_wm_area_set(C, area);
+	CTX_wm_region_set(C, region);
+}
+
+ROSE_INLINE void wm_operator_finished(rContext *C, wmOperator *op) {
+	WM_operator_free(op);
+}
+
+ROSE_INLINE wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot, const wmEvent *event, PointerRNA *properties, const bool poll_only) {
+	wmOperatorStatus retval = OPERATOR_PASS_THROUGH;
+
+	/* This is done because complicated setup is done to call this function
+	 * that is better not duplicated. */
+	if (poll_only) {
+		return (wmOperatorStatus)WM_operator_poll(C, ot);
+	}
+
+	if (WM_operator_poll(C, ot)) {
+		WindowManager *wm = CTX_wm_manager(C);
+		wmOperator *op = wm_operator_create(wm, ot, properties);
+
+		if (op->type->invoke && event) {
+			/* Make a copy of the event as it's `const` and the #wmEvent.mval to be written into. */
+			wmEvent newevent = *event;
+			wm_region_mouse_co(C, &newevent);
+
+			retval = op->type->invoke(C, op, &newevent);
+		}
+		else if (op->type->exec) {
+			retval = op->type->exec(C, op);
+		}
+
+		if (retval & OPERATOR_HANDLED) {
+			/* Do nothing, #wm_operator_exec() has been called somewhere. */
+		}
+		else if (retval & OPERATOR_FINISHED) {
+			wm_operator_finished(C, op);
+		}
+		else if (retval & OPERATOR_RUNNING_MODAL) {
+			/* Cancel UI handlers, typically tool-tips that can hang around
+			 * while dragging the view or worse, that stay there permanently
+			 * after the modal operator has swallowed all events and passed
+			 * none to the UI handler. */
+			// wm_event_handler_ui_cancel(C);
+		}
+		else {
+			WM_operator_free(op);
+		}
+	}
+
+	return retval;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(rContext *C, ListBase *handlers, wmEventHandler *handler_base, wmEvent *event, PointerRNA *properties, const char *kmi_idname) {
+	wmOperatorStatus retval = OPERATOR_PASS_THROUGH;
+
+	if ((handler_base->type == WM_HANDLER_TYPE_OP) && (((wmEventHandler_Op *)handler_base)->op != NULL)) {
+		wmEventHandler_Op *handler = (wmEventHandler_Op *)handler_base;
+		wmOperator *op = handler->op;
+		wmOperatorType *ot = op->type;
+
+		if (ot->modal) {
+			WindowManager *wm = CTX_wm_manager(C);
+			wmWindow *window = CTX_wm_window(C);
+			ScrArea *area = CTX_wm_area(C);
+			ARegion *region = CTX_wm_region(C);
+
+			wm_handler_op_context(C, handler, event);
+			wm_region_mouse_co(C, event);
+
+			retval = ot->modal(C, op, event);
+
+			/* Important to run 'wm_operator_finished' before setting the context members to null. */
+			if (retval & OPERATOR_FINISHED) {
+				wm_operator_finished(C, op);
+				handler->op = NULL;
+			}
+			else if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
+				WM_operator_free(op);
+				handler->op = NULL;
+			}
+
+			/* Remove modal handler, operator itself should have been canceled and freed. */
+			if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
+				LIB_remlink(handlers, handler);
+				MEM_freeN(&handler->head);
+			}
+		}
+		else {
+			ROSE_assert_unreachable();
+		}
+	}
+	else {
+		wmOperatorType *ot = WM_operatortype_find(kmi_idname, false);
+
+		if (ot) {
+			retval = wm_operator_invoke(C, ot, event, properties, false);
+		}
+	}
+
+	/* Finished and pass through flag as handled. */
+	if (retval == (OPERATOR_FINISHED | OPERATOR_PASS_THROUGH)) {
+		return WM_HANDLER_HANDLED;
+	}
+
+	/* Modal unhandled, break. */
+	if (retval == (OPERATOR_PASS_THROUGH | OPERATOR_RUNNING_MODAL)) {
+		return (WM_HANDLER_BREAK | WM_HANDLER_MODAL);
+	}
+
+	if (retval & OPERATOR_PASS_THROUGH) {
+		return WM_HANDLER_CONTINUE;
+	}
+
+	return WM_HANDLER_BREAK;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(rContext *C, wmEventHandler_UI *handler, wmEvent *event) {
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);
 
@@ -179,13 +407,85 @@ ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(struct rContext *C, wmEventHan
 	return WM_HANDLER_CONTINUE;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_handlers_do(struct rContext *C, wmEvent *event, ListBase *handlers) {
+ROSE_INLINE bool wm_eventmatch(const wmEvent *winevent, const wmKeyMapItem *kmi) {
+	if (kmi->flag & KMI_INACTIVE) {
+		return false;
+	}
+
+	if (winevent->flag & WM_EVENT_IS_REPEAT) {
+		if (kmi->flag & KMI_REPEAT_IGNORE) {
+			return false;
+		}
+	}
+
+	if (kmi->type != KM_ANY) {
+		if (winevent->type != kmi->type) {
+			return false;
+		}
+	}
+
+	if (kmi->val != KM_ANY) {
+		if (winevent->value != kmi->val) {
+			return false;
+		}
+	}
+
+	/* Account for rare case of when these keys are used as the 'type' not as modifiers. */
+	if (kmi->shift != KM_ANY) {
+		const int shift = (winevent->modifier & KM_SHIFT) ? KM_MOD_HELD : KM_NOTHING;
+		if ((shift != kmi->shift) && !ELEM(winevent->type, EVT_LEFTSHIFTKEY, EVT_RIGHTSHIFTKEY)) {
+			return false;
+		}
+	}
+	if (kmi->ctrl != KM_ANY) {
+		const int ctrl = (winevent->modifier & KM_CTRL) ? KM_MOD_HELD : KM_NOTHING;
+		if ((ctrl != kmi->ctrl) && !ELEM(winevent->type, EVT_LEFTCTRLKEY, EVT_RIGHTCTRLKEY)) {
+			return false;
+		}
+	}
+	if (kmi->alt != KM_ANY) {
+		const int alt = (winevent->modifier & KM_ALT) ? KM_MOD_HELD : KM_NOTHING;
+		if ((alt != kmi->alt) && !ELEM(winevent->type, EVT_LEFTALTKEY, EVT_RIGHTALTKEY)) {
+			return false;
+		}
+	}
+	if (kmi->oskey != KM_ANY) {
+		const int oskey = (winevent->modifier & KM_OSKEY) ? KM_MOD_HELD : KM_NOTHING;
+		if ((oskey != kmi->oskey) && (winevent->type != EVT_OSKEY)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(rContext *C, wmEvent *event, ListBase *handlers, wmEventHandler_Keymap *handler, wmKeyMap *keymap) {
+	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+
+	if (keymap == NULL) {
+		ROSE_assert_unreachable();
+	}
+	else {
+		if (WM_keymap_poll(C, keymap)) {
+			LISTBASE_FOREACH(wmKeyMapItem *, kmi, &keymap->items) {
+				if (wm_eventmatch(event, kmi)) {
+					action |= wm_handler_operator_call(C, handlers, &handler->head, event, kmi->ptr, kmi->idname);
+				}
+			}
+		}
+	}
+
+	return action;
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handlers_do(rContext *C, wmEvent *event, ListBase *handlers) {
 	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
 	if (handlers == NULL) {
 		return action;
 	}
 
+	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = CTX_wm_window(C);
 
 	LISTBASE_FOREACH_MUTABLE(wmEventHandler *, handler_base, handlers) {
@@ -202,6 +502,28 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do(struct rContext *C, wmEvent *event
 				ROSE_assert(handler->handle_fn != NULL);
 
 				action |= wm_handler_ui_call(C, handler, event);
+			}
+			else if (handler_base->type == WM_HANDLER_TYPE_OP) {
+				wmEventHandler_Op *handler = (wmEventHandler_Op *)handler_base;
+
+				action |= wm_handler_operator_call(C, handlers, handler_base, event, NULL, NULL);
+			}
+			else if (handler_base->type == WM_HANDLER_TYPE_KEYMAP) {
+				wmEventHandler_Keymap *handler = (wmEventHandler_Keymap *)handler_base;
+				wmEventHandler_KeymapResult km_result;
+
+				memset(&km_result, 0x0, sizeof(km_result));
+
+				WM_event_get_keymaps_from_handler(wm, window, handler, &km_result);
+
+				eHandlerActionFlag action_iter = WM_HANDLER_CONTINUE;
+				for (int km_index = 0; km_index < km_result.totkeymaps; km_index++) {
+					wmKeyMap *keymap = km_result.keymaps[km_index];
+					action_iter |= wm_handlers_do_keymap_with_keymap_handler(C, event, handlers, handler, keymap);
+					if (action_iter & WM_HANDLER_BREAK) {
+						break;
+					}
+				}
 			}
 			else {
 				ROSE_assert_unreachable();
@@ -223,13 +545,13 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do(struct rContext *C, wmEvent *event
 	return action;
 }
 
-ROSE_INLINE eHandlerActionFlag wm_event_do_region_handlers(struct rContext *C, wmEvent *event, ARegion *region) {
+ROSE_INLINE eHandlerActionFlag wm_event_do_region_handlers(rContext *C, wmEvent *event, ARegion *region) {
 	CTX_wm_region_set(C, region);
 	wm_region_mouse_co(C, event);
 	return wm_handlers_do(C, event, &region->handlers);
 }
 
-ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(struct rContext *C, wmEvent *event, ScrArea *area) {
+ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(rContext *C, wmEvent *event, ScrArea *area) {
 	if (wm_event_always_pass(event)) {
 		eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
@@ -246,7 +568,7 @@ ROSE_INLINE eHandlerActionFlag wm_event_do_handlers_area_regions(struct rContext
 	return wm_event_do_region_handlers(C, event, region_hovered);
 }
 
-void WM_do_handlers(struct rContext *C) {
+void WM_do_handlers(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
 	LISTBASE_FOREACH_MUTABLE(wmWindow *, window, &wm->windows) {
@@ -328,6 +650,39 @@ void WM_do_handlers(struct rContext *C) {
 		CTX_wm_screen_set(C, NULL);
 		CTX_wm_window_set(C, NULL);
 	}
+}
+
+void wm_event_do_depsgraph(rContext *C, bool force_visible_tag) {
+	WindowManager *wm = CTX_wm_manager(C);
+
+	/* Update all the dependency graphs of visible view layers. */
+	LISTBASE_FOREACH(wmWindow *, win, &wm->windows) {
+		Scene *scene = WM_window_get_active_scene(win);
+		ViewLayer *view_layer = KER_view_layer_default_view(scene);
+		Main *main = CTX_data_main(C);
+
+		Depsgraph *depsgraph = KER_scene_ensure_depsgraph(main, scene, view_layer);
+		if (force_visible_tag) {
+			DEG_graph_tag_on_visible_update(depsgraph, true);
+		}
+		DEG_make_active(depsgraph);
+		KER_scene_graph_update_tagged(depsgraph, main);
+	}
+}
+
+void wm_event_do_refresh_wm_and_depsgraph(rContext *C) {
+	wm_event_do_depsgraph(C, false);
+}
+
+void WM_do_notifiers(rContext *C) {
+	WindowManager *wm = CTX_wm_manager(C);
+	if (wm == NULL) {
+		return;
+	}
+
+	// TODO; notifiers
+
+	wm_event_do_refresh_wm_and_depsgraph(C);
 }
 
 void WM_window_post_quit_event(wmWindow *window) {

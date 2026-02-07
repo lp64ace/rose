@@ -27,7 +27,7 @@ class GTKManagerInterface {
 	std::vector<GTKRenderInterface *> renders;
 	std::vector<GTKWindowInterface *> windows;
 
-	std::chrono::system_clock::time_point t0;
+	std::chrono::steady_clock::time_point t0;
 
 public:
 	GTKManagerInterface();

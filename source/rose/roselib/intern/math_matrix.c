@@ -512,14 +512,7 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]) {
 	ROSE_assert(inverse != mat);
 
 	/* Set inverse to identity */
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			inverse[i][j] = 0;
-		}
-	}
-	for (i = 0; i < 4; i++) {
-		inverse[i][i] = 1;
-	}
+	unit_m4(inverse);
 
 	/* Copy original matrix so we don't mess it up */
 	for (i = 0; i < 4; i++) {
@@ -565,6 +558,26 @@ bool invert_m4_m4(float inverse[4][4], const float mat[4][4]) {
 		}
 	}
 	return true;
+}
+
+bool invert_m4_m4_safe(float Ainv[4][4], const float A[4][4]) {
+	if (!invert_m4_m4(Ainv, A)) {
+		float Atemp[4][4];
+
+		copy_m4_m4(Atemp, A);
+
+		/**
+		 * Matrix is degenerate (e.g. 0 scale on some axis), ideally we should
+		 * never be in this situation, but try to invert it anyway with tweak.
+		 */
+		Atemp[0][0] += 1e-8f;
+		Atemp[1][1] += 1e-8f;
+		Atemp[2][2] += 1e-8f;
+
+		if (!invert_m4_m4(Ainv, Atemp)) {
+			unit_m4(Ainv);
+		}
+	}
 }
 
 /** \} */
@@ -841,7 +854,7 @@ void mat3_to_size(float size[3], const float M[3][3]) {
 	size[2] = len_v3(M[2]);
 }
 
-void mat4_to_size(float size[4], const float M[4][4]) {
+void mat4_to_size(float size[3], const float M[4][4]) {
 	size[0] = len_v3(M[0]);
 	size[1] = len_v3(M[1]);
 	size[2] = len_v3(M[2]);
@@ -934,7 +947,7 @@ void print_m4(float m[4][4]) {
 	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[0][0], m[0][1], m[0][2], m[0][3]);
 	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[1][0], m[1][1], m[1][2], m[1][3]);
 	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[2][0], m[2][1], m[2][2], m[2][3]);
-	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f), ", m[3][0], m[3][1], m[3][2], m[3][3]);
+	fprintf(stdout, "(%5.2f, %5.2f, %5.2f, %5.2f)", m[3][0], m[3][1], m[3][2], m[3][3]);
 	fprintf(stdout, "]");
 }
 

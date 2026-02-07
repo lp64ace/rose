@@ -1,6 +1,8 @@
 #ifndef KER_MODIFIER_TYPES_H
 #define KER_MODIFIER_TYPES_H
 
+#include "DNA_session_uuid_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,8 +12,10 @@ typedef struct ModifierData {
 
 	int type;
 	int flag;
+	SessionUUID uuid;
 
 	char name[64];
+	char *error;
 
 	/**
 	 * Runtime field which contains runtime data which is specified to a modifier type.

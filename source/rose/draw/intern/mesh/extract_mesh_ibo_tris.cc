@@ -42,7 +42,7 @@ ROSE_STATIC void extract_triangles_mesh(const Mesh *mesh, GPUIndexBuf *ibo) {
 	 */
 	rose::array_utils::gather(read, read.index_range(), write);
 
-	GPU_indexbuf_build_in_place_ex(&builder, 0, triangles, false, ibo);
+	GPU_indexbuf_build_in_place_ex(&builder, 0, triangles * 3, false, ibo);
 }
 
 void extract_triangles(const Mesh *mesh, GPUIndexBuf *ibo) {

@@ -34,7 +34,7 @@ ROSE_INLINE void rna_def_pose_channel(RoseRNA *rna) {
 		} while (false);
 
 		do {
-			PropertyRNA *quat = RNA_def_property(posebone, "rotation_quaternion", PROP_FLOAT, PROP_TRANSLATION);
+			PropertyRNA *quat = RNA_def_property(posebone, "quaternion", PROP_FLOAT, PROP_TRANSLATION);
 			RNA_def_property_float_sdna(quat, NULL, "quat");
 			RNA_def_property_float_array_default(quat, rna_default_quaternion);
 			RNA_def_property_ui_text(quat, "Quaternion Rotation", "Rotation in Quaternions");
@@ -43,10 +43,11 @@ ROSE_INLINE void rna_def_pose_channel(RoseRNA *rna) {
 		/* TODO: Add axis angle. */
 
 		do {
-			PropertyRNA *euler = RNA_def_property(posebone, "rotation_euler", PROP_FLOAT, PROP_TRANSLATION);
+			PropertyRNA *euler = RNA_def_property(posebone, "euler", PROP_FLOAT, PROP_TRANSLATION);
 			RNA_def_property_float_sdna(euler, NULL, "euler");
 			RNA_def_property_ui_text(euler, "Euler Rotation", "Rotation in Eulers");
 			RNA_def_property_ui_range(euler, -FLT_MAX, FLT_MAX, 100, RNA_TRANSLATION_PREC_DEFAULT);
+			RNA_def_property_update(euler, "rna_Pose_update");
 		} while (false);
 
 	} while (false);
@@ -58,7 +59,7 @@ void RNA_def_Pose(RoseRNA *rna) {
 		RNA_def_struct_ui_text(pose, "Pose", "A collection of pose channels, including settings for animating bones");
 
 		do {
-			PropertyRNA *bones = RNA_def_property(pose, "bones", PROP_COLLECTION, PROP_NONE);
+			PropertyRNA *bones = RNA_def_property(pose, "bone", PROP_COLLECTION, PROP_NONE);
 			RNA_def_property_collection_sdna(bones, NULL, "channelbase", NULL);
 			RNA_def_property_struct_type(bones, "PoseBone");
 			RNA_def_property_ui_text(bones, "Pose Bones", "Individual pose bones for the armature");

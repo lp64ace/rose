@@ -827,7 +827,7 @@ void IDP_MergeGroup_ex(IDProperty *destination, const IDProperty *source, bool o
 }
 
 bool IDP_AddToGroup(IDProperty *group, IDProperty *property) {
-	ROSE_assert(property->type == IDP_GROUP);
+	ROSE_assert(group->type == IDP_GROUP);
 
 	if (IDP_GetPropertyFromGroup(group, property->name) == NULL) {
 		group->length++;

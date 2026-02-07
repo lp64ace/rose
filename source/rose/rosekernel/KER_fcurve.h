@@ -36,6 +36,7 @@ typedef struct FCurveDescriptor {
  * \{ */
 
 struct FCurve *KER_fcurve_new(void);
+struct FCurve *KER_fcurve_copy(const struct FCurve *fcurve);
 
 void KER_fcurves_free(struct ListBase *list);
 void KER_fcurve_free(struct FCurve *fcurve);
@@ -61,6 +62,8 @@ float KER_fcurve_evaluate(struct PathResolvedRNA *rna, struct FCurve *fcurve, fl
  * should be considered invalid / dangling.
  */
 void KER_fcurve_bezt_resize(struct FCurve *fcurve, int totvert);
+void KER_fcurve_path_set_ex(struct FCurve *fcurve, const char *newpath, bool compile);
+void KER_fcurve_path_set(struct FCurve *fcurve, const char *newpath);
 
 /** \} */
 

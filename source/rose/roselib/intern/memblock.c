@@ -35,7 +35,7 @@ MemBlock *LIB_memory_block_create_ex(size_t elem_size, size_t chunk_size) {
 }
 
 void *LIB_memory_block_alloc(MemBlock *block) {
-	if (block->elem_last < block->elem_next) {
+	if (block->elem_last < block->elem_next || block->elem_last == -1) {
 		block->elem_last = block->elem_next;
 	}
 	block->elem_next++;
@@ -64,16 +64,16 @@ void LIB_memory_block_clear(MemBlock *block, MemblockValFreeFP free_callback) {
 	size_t elem_per_chunk = block->chunk_size / block->elem_size;
 	size_t last_used_chunk = block->elem_next / elem_per_chunk;
 
-	if (free_callback) {
-		for (int i = block->elem_last; i >= block->elem_next; i--) {
-			int chunk_idx = i / elem_per_chunk;
-			int elem_idx = i - elem_per_chunk * chunk_idx;
+	if (free_callback && block->elem_last != -1) {
+		for (size_t i = block->elem_last; block->elem_last >= i && i >= block->elem_next; i--) {
+			size_t chunk_idx = i / elem_per_chunk;
+			size_t elem_idx = i - elem_per_chunk * chunk_idx;
 			void *val = (char *)(block->chunks[chunk_idx]) + block->elem_size * elem_idx;
 			free_callback(val);
 		}
 	}
 
-	for (int i = last_used_chunk + 1; i < block->chunk_length; i++) {
+	for (size_t i = last_used_chunk + 1; i < block->chunk_length; i++) {
 		MEM_SAFE_FREE(block->chunks[i]);
 	}
 
@@ -89,18 +89,18 @@ void LIB_memory_block_clear(MemBlock *block, MemblockValFreeFP free_callback) {
 }
 
 void LIB_memory_block_destroy(MemBlock *block, MemblockValFreeFP free_callback) {
-	int elem_per_chunk = block->chunk_size / block->elem_size;
+	size_t elem_per_chunk = block->chunk_size / block->elem_size;
 
-	if (free_callback) {
-		for (int i = 0; i <= block->elem_last; i++) {
-			int chunk_idx = i / elem_per_chunk;
-			int elem_idx = i - elem_per_chunk * chunk_idx;
+	if (free_callback && block->elem_last != -1) {
+		for (size_t i = 0; i <= block->elem_last; i++) {
+			size_t chunk_idx = i / elem_per_chunk;
+			size_t elem_idx = i - elem_per_chunk * chunk_idx;
 			void *val = (char *)(block->chunks[chunk_idx]) + block->elem_size * elem_idx;
 			free_callback(val);
 		}
 	}
 
-	for (int i = 0; i < block->chunk_length; i++) {
+	for (size_t i = 0; i < block->chunk_length; i++) {
 		MEM_SAFE_FREE(block->chunks[i]);
 	}
 	MEM_SAFE_FREE(block->chunks);
@@ -112,4 +112,33 @@ void *LIB_memory_block_elem_get(MemBlock *block, size_t chunk, size_t elem) {
 	chunk += elem / elem_per_chunk;
 	elem = elem % elem_per_chunk;
 	return POINTER_OFFSET(block->chunks[chunk], block->elem_size * elem);
+}
+
+void LIB_memory_block_iternew(MemBlock *mblk, MemBlockIter *iter) {
+	/* Small copy of the memblock used for better cache coherence. */
+	iter->chunk_list = mblk->chunks;
+	iter->end_index = mblk->elem_next;
+	iter->current_index = 0;
+	iter->chunk_idx = 0;
+	iter->element_offset = 0;
+	iter->element_size = mblk->elem_size;
+	iter->chunk_max_offset = mblk->chunk_max_offset;
+}
+
+void *LIB_memory_block_iterstep(MemBlockIter *iter) {
+	if (iter->current_index == iter->end_index) {
+		return NULL;
+	}
+
+	iter->current_index++;
+
+	void *ptr = (char *)(iter->chunk_list[iter->chunk_idx]) + iter->element_offset;
+
+	iter->element_offset += iter->element_size;
+
+	if (iter->element_offset == iter->chunk_max_offset) {
+		iter->element_offset = 0;
+		iter->chunk_idx++;
+	}
+	return ptr;
 }

@@ -124,7 +124,8 @@ void LIB_freelinkN(ListBase *lb, void *vlink);
  *
  * \return `true` if the Link exists in the ListBase, `false` otherwise.
  */
-bool LIB_haslink(const ListBase *lb, void *vlink);
+bool LIB_haslink(const ListBase *lb, const void *vlink);
+void *LIB_findlink(const ListBase *lb, size_t index);
 
 /**
  * Finds and returns the first Link in a ListBase where;
@@ -148,6 +149,7 @@ void *LIB_findptr(const ListBase *lb, const void *ptr, const size_t offset);
  * \return A pointer to the found Link, or NULL if no match is found.
  */
 void *LIB_findstr(const ListBase *lb, const char *str, const size_t offset);
+void *LIB_findstr_pointer(const ListBase *lb, const char *str, const size_t offset);
 /**
  * Finds and returns the first Link in a ListBase where;
  * The specified sequence of bytes matches a value at a given offset.

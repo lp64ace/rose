@@ -50,6 +50,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::rosefont
 	rose::source::gpu
+	rose::source::rna
 	rose::source::windowmanager
 	
 	# External Library Dependencies

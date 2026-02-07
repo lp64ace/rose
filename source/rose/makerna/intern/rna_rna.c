@@ -16,18 +16,21 @@ ROSE_INLINE void rna_def_struct(RoseRNA *rna) {
 			PropertyRNA *name = RNA_def_property(structrna, "name", PROP_STRING, PROP_NONE);
 			RNA_def_struct_name_property(structrna, name);
 			RNA_def_property_clear_flag(name, PROP_EDITABLE);
+			RNA_def_property_string_funcs(name, "rna_Struct_name_get", "rna_Struct_name_length", NULL);
 			RNA_def_property_ui_text(name, "Name", "Human readable name");
 		} while (false);
 
 		do {
 			PropertyRNA *identifier = RNA_def_property(structrna, "identifier", PROP_STRING, PROP_NONE);
 			RNA_def_property_clear_flag(identifier, PROP_EDITABLE);
+			RNA_def_property_string_funcs(identifier, "rna_Struct_identifier_get", "rna_Struct_identifier_length", NULL);
 			RNA_def_property_ui_text(identifier, "Identifier", "Unique name used in the code and scripting");
 		} while (false);
 
 		do {
 			PropertyRNA *description = RNA_def_property(structrna, "description", PROP_STRING, PROP_NONE);
 			RNA_def_property_clear_flag(description, PROP_EDITABLE);
+			RNA_def_property_string_funcs(description, "rna_Struct_description_get", "rna_Struct_description_length", NULL);
 			RNA_def_property_ui_text(description, "Description", "Description of the Struct's purpose");
 		} while (false);
 
@@ -58,12 +61,14 @@ ROSE_INLINE void rna_def_property(RoseRNA *rna) {
 		do {
 			PropertyRNA *identifier = RNA_def_property(propertyrna, "identifier", PROP_STRING, PROP_NONE);
 			RNA_def_property_clear_flag(identifier, PROP_EDITABLE);
+			RNA_def_property_string_funcs(identifier, "rna_Property_identifier_get", "rna_Property_identifier_length", NULL);
 			RNA_def_property_ui_text(identifier, "Identifier", "Unique name used in the code and scripting");
 		} while (false);
 
 		do {
 			PropertyRNA *description = RNA_def_property(propertyrna, "description", PROP_STRING, PROP_NONE);
 			RNA_def_property_clear_flag(description, PROP_EDITABLE);
+			RNA_def_property_string_funcs(description, "rna_Property_description_get", "rna_Property_description_length", NULL);
 			RNA_def_property_ui_text(description, "Description", "Description of the property for tooltips");
 		} while (false);
 	} while (false);

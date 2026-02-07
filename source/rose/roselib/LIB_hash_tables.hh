@@ -7,6 +7,7 @@
 
 #include "LIB_allocator.hh"
 #include "LIB_memory_utils.hh"
+#include "LIB_session_uuid.h"
 #include "LIB_utildefines.h"
 #include "LIB_vector.hh"
 

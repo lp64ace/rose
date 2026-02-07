@@ -49,11 +49,13 @@ typedef struct Theme {
 	ThemeSpace space_view3d;
 	ThemeSpace space_topbar;
 	ThemeSpace space_statusbar;
-	ThemeSpace space_userpref;
+	ThemeSpace space_properties;
 } Theme;
 
 typedef struct UserDef {
 	char engine[64];
+
+	float view_rotate_sensitivity_turntable;
 
 	ListBase themes;
 } UserDef;
