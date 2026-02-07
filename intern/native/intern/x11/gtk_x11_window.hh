@@ -6,6 +6,11 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
+
 class GTKManagerX11;
 
 class GTKWindowX11 : public GTKWindowInterface {
@@ -19,7 +24,8 @@ class GTKWindowX11 : public GTKWindowInterface {
 	int y;
 	int sizex;
 	int sizey;
-	
+
+	GLXFBConfig pixel_config;
 	XVisualInfo *visual_info;
 	
 public:
@@ -79,6 +85,7 @@ protected:
 	GTKRenderInterface *AllocateRender(int render);
 
     friend class GTKManagerX11;
+	friend class GTKRenderXGL;
 };
 
 #endif

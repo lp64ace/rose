@@ -3,6 +3,8 @@
 #include "gtk_x11_window.hh"
 #include "gtk_x11_window_manager.hh"
 
+#include <stdio.h>
+
 GTKWindowX11::GTKWindowX11(GTKManagerX11 *manager) : GTKWindowInterface(manager), window(), visual_info(NULL) {
 	this->display = manager->display;
 }
@@ -59,15 +61,51 @@ bool GTKWindowX11::InitXIC(GTKManagerX11 *manager) {
 #endif
 
 bool GTKWindowX11::Create(GTKWindowInterface *parent, const char *name, int width, int height, int state) {
-	XSetWindowAttributes xattribs;
+	GTKManagerX11 *manager = static_cast<GTKManagerX11 *>(this->GetManagerInterface());
+
+	XSetWindowAttributes xattribs = {};
 	xattribs.event_mask |= ExposureMask;
 	xattribs.event_mask |= KeyPressMask | KeyReleaseMask;
 	xattribs.event_mask |= PointerMotionMask | ButtonPressMask | ButtonReleaseMask;
 	xattribs.event_mask |= FocusIn | FocusOut | FocusChangeMask;
 	xattribs.event_mask |= Button1MotionMask | Button2MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask;
 	xattribs.event_mask |= VisibilityChangeMask | PropertyChangeMask | SubstructureNotifyMask | MotionNotify;
+
+	this->pixel_config = GTKRenderXGL::XPixelConfigInit(manager, RenderSetting());
+
+	if (!this->pixel_config) {
+		fprintf(stderr, "Invalid GLXFBConfig while creating window.\n");
+    	return false;
+	}
+
+	this->visual_info = glXGetVisualFromFBConfig(display, this->pixel_config);
+	if (this->visual_info == nullptr) {
+		fprintf(stderr, "Invalid VisualInfo while creating window.\n");
+		return 1;
+	}
+
+	Screen* screen = DefaultScreenOfDisplay(display);
+	Window root = RootWindow(display, this->visual_info->screen);
+
+	xattribs.border_pixel = screen->black_pixel;
+	xattribs.background_pixel = screen->white_pixel;
+	xattribs.override_redirect = True;
+	xattribs.colormap = XCreateColormap(display, root, this->visual_info->visual, AllocNone);
 	
-	this->window = XCreateWindow(this->display, XDefaultRootWindow(this->display), 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &xattribs);
+	this->window = XCreateWindow(
+		this->display,
+		root,
+		0,
+		0,
+		width,
+		height,
+		0,
+		this->visual_info->depth,
+		InputOutput,
+		this->visual_info->visual,
+		CWBackPixel | CWColormap | CWBorderPixel | CWEventMask,
+		&xattribs
+	);
 
 	if (!this->window) {
 		return false;
