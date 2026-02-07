@@ -53,6 +53,7 @@ MDeformWeight *KER_defvert_ensure_index(MDeformVert *dvert, int defgroup) {
 	dw_new->weight = 0.0f;
 	dw_new->def_nr = defgroup;
 	/* Group index */
+
 	dvert->totweight++;
 
 	return dw_new;

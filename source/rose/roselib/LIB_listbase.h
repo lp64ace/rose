@@ -125,7 +125,7 @@ void LIB_freelinkN(ListBase *lb, void *vlink);
  * \return `true` if the Link exists in the ListBase, `false` otherwise.
  */
 bool LIB_haslink(const ListBase *lb, void *vlink);
-void *LIB_findlink(ListBase *lb, size_t index);
+void *LIB_findlink(const ListBase *lb, size_t index);
 
 /**
  * Finds and returns the first Link in a ListBase where;

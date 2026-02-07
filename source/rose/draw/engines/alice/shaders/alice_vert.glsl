@@ -1,8 +1,3 @@
-float3 mul_m4_v3(float4x4 mat, float3 vec) {
-    float4 r = mat * float4(vec, 1.0);
-    return r.xyz / r.w;
-}
-
 void main() {
     float3 co = pos;
     float3 no = nor;
@@ -11,10 +6,10 @@ void main() {
     float3 dn = float3(0.0, 0.0, 0.0);
     float contrib = 0.0;
 
-    co = mul_m4_v3(TargetToArmatureMatrix, co);
+    co = (float4x4(TargetToArmatureMatrix) * vec4(co, 1.0)).xyz;
 
     for (int i = 0; i < 4; i++) {
-        if (weight[i] != 0.0 && defgroup[i] >= 0) {
+        if (weight[i] > 0.0 && defgroup[i] >= 0) {
             float4x4 mat = grp_matrices.drw_poseMatrix[defgroup[i]];
             
             dv += weight[i] * ((float4x4(mat) * float4(co, 1.0)).xyz - co);
@@ -29,7 +24,7 @@ void main() {
         no = normalize(dn);
     }
 
-    co = mul_m4_v3(ArmatureToTargetMatrix, co);
+    co = (float4x4(ArmatureToTargetMatrix) * vec4(co, 1.0)).xyz;
 
     gl_Position = ProjectionMatrix * ModelMatrix * float4(co, 1.0);
 

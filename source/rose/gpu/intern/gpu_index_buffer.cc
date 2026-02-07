@@ -260,7 +260,7 @@ void IndexBuf::init(uint indices_len, uint32_t *indices, uint min_index, uint ma
 	/** Count the primitive restart index. */
 	range += 1;
 
-	if (range <= 0xFFFF) {
+	if (range < 0xFFFF) {
 		index_type_ = GPU_INDEX_U16;
 		bool do_clamp_indices = false;
 #	ifdef __APPLE__
@@ -356,7 +356,9 @@ void IndexBuf::squeeze_indices_short(uint min_idx, uint max_idx, PrimType prim_t
 	else {
 		index_base_ = 0;
 		for (uint i = 0; i < index_len_; i++) {
-			ushort_idx[i] = uint16_t(uint_idx[i]);
+			ROSE_assert(uint_idx[i] < USHRT_MAX);
+
+			ushort_idx[i] = static_cast<uint16_t>(uint_idx[i]);
 		}
 	}
 }

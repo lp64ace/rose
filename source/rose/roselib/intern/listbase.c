@@ -233,7 +233,7 @@ bool LIB_haslink(const ListBase *lb, void *vlink) {
 	return false;
 }
 
-void *LIB_findlink(ListBase *lb, size_t index) {
+void *LIB_findlink(const ListBase *lb, size_t index) {
 	Link *link = NULL;
 
 	link = lb->first;

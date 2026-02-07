@@ -79,7 +79,7 @@ ROSE_STATIC GPUVertFormat *extract_weights_format() {
 }
 
 struct MDeformDeviceData {
-	int4 defgroup = int4(0, 0, 0, 0);
+	int4 defgroup = int4(-1, -1, -1, -1);
 	float4 weight = float4(0, 0, 0, 0);
 };
 
@@ -129,6 +129,9 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 		return;
 	}
 
+	size_t total[127];
+	memset(&total, 0, sizeof(total));
+
 	std::atomic<bool> too_many_deform_verts_warning = false;
 
 	/* gather the deform vertices for each vertex. */
@@ -143,10 +146,12 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 				for (const size_t index : dweights.index_range()) {
 					vbo_data[corner].defgroup[index] = dweights[index].def_nr;
 					vbo_data[corner].weight[index] = dweights[index].weight;
+
+					total[vbo_data[corner].defgroup[index]]++;
 				}
 			}
 			else {
-				MDeformWeight top[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+				MDeformWeight top[4] = {{-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}};
 				for (const size_t index : dweights.index_range()) {
 					int m = 0;
 					m = top[1].weight < top[m].weight ? 1 : m;
@@ -160,6 +165,8 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 				for (const size_t index : rose::IndexRange(4)) {
 					vbo_data[corner].defgroup[index] = top[index].def_nr;
 					vbo_data[corner].weight[index] = top[index].weight;
+
+					total[vbo_data[corner].defgroup[index]]++;
 				}
 
 				too_many_deform_verts_warning.store(true, std::memory_order_relaxed);

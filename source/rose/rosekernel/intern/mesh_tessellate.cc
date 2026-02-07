@@ -46,7 +46,6 @@ ROSE_INLINE void mesh_calc_tessellation_for_face_impl(const Span<int> corner_ver
 			}
 		} break;
 		default: {
-
 			float axis_mat[3][3];
 
 			if (face_normal == false) {
