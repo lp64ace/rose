@@ -7,7 +7,7 @@
 static GLXContext SharedContextHandle = {};
 static int SharedContextCounter = {};
 
-GTKRenderXGL::GTKRenderXGL(GTKWindowX11 *window) : GTKRenderInterface(window), context(), pixel_config() {
+GTKRenderXGL::GTKRenderXGL(GTKWindowX11 *window) : GTKRenderInterface(window), context() {
 	this->visual_info = NULL;
 }
 
@@ -19,33 +19,13 @@ GTKRenderXGL::~GTKRenderXGL() {
 			}
 		}
 	}
-	
-	MEM_SAFE_FREE(this->visual_attribs);
 }
 
 bool GTKRenderXGL::Create(RenderSetting setting) {
 	GTKWindowX11 *window = static_cast<GTKWindowX11 *>(this->GetWindowInterface());
 	GTKManagerX11 *manager = static_cast<GTKManagerX11 *>(window->GetManagerInterface());
 	
-	int i = 0;
-	this->visual_attribs = static_cast<int *>(MEM_mallocN(sizeof(int) * 16, "VisualAttributes"));
-	this->visual_attribs[i++] = GLX_RGBA;
-	this->visual_attribs[i++] = GLX_DOUBLEBUFFER;
-	this->visual_attribs[i++] = GLX_RED_SIZE;
-	this->visual_attribs[i++] = setting.color_bits;
-	this->visual_attribs[i++] = GLX_GREEN_SIZE;
-	this->visual_attribs[i++] = setting.color_bits;
-	this->visual_attribs[i++] = GLX_BLUE_SIZE;
-	this->visual_attribs[i++] = setting.color_bits;
-	this->visual_attribs[i++] = GLX_ALPHA_SIZE;
-	this->visual_attribs[i++] = setting.color_bits;
-	this->visual_attribs[i++] = GLX_DEPTH_SIZE;
-	this->visual_attribs[i++] = setting.depth_bits;
-	this->visual_attribs[i++] = GLX_STENCIL_SIZE;
-	this->visual_attribs[i++] = setting.stencil_bits;
-	this->visual_attribs[i++] = None;
-	
-	this->visual_info = glXChooseVisual(manager->display, XDefaultScreen(manager->display), this->visual_attribs);
+	this->visual_info = glXGetVisualFromFBConfig(manager->display, window->pixel_config);
 	
 	if (!this->visual_info) {
 		return false;
@@ -58,10 +38,6 @@ bool GTKRenderXGL::Create(RenderSetting setting) {
 		return false;
 	}
 	
-	if (!XPixelConfigInit(setting)) {
-		return false;
-	}
-	
 	int attribs[] = {
 		GLX_CONTEXT_MAJOR_VERSION_ARB, setting.major,
 		GLX_CONTEXT_MINOR_VERSION_ARB, setting.minor,
@@ -69,7 +45,7 @@ bool GTKRenderXGL::Create(RenderSetting setting) {
 		None
 	};
 	
-	this->context = manager->glxCreateContextAttribsARB(manager->display, this->pixel_config, SharedContextHandle, true, attribs);
+	this->context = manager->glxCreateContextAttribsARB(manager->display, window->pixel_config, SharedContextHandle, true, attribs);
 	
 	if (!this->context) {
 		return false;
@@ -119,10 +95,7 @@ bool GTKRenderXGL::SwapInterval(int interval) {
 	return false;
 }
 
-bool GTKRenderXGL::XPixelConfigInit(RenderSetting setting) {
-	GTKWindowX11 *window = static_cast<GTKWindowX11 *>(this->GetWindowInterface());
-	GTKManagerX11 *manager = static_cast<GTKManagerX11 *>(window->GetManagerInterface());
-	
+GLXFBConfig GTKRenderXGL::XPixelConfigInit(GTKManagerX11 *manager, RenderSetting setting) {
 	int attribs[64], nattribs = 0;
 		
 	attribs[nattribs++] = GLX_X_RENDERABLE;
@@ -152,13 +125,14 @@ bool GTKRenderXGL::XPixelConfigInit(RenderSetting setting) {
 	attribs[nattribs++] = setting.stencil_bits;
 	attribs[nattribs++] = None;
 	
-	int count, best = 0;
+	int count;
 	
 	int screen = XDefaultScreen(manager->display);
 	GLXFBConfig* configs = manager->glxChooseFBConfig(manager->display, screen, attribs, &count);
+	GLXFBConfig best = configs[0];
 	
 	if (!count) {
-		return false;
+		return NULL;
 	}
 
 	for (int index = 0; index < count; index++) {
@@ -190,15 +164,14 @@ bool GTKRenderXGL::XPixelConfigInit(RenderSetting setting) {
 			glXGetFBConfigAttrib(manager->display, configs[index], GLX_STENCIL_SIZE, &stencilSize);
 
 			if (sampleBuffer && samples > -1) {
-				best = index;
+				best = configs[index];
 			}
 		}
 
 		XFree(visualInfo);
 	}
-	
-	this->pixel_config = configs[0];
+
 	XFree(configs);
 	
-	return true;
+	return best;
 }

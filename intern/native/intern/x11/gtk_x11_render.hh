@@ -16,10 +16,8 @@ class GTKManagerX11;
 
 class GTKRenderXGL final : public GTKRenderInterface {
 	GLXContext context;
-	GLXFBConfig pixel_config;
 	
 	XVisualInfo *visual_info;
-	int *visual_attribs;
 	
 public:
 	GTKRenderXGL(GTKWindowX11 *window);
@@ -29,9 +27,8 @@ public:
 	bool MakeCurrent(void);
 	bool SwapBuffers(void);
 	bool SwapInterval(int interval);
-	
-private:
-	bool XPixelConfigInit(RenderSetting setting);
+
+	static GLXFBConfig XPixelConfigInit(GTKManagerX11 *manager, RenderSetting setting);
 	
 };
 
