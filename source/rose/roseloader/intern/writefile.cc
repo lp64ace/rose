@@ -6,6 +6,7 @@
 #include "LIB_assert.h"
 #include "LIB_fileops.h"
 #include "LIB_listbase.h"
+#include "LIB_memory_utils.hh"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
@@ -197,11 +198,6 @@ void RLO_write_struct_by_name(RoseWriter *writer, const char *struct_name, const
 	writestruct_nr(writer->wd, RLO_CODE_DATA, struct_nr, 1, data);
 }
 
-#define RLO_write_struct(writer, _struct, data)                            \
-	do {                                                                   \
-		RLO_write_struct_by_name(writer, #_struct, (const _struct *)data); \
-	} while (false)
-
 void RLO_write_raw(RoseWriter *writer, size_t size, const void *ptr) {
 	writedata(writer->wd, RLO_CODE_DATA, size, ptr);
 }
@@ -242,6 +238,91 @@ void RLO_write_string(struct RoseWriter *writer, const char *ptr) {
 	RLO_write_raw(writer, LIB_strlen(ptr) + 1, ptr);
 }
 
+void rlo_write_id_struct(struct RoseWriter *writer, const char *struct_name, const void *id_address, const ID *id) {
+	uint64_t struct_nr = DNA_sdna_struct_id(writer->wd->dna, struct_name);
+
+	writestruct_at_address_nr(writer->wd, GS(id->name), struct_nr, 1, id_address, id);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name ID Writing (Private)
+ * \{ */
+
+/**
+ * Specific code to prepare IDs to be written.
+ *
+ * Required for writing properly embedded IDs currently.
+ *
+ * \note Once there is a better generic handling of embedded IDs,
+ * this may go back to private code in `writefile.cc`.
+ */
+struct RLO_Write_IDBuffer {
+private:
+	static constexpr int static_size = 8192;
+	rose::DynamicStackBuffer<static_size> buffer_;
+
+public:
+	RLO_Write_IDBuffer(ID &id, bool is_placeholder);
+	RLO_Write_IDBuffer(ID &id, RoseWriter *writer);
+
+	ID *get() {
+		return static_cast<ID *>(buffer_.buffer());
+	};
+};
+
+RLO_Write_IDBuffer::RLO_Write_IDBuffer(ID &id, const bool is_placeholder) : buffer_(is_placeholder ? sizeof(ID) : KER_idtype_get_info_from_id(&id)->size, alignof(ID)) {
+	const IDTypeInfo *id_type = KER_idtype_get_info_from_id(&id);
+	ID *temp_id = static_cast<ID *>(buffer_.buffer());
+
+	/* Copy ID data itself into buffer, to be able to freely modify it. */
+
+	if (is_placeholder) {
+		/* For placeholders (references to linked data), zero-initialize, and only explicitly copy the
+		 * very small subset of required data. */
+		*temp_id = ID{};
+		temp_id->lib = id.lib;
+		LIB_strcpy(temp_id->name, ARRAY_SIZE(temp_id->name), id.name);
+		temp_id->flag = id.flag;
+		temp_id->uuid = id.uuid;
+		return;
+	}
+
+	/* Regular 'full' ID writing, copy everything, then clear some runtime data irrelevant in the
+	 * blendfile. */
+	memcpy(temp_id, &id, id_type->size);
+
+	/* Clear runtime data to reduce false detection of changed data in undo/redo context. */
+	temp_id->tag = 0;
+	temp_id->user = 0;
+	/**
+	 * Those listbase data change every time we add/remove an ID, and also often when
+	 * renaming one (due to re-sorting). This avoids generating a lot of false 'is changed'
+	 * detections between undo steps.
+	 */
+	temp_id->prev = nullptr;
+	temp_id->next = nullptr;
+	/** 
+	 * Those runtime pointers should never be set during writing stage, but just in case clear
+	 * them too.
+	 */
+	temp_id->orig_id = nullptr;
+	temp_id->newid = nullptr;
+}
+
+RLO_Write_IDBuffer::RLO_Write_IDBuffer(ID &id, RoseWriter *writer) : RLO_Write_IDBuffer(id, false) {
+}
+
+ROSE_STATIC void write_id(RoseWriter *writer, ID *id) {
+	const IDTypeInfo *id_type = KER_idtype_get_info_from_id(id);
+
+	if (id_type->write != nullptr) {
+		RLO_Write_IDBuffer id_buffer{*id, false};
+		id_type->write(writer, id_buffer.get(), id);
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -258,6 +339,14 @@ ROSE_STATIC void write_userdef(RoseWriter *writer, const UserDef *userdef) {
 	LISTBASE_FOREACH(const Theme *, theme, &userdef->themes) {
 		RLO_write_struct(writer, Theme, theme);
 	}
+}
+
+ROSE_STATIC void write_libraries(RoseWriter *writer, Main *main) {
+	ID *id;
+	FOREACH_MAIN_ID_BEGIN(main, id) {
+		write_id(writer, id);
+	}
+	FOREACH_MAIN_ID_END;
 }
 
 ROSE_STATIC void write_end(RoseWriter *writer) {
@@ -282,6 +371,7 @@ ROSE_STATIC bool write_file_handle(Main *main, WriteWrap *ww, int flag) {
 
 	write_dna(&writer, wd->dna);
 	write_userdef(&writer, &U);
+	write_libraries(&writer, main);
 	write_end(&writer);
 
 	status = !wd->validation.error;

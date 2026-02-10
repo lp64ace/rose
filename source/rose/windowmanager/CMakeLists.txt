@@ -48,6 +48,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::rosemesh
 	rose::source::rosefont
+	rose::source::roseloader
 	rose::source::gpu
 	rose::source::draw
 	rose::source::io::fbx
