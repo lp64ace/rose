@@ -242,47 +242,44 @@ bool KER_animsys_rna_path_resolve(PointerRNA *ptr, const char *path, int index, 
 	return true;
 }
 
+bool KER_animsys_rna_static_path_resolve(PointerRNA *ptr, StaticPathRNA *path, int index, PathResolvedRNA *result) {
+	if (path == NULL) {
+		return false;
+	}
+
+	/** The path is not the same as the already resolved one, resolve the property again! */
+	if (!RNA_static_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
+		return false;
+	}
+
+	if (ptr->owner == NULL || !RNA_property_animateable(&result->ptr, result->property)) {
+		return false;
+	}
+
+	int length = RNA_property_array_length(&result->ptr, result->property);
+	if (length && index >= length) {
+		return false;
+	}
+
+	result->index = length ? index : -1;
+	return true;
+}
+
 bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolvedRNA *result) {
+#if 0
 	if (fcurve->runtime.static_path != NULL) {
-		StaticPathRNA *path = (StaticPathRNA *)fcurve->runtime.static_path;
-
-		if (!RNA_static_path_resolve_property(ptr, path, &result->ptr, &result->property)) {
-			fprintf(stderr, "[Kernel] Invalid path, ID = '%s', '%s[%d]'.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index);
-			return false;
+		if (KER_animsys_rna_static_path_resolve(ptr, fcurve->runtime.static_path, fcurve->index, result)) {
+			return true;
 		}
 
-		if (ptr->owner == NULL || !RNA_property_animateable(&result->ptr, result->property)) {
-			return false;
-		}
-
-		int length = RNA_property_array_length(&result->ptr, result->property);
-		if (length && fcurve->index >= length) {
-			fprintf(stderr, "[Kernel] Invalid array index, ID = '%s', '%s[%d]', array length is %d.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index, length - 1);
-			return false;
-		}
-
-		result->index = length ? fcurve->index : -1;
-		return true;
+		/**
+		 * Fallthrough for better error management since static path cannot be printed!
+		 * \note This is costly but it should never happen in production!
+		 */
 	}
-	else {
-		if (!RNA_path_can_do_static_compilation(ptr, fcurve->path)) {
-			return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
-		}
+#endif
 
-		fcurve->runtime.static_path = RNA_path_new(ptr, fcurve->path, NULL, NULL);
-
-		if (!fcurve->runtime.static_path) {
-			/**
-			 * Since #RNA_path_can_do_static_compilation returned true, #RNA_path_new should 
-			 * not return NULL!
-			 */
-			ROSE_assert_unreachable();
-
-			return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
-		}
-	}
-
-	return KER_animsys_rna_curve_resolve(ptr, fcurve, result);
+	return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
 }
 
 /** \} */

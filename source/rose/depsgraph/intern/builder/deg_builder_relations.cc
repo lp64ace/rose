@@ -281,20 +281,12 @@ void DepsgraphRelationBuilder::build_animdata_curves_targets(ID *id, ComponentKe
 	for (int curve = 0; curve < totcurve; curve++) {
 		FCurve *fcu = curves[curve];
 
-		PointerRNA ptr;
-		PropertyRNA *prop;
-		if (fcu->runtime.static_path) {
-			if (!RNA_static_path_resolve_property(&id_ptr, fcu->runtime.static_path, &ptr, &prop)) {
-				continue;
-			}
-		}
-		else {
-			if (!RNA_path_resolve_property(&id_ptr, fcu->path, &ptr, &prop)) {
-				continue;
-			}
+		PathResolvedRNA resolved;
+		if (!KER_animsys_rna_curve_resolve(&id_ptr, fcu, &resolved)) {
+			continue;
 		}
 
-		Node *node_to = rna_node_query_.find_node(&ptr, prop, RNAPointerSource::ENTRY);
+		Node *node_to = rna_node_query_.find_node(&resolved.ptr, resolved.property, RNAPointerSource::ENTRY);
 		if (node_to == nullptr) {
 			continue;
 		}
