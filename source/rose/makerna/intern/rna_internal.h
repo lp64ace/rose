@@ -117,7 +117,20 @@ void RNA_def_rna(struct RoseRNA *rna);
 void RNA_def_ID(struct RoseRNA *rna);
 void RNA_def_Object(struct RoseRNA *rna);
 void RNA_def_Pose(struct RoseRNA *rna);
+void RNA_def_space(struct RoseRNA *rna);
 void RNA_def_wm(struct RoseRNA *rna);
+
+/* -------------------------------------------------------------------- */
+/** \name IDProperty RNA Definition Functions
+ * \{ */
+
+void rna_IDPArray_begin(struct CollectionPropertyIterator *iter, struct PointerRNA *ptr);
+void rna_IDPArray_length(struct PointerRNA *ptr);
+
+struct IDProperty **rna_PropertyGroup_idprops(struct PointerRNA *ptr);
+struct StructRNA *rna_PropertyGroup_refine(struct PointerRNA *ptr);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Definition Functions
@@ -130,6 +143,11 @@ struct PropertyDefRNA *rna_find_struct_property_def(struct StructRNA *nstruct, s
 /* -------------------------------------------------------------------- */
 /** \name Iteraton
  * \{ */
+
+void rna_iterator_array_begin(CollectionPropertyIterator *iter, PointerRNA *ptr, void *data, size_t itemsize, int64_t length, bool free_ptr, IteratorSkipFunc skip);
+void rna_iterator_array_next(CollectionPropertyIterator *iter);
+void *rna_iterator_array_get(CollectionPropertyIterator *iter);
+void rna_iterator_array_end(CollectionPropertyIterator *iter);
 
 void rna_iterator_listbase_begin(struct CollectionPropertyIterator *iter, struct PointerRNA *ptr, struct ListBase *lb, IteratorSkipFunc skip);
 void rna_iterator_listbase_next(struct CollectionPropertyIterator *iter);

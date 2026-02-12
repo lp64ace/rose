@@ -74,7 +74,7 @@ Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, const i
 }
 
 Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
-	return ED_screen_add_ex(main, name, rect, NULL, 2);
+	return ED_screen_add_ex(main, name, rect, NULL, 1);
 }
 
 /** \} */

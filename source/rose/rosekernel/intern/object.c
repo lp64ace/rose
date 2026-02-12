@@ -70,7 +70,7 @@ bool KER_object_modifier_stack_copy(Object *ob_dst, const Object *ob_src, const 
 /** \name Data-Block Functions
  * \{ */
 
-ROSE_STATIC void object_init_data(struct ID *id) {
+ROSE_INLINE void object_init_data(struct ID *id) {
 	Object *ob = (Object *)id;
 	
 	ob->type = OB_EMPTY;
@@ -90,7 +90,7 @@ ROSE_INLINE void copy_object_pose(Object *obnew, const Object *obold, const int 
 	KER_pose_copy_data(&obnew->pose, obold->pose, flag);
 }
 
-ROSE_STATIC void object_copy_data(struct Main *main, struct ID *dst, const struct ID *src, int flag) {
+ROSE_INLINE void object_copy_data(struct Main *main, struct ID *dst, const struct ID *src, int flag) {
 	const Object *ob_src = (const Object *)src;
 	Object *ob_dst = (Object *)dst;
 
@@ -109,7 +109,7 @@ ROSE_STATIC void object_copy_data(struct Main *main, struct ID *dst, const struc
 	KER_object_modifier_stack_copy(ob_dst, ob_src, true, flag_subdata);
 }
 
-ROSE_STATIC void object_free_data(struct ID *id) {
+ROSE_INLINE void object_free_data(struct ID *id) {
 	Object *ob = (Object *)id;
 
 	KER_object_free_modifiers(ob, LIB_ID_CREATE_NO_USER_REFCOUNT);
@@ -120,12 +120,12 @@ ROSE_STATIC void object_free_data(struct ID *id) {
 	}
 }
 
-ROSE_STATIC void library_foreach_modifiersForeachIDLink(void *user_data, Object *object, ID **id_pointer, const int cb_flag) {
+ROSE_INLINE void library_foreach_modifiersForeachIDLink(void *user_data, Object *object, ID **id_pointer, const int cb_flag) {
 	struct LibraryForeachIDData *data = (struct LibraryForeachIDData *)user_data;
 	KER_LIB_FOREACHID_PROCESS_FUNCTION_CALL(data, KER_lib_query_foreachid_process(data, id_pointer, cb_flag));
 }
 
-ROSE_STATIC void object_foreach_id(struct ID *id, struct LibraryForeachIDData *data) {
+ROSE_INLINE void object_foreach_id(struct ID *id, struct LibraryForeachIDData *data) {
 	Object *ob = (Object *)id;
 	
 	/* object data special case */
@@ -144,6 +144,29 @@ ROSE_STATIC void object_foreach_id(struct ID *id, struct LibraryForeachIDData *d
 	KER_LIB_FOREACHID_PROCESS_IDSUPER(data, ob->track, IDWALK_CB_NEVER_SELF);
 
 	KER_LIB_FOREACHID_PROCESS_FUNCTION_CALL(data, KER_modifiers_foreach_ID_link(ob, library_foreach_modifiersForeachIDLink, data));
+}
+
+/**
+ * typedef void (*IDTypeRoseWriteFunction)(struct RoseWriter *writer, struct ID *id, const void *address);
+ * typedef void (*IDTypeRoseReadDataFunction)(struct RoseDataReader *reader, struct ID *id);
+ */
+
+ROSE_INLINE void object_write(RoseWriter *writer, ID *id, const void *address) {
+	Object *ob = (Object *)id;
+
+	// Write pose!
+
+	LISTBASE_FOREACH(ModifierData *, md, &ob->modifiers) {
+		// Write modifiers!
+	}
+
+	memset(&ob->runtime, 0, sizeof(Object_Runtime));
+}
+
+ROSE_INLINE void object_read_data(RoseDataReader *reader, ID *id) {
+	Object *ob = (Object *)id;
+
+
 }
 
 ROSE_STATIC void object_init(Object *ob, int type) {

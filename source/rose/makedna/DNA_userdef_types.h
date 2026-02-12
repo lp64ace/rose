@@ -46,6 +46,7 @@ typedef struct Theme {
 	ThemeUI tui;
 
 	ThemeSpace space_empty;
+	ThemeSpace space_file;
 	ThemeSpace space_view3d;
 	ThemeSpace space_topbar;
 	ThemeSpace space_statusbar;

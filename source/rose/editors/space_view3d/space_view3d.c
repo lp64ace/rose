@@ -173,7 +173,7 @@ void ED_spacetype_view3d() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->layout = view3d_main_region_layout;
+		art->layout = NULL;
 		art->draw = view3d_main_region_draw;
 		art->init = view3d_main_region_init;
 		art->exit = ED_region_default_exit;

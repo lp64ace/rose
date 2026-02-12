@@ -45,6 +45,28 @@ typedef struct PathResolvedRNA {
 
 typedef bool (*IteratorSkipFunc)(struct CollectionPropertyIterator *iter, void *data);
 
+typedef struct ArrayIterator {
+	char *ptr;
+	/** Past the last valid pointer, only for comparisons, ignores skipped values. */
+	char *endptr;
+	/** Will be freed if set. */
+	void *free_ptr;
+	int itemsize;
+
+	/**
+	 * Array length with no skip functions applied,
+	 * take care not to compare against index from animsys or Python indices.
+	 */
+	int length;
+
+	/**
+	 * Optional skip function,
+	 * when set the array as viewed by rna can contain only a subset of the members.
+	 * this changes indices so quick array index lookups are not possible when skip function is used.
+	 */
+	IteratorSkipFunc skip;
+} ArrayIterator;
+
 typedef struct ListBaseIterator {
 	struct Link *link;
 	int flag;
@@ -57,6 +79,7 @@ typedef struct CollectionPropertyIterator {
 	struct PropertyRNA *property;
 
 	union {
+		ArrayIterator array;
 		ListBaseIterator listbase;
 		void *custom;
 	} internal;

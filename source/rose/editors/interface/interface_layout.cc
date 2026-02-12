@@ -2,6 +2,8 @@
 
 #include "DNA_screen_types.h"
 
+#include "KER_screen.h"
+
 #include "UI_interface.h"
 
 #include "LIB_array.hh"
@@ -163,6 +165,18 @@ uiLayout *UI_layout_grid(uiLayout *parent, int columns, bool evenr, bool evenc) 
 	
 	UI_block_layout_set_current(layout->root->block, layout);
 	return layout;
+}
+
+uiBlock *UI_layout_block(uiLayout *layout) {
+	return layout->root->block;
+}
+
+void UI_layout_scale_x_set(uiLayout *layout, float scale) {
+	layout->scale[0] = scale;
+}
+
+void UI_layout_scale_y_set(uiLayout *layout, float scale) {
+	layout->scale[1] = scale;
 }
 
 void UI_block_layout_free(uiBlock *block) {
@@ -471,14 +485,14 @@ ROSE_STATIC void ui_item_scale(uiLayout *layout, const float scale[2]) {
 	}
 }
 
-ROSE_INLINE int spaces_after_column_item(const uiLayout *layout, const uiItem *i1, const uiItem *i2) {
+ROSE_INLINE int spaces_after_col_item(const uiLayout *layout, const uiItem *i1, const uiItem *i2) {
 	if (i1 == NULL || i2 == NULL) {
 		return 0;
 	}
 	return 1;
 }
 
-ROSE_INLINE void ui_item_estimate_column(uiLayout *layout) {
+ROSE_INLINE void ui_item_estimate_col(uiLayout *layout) {
 	layout->w = 0;
 	layout->h = 0;
 
@@ -489,7 +503,7 @@ ROSE_INLINE void ui_item_estimate_column(uiLayout *layout) {
 		layout->w = ROSE_MAX(layout->w, w);
 		layout->h = layout->h + h;
 
-		const int cnt = spaces_after_column_item(layout, nested, nested->next);
+		const int cnt = spaces_after_col_item(layout, nested, nested->next);
 		layout->h = layout->h + layout->space * cnt;
 	}
 }
@@ -593,7 +607,7 @@ ROSE_INLINE void ui_item_estimate_grid(uiLayout *layout) {
 }
 
 ROSE_INLINE void ui_item_estimate_root(uiLayout *layout) {
-	ui_item_estimate_column(layout);
+	ui_item_estimate_col(layout);
 }
 
 ROSE_STATIC void ui_item_estimate(uiItem *vitem) {
@@ -621,7 +635,7 @@ ROSE_STATIC void ui_item_estimate(uiItem *vitem) {
 
 		switch (item->type) {
 			ESTIMATE(ITEM_LAYOUT_ROW, ui_item_estimate_row(item));
-			ESTIMATE(ITEM_LAYOUT_COL, ui_item_estimate_column(item));
+			ESTIMATE(ITEM_LAYOUT_COL, ui_item_estimate_col(item));
 			ESTIMATE(ITEM_LAYOUT_GRID, ui_item_estimate_grid(item));
 			ESTIMATE(ITEM_LAYOUT_ROOT, ui_item_estimate_root(item));
 		}
@@ -637,7 +651,7 @@ ROSE_STATIC void ui_item_estimate(uiItem *vitem) {
 	}
 }
 
-ROSE_INLINE void ui_item_layout_column(uiLayout *layout) {
+ROSE_INLINE void ui_item_layout_col(uiLayout *layout) {
 	int x = layout->x, y = layout->y;
 
 	int w, h;
@@ -646,7 +660,7 @@ ROSE_INLINE void ui_item_layout_column(uiLayout *layout) {
 
 		y -= h;
 		ui_item_position(nested, x, y, layout->w, h);
-		const int cnt = spaces_after_column_item(layout, nested, nested->next);
+		const int cnt = spaces_after_col_item(layout, nested, nested->next);
 		y -= cnt * layout->space;
 	}
 
@@ -735,7 +749,7 @@ ROSE_INLINE void ui_item_layout_grid(uiLayout *layout) {
 }
 
 ROSE_INLINE void ui_item_layout_root(uiLayout *layout) {
-	ui_item_layout_column(layout);	// default
+	ui_item_layout_col(layout);	// default
 }
 
 ROSE_STATIC void ui_item_layout(uiItem *vitem) {
@@ -753,7 +767,7 @@ ROSE_STATIC void ui_item_layout(uiItem *vitem) {
 
 		switch (item->type) {
 			LAYOUT(ITEM_LAYOUT_ROW, ui_item_layout_row(item));
-			LAYOUT(ITEM_LAYOUT_COL, ui_item_layout_column(item));
+			LAYOUT(ITEM_LAYOUT_COL, ui_item_layout_col(item));
 			LAYOUT(ITEM_LAYOUT_GRID, ui_item_layout_grid(item));
 			LAYOUT(ITEM_LAYOUT_ROOT, ui_item_layout_root(item));
 		}
@@ -810,6 +824,54 @@ void UI_layout_estimate(uiLayout *layout, int *r_w, int *r_h) {
 	if (r_h) {
 		*r_h = layout->h;
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Layout Draw
+ * \{ */
+
+static void ui_paneltype_draw_impl(rContext *C, PanelType *pt, uiLayout *layout, bool show_header) {
+	uiBlock *block = UI_layout_block(layout);
+	Panel *panel = KER_panel_new(pt);
+	
+	uiItem *item_last = LIB_listbase_is_empty(&layout->items) ? NULL : (uiItem *)layout->items.last;
+
+	if (show_header) {
+		uiLayout *row = UI_layout_row(layout, BORDERPADDING);
+		if (pt->draw_header) {
+			panel->layout = row;
+			pt->draw_header(C, panel);
+			panel->layout = NULL;
+		}
+	}
+
+	panel->layout = layout;
+	pt->draw(C, panel);
+	panel->layout = NULL;
+	ROSE_assert(panel->runtime.custom_data_ptr == NULL);
+
+	KER_panel_free(panel);
+
+	LISTBASE_FOREACH(LinkData *, link, &pt->children) {
+		PanelType *child = (PanelType *)link->data;
+
+		if (child->poll == NULL || child->poll(C, child)) {
+			/* Add space if something was added to the layout. */
+			if (!LIB_listbase_is_empty(&layout->items) && item_last != (uiItem *)layout->items.last) {
+				uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, layout->space, layout->space, NULL, UI_POINTER_NIL, 0, 0, 0);
+				item_last = (uiItem *)layout->items.last;
+			}
+
+			uiLayout *col = UI_layout_col(layout, BORDERPADDING);
+			ui_paneltype_draw_impl(C, child, col, true);
+		}
+	}
+}
+
+void UI_paneltype_draw(rContext *C, PanelType *pt, uiLayout *layout) {
+	ui_paneltype_draw_impl(C, pt, layout, false);
 }
 
 /** \} */

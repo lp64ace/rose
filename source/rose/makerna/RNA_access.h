@@ -135,6 +135,14 @@ int RNA_property_float_clamp(struct PointerRNA *ptr, struct PropertyRNA *propert
 
 /* string */
 
+void RNA_property_string_get(struct PointerRNA *ptr, struct PropertyRNA *property, char *value);
+void RNA_property_string_set(struct PointerRNA *ptr, struct PropertyRNA *property, const char *value);
+int RNA_property_string_length(struct PointerRNA *ptr, struct PropertyRNA *property);
+
+void RNA_string_get(struct PointerRNA *ptr, const char *name, char *value);
+void RNA_string_set(struct PointerRNA *ptr, const char *name, const char *value);
+int RNA_string_length(struct PointerRNA *ptr, const char *name);
+
 int RNA_property_string_max_length(struct PropertyRNA *property);
 
 /** \} */
@@ -155,6 +163,9 @@ struct PropertyRNA *RNA_struct_type_find_property(struct StructRNA *srna, const 
  * Returns the IDProperty group stored in the given PointerRNA's ID, or NULL if none.
  */
 struct IDProperty *RNA_struct_idprops(struct PointerRNA *ptr);
+
+bool RNA_struct_property_is_set_ex(struct PointerRNA *ptr, const char *identifier);
+bool RNA_struct_property_is_set(struct PointerRNA *ptr, const char *identifier);
 
 /** \} */
 

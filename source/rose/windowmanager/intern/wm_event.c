@@ -658,7 +658,15 @@ void wm_event_do_depsgraph(rContext *C, bool force_visible_tag) {
 	/* Update all the dependency graphs of visible view layers. */
 	LISTBASE_FOREACH(wmWindow *, win, &wm->windows) {
 		Scene *scene = WM_window_get_active_scene(win);
+		if (!scene) {
+			continue;
+		}
+
 		ViewLayer *view_layer = KER_view_layer_default_view(scene);
+		if (!view_layer) {
+			continue;
+		}
+
 		Main *main = CTX_data_main(C);
 
 		Depsgraph *depsgraph = KER_scene_ensure_depsgraph(main, scene, view_layer);

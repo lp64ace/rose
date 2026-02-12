@@ -542,13 +542,32 @@ void DRW_draw_view(const rContext *C) {
 		return;
 	}
 
-	struct WindowManager *wm = CTX_wm_manager(C);
+	Scene *scene = CTX_data_scene(C);
+
+	if (!scene) {
+		/** what the fuck are we supposed to render anyway! */
+		return;
+	}
+
+	ViewLayer *view_layer = CTX_data_view_layer(C);
+
+	if (!view_layer) {
+		/** what the fuck are we supposed to render anyway! */
+		return;
+	}
 
 	Depsgraph *depsgraph = CTX_data_expect_evaluated_depsgraph(C);
 
 	DRW_render_context_enable();
 	DRW_draw_render_loop(depsgraph, region, viewport);
 	DRW_render_context_disable();
+
+	struct WindowManager *wm = CTX_wm_manager(C);
+
+	/**
+	 * We have changed the rendering context, we need ot invalidate the 
+	 * #drawable window of the WindowManager too!
+	 */
 
 	wm_window_reset_drawable(wm);
 }

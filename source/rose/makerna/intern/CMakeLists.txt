@@ -43,6 +43,7 @@ set(RUN_SRC
 	rna_pose_runtime.c
 	rna_rna_runtime.c
 	rna_rna_runtime.cc
+	rna_space_runtime.c
 	rna_wm_runtime.c
 )
 
@@ -54,6 +55,7 @@ set(IN_SRC
 	rna_ob.c
 	rna_pose.c
 	rna_rna.c
+	rna_space.c
 	rna_wm.c
 
 )

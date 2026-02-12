@@ -63,6 +63,35 @@ void UI_view2d_region_reinit(View2D *v2d, int type, int winx, int winy) {
 			v2d->keepofs = V2D_LOCKOFS_Y;
 			v2d->scroll = 0;
 		} break;
+		case V2D_COMMONVIEW_PANELS_UI: {
+			/* for now, aspect ratio should be maintained,
+			 * and zoom is clamped within sane default limits */
+			v2d->keepzoom = (V2D_KEEPASPECT | V2D_LIMITZOOM | V2D_KEEPZOOM);
+			v2d->minzoom = 0.5f;
+			v2d->maxzoom = 2.0f;
+
+			v2d->align = (V2D_ALIGN_NO_NEG_X | V2D_ALIGN_NO_POS_Y);
+			v2d->keeptot = V2D_KEEPTOT_BOUNDS;
+
+			/* NOTE: scroll is being flipped in #ED_region_panels() drawing. */
+			v2d->scroll |= (V2D_SCROLL_HORIZONTAL_HIDE | V2D_SCROLL_VERTICAL_HIDE);
+
+			if (!init) {
+				const float panelzoom = 1.0f;
+
+				v2d->tot.xmin = 0.0f;
+				v2d->tot.xmax = winx;
+
+				v2d->tot.ymax = 0.0f;
+				v2d->tot.ymin = -winy;
+
+				v2d->cur.xmin = 0.0f;
+				v2d->cur.xmax = winx * panelzoom;
+
+				v2d->cur.ymax = 0.0f;
+				v2d->cur.ymin = -winy * panelzoom;
+			}
+		} break;
 		default:
 			break;
 	}

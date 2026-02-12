@@ -27,6 +27,7 @@ RNAProcessItem RNAItems[] = {
 	{.filename = "rna_id.c", .define = RNA_def_ID},
 	{.filename = "rna_ob.c", .define = RNA_def_Object},
 	{.filename = "rna_pose.c", .define = RNA_def_Pose},
+	{.filename = "rna_space.c", .define = RNA_def_space},
 	{.filename = "rna_wm.c", .define = RNA_def_wm},
 };
 

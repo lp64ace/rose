@@ -1,6 +1,7 @@
 #ifndef LIB_LINKLIST_H
 #define LIB_LINKLIST_H
 
+#include "LIB_alloca.h"
 #include "LIB_utildefines.h"
 
 #ifdef __cplusplus

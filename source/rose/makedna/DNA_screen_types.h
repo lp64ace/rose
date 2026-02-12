@@ -80,6 +80,58 @@ typedef struct ScrAreaMap {
 	ListBase areabase;
 } ScrAreaMap;
 
+typedef struct Panel_Runtime {
+	/**
+	 * Pointer for storing which data the panel corresponds to.
+	 * Useful when there can be multiple instances of the same panel type.
+	 *
+	 * \note A panel and its sub-panels share the same custom data pointer.
+	 * This avoids freeing the same pointer twice when panels are removed.
+	 */
+	struct PointerRNA *custom_data_ptr;
+	/**
+	 * Pointer to the panel's block. Useful when changes to panel #uiBlocks
+	 * need some context from traversal of the panel "tree".
+	 */
+	struct uiBlock *block;
+
+	int region_ofsx;
+} Panel_Runtime;
+
+typedef struct Panel {
+	struct Pane *prev, *next;
+
+	/** Callbacks for this panel type. */
+	struct PanelType *type;
+
+	struct uiLayout *layout;
+
+	char name[64];
+	/** Panel name is identifier for restoring location. */
+	char *drawname;
+	/** Offset within the region. */
+	int ofsx, ofsy;
+	/** Panel size including children. */
+	int sizex, sizey;
+	/** Panel size excluding children. */
+	int blocksizex, blocksizey;
+
+	int flag;
+	int flag_ex;
+	int sortorder;
+
+	ListBase children;
+
+	Panel_Runtime runtime;
+} Panel;
+
+/** #Panel->flag_ex */
+enum {
+	PANEL_ACTIVE = 1 << 0,
+	PANEL_NEW_ADDED = 1 << 1,
+	PANEL_LAST_ADDED = 1 << 2,
+};
+
 typedef struct ScrGlobalAreaData {
 	int height;
 	int size_min;
@@ -167,6 +219,7 @@ typedef struct ARegion {
 
 	void *regiondata;
 
+	ListBase panels;
 	ListBase uiblocks;
 	ListBase uilists;
 	ListBase handlers;
@@ -206,7 +259,10 @@ enum {
 	RGN_TYPE_ANY = -1,
 	RGN_TYPE_WINDOW,
 	RGN_TYPE_HEADER,
+	RGN_TYPE_UI,
+	RGN_TYPE_TOOLS,
 	RGN_TYPE_FOOTER,
+	RGN_TYPE_EXECUTE,
 	/** Use for temporary regions, for example pop-ups! */
 	RGN_TYPE_TEMPORARY,
 };

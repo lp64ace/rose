@@ -1,5 +1,7 @@
 #include "DNA_ID.h"
 
+#include "KER_idprop.h"
+
 #include "RNA_access.h"
 #include "RNA_define.h"
 #include "RNA_prototypes.h"
@@ -23,6 +25,30 @@ StructRNA *rna_ID_refine(PointerRNA *ptr) {
 	ID *id = (ID *)ptr->data;
 
 	return RNA_id_code_to_rna_type(GS(id->name));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name IDProperty RNA Definition Functions
+ * \{ */
+
+void rna_IDPArray_begin(CollectionPropertyIterator *iter, PointerRNA *ptr) {
+	IDProperty *prop = (IDProperty *)ptr->data;
+	rna_iterator_array_begin(iter, ptr, IDP_Array(prop), sizeof(IDProperty), prop->length, 0, NULL);
+}
+
+void rna_IDPArray_length(PointerRNA *ptr) {
+	IDProperty *prop = (IDProperty *)ptr->data;
+	return prop->length;
+}
+
+IDProperty **rna_PropertyGroup_idprops(PointerRNA *ptr) {
+	return (IDProperty **)&ptr->data;
+}
+
+StructRNA *rna_PropertyGroup_refine(PointerRNA *ptr) {
+	return ptr->type;
 }
 
 /** \} */

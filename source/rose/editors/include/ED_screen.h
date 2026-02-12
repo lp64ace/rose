@@ -113,6 +113,14 @@ void ED_area_update_region_sizes(struct WindowManager *wm, struct wmWindow *wind
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Panel
+ * \{ */
+
+void ED_region_panels_init(struct WindowManager *wm, struct ARegion *region);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Screen
  * \{ */
 

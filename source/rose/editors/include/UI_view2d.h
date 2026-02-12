@@ -25,6 +25,7 @@ enum eView2D_CommonViewTypes {
 
 	V2D_COMMONVIEW_STANDARD,
 	V2D_COMMONVIEW_HEADER,
+	V2D_COMMONVIEW_PANELS_UI,
 };
 
 /** \} */

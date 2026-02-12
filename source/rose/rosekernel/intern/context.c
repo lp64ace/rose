@@ -70,11 +70,14 @@ struct Scene *CTX_data_scene(const rContext *ctx) {
 	return ctx->data.scene;
 }
 struct ViewLayer *CTX_data_view_layer(const rContext *C) {
-	ViewLayer *view_layer = NULL;
+	Scene *scene = CTX_data_scene(C);
+	if (!scene) {
+		return NULL;
+	}
 
 	wmWindow *window = CTX_wm_window(C);
-	Scene *scene = CTX_data_scene(C);
 	if (window) {
+		ViewLayer *view_layer = NULL;
 		if ((view_layer = KER_view_layer_find(scene, window->view_layer_name)) != NULL) {
 			return view_layer;
 		}

@@ -103,6 +103,49 @@ void UI_region_free_active_but_all(struct rContext *C, struct ARegion *region);
 void UI_blocklist_free_inactive(struct rContext *C, struct ARegion *region);
 void UI_block_free(struct rContext *C, struct uiBlock *block);
 
+void UI_paneltype_draw(struct rContext *C, struct PanelType *pt, struct uiLayout *layout);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Panel
+ * \{ */
+
+/**
+ * Panels
+ *
+ * Functions for creating, freeing and drawing panels. The API here
+ * could use a good cleanup, though how they will function in 2.5 is
+ * not clear yet so we postpone that.
+ */
+void UI_panels_begin(const struct rContext *C, struct ARegion *region);
+void UI_panels_end(const struct rContext *C, struct ARegion *region, int *r_x, int *r_y);
+/**
+ * Draw panels, selected (panels currently being dragged) on top.
+ */
+void UI_panels_draw(const struct rContext *C, struct ARegion *region);
+
+/**
+ * \note \a panel should be return value from #UI_panel_find_by_type and can be NULL.
+ */
+struct Panel *UI_panel_begin(struct ARegion *region, struct ListBase *lb, struct uiBlock *block, struct PanelType *pt, struct Panel *panel);
+/**
+ * Create the panel header button group, used to mark which buttons are part of
+ * panel headers for the panel search process that happens later. This Should be
+ * called before adding buttons for the panel's header layout.
+ */
+void UI_panel_header_buttons_begin(struct Panel *panel);
+/**
+ * Finish the button group for the panel header to avoid putting panel body buttons in it.
+ */
+void UI_panel_header_buttons_end(struct Panel *panel);
+void UI_panel_end(struct Panel *panel, int width, int height);
+
+struct Panel *UI_panel_find_by_type(struct ListBase *lb, const struct PanelType *pt);
+
+void UI_panel_label_offset(const struct uiBlock *block, int *r_x, int *r_y);
+bool UI_panel_should_show_background(const struct ARegion *region, const struct PanelType *panel_type);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -262,8 +305,12 @@ struct uiLayout *UI_block_layout(struct uiBlock *block, int dir, int type, int x
 struct uiLayout *UI_layout_row(struct uiLayout *layout, int space);
 struct uiLayout *UI_layout_col(struct uiLayout *layout, int space);
 struct uiLayout *UI_layout_grid(struct uiLayout *layout, int columns, bool evenr, bool evenc);
+struct uiBlock *UI_layout_block(struct uiLayout *layout);
 void UI_block_layout_set_current(struct uiBlock *block, struct uiLayout *layout);
 void UI_block_layout_free(struct uiBlock *block);
+
+void UI_layout_scale_x_set(struct uiLayout *layout, float scale);
+void UI_layout_scale_y_set(struct uiLayout *layout, float scale);
 
 void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
 
