@@ -41,16 +41,20 @@ bool GTKWindowWin32::Create(GTKWindowInterface *vparent, const char *name, int w
 
 	GTKWindowWin32 *parent = static_cast<GTKWindowWin32 *>(vparent);
 
-	this->hwnd = CreateWindowEx(
-		WS_EX_APPWINDOW,
+	const DWORD wsdefault = WS_OVERLAPPEDWINDOW;
+	const DWORD wschild = WS_POPUPWINDOW | WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX;
+	const DWORD style = (parent) ? wschild : wsdefault;
+	const HWND hwndparent = (parent) ? parent->GetHandle() : NULL;
+
+	this->hwnd = CreateWindow(
 		name,
 		name,
-		WS_OVERLAPPEDWINDOW & ~WS_VISIBLE,
+		style & ~WS_VISIBLE,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		width,
 		height,
-		(parent) ? parent->hwnd : HWND_DESKTOP,
+		hwndparent,
 		NULL,
 		GetModuleHandle(NULL),
 		NULL

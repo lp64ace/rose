@@ -110,6 +110,9 @@ bool GTKRenderWGL::Create(RenderSetting setting) {
 	}
 
 	wglMakeCurrent(window->GetDeviceHandle(), this->context);
+	if (manager->wglSwapIntervalEXT) {
+		manager->wglSwapIntervalEXT(0);
+	}
 
 	GLenum err = glewInit();
 	if (GLEW_OK != err) {
