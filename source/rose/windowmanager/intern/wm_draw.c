@@ -82,7 +82,7 @@ ROSE_INLINE void wm_draw_region_buffer_create(ARegion *region, bool viewport) {
 		}
 		else {
 			const TextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ;
-			GPUOffScreen *offscreen = GPU_offscreen_create(region->sizex, region->sizey, false, GPU_RGBA8, usage, NULL);
+			GPUOffScreen *offscreen = GPU_offscreen_create(region->sizex, region->sizey, false, GPU_RGB8, usage, NULL);
 			if (!offscreen) {
 				return;
 			}
@@ -128,8 +128,9 @@ ROSE_INLINE void wm_draw_region_unbind(ARegion *region) {
 		GPU_viewport_unbind(region->draw_buffer->viewport);
 	}
 	else {
-		GPU_scissor_test(false);
 		GPU_offscreen_unbind(region->draw_buffer->offscreen, false);
+
+		GPU_scissor_test(false);
 	}
 }
 
@@ -224,12 +225,16 @@ void wm_window_make_drawable(WindowManager *wm, wmWindow *window) {
 }
 
 ROSE_INLINE void wm_draw_window_offscreen(rContext *C, wmWindow *window) {
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 	if (!screen) {
 		return;
 	}
 
 	WindowManager *wm = CTX_wm_manager(C);
+
+	if (screen->do_refresh) {
+		ED_screen_refresh(wm, window);
+	}
 
 	CTX_wm_screen_set(C, screen);
 	ED_screen_areas_iter(window, screen, area) {
@@ -291,7 +296,7 @@ ROSE_INLINE void wm_draw_window_offscreen(rContext *C, wmWindow *window) {
 }
 
 ROSE_INLINE void wm_draw_window_onscreen(rContext *C, wmWindow *window, int view) {
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 
 	GPU_clear_color(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -392,11 +397,19 @@ void WM_do_draw(rContext *C) {
 		wm_window_update_animation_time(wm, window);
 		wm_window_make_drawable(wm, window);
 		wm_window_draw(C, window);
-		GTK_window_swap_buffers(window->handle);
 		CTX_wm_window_set(C, NULL);
 	}
 
 	GPU_context_main_unlock();
+
+	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
+		/** Do not render windows that are not visible. */
+		if (!window->handle || GTK_window_is_minimized(window->handle)) {
+			continue;
+		}
+
+		GTK_window_swap_buffers(window->handle);
+	}
 }
 
 /* -------------------------------------------------------------------- */

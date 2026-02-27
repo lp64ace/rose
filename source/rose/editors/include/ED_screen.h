@@ -77,6 +77,7 @@ struct ARegion *ED_area_find_region_xy_visual(const struct ScrArea *area, int re
 struct ScrArea *ED_screen_temp_space_open(struct rContext *C, const char *title, const struct rcti *rect, int space_type);
 
 void ED_area_newspace(struct rContext *C, struct ScrArea *area, int space_type);
+void ED_area_prevspace(struct rContext *C, struct ScrArea *area);
 void ED_area_init(struct WindowManager *wm, struct wmWindow *window, struct ScrArea *area);
 void ED_area_exit(struct rContext *C, struct ScrArea *area);
 
@@ -85,6 +86,7 @@ void ED_area_tag_redraw_no_rebuild(struct ScrArea *area);
 
 bool ED_area_is_global(const struct ScrArea *area);
 int ED_area_global_size_y(const struct ScrArea *area);
+int ED_area_header_size_y(const struct ScrArea *area);
 
 struct ScrArea *ED_screen_areas_iter_first(const struct wmWindow *win, const struct Screen *screen);
 struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const struct ScrArea *area);
@@ -129,6 +131,7 @@ void ED_screen_exit(struct rContext *C, struct wmWindow *window, struct Screen *
 
 void ED_screen_refresh(struct WindowManager *wm, struct wmWindow *window);
 void ED_screen_global_areas_refresh(struct wmWindow *window);
+void ED_screen_full_prevspace(struct rContext *C, struct ScrArea *area);
 
 bool ED_screen_area_active(struct rContext *C);
 

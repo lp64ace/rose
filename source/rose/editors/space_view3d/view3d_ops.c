@@ -79,7 +79,7 @@ ROSE_INLINE void viewrotate_apply(ViewOpsData *vod, const int event_xy[2]) {
 /**
  * Return's false if we should deny rotation to the user of the View3D!
  */
-ROSE_INLINE int view3d_rotation_poll(rContext *C) {
+ROSE_INLINE bool view3d_rotation_poll(rContext *C) {
 	return true;
 }
 
@@ -174,7 +174,7 @@ ROSE_INLINE void viewpan_apply(ViewOpsData *vod, const int event_xy[2]) {
 /**
  * Return's false if we should deny move to the user of the View3D!
  */
-ROSE_INLINE int view3d_pan_poll(rContext *C) {
+ROSE_INLINE bool view3d_pan_poll(rContext *C) {
 	return true;
 }
 

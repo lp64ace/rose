@@ -9,7 +9,13 @@
 #include "LIB_fileops.h"
 #include "LIB_task.hh"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_build.h"
+
 #include "IO_fbx.h"
+
+#include "WM_api.h"
+#include "WM_handler.h"
 
 #include "importer/fbx_import_util.hh"
 #include "importer/fbx_import_anim.hh"
@@ -100,7 +106,13 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 	for (Object *obj : ctx.mapping.imported_objects) {
 		Base *base = KER_view_layer_base_find(view_layer, obj);
 		KER_view_layer_base_select_and_set_active(view_layer, base);
+
+		int flags = ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY | ID_RECALC_ANIMATION;
+		DEG_id_tag_update_ex(main, &obj->id, flags);
 	}
+
+	DEG_id_tag_update(&lc->collection->id, ID_RECALC_COPY_ON_WRITE);
+	DEG_relations_tag_update(main);
 }
 
 void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath, float unit) {

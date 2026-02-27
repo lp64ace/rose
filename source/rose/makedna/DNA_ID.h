@@ -3,7 +3,7 @@
 
 #include "DNA_ID_enums.h"
 #include "DNA_session_uuid_types.h"
-
+#include "DNA_space_types.h"
 #include "DNA_listbase.h"
 
 #ifdef __cplusplus
@@ -95,7 +95,7 @@ typedef struct Library_Runtime {
 typedef struct Library {
 	ID id;
 
-	char filepath[1024];
+	char filepath[FILE_MAX];
 
 	struct Library_Runtime runtime;
 } Library;

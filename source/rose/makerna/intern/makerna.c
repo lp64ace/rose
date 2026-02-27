@@ -3,6 +3,8 @@
 #include "LIB_string.h"
 #include "LIB_path_utils.h"
 
+#include "DNA_space_types.h"
+
 #include "RNA_define.h"
 #include "RNA_types.h"
 
@@ -594,6 +596,41 @@ ROSE_INLINE char *rna_def_property_set_func(FILE *fpout, StructRNA *srna, Proper
 	func = rna_alloc_function_name(srna->identifier, rna_safe_id(p->identifier), "set");
 
 	switch (p->type) {
+		case PROP_STRING: {
+			StringPropertyRNA *sproperty = (StringPropertyRNA *)p;
+			fprintf(fpout, "extern void %s(PointerRNA *ptr, const char *value) {\n", func);
+			if (manual) {
+				fprintf(fpout, "\tPropStringSetFunc fn = %s;\n", manual);
+				fprintf(fpout, "\tfn(ptr, value);\n");
+			}
+			else {
+				const ePropertySubType subtype = p->subtype;
+				rna_print_data_get(fpout, dp);
+
+				if (dp->dnapointerlevel == 1) {
+					/* Handle allocated char pointer properties. */
+					fprintf(fpout, "\tif (data->%s != nullptr) {\n", dp->dnaname);
+					fprintf(fpout, "\t\tMEM_freeN(data->%s);\n", dp->dnaname);
+					fprintf(fpout, "\t}\n");
+					fprintf(fpout, "\tconst size_t length = LIB_strlen(value);\n");
+					fprintf(fpout, "\tif (length > 0) {\n");
+					fprintf(fpout, "\t\tdata->%s = (char *)MEM_mallocN(length + 1, __func__);\n", dp->dnaname);
+					fprintf(fpout, "\t\tmemcpy(data->%s, value, length + 1);\n", dp->dnaname);
+					fprintf(fpout, "\t} else { data->%s = nullptr; }\n", dp->dnaname);
+				}
+				else {
+					const char *string_copy_func = ELEM(subtype, PROP_FILEPATH, PROP_DIRPATH, PROP_FILENAME) ? "LIB_strcpy" : "LIB_strcpy";
+					/* Handle char array properties. */
+					if (sproperty->maxlength) {
+						fprintf(fpout, "\t%s(data->%s, %d, value);\n", string_copy_func, dp->dnaname, sproperty->maxlength);
+					}
+					else {
+						fprintf(fpout, "\t%s(data->%s, sizeof(data->%s), value);\n", string_copy_func, dp->dnaname, dp->dnaname);
+					}
+				}
+			}
+			fprintf(fpout, "}\n\n");
+		} break;
 		case PROP_POINTER: {
 			PointerPropertyRNA *pproperty = (PointerPropertyRNA *)p;
 			if (!manual) {
@@ -913,6 +950,7 @@ ROSE_INLINE void rna_def_property_funcs(FILE *fpout, StructRNA *srna, PropertyDe
 				DefRNA.error = true;
 			}
 
+			sproperty->set = (PropStringGetFunc)rna_def_property_set_func(fpout, srna, property, defproperty, (const char *)sproperty->set);
 			sproperty->get = (PropStringGetFunc)rna_def_property_get_func(fpout, srna, property, defproperty, (const char *)sproperty->get);
 			sproperty->length = (PropStringLengthFunc)rna_def_property_length_func(fpout, srna, property, defproperty, (const char *)sproperty->length);
 		} break;
@@ -1088,8 +1126,8 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 			rna_print_property_flag(fpout, property->flag);
 			fprintf(fpout, ",\n");
 		} while (false);
-		fprintf(fpout, "\t\t.type = %s,\n", RNA_property_typename(property->type));
-		fprintf(fpout, "\t\t.subtype = %s,\n", RNA_property_subtypename(property->subtype));
+		fprintf(fpout, "\t\t.type = %s,\n", RNA_property_type_typename(property->type));
+		fprintf(fpout, "\t\t.subtype = %s,\n", RNA_property_type_subtypename(property->subtype));
 
 		do {
 			fprintf(fpout, "\t\t.name = ");
@@ -1113,7 +1151,7 @@ ROSE_INLINE void rna_generate_property(FILE *fpout, StructRNA *srna, const char 
 			PropertyDefRNA *defproperty = rna_find_struct_property_def(srna, property);
 
 			fprintf(fpout, "\t\t.rawoffset = offsetof(%s, %s),\n", defproperty->dnastructname, defproperty->dnaname);
-			fprintf(fpout, "\t\t.rawtype = %s,\n", RNA_property_rawtypename(property->rawtype));
+			fprintf(fpout, "\t\t.rawtype = %s,\n", RNA_property_type_rawtypename(property->rawtype));
 		}
 		else {
 			fprintf(fpout, "\t\t.rawoffset = 0,\n");
@@ -1592,7 +1630,7 @@ ROSE_INLINE int rna_preprocess(const char *source, const char *binary) {
 		fprintf(stderr, "[RNA] There was an error while generating the RNA for RoseRNA.\n");
 	}
 
-	char prototype[1024];
+	char prototype[FILE_MAX];
 	LIB_path_join(prototype, ARRAY_SIZE(prototype), binary, "../RNA_prototypes.h");
 
 	FILE *fpout = fopen(prototype, "w");
@@ -1623,10 +1661,10 @@ ROSE_INLINE int rna_preprocess(const char *source, const char *binary) {
 	for (size_t index = 0; index < ARRAY_SIZE(RNAItems); index++) {
 		size_t lenfile = LIB_strlen(RNAItems[index].filename);
 
-		char file[1024];
+		char file[FILE_MAX];
 		LIB_strnformat(file, ARRAY_SIZE(file), "%.*s_gen.c", (unsigned int)lenfile - 2, RNAItems[index].filename);
 
-		char path[1024];
+		char path[FILE_MAX];
 		LIB_path_join(path, ARRAY_SIZE(path), file);
 
 		FILE *fpout = fopen(path, "w");

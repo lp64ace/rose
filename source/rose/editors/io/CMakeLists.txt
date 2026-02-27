@@ -3,6 +3,7 @@
 
 set(INC
 	# Internal Include Directories
+	PUBLIC ../include
 	PUBLIC .
 	
 	# External Include Directories
@@ -21,20 +22,12 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	WM_api.h
-	WM_draw.h
-	WM_event.h
-	WM_handler.h
-	WM_window.h
+	io_fbx.cc
+	io_ops.cc
+	io_ops.h
+	io_utils.cc
+	io_utils.hh
 	
-	intern/wm.c
-	intern/wm_draw.c
-	intern/wm_event.c
-	intern/wm_file.c
-	intern/wm_keymap.c
-	intern/wm_handler.c
-	intern/wm_operator.c
-	intern/wm_window.c
 )
 
 # -----------------------------------------------------------------------------
@@ -43,23 +36,11 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::intern::native
-	rose::source::rna
-	rose::source::roselib
 	rose::source::rosekernel
-	rose::source::rosemesh
-	rose::source::rosefont
-	rose::source::roseloader
-	rose::source::gpu
-	rose::source::draw
+	rose::source::roselib
+	rose::source::dna
 	rose::source::io::fbx
-	rose::source::editors::space_api
-	rose::source::editors::space_statusbar
-	rose::source::editors::space_topbar
-	rose::source::editors::space_view3d
-	rose::source::editors::screen
-
-	rose::resources::models
+	rose::source::windowmanager
 	
 	# External Library Dependencies
 	
@@ -68,7 +49,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(windowmanager "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::windowmanager ALIAS windowmanager)
-
-add_dependencies(windowmanager rna)
+rose_add_lib(io "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::source::editors::io ALIAS io)

@@ -33,6 +33,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::rosekernel
 	rose::source::dna
+	rose::source::editors::io
 	rose::source::editors::screen
 	rose::source::editors::space_file
 	rose::source::editors::space_statusbar

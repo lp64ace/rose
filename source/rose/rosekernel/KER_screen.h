@@ -148,6 +148,22 @@ void KER_spacetype_free(void);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Area
+ * \{ */
+
+/**
+ * Find a region of type \a region_type in the currently active space of \a area.
+ *
+ * \note This does _not_ work if the region to look up is not in the active space.
+ * Use #BKE_spacedata_find_region_type if that may be the case.
+ */
+struct ARegion *KER_area_find_region_type(const struct ScrArea *area, int region_type);
+struct ARegion *KER_area_find_region_active_win(const struct ScrArea *area);
+struct ARegion *KER_area_find_region_xy(const struct ScrArea *area, int regiontype, const int xy[2]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Panel
  * \{ */
 

@@ -4,6 +4,8 @@
 #include "DNA_listbase.h"
 #include "DNA_userdef_types.h"
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,6 +27,12 @@ typedef struct SpaceLink SpaceTopBar;
 typedef struct SpaceLink SpaceStatusBar;
 typedef struct SpaceLink SpacePropeties;
 
+/** #SpaceLink->flag */
+enum {
+	SPACE_FLAG_TYPE_TEMPORARY = 1 << 0,
+	SPACE_FLAG_TYPE_WAS_ACTIVE = 1 << 1,
+};
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -35,13 +43,39 @@ typedef struct SpaceLink SpacePropeties;
 #define FILE_MAXFILE 256
 #define FILE_MAX 1024
 
+typedef struct FileDirEntry {
+	struct FileDirEntry *prev, *next;
+
+	const char name[FILE_MAXFILE];
+
+	uint64_t size;
+	uint64_t time;
+
+	struct FileDirEntry_DrawData { // Needed for #DNA
+		char size[16];
+		char date[32];
+	} draw_data;
+} FileDirEntry;
+
+typedef struct FileDirEntryArr {
+	ListBase entries;
+	int totentries;
+
+	char root[FILE_MAXDIR];
+} FileDirEntryArr;
+
 typedef struct FileSelectParams {
 	/** Title, also used for the text of the execute button. */
 	char title[64];
 
-	char dir[FILE_MAXDIR];
+	/**
+	 * Abused by the editor allowing to write both directory and filename, 
+	 * therefore we allow up to #FILE_MAX instead of #FILE_MAXDIR!
+	 */
+	char dir[FILE_MAX];
 	char file[FILE_MAXFILE];
 
+	int type;
 	int flag;
 } FileSelectParams;
 
@@ -50,6 +84,8 @@ enum {
 	FILE_DIRSEL_ONLY = (1 << 0),
 	FILE_CHECK_EXISTING = (1 << 1),
 };
+
+struct FileList;
 
 typedef struct SpaceFile {
 	struct SpaceLink *prev, *next;
@@ -60,7 +96,8 @@ typedef struct SpaceFile {
 	ListBase regionbase;
 	/* End 'SpaceLink' header. */
 
-	FileSelectParams *params;
+	struct FileSelectParams *params;
+	struct FileList *files;
 
 	/**
 	 * The operator that is invoking file-select `op->exec()` will be called on the 'Load' button.

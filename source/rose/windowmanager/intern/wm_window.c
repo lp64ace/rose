@@ -116,7 +116,7 @@ wmWindow *WM_window_open(rContext *C, const char *name, int space_type, bool tem
 			continue;
 		}
 
-		Screen *screen = WM_window_screen_get(win_iter);
+		Screen *screen = WM_window_get_active_screen(win_iter);
 		if (screen && screen->temp && LIB_listbase_is_single(&screen->areabase)) {
 			window = win_iter;
 			break;
@@ -142,7 +142,7 @@ wmWindow *WM_window_open(rContext *C, const char *name, int space_type, bool tem
 	wmKeyMap *keymap = WM_keymap_ensure(wm->runtime.defaultconf, "Screen Editing", SPACE_EMPTY, RGN_TYPE_WINDOW);
 	WM_event_add_keymap_handler(&window->handlers, keymap);
 	
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 
 	CTX_wm_window_set(C, window);
 	CTX_wm_screen_set(C, screen);
@@ -158,11 +158,11 @@ wmWindow *WM_window_open(rContext *C, const char *name, int space_type, bool tem
 	/** Update the screen to be temporary if set! */
 	screen->temp = temp;
 
-	ED_screen_refresh(wm, window);
+	screen->do_refresh = true;
 
 	if (parent) {
 		CTX_wm_window_set(C, parent);
-		CTX_wm_screen_set(C, WM_window_screen_get(parent));
+		CTX_wm_screen_set(C, WM_window_get_active_screen(parent));
 	}
 	else {
 		CTX_wm_window_set(C, NULL);
@@ -195,7 +195,7 @@ void WM_window_close(rContext *C, wmWindow *window, bool do_free) {
 		}
 	}
 
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 	if (!do_free && screen->temp) {
 		wm_window_make_drawable(wm, window);
 		ED_screen_exit(C, window, screen);
@@ -203,7 +203,7 @@ void WM_window_close(rContext *C, wmWindow *window, bool do_free) {
 		wm_window_clear_drawable(wm);
 	}
 	else {
-		WM_window_screen_set(C, window, NULL);
+		WM_window_set_active_screen(C, window, NULL);
 		WM_window_free(wm, window);
 	}
 
@@ -249,7 +249,7 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 /** \name Window Screen
  * \{ */
 
-void WM_window_screen_set(rContext *C, wmWindow *window, Screen *screen) {
+void WM_window_set_active_screen(rContext *C, wmWindow *window, Screen *screen) {
 	if (window->screen == screen) {
 		return;
 	}
@@ -267,7 +267,7 @@ void WM_window_screen_set(rContext *C, wmWindow *window, Screen *screen) {
 		ED_screen_refresh(wm, window);
 	}
 }
-Screen *WM_window_screen_get(const wmWindow *window) {
+Screen *WM_window_get_active_screen(const wmWindow *window) {
 	return window->screen;
 }
 

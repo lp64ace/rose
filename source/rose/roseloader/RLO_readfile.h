@@ -4,6 +4,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "DNA_space_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,7 +23,7 @@ typedef struct FileData {
 	struct OldNewMap *map_glob;
 
 	/** Used for relative paths handling. */
-	char relabase[1024];
+	char relabase[FILE_MAX];
 
 	struct SDNA *f_dna;
 	struct SDNA *m_dna;

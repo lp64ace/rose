@@ -1,6 +1,8 @@
 #ifndef DNA_CUSTOMDATA_TYPES_H
 #define DNA_CUSTOMDATA_TYPES_H
 
+#include "DNA_space_types.h"
+
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -111,7 +113,7 @@ typedef enum eCustomDataType {
 #define CD_MASK_ALL (~0LL)
 
 typedef struct CustomDataExternal {
-	char filepath[1024];
+	char filepath[FILE_MAX];
 } CustomDataExternal;
 
 /**

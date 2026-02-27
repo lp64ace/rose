@@ -4,6 +4,7 @@
 add_subdirectory(include)
 add_subdirectory(armature)
 add_subdirectory(interface)
+add_subdirectory(io)
 add_subdirectory(screen)
 add_subdirectory(space_api)
 add_subdirectory(space_file)

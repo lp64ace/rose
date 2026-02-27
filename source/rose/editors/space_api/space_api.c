@@ -5,6 +5,8 @@
 
 #include "KER_screen.h"
 
+#include "io_ops.h"
+
 void ED_spacetypes_init() {
 	ED_spacetype_file();
 	ED_spacetype_statusbar();
@@ -13,6 +15,7 @@ void ED_spacetypes_init() {
 	ED_spacetype_properties();
 
 	ED_operatortypes_screen();
+	ED_operatortypes_io();
 
 	ListBase *lb = KER_spacetype_list();
 

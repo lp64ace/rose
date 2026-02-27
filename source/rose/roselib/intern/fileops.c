@@ -19,6 +19,12 @@
 /** \name File Utils
  * \{ */
 
+int LIB_access(const char *filepath, int mode) {
+	ROSE_assert(!LIB_path_is_rel(filepath));
+
+	return access(filepath, mode);
+}
+
 #ifdef WIN32
 int LIB_stat(const char *filepath, RoseFileStat *r_stat) {
 #	if defined(_MSC_VER)
@@ -66,6 +72,64 @@ uint64_t LIB_seek(int fd, size_t offset, int whence) {
 #else
 	return lseek(fd, offset, whence);
 #endif
+}
+
+int LIB_exists(const char *path) {
+#if defined(WIN32)
+	RoseFileStat st;
+	char tmp[FILE_MAX];
+	LIB_strcpy(tmp, FILE_MAX, path);
+
+	size_t len = LIB_strlen(tmp);
+	/* in Windows #stat doesn't recognize dir ending on a slash
+	 * so we remove it here */
+	if ((len > 3) && ELEM(tmp[len - 1], '\\', '/')) {
+		tmp[len - 1] = '\0';
+	}
+	/* two special cases where the trailing slash is needed:
+	 * 1. after the share part of a UNC path
+	 * 2. after the C:\ when the path is the volume only
+	 */
+	if ((len >= 3) && (tmp[0] == '\\') && (tmp[1] == '\\')) {
+		LIB_path_normalize_unc(tmp, FILE_MAX);
+	}
+
+	if ((tmp[1] == ':') && (tmp[2] == '\0')) {
+		tmp[2] = '\\';
+		tmp[3] = '\0';
+	}
+
+	if (LIB_stat(tmp, &st) == -1) {
+		return 0;
+	}
+#else
+	struct stat st;
+	ROSE_assert(!LIB_path_is_rel(path));
+	if (stat(path, &st)) {
+		return 0;
+	}
+#endif
+	return (st.st_mode);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name File Utils
+ * \{ */
+
+bool LIB_is_file(const char *path) {
+	return S_ISREG(LIB_exists(path));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Dir Utils
+ * \{ */
+
+bool LIB_is_dir(const char *path) {
+	return S_ISDIR(LIB_exists(path));
 }
 
 /** \} */

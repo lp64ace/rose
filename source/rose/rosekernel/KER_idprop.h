@@ -69,6 +69,11 @@ enum eIDPropertyType {
 	IDP_GROUP = 8,
 };
 
+/** #IDProperty->flag */
+enum {
+	IDP_FLAG_GHOST = 1 << 0,
+};
+
 /** Used by some IDP utils, keep values in sync with type enum above. */
 enum {
 	IDP_TYPE_FILTER_STRING = 1 << IDP_STRING,

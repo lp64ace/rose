@@ -21,8 +21,12 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
+	filelist/filelist.c
+	filelist/filelist.h
+
 	file.c
 	file.h
+	file_ops.c
 	space_file.c
 	
 )

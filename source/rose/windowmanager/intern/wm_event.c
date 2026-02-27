@@ -7,6 +7,7 @@
 #include "RNA_access.h"
 #include "RNA_define.h"
 
+#include "ED_fileselect.h"
 #include "ED_screen.h"
 
 #include "WM_api.h"
@@ -20,10 +21,13 @@
 #include "KER_layer.h"
 #include "KER_main.h"
 #include "KER_scene.h"
+#include "KER_screen.h"
 
 #include "DEG_depsgraph.h"
 
 #include <GTK_api.h>
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Event Management
@@ -53,6 +57,10 @@ wmEvent *wm_event_add_ex(wmWindow *win, const wmEvent *event_to_add, wmEvent *ev
 }
 
 wmEvent *wm_event_add(wmWindow *win, const wmEvent *event_to_add) {
+	return wm_event_add_ex(win, event_to_add, NULL);
+}
+
+wmEvent *WM_event_add(wmWindow *win, const wmEvent *event_to_add) {
 	return wm_event_add_ex(win, event_to_add, NULL);
 }
 
@@ -200,7 +208,7 @@ ROSE_INLINE void wm_handler_op_context_get_if_valid(rContext *C, wmEventHandler_
 	/* It's probably fine to always use #WM_window_get_active_screen() to get the screen. But this
 	 * code has been getting it through context since forever, so play safe and stick to that when
 	 * possible. */
-	Screen *screen = handler->context.window ? WM_window_screen_get(window) : CTX_wm_screen(C);
+	Screen *screen = handler->context.window ? WM_window_get_active_screen(window) : CTX_wm_screen(C);
 
 	*r_area = NULL;
 	*r_region = NULL;
@@ -270,7 +278,7 @@ ROSE_INLINE void wm_operator_finished(rContext *C, wmOperator *op) {
 	WM_operator_free(op);
 }
 
-ROSE_INLINE wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot, const wmEvent *event, PointerRNA *properties, const bool poll_only) {
+wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot, const wmEvent *event, PointerRNA *properties, const bool poll_only) {
 	wmOperatorStatus retval = OPERATOR_PASS_THROUGH;
 
 	/* This is done because complicated setup is done to call this function
@@ -313,6 +321,103 @@ ROSE_INLINE wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot,
 	}
 
 	return retval;
+}
+
+ROSE_INLINE wmOperatorStatus wm_operator_call_internal(rContext *C, wmOperatorType *ot, PointerRNA *ptr, eOpCallContext context, const bool poll_only, const wmEvent *event) {
+	wmOperatorStatus retval;
+
+	if (ot) {
+		wmWindow *window = CTX_wm_window(C);
+
+		if (event == NULL) {
+			switch (context) {
+				case OP_INVOKE_DEFAULT:
+				case OP_INVOKE_REGION_WIN:
+				case OP_INVOKE_AREA:
+				case OP_INVOKE_SCREEN: {
+					if (window == NULL) {
+						return (wmOperatorStatus)0;
+					}
+					else {
+						event = window->event_state;
+					}
+				} break;
+				default: {
+					event = NULL;
+				} break;
+			}
+		}
+	}
+	else {
+		switch (context) {
+			case OP_EXEC_DEFAULT:
+			case OP_EXEC_REGION_WIN:
+			case OP_EXEC_AREA:
+			case OP_EXEC_SCREEN: {
+				event = NULL;
+			} break;
+			default: {
+			} break;
+		}
+	}
+
+	switch (context) {
+		case OP_EXEC_REGION_WIN:
+		case OP_INVOKE_REGION_WIN: {
+			ARegion *region = CTX_wm_region(C);
+			ScrArea *area = CTX_wm_area(C);
+			int type = RGN_TYPE_WINDOW;
+
+			switch (context) {
+				case OP_EXEC_REGION_WIN:
+				case OP_INVOKE_REGION_WIN: {
+					type = RGN_TYPE_WINDOW;
+				} break;
+			}
+
+			if (!(region && region->regiontype == type) && area) {
+				ARegion *region_other = (type == RGN_TYPE_WINDOW) ? KER_area_find_region_active_win(area) : KER_area_find_region_type(area, type);
+				if (region_other) {
+					CTX_wm_region_set(C, region_other);
+				}
+			}
+
+			retval = wm_operator_invoke(C, ot, event, ptr, poll_only);
+
+			CTX_wm_region_set(C, region);
+		} return retval;
+		case OP_EXEC_AREA:
+		case OP_INVOKE_AREA: {
+			ARegion *region = CTX_wm_region(C);
+
+			CTX_wm_region_set(C, NULL);
+			retval = wm_operator_invoke(C, ot, event, ptr, poll_only);
+			CTX_wm_region_set(C, region);
+		} return retval;
+		case OP_EXEC_SCREEN:
+		case OP_INVOKE_SCREEN: {
+			/* Remove region + area from context. */
+			ARegion *region = CTX_wm_region(C);
+			ScrArea *area = CTX_wm_area(C);
+
+			CTX_wm_region_set(C, NULL);
+			CTX_wm_area_set(C, NULL);
+			retval = wm_operator_invoke(C, ot, event, ptr, poll_only);
+			CTX_wm_area_set(C, area);
+			CTX_wm_region_set(C, region);
+		} return retval;
+		case OP_EXEC_DEFAULT:
+		case OP_INVOKE_DEFAULT: {
+			retval = wm_operator_invoke(C, ot, event, ptr, poll_only);
+		} return retval;
+	}
+
+	return (wmOperatorStatus)0;
+}
+
+wmOperatorStatus WM_operator_name_call_ptr(rContext *C, wmOperatorType *ot, eOpCallContext context, PointerRNA *ptr, const wmEvent *event) {
+	ROSE_assert(ot == WM_operatortype_find(ot->idname, true));
+	return wm_operator_call_internal(C, ot, ptr, context, false, event);
 }
 
 ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(rContext *C, ListBase *handlers, wmEventHandler *handler_base, wmEvent *event, PointerRNA *properties, const char *kmi_idname) {
@@ -377,6 +482,142 @@ ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(rContext *C, ListBase *h
 	}
 
 	return WM_HANDLER_BREAK;
+}
+
+static void wm_operator_free_for_fileselect(wmOperator *file_operator) {
+	LISTBASE_FOREACH(Screen *, screen, &G_MAIN->screens) {
+		LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
+			if (area->spacetype == SPACE_FILE) {
+				SpaceFile *sfile = (SpaceFile *)(area->spacedata.first);
+				if (sfile->op == file_operator) {
+					sfile->op = NULL;
+				}
+			}
+		}
+	}
+
+	WM_operator_free(file_operator);
+}
+
+/**
+ * File-select handlers are only in the window queue,
+ * so it's safe to switch screens or area types.
+ */
+static eHandlerActionFlag wm_handler_fileselect_do(rContext *C, ListBase *handlers, wmEventHandler_Op *handler, int val) {
+	WindowManager *wm = CTX_wm_manager(C);
+	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+
+	switch (val) {
+		case EVT_FILESELECT_FULL_OPEN: {
+			ScrArea *area = ED_screen_temp_space_open(C, "File View", NULL, SPACE_FILE);
+			if (!area) {
+				fprintf(stderr, "[WindowManager] Failed to open file browser!\n");
+				return WM_HANDLER_BREAK;
+			}
+
+			ROSE_assert(area->spacetype == SPACE_FILE);
+
+			/* Settings for file-browser, #sfile is not operator owner but sends events. */
+			SpaceFile *sfile = (SpaceFile *)area->spacedata.first;
+			sfile->op = handler->op;
+
+			ED_fileselect_set_params_from_userdef(sfile);
+			action = WM_HANDLER_BREAK;
+			break;
+		}
+
+		case EVT_FILESELECT_EXEC:
+		case EVT_FILESELECT_CANCEL:
+		case EVT_FILESELECT_EXTERNAL_CANCEL: {
+			wmWindow *ctx_win = CTX_wm_window(C);
+			wmEvent *eventstate = ctx_win->event_state;
+			/* The root window of the operation as determined in #WM_event_add_fileselect(). */
+			wmWindow *root_win = handler->context.window;
+
+			/* Remove link now, for load file case before removing. */
+			LIB_remlink(handlers, handler);
+
+			if (val == EVT_FILESELECT_EXTERNAL_CANCEL) {
+				/* The window might have been freed already. */
+				if (LIB_haslink(&wm->windows, handler->context.window) == false) {
+					handler->context.window = NULL;
+				}
+			}
+			else {
+				ScrArea *ctx_area = CTX_wm_area(C);
+
+				wmWindow *temp_win = NULL;
+				LISTBASE_FOREACH(wmWindow *, win, &wm->windows) {
+					Screen *screen = WM_window_get_active_screen(win);
+					ScrArea *file_area = (ScrArea *)(screen->areabase.first);
+
+					if ((file_area->spacetype != SPACE_FILE) || !screen->temp) {
+						continue;
+					}
+
+					ED_fileselect_params_to_userdef((SpaceFile *)(file_area->spacedata.first));
+
+					if (LIB_listbase_is_single(&file_area->spacedata)) {
+						ROSE_assert(root_win != win);
+
+						WM_window_close(C, win, false);
+
+						/* #wm_window_close() sets the context's window to null. */
+						CTX_wm_window_set(C, root_win);
+						/* Some operators expect a drawable context (for #EVT_FILESELECT_EXEC). */
+						wm_window_make_drawable(wm, root_win);
+					}
+					else {
+						ED_area_prevspace(C, file_area);
+					}
+
+					temp_win = win;
+					break;
+				}
+
+				if (!temp_win) {
+					ED_fileselect_params_to_userdef((SpaceFile *)(ctx_area->spacedata.first));
+					ED_screen_full_prevspace(C, ctx_area);
+				}
+			}
+
+			CTX_wm_window_set(C, root_win);
+			wm_handler_op_context(C, handler, eventstate);
+			/* At this point context is supposed to match the root context determined by
+			 * #WM_event_add_fileselect(). */
+			ROSE_assert(!CTX_wm_area(C) || (CTX_wm_area(C) == handler->context.area));
+			ROSE_assert(!CTX_wm_region(C) || (CTX_wm_region(C) == handler->context.region));
+
+			/* Needed for #UI_popup_menu_reports. */
+
+			if (val == EVT_FILESELECT_EXEC) {
+				const wmOperatorStatus retval = handler->op->type->exec(C, handler->op);
+
+				if (retval & OPERATOR_FINISHED) {
+					WM_operator_last_properties_store(handler->op);
+				}
+
+				if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
+					wm_operator_free_for_fileselect(handler->op);
+				}
+			}
+			else {
+				if (handler->op->type->cancel) {
+					handler->op->type->cancel(C, handler->op);
+				}
+				wm_operator_free_for_fileselect(handler->op);
+			}
+
+			CTX_wm_area_set(C, NULL);
+
+			MEM_freeN(handler);
+
+			action = WM_HANDLER_BREAK;
+			break;
+		}
+	}
+
+	return action;
 }
 
 ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(rContext *C, wmEventHandler_UI *handler, wmEvent *event) {
@@ -506,7 +747,12 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do(rContext *C, wmEvent *event, ListB
 			else if (handler_base->type == WM_HANDLER_TYPE_OP) {
 				wmEventHandler_Op *handler = (wmEventHandler_Op *)handler_base;
 
-				action |= wm_handler_operator_call(C, handlers, handler_base, event, NULL, NULL);
+				if (handler->is_fileselect) {
+					action |= wm_handler_fileselect_call(C, handlers, handler, event);
+				}
+				else {
+					action |= wm_handler_operator_call(C, handlers, handler_base, event, NULL, NULL);
+				}
 			}
 			else if (handler_base->type == WM_HANDLER_TYPE_KEYMAP) {
 				wmEventHandler_Keymap *handler = (wmEventHandler_Keymap *)handler_base;
@@ -586,7 +832,7 @@ void WM_do_handlers(rContext *C) {
 
 			wm_region_mouse_co(C, evt);
 
-			Screen *screen = WM_window_screen_get(window);
+			Screen *screen = WM_window_get_active_screen(window);
 			CTX_wm_screen_set(C, screen);
 
 			LISTBASE_FOREACH_MUTABLE(ARegion *, region, &screen->regionbase) {
@@ -701,6 +947,169 @@ void WM_window_post_quit_event(wmWindow *window) {
 	evt.value = KM_NOTHING;
 
 	wm_event_add(window, &evt);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name File Select Methods
+ * \{ */
+
+/**
+ * From the context window, try to find a window that is appropriate for use as root window of a
+ * modal File Browser (modal means: there is a #SpaceFile.op to execute). The root window will
+ * become the parent of the File Browser and provides a context to execute the file operator in,
+ * even after closing the File Browser.
+ *
+ * An appropriate window is either of the following:
+ * * A parent window that does not yet contain a modal File Browser. This is determined using
+ *   #ED_fileselect_handler_area_find_any_with_op().
+ * * A parent window containing a modal File Browser, but in a maximized/full-screen state. Users
+ *   shouldn't be able to put a temporary screen like the modal File Browser into
+ *   maximized/full-screen state themselves. So this setup indicates that the File Browser was
+ *   opened using #USER_TEMP_SPACE_DISPLAY_FULLSCREEN.
+ *
+ * If no appropriate parent window can be found from the context window, return the first
+ * registered window (which can be assumed to be a regular window, e.g. no modal File Browser; this
+ * is asserted).
+ */
+static wmWindow *wm_event_find_fileselect_root_window_from_context(const rContext *C) {
+	wmWindow *ctx_win = CTX_wm_window(C);
+
+	for (wmWindow *ctx_win_or_parent = ctx_win; ctx_win_or_parent; ctx_win_or_parent = ctx_win_or_parent->parent) {
+		ScrArea *file_area = ED_fileselect_handler_area_find_any_with_op(ctx_win_or_parent);
+
+		if (!file_area) {
+			return ctx_win_or_parent;
+		}
+	}
+
+	/* Fall back to the first window. */
+	const WindowManager *wm = CTX_wm_manager(C);
+	ROSE_assert(!ED_fileselect_handler_area_find_any_with_op((wmWindow *)wm->windows.first));
+	return (wmWindow *)wm->windows.first;
+}
+
+/**
+ * Insert modal operator into list of modal handlers, respecting priority.
+ */
+static void wm_handler_operator_insert(wmWindow *win, wmEventHandler_Op *handler) {
+	if (!(handler->op->type->flag & OPTYPE_MODAL_PRIORITY)) {
+		/* Keep priority operators in front. */
+		wmEventHandler *last_priority_handler = NULL;
+		LISTBASE_FOREACH(wmEventHandler *, handler_iter, &win->modalhandlers) {
+			if (handler_iter->type == WM_HANDLER_TYPE_OP) {
+				wmEventHandler_Op *handler_iter_op = (wmEventHandler_Op *)handler_iter;
+				if (handler_iter_op->op != NULL) {
+					if (handler_iter_op->op->type->flag & OPTYPE_MODAL_PRIORITY) {
+						last_priority_handler = handler_iter;
+					}
+				}
+			}
+		}
+
+		if (last_priority_handler) {
+			LIB_insertlinkafter(&win->modalhandlers, last_priority_handler, handler);
+			return;
+		}
+	}
+
+	LIB_addhead(&win->modalhandlers, handler);
+}
+
+ROSE_INLINE eHandlerActionFlag wm_handler_fileselect_call(rContext *C, ListBase *handlers, wmEventHandler_Op *handler, const wmEvent *event) {
+	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+
+	if (event->type != EVT_FILESELECT) {
+		return action;
+	}
+	if (handler->op != (wmOperator *)event->customdata) {
+		return action;
+	}
+
+	return wm_handler_fileselect_do(C, handlers, handler, event->value);
+}
+
+void WM_event_add_fileselect(rContext *C, wmOperator *op) {
+	WindowManager *wm = CTX_wm_manager(C);
+	wmWindow *ctx_win = CTX_wm_window(C);
+
+	/* The following vars define the root context. That is essentially the "parent" context of the
+	 * File Browser operation, to be restored for eventually executing the file operation. */
+	wmWindow *root_win = wm_event_find_fileselect_root_window_from_context(C);
+	/* Determined later. */
+	ScrArea *root_area = NULL;
+	ARegion *root_region = NULL;
+
+	/* Setting the context window unsets the context area & screen. Avoid doing that, so operators
+	 * calling the file browser can operate in the context the browser was opened in. */
+	if (ctx_win != root_win) {
+		CTX_wm_window_set(C, root_win);
+	}
+
+	/* The root window may already have a File Browser open. Cancel it if so, only 1 should be open
+	 * per window. The root context of this operation is also used for the new operation. */
+	LISTBASE_FOREACH_MUTABLE(wmEventHandler *, handler_base, &root_win->modalhandlers) {
+		if (handler_base->type == WM_HANDLER_TYPE_OP) {
+			wmEventHandler_Op *handler = (wmEventHandler_Op *)handler_base;
+			if (handler->is_fileselect == false) {
+				continue;
+			}
+
+			wm_handler_op_context_get_if_valid(C, handler, ctx_win->event_state, &root_area, &root_region);
+
+			ScrArea *file_area = ED_fileselect_handler_area_find(root_win, handler->op);
+
+			if (file_area) {
+				CTX_wm_area_set(C, file_area);
+				wm_handler_fileselect_do(C, &root_win->modalhandlers, handler, EVT_FILESELECT_CANCEL);
+			}
+			/* If not found we stop the handler without changing the screen. */
+			else {
+				wm_handler_fileselect_do(C, &root_win->modalhandlers, handler, EVT_FILESELECT_EXTERNAL_CANCEL);
+			}
+		}
+	}
+
+	ROSE_assert(root_win != NULL);
+	/* When not reusing the root context from a previous file browsing operation, use the current
+	 * area & region, if they are inside the root window. */
+	if (!root_area && ctx_win == root_win) {
+		root_area = CTX_wm_area(C);
+		root_region = CTX_wm_region(C);
+	}
+
+	wmEventHandler_Op *handler = MEM_callocN(sizeof(wmEventHandler_Op), __func__);
+	handler->head.type = WM_HANDLER_TYPE_OP;
+
+	handler->is_fileselect = true;
+	handler->op = op;
+	handler->context.window = root_win;
+	handler->context.area = root_area;
+	handler->context.region = root_region;
+
+	wm_handler_operator_insert(root_win, handler);
+
+	WM_event_fileselect_event(wm, op, EVT_FILESELECT_FULL_OPEN);
+
+	if (ctx_win != root_win) {
+		CTX_wm_window_set(C, ctx_win);
+	}
+}
+
+void WM_event_fileselect_event(WindowManager *wm, void *ophandle, int eventval) {
+	/* Add to all windows! */
+	LISTBASE_FOREACH(wmWindow *, win, &wm->windows) {
+		wmEvent event;
+		memcpy(&event, win->event_state, sizeof(wmEvent));
+
+		event.type = EVT_FILESELECT;
+		event.value = eventval;
+		event.flag = 0;
+		event.customdata = ophandle; /* Only as void pointer type check. */
+
+		WM_event_add(win, &event);
+	}
 }
 
 /** \} */

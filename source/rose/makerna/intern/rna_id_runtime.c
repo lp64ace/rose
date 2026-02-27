@@ -9,7 +9,11 @@
 #include "rna_internal_types.h"
 #include "rna_internal.h"
 
-StructRNA *RNA_id_code_to_rna_type(int type) {
+/* -------------------------------------------------------------------- */
+/** \name Exposed Functions
+ * \{ */
+
+StructRNA *rna_ID_code_to_rna(short type) {
 	switch (type) {
 		case ID_OB: return &RNA_Object;
 	}
@@ -17,14 +21,10 @@ StructRNA *RNA_id_code_to_rna_type(int type) {
 	return &RNA_ID;
 }
 
-/* -------------------------------------------------------------------- */
-/** \name Exposed Functions
- * \{ */
-
 StructRNA *rna_ID_refine(PointerRNA *ptr) {
 	ID *id = (ID *)ptr->data;
 
-	return RNA_id_code_to_rna_type(GS(id->name));
+	return rna_ID_code_to_rna(GS(id->name));
 }
 
 /** \} */
@@ -38,7 +38,7 @@ void rna_IDPArray_begin(CollectionPropertyIterator *iter, PointerRNA *ptr) {
 	rna_iterator_array_begin(iter, ptr, IDP_Array(prop), sizeof(IDProperty), prop->length, 0, NULL);
 }
 
-void rna_IDPArray_length(PointerRNA *ptr) {
+int rna_IDPArray_length(PointerRNA *ptr) {
 	IDProperty *prop = (IDProperty *)ptr->data;
 	return prop->length;
 }

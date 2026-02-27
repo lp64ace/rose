@@ -18,9 +18,9 @@ const Theme U_theme_default = {
 		/** The colors that will be used for regural buttons. */
 		.wcol_but = {
 			.outline = RGBA(0x222222ff),
-			.inner = RGBA(0x222222ff),
+			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0x444444ff),
-			.text = RGBA(0x80b0faff),
+			.text = RGBA(0xffffffff),
 			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text buttons. */
@@ -28,7 +28,7 @@ const Theme U_theme_default = {
 			.outline = RGBA(0x00000000),
 			.inner = RGBA(0x00000000),
 			.inner_sel = RGBA(0xe0e0e055),
-			.text = RGBA(0xfaa070ee),
+			.text = RGBA(0xffffffff),
 			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
@@ -36,8 +36,8 @@ const Theme U_theme_default = {
 			.outline = RGB(0x222222ff),
 			.inner = RGBA(0x0a0a0aff),
 			.inner_sel = RGBA(0x3a3a3a3f),
-			.text = RGBA(0xd0fab0ff),
-			.text_sel = RGBA(0xfceeee3f),
+			.text = RGBA(0xffffffff),
+			.text_sel = RGBA(0xfcfcfc3f),
 			.roundness = 0.0f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
@@ -69,7 +69,7 @@ const Theme U_theme_default = {
 	},
 	/** The colors that will be used for the View3D space. */
 	.space_view3d = {
-		.back = RGBA(0x101010ff),
+		.back = RGBA(0x353535ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),
 		.header = RGBA(0x1a1a1aff),
@@ -77,19 +77,19 @@ const Theme U_theme_default = {
 	},
 	/** The colors that will be used for the TopBar space. */
 	.space_topbar = {
-		.back = RGBA(0x1a1a1aff),
+		.back = RGBA(0x181818ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0x00ffccff),
-		.header = RGBA(0x2a2a2aff),
-		.header_hi = RGBA(0x333333ff),
+		.header = RGBA(0x181818ff),
+		.header_hi = RGBA(0x181818ff),
 	},
 	/** The colors that will be used for the StatusBar space. */
 	.space_statusbar = {
-		.back = RGBA(0x1a1a1aff),
+		.back = RGBA(0x181818ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0x00ffccff),
-		.header = RGBA(0x1a1a1aff),
-		.header_hi = RGBA(0x333333ff),
+		.header = RGBA(0x181818ff),
+		.header_hi = RGBA(0x181818ff),
 	},
 	/** The colors that will be used for the UserPref space. */
 	.space_properties = {

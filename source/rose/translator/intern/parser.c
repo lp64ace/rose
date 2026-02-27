@@ -467,6 +467,9 @@ unsigned long long RT_parser_alignof(RTCParser *P, const RTType *type) {
 
 		return alignment;
 	}
+	if (type->kind == TP_QUALIFIED) {
+		return RT_parser_alignof(P, type->tp_qualified.base);
+	}
 	ROSE_assert_unreachable();
 	return 0;
 }
@@ -534,6 +537,9 @@ unsigned long long RT_parser_size(RTCParser *P, const RTType *type) {
 		size = align(&P->configuration, alignment, size);
 
 		return size;
+	}
+	if (type->kind == TP_QUALIFIED) {
+		return RT_parser_size(P, type->tp_qualified.base);
 	}
 	// If the type is unrecognized, return 0.
 	ROSE_assert_unreachable();

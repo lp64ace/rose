@@ -34,6 +34,8 @@
 
 #include "interface_intern.h"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name UI Button Draw
  * \{ */

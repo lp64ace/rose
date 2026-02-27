@@ -20,7 +20,230 @@ GTKRenderWGL ::~GTKRenderWGL() {
 	}
 }
 
+static int WeightDummyPixelFormat(PIXELFORMATDESCRIPTOR *pfd, PIXELFORMATDESCRIPTOR *preferredPFD) {
+	int weight = 0;
+
+	/* Assume desktop color depth is 32 bits per pixel */
+
+	/* cull unusable pixel formats */
+	/* if no formats can be found, can we determine why it was rejected? */
+	if (!(pfd->dwFlags & PFD_SUPPORT_OPENGL) || !(pfd->dwFlags & PFD_DRAW_TO_WINDOW) || !(pfd->dwFlags & PFD_DOUBLEBUFFER) || !(pfd->iPixelType == PFD_TYPE_RGBA) || (pfd->cColorBits > 32) || (pfd->dwFlags & PFD_GENERIC_FORMAT)) {
+		return 0;
+	}
+
+	weight = 1; /* it's usable */
+
+	weight += pfd->cColorBits - 8;
+
+	if (preferredPFD->cAlphaBits > 0 && pfd->cAlphaBits > 0) {
+		weight++;
+	}
+
+	return weight;
+}
+
+
+static HWND CloneWindow(HWND hWnd, LPVOID lpParam) {
+	WCHAR lpClassName[100] = L"";
+	WCHAR lpWindowName[100] = L"";
+
+	GetClassNameW(hWnd, lpClassName, ARRAYSIZE(lpClassName));
+	GetWindowTextW(hWnd, lpWindowName, ARRAYSIZE(lpWindowName));
+
+	RECT rect;
+	GetWindowRect(hWnd, &rect);
+
+	/* clang-format off */
+
+	HWND hwndCloned = CreateWindowExW(
+		GetWindowLong(hWnd, GWL_EXSTYLE),
+		lpClassName,
+		lpWindowName,
+		GetWindowLong(hWnd, GWL_STYLE),
+		rect.left,
+		rect.top,
+		rect.right - rect.left,
+		rect.bottom - rect.top,
+		(HWND)GetWindowLongPtr(hWnd, GWLP_HWNDPARENT),
+		GetMenu(hWnd),
+		(HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
+		lpParam
+	);
+
+	/* clang-format on */
+
+	return hwndCloned;
+}
+
+/*
+ * A modification of Ron Fosner's replacement for ChoosePixelFormat
+ * returns 0 on error, else returns the pixel format number to be used
+ */
+static int ChooseDummyPixelFormatLegacy(HDC hDC, PIXELFORMATDESCRIPTOR *preferredPFD) {
+	int iPixelFormat = 0;
+	int weight = 0;
+
+	int iStereoPixelFormat = 0;
+	int stereoWeight = 0;
+
+	/* choose a pixel format using the useless Windows function in case we come up empty handed */
+	int iLastResortPixelFormat = ::ChoosePixelFormat(hDC, preferredPFD);
+	int lastPFD = ::DescribePixelFormat(hDC, 1, sizeof(PIXELFORMATDESCRIPTOR), nullptr);
+
+	for (int i = 1; i <= lastPFD; i++) {
+		PIXELFORMATDESCRIPTOR pfd;
+		int check = ::DescribePixelFormat(hDC, i, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+
+		int w = WeightDummyPixelFormat(&pfd, preferredPFD);
+
+		if (w > weight) {
+			weight = w;
+			iPixelFormat = i;
+		}
+
+		if (w > stereoWeight && (preferredPFD->dwFlags & pfd.dwFlags & PFD_STEREO)) {
+			stereoWeight = w;
+			iStereoPixelFormat = i;
+		}
+	}
+
+	/* choose any available stereo format over a non-stereo format */
+	if (iStereoPixelFormat != 0) {
+		iPixelFormat = iStereoPixelFormat;
+	}
+
+	if (iPixelFormat == 0) {
+		fprintf(stderr, "Warning! Using result of ChoosePixelFormat.\n");
+		iPixelFormat = iLastResortPixelFormat;
+	}
+
+	return iPixelFormat;
+}
+
+struct DummyContextWGL {
+	HWND dummyHWND = nullptr;
+
+	HDC dummyHDC = nullptr;
+	HGLRC dummyHGLRC = nullptr;
+
+	HDC prevHDC = nullptr;
+	HGLRC prevHGLRC = nullptr;
+
+	int dummyPixelFormat = 0;
+
+	PIXELFORMATDESCRIPTOR preferredPFD;
+
+	bool has_WGL_ARB_pixel_format = false;
+	bool has_WGL_ARB_create_context = false;
+	bool has_WGL_ARB_create_context_profile = false;
+	bool has_WGL_ARB_create_context_robustness = false;
+
+	DummyContextWGL(GTKManagerWin32 *manager, HDC hDC, HWND hWnd, bool stereoVisual, bool needAlpha) {
+		prevHDC = ::wglGetCurrentDC();
+		prevHGLRC = ::wglGetCurrentContext();
+
+		/* clang-format off */
+
+		preferredPFD = {
+			sizeof(PIXELFORMATDESCRIPTOR),
+			1,
+			(DWORD)(PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER | (stereoVisual ? PFD_STEREO : 0)),
+			PFD_TYPE_RGBA,
+			(BYTE)(needAlpha ? 32 : 24),
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,						   
+			(BYTE)(needAlpha ? 8 : 0), 
+			0,						   
+			0,						   
+			0,
+			0,
+			0,
+			0,				
+			0,				
+			0,				
+			0,				
+			PFD_MAIN_PLANE, 
+			0,				
+			0,
+			0,
+			0
+		};
+
+		/* clang-format on */
+
+		dummyPixelFormat = ChooseDummyPixelFormatLegacy(hDC, &preferredPFD);
+
+		if (dummyPixelFormat == 0) {
+			return;
+		}
+
+		PIXELFORMATDESCRIPTOR chosenPFD;
+		if (!::DescribePixelFormat(hDC, dummyPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &chosenPFD)) {
+			return;
+		}
+
+		if (hWnd) {
+			dummyHWND = CloneWindow(hWnd, nullptr);
+
+			if (dummyHWND == nullptr) {
+				return;
+			}
+
+			dummyHDC = GetDC(dummyHWND);
+		}
+
+		if (!(dummyHDC != nullptr)) {
+			return;
+		}
+
+		if (!::SetPixelFormat(dummyHDC, dummyPixelFormat, &chosenPFD)) {
+			return;
+		}
+
+		dummyHGLRC = ::wglCreateContext(dummyHDC);
+
+		if (!(dummyHGLRC != nullptr)) {
+			return;
+		}
+
+		if (!(::wglMakeCurrent(dummyHDC, dummyHGLRC))) {
+			return;
+		}
+
+		if (glewInit() != GLEW_OK) {
+			return;
+		}
+
+		has_WGL_ARB_pixel_format = glewIsSupported("WGL_ARB_pixel_format");
+		has_WGL_ARB_create_context = glewIsSupported("WGL_ARB_create_context");
+		has_WGL_ARB_create_context_profile = glewIsSupported("WGL_ARB_create_context_profile");
+		has_WGL_ARB_create_context_robustness = glewIsSupported("WGL_ARB_create_context_robustness");
+	}
+
+	~DummyContextWGL() {
+		::wglMakeCurrent(prevHDC, prevHGLRC);
+
+		if (dummyHGLRC != nullptr) {
+			::wglDeleteContext(dummyHGLRC);
+		}
+
+		if (dummyHWND != nullptr) {
+			if (dummyHDC != nullptr) {
+				::ReleaseDC(dummyHWND, dummyHDC);
+			}
+
+			::DestroyWindow(dummyHWND);
+		}
+	}
+};
+
 bool GTKRenderWGL::InitPixelFormat(GTKManagerWin32 *manager, GTKWindowWin32 *window, RenderSetting setting) {
+	DummyContextWGL dummy(manager, window->GetDeviceHandle(), window->GetHandle(), setting.srgb, true);
+
 	/* clang-format off */
 
 	unsigned int count = WGL_NUMBER_PIXEL_FORMATS_ARB;

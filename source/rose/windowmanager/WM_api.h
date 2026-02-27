@@ -89,6 +89,14 @@ typedef struct wmOperatorType {
 	wmOperatorStatus (*invoke)(struct rContext *C, struct wmOperator *op, const struct wmEvent *event);
 
 	/**
+	 * This callback executes on a running operator whenever as property
+	 * is changed. It can correct its own properties or report errors for
+	 * invalid settings in exceptional cases.
+	 * Boolean return value, True denotes a change has been made and to redraw.
+	 */
+	bool (*check)(struct rContext *C, struct wmOperator *op);
+
+	/**
 	 * Called when a modal operator is canceled (not used often).
 	 * Internal cleanup can be done here if needed.
 	 */
@@ -103,7 +111,7 @@ typedef struct wmOperatorType {
 	wmOperatorStatus (*modal)(struct rContext *C, struct wmOperator *op, const struct wmEvent *event);
 
 	/** Verify if enabled in the current context, use #WM_keymap_poll instead of direct calls. */
-	int (*poll)(struct rContext *);
+	bool (*poll)(struct rContext *);
 
 	/** RNA for properties. */
 	struct StructRNA *srna;
@@ -112,7 +120,13 @@ typedef struct wmOperatorType {
 enum {
 	OPTYPE_BLOCKING = 1 << 0,
 	OPTYPE_INTERNAL = 1 << 1,
+	OPTYPE_MODAL_PRIORITY = 1 << 2,
 };
+
+bool WM_operator_last_properties_init(struct wmOperator *op);
+bool WM_operator_last_properties_store(struct wmOperator *op);
+
+const char *WM_operatortype_name(struct wmOperatorType *ot, struct PointerRNA *pointer);
 
 void WM_operatortype_append(void (*opfunc)(struct wmOperatorType *ot));
 void WM_operatortype_clear(void);
@@ -123,10 +137,13 @@ void WM_operatortype_clear(void);
 /** \name Operator
  * \{ */
 
+wmOperatorStatus WM_operator_name_call_ptr(struct rContext *C, struct wmOperatorType *ot, eOpCallContext context, struct PointerRNA *ptr, const struct wmEvent *event);
+
 struct wmOperatorType *WM_operatortype_find(const char *idname, bool quiet);
 
 bool WM_operator_poll(struct rContext *C, struct wmOperatorType *ot);
 
+void WM_operator_properties_filesel(struct wmOperatorType *ot, int filter, int type, int action, int flag);
 void WM_operator_properties_alloc(struct PointerRNA **ptr, struct IDProperty **properties, const char *opstring);
 void WM_operator_properties_free(struct PointerRNA *ptr);
 void WM_operator_free(struct wmOperator *op);

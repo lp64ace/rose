@@ -17,11 +17,15 @@
 #include "LIB_utildefines.h"
 
 #include "KER_context.h"
+#include "KER_main.h"
 #include "KER_screen.h"
 
 #include "WM_api.h"
 
 #include "file.h"
+#include "filelist/filelist.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name SpaceFile SpaceType Methods
@@ -42,7 +46,7 @@ ROSE_INLINE SpaceLink *file_create(const ScrArea *area) {
 		ARegion *region = MEM_callocN(sizeof(ARegion), "SpaceFile::Tools");
 		LIB_addtail(&file->regionbase, region);
 		region->regiontype = RGN_TYPE_TOOLS;
-		region->alignment = RGN_ALIGN_TOP;
+		region->alignment = RGN_ALIGN_LEFT;
 	}
 	// UI List Region
 	{
@@ -77,12 +81,25 @@ ROSE_INLINE SpaceLink *file_create(const ScrArea *area) {
 }
 
 ROSE_INLINE void file_free(SpaceLink *link) {
+	SpaceFile *sfile = (SpaceFile *)link;
+
+	if (sfile->files) {
+		filelist_free(sfile->files);
+		sfile->files = NULL;
+	}
 }
 
 ROSE_INLINE void file_init(WindowManager *wm, ScrArea *area) {
-	SpaceFile *file = (SpaceFile *)area->spacedata.first;
+	SpaceFile *sfile = (SpaceFile *)area->spacedata.first;
 	
-	FileSelectParams *params = ED_fileselect_ensure_active_params(file);
+	FileSelectParams *params = ED_fileselect_ensure_active_params(sfile);
+
+	if (!sfile->files) {
+		sfile->files = filelist_new(params->type);
+	}
+
+	filelist_settype(sfile->files, params->type);
+	filelist_setdir(sfile->files, params->dir);
 }
 
 ROSE_INLINE void file_exit(WindowManager *wm, ScrArea *area) {
@@ -119,7 +136,12 @@ static void file_panel_execution_cancel_button(uiLayout *layout) {
 
 	uiBlock *block;
 	if ((block = UI_layout_block(row))) {
-		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, "Cancel", 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+		UI_layout_scale_x_set(row, 0.8f);
+
+		wmOperatorType *ot = WM_operatortype_find("FILE_OT_cancel", false);
+
+		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, "Cancel", 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		UI_but_op_set(but, ot);
 	}
 }
 
@@ -128,14 +150,12 @@ static void file_panel_execution_execute_button(uiLayout *layout, const char *na
 
 	uiBlock *block;
 	if ((block = UI_layout_block(row))) {
+		UI_layout_scale_x_set(row, 0.8f);
 
-		uiBut *but;
-		if (name[0]) {
-			but = uiDefBut(block, UI_BTYPE_PUSH, name, 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
-		}
-		else {
-			but = uiDefBut(block, UI_BTYPE_PUSH, "Done", 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
-		}
+		wmOperatorType *ot = WM_operatortype_find("FILE_OT_execute", false);
+
+		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, name, 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		UI_but_op_set(but, ot);
 	}
 }
 
@@ -144,23 +164,25 @@ ROSE_INLINE void file_panel_execution_buttons_draw(const rContext *C, Panel *pan
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);
 
-	SpaceFile *file = (SpaceFile *)area->spacedata.first;
+	SpaceFile *file = CTX_wm_space_file(C);
 	FileSelectParams *params = ED_fileselect_get_active_params(file);
 	PointerRNA ptr = RNA_pointer_create_discrete(&screen->id, &RNA_FileSelectParams, params);
 
 	uiBut *but;
 	uiBlock *block;
 	if ((block = UI_layout_block(panel->layout))) {
-		uiLayout *layout = UI_layout_row(panel->layout, BORDERPADDING);
-		UI_layout_scale_y_set(layout, 1.3f);
+		uiLayout *flow = UI_layout_grid(panel->layout, 0, false, false);
 
-		but = uiDefBut_RNA(block, UI_BTYPE_EDIT, "Filename", 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, &ptr, "filename", -1, UI_BUT_TEXT_LEFT);
+		uiLayout *subrow;
+		if ((subrow = UI_layout_row(flow, 0))) {
+			uiLayout *subsubrow;
 
-		{
-			uiLayout *sub = UI_layout_row(layout, BORDERPADDING);
+			but = uiDefBut_RNA(block, UI_BTYPE_EDIT, "", 0, 0, 0, UI_UNIT_Y, &ptr, "filename", -1, UI_BUT_TEXT_LEFT);
 
-			file_panel_execution_execute_button(sub, params->title);
-			file_panel_execution_cancel_button(sub);
+			if ((subsubrow = UI_layout_row(subrow, BORDERPADDING))) {
+				file_panel_execution_execute_button(subsubrow, params->title);
+				file_panel_execution_cancel_button(subsubrow);
+			}
 		}
 	}
 }
@@ -171,6 +193,57 @@ void file_execute_region_panels_register(ARegionType *art) {
 	LIB_strcpy(pt->label, ARRAY_SIZE(pt->label), "Execute Buttons");
 	pt->flag = PANEL_TYPE_NO_HEADER;
 	pt->draw = file_panel_execution_buttons_draw;
+	LIB_addtail(&art->paneltypes, pt);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name File UI Region Methods
+ * \{ */
+
+ROSE_INLINE void file_ui_region_init(WindowManager *wm, ARegion *region) {
+	ED_region_panels_init(wm, region);
+}
+
+ROSE_INLINE void file_panel_ui_file_select_path_draw(const rContext *C, Panel *panel) {
+	Screen *screen = CTX_wm_screen(C);
+	ScrArea *area = CTX_wm_area(C);
+	ARegion *region = CTX_wm_region(C);
+
+	SpaceFile *file = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(file);
+	PointerRNA ptr = RNA_pointer_create_discrete(&screen->id, &RNA_FileSelectParams, params);
+
+	uiBut *but;
+	uiBlock *block;
+	if ((block = UI_layout_block(panel->layout))) {
+		uiLayout *flow = UI_layout_grid(panel->layout, 0, false, false);
+
+		uiLayout *subrow;
+		if ((subrow = UI_layout_row(flow, 0))) {
+			uiLayout *subsubrow;
+
+			if ((subsubrow = UI_layout_row(subrow, BORDERPADDING))) {
+				uiDefBut(block, UI_BTYPE_PUSH, "\u2190", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Back
+				uiDefBut(block, UI_BTYPE_PUSH, "\u2192", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Next
+				uiDefBut(block, UI_BTYPE_PUSH, "\u2191", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Parent
+			}
+
+			UI_block_layout_set_current(block, subrow);
+
+			but = uiDefBut_RNA(block, UI_BTYPE_EDIT, "", 0, 0, 0, UI_UNIT_Y, &ptr, "directory", -1, UI_BUT_TEXT_LEFT);
+			UI_but_func_set(but, file_directory_enter_handle, NULL, NULL);
+		}
+	}
+}
+
+void file_ui_region_panels_register(ARegionType *art) {
+	PanelType *pt = MEM_callocN(sizeof(PanelType), "SpaceType::File::PanelType::UI");
+	LIB_strcpy(pt->idname, ARRAY_SIZE(pt->idname), "FILEBROWSER_PT_directory_path");
+	LIB_strcpy(pt->label, ARRAY_SIZE(pt->idname), "Directory Path");
+	pt->flag = PANEL_TYPE_NO_HEADER;
+	pt->draw = file_panel_ui_file_select_path_draw;
 	LIB_addtail(&art->paneltypes, pt);
 }
 
@@ -192,6 +265,7 @@ void ED_spacetype_file() {
 	st->free = file_free;
 	st->init = file_init;
 	st->exit = file_exit;
+	st->operatortypes = file_operatortypes;
 
 	// Main
 	{
@@ -207,7 +281,6 @@ void ED_spacetype_file() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "File::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->prefsizey = UI_UNIT_Y;
 		art->draw = ED_region_default_draw;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
@@ -228,8 +301,9 @@ void ED_spacetype_file() {
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_UI;
 		art->draw = ED_region_default_draw;
-		art->init = ED_region_default_init;
+		art->init = file_ui_region_init;
 		art->exit = ED_region_default_exit;
+		file_ui_region_panels_register(art);
 	}
 	// Tools
 	{

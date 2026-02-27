@@ -63,6 +63,9 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 	if (but_new->poin != but_old->poin || but_new->pointype != but_old->pointype) {
 		return false;
 	}
+	if (but_new->ot != but_old->ot || but_new->op_ctx != but_old->op_ctx || but_new->op_ptr != but_old->op_ptr) {
+		return false;
+	}
 	if (!STREQ(but_new->name, but_old->name)) {
 		return false;
 	}
@@ -232,6 +235,7 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	but->name = LIB_strdupN(name);
 
 	switch (pointype) {
+		case UI_POINTER_NIL:
 		case UI_POINTER_STR: {
 			but->maxlength = (int)(max) ? (int)(max) : 64;
 		} break;
@@ -240,7 +244,7 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 		} break;
 	}
 
-	but->drawstr = MEM_mallocN(but->maxlength, "uiBut::DrawStr");
+	but->drawstr = MEM_mallocN(but->maxlength + 1, "uiBut::DrawStr");
 	LIB_strcpy(but->drawstr, but->maxlength, but->name);
 
 	but->pointype = pointype;
@@ -309,6 +313,8 @@ ROSE_INLINE uiBut *ui_def_but_rna(uiBlock *block, int type, const char *name, in
 		but->rna_pointer = PointerRNA_NULL;
 	}
 
+	ui_but_update(but, true);
+
 	return but;
 }
 
@@ -363,6 +369,10 @@ void UI_but_func_set(uiBut *but, uiButHandleFunc func, void *arg1, void *arg2) {
 void UI_but_menu_set(uiBut *but, uiBlockCreateFunc func, void *arg) {
 	but->menu_create_func = func;
 	but->arg = arg;
+}
+
+void UI_but_op_set(uiBut *but, wmOperatorType *ot) {
+	but->ot = ot;
 }
 
 bool ui_region_contains_point_px(const ARegion *region, const int xy[2]) {

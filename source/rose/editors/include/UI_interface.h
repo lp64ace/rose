@@ -1,6 +1,8 @@
 #ifndef ED_INTERFACE_H
 #define ED_INTERFACE_H
 
+#include "DNA_windowmanager_types.h"
+
 #include "RNA_access.h"
 
 #include "LIB_listbase.h"
@@ -19,6 +21,7 @@ struct uiBut;
 struct uiLayout;
 struct uiPopupBlockHandle;
 struct PointerRNA;
+struct wmOperatorType;
 
 /* -------------------------------------------------------------------- */
 /** \name UI Enums
@@ -195,6 +198,10 @@ typedef struct uiBut {
 	int selend;
 	int scroll;
 
+	struct wmOperatorType *ot;
+	eOpCallContext op_ctx;
+	PointerRNA *op_ptr;
+
 	uiButHandleTextFunc handle_text_func;
 	uiButHandleFunc handle_func;
 	void *arg1, *arg2;
@@ -265,6 +272,7 @@ struct uiBut *uiDefButEx_RNA(struct uiBlock *block, int type, const char *name, 
 void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double softmin, double softmax);
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
 void UI_but_menu_set(struct uiBut *but, uiBlockCreateFunc func, void *arg);
+void UI_but_op_set(struct uiBut *but, struct wmOperatorType *ot);
 
 void uiButEnableFlag(struct uiBut *but, int flag);
 void uiButDisableFlag(struct uiBut *but, int flag);
@@ -296,6 +304,13 @@ enum {
 };
 
 enum {
+	LAYOUT_ALIGN_EXPAND = 0,
+	LAYOUT_ALIGN_LEFT = 1,
+	LAYOUT_ALIGN_CENTER = 2,
+	LAYOUT_ALIGN_RIGHT = 3,
+};
+
+enum {
 	UI_LAYOUT_HORIZONTAL = 0,
 	UI_LAYOUT_VERTICAL = 1,
 };
@@ -311,6 +326,9 @@ void UI_block_layout_free(struct uiBlock *block);
 
 void UI_layout_scale_x_set(struct uiLayout *layout, float scale);
 void UI_layout_scale_y_set(struct uiLayout *layout, float scale);
+void UI_layout_unit_x_set(struct uiLayout *layout, float unit);
+void UI_layout_unit_y_set(struct uiLayout *layout, float unit);
+void UI_layout_fit(struct uiLayout *layout, float x, float y);
 
 void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
 

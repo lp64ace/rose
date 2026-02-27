@@ -57,6 +57,11 @@ unsigned int RNA_property_canonical_token(const char *identifier);
 
 struct PropertyRNA *RNA_def_property(void *container, const char *identifier, int type, int subtype);
 struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
+struct PropertyRNA *RNA_def_string(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
+struct PropertyRNA *RNA_def_string_file_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
+struct PropertyRNA *RNA_def_string_dir_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
+struct PropertyRNA *RNA_def_string_file_name(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
+struct PropertyRNA *RNA_def_collection_runtime(void *container, const char *identifier, struct StructRNA *type, const char *ui_name, const char *ui_description);
 
 void RNA_def_property_ui_text(struct PropertyRNA *prop, const char *name, const char *description);
 void RNA_def_property_ui_range(struct PropertyRNA *prop, double vmin, double vmax, double step, int precision);
@@ -101,6 +106,7 @@ void RNA_def_property_int_default(struct PropertyRNA *property, int default_valu
 /** \name String Property RNA Definition
  * \{ */
 
+void RNA_def_property_string_default(struct PropertyRNA *prop, const char *default_value);
 void RNA_def_property_string_maxlength(struct PropertyRNA *prop, int maxlength);
 
 /** \} */
@@ -109,9 +115,10 @@ void RNA_def_property_string_maxlength(struct PropertyRNA *prop, int maxlength);
 /** \name Helper Functions
  * \{ */
 
-const char *RNA_property_typename(enum ePropertyType type);
-const char *RNA_property_rawtypename(enum eRawPropertyType type);
-const char *RNA_property_subtypename(enum ePropertySubType type);
+const char *RNA_property_type_identifier(enum ePropertyType type);
+const char *RNA_property_type_typename(enum ePropertyType type);
+const char *RNA_property_type_rawtypename(enum eRawPropertyType type);
+const char *RNA_property_type_subtypename(enum ePropertySubType type);
 
 /** \} */
 
@@ -156,6 +163,7 @@ int rna_Property_description_length(struct PointerRNA *ptr);
 /** \name ID Exposed Functions
  * \{ */
 
+struct StructRNA *rna_ID_code_to_rna(short idcode);
 struct StructRNA *rna_ID_refine(struct PointerRNA *ptr);
 
 /** \} */

@@ -547,7 +547,6 @@ bool KER_collection_object_add_notest(Main *main, Collection *collection, Object
 		KER_main_collection_sync(main);
 	}
 
-
 	DEG_id_tag_update(&collection->id, ID_RECALC_GEOMETRY);
 
 	return true;

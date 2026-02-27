@@ -17,7 +17,7 @@ const Theme U_theme_xp = {
 			.inner_sel = RGBA(0xe0e0e0ff),     // lighter gray on select
 			.text = RGBA(0x000000ff),          // black text
 			.text_sel = RGBA(0xffffff00),      // transparent white text for highlight
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for regular buttons. */
 		.wcol_but = {
@@ -26,7 +26,7 @@ const Theme U_theme_xp = {
 			.inner_sel = RGBA(0x316ac5ff),     // XP blue selection
 			.text = RGBA(0x000000ff),
 			.text_sel = RGBA(0xffffffff),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text buttons. */
 		.wcol_txt = {
@@ -35,7 +35,7 @@ const Theme U_theme_xp = {
 			.inner_sel = RGBA(0x316ac5ff),
 			.text = RGBA(0x000000ff),
 			.text_sel = RGBA(0xffffffff),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for text/number edit buttons. */
 		.wcol_edit = {
@@ -44,7 +44,7 @@ const Theme U_theme_xp = {
 			.inner_sel = RGBA(0x316ac5cc),
 			.text = RGBA(0x000000ff),
 			.text_sel = RGBA(0xaa80ffcc),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		/** The colors that will be used for scrollbar buttons. */
 		.wcol_scroll = {
@@ -53,7 +53,7 @@ const Theme U_theme_xp = {
 			.inner_sel = RGBA(0xffffff2f),
 			.text = RGBA(0x000000cf),
 			.text_sel = RGBA(0x000000ff),
-			.roundness = 0.05f,
+			.roundness = 0.0f,
 		},
 		.text_cur = RGBA(0x000000ff),
 	},

@@ -1,6 +1,10 @@
 #ifndef ED_SPACE_API_H
 #define ED_SPACE_API_H
 
+#include <stdbool.h>
+
+struct rContext;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,6 +23,14 @@ void ED_spacetype_statusbar();
 void ED_spacetype_topbar();
 void ED_spacetype_view3d();
 void ED_spacetype_properties();
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Helper Routines
+ * \{ */
+
+bool ED_operator_file_browsing_active(struct rContext *C);
 
 /** \} */
 

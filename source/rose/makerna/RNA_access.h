@@ -73,6 +73,30 @@ bool RNA_property_is_idprop(const struct PropertyRNA *property);
 bool RNA_property_animateable(const struct PointerRNA *ptr, struct PropertyRNA *property);
 bool RNA_property_editable(const struct PointerRNA *ptr, struct PropertyRNA *property);
 
+/**
+ * Check if the #IDproperty exists, for operators.
+ *
+ * \param use_ghost: Internally an #IDProperty may exist,
+ * without the RNA considering it to be "set", see #IDP_FLAG_GHOST.
+ * This is used for operators, where executing an operator that has run previously
+ * will re-use the last value (unless #PROP_SKIP_SAVE property is set).
+ * In this case, the presence of an existing value shouldn't prevent it being initialized
+ * from the context. Even though this value will be returned if it's requested,
+ * it's not considered to be set (as it would if the menu item or key-map defined it's value).
+ * Set `use_ghost` to true for default behavior, otherwise false to check if there is a value
+ * exists internally and would be returned on request.
+ */
+bool RNA_property_is_set_ex(struct PointerRNA *ptr, struct PropertyRNA *prop, bool use_ghost);
+bool RNA_property_is_set(struct PointerRNA *ptr, struct PropertyRNA *prop);
+void RNA_property_unset(struct PointerRNA *ptr, struct PropertyRNA *prop);
+
+void RNA_property_update(struct rContext *C, struct PointerRNA *ptr, struct PropertyRNA *prop);
+/**
+ * \note its possible this returns a false positive in the case of #PROP_CONTEXT_UPDATE
+ * but this isn't likely to be a performance problem.
+ */
+bool RNA_property_update_check(struct PropertyRNA *prop);
+
 /** Returns the length of the array defined by the property. */
 int RNA_property_array_length(const struct PointerRNA *ptr, struct PropertyRNA *property);
 bool RNA_property_array_check(const struct PropertyRNA *property);
@@ -145,6 +169,32 @@ int RNA_string_length(struct PointerRNA *ptr, const char *name);
 
 int RNA_property_string_max_length(struct PropertyRNA *property);
 
+/* collection */
+
+void RNA_property_collection_begin(PointerRNA *ptr, PropertyRNA *property, CollectionPropertyIterator *iter);
+void RNA_property_collection_next(CollectionPropertyIterator *iter);
+void RNA_property_collection_end(CollectionPropertyIterator *iter);
+
+#define RNA_PROP_BEGIN(sptr, itemptr, prop)                                                                                                     \
+	{                                                                                                                                           \
+		CollectionPropertyIterator rna_macro_iter;                                                                                              \
+		for (RNA_property_collection_begin(sptr, prop, &rna_macro_iter); rna_macro_iter.valid; RNA_property_collection_next(&rna_macro_iter)) { \
+			PointerRNA itemptr = rna_macro_iter.ptr;
+
+#define RNA_PROP_END								  \
+		}                                             \
+		RNA_property_collection_end(&rna_macro_iter); \
+	}												  \
+	((void)0)
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name PointerRNA
+ * \{ */
+
+struct StructRNA *RNA_property_pointer_type(struct PointerRNA *ptr, struct PropertyRNA *property);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -160,11 +210,25 @@ struct PropertyRNA *RNA_struct_find_property(struct PointerRNA *ptr, const char 
 struct PropertyRNA *RNA_struct_type_find_property(struct StructRNA *srna, const char *identifier);
 
 /**
+ * Same as `RNA_struct_find_property` but returns `nullptr` if the property type is no same to
+ * `property_type_check`.
+ */
+struct PropertyRNA *RNA_struct_find_property_check(struct PointerRNA *pointer, const char *name, const ePropertyType property_type_check);
+/**
+ * Same as `RNA_struct_find_property` but returns `nullptr` if the property type is not
+ * #PropertyType::PROP_COLLECTION or property struct type is different to `struct_type_check`.
+ */
+struct PropertyRNA *RNA_struct_find_collection_property_check(struct PointerRNA *pointer, const char *name, const struct StructRNA *struct_type_check);
+
+/**
  * Returns the IDProperty group stored in the given PointerRNA's ID, or NULL if none.
  */
 struct IDProperty *RNA_struct_idprops(struct PointerRNA *ptr);
 
-bool RNA_struct_property_is_set_ex(struct PointerRNA *ptr, const char *identifier);
+const char *RNA_struct_identifier(const struct StructRNA *type);
+const char *RNA_struct_name(const struct StructRNA *type);
+
+bool RNA_struct_property_is_set_ex(struct PointerRNA *ptr, const char *identifier, bool use_ghost);
 bool RNA_struct_property_is_set(struct PointerRNA *ptr, const char *identifier);
 
 /** \} */

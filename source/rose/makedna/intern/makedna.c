@@ -4,6 +4,8 @@
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
+#include "DNA_space_types.h"
+
 #include "RT_context.h"
 #include "RT_object.h"
 #include "RT_parser.h"
@@ -175,7 +177,7 @@ int main(int argc, char **argv) {
 
 	void *ptr = POINTER_OFFSET(sdna->data, sdna->length);
 
-	char path[1024];
+	char path[FILE_MAX];
 	LIB_strcpy(path, ARRAY_SIZE(path), source);
 	LIB_strcat(path, ARRAY_SIZE(path), "/");
 	LIB_strcat(path, ARRAY_SIZE(path), "include_all.c");

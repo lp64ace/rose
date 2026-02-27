@@ -51,24 +51,31 @@ void CTX_free(rContext *ctx) {
 struct WindowManager *CTX_wm_manager(const rContext *ctx) {
 	return ctx->wm.manager;
 }
+
 struct wmWindow *CTX_wm_window(const rContext *ctx) {
 	return ctx->wm.window;
 }
+
 struct Screen *CTX_wm_screen(const rContext *ctx) {
 	return ctx->wm.screen;
 }
+
 struct ScrArea *CTX_wm_area(const rContext *ctx) {
 	return ctx->wm.area;
 }
+
 struct ARegion *CTX_wm_region(const rContext *ctx) {
 	return ctx->wm.region;
 }
+
 struct Main *CTX_data_main(const rContext *ctx) {
 	return ctx->data.main;
 }
+
 struct Scene *CTX_data_scene(const rContext *ctx) {
 	return ctx->data.scene;
 }
+
 struct ViewLayer *CTX_data_view_layer(const rContext *C) {
 	Scene *scene = CTX_data_scene(C);
 	if (!scene) {
@@ -118,24 +125,46 @@ Depsgraph *CTX_data_ensure_evaluated_depsgraph(const rContext *C) {
 	return depsgraph;
 }
 
+struct SpaceLink *CTX_wm_space_data(const rContext *C) {
+	ScrArea *area = CTX_wm_area(C);
+	if (area) {
+		return (struct SpaceLink *)(area->spacedata.first);
+	}
+	return NULL;
+}
+
+struct SpaceFile *CTX_wm_space_file(const rContext *C) {
+	ScrArea *area = CTX_wm_area(C);
+	if (area && area->spacetype == SPACE_FILE) {
+		return (struct SpaceFile *)(area->spacedata.first);
+	}
+	return NULL;
+}
+
 void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {
 	ctx->wm.manager = manager;
 }
+
 void CTX_wm_window_set(rContext *ctx, struct wmWindow *window) {
 	ctx->wm.window = window;
 }
+
 void CTX_wm_screen_set(rContext *ctx, struct Screen *screen) {
 	ctx->wm.screen = screen;
 }
+
 void CTX_wm_area_set(rContext *ctx, struct ScrArea *area) {
 	ctx->wm.area = area;
 }
+
 void CTX_wm_region_set(rContext *ctx, struct ARegion *region) {
 	ctx->wm.region = region;
 }
+
 void CTX_data_main_set(rContext *ctx, struct Main *main) {
 	ctx->data.main = main;
 }
+
 void CTX_data_scene_set(rContext *ctx, struct Scene *scene) {
 	ctx->data.scene = scene;
 }

@@ -99,7 +99,7 @@ typedef struct Panel_Runtime {
 } Panel_Runtime;
 
 typedef struct Panel {
-	struct Pane *prev, *next;
+	struct Panel *prev, *next;
 
 	/** Callbacks for this panel type. */
 	struct PanelType *type;
@@ -285,7 +285,7 @@ enum {
 
 #define AREAMINX 48
 #define PIXELSIZE 1
-#define WIDGET_UNIT 28
+#define WIDGET_UNIT 24
 
 #define BORDERPADDING 3 * PIXELSIZE
 #define BORDERPADDING_GLOBAL 3 * PIXELSIZE

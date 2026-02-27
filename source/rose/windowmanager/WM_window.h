@@ -34,9 +34,9 @@ void WM_window_post_quit_event(struct wmWindow *window);
  * \{ */
 
 /** Set the screen of the window for UI rendering. */
-void WM_window_screen_set(struct rContext *C, struct wmWindow *window, struct Screen *screen);
+void WM_window_set_active_screen(struct rContext *C, struct wmWindow *window, struct Screen *screen);
 /** Get the screen of the window for UI rendering. */
-struct Screen *WM_window_screen_get(const struct wmWindow *window);
+struct Screen *WM_window_get_active_screen(const struct wmWindow *window);
 
 /** \} */
 

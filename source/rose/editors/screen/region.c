@@ -82,7 +82,7 @@ void ED_panel_do_draw(rContext *C, ARegion *region, ListBase *lb, PanelType *pt,
 	}
 	UI_panel_header_buttons_end(panel);
 
-	panel->layout = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, 0, 0);
+	panel->layout = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, region->sizex, 0);
 	pt->draw(C, panel);
 	panel->layout = NULL;
 

@@ -205,6 +205,19 @@ typedef struct wmOperator {
 	struct PointerRNA *ptr;
 } wmOperator;
 
+typedef enum eOpCallContext {
+	/* If there's invoke, call it, otherwise exec. */
+	OP_INVOKE_DEFAULT,
+	OP_INVOKE_REGION_WIN,
+	OP_INVOKE_AREA,
+	OP_INVOKE_SCREEN,
+	/* Only call exec. */
+	OP_EXEC_DEFAULT,
+	OP_EXEC_REGION_WIN,
+	OP_EXEC_AREA,
+	OP_EXEC_SCREEN,
+} eOpCallContext;
+
 enum {
 	OP_IS_INVOKE = (1 << 0),
 	OP_IS_MODAL_CURSOR_REGION = (1 << 1),
@@ -224,6 +237,27 @@ typedef enum wmOperatorStatus {
 	 */
 	OPERATOR_INTERFACE = (1 << 5),
 } wmOperatorStatus;
+
+typedef enum eFileSel_Filter {
+	FILE_TYPE_FOLDER = 1 << 0,
+} eFileSel_Filter;
+
+typedef enum eFileSel_Type {
+	FILE_ROSE = 1, /* don't display relative paths */
+} eFileSel_Type;
+
+typedef enum eFileSel_Action {
+	FILE_OPENFILE = 0,
+	FILE_SAVE = 1,
+} eFileSel_Action;
+
+typedef enum eFileSel_Flag {
+	WM_FILESEL_RELPATH = 1 << 0,
+	WM_FILESEL_DIRECTORY = 1 << 1,
+	WM_FILESEL_FILENAME = 1 << 2,
+	WM_FILESEL_FILEPATH = 1 << 3,
+	WM_FILESEL_FILES = 1 << 4,
+} eFileSel_Flag;
 
 #ifdef __cplusplus
 }

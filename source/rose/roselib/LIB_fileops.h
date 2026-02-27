@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -31,15 +32,47 @@ typedef struct _stat RoseFileStat;
 typedef struct stat RoseFileStat;
 #endif
 
+#ifndef S_ISREG
+#	define S_ISREG(x) (((x) & _S_IFREG) == _S_IFREG)
+#endif
+#ifndef S_ISDIR
+#	define S_ISDIR(x) (((x) & _S_IFDIR) == _S_IFDIR)
+#endif
+
+#if defined(WIN32)
+#	if defined(_MSC_VER)
+#		define R_OK 4
+#		define W_OK 2
+#		define F_OK 0
+#	endif
+#endif
+
 /* -------------------------------------------------------------------- */
 /** \name File Utils
  * \{ */
 
+int LIB_access(const char *filepath, int mode);
 int LIB_stat(const char *filepath, RoseFileStat *r_stat);
 
 int LIB_open(const char *filepath, int oflag, int pmode);
 uint64_t LIB_read(int fd, void *buffer, size_t size);
 uint64_t LIB_seek(int fd, size_t offset, int whence);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name File Utils
+ * \{ */
+
+bool LIB_is_file(const char *path);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Dir Utils
+ * \{ */
+
+bool LIB_is_dir(const char *path);
 
 /** \} */
 

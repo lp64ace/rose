@@ -7,6 +7,7 @@
 #include "LIB_assert.h"
 #include "LIB_ghash.h"
 #include "LIB_listbase.h"
+#include "LIB_rect.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
@@ -218,6 +219,48 @@ void KER_spacetype_free(void) {
 		LIB_freelistN(&st->regiontypes);
 	}
 	LIB_freelistN(&space_types);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Area
+ * \{ */
+
+ARegion *KER_area_find_region_type(const ScrArea *area, int region_type) {
+	if (area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (region->regiontype == region_type) {
+				return region;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+ARegion *KER_area_find_region_active_win(const ScrArea *area) {
+	if (area == NULL) {
+		return NULL;
+	}
+
+	return KER_area_find_region_type(area, RGN_TYPE_WINDOW);
+}
+
+ARegion *KER_area_find_region_xy(const ScrArea *area, int regiontype, const int xy[2]) {
+	if (area == NULL) {
+		return NULL;
+	}
+
+	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		if (ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
+			if (LIB_rcti_isect_pt_v(&region->winrct, xy)) {
+				return region;
+			}
+		}
+	}
+
+	return NULL;
 }
 
 /** \} */

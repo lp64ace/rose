@@ -98,3 +98,37 @@ void ED_spacetype_properties() {
 
 	KER_spacetype_register(st);
 }
+
+/* -------------------------------------------------------------------- */
+/** \name Helper Routines
+ * \{ */
+
+bool ED_operator_areaactive(rContext *C) {
+	if (CTX_wm_window(C) == NULL) {
+		return false;
+	}
+	if (CTX_wm_screen(C) == NULL) {
+		return false;
+	}
+	if (CTX_wm_area(C) == NULL) {
+		return false;
+	}
+	return true;
+}
+
+ROSE_INLINE bool ed_spacetype_test(rContext *C, int spacetype) {
+	if (ED_operator_areaactive(C)) {
+		SpaceLink *sl = (SpaceLink *)CTX_wm_space_data(C);
+		return sl && (sl->spacetype == spacetype);
+	}
+	return false;
+}
+
+bool ED_operator_file_browsing_active(rContext *C) {
+	if (ed_spacetype_test(C, SPACE_FILE)) {
+		return CTX_wm_space_file(C) != NULL;
+	}
+	return false;
+}
+
+/** \} */

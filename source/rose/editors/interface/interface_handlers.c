@@ -32,6 +32,113 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+ROSE_STATIC void ui_do_but_menu_exit(rContext *C, uiBut *but);
+
+/* -------------------------------------------------------------------- */
+/** \name Button Apply/Revert
+ * \{ */
+
+typedef struct uiAfterFunc {
+	struct uiAfterFunc *prev, *next;
+
+	uiButHandleFunc handle_func;
+	void *arg1;
+	void *arg2;
+
+	wmOperatorType *ot;
+	PointerRNA *op_ptr;
+	eOpCallContext op_ctx;
+
+	PointerRNA rna_pointer;
+	PropertyRNA *rna_property;
+} uiAfterFunc;
+
+static ListBase UIAfterFuncs = {.first = NULL, .last = NULL};
+
+ROSE_INLINE uiAfterFunc *ui_afterfunc_new() {
+	uiAfterFunc *after = (uiAfterFunc *)MEM_callocN(sizeof(uiAfterFunc), "uiAfterFunc");
+	LIB_addtail(&UIAfterFuncs, after);
+	return after;
+}
+
+ROSE_INLINE void ui_handle_afterfunc_add_operator_ex(wmOperatorType *ot, PointerRNA **properties, eOpCallContext opcontext, const uiBut *but) {
+	uiAfterFunc *after = ui_afterfunc_new();
+
+	after->ot = ot;
+	after->op_ctx = opcontext;
+	if (properties) {
+		after->op_ptr = *properties;
+		*properties = NULL;
+	}
+}
+
+ROSE_INLINE void ui_handle_afterfunc_add_operator(wmOperatorType *ot, eOpCallContext opcontext) {
+	ui_handle_afterfunc_add_operator_ex(ot, NULL, opcontext, NULL);
+}
+
+ROSE_INLINE void ui_apply_but_func(rContext *C, uiBut *but, void *arg1, void *arg2) {
+	if (but->handle_func) {
+		but->handle_func(C, but, arg1, arg2);
+	}
+
+	uiAfterFunc *after = ui_afterfunc_new();
+
+	if (but->ot) {
+		after->ot = but->ot;
+		after->op_ctx = but->op_ctx;
+		after->op_ptr = but->op_ptr;
+
+		but->ot = NULL;
+		but->op_ctx = OP_INVOKE_DEFAULT;
+		but->op_ptr = NULL;
+	}
+
+	after->rna_pointer = but->rna_pointer;
+	after->rna_property = but->rna_property;
+
+	/** We are currently inside a popup menu and a button was handled, we need to exit the menu! */
+	if (but->block && but->block->handle) {
+		ui_do_but_menu_exit(C, but);
+	}
+}
+
+ROSE_INLINE void ui_apply_but_funcs_after(rContext *C) {
+	ListBase copy = UIAfterFuncs;
+
+	LIB_listbase_clear(&UIAfterFuncs);
+
+	LISTBASE_FOREACH_MUTABLE(uiAfterFunc *, after_func, &copy) {
+		uiAfterFunc after;
+		memcpy(&after, after_func, sizeof(uiAfterFunc));
+		LIB_remlink(&copy, after_func);
+		MEM_freeN(after_func);
+
+		PointerRNA op_ptr = PointerRNA_NULL;
+		if (after.op_ptr) {
+			memcpy(&op_ptr, after.op_ptr, sizeof(PointerRNA));
+			MEM_freeN(after.op_ptr);
+		}
+
+		if (after.ot) {
+			WM_operator_name_call_ptr(C, after.ot, after.op_ctx, after.op_ptr ? &op_ptr : NULL, NULL);
+		}
+
+		if (after.op_ptr) {
+			WM_operator_properties_free(&op_ptr);
+		}
+
+		if (after.rna_pointer.data) {
+			RNA_property_update(C, &after.rna_pointer, after.rna_property);
+		}
+
+		if (after.handle_func) {
+			after.handle_func(C, NULL, after.arg1, after.arg2);
+		}
+	}
+}
+
+/** \} */
+
 /* -------------------------------------------------------------------- */
 /** \name UI Event Handlers
  * \{ */
@@ -71,6 +178,78 @@ enum {
 bool ui_but_is_editing(uiBut *but) {
 	uiHandleButtonData *data = but->active;
 	return (data && data->state == BUTTON_STATE_TEXT_EDITING);
+}
+
+void ui_but_string_get_ex(uiBut *but, char *str, const size_t maxncpy, const int float_precision, const bool use_exp_float, bool *r_use_exp_float) {
+	if (r_use_exp_float) {
+		*r_use_exp_float = false;
+	}
+
+	if (but->rna_property && ELEM(but->type, UI_BTYPE_EDIT, UI_BTYPE_TEXT)) {
+		const ePropertyType type = RNA_property_type(but->rna_property);
+
+		char *buf = NULL;
+		if (type == PROP_STRING) {
+			int length = RNA_property_string_length(&but->rna_pointer, but->rna_property);
+			if (length < maxncpy) {
+				RNA_property_string_get(&but->rna_pointer, but->rna_property, str);
+				buf = str;
+			}
+			else {
+				if (length) {
+					buf = MEM_mallocN(sizeof(*buf) * (length + 1), __func__);
+					RNA_property_string_get(&but->rna_pointer, but->rna_property, buf);
+					buf[length] = '\0';
+				}
+			}
+		}
+		else {
+			ROSE_assert_unreachable();
+		}
+
+		if (buf == NULL) {
+			str[0] = '\0';
+		}
+		else if (buf != str) {
+			LIB_strcpy(str, maxncpy, buf);
+			MEM_freeN(buf);
+		}
+	}
+	else if (ELEM(but->type, UI_BTYPE_EDIT, UI_BTYPE_TEXT)) {
+		ROSE_assert(but->pointype == UI_POINTER_STR);
+		ROSE_assert_unreachable(); // TODO
+	}
+	else {
+		ROSE_assert_unreachable(); // TODO
+	}
+}
+
+void ui_but_string_get(uiBut *but, char *str, const size_t str_maxncpy) {
+	ui_but_string_get_ex(but, str, str_maxncpy, -1, false, NULL);
+}
+
+bool ui_but_string_set(rContext *C, uiBut *but, const char *str) {
+	if (but->rna_property && but->rna_pointer.data && ELEM(but->type, UI_BTYPE_EDIT)) {
+		if (RNA_property_editable(&but->rna_pointer, but->rna_property)) {
+			const ePropertyType type = RNA_property_type(but->rna_property);
+
+			switch (type) {
+				case PROP_STRING: {
+					RNA_property_string_set(&but->rna_pointer, but->rna_property, str);
+				} break;
+				default: {
+					ROSE_assert_unreachable();
+				} break;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+	
+	ROSE_assert_unreachable();
+	return false;
 }
 
 void ui_but_value_set(uiBut *but, double value) {
@@ -276,6 +455,7 @@ void ui_but_update(uiBut *but, bool validate) {
 	}
 
 	switch (but->type) {
+		case UI_BTYPE_EDIT:
 		case UI_BTYPE_TEXT: {
 			if (ui_but_is_float(but)) {
 				UI_GET_BUT_VALUE_INIT(but, value);
@@ -286,6 +466,16 @@ void ui_but_update(uiBut *but, bool validate) {
 				}
 				else {
 					LIB_strnformat(but->drawstr, but->maxlength, "%.*f", precision, (float)value);
+				}
+			}
+			else {
+				if (!ui_but_is_editing(but)) {
+					char str[1024];
+					ui_but_string_get(but, str, ARRAY_SIZE(str));
+					if (!but->drawstr) {
+						but->drawstr = MEM_mallocN(but->maxlength + 1, __func__);
+					}
+					LIB_strcpy(but->drawstr, but->maxlength, str);
 				}
 			}
 		} break;
@@ -456,17 +646,6 @@ ROSE_STATIC void ui_do_but_menu_exit(rContext *C, uiBut *but) {
 	}
 }
 
-ROSE_STATIC void ui_apply_but_func(rContext *C, uiBut *but, void *arg1, void *arg2) {
-	if (but->handle_func) {
-		but->handle_func(C, but, arg1, arg2);
-	}
-
-	/** We are currently inside a popup menu and a button was handled, we need to exit the menu! */
-	if (but->block && but->block->handle) {
-		ui_do_but_menu_exit(C, but);
-	}
-}
-
 ROSE_STATIC bool ui_scroll_set_thumb_pos(uiBut *but, const ARegion *region, const int xy[2]) {
 	float mx = xy[0], my = xy[1];
 	ui_window_to_block_fl(region, but->block, &mx, &my);
@@ -539,6 +718,12 @@ ROSE_STATIC int ui_do_but(rContext *C, uiBlock *block, uiBut *but, const wmEvent
 	}
 
 	return retval;
+}
+
+ROSE_STATIC void ui_textedit_apply(struct rContext *C, uiBut *but, uiHandleButtonData *data) {
+	ui_but_string_set(C, but, but->drawstr);
+	ui_but_update(but, true);
+	ui_apply_but_func(C, but, but->arg1, but->arg2);
 }
 
 ROSE_STATIC void ui_textedit_set_cursor_pos(uiBut *but, const ARegion *region, const float x) {
@@ -876,7 +1061,7 @@ ROSE_STATIC int ui_do_but_textedit(rContext *C, uiBlock *block, uiBut *but, uiHa
 				}
 				else {
 					button_activate_state(C, but, BUTTON_STATE_EXIT);
-					ui_apply_but_func(C, but, but->arg1, but->arg2);
+					ui_textedit_apply(C, but, data);
 				}
 			}
 
@@ -891,7 +1076,7 @@ ROSE_STATIC int ui_do_but_textedit(rContext *C, uiBlock *block, uiBut *but, uiHa
 		case EVT_RETKEY:
 		case EVT_PADENTER: {
 			button_activate_state(C, but, BUTTON_STATE_EXIT);
-			ui_apply_but_func(C, but, but->arg1, but->arg2);
+			ui_textedit_apply(C, but, data);
 			retval |= WM_UI_HANDLER_BREAK;
 		} break;
 		case EVT_ESCKEY: {
@@ -1086,8 +1271,9 @@ ROSE_STATIC int ui_handle_button_event(rContext *C, const wmEvent *evt, uiBut *b
 				retval |= WM_UI_HANDLER_BREAK;
 				break;
 			}
+			
 			/** Left mouse outside of the region cancels the popup. */
-			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_RELEASE)) {
+			if ((U.flag_ui & UI_MENU_EXIT_AUTO) != 0 || evt->type == LEFTMOUSE && ELEM(evt->value, KM_RELEASE)) {
 				ARegion *menuregion = NULL;
 				if (data->menu && data->menu->region) {
 					if (ED_region_contains_xy(data->menu->region, evt->mouse_xy)) {
@@ -1157,6 +1343,9 @@ ROSE_STATIC int ui_handler_region_menu(rContext *C, const wmEvent *evt, void *us
 		}
 	}
 
+	/* delayed apply callbacks */
+	ui_apply_but_funcs_after(C);
+
 	return retval;
 }
 
@@ -1177,33 +1366,49 @@ ROSE_STATIC int ui_region_handler(rContext *C, const wmEvent *evt, void *user_da
 		retval |= ui_handle_button_event(C, evt, but);
 	}
 
-	if (retval != WM_UI_HANDLER_CONTINUE) {
-		return retval;
+	if (retval == WM_UI_HANDLER_CONTINUE) {
+		if (!ui_button_modal_state(but)) {
+			retval |= ui_handle_button_over(C, evt, region);
+		}
 	}
 
-	if (!ui_button_modal_state(but)) {
-		retval |= ui_handle_button_over(C, evt, region);
-	}
-
-	if (retval != WM_UI_HANDLER_CONTINUE) {
-		return retval;
-	}
-
-	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
-		LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
-			if (but->flag & UI_DEFAULT) {
-				retval |= ui_do_but(C, block, but, evt);
-			}
-			if (retval != WM_UI_HANDLER_CONTINUE) {
-				return retval;
+	if (retval == WM_UI_HANDLER_CONTINUE) {
+		LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+			LISTBASE_FOREACH_BACKWARD(uiBut *, but, &block->buttons) {
+				if (but->flag & UI_DEFAULT) {
+					retval |= ui_do_but(C, block, but, evt);
+				}
+				if (retval != WM_UI_HANDLER_CONTINUE) {
+					break;
+				}
 			}
 		}
 	}
+
+	/* delayed apply callbacks */
+	ui_apply_but_funcs_after(C);
 
 	return retval;
 }
 
 ROSE_STATIC void ui_region_handler_remove(rContext *C, void *user_data) {
+	ARegion *region = CTX_wm_region(C);
+	if (region == NULL) {
+		return;
+	}
+
+	UI_blocklist_free(C, region);
+	Screen *screen = CTX_wm_screen(C);
+	if (screen == NULL) {
+		return;
+	}
+
+	/* delayed apply callbacks, but not for screen level regions, those
+	 * we rather do at the very end after closing them all, which will
+	 * be done in ui_region_handler/window */
+	if (!LIB_haslink(&screen->regionbase, region)) {
+		ui_apply_but_funcs_after(C);
+	}
 }
 
 void UI_region_handlers_add(ListBase *handlers) {

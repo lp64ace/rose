@@ -125,7 +125,7 @@ void RNA_def_wm(struct RoseRNA *rna);
  * \{ */
 
 void rna_IDPArray_begin(struct CollectionPropertyIterator *iter, struct PointerRNA *ptr);
-void rna_IDPArray_length(struct PointerRNA *ptr);
+int rna_IDPArray_length(struct PointerRNA *ptr);
 
 struct IDProperty **rna_PropertyGroup_idprops(struct PointerRNA *ptr);
 struct StructRNA *rna_PropertyGroup_refine(struct PointerRNA *ptr);
