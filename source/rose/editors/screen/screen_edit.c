@@ -55,7 +55,7 @@ ScrArea *ED_screen_areas_iter_next(const Screen *screen, const ScrArea *area) {
  * \{ */
 
 ROSE_STATIC void screen_refresh(WindowManager *wm, wmWindow *window, bool full) {
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 	bool do_refresh = screen->do_refresh;
 	if (!full && !do_refresh) {
 		return;
@@ -107,7 +107,7 @@ ROSE_INLINE void screen_global_area_refresh(wmWindow *window, Screen *screen, in
 }
 
 ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *screen) {
-	const int size = UI_UNIT_Y;
+	const int size = PIXELSIZE + UI_UNIT_Y;
 	rcti rect;
 
 	LIB_rcti_init(&rect, 0, WM_window_size_x(window) - 1, 0, WM_window_size_y(window) - 1);
@@ -118,7 +118,7 @@ ROSE_INLINE void screen_global_topbar_area_refresh(wmWindow *window, Screen *scr
 
 ROSE_INLINE void screen_global_statusbar_area_refresh(wmWindow *window, Screen *screen) {
 	const int size_min = 1;
-	const int size_max = UI_UNIT_Y;
+	const int size_max = PIXELSIZE + UI_UNIT_Y;
 	const int size = size_max;
 	rcti rect;
 
@@ -129,7 +129,7 @@ ROSE_INLINE void screen_global_statusbar_area_refresh(wmWindow *window, Screen *
 }
 
 void ED_screen_global_areas_refresh(wmWindow *window) {
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 	if (window->parent != NULL) {
 		if (window->global_areas.areabase.first) {
 			KER_screen_area_map_free(&window->global_areas);
@@ -148,6 +148,11 @@ void ED_screen_global_areas_refresh(wmWindow *window) {
 		screen_global_statusbar_area_refresh(window, screen);
 		screen_global_topbar_area_refresh(window, screen);
 	}
+}
+
+void ED_screen_full_prevspace(rContext *C, ScrArea *area) {
+	/* Stacked full-screen -> only go back to previous area and don't toggle out of full-screen. */
+	ED_area_prevspace(C, area);
 }
 
 bool ED_screen_area_active(rContext *C) {

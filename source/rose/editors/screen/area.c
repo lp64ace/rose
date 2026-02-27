@@ -133,7 +133,7 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 	int prefsizey;
 
 	if (ELEM(region->regiontype, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
-		prefsizey = UI_UNIT_Y;
+		prefsizey = ED_area_header_size_y(area);
 	}
 	else {
 		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 0.5f : region->type->prefsizey);
@@ -344,7 +344,7 @@ ScrArea *ED_screen_temp_space_open(rContext *C, const char *title, const rcti *r
 
 	wmWindow *window;
 	if ((window = WM_window_open(C, title, space_type, true))) {
-		Screen *screen = WM_window_screen_get(window);
+		Screen *screen = WM_window_get_active_screen(window);
 		area = (ScrArea *)screen->areabase.first;
 		ROSE_assert(area && area->spacetype == space_type);
 	}
@@ -407,8 +407,47 @@ void ED_area_newspace(rContext *C, ScrArea *area, int space_type) {
 	ED_area_init(CTX_wm_manager(C), win, area);
 }
 
+static SpaceLink *area_get_prevspace(ScrArea *area) {
+	SpaceLink *sl = (SpaceLink *)(area->spacedata.first);
+
+	/* First toggle to the next temporary space in the list. */
+	for (SpaceLink *sl_iter = sl->next; sl_iter; sl_iter = sl_iter->next) {
+		if (sl_iter->flag & SPACE_FLAG_TYPE_TEMPORARY) {
+			return sl_iter;
+		}
+	}
+
+	/* No temporary space, find the item marked as last active. */
+	for (SpaceLink *sl_iter = sl->next; sl_iter; sl_iter = sl_iter->next) {
+		if (sl_iter->flag & SPACE_FLAG_TYPE_WAS_ACTIVE) {
+			return sl_iter;
+		}
+	}
+
+	/* If neither is found, we can just return to the regular previous one. */
+	return sl->next;
+}
+
+void ED_area_prevspace(rContext *C, ScrArea *area) {
+	SpaceLink *sl = (SpaceLink *)(area->spacedata.first);
+	SpaceLink *prevspace = sl ? area_get_prevspace(area) : NULL;
+
+	if (prevspace) {
+		/* Specify that we want last-used if there are subtypes. */
+		ED_area_newspace(C, area, prevspace->spacetype);
+		/* We've exited the space, so it can't be considered temporary anymore. */
+		sl->flag &= ~SPACE_FLAG_TYPE_TEMPORARY;
+	}
+	else {
+		/* no change */
+		return;
+	}
+
+	ED_area_tag_redraw(area);
+}
+
 void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
-	Screen *screem = WM_window_screen_get(window);
+	Screen *screem = WM_window_get_active_screen(window);
 
 	if (ED_area_is_global(area) && (area->global->flag & GLOBAL_AREA_IS_HIDDEN) != 0) {
 		return;
@@ -502,6 +541,14 @@ int ED_area_global_size_y(const ScrArea *area) {
 	return area->global->height;
 }
 
+int ED_area_header_size_y(const ScrArea *area) {
+	if (area->global) {
+		return ED_area_global_size_y(area);
+	}
+
+	return PIXELSIZE + UI_UNIT_Y;
+}
+
 void screen_area_spacelink_add(ScrArea *area, int spacetype) {
 	SpaceType *st = KER_spacetype_from_id(spacetype);
 	SpaceLink *slink = st->create(area);
@@ -535,7 +582,7 @@ void ED_area_update_region_sizes(WindowManager *wm, wmWindow *window, ScrArea *a
 	if (!(area->flag & AREA_FLAG_REGION_SIZE_UPDATE)) {
 		return;
 	}
-	const Screen *screen = WM_window_screen_get(window);
+	const Screen *screen = WM_window_get_active_screen(window);
 
 	rcti window_rect;
 	WM_window_rect_calc(window, &window_rect);
