@@ -542,20 +542,6 @@ void DRW_draw_view(const rContext *C) {
 		return;
 	}
 
-	Scene *scene = CTX_data_scene(C);
-
-	if (!scene) {
-		/** what the fuck are we supposed to render anyway! */
-		return;
-	}
-
-	ViewLayer *view_layer = CTX_data_view_layer(C);
-
-	if (!view_layer) {
-		/** what the fuck are we supposed to render anyway! */
-		return;
-	}
-
 	Depsgraph *depsgraph = CTX_data_expect_evaluated_depsgraph(C);
 
 	DRW_render_context_enable();
