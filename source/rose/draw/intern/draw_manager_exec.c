@@ -161,10 +161,12 @@ ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResour
 	size_t elem = DRW_handle_elem_get(handle);
 	if (chunk != state->chunk) {
 		if (state->obmat_block_loc) {
-			if (state->chunk != (size_t)-1) {
-				GPU_uniformbuf_unbind(GDrawManager.vdata_pool->matrices_ubo[state->chunk]);
+			if (GDrawManager.vdata_pool->matrices_ubo) {
+				if (state->chunk != (size_t)-1) {
+					GPU_uniformbuf_unbind(GDrawManager.vdata_pool->matrices_ubo[state->chunk]);
+				}
+				GPU_uniformbuf_bind(GDrawManager.vdata_pool->matrices_ubo[chunk], state->obmat_block_loc);
 			}
-			GPU_uniformbuf_bind(GDrawManager.vdata_pool->matrices_ubo[chunk], state->obmat_block_loc);
 		}
 		state->chunk = chunk;
 	}
