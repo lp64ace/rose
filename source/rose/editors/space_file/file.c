@@ -116,7 +116,7 @@ FileSelectParams *ED_fileselect_ensure_active_params(SpaceFile *file) {
 			}
 		}
 
-		if (params->dir[0]) {
+		if (!params->dir[0]) {
 			LIB_path_current_working_directory(file->params->dir, ARRAY_SIZE(file->params->dir));
 		}
 

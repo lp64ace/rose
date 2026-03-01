@@ -14,6 +14,7 @@
 #include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_string_utils.h"
+#include "LIB_path_utils.h"
 #include "LIB_utildefines.h"
 
 #include "KER_context.h"
@@ -91,15 +92,25 @@ ROSE_INLINE void file_free(SpaceLink *link) {
 
 ROSE_INLINE void file_init(WindowManager *wm, ScrArea *area) {
 	SpaceFile *sfile = (SpaceFile *)area->spacedata.first;
-	
 	FileSelectParams *params = ED_fileselect_ensure_active_params(sfile);
 
 	if (!sfile->files) {
 		sfile->files = filelist_new(params->type);
 	}
+}
 
-	filelist_settype(sfile->files, params->type);
+ROSE_INLINE void file_refresh(const rContext *C, ScrArea *area) {
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+
 	filelist_setdir(sfile->files, params->dir);
+	filelist_settype(sfile->files, params->type);
+
+	if (filelist_needs_reading(sfile->files)) {
+		if (!filelist_pending(sfile->files)) {
+			filelist_readjob_start(sfile->files, C);
+		}
+	}
 }
 
 ROSE_INLINE void file_exit(WindowManager *wm, ScrArea *area) {
@@ -174,7 +185,7 @@ ROSE_INLINE void file_panel_execution_buttons_draw(const rContext *C, Panel *pan
 		uiLayout *flow = UI_layout_grid(panel->layout, 0, false, false);
 
 		uiLayout *subrow;
-		if ((subrow = UI_layout_row(flow, 0))) {
+		if ((subrow = UI_layout_row(flow, BORDERPADDING))) {
 			uiLayout *subsubrow;
 
 			but = uiDefBut_RNA(block, UI_BTYPE_EDIT, "", 0, 0, 0, UI_UNIT_Y, &ptr, "filename", -1, UI_BUT_TEXT_LEFT);
@@ -211,8 +222,8 @@ ROSE_INLINE void file_panel_ui_file_select_path_draw(const rContext *C, Panel *p
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);
 
-	SpaceFile *file = CTX_wm_space_file(C);
-	FileSelectParams *params = ED_fileselect_get_active_params(file);
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
 	PointerRNA ptr = RNA_pointer_create_discrete(&screen->id, &RNA_FileSelectParams, params);
 
 	uiBut *but;
@@ -221,7 +232,7 @@ ROSE_INLINE void file_panel_ui_file_select_path_draw(const rContext *C, Panel *p
 		uiLayout *flow = UI_layout_grid(panel->layout, 0, false, false);
 
 		uiLayout *subrow;
-		if ((subrow = UI_layout_row(flow, 0))) {
+		if ((subrow = UI_layout_row(flow, BORDERPADDING))) {
 			uiLayout *subsubrow;
 
 			if ((subsubrow = UI_layout_row(subrow, BORDERPADDING))) {
@@ -253,6 +264,74 @@ void file_ui_region_panels_register(ARegionType *art) {
 /** \name File Main Region Methods
  * \{ */
 
+ROSE_INLINE file_main_region_init(WindowManager *wm, ARegion *region) {
+	wmKeyMap *keymap;
+
+	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Selecting", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
+		WM_event_add_keymap_handler(&region->handlers, keymap);
+	}
+}
+
+bool file_main_region_needs_refresh_before_draw(SpaceFile *sfile) {
+	/* Needed, because filelist is not initialized on loading */
+	if (!sfile->files || filelist_needs_reading(sfile->files)) {
+		return true;
+	}
+
+	return false;
+}
+
+void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
+	Screen *screen = CTX_wm_screen(C);
+	ScrArea *area = CTX_wm_area(C);
+	ARegion *region = CTX_wm_region(C);
+
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+	FileList *files = sfile->files;
+
+	if (file_main_region_needs_refresh_before_draw(sfile)) {
+		file_refresh(C, NULL);
+	}
+
+	size_t numfiles = filelist_files_ensure(files);
+
+	uiBlock *block;
+	if ((block = UI_block_begin(C, region, "FILEBROWSER_PT_file_list"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, region->sizey, region->sizex, 0);
+		uiLayout *col = UI_layout_col(root, 0);
+
+		for (size_t index = 0; index < numfiles; index++) {
+			FileDirEntry *file = filelist_file(files, index);
+
+			do {
+				uiLayout *row = UI_layout_row(col, 0);
+
+				if (file->size && (file->draw_data.size[0] == '\0')) {
+					LIB_strnformat_byte_size(file->draw_data.size, ARRAY_SIZE(file->draw_data.size), file->size, 1);
+				}
+
+				void *ptr = POINTER_FROM_INT(index);
+
+				uiBut *but;
+				but = uiDefBut(block, UI_BTYPE_TEXT, file->name, 0, 0, 0, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+				UI_but_row_set(but, index & 1);
+
+				if ((file->flag & FILE_SEL_HIGHLIGHTED) != 0 || (file->flag & FILE_SEL_SELECTED) != 0) {
+					but->flag |= UI_HOVER;
+				}
+
+				but = uiDefBut(block, UI_BTYPE_TEXT, file->draw_data.size, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+				UI_but_row_set(but, index & 1);
+				but = uiDefBut(block, UI_BTYPE_TEXT, file->draw_data.date, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+				UI_but_row_set(but, index & 1);
+			} while (false);
+		}
+
+		UI_block_end(C, block);
+	}
+}
+
 /** \} */
 
 void ED_spacetype_file() {
@@ -265,6 +344,7 @@ void ED_spacetype_file() {
 	st->free = file_free;
 	st->init = file_init;
 	st->exit = file_exit;
+	st->keymap = file_keymap;
 	st->operatortypes = file_operatortypes;
 
 	// Main
@@ -272,8 +352,8 @@ void ED_spacetype_file() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "File::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = ED_region_default_draw;
-		art->init = ED_region_default_init;
+		art->draw = file_main_region_file_list_draw;
+		art->init = file_main_region_init;
 		art->exit = ED_region_default_exit;
 	}
 	// Header

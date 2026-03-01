@@ -4,6 +4,7 @@
 set(INC
 	# Internal Include Directories
 	PUBLIC ../include
+	.
 	
 	# External Include Directories
 	

@@ -5,7 +5,11 @@
 #include "LIB_path_utils.h"
 #include "LIB_utildefines.h"
 
+#include "RNA_access.h"
+#include "RNA_define.h"
+
 #include "KER_context.h"
+#include "KER_idprop.h"
 #include "KER_main.h"
 #include "KER_userdef.h"
 
@@ -89,8 +93,6 @@ void file_directory_enter_handle(struct rContext *C, struct uiBut *but, void *un
 
 			ED_area_tag_redraw(area);
 		}
-
-		filelist_setdir(sfile->files, params->dir);
 	}
 
 	if (filelist_is_dir(sfile->files, params->dir)) {
@@ -98,6 +100,7 @@ void file_directory_enter_handle(struct rContext *C, struct uiBut *but, void *un
 	}
 
 	ED_fileselect_change_dir(C);
+	ED_area_tag_redraw(area);
 }
 
 void file_draw_check_ex(rContext *C, struct ScrArea *area) {
@@ -217,6 +220,280 @@ void FILE_OT_cancel(wmOperatorType *ot) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name File Select Operator
+ * \{ */
+
+typedef struct FileSelectOperator_CustomData {
+	int event;
+} FileSelectOperator_CustomData;
+
+ROSE_INLINE wmOperatorStatus file_select_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	ARegion *region = CTX_wm_region(C);
+
+	RNA_int_set(op->ptr, "x", event->mouse_local[0]);
+	RNA_int_set(op->ptr, "y", event->mouse_local[1]);
+
+	op->customdata = MEM_callocN(sizeof(FileSelectOperator_CustomData), "FileSelectOperator_CustomData");
+
+	return op->type->modal(C, op, event);
+}
+
+ROSE_INLINE wmOperatorStatus file_select_modal(rContext *C, wmOperator *op, const wmEvent *event) {
+	PropertyRNA *wait_to_deselect_prop = RNA_struct_find_property(op->ptr, "wait_to_deselect_others");
+
+	/* Get settings from RNA properties for operator. */
+	const int mouse_begin[2] = {
+		RNA_int_get(op->ptr, "x"),
+		RNA_int_get(op->ptr, "y"),
+	};
+
+	FileSelectOperator_CustomData *data = (FileSelectOperator_CustomData *)op->customdata;
+
+	const bool use_select_on_click = RNA_struct_property_is_set(op->ptr, "use_select_on_click");
+	const int init_event_type = data->event;
+
+	if (init_event_type == EVENT_NONE) {
+		data->event = event->type;
+
+		if (use_select_on_click) {
+			/* Don't do any selection yet. Wait to see if there's a drag or click (release) event. */
+			WM_event_add_modal_handler(C, op);
+			return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
+		}
+
+		if (event->value == KM_PRESS) {
+			RNA_property_boolean_set(op->ptr, wait_to_deselect_prop, true);
+
+			wmOperatorStatus retval = op->type->exec(C, op);
+
+			if (retval & OPERATOR_RUNNING_MODAL) {
+				WM_event_add_modal_handler(C, op);
+			}
+
+			return retval | OPERATOR_PASS_THROUGH;
+		}
+
+		/**
+		 * If we are in init phase, and cannot validate init of modal operations,
+		 * just fall back to basic exec.
+		 */
+		RNA_property_boolean_set(op->ptr, wait_to_deselect_prop, false);
+
+		return op->type->exec(C, op);
+	}
+	if (init_event_type == event->type && event->value == KM_RELEASE) {
+		RNA_property_boolean_set(op->ptr, wait_to_deselect_prop, false);
+
+		wmOperatorStatus retval = op->type->exec(C, op);
+		return retval | OPERATOR_PASS_THROUGH;
+	}
+
+	if (ISMOUSE_MOTION(event->type)) {
+		const int drag_delta[2] = {
+			mouse_begin[0] - event->mouse_local[0],
+			mouse_begin[1] - event->mouse_local[1],
+		};
+
+		/**
+		 * If user moves mouse more than defined threshold, we consider select operator as
+		 * finished. Otherwise, it is still running until we get an 'release' event. In any
+		 * case, we pass through event, but select op is not finished yet.
+		 */
+		// if (WM_event_drag_test_with_delta(event, drag_delta)) {
+		// 	return OPERATOR_FINISHED | OPERATOR_PASS_THROUGH;
+		// }
+
+		/**
+		 * Important not to return anything other than PASS_THROUGH here,
+		 * otherwise it prevents underlying drag detection code to work properly.
+		 */
+		return OPERATOR_PASS_THROUGH;
+	}
+
+	return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
+}
+
+ROSE_INLINE size_t file_select_find_file(ARegion *region, int x, int y) {
+	// This is really bad to do here!
+	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+		if (!block->active) {
+			continue;
+		}
+
+		if (STREQ(block->name, "FILEBROWSER_PT_file_list")) {
+			LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+				if (but->pointype != UI_POINTER_NIL) {
+					continue;
+				}
+
+				if (LIB_rctf_isect_pt(&but->rect, (float)x, (float)y)) {
+					return POINTER_AS_INT(but->poin);
+				}
+			}
+		}
+	}
+
+	return -1;
+}
+
+typedef enum eFileSelect {
+	FILE_SELECT_NOTHING = 0,
+	FILE_SELECT_DIR = 1,
+	FILE_SELECT_FILE = 2,
+} eFileSelect;
+
+ROSE_INLINE eFileSelect file_select_do(rContext *C, size_t index, bool do_diropen) {
+	Main *main = CTX_data_main(C);
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+
+	size_t total = filelist_files_ensure(sfile->files);
+	const FileDirEntry *file;
+
+	eFileSelect ret = FILE_SELECT_NOTHING;
+	if ((0 <= index) && (index < total) && (file = filelist_file(sfile->files, index))) {
+		if ((file->type & FILE_TYPE_DIR) != 0) {
+			const bool is_parent_dir = FILENAME_IS_PARENT(file->relpath);
+
+			if (do_diropen == false) {
+				ret = FILE_SELECT_DIR;
+			}
+			/* the path is too long and we are not going up! */
+			else if (!is_parent_dir && LIB_strlen(params->dir) + LIB_strlen(file->relpath) >= FILE_MAX) {
+				// Path too long, cannot enter this directory
+			}
+			else {
+				if (is_parent_dir) {
+					/* Avoids "/../../" */
+					LIB_path_parent_dir(params->dir, ARRAY_SIZE(params->dir));
+				}
+				else {
+					LIB_path_join(params->dir, ARRAY_SIZE(params->dir), params->dir, file->relpath);
+					LIB_path_normalize(params->dir);
+				}
+			}
+
+			ED_fileselect_change_dir(C);
+			ret = FILE_SELECT_DIR;
+		}
+		else {
+			ret = FILE_SELECT_FILE;
+		}
+
+		filelist_file_set(C, sfile, index);
+	}
+
+	return ret;
+}
+
+ROSE_INLINE void file_select_deselect_all(SpaceFile *sfile, const int flag) {
+	size_t numfiles = filelist_files_ensure(sfile->files);
+
+	for (size_t index = 0; index < numfiles; index++) {
+		FileDirEntry *file = filelist_file(sfile->files, index);
+
+		file->flag &= ~flag;
+	}
+}
+
+ROSE_INLINE wmOperatorStatus file_select_exec(rContext *C, wmOperator *op) {
+	WindowManager *wm = CTX_wm_manager(C);
+	ARegion *region = CTX_wm_region(C);
+	SpaceFile *sfile = CTX_wm_space_file(C);
+
+	const bool clear = RNA_boolean_get(op->ptr, "deselect_all");
+	const bool extend = RNA_boolean_get(op->ptr, "extend");
+	const bool fill = RNA_boolean_get(op->ptr, "fill");
+	const bool do_open = RNA_boolean_get(op->ptr, "open");
+
+	bool wait_to_deselect_others = RNA_boolean_get(op->ptr, "wait_to_deselect_others");
+
+	int mval[2] = {
+		RNA_int_get(op->ptr, "x"),
+		RNA_int_get(op->ptr, "y"),
+	};
+
+	size_t index = file_select_find_file(region, mval[0], mval[1]);
+	if (index == (size_t)-1) {
+		return OPERATOR_CANCELLED | OPERATOR_PASS_THROUGH;
+	}
+
+	wmOperatorStatus ret = OPERATOR_FINISHED;
+
+	const FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+	if (params) {
+		size_t numfiles = filelist_files_ensure(sfile->files);
+
+		bool has_selected = false;
+
+		for (size_t index = 0; index < numfiles; index++) {
+			FileDirEntry *file = filelist_file(sfile->files, index);
+
+			if ((file->flag & FILE_SEL_SELECTED) != 0) {
+				if (wait_to_deselect_others) {
+					ret = OPERATOR_RUNNING_MODAL;
+				}
+
+				has_selected |= true;
+			}
+		}
+
+		/* single select, deselect all selected first */
+		if (has_selected && !extend) {
+			file_select_deselect_all(sfile, FILE_SEL_SELECTED);
+		}
+	}
+
+	switch (file_select_do(C, index, do_open)) {
+		case FILE_SELECT_NOTHING: {
+			if (clear) {
+				file_select_deselect_all(sfile, FILE_SEL_SELECTED);
+			}
+		} break;
+		case FILE_SELECT_DIR: {
+			// Handled by #file_select_do!
+		} break;
+		case FILE_SELECT_FILE: {
+			FileDirEntry *file = filelist_file(sfile->files, index);
+
+			file->flag |= FILE_SEL_SELECTED;
+
+			if (do_open) {
+				WM_event_fileselect_event(wm, sfile->op, EVT_FILESELECT_EXEC);
+			}
+		} break;
+	}
+
+	return ret;
+}
+
+void FILE_OT_select(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Select";
+	ot->idname = "FILE_OT_select";
+	ot->description = "Handle mouse clicks to select and activate items";
+
+	/* API callbacks. */
+	ot->invoke = file_select_invoke;
+	ot->exec = file_select_exec;
+	ot->modal = file_select_modal;
+	/* Operator works for file or asset browsing */
+	ot->poll = ED_operator_file_browsing_active;
+
+	/* rna */
+	RNA_def_int(ot->srna, "x", 0, INT_MIN, INT_MAX, "X", "", INT_MIN, INT_MAX);
+	RNA_def_int(ot->srna, "y", 0, INT_MIN, INT_MAX, "Y", "", INT_MIN, INT_MAX);
+	RNA_def_boolean(ot->srna, "wait_to_deselect_others", false, "Wait to Deselect Others", "");
+
+	RNA_def_boolean(ot->srna, "extend", false, "Extend", "Extend selection instead of deselecting everything first");
+	RNA_def_boolean(ot->srna, "fill", false, "Fill", "Select everything beginning with the last selection");
+	RNA_def_boolean(ot->srna, "open", true, "Open", "Open a directory when selecting it");
+	RNA_def_boolean(ot->srna, "deselect_all", false, "Deselect On Nothing", "Deselect all when nothing under the cursor");
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Operator Utilities
  * \{ */
 
@@ -316,8 +593,38 @@ void file_sfile_filepath_set(SpaceFile *sfile, const char *filepath) {
 }
 
 void file_operatortypes() {
+	WM_operatortype_append(FILE_OT_select);
 	WM_operatortype_append(FILE_OT_execute);
 	WM_operatortype_append(FILE_OT_cancel);
+}
+
+void file_keymap(wmKeyConfig *keyconf) {
+	/* File Selecting ------------------------------------------------ */
+	wmKeyMap *keymap = WM_keymap_ensure(keyconf, "File Selecting", SPACE_FILE, RGN_TYPE_WINDOW);
+
+	/* clang-format off */
+
+	do {
+		wmKeyMapItem *item = WM_keymap_add_item(keymap, "FILE_OT_select", &(KeyMapItem_Params){
+			.type = LEFTMOUSE,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+
+		RNA_boolean_set(item->ptr, "open", false);
+	} while(false);
+
+	do {
+		wmKeyMapItem *item = WM_keymap_add_item(keymap, "FILE_OT_select", &(KeyMapItem_Params){
+			.type = LEFTMOUSE,
+			.value = KM_DBL_CLICK,
+			.modifier = KM_NOTHING,
+		});
+
+		RNA_boolean_set(item->ptr, "open", true);
+	} while(false);
+
+	/* clang-format on */
 }
 
 /** \} */

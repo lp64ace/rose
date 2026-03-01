@@ -215,6 +215,15 @@ void LIB_duplicatelist(ListBase *dst, const ListBase *src);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Sort Methods
+ * \{ */
+
+/** For now avoid using it on time critical situations, not the fastest implementation possible! */
+void LIB_listbase_sort(ListBase *lb, int (*cmp)(const void *, const void *, void *), void *user_data);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Query Methods
  * \{ */
 

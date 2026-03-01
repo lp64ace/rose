@@ -1425,6 +1425,17 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 	return property;
 }
 
+PropertyRNA *RNA_def_boolean(void *vcontainer, const char *identifier, bool default_value, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_BOOLEAN, PROP_NONE);
+	RNA_def_property_boolean_default(prop, default_value);
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
 PropertyRNA *RNA_def_int(void *vcontainer, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax) {
 	ContainerRNA *container = (ContainerRNA *)(vcontainer);
 	PropertyRNA *prop;
@@ -1560,6 +1571,21 @@ void RNA_def_property_int_default(PropertyRNA *prop, int value) {
 		case PROP_INT: {
 			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
 			iprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_boolean_default(PropertyRNA *prop, bool value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_BOOLEAN: {
+			BoolPropertyRNA *bprop = (IntPropertyRNA *)prop;
+			bprop->defaultvalue = value;
 			break;
 		}
 		default:

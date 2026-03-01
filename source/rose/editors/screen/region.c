@@ -194,13 +194,13 @@ void ED_region_do_layout(rContext *C, ARegion *region) {
 
 	ED_region_pixelspace(region);
 
+	UI_blocklist_free_inactive(C, region);
+
 	if (region->type && region->type->layout) {
 		region->type->layout(C, region);
 	}
 
 	ED_region_panels_layout(C, region);
-
-	UI_blocklist_free_inactive(C, region);
 
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
@@ -269,7 +269,7 @@ void ED_region_do_draw(rContext *C, ARegion *region) {
 	}
 
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
-		if (block->panel == NULL) {
+		if (block->panel == NULL && block->active) {
 			UI_block_draw(C, block);
 		}
 	}

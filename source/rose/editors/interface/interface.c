@@ -375,6 +375,12 @@ void UI_but_op_set(uiBut *but, wmOperatorType *ot) {
 	but->ot = ot;
 }
 
+void UI_but_row_set(uiBut *but, int row) {
+	but->draw |= UI_BUT_GRID;
+	but->draw |= UI_BUT_ROW;
+	but->draw |= DRAW_INDX(row);
+}
+
 bool ui_region_contains_point_px(const ARegion *region, const int xy[2]) {
 	if (!LIB_rcti_isect_pt_v(&region->winrct, xy)) {
 		return false;

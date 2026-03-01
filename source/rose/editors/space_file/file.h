@@ -53,6 +53,8 @@ void FILE_OT_cancel(struct wmOperatorType *ot);
 
 void file_operatortypes();
 
+void file_keymap(struct wmKeyConfig *keyconf);
+
 /** \} */
 
 #ifdef __cplusplus

@@ -273,6 +273,7 @@ void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double so
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
 void UI_but_menu_set(struct uiBut *but, uiBlockCreateFunc func, void *arg);
 void UI_but_op_set(struct uiBut *but, struct wmOperatorType *ot);
+void UI_but_row_set(struct uiBut *but, int row);
 
 void uiButEnableFlag(struct uiBut *but, int flag);
 void uiButDisableFlag(struct uiBut *but, int flag);

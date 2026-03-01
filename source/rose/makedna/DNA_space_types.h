@@ -46,16 +46,26 @@ enum {
 typedef struct FileDirEntry {
 	struct FileDirEntry *prev, *next;
 
-	const char name[FILE_MAXFILE];
+	char name[FILE_MAXFILE];
+	char relpath[FILE_MAX];
 
 	uint64_t size;
 	uint64_t time;
+
+	int type;
+	int flag;
 
 	struct FileDirEntry_DrawData { // Needed for #DNA
 		char size[16];
 		char date[32];
 	} draw_data;
 } FileDirEntry;
+
+/** #FileDirEntry->flag */
+enum {
+	FILE_SEL_HIGHLIGHTED = 1 << 0,
+	FILE_SEL_SELECTED = 1 << 1,
+};
 
 typedef struct FileDirEntryArr {
 	ListBase entries;

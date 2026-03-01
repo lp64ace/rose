@@ -38,6 +38,21 @@ ROSE_INLINE bool LIB_path_slash_is_native_compat(const char ch) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Current & Parent Directory Defines/Macros
+ * \{ */
+
+/* Parent and current dir helpers. */
+#define FILENAME_PARENT ".."
+#define FILENAME_CURRENT "."
+
+/* Avoid calling `strcmp` on one or two chars! */
+#define FILENAME_IS_PARENT(_n) (((_n)[0] == '.') && ((_n)[1] == '.') && ((_n)[2] == '\0'))
+#define FILENAME_IS_CURRENT(_n) (((_n)[0] == '.') && ((_n)[1] == '\0'))
+#define FILENAME_IS_CURRPAR(_n) (((_n)[0] == '.') && (((_n)[1] == '\0') || (((_n)[1] == '.') && ((_n)[2] == '\0'))))
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Current Working Directory Specific Paths
  * \{ */
 

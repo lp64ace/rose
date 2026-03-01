@@ -694,12 +694,16 @@ ROSE_INLINE void ui_item_layout_col(uiLayout *layout) {
 	int x = layout->x, y = layout->y;
 	int w, h;
 
-	int rawh = 0, flex = 0;
-	LISTBASE_FOREACH(uiItem *, nested, &layout->items) {
+	int rawh = 0, flex = 0, items = 0;
+	LISTBASE_FOREACH_INDEX(uiItem *, nested, &layout->items, items) {
 		ui_item_size(nested, &w, &h);
 
 		rawh += h;
 		flex += (h == 0);
+	}
+
+	if (items > 0 && layout->space) {
+		rawh = rawh - (items - 1) * layout->space;
 	}
 
 	uiItem *last = (uiItem *)layout->items.last;
@@ -726,12 +730,16 @@ ROSE_INLINE void ui_item_layout_row(uiLayout *layout) {
 	int x = layout->x, y = layout->y;
 	int w, h;
 
-	int raww = 0, flex = 0;
-	LISTBASE_FOREACH(uiItem *, nested, &layout->items) {
+	int raww = 0, flex = 0, items = 0;
+	LISTBASE_FOREACH_INDEX(uiItem *, nested, &layout->items, items) {
 		ui_item_size(nested, &w, &h);
 
 		raww += w;
 		flex += (w == 0);
+	}
+
+	if (items > 0 && layout->space) {
+		raww = raww - (items - 1) * layout->space;
 	}
 
 	uiItem *last = (uiItem *)layout->items.last;

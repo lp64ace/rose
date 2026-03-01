@@ -133,6 +133,9 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 
 	std::atomic<bool> too_many_deform_verts_warning(false);
 
+	size_t total = 0;
+
+
 	/* gather the deform vertices for each vertex. */
 	rose::threading::parallel_for(vcorners.index_range(), 4096, [&](const rose::IndexRange range) {
 		for (const size_t corner : range) {
@@ -148,6 +151,7 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 				}
 			}
 			else {
+
 				MDeformWeight top[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 				for (const size_t index : dweights.index_range()) {
 					int m = 0;
@@ -159,6 +163,7 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 						top[m] = dweights[index];
 					}
 				}
+
 				for (const size_t index : rose::IndexRange(4)) {
 					vbo_data[corner].defgroup[index] = top[index].def_nr;
 					vbo_data[corner].weight[index] = top[index].weight;

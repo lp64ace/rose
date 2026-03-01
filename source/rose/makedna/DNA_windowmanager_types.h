@@ -246,6 +246,10 @@ typedef enum eFileSel_Type {
 	FILE_ROSE = 1, /* don't display relative paths */
 } eFileSel_Type;
 
+typedef enum eFileSel_FileType {
+	FILE_TYPE_DIR = 1 << 30,
+} eFileSel_FileType;
+
 typedef enum eFileSel_Action {
 	FILE_OPENFILE = 0,
 	FILE_SAVE = 1,

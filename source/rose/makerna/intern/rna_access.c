@@ -1118,6 +1118,56 @@ bool RNA_property_boolean_get(struct PointerRNA *ptr, struct PropertyRNA *proper
 	return bproperty->defaultvalue;
 }
 
+void RNA_property_boolean_set(PointerRNA *ptr, PropertyRNA *property, bool value) {
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(!p.is_array);
+
+	BoolPropertyRNA *bproperty = (BoolPropertyRNA *)p.rnaprop;
+
+	if (p.idprop) {
+		IDProperty *idproperty = p.idprop;
+		IDP_Bool(idproperty) = value;
+		rna_idproperty_touch(idproperty);
+	}
+	else if (bproperty->set) {
+		bproperty->set(ptr, value);
+	}
+	else if (bproperty->set_ex) {
+		bproperty->set_ex(ptr, &bproperty->property, value);
+	}
+	else if (bproperty->property.flag & PROP_EDITABLE) {
+		IDProperty *group = RNA_struct_system_idprops(ptr, true);
+		if (group) {
+			IDP_AddToGroup(group, IDP_New(IDP_BOOLEAN, &value, 0, p.identifier, 0));
+		}
+	}
+}
+
+bool RNA_boolean_get(PointerRNA *ptr, const char *name) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		return RNA_property_boolean_get(ptr, property);
+	}
+	fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	return false;
+}
+
+void RNA_boolean_set(PointerRNA *ptr, const char *name, bool value) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		RNA_property_boolean_set(ptr, property, value);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
 /* int */
 
 int RNA_property_int_get(PointerRNA *ptr, PropertyRNA *property) {

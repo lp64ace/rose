@@ -56,6 +56,7 @@ unsigned int RNA_property_canonical_token(const char *identifier);
 #define RNA_TRANSLATION_PREC_DEFAULT 3
 
 struct PropertyRNA *RNA_def_property(void *container, const char *identifier, int type, int subtype);
+struct PropertyRNA *RNA_def_boolean(void *container, const char *identifier, bool default_value, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
 struct PropertyRNA *RNA_def_string(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string_file_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
@@ -99,6 +100,14 @@ void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float 
  * \{ */
 
 void RNA_def_property_int_default(struct PropertyRNA *property, int default_value);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Boolean Property RNA Definition
+ * \{ */
+
+void RNA_def_property_boolean_default(struct PropertyRNA *property, bool default_value);
 
 /** \} */
 

@@ -216,7 +216,14 @@ void ui_but_string_get_ex(uiBut *but, char *str, const size_t maxncpy, const int
 		}
 	}
 	else if (ELEM(but->type, UI_BTYPE_EDIT, UI_BTYPE_TEXT)) {
-		ROSE_assert(but->pointype == UI_POINTER_STR);
+		if (but->pointype == UI_POINTER_NIL) {
+			LIB_strcpy(str, maxncpy, but->name);
+			return;
+		}
+		if (but->pointype == UI_POINTER_STR) {
+			LIB_strncpy(str, maxncpy, but->poin, but->maxlength);
+			return;
+		}
 		ROSE_assert_unreachable(); // TODO
 	}
 	else {
@@ -1222,8 +1229,7 @@ ROSE_STATIC int ui_handle_button_event(rContext *C, const wmEvent *evt, uiBut *b
 				break;
 			}
 			if (evt->type == LEFTMOUSE && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
-				/** This type of buttons only activate when double-clicked! */
-				if (!ELEM(but->type, UI_BTYPE_TEXT) || ELEM(evt->value, KM_DBL_CLICK)) {
+				if (!ELEM(but->type, UI_BTYPE_TEXT)) {
 					switch (but->type) {
 						case UI_BTYPE_SCROLL: {
 							button_activate_state(C, but, BUTTON_STATE_SCROLL);

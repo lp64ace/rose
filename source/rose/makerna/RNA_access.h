@@ -123,9 +123,12 @@ const char *RNA_property_description(const struct PropertyRNA *property);
 /* boolean */
 
 bool RNA_property_boolean_get(struct PointerRNA *ptr, struct PropertyRNA *property);
-// void RNA_property_boolean_set(struct PointerRNA *ptr, struct PropertyRNA *property, bool value);
+void RNA_property_boolean_set(struct PointerRNA *ptr, struct PropertyRNA *property, bool value);
 // void RNA_property_boolean_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, bool *r_value);
 // void RNA_property_boolean_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const bool *i_value);
+
+bool RNA_boolean_get(struct PointerRNA *ptr, const char *name);
+void RNA_boolean_set(struct PointerRNA *ptr, const char *name, bool value);
 
 /* int */
 
