@@ -126,6 +126,14 @@ void ED_region_panels_init(struct WindowManager *wm, struct ARegion *region);
 /** \name Screen
  * \{ */
 
+/**
+ * Default key-maps, bit-flags (matches order of evaluation).
+ */
+enum {
+	ED_KEYMAP_UI = (1 << 1),
+	ED_KEYMAP_VIEW2D = (1 << 4),
+};
+
 void ED_screen_set_active_region(struct rContext *C, struct wmWindow *window, const int xy[2]);
 void ED_screen_exit(struct rContext *C, struct wmWindow *window, struct Screen *screen);
 

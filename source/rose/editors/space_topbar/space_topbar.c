@@ -158,6 +158,7 @@ void ED_spacetype_topbar() {
 	st->free = topbar_free;
 	st->init = topbar_init;
 	st->exit = topbar_exit;
+	st->keymapflag = ED_KEYMAP_UI;
 
 	// Header
 	{
@@ -168,6 +169,7 @@ void ED_spacetype_topbar() {
 		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 	// Main Region
 	{
@@ -177,6 +179,7 @@ void ED_spacetype_topbar() {
 		art->draw = NULL;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 
 	KER_spacetype_register(st);

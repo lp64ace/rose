@@ -14,6 +14,7 @@
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
+#include "WM_api.h"
 #include "WM_handler.h"
 #include "WM_window.h"
 
@@ -446,6 +447,19 @@ void ED_area_prevspace(rContext *C, ScrArea *area) {
 	ED_area_tag_redraw(area);
 }
 
+ROSE_INLINE void ed_default_handlers(WindowManager *wm, ScrArea *area, ARegion *region, ListBase *handlers, int flag) {
+	ROSE_assert(region ? (&region->handlers == handlers) : (&area->handlers == handlers));
+
+	if (flag & ED_KEYMAP_UI) {
+		UI_region_handlers_add(handlers);
+	}
+	if (flag & ED_KEYMAP_VIEW2D) {
+		/* 2d-viewport handling+manipulation */
+		wmKeyMap *keymap = WM_keymap_ensure(wm->runtime.defaultconf, "View2D", SPACE_EMPTY, RGN_TYPE_WINDOW);
+		WM_event_add_keymap_handler(handlers, keymap);
+	}
+}
+
 void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	Screen *screem = WM_window_get_active_screen(window);
 
@@ -477,6 +491,9 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	region_rect_recursive(area, (ARegion *)area->regionbase.first, &rect, &overlap_rect, 0);
 	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
 
+	/* default area handlers */
+	ed_default_handlers(wm, area, NULL, &area->handlers, area->type->keymapflag);
+
 	if (area->type->init) {
 		area->type->init(wm, area);
 	}
@@ -489,9 +506,10 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 				region->type->init(wm, region);
 			}
 
-			ED_region_tag_redraw(region);
+			/* default region handlers */
+			ed_default_handlers(wm, area, region, &region->handlers, region->type->keymapflag);
 
-			UI_region_handlers_add(&region->handlers);
+			ED_region_tag_redraw(region);
 		}
 		else {
 			UI_blocklist_free(NULL, region);

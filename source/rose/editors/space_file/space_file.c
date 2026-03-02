@@ -311,7 +311,7 @@ void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
 
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "FILEBROWSER_PT_file_list"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, region->sizex, 0);
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, region->v2d.cur.xmin, -region->v2d.cur.ymax, region->sizex, 0);
 		uiLayout *col = UI_layout_col(root, 0);
 
 		for (size_t index = 0; index < numfiles; index++) {
@@ -368,6 +368,7 @@ void ED_spacetype_file() {
 	st->init = file_init;
 	st->exit = file_exit;
 	st->keymap = file_keymap;
+	st->keymapflag = ED_KEYMAP_UI;
 	st->operatortypes = file_operatortypes;
 
 	// Main
@@ -378,6 +379,7 @@ void ED_spacetype_file() {
 		art->draw = file_main_region_file_list_draw;
 		art->init = file_main_region_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D;
 	}
 	// Header
 	{
@@ -387,6 +389,7 @@ void ED_spacetype_file() {
 		art->draw = ED_region_default_draw;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 	// Execute
 	{
@@ -396,6 +399,7 @@ void ED_spacetype_file() {
 		art->draw = ED_region_default_draw;
 		art->init = file_execution_region_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 		file_execute_region_panels_register(art);
 	}
 	// UI
@@ -406,6 +410,7 @@ void ED_spacetype_file() {
 		art->draw = ED_region_default_draw;
 		art->init = file_ui_region_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 		file_ui_region_panels_register(art);
 	}
 	// Tools
@@ -418,6 +423,7 @@ void ED_spacetype_file() {
 		art->draw = ED_region_default_draw;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 
 	KER_spacetype_register(st);

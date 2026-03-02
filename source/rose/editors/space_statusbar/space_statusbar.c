@@ -95,6 +95,7 @@ void ED_spacetype_statusbar() {
 	st->free = statusbar_free;
 	st->init = statusbar_init;
 	st->exit = statusbar_exit;
+	st->keymapflag = ED_KEYMAP_UI;
 
 	// Header
 	{
@@ -105,6 +106,7 @@ void ED_spacetype_statusbar() {
 		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 	// Main
 	{
@@ -114,6 +116,7 @@ void ED_spacetype_statusbar() {
 		art->draw = NULL;
 		art->init = ED_region_default_init;
 		art->exit = ED_region_default_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 
 	KER_spacetype_register(st);

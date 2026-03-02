@@ -34,6 +34,7 @@ set(SRC
 	interface_widgets.c
 	resources.c
 	view2d.c
+	view2d_ops.c
 	
 	intern/userdef_theme_default.c
 	intern/userdef_theme_light.c

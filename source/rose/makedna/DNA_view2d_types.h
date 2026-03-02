@@ -89,6 +89,7 @@ enum {
 	V2D_PIXELOFS_Y = 1 << 1,
 
 	V2D_IS_INIT = 1 << 16,
+	V2D_IS_NAVIGATING = 1 << 17,
 };
 
 /** #View2D->scroll */

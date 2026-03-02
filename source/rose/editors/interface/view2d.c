@@ -1,5 +1,7 @@
 #include "DNA_view2d_types.h"
 
+#include "KER_context.h"
+
 #include "LIB_assert.h"
 #include "LIB_math_base.h"
 #include "LIB_rect.h"
@@ -57,7 +59,10 @@ void UI_view2d_region_reinit(View2D *v2d, int type, int winx, int winy) {
 			/* tot rect has strictly regulated placement, and must only occur in +/- quadrant */
 			v2d->align = (V2D_ALIGN_NO_NEG_X | V2D_ALIGN_NO_POS_Y);
 			v2d->keeptot = V2D_KEEPTOT_STRICT;
-			changed = init;
+			
+			if (!init) {
+				changed |= true;
+			}
 
 			/* scroller settings are currently not set here... that is left for regions... */
 			break;
@@ -177,8 +182,16 @@ void UI_view2d_tot_rect_set_resize(View2D *v2d, int width, int height, bool resi
 	ui_view2d_cur_rect_validate_resize(v2d, resize);
 }
 
-void UI_view2d_tot_rect_set(struct View2D *v2d, int width, int height) {
+void UI_view2d_tot_rect_set(View2D *v2d, int width, int height) {
 	UI_view2d_tot_rect_set_resize(v2d, width, height, false);
+}
+
+void UI_view2d_cur_rect_validate(View2D *v2d) {
+	ui_view2d_cur_rect_validate_resize(v2d, false);
+}
+
+void UI_view2d_cur_rect_changed(rContext *C, View2D *v2d) {
+	UI_view2d_cur_rect_validate(v2d);
 }
 
 void UI_view2d_scroller_size_get(const View2D *v2d, float *r_x, float *r_y) {

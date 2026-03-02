@@ -158,6 +158,7 @@ void ED_spacetype_view3d() {
 	st->exit = view3d_exit;
 	st->operatortypes = view3d_operatortypes;
 	st->keymap = view3d_keymap;
+	st->keymapflag = ED_KEYMAP_UI;
 
 	// Header Region
 	{
@@ -167,6 +168,7 @@ void ED_spacetype_view3d() {
 		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 	// Main Region
 	{
@@ -178,6 +180,7 @@ void ED_spacetype_view3d() {
 		art->init = view3d_main_region_init;
 		art->exit = ED_region_default_exit;
 		art->free = view3d_main_region_free;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 
 	KER_spacetype_register(st);

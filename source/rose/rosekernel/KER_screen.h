@@ -47,6 +47,8 @@ typedef struct SpaceType {
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
 
+	int keymapflag;
+
 	/* region type definitions */
 	ListBase regiontypes;
 } SpaceType;
@@ -74,6 +76,8 @@ typedef struct ARegionType {
 
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
+
+	int keymapflag;
 
 	int minsizex;
 	int minsizey;

@@ -54,6 +54,7 @@ void UI_view2d_region_reinit(struct View2D *v2d, int type, int winx, int winy);
 /** Resize the View2D total rect based on the new region size. */
 void UI_view2d_tot_rect_set_resize(struct View2D *v2d, int width, int height, bool resize);
 void UI_view2d_tot_rect_set(struct View2D *v2d, int width, int height);
+void UI_view2d_cur_rect_changed(struct rContext *C, struct View2D *v2d);
 
 void UI_view2d_mask_from_win(const View2D *v2d, rcti *r_mask);
 
@@ -75,6 +76,15 @@ void UI_view2d_scrollers_draw(View2D *v2d, const rcti *mask_custom);
  * \{ */
 
 void UI_view2d_view_ortho(const struct View2D *v2d);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Operators
+ * \{ */
+
+void ED_operatortypes_view2d();
+void ED_keymap_view2d(struct wmKeyConfig *keyconf);
 
 /** \} */
 
