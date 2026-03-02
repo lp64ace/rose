@@ -115,46 +115,6 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 	DEG_relations_tag_update(main);
 }
 
-void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath, float unit) {
-	FILE *file = fopen(filepath, "rb");
-	if (!file) {
-		fprintf(stderr, "[FBX] Cannot open resource file '%s'\n", filepath);
-		return;
-	}
-
-	ufbx_load_opts opts = {};
-	opts.filename.data = filepath;
-	opts.filename.length = LIB_strlen(filepath);
-	opts.evaluate_skinning = false;
-	opts.evaluate_caches = false;
-	opts.load_external_files = false;
-	opts.clean_skin_weights = true;
-	opts.use_blender_pbr_material = true;
-
-	opts.geometry_transform_handling = UFBX_GEOMETRY_TRANSFORM_HANDLING_MODIFY_GEOMETRY;
-	opts.pivot_handling = UFBX_PIVOT_HANDLING_ADJUST_TO_ROTATION_PIVOT;
-
-	opts.space_conversion = UFBX_SPACE_CONVERSION_ADJUST_TRANSFORMS;
-	opts.target_unit_meters = unit;
-
-	/* Setup ufbx threading to go through our own task system. */
-	opts.thread_opts.pool.run_fn = fbx_task_run_fn;
-	opts.thread_opts.pool.wait_fn = fbx_task_wait_fn;
-
-	ufbx_error fbx_error;
-	ufbx_scene *fbx = ufbx_load_stdio(file, &opts, &fbx_error);
-	fclose(file);
-
-	if (!fbx) {
-		fprintf(stderr, "[FBX] Cannot import resource file '%s': %s\n", filepath, fbx_error.description.data);
-		return;
-	}
-
-	importer_scene(main, scene, view_layer, fbx, filepath);
-
-	ufbx_free_scene(fbx);
-}
-
 void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void *memory, size_t size, float unit) {
 	ufbx_load_opts opts = {};
 	opts.evaluate_skinning = false;
@@ -184,6 +144,27 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	importer_scene(main, scene, view_layer, fbx, "");
 
 	ufbx_free_scene(fbx);
+}
+
+void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath, float unit) {
+	int fd = LIB_open(filepath, O_BINARY | O_RDONLY, 0);
+	if (!fd) {
+		fprintf(stderr, "[FBX] Cannot open resource file '%s'\n", filepath);
+		return;
+	}
+
+	uint64_t size = LIB_seek(fd, 0, SEEK_END);
+	if (size) {
+		void *memory = MEM_mallocN(size, __func__);
+		LIB_seek(fd, 0, SEEK_SET);
+		LIB_read(fd, memory, size);
+
+		importer_memory(main, scene, view_layer, memory, size, unit);
+
+		MEM_freeN(memory);
+	}
+
+	close(fd);
 }
 
 void FBX_import(rContext *C, const char *filepath, float unit) {
