@@ -183,6 +183,18 @@ ROSE_STATIC size_t lib_filelist_dir_contents_win32(const char *dirname, DirEntry
 
 	size_t count = 0;
 	do {
+		if (e.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) {
+			continue;
+		}
+
+		if (e.dwFileAttributes & FILE_ATTRIBUTE_TEMPORARY) {
+			continue;
+		}
+
+		if (e.dwFileAttributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) {
+			continue;
+		}
+
 		size_t index = count++;
 		(*r_list) = MEM_recallocN_id(*r_list, sizeof(DirEntry) * count, "DirEntryArray");
 

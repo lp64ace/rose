@@ -78,8 +78,15 @@ ROSE_INLINE void filelist_readjob_recursive_dir_add_items(FileListReadJob *job_p
 	DirEntry *e = NULL;
 	size_t n = LIB_filelist_dir_contents(dir, &e);
 
+	if (n == (size_t)-1) {
+		n = 0;
+	}
+
 	for (size_t index = 0; index < n; index++) {
 		if (FILENAME_IS_CURRENT(e[index].name)) {
+			continue;
+		}
+		if (!ELEM(e[index].type, RDT_DIR, RDT_REG)) {
 			continue;
 		}
 

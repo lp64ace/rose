@@ -22,6 +22,7 @@
 
 #include "KER_object.h"
 #include "KER_idtype.h"
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_main.h"
 #include "KER_scene.h"
@@ -29,6 +30,8 @@
 
 #include "WM_draw.h"
 #include "WM_window.h"
+
+#include "DEG_depsgraph.h"
 
 #include <GTK_api.h>
 
@@ -382,8 +385,71 @@ void wm_window_update_animation_time(WindowManager *wm, wmWindow *window) {
 	window->last_draw += dt;
 }
 
+static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowManager *wm, wmWindow *win, bool allow_always_redraw) {
+	Screen *screen = WM_window_get_active_screen(win);
+	bool do_draw = false;
+
+	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
+		if (region->visible && (region->flag & RGN_FLAG_REDRAW) != 0) {
+			do_draw = true;
+		}
+		if (allow_always_redraw) {
+			if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+				do_draw = true;
+			}
+		}
+	}
+
+	ED_screen_areas_iter(win, screen, area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (region->visible && (region->flag & RGN_FLAG_REDRAW) != 0) {
+				do_draw = true;
+			}
+			if (allow_always_redraw) {
+				if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+					do_draw = true;
+				}
+			}
+		}
+	}
+
+	if (screen->do_refresh) {
+		return true;
+	}
+	if (screen->do_draw) {
+		return true;
+	}
+
+	return do_draw;
+}
+
+static bool wm_draw_update_test_window(Main *main, rContext *C, WindowManager *wm, wmWindow *win) {
+	Screen *screen = WM_window_get_active_screen(win);
+	bool do_draw = false;
+
+	size_t total_drawable_windows = 0;
+	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
+		if (!window->handle || GTK_window_is_minimized(window->handle)) {
+			continue;
+		}
+
+		/**
+		 * Count how many windows want to be drawn!
+		 * 
+		 * \note If more than one window wants to be drawn we will ONLY allow 
+		 * the windows that do not have the RGN_FLAG_ALWAYS_REDRAW reason to redraw!
+		 */
+		if (wm_draw_update_test_window_internal(main, C, wm, window, true)) {
+			total_drawable_windows++;
+		}
+	}
+
+	return wm_draw_update_test_window_internal(main, C, wm, win, total_drawable_windows <= 1);
+}
+
 void WM_do_draw(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
+	Main *main = CTX_data_main(C);
 
 	GPU_context_main_lock();
 
@@ -393,23 +459,17 @@ void WM_do_draw(rContext *C) {
 			continue;
 		}
 
-		CTX_wm_window_set(C, window);
-		wm_window_update_animation_time(wm, window);
-		wm_window_make_drawable(wm, window);
-		wm_window_draw(C, window);
-		CTX_wm_window_set(C, NULL);
+		if (wm_draw_update_test_window(main, C, wm, window)) {
+			CTX_wm_window_set(C, window);
+			wm_window_update_animation_time(wm, window);
+			wm_window_make_drawable(wm, window);
+			wm_window_draw(C, window);
+			GTK_window_swap_buffers(window->handle);
+			CTX_wm_window_set(C, NULL);
+		}
 	}
 
 	GPU_context_main_unlock();
-
-	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
-		/** Do not render windows that are not visible. */
-		if (!window->handle || GTK_window_is_minimized(window->handle)) {
-			continue;
-		}
-
-		GTK_window_swap_buffers(window->handle);
-	}
 }
 
 /* -------------------------------------------------------------------- */

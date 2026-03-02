@@ -65,6 +65,8 @@ set(FONTS_SRC
 	fonts/DejaVuSans.ttf
 	fonts/DejaVuSansMono.ttf
 	fonts/GoogleSansCode.ttf
+	fonts/Monospaceland.ttf
+	fonts/RealTimeRoundedTest.otf
 	fonts/Roboto.ttf
 )
 
