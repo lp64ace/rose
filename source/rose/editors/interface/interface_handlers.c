@@ -902,7 +902,8 @@ ROSE_STATIC bool ui_textedit_insert_buf(rContext *C, uiBut *but, const char *inp
 		}
 
 		if (step && (length + step < maxlength)) {
-			char *nbuf = LIB_strformat_allocN("%.*s%.*s%s", but->offset, but->drawstr, step, input, but->drawstr + but->offset);
+			char *nbuf = MEM_callocN(but->maxlength + 1, __func__);
+			LIB_strnformat(nbuf, but->maxlength, "%.*s%.*s%s", but->offset, but->drawstr, step, input, but->drawstr + but->offset);
 			if (but->handle_text_func == NULL || but->handle_text_func(C, but, nbuf)) {
 				SWAP(char *, but->drawstr, nbuf);
 

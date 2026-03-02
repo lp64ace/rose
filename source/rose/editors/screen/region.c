@@ -143,6 +143,8 @@ void ED_region_panels_layout_ex(rContext *C, ARegion *region, ListBase *paneltyp
 	ScrArea *area = CTX_wm_area(C);
 	View2D *v2d = &region->v2d;
 
+	bool update_tot_size = true;
+
 	/* only allow scrolling in vertical direction */
 	v2d->keepofs |= V2D_LOCKOFS_X | V2D_KEEPOFS_Y;
 	v2d->keepofs &= ~(V2D_LOCKOFS_Y | V2D_KEEPOFS_X);
@@ -177,6 +179,10 @@ void ED_region_panels_layout_ex(rContext *C, ARegion *region, ListBase *paneltyp
 	/* align panels and return size */
 	int x, y;
 	UI_panels_end(C, region, &x, &y);
+
+	if (update_tot_size) {
+		UI_view2d_tot_rect_set(v2d, x, y);
+	}
 }
 
 void ED_region_panels_layout(rContext *C, ARegion *region) {
@@ -267,6 +273,8 @@ void ED_region_do_draw(rContext *C, ARegion *region) {
 	if (region->type->draw) {
 		region->type->draw(C, region);
 	}
+
+	View2D *v2d = &region->v2d;
 
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		if (block->panel == NULL && block->active) {

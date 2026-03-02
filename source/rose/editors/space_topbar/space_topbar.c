@@ -120,17 +120,6 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(rContext *C, ARegion *region, uiBut
 	return block;
 }
 
-ROSE_INLINE uiBlock *topbar_header_debug_menu(rContext *C, ARegion *region, uiBut *owner, void *arg) {
-	uiBlock *block;
-	uiBut *but;
-	if ((block = UI_block_begin(C, region, "TOPBAR_menu_debug"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_COL, 0, 0, 0, 0);
-		block->direction = UI_DIR_DOWN;
-		UI_block_end(C, block);
-	}
-	return block;
-}
-
 ROSE_INLINE void topbar_header_region_layout(rContext *C, ARegion *region) {
 	uiBlock *block;
 	uiBut *but;

@@ -201,9 +201,6 @@ typedef struct ARegion {
 	int sizex;
 	int sizey;
 
-	float hscroll;
-	float vscroll;
-
 	View2D v2d;
 
 	int alignment;

@@ -8,6 +8,7 @@
 #include "ED_space_api.h"
 
 #include "UI_interface.h"
+#include "UI_view2d.h"
 
 #include "RNA_prototypes.h"
 
@@ -97,6 +98,9 @@ ROSE_INLINE void file_init(WindowManager *wm, ScrArea *area) {
 	if (!sfile->files) {
 		sfile->files = filelist_new(params->type);
 	}
+
+	filelist_setdir(sfile->files, params->dir);
+	filelist_settype(sfile->files, params->type);
 }
 
 ROSE_INLINE void file_refresh(const rContext *C, ScrArea *area) {
@@ -267,9 +271,11 @@ void file_ui_region_panels_register(ARegionType *art) {
 ROSE_INLINE file_main_region_init(WindowManager *wm, ARegion *region) {
 	wmKeyMap *keymap;
 
-	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Selecting", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
+	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
 		WM_event_add_keymap_handler(&region->handlers, keymap);
 	}
+
+	UI_view2d_region_reinit(&region->v2d, V2D_COMMONVIEW_LIST, region->sizex, region->sizey);
 }
 
 bool file_main_region_needs_refresh_before_draw(SpaceFile *sfile) {
@@ -286,6 +292,8 @@ void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);
 
+	View2D *v2d = &region->v2d;
+
 	SpaceFile *sfile = CTX_wm_space_file(C);
 	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
 	FileList *files = sfile->files;
@@ -294,11 +302,16 @@ void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
 		file_refresh(C, NULL);
 	}
 
+	/* v2d has initialized flag, so this call will only set the mask correct */
+	UI_view2d_region_reinit(v2d, V2D_COMMONVIEW_LIST, region->sizex, region->sizey);
+
 	size_t numfiles = filelist_files_ensure(files);
+
+	UI_view2d_view_ortho(v2d);
 
 	uiBlock *block;
 	if ((block = UI_block_begin(C, region, "FILEBROWSER_PT_file_list"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, region->sizey, region->sizex, 0);
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, region->sizex, 0);
 		uiLayout *col = UI_layout_col(root, 0);
 
 		for (size_t index = 0; index < numfiles; index++) {
@@ -317,7 +330,11 @@ void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
 				but = uiDefBut(block, UI_BTYPE_TEXT, file->name, 0, 0, 0, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
 				UI_but_row_set(but, index & 1);
 
-				if ((file->flag & FILE_SEL_HIGHLIGHTED) != 0 || (file->flag & FILE_SEL_SELECTED) != 0) {
+				if ((file->flag & FILE_SEL_SELECTED) != 0) {
+					but->flag |= UI_SELECT;
+				}
+
+				if ((file->flag & FILE_SEL_HIGHLIGHTED) != 0) {
 					but->flag |= UI_HOVER;
 				}
 
@@ -329,7 +346,13 @@ void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
 		}
 
 		UI_block_end(C, block);
+
+		UI_view2d_tot_rect_set(v2d, LIB_rctf_size_x(&block->rect), LIB_rctf_size_y(&block->rect));
 	}
+
+	ED_region_pixelspace(region);
+
+	UI_view2d_scrollers_draw(v2d, &v2d->mask);
 }
 
 /** \} */

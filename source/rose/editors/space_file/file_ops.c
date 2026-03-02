@@ -19,6 +19,8 @@
 #include "WM_api.h"
 #include "WM_handler.h"
 
+#include "../interface/interface_intern.h"
+
 #include "filelist/filelist.h"
 #include "file.h"
 
@@ -230,8 +232,8 @@ typedef struct FileSelectOperator_CustomData {
 ROSE_INLINE wmOperatorStatus file_select_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
 	ARegion *region = CTX_wm_region(C);
 
-	RNA_int_set(op->ptr, "x", event->mouse_local[0]);
-	RNA_int_set(op->ptr, "y", event->mouse_local[1]);
+	RNA_int_set(op->ptr, "x", event->mouse_xy[0]);
+	RNA_int_set(op->ptr, "y", event->mouse_xy[1]);
 
 	op->customdata = MEM_callocN(sizeof(FileSelectOperator_CustomData), "FileSelectOperator_CustomData");
 
@@ -290,8 +292,8 @@ ROSE_INLINE wmOperatorStatus file_select_modal(rContext *C, wmOperator *op, cons
 
 	if (ISMOUSE_MOTION(event->type)) {
 		const int drag_delta[2] = {
-			mouse_begin[0] - event->mouse_local[0],
-			mouse_begin[1] - event->mouse_local[1],
+			mouse_begin[0] - event->mouse_xy[0],
+			mouse_begin[1] - event->mouse_xy[1],
 		};
 
 		/**
@@ -313,12 +315,17 @@ ROSE_INLINE wmOperatorStatus file_select_modal(rContext *C, wmOperator *op, cons
 	return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
 }
 
-ROSE_INLINE size_t file_select_find_file(ARegion *region, int x, int y) {
+ROSE_INLINE size_t file_select_find_file(ARegion *region, int xy[2]) {
+	View2D *v2d = &region->v2d;
+
 	// This is really bad to do here!
 	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
 		if (!block->active) {
 			continue;
 		}
+
+		float x = xy[0], y = xy[1];
+		ui_window_to_block_fl(region, block, &x, &y);
 
 		if (STREQ(block->name, "FILEBROWSER_PT_file_list")) {
 			LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
@@ -326,7 +333,7 @@ ROSE_INLINE size_t file_select_find_file(ARegion *region, int x, int y) {
 					continue;
 				}
 
-				if (LIB_rctf_isect_pt(&but->rect, (float)x, (float)y)) {
+				if (ui_but_contains_pt(but, x, y)) {
 					return POINTER_AS_INT(but->poin);
 				}
 			}
@@ -413,7 +420,7 @@ ROSE_INLINE wmOperatorStatus file_select_exec(rContext *C, wmOperator *op) {
 		RNA_int_get(op->ptr, "y"),
 	};
 
-	size_t index = file_select_find_file(region, mval[0], mval[1]);
+	size_t index = file_select_find_file(region, mval);
 	if (index == (size_t)-1) {
 		return OPERATOR_CANCELLED | OPERATOR_PASS_THROUGH;
 	}
@@ -600,7 +607,7 @@ void file_operatortypes() {
 
 void file_keymap(wmKeyConfig *keyconf) {
 	/* File Selecting ------------------------------------------------ */
-	wmKeyMap *keymap = WM_keymap_ensure(keyconf, "File Selecting", SPACE_FILE, RGN_TYPE_WINDOW);
+	wmKeyMap *keymap = WM_keymap_ensure(keyconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW);
 
 	/* clang-format off */
 

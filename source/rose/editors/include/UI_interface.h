@@ -278,6 +278,14 @@ void UI_but_row_set(struct uiBut *but, int row);
 void uiButEnableFlag(struct uiBut *but, int flag);
 void uiButDisableFlag(struct uiBut *but, int flag);
 
+/** State for scroll-drawing. */
+enum {
+	UI_SCROLL_PRESSED = 1 << 0,
+	UI_SCROLL_ARROWS = 1 << 1,
+};
+
+void UI_draw_widget_scroll(const struct uiWidgetColors *wcol, const struct rcti *rect, const struct rcti *slider, int state);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

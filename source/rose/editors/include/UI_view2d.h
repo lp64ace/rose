@@ -19,11 +19,15 @@ struct View2D;
 #define V2D_SCROLL_HANDLE_HEIGHT (0.6f * WIDGET_UNIT)
 #define V2D_SCROLL_HANDLE_WIDTH (0.6f * WIDGET_UNIT)
 
+/** Scroll bar with 'handles' hot-spot radius for cursor proximity. */
+#define V2D_SCROLL_HANDLE_SIZE_HOTSPOT (0.6f * WIDGET_UNIT)
+
 enum eView2D_CommonViewTypes {
 	/* custom view type (region has defined all necessary flags already) */
 	V2D_COMMONVIEW_CUSTOM = -1,
 
 	V2D_COMMONVIEW_STANDARD,
+	V2D_COMMONVIEW_LIST,
 	V2D_COMMONVIEW_HEADER,
 	V2D_COMMONVIEW_PANELS_UI,
 };
@@ -52,6 +56,17 @@ void UI_view2d_tot_rect_set_resize(struct View2D *v2d, int width, int height, bo
 void UI_view2d_tot_rect_set(struct View2D *v2d, int width, int height);
 
 void UI_view2d_mask_from_win(const View2D *v2d, rcti *r_mask);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scroll-bar Drawing
+ * \{ */
+
+/**
+ * Draw scroll-bars in the given 2D-region.
+ */
+void UI_view2d_scrollers_draw(View2D *v2d, const rcti *mask_custom);
 
 /** \} */
 
