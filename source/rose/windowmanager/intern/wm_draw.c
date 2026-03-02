@@ -425,7 +425,7 @@ static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowM
 
 static bool wm_draw_update_test_window(Main *main, rContext *C, WindowManager *wm, wmWindow *win) {
 	Screen *screen = WM_window_get_active_screen(win);
-	bool do_draw = false;
+	bool allow_always_redraw = true;
 
 	size_t total_drawable_windows = 0;
 	LISTBASE_FOREACH(wmWindow *, window, &wm->windows) {
@@ -435,16 +435,18 @@ static bool wm_draw_update_test_window(Main *main, rContext *C, WindowManager *w
 
 		/**
 		 * Count how many windows want to be drawn!
-		 * 
-		 * \note If more than one window wants to be drawn we will ONLY allow 
+		 *
+		 * \note If more than one window wants to be drawn we will ONLY allow
 		 * the windows that do not have the RGN_FLAG_ALWAYS_REDRAW reason to redraw!
 		 */
-		if (wm_draw_update_test_window_internal(main, C, wm, window, true)) {
-			total_drawable_windows++;
-		}
+		total_drawable_windows++;
 	}
 
-	return wm_draw_update_test_window_internal(main, C, wm, win, total_drawable_windows <= 1);
+	if (total_drawable_windows > 1) {
+		allow_always_redraw = false;
+	}
+
+	return wm_draw_update_test_window_internal(main, C, wm, win, allow_always_redraw);
 }
 
 void WM_do_draw(rContext *C) {
@@ -459,14 +461,18 @@ void WM_do_draw(rContext *C) {
 			continue;
 		}
 
+		CTX_wm_window_set(C, window);
+
+		/* Quick test to prevent changing window drawable. */
 		if (wm_draw_update_test_window(main, C, wm, window)) {
-			CTX_wm_window_set(C, window);
 			wm_window_update_animation_time(wm, window);
 			wm_window_make_drawable(wm, window);
 			wm_window_draw(C, window);
+
 			GTK_window_swap_buffers(window->handle);
-			CTX_wm_window_set(C, NULL);
 		}
+
+		CTX_wm_window_set(C, NULL);
 	}
 
 	GPU_context_main_unlock();
