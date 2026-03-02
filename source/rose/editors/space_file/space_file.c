@@ -287,7 +287,7 @@ bool file_main_region_needs_refresh_before_draw(SpaceFile *sfile) {
 	return false;
 }
 
-void file_main_region_file_list_draw(const rContext *C, Panel *panel) {
+void file_main_region_file_list_draw(rContext *C, Panel *panel) {
 	Screen *screen = CTX_wm_screen(C);
 	ScrArea *area = CTX_wm_area(C);
 	ARegion *region = CTX_wm_region(C);

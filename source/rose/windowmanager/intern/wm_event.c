@@ -64,6 +64,10 @@ wmEvent *WM_event_add(wmWindow *win, const wmEvent *event_to_add) {
 	return wm_event_add_ex(win, event_to_add, NULL);
 }
 
+void WM_event_add_mouse_move(wmWindow *win) {
+	win->flag |= WINDOW_ADD_MOUSE_MOVE;
+}
+
 void wm_event_update_last_handled(wmWindow *win, wmEvent *evt) {
 	if (win->event_last_handled) {
 		wm_event_free(win->event_last_handled);
@@ -893,6 +897,20 @@ void WM_do_handlers(rContext *C) {
 			LIB_remlink(&window->event_queue, evt);
 			wm_event_update_last_handled(window, evt);
 		}
+
+		/* Only add mouse-move when the event queue was read entirely. */
+		if ((window->flag & WINDOW_ADD_MOUSE_MOVE) != 0) {
+			wmEvent tevent;
+			memcpy(&tevent, window->event_state, sizeof(wmEvent));
+			tevent.type = MOUSEMOVE;
+			tevent.value = KM_NOTHING;
+			tevent.prev_xy[0] = tevent.mouse_xy[0];
+			tevent.prev_xy[1] = tevent.mouse_xy[1];
+			tevent.flag = 0;
+			WM_event_add(window, &tevent);
+			window->flag &= ~WINDOW_ADD_MOUSE_MOVE;
+		}
+
 		CTX_wm_screen_set(C, NULL);
 		CTX_wm_window_set(C, NULL);
 	}

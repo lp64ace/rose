@@ -101,6 +101,8 @@ ROSE_INLINE void view_pan_apply_ex(rContext *C, v2dViewPanData *vpd, float dx, f
 
 	/* don't rebuild full tree in outliner, since we're just changing our view */
 	ED_region_tag_redraw_no_rebuild(vpd->region);
+
+	WM_event_add_mouse_move(CTX_wm_window(C));
 }
 
 ROSE_INLINE void view_pan_apply(rContext *C, wmOperator *op) {

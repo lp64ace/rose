@@ -36,7 +36,7 @@ struct ViewOpsData;
 typedef struct ViewOpsType {
 	eViewOpsFlag flag;
 	const char *idname;
-	int (*poll_fn)(struct rContext *C);
+	bool (*poll_fn)(struct rContext *C);
 	enum wmOperatorStatus (*init_fn)(struct rContext *C, struct ViewOpsData *vod, const struct wmEvent *event, struct PointerRNA *ptr);
 	enum wmOperatorStatus (*apply_fn)(struct rContext *C, struct ViewOpsData *vod, const eV3D_OpEvent event_code, const int xy[2]);
 } ViewOpsType;

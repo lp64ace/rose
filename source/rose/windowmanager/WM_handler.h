@@ -172,6 +172,7 @@ void WM_event_modal_handler_area_replace(struct wmWindow *win, const struct ScrA
 void WM_event_modal_handler_region_replace(struct wmWindow *win, const struct ARegion *old_region, struct ARegion *new_region);
 
 struct wmEvent *WM_event_add(struct wmWindow *win, const struct wmEvent *event_to_add);
+void WM_event_add_mouse_move(struct wmWindow *win);
 
 /**
  * The idea here is to keep a handler alive on window queue, owning the operator.

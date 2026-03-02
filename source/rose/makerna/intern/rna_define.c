@@ -1536,7 +1536,7 @@ void RNA_def_property_struct_runtime(ContainerRNA *container, PropertyRNA *prop,
 	switch (prop->type) {
 		case PROP_POINTER: {
 			PointerPropertyRNA *pprop = (PointerPropertyRNA *)prop;
-			pprop->type = type;
+			pprop->srna = type;
 
 			if (type && (type->flag & STRUCT_ID_REFCOUNT)) {
 				prop->flag |= PROP_ID_REFCOUNT;
@@ -1584,7 +1584,7 @@ void RNA_def_property_boolean_default(PropertyRNA *prop, bool value) {
 
 	switch (prop->type) {
 		case PROP_BOOLEAN: {
-			BoolPropertyRNA *bprop = (IntPropertyRNA *)prop;
+			BoolPropertyRNA *bprop = (BoolPropertyRNA *)prop;
 			bprop->defaultvalue = value;
 			break;
 		}

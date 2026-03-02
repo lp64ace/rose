@@ -42,6 +42,7 @@ typedef struct wmWindow {
 
 	char view_layer_name[64];
 
+	int flag;
 	int posx;
 	int posy;
 	int sizex;
@@ -69,6 +70,11 @@ typedef struct wmWindow {
 
 	wmWindow_Runtime runtime;
 } wmWindow;
+
+/** #wmWindow->flag */
+enum {
+	WINDOW_ADD_MOUSE_MOVE = 1 << 0,
+};
 
 typedef struct WindowManager_Runtime {
 	struct wmKeyConfig *defaultconf;

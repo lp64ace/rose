@@ -108,7 +108,7 @@ bool KER_main_is_empty(struct Main *main);
  * \warning Usage is not recommended,
  * you should always try to get a valid Main pointer from context.
  */
-const char *KER_main_rosefile_path(struct Main *main);
+const char *KER_main_rosefile_path(const struct Main *main);
 const char *KER_main_rosefile_path_from_global();
 
 /** \} */

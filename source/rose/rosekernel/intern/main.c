@@ -109,7 +109,7 @@ bool KER_main_is_empty(struct Main *main) {
 	return true;
 }
 
-const char *KER_main_rosefile_path(Main *main) {
+const char *KER_main_rosefile_path(const Main *main) {
 	return main->filepath;
 }
 

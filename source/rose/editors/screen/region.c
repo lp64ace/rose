@@ -72,7 +72,7 @@ void ED_panel_do_draw(rContext *C, ARegion *region, ListBase *lb, PanelType *pt,
 	int h = 0;
 
 	panel = UI_panel_begin(region, lb, block, pt, panel);
-	if (pt->draw_header && (!pt->flag & PANEL_TYPE_NO_HEADER)) {
+	if (pt->draw_header && !(pt->flag & PANEL_TYPE_NO_HEADER)) {
 		int labelx = 0, labely = 0;
 		UI_panel_label_offset(block, &labelx, &labely);
 
