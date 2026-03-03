@@ -243,6 +243,7 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	 * Should honestly be more than enough.
 	 */
 	scene->r.sframe = 0;
+	scene->r.cframe = 0;
 	scene->r.eframe = INT_MAX;
 	scene->r.fps = 30;
 

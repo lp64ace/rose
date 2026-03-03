@@ -311,6 +311,10 @@ void KER_pose_eval_init(Depsgraph *depsgraph, Scene *scene, Object *object) {
 
 	invert_m4_m4(object->invmat, object->obmat);
 
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+		pchannel->flag &= ~(POSE_DONE | POSE_IKTREE);
+	}
+
 	ROSE_assert(pose->channels != NULL || LIB_listbase_is_empty(&pose->channelbase));
 }
 

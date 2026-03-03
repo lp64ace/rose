@@ -622,6 +622,13 @@ void DepsgraphRelationBuilder::build_object_data_armature(Object *object) {
 			add_relation(bone_done_key, pose_cleanup_key, "Done -> Cleanup");
 			add_relation(bone_ready_key, pose_cleanup_key, "Ready -> Cleanup");
 		}
+		/* Pose -> Ready */
+		add_relation(bone_pose_key, bone_ready_key, "Pose -> Ready");
+		/* Bone ready -> Bone done.
+		 * NOTE: For bones without IK, this is all that's needed.
+		 *       For IK chains however, an additional rel is created from IK
+		 *       to done, with transitive reduction removing this one. */
+		add_relation(bone_ready_key, bone_done_key, "Ready -> Done");
 	}
 }
 

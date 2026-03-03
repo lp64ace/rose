@@ -183,12 +183,12 @@ ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATA *e) {
 }
 
 ROSE_STATIC size_t lib_filelist_dir_contents_win32(const char *dirname, DirEntry **r_list) {
-	char absolute[MAX_PATH];
+	char absolute[FILE_MAX];
 	lib_filelist_path(absolute, dirname);
 
 	WIN32_FIND_DATAW e;
 
-	WCHAR lpQuery[MAX_PATH];
+	WCHAR lpQuery[FILE_MAX];
 	int length;
 	if ((length = MultiByteToWideChar(CP_UTF8, 0, absolute, -1, lpQuery, MAX_PATH)) > 0) {
 		lpQuery[length - 1] = L'*';

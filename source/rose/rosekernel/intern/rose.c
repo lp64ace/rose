@@ -32,7 +32,6 @@ void KER_rose_userdef_init() {
 		LIB_addtail(&U.themes, theme);
 	}
 
-	U.flag_ui = UI_MENU_EXIT_AUTO;
 	U.view_rotate_sensitivity_turntable = 5e-3f;
 
 	// We could honestly leave this empty, and make Alice the default but I prefer basic to be the default!

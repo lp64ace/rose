@@ -233,8 +233,8 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam,
 		} break;
 		case WM_GETMINMAXINFO: {
 			MINMAXINFO *mmi = (MINMAXINFO *)lparam;
-			mmi->ptMinTrackSize.x = 800;
-			mmi->ptMinTrackSize.y = 600;
+			mmi->ptMinTrackSize.x = 640;
+			mmi->ptMinTrackSize.y = 360;
 		} return 0;
 		case WM_INPUT: {
 			if (GetActiveWindow() != hwnd) {

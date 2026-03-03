@@ -133,9 +133,6 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 
 	std::atomic<bool> too_many_deform_verts_warning(false);
 
-	size_t total = 0;
-
-
 	/* gather the deform vertices for each vertex. */
 	rose::threading::parallel_for(vcorners.index_range(), 4096, [&](const rose::IndexRange range) {
 		for (const size_t corner : range) {
