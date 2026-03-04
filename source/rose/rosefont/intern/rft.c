@@ -555,6 +555,15 @@ void RFT_draw(int fontid, const char *str, size_t str_len) {
 	RFT_draw_ex(fontid, str, str_len, NULL);
 }
 
+void RFT_draw_svg_icon(int iconid, float x, float y, float size, const unsigned char color[4], float outline_alpha, bool multicolor) {
+	FontRFT *font = global_font[0];
+	if (font) {
+		rft_draw_gpu__start(font);
+		rft_draw_svg_icon(font, iconid, x, y, size, color, outline_alpha, multicolor);
+		rft_draw_gpu__end(font);
+	}
+}
+
 int RFT_draw_mono(int fontid, const char *str, size_t str_len, int cwidth, int tab_columns) {
 	if (str_len == 0 || str[0] == '\0') {
 		return 0;

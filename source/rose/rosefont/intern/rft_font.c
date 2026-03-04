@@ -13,6 +13,7 @@
 
 #include "LIB_listbase.h"
 #include "LIB_math_base.h"
+#include "LIB_math_color.h"
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
@@ -420,6 +421,7 @@ static void rft_font_draw_ex(FontRFT *font, GlyphCacheRFT *gc, const char *str, 
 		r_info->width = ft_pix_to_int(pen_x);
 	}
 }
+
 void rft_font_draw(FontRFT *font, const char *str, const size_t str_len, ResultRFT *r_info) {
 	GlyphCacheRFT *gc = rft_glyph_cache_acquire(font);
 	rft_font_draw_ex(font, gc, str, str_len, r_info, 0);
@@ -456,6 +458,49 @@ int rft_font_draw_mono(FontRFT *font, const char *str, const size_t str_len, int
 
 	rft_glyph_cache_release(font);
 	return columns;
+}
+
+void rft_draw_svg_icon(FontRFT *font, const uint icon_id, const float x, const float y, float size, const unsigned char color[4], const float outline_alpha, const bool multicolor) {
+	ROSE_assert(outline_alpha <= 1.0f);
+	if (size) {
+		rft_font_size(font, size);
+	}
+	else {
+		size = font->size;
+	}
+	font->pos[0] = (int)x;
+	font->pos[1] = (int)y;
+	font->pos[2] = 0;
+
+	if (color != NULL) {
+		memcpy(font->color, color, sizeof(unsigned char [4]));
+	}
+
+	if (outline_alpha > 0.0f) {
+		font->flags |= RFT_SHADOW;
+		font->shadow = 6;
+		font->shadow_x = 0;
+		font->shadow_y = 0;
+		font->shadow_color[0] = 0;
+		font->shadow_color[1] = 0;
+		font->shadow_color[2] = 0;
+		font->shadow_color[3] = outline_alpha * 255.0f;
+	}
+
+	GlyphCacheRFT *gc = rft_glyph_cache_acquire(font);
+	rft_batch_draw_begin(font);
+
+	GlyphRFT *g = rft_glyph_ensure_icon(gc, icon_id, multicolor);
+	if (g) {
+		rft_glyph_draw(font, gc, g, 0, 0);
+	}
+
+	if (outline_alpha > 0) {
+		font->flags &= ~RFT_SHADOW;
+	}
+
+	rft_batch_draw_end();
+	rft_glyph_cache_release(font);
 }
 
 /* \} */

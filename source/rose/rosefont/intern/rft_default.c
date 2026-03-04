@@ -31,7 +31,6 @@ int RFT_set_default() {
 	ASSERT_DEFAULT_SET;
 
 	RFT_size(global_font_default, global_font_size * PIXELSIZE);
-
 	return global_font_default;
 }
 

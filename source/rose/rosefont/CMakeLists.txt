@@ -43,7 +43,11 @@ set(SRC
 
 set(LIB
 	# Internal Include Directories
+	rose::resources::icons
+
+	rose::extern::nanosvg
 	rose::intern::guardedalloc
+
 	rose::source::gpu
 	rose::source::roselib
 	

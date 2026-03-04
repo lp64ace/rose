@@ -33,6 +33,12 @@ struct ResultRFT;
 #define RFT_CACHE_BYTES 400000
 
 /**
+ * Offset from icon id to Unicode Supplementary Private Use Area-B,
+ * added with Unicode 2.0. 65,536 code-points at U+100000..U+10FFFF.
+ */
+#define RFT_ICON_OFFSET 0x100000L
+
+/**
  * We assume square pixels at a fixed DPI of 72, scaling only the size. Therefore
  * font size = points = pixels, i.e. a size of 20 will result in a 20-pixel EM square.
  * Although we could use the actual monitor DPI instead, we would then have to scale
@@ -89,6 +95,7 @@ void rft_font_draw__wrap(struct FontRFT *font, const char *str, size_t str_len, 
  * Use fixed column width, but an utf8 character may occupy multiple columns.
  */
 int rft_font_draw_mono(struct FontRFT *font, const char *str, size_t str_len, int cwidth, int tab_columns);
+void rft_draw_svg_icon(struct FontRFT *font, const uint icon_id, const float x, const float y, float size, const unsigned char color[4], const float outline_alpha, const bool multicolor);
 void rft_font_draw_buffer(struct FontRFT *font, const char *str, size_t str_len, struct ResultRFT *r_info);
 void rft_font_draw_buffer__wrap(struct FontRFT *font, const char *str, size_t str_len, struct ResultRFT *r_info);
 size_t rft_font_width_to_strlen(struct FontRFT *font, const char *str, size_t str_len, int width, int *r_width);
@@ -122,6 +129,7 @@ void rft_glyph_cache_clear(struct FontRFT *font);
  * Create (or load from cache) a fully-rendered bitmap glyph.
  */
 struct GlyphRFT *rft_glyph_ensure(struct FontRFT *font, struct GlyphCacheRFT *gc, unsigned int charcode);
+struct GlyphRFT *rft_glyph_ensure_icon(struct GlyphCacheRFT *gc, unsigned int icon, bool color);
 
 #ifdef RFT_SUBPIXEL_AA
 struct GlyphRFT *rft_glyph_ensure_subpixel(struct FontRFT *font, struct GlyphCacheRFT *gc, struct GlyphRFT *g, int32_t pen_x);
