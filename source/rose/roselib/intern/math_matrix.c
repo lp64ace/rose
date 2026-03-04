@@ -576,8 +576,10 @@ bool invert_m4_m4_safe(float Ainv[4][4], const float A[4][4]) {
 
 		if (!invert_m4_m4(Ainv, Atemp)) {
 			unit_m4(Ainv);
+			return false;
 		}
 	}
+	return true;
 }
 
 /** \} */

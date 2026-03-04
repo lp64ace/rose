@@ -172,7 +172,7 @@ ROSE_STATIC size_t lib_filelist_path(char out[MAX_PATH], const char *dirname) {
 	return length;
 }
 
-ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATA *e) {
+ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATAW *e) {
 	if (e->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		return RDT_DIR;
 	}

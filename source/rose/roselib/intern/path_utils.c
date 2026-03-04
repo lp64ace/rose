@@ -89,7 +89,7 @@ void LIB_path_normalize_unc(char *path, size_t maxncpy) {
 			tmp[len - 4] = L'\0';
 			LIB_strcpy(path, maxncpy, tmp);
 		}
-		else if ((len > 7) && STREQ(&path[4], "UNC", 3) && ELEM(path[7], '\\', '/')) {
+		else if ((len > 7) && STREQLEN(&path[4], "UNC", 3) && ELEM(path[7], '\\', '/')) {
 			tmp[0] = '\\';
 			tmp[1] = '\\';
 			LIB_strncpy(tmp + 2, ARRAY_SIZE(tmp) - 2, path + 8, len - 8);
