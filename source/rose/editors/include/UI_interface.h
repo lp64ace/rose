@@ -182,6 +182,7 @@ typedef struct uiBut {
 	double precision;
 
 	rctf rect;
+	int icon;
 	int type;
 	int flag;
 	int draw;

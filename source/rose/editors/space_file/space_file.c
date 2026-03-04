@@ -7,6 +7,7 @@
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
+#include "UI_resource.h"
 #include "UI_interface.h"
 #include "UI_view2d.h"
 
@@ -335,6 +336,12 @@ void file_main_region_file_list_draw(rContext *C, ARegion *region) {
 
 				if ((file->flag & FILE_SEL_HIGHLIGHTED) != 0) {
 					but->flag |= UI_HOVER;
+				}
+
+				but->icon = ICON_FILE_BLANK;
+
+				if ((file->type & FILE_TYPE_DIR) != 0) {
+					but->icon = ICON_FILE_FOLDER;
 				}
 
 				but = uiDefBut(block, UI_BTYPE_TEXT, file->draw_data.size, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);

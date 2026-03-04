@@ -20,6 +20,7 @@
 
 #include "LIB_ghash.h"
 #include "LIB_listbase.h"
+#include "LIB_math_color.h"
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
@@ -283,20 +284,23 @@ ROSE_STATIC void ui_draw_text_font_clip_end(int font) {
 	RFT_disable(font, RFT_CLIPPING);
 }
 
-ROSE_STATIC void ui_draw_text_font_position(uiBut *but, int font, const rcti *rect, const char *text, int *r_x, int *r_y) {
+ROSE_STATIC void ui_draw_text_font_position(uiBut *but, int font, const rcti *rect, const char *text, int *r_x, int *r_y, int extra_x, int extra_y) {
 	if (ELEM(but->type, UI_BTYPE_TEXT, UI_BTYPE_PUSH, UI_BTYPE_MENU, UI_BTYPE_EDIT)) {
-		*r_y = LIB_rcti_cent_y(rect) - RFT_height_max(font) / 3;
+		*r_y = LIB_rcti_cent_y(rect) - (RFT_height_max(font) + extra_y) / 3;
 	}
 	else {
-		*r_y = rect->ymax - RFT_height_max(font);
+		*r_y = rect->ymax - (RFT_height_max(font) + extra_y);
 	}
+	
 	if (but->draw & UI_BUT_TEXT_LEFT) {
-		*r_x = rect->xmin;
+		*r_x = rect->xmin + extra_x;
 	}
 	else {
-		float width = ROSE_MIN(RFT_width(font, text, -1), LIB_rcti_size_x(rect));
+		float width = ROSE_MIN(RFT_width(font, text, -1) + extra_x, LIB_rcti_size_x(rect));
+
 		*r_x = (but->draw & UI_BUT_TEXT_RIGHT) ? rect->xmax - width : LIB_rcti_cent_x(rect) - width / 2;
 	}
+
 	RFT_position(font, *r_x, *r_y, 0);
 }
 
@@ -334,8 +338,17 @@ ROSE_STATIC void ui_draw_text_font(uiWidgetColors *wcol, uiBut *but, const rcti 
 
 	int x, y;
 	ui_draw_text_font_clip_begin(font, &rect);
-	ui_draw_text_font_position(but, font, &rect, text + but->scroll, &x, &y);
-	ui_draw_text_font_draw(wcol, but, &rect, font, text + but->scroll, x, y);
+	if (ELEM(but->type, UI_BTYPE_TEXT) && but->icon != ICON_NONE) {
+		ui_draw_text_font_position(but, 0, &rect, "", &x, &y, 0, ICON_UNIT >> 1);
+		RFT_draw_svg_icon(but->icon, x, y, ICON_UNIT, wcol->text, 1.0f, false);
+
+		ui_draw_text_font_position(but, font, &rect, text + but->scroll, &x, &y, WIDGET_UNIT, 0);
+		ui_draw_text_font_draw(wcol, but, &rect, font, text + but->scroll, x, y);
+	}
+	else {
+		ui_draw_text_font_position(but, font, &rect, text + but->scroll, &x, &y, 0, 0);
+		ui_draw_text_font_draw(wcol, but, &rect, font, text + but->scroll, x, y);
+	}
 	ui_draw_text_font_caret(but, &rect, font, text + but->scroll, x, y);
 	ui_draw_text_font_clip_end(font);
 }
