@@ -26,6 +26,7 @@ typedef enum ID_Type {
 	ID_AC = MAKE_ID2('A', 'C'),		/* Action */
 	ID_AR = MAKE_ID2('A', 'R'),		/* Armature */
 	ID_CA = MAKE_ID2('C', 'A'),		/* Camera */
+	ID_MA = MAKE_ID2('M', 'A'),		/* Material */
 	ID_ME = MAKE_ID2('M', 'E'),		/* Mesh */
 	ID_OB = MAKE_ID2('O', 'B'),		/* Object */
 	ID_GR = MAKE_ID2('G', 'R'),		/* Collection */

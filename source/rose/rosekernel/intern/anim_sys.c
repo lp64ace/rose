@@ -288,7 +288,7 @@ bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolved
 /** \name Animation Data Iteration
  * \{ */
 
-/* "User-Data" wrapper used by BKE_fcurves_main_cb() */
+/* "User-Data" wrapper used by KER_fcurves_main_cb() */
 typedef struct AllFCurvesCbWrapper {
 	ID_FCurve_Edit_Callback func; /* Operation to apply on F-Curve */
 	void *user_data;			  /* Custom data for that operation */

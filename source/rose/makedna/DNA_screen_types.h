@@ -282,6 +282,7 @@ enum {
 
 #define AREAMINX 48
 #define PIXELSIZE 1
+#define ICON_UNIT 16
 #define WIDGET_UNIT 24
 
 #define BORDERPADDING 3 * PIXELSIZE

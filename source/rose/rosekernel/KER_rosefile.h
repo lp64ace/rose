@@ -8,6 +8,9 @@ extern "C" {
 typedef struct RoseFileData {
 	struct Main *main;
 	struct UserDef *user;
+	struct Screen *screen;
+	struct Scene *scene;
+	struct ViewLayer *view_layer;
 } RoseFileData;
 
 /* -------------------------------------------------------------------- */

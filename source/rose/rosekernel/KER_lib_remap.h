@@ -51,7 +51,83 @@ enum {
 	 * in memfile reading during undo step decoding).
 	 */
 	ID_REMAP_SKIP_USER_REFCOUNT = 1 << 4,
+	/** Force remapping of 'UI-like' ID usages (ID pointers stored in editors data etc.). */
+	ID_REMAP_FORCE_UI_POINTERS = 1 << 5,
 };
+
+/* -------------------------------------------------------------------- */
+/** \name IDRemapper
+ * \{ */
+
+/** Create a new IDRemap object and initialize it, starting with zero entries. */
+struct IDRemapper *KER_id_remapper_new();
+
+/** Remove all entries from an IDRemap. */
+void KER_id_remapper_clear(struct IDRemapper *me);
+/** Destroy an IDRemap object and free any allocated memory. */
+void KER_id_remapper_free(struct IDRemapper *me);
+
+bool KER_id_remapper_empty(const struct IDRemapper *me);
+bool KER_id_remapper_contains_mapping_for_any(const struct IDRemapper *me, int filter);
+
+/** Do not use #KER_id_remapper_add for entries that already exist! */
+void KER_id_remapper_add(struct IDRemapper *me, void *old_idv, void *new_idv);
+void KER_id_remapper_add_overwrite(struct IDRemapper *me, void *old_idv, void *new_idv);
+
+enum {
+	ID_REMAP_APPLY_DEFAULT = 0,
+	/**
+	 * Update the user count of the old and new ID data-block.
+	 *
+	 * For remapping the old ID users will be decremented and the new ID users will be
+	 * incremented. When un-assigning the old ID users will be decremented.
+	 */
+	ID_REMAP_APPLY_UPDATE_REFCOUNT = (1 << 0),
+	/**
+	 * Unassign instead of remap when the new ID pointer would point to itself.
+	 *
+	 * To use this option #KER_id_remapper_mapping_apply must be used with a non-null self_idv parameter.
+	 */
+	ID_REMAP_APPLY_UNMAP_WHEN_REMAPPING_TO_SELF = (1 << 1),
+};
+
+enum {
+	ID_REMAP_RESULT_SOURCE_UNAVAILABLE,
+	ID_REMAP_RESULT_SOURCE_NOT_MAPPABLE,
+	ID_REMAP_RESULT_SOURCE_REMAPPED,
+	ID_REMAP_RESULT_SOURCE_UNASSIGNED,
+};
+
+int KER_id_remapper_mapping_result(const struct IDRemapper *me, void *idv, int options, const void *self_idv);
+int KER_id_remapper_mapping_apply(const struct IDRemapper *me, void **idv, int options, const void *self_idv);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Main Remap (Multiple)
+ * \{ */
+
+/**
+ * Replace all references in given Main using the given \a mappings
+ *
+ * \note Is preferred over KER_libblock_remap_locked due to performance.
+ */
+void KER_libblock_remap_multiple_locked(struct Main *main, struct IDRemapper *mappings, const int flag);
+
+void KER_libblock_remap_multiple(struct Main *main, struct IDRemapper *mappings, const int flag);
+
+/**
+ * Bare raw remapping of IDs, with no other processing than actually updating the ID pointers.
+ * No user-count, direct vs indirect linked status update, depsgraph tagging, etc.
+ *
+ * This is way more efficient than regular remapping from #KER_libblock_remap_multiple & co, but it
+ * implies that calling code handles all the other aspects described above. This is typically the
+ * case e.g. in read-file process.
+ *
+ * WARNING: This call will likely leave the given Main in invalid state in many aspects. */
+void KER_libblock_remap_multiple_raw(struct Main *main, struct IDRemapper *mappings, const int flag);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Main Remap

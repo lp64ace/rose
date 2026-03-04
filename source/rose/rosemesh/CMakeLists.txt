@@ -14,6 +14,7 @@ set(INC
 
 set(INC_SYS
 	# External Include Directories
+	${TBB_INCLUDE_DIRS}
 	${PTHREADS_INC}
 	
 )
@@ -53,12 +54,12 @@ set(SRC
 
 set(LIB
 	# Internal Include Directories
-	
-	# External Include Directories
 	rose::intern::guardedalloc
 	PUBLIC rose::source::roselib
 	PUBLIC rose::source::rosekernel
 	rose::source::dna
+	
+	# External Include Directories
 	
 )
 

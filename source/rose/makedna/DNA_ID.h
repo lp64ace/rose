@@ -119,6 +119,8 @@ enum {
 	ID_FLAG_EMBEDDED_DATA = 1 << 1,
 };
 
+#define ID_IS_LINKED(id) ((id)->lib != NULL)
+
 /**
  * Amount of 'fake user' usages of this ID.
  * Always 0 or 1.
@@ -143,6 +145,7 @@ enum {
  * Keep in sync with #KER_id_eval_properties_copy.
  */
 #define ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW(id_type) ELEM(id_type, ID_ME)
+#define ID_TYPE_SUPPORTS_ASSET_EDITABLE(id_type) ELEM(id_type, ID_MA)
 
 enum {
 	/**
