@@ -19,6 +19,9 @@ extern "C" {
 
 typedef enum eViewOpsFlag {
 	VIEWOPS_FLAG_NONE = 0,
+	/** When enabled, use the depth under the cursor for navigation. */
+	VIEWOPS_FLAG_DEPTH_NAVIGATE = (1 << 1),
+	VIEWOPS_FLAG_ZOOM_TO_MOUSE = (1 << 2),
 } eViewOpsFlag;
 
 ENUM_OPERATORS(eViewOpsFlag, VIEWOPS_FLAG_NONE)
