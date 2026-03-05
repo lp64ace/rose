@@ -253,6 +253,8 @@ typedef enum eFileSel_Type {
 } eFileSel_Type;
 
 typedef enum eFileSel_FileType {
+	FILE_TYPE_FBX = 1 << 0,
+	FILE_TYPE_HIDDEN = 1 << 29,
 	FILE_TYPE_DIR = 1 << 30,
 } eFileSel_FileType;
 

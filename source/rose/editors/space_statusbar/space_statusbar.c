@@ -69,7 +69,7 @@ ROSE_STATIC void statusbar_header_region_layout(rContext *C, ARegion *region) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
 
-		uiDefBut(block, UI_BTYPE_TEXT, "", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frames_per_second, UI_POINTER_FLT, 0, FLT_MAX, UI_BUT_TEXT_LEFT);
+		uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frames_per_second, UI_POINTER_FLT, 0, FLT_MAX, UI_BUT_TEXT_LEFT);
 		
 		UI_block_end(C, block);
 	}

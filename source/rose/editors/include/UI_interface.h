@@ -5,6 +5,8 @@
 
 #include "RNA_access.h"
 
+#include "UI_resource.h"
+
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
@@ -266,7 +268,7 @@ enum {
 #define DRAW_FLAG(draw) ((draw) & 0xffff0000)
 #define DRAW_INDX(draw) ((draw) & 0x0000ffff)
 
-struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw);
+struct uiBut *uiDefBut(struct uiBlock *block, int type, int icon, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw);
 struct uiBut *uiDefBut_RNA(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, const char *property, int index, int draw);
 struct uiBut *uiDefButEx_RNA(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, struct PropertyRNA *property, int index, int draw);
 

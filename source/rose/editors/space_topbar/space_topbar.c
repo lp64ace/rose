@@ -72,7 +72,7 @@ ROSE_INLINE uiBlock *topbar_header_file_menu_import(rContext *C, ARegion *region
 
 		wmOperatorType *fbx = WM_operatortype_find("WM_OT_fbx_import", false);
 
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Autodesk FBX", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Autodesk FBX", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_op_set(but, fbx);
 
 		block->direction = UI_DIR_RIGHT;
@@ -99,19 +99,19 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(rContext *C, ARegion *region, uiBut
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_COL, 0, 0, 6 * UI_UNIT_X, 0);
 		
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Open", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Open", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_open_but, NULL, NULL);
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Save", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Save", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_save_but, NULL, NULL);
 
-		uiDefBut(block, UI_BTYPE_HSPR, "", 0, 0, 6 * UI_UNIT_X, BORDERPADDING, NULL, 0, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_HSPR, ICON_NONE, "", 0, 0, 6 * UI_UNIT_X, BORDERPADDING, NULL, 0, 0, 0, 0);
 
-		but = uiDefBut(block, UI_BTYPE_MENU, "Import", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_MENU, ICON_NONE, "Import", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_file_menu_import, NULL);
 
-		uiDefBut(block, UI_BTYPE_HSPR, "", 0, 0, 6 * UI_UNIT_X, BORDERPADDING, NULL, 0, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_HSPR, ICON_NONE, "", 0, 0, 6 * UI_UNIT_X, BORDERPADDING, NULL, 0, 0, 0, 0);
 
-		but = uiDefBut(block, UI_BTYPE_PUSH, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
+		but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Quit", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_func_set(but, (uiButHandleFunc)topbar_header_file_menu_quit_but, NULL, NULL);
 		
 		block->direction = UI_DIR_DOWN;
@@ -126,7 +126,7 @@ ROSE_INLINE void topbar_header_region_layout(rContext *C, ARegion *region) {
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_COL, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
-		but = uiDefBut(block, UI_BTYPE_MENU, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_MENU, ICON_NONE, "File", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_but_menu_set(but, (uiBlockCreateFunc)topbar_header_file_menu, NULL);
 		UI_block_end(C, block);
 	}

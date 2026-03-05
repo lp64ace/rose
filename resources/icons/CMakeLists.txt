@@ -14,9 +14,12 @@ set(LIB
 )
 
 set(SVG_FILENAMES_NOEXT
+	back
 	file_3d
 	file_blank
 	file_folder
+	file_parent
+	forward
 )
 
 set(SVG_CONTENTS_H)

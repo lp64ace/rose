@@ -79,6 +79,8 @@ void ED_panel_do_draw(rContext *C, ARegion *region, ListBase *lb, PanelType *pt,
 		panel->layout = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROW, labelx, labely, UI_UNIT_Y, BORDERPADDING);
 		pt->draw_header(C, panel);
 		panel->layout = NULL;
+
+		UI_block_layout_resolve(block, NULL, NULL);
 	}
 	UI_panel_header_buttons_end(panel);
 

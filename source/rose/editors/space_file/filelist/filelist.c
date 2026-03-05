@@ -11,6 +11,8 @@
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
+#include "UI_resource.h"
+
 #include "WM_api.h"
 
 #include "filelist.h"
@@ -99,6 +101,10 @@ ROSE_INLINE void filelist_readjob_recursive_dir_add_items(FileListReadJob *job_p
 		
 		if (e[index].type == RDT_DIR) {
 			entry->type |= FILE_TYPE_DIR;
+		}
+		else {
+			entry->type = ED_path_extension_type(entry->relpath);
+			entry->icon = ED_file_type_icon(entry->type);
 		}
 
 		LIB_addtail(&entries, entry);
@@ -425,4 +431,27 @@ ROSE_INLINE void filelist_readjob_start_ex(FileList *filelist, const rContext *C
 
 void filelist_readjob_start(FileList *filelist, const rContext *C) {
 	filelist_readjob_start_ex(filelist, C, true);
+}
+
+int ED_path_extension_type(const char *path) {
+	if (LIB_path_extension_check(path, ".fbx")) {
+		return FILE_TYPE_FBX;
+	}
+	return 0;
+}
+
+int ED_file_extension_icon(const char *path) {
+	int type = ED_path_extension_type(path);
+
+	return ED_file_type_icon(type);
+}
+
+int ED_file_type_icon(int type) {
+	ROSE_assert((type & FILE_TYPE_DIR) == 0);
+
+	switch (type) {
+		case FILE_TYPE_DIR: return ICON_FILE_FOLDER;
+		case FILE_TYPE_FBX: return ICON_FILE_3D;
+	}
+	return ICON_FILE_BLANK;
 }

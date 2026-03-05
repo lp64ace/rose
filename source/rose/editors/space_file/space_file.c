@@ -90,6 +90,8 @@ ROSE_INLINE void file_free(SpaceLink *link) {
 		filelist_free(sfile->files);
 		sfile->files = NULL;
 	}
+
+	ED_folder_history_list_free(sfile);
 }
 
 ROSE_INLINE void file_init(WindowManager *wm, ScrArea *area) {
@@ -156,7 +158,7 @@ static void file_panel_execution_cancel_button(uiLayout *layout) {
 
 		wmOperatorType *ot = WM_operatortype_find("FILE_OT_cancel", false);
 
-		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, "Cancel", 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Cancel", 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_but_op_set(but, ot);
 	}
 }
@@ -170,7 +172,7 @@ static void file_panel_execution_execute_button(uiLayout *layout, const char *na
 
 		wmOperatorType *ot = WM_operatortype_find("FILE_OT_execute", false);
 
-		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, name, 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		uiBut *but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, name, 0, 0, 5 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_but_op_set(but, ot);
 	}
 }
@@ -241,9 +243,17 @@ ROSE_INLINE void file_panel_ui_file_select_path_draw(const rContext *C, Panel *p
 			uiLayout *subsubrow;
 
 			if ((subsubrow = UI_layout_row(subrow, BORDERPADDING))) {
-				uiDefBut(block, UI_BTYPE_PUSH, "\u2190", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Back
-				uiDefBut(block, UI_BTYPE_PUSH, "\u2192", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Next
-				uiDefBut(block, UI_BTYPE_PUSH, "\u2191", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Parent
+				wmOperatorType *prev = WM_operatortype_find("FILE_OT_previous", false);
+				wmOperatorType *next = WM_operatortype_find("FILE_OT_next", false);
+				wmOperatorType *parent = WM_operatortype_find("FILE_OT_parent", false);
+
+				uiBut *but;
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_BACK, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Back
+				UI_but_op_set(but, prev);
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FORWARD, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	// Forward
+				UI_but_op_set(but, next);
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FILE_PARENT, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	// Parent
+				UI_but_op_set(but, parent);
 			}
 
 			UI_block_layout_set_current(block, subrow);
@@ -327,7 +337,7 @@ void file_main_region_file_list_draw(rContext *C, ARegion *region) {
 				void *ptr = POINTER_FROM_INT(index);
 
 				uiBut *but;
-				but = uiDefBut(block, UI_BTYPE_TEXT, file->name, 0, 0, 0, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+				but = uiDefBut(block, UI_BTYPE_TEXT, file->icon, file->name, 0, 0, 0, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
 				UI_but_row_set(but, index & 1);
 
 				if ((file->flag & FILE_SEL_SELECTED) != 0) {
@@ -338,15 +348,13 @@ void file_main_region_file_list_draw(rContext *C, ARegion *region) {
 					but->flag |= UI_HOVER;
 				}
 
-				but->icon = ICON_FILE_BLANK;
-
 				if ((file->type & FILE_TYPE_DIR) != 0) {
 					but->icon = ICON_FILE_FOLDER;
 				}
 
-				but = uiDefBut(block, UI_BTYPE_TEXT, file->draw_data.size, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+				but = uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, file->draw_data.size, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
 				UI_but_row_set(but, index & 1);
-				but = uiDefBut(block, UI_BTYPE_TEXT, file->draw_data.date, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
+				but = uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, file->draw_data.date, 0, 0, 4 * UI_UNIT_X, UI_UNIT_Y, ptr, UI_POINTER_NIL, 0, 0, UI_BUT_TEXT_LEFT);
 				UI_but_row_set(but, index & 1);
 			} while (false);
 		}
@@ -359,6 +367,79 @@ void file_main_region_file_list_draw(rContext *C, ARegion *region) {
 	ED_region_pixelspace(region);
 
 	UI_view2d_scrollers_draw(v2d, &v2d->mask);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name File Tools Region Methods
+ * \{ */
+
+ROSE_INLINE void file_tools_region_init(WindowManager *wm, ARegion *region) {
+	ED_region_panels_init(wm, region);
+}
+
+ROSE_INLINE void file_panel_tools_bookmarks_system_draw(uiBlock *block, uiLayout *layout) {
+	uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "System", 0, 0, 0, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+
+	uiLayout *flow = UI_layout_grid(layout, 1, false, false);
+
+	for (size_t index = 0; index < 0; index++) {
+	}
+}
+
+ROSE_INLINE void file_panel_tools_bookmarks_volumes_draw(uiBlock *block, uiLayout *layout) {
+	uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "Volumes", 0, 0, 0, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+
+	uiLayout *flow = UI_layout_grid(layout, 1, false, false);
+
+	for (size_t index = 0; index < 0; index++) {
+	}
+}
+
+ROSE_INLINE void file_panel_tools_bookmarks_draw(const rContext *C, Panel *panel) {
+	Screen *screen = CTX_wm_screen(C);
+	ScrArea *area = CTX_wm_area(C);
+	ARegion *region = CTX_wm_region(C);
+
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+	PointerRNA ptr = RNA_pointer_create_discrete(&screen->id, &RNA_FileSelectParams, params);
+
+	uiBut *but;
+	uiBlock *block;
+	if ((block = UI_layout_block(panel->layout))) {
+		uiLayout *col = UI_layout_col(panel->layout, BORDERPADDING);
+
+		return; // TODO!
+
+		typedef void (*fnDrawCategory)(struct uiBlock *block, struct uiLayout *layout);
+
+		fnDrawCategory categories[] = {
+			file_panel_tools_bookmarks_system_draw,
+			file_panel_tools_bookmarks_volumes_draw,
+		};
+
+		for (size_t category = 0; category < ARRAY_SIZE(categories); category++) {
+			const fnDrawCategory draw_cb = categories[category];
+
+			draw_cb(block, col);
+			UI_block_layout_set_current(block, col);
+			uiDefBut(block, UI_BTYPE_HSPR, ICON_NONE, "", 0, 0, 0, PIXELSIZE, NULL, UI_POINTER_NIL, 0, 0, 0);
+		}
+	}
+}
+
+void file_tools_region_panels_register_bookmarks(ARegionType *art) {
+	PanelType *pt = MEM_callocN(sizeof(PanelType), "SpaceType::File::PanelType::Tools");
+	LIB_strcpy(pt->idname, ARRAY_SIZE(pt->idname), "FILEBROWSER_PT_bookmarks");
+	LIB_strcpy(pt->label, ARRAY_SIZE(pt->idname), "Bookmarks");
+	pt->draw = file_panel_tools_bookmarks_draw;
+	LIB_addtail(&art->paneltypes, pt);
+}
+
+void file_tools_region_panels_register(ARegionType *art) {
+	file_tools_region_panels_register_bookmarks(art);
 }
 
 /** \} */
@@ -427,9 +508,10 @@ void ED_spacetype_file() {
 		art->prefsizex = 240;
 		art->prefsizey = 60;
 		art->draw = ED_region_default_draw;
-		art->init = ED_region_default_init;
+		art->init = file_tools_region_init;
 		art->exit = ED_region_default_exit;
 		art->keymapflag = ED_KEYMAP_UI;
+		file_tools_region_panels_register(art);
 	}
 
 	KER_spacetype_register(st);

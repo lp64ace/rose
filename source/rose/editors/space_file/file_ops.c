@@ -222,6 +222,106 @@ void FILE_OT_cancel(wmOperatorType *ot) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Navigate Parent Operator
+ * \{ */
+
+static wmOperatorStatus file_parent_exec(rContext *C, wmOperator *op) {
+	Main *main = CTX_data_main(C);
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+
+	if (params) {
+		if (LIB_path_parent_dir(params->dir, ARRAY_SIZE(params->dir))) {
+			LIB_path_absolute(params->dir, ARRAY_SIZE(params->dir), params->dir);
+			LIB_path_normalize(params->dir);
+			ED_fileselect_change_dir(C);
+		}
+	}
+
+	return OPERATOR_FINISHED;
+}
+
+void FILE_OT_parent(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Parent Directory";
+	ot->description = "Move to parent directory";
+	ot->idname = "FILE_OT_parent";
+
+	/* API callbacks. */
+	ot->exec = file_parent_exec;
+	/* File browsing only operator (not asset browsing). */
+	ot->poll = ED_operator_file_browsing_active; /* <- important, handler is on window level */
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Navigate Previous Operator
+ * \{ */
+
+static wmOperatorStatus file_previous_exec(rContext *C, wmOperator *op) {
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+
+	if (params) {
+		ED_folderlist_pushdir(&sfile->folders_next, params->dir);
+		ED_folderlist_popdir(&sfile->folders_prev, params->dir);
+		ED_folderlist_pushdir(&sfile->folders_next, params->dir);
+
+		ED_fileselect_change_dir(C);
+	}
+
+	return OPERATOR_FINISHED;
+}
+
+void FILE_OT_previous(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Previous Folder";
+	ot->description = "Move to previous folder";
+	ot->idname = "FILE_OT_previous";
+
+	/* API callbacks. */
+	ot->exec = file_previous_exec;
+	/* File browsing only operator (not asset browsing). */
+	ot->poll = ED_operator_file_browsing_active; /* <- important, handler is on window level */
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Navigate Next Operator
+ * \{ */
+
+static wmOperatorStatus file_next_exec(rContext *C, wmOperator *ot) {
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+	if (params) {
+		ED_folderlist_pushdir(&sfile->folders_prev, params->dir);
+		ED_folderlist_popdir(&sfile->folders_next, params->dir);
+		/* update folders_prev so we can check for it in #folderlist_clear_next() */
+		ED_folderlist_pushdir(&sfile->folders_prev, params->dir);
+
+		ED_fileselect_change_dir(C);
+	}
+
+	return OPERATOR_FINISHED;
+}
+
+void FILE_OT_next(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Next Folder";
+	ot->description = "Move to next folder";
+	ot->idname = "FILE_OT_next";
+
+	/* API callbacks. */
+	ot->exec = file_next_exec;
+	/* File browsing only operator (not asset browsing). */
+	ot->poll = ED_operator_file_browsing_active; /* <- important, handler is on window level */
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name File Select Operator
  * \{ */
 
@@ -603,6 +703,9 @@ void file_operatortypes() {
 	WM_operatortype_append(FILE_OT_select);
 	WM_operatortype_append(FILE_OT_execute);
 	WM_operatortype_append(FILE_OT_cancel);
+	WM_operatortype_append(FILE_OT_parent);
+	WM_operatortype_append(FILE_OT_previous);
+	WM_operatortype_append(FILE_OT_next);
 }
 
 void file_keymap(wmKeyConfig *keyconf) {

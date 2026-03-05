@@ -85,6 +85,15 @@ bool LIB_path_is_win32_drive_with_slash(const char *path);
 /** \name Path Queries
  * \{ */
 
+/* Path string comparisons: case-insensitive for Windows, case-sensitive otherwise. */
+#if defined(WIN32)
+#	define LIB_path_cmp strcasecmp
+#	define LIB_path_ncmp strncasecmp
+#else
+#	define LIB_path_cmp strcmp
+#	define LIB_path_ncmp strncmp
+#endif
+
 /**
  * Return true if the path is a UNC share.
  */
@@ -135,6 +144,17 @@ const char *LIB_path_slash_rfind(const char *path);
  * \return the length of `path`.
  */
 int LIB_path_normalize(char *path);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Extension
+ * \{ */
+
+/**
+ * \return true when `path` end with `ext` (case insensitive).
+ */
+bool LIB_path_extension_check(const char *path, const char *ext);
 
 /** \} */
 

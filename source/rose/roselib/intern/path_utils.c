@@ -655,6 +655,23 @@ int LIB_path_normalize(char *path) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Extension
+ * \{ */
+
+static bool path_extension_check_ex(const char *path, const size_t path_len, const char *ext, const size_t ext_len) {
+	ROSE_assert(LIB_strlen(path) == path_len);
+	ROSE_assert(LIB_strlen(ext) == ext_len);
+
+	return (((path_len == 0 || ext_len == 0 || ext_len >= path_len) == 0) && (strcasecmp(ext, path + path_len - ext_len) == 0));
+}
+
+bool LIB_path_extension_check(const char *path, const char *ext) {
+	return path_extension_check_ex(path, LIB_strlen(path), ext, LIB_strlen(ext));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Path Split
  * \{ */
 

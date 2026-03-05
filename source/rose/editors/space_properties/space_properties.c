@@ -66,8 +66,8 @@ ROSE_INLINE void propeties_main_region_layout(rContext *C, ARegion *region) {
 	if ((block = UI_block_begin(C, region, "PROPERTIES_main"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_col(root, PIXELSIZE);
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Read Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "Edit Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "Read Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_EDIT, ICON_NONE, "Edit Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_block_end(C, block);
 	}
 }

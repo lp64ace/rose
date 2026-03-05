@@ -229,7 +229,7 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 	memcpy(rect, &recti, sizeof(recti));
 }
 
-ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max) {
+ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, int icon, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max) {
 	uiBut *but = (uiBut *)MEM_callocN(sizeof(uiBut), "uiBut");
 
 	but->name = LIB_strdupN(name);
@@ -257,6 +257,7 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	but->rect.ymin = y;
 	but->rect.xmax = but->rect.xmin + w;
 	but->rect.ymax = but->rect.ymin + h;
+	but->icon = icon;
 	but->type = type;
 	but->flag = 0;
 
@@ -294,7 +295,7 @@ ROSE_INLINE uiBut *ui_def_but_rna(uiBlock *block, int type, const char *name, in
 		} break;
 	}
 
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h, NULL, UI_POINTER_NIL, min, max);
+	uiBut *but = ui_def_but(block, type, ICON_NONE, name, x, y, w, h, NULL, UI_POINTER_NIL, min, max);
 
 	if (pointer) {
 		but->rna_pointer = *pointer;
@@ -318,8 +319,8 @@ ROSE_INLINE uiBut *ui_def_but_rna(uiBlock *block, int type, const char *name, in
 	return but;
 }
 
-uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw) {
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h, poin, pointype, min, max);
+uiBut *uiDefBut(uiBlock *block, int type, int icon, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw) {
+	uiBut *but = ui_def_but(block, type, icon, name, x, y, w, h, poin, pointype, min, max);
 	if (but) {
 		but->draw = draw;
 	}

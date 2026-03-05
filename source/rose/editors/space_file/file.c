@@ -70,6 +70,8 @@ ROSE_INLINE void fileselect_initialize_params_common(SpaceFile *sfile, FileSelec
 	if (!params->dir[0]) {
 		LIB_path_current_working_directory(params->dir, ARRAY_SIZE(params->dir));
 	}
+
+	ED_folderlist_pushdir(&sfile->folders_prev, params->dir);
 }
 
 FileSelectParams *ED_fileselect_ensure_active_params(SpaceFile *file) {
@@ -152,6 +154,92 @@ FileSelectParams *ED_fileselect_get_active_params(SpaceFile *file) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Folder List
+ * \{ */
+
+typedef struct FolderList {
+	struct FolderList *prev, *next;
+
+	char *foldername;
+} FolderList;
+
+void ED_folderlist_popdir(ListBase *lb, char *dir) {
+	const char *prev_dir;
+	FolderList *folder;
+	folder = (FolderList *)(lb->last);
+
+	if (folder) {
+		/* remove the current directory */
+		MEM_freeN(folder->foldername);
+		LIB_freelinkN(lb, folder);
+
+		folder = (FolderList *)(lb->last);
+		if (folder) {
+			prev_dir = folder->foldername;
+			LIB_strcpy(dir, FILE_MAXDIR, prev_dir);
+		}
+	}
+}
+
+void ED_folderlist_pushdir(ListBase *lb, char *dir) {
+	if (!dir[0]) {
+		return;
+	}
+
+	FolderList *folder, *previous_folder;
+	previous_folder = (FolderList *)(lb->last);
+
+	/* check if already exists */
+	if (previous_folder && previous_folder->foldername) {
+		if (LIB_path_cmp(previous_folder->foldername, dir) == 0) {
+			return;
+		}
+	}
+
+	/* create next folder element */
+	folder = MEM_callocN(sizeof(FolderList), __func__);
+	folder->foldername = LIB_strdupN(dir);
+
+	/* add it to the end of the list */
+	LIB_addtail(lb, folder);
+}
+
+bool folderlist_clear_next(SpaceFile *sfile) {
+	const FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+	FolderList *folder;
+
+	/* if there is no folder_next there is nothing we can clear */
+	if (LIB_listbase_is_empty(&sfile->folders_next)) {
+		return false;
+	}
+
+	/* if previous_folder, next_folder or refresh_folder operators are executed
+	 * it doesn't clear folder_next */
+	folder = (FolderList *)(sfile->folders_prev.last);
+	if ((!folder) || (LIB_path_cmp(folder->foldername, params->dir) == 0)) {
+		return false;
+	}
+
+	/* eventually clear flist->folders_next */
+	return true;
+}
+
+void ED_folderlist_free(ListBase *lb) {
+	LISTBASE_FOREACH_MUTABLE(FolderList *, folder, lb) {
+		MEM_freeN(folder->foldername);
+		MEM_freeN(folder);
+	}
+	LIB_listbase_clear(lb);
+}
+
+void ED_folder_history_list_free(SpaceFile *file) {
+	ED_folderlist_free(&file->folders_prev);
+	ED_folderlist_free(&file->folders_next);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name File Select Params
  * \{ */
 
@@ -165,8 +253,13 @@ void ED_fileselect_change_dir_ex(rContext *C, ScrArea *area) {
 			/* could return but just refresh the current dir */
 		}
 		filelist_setdir(sfile->files, params->dir);
-
 		file_draw_check_ex(C, area);
+
+		if (folderlist_clear_next(sfile)) {
+			ED_folderlist_free(&sfile->folders_next);
+		}
+
+		ED_folderlist_pushdir(&sfile->folders_prev, params->dir);
 	}
 }
 

@@ -52,6 +52,7 @@ typedef struct FileDirEntry {
 	uint64_t size;
 	uint64_t time;
 
+	int icon;
 	int type;
 	int flag;
 
@@ -114,6 +115,9 @@ typedef struct SpaceFile {
 	 * if operator provides op->cancel(), then this will be invoked on the cancel button.
 	 */
 	struct wmOperator *op;
+
+	ListBase folders_prev;
+	ListBase folders_next;
 } SpaceFile;
 
 /** \} */

@@ -88,7 +88,7 @@ ROSE_INLINE void ui_layout_add_padding_button(uiLayoutRoot *root) {
 		uiLayout *prev_layout = block->layout;
 
 		block->layout = root->layout;
-		uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0, 0);
+		uiDefBut(block, UI_BTYPE_SEPR, ICON_NONE, "", 0, 0, root->padding, root->padding, NULL, UI_POINTER_NIL, 0, 0, 0);
 		block->layout = prev_layout;
 	}
 }
@@ -936,7 +936,7 @@ static void ui_paneltype_draw_impl(rContext *C, PanelType *pt, uiLayout *layout,
 		if (child->poll == NULL || child->poll(C, child)) {
 			/* Add space if something was added to the layout. */
 			if (!LIB_listbase_is_empty(&layout->items) && item_last != (uiItem *)layout->items.last) {
-				uiDefBut(block, UI_BTYPE_SEPR, "", 0, 0, layout->space, layout->space, NULL, UI_POINTER_NIL, 0, 0, 0);
+				uiDefBut(block, UI_BTYPE_SEPR, ICON_NONE, "", 0, 0, layout->space, layout->space, NULL, UI_POINTER_NIL, 0, 0, 0);
 				item_last = (uiItem *)layout->items.last;
 			}
 

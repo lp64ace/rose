@@ -197,6 +197,14 @@ void rna_Pose_update(struct Main *main, struct Scene *scene, struct PointerRNA *
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Space Exposed Functions
+ * \{ */
+
+
+
+/** \} */
+
 bool IS_DNATYPE_FLOAT_COMPAT(const struct DNAType *type);
 bool IS_DNATYPE_INT_COMPAT(const struct DNAType *type);
 bool IS_DNATYPE_BOOLEAN_COMPAT(const struct DNAType *type);

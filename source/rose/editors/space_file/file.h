@@ -38,10 +38,27 @@ struct FileSelectParams *ED_fileselect_get_active_params(struct SpaceFile *file)
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Folder List
+ * \{ */
+
+void ED_folderlist_popdir(struct ListBase *lb, char *dir);
+void ED_folderlist_pushdir(struct ListBase *lb, char *dir);
+
+void ED_folderlist_free(struct ListBase *lb);
+
+void ED_folder_history_list_free(struct SpaceFile *file);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name File Select Params
  * \{ */
 
 void ED_fileselect_change_dir(struct rContext *C);
+
+int ED_path_extension_type(const char *path);
+int ED_file_extension_icon(const char *path);
+int ED_file_type_icon(int type);
 
 /** \} */
 
