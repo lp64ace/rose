@@ -7,6 +7,8 @@ struct ID;
 struct RoseRNA;
 struct StructRNA;
 
+struct rContext;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

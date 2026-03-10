@@ -53,6 +53,7 @@ typedef struct stat RoseFileStat;
 
 int LIB_access(const char *filepath, int mode);
 int LIB_stat(const char *filepath, RoseFileStat *r_stat);
+int LIB_exists(const char *filepath);
 
 int LIB_open(const char *filepath, int oflag, int pmode);
 uint64_t LIB_read(int fd, void *buffer, size_t size);

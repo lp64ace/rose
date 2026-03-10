@@ -723,6 +723,19 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(rContex
 	return action;
 }
 
+ROSE_INLINE eHandlerActionFlag wm_handler_fileselect_call(rContext *C, ListBase *handlers, wmEventHandler_Op *handler, const wmEvent *event) {
+	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
+
+	if (event->type != EVT_FILESELECT) {
+		return action;
+	}
+	if (handler->op != (wmOperator *)event->customdata) {
+		return action;
+	}
+
+	return wm_handler_fileselect_do(C, handlers, handler, event->value);
+}
+
 ROSE_INLINE eHandlerActionFlag wm_handlers_do(rContext *C, wmEvent *event, ListBase *handlers) {
 	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
@@ -1033,19 +1046,6 @@ static void wm_handler_operator_insert(wmWindow *win, wmEventHandler_Op *handler
 	}
 
 	LIB_addhead(&win->modalhandlers, handler);
-}
-
-ROSE_INLINE eHandlerActionFlag wm_handler_fileselect_call(rContext *C, ListBase *handlers, wmEventHandler_Op *handler, const wmEvent *event) {
-	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
-
-	if (event->type != EVT_FILESELECT) {
-		return action;
-	}
-	if (handler->op != (wmOperator *)event->customdata) {
-		return action;
-	}
-
-	return wm_handler_fileselect_do(C, handlers, handler, event->value);
 }
 
 void WM_event_add_fileselect(rContext *C, wmOperator *op) {

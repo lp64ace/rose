@@ -279,7 +279,7 @@ void file_ui_region_panels_register(ARegionType *art) {
 /** \name File Main Region Methods
  * \{ */
 
-ROSE_INLINE file_main_region_init(WindowManager *wm, ARegion *region) {
+ROSE_INLINE void file_main_region_init(WindowManager *wm, ARegion *region) {
 	wmKeyMap *keymap;
 
 	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {

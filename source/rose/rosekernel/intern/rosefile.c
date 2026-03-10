@@ -180,7 +180,7 @@ ROSE_STATIC bool reuse_main_move_id(ReuseOldMainData *data, ID *id, Library *lib
 ROSE_STATIC Library *reuse_main_data_dependencies_new_library_get(ReuseOldMainData *reuse_data, Library *old_lib) {
 	const IDRemapper *remapper = reuse_main_data_remapper_ensure(reuse_data);
 	Library *new_lib = old_lib;
-	int result = KER_id_remapper_mapping_apply(remapper, (ID **)&new_lib, ID_REMAP_APPLY_DEFAULT, NULL);
+	int result = KER_id_remapper_mapping_apply(remapper, (void **)&new_lib, ID_REMAP_APPLY_DEFAULT, NULL);
 
 	switch (result) {
 		case ID_REMAP_RESULT_SOURCE_UNAVAILABLE: {

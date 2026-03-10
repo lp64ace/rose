@@ -330,7 +330,7 @@ void LIB_path_rel(char path[FILE_MAX], const char *basepath) {
 #ifdef WIN32
 		LIB_string_replace_single(res + 2, '/', '\\');
 #endif
-		LIB_strcpy(path, ARRAY_SIZE(path), res);
+		LIB_strcpy(path, FILE_MAX, res);
 	}
 }
 

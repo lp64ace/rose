@@ -112,6 +112,6 @@ void view3d_navigate_cancel_fn(rContext *C, wmOperator *op) {
 	RegionView3D *rv3d = (RegionView3D *)vod->region->regiondata;
 	if (rv3d) {
 		copy_qt_qt(rv3d->viewquat, vod->initial.viewquat);
-		copy_qt_qt(rv3d->viewloc, vod->initial.viewloc);
+		copy_v3_v3(rv3d->viewloc, vod->initial.viewloc);
 	}
 }

@@ -341,7 +341,7 @@ ROSE_INLINE char *rna_def_property_get_func(FILE *fpout, StructRNA *srna, Proper
 					fprintf(fpout, "\treturn RNA_pointer_create_with_parent(&iter->parent, &RNA_%s, %s(iter));\n", (cproperty->element) ? (const char *)cproperty->element : "UnknownType", manual);
 				}
 				else {
-					fprintf(fpout, "\tPropCollectionGetFunc fn = %s;\n", manual);
+					fprintf(fpout, "\tPropCollectionGetFunc fn = (PropCollectionGetFunc)%s;\n", manual);
 					fprintf(fpout, "\treturn fn(iter);\n");
 				}
 			}
@@ -950,7 +950,7 @@ ROSE_INLINE void rna_def_property_funcs(FILE *fpout, StructRNA *srna, PropertyDe
 				DefRNA.error = true;
 			}
 
-			sproperty->set = (PropStringGetFunc)rna_def_property_set_func(fpout, srna, property, defproperty, (const char *)sproperty->set);
+			sproperty->set = (PropStringSetFunc)rna_def_property_set_func(fpout, srna, property, defproperty, (const char *)sproperty->set);
 			sproperty->get = (PropStringGetFunc)rna_def_property_get_func(fpout, srna, property, defproperty, (const char *)sproperty->get);
 			sproperty->length = (PropStringLengthFunc)rna_def_property_length_func(fpout, srna, property, defproperty, (const char *)sproperty->length);
 		} break;
