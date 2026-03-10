@@ -1,7 +1,11 @@
 #ifndef ED_INTERFACE_H
 #define ED_INTERFACE_H
 
+#include "DNA_windowmanager_types.h"
+
 #include "RNA_access.h"
+
+#include "UI_resource.h"
 
 #include "LIB_listbase.h"
 #include "LIB_rect.h"
@@ -19,6 +23,7 @@ struct uiBut;
 struct uiLayout;
 struct uiPopupBlockHandle;
 struct PointerRNA;
+struct wmOperatorType;
 
 /* -------------------------------------------------------------------- */
 /** \name UI Enums
@@ -103,6 +108,49 @@ void UI_region_free_active_but_all(struct rContext *C, struct ARegion *region);
 void UI_blocklist_free_inactive(struct rContext *C, struct ARegion *region);
 void UI_block_free(struct rContext *C, struct uiBlock *block);
 
+void UI_paneltype_draw(struct rContext *C, struct PanelType *pt, struct uiLayout *layout);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Panel
+ * \{ */
+
+/**
+ * Panels
+ *
+ * Functions for creating, freeing and drawing panels. The API here
+ * could use a good cleanup, though how they will function in 2.5 is
+ * not clear yet so we postpone that.
+ */
+void UI_panels_begin(const struct rContext *C, struct ARegion *region);
+void UI_panels_end(const struct rContext *C, struct ARegion *region, int *r_x, int *r_y);
+/**
+ * Draw panels, selected (panels currently being dragged) on top.
+ */
+void UI_panels_draw(const struct rContext *C, struct ARegion *region);
+
+/**
+ * \note \a panel should be return value from #UI_panel_find_by_type and can be NULL.
+ */
+struct Panel *UI_panel_begin(struct ARegion *region, struct ListBase *lb, struct uiBlock *block, struct PanelType *pt, struct Panel *panel);
+/**
+ * Create the panel header button group, used to mark which buttons are part of
+ * panel headers for the panel search process that happens later. This Should be
+ * called before adding buttons for the panel's header layout.
+ */
+void UI_panel_header_buttons_begin(struct Panel *panel);
+/**
+ * Finish the button group for the panel header to avoid putting panel body buttons in it.
+ */
+void UI_panel_header_buttons_end(struct Panel *panel);
+void UI_panel_end(struct Panel *panel, int width, int height);
+
+struct Panel *UI_panel_find_by_type(struct ListBase *lb, const struct PanelType *pt);
+
+void UI_panel_label_offset(const struct uiBlock *block, int *r_x, int *r_y);
+bool UI_panel_should_show_background(const struct ARegion *region, const struct PanelType *panel_type);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -136,6 +184,7 @@ typedef struct uiBut {
 	double precision;
 
 	rctf rect;
+	int icon;
 	int type;
 	int flag;
 	int draw;
@@ -151,6 +200,10 @@ typedef struct uiBut {
 	int selsta;
 	int selend;
 	int scroll;
+
+	struct wmOperatorType *ot;
+	eOpCallContext op_ctx;
+	PointerRNA *op_ptr;
 
 	uiButHandleTextFunc handle_text_func;
 	uiButHandleFunc handle_func;
@@ -215,16 +268,26 @@ enum {
 #define DRAW_FLAG(draw) ((draw) & 0xffff0000)
 #define DRAW_INDX(draw) ((draw) & 0x0000ffff)
 
-struct uiBut *uiDefBut(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw);
+struct uiBut *uiDefBut(struct uiBlock *block, int type, int icon, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw);
 struct uiBut *uiDefBut_RNA(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, const char *property, int index, int draw);
 struct uiBut *uiDefButEx_RNA(struct uiBlock *block, int type, const char *name, int x, int y, int w, int h, struct PointerRNA *pointer, struct PropertyRNA *property, int index, int draw);
 
 void UI_but_func_text_set(struct uiBut *but, uiButHandleTextFunc func, double softmin, double softmax);
 void UI_but_func_set(struct uiBut *but, uiButHandleFunc func, void *arg1, void *arg2);
 void UI_but_menu_set(struct uiBut *but, uiBlockCreateFunc func, void *arg);
+void UI_but_op_set(struct uiBut *but, struct wmOperatorType *ot);
+void UI_but_row_set(struct uiBut *but, int row);
 
 void uiButEnableFlag(struct uiBut *but, int flag);
 void uiButDisableFlag(struct uiBut *but, int flag);
+
+/** State for scroll-drawing. */
+enum {
+	UI_SCROLL_PRESSED = 1 << 0,
+	UI_SCROLL_ARROWS = 1 << 1,
+};
+
+void UI_draw_widget_scroll(const struct uiWidgetColors *wcol, const struct rcti *rect, const struct rcti *slider, int state);
 
 /** \} */
 
@@ -253,6 +316,13 @@ enum {
 };
 
 enum {
+	LAYOUT_ALIGN_EXPAND = 0,
+	LAYOUT_ALIGN_LEFT = 1,
+	LAYOUT_ALIGN_CENTER = 2,
+	LAYOUT_ALIGN_RIGHT = 3,
+};
+
+enum {
 	UI_LAYOUT_HORIZONTAL = 0,
 	UI_LAYOUT_VERTICAL = 1,
 };
@@ -262,8 +332,15 @@ struct uiLayout *UI_block_layout(struct uiBlock *block, int dir, int type, int x
 struct uiLayout *UI_layout_row(struct uiLayout *layout, int space);
 struct uiLayout *UI_layout_col(struct uiLayout *layout, int space);
 struct uiLayout *UI_layout_grid(struct uiLayout *layout, int columns, bool evenr, bool evenc);
+struct uiBlock *UI_layout_block(struct uiLayout *layout);
 void UI_block_layout_set_current(struct uiBlock *block, struct uiLayout *layout);
 void UI_block_layout_free(struct uiBlock *block);
+
+void UI_layout_scale_x_set(struct uiLayout *layout, float scale);
+void UI_layout_scale_y_set(struct uiLayout *layout, float scale);
+void UI_layout_unit_x_set(struct uiLayout *layout, float unit);
+void UI_layout_unit_y_set(struct uiLayout *layout, float unit);
+void UI_layout_fit(struct uiLayout *layout, float x, float y);
 
 void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
 

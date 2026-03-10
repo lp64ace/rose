@@ -3,15 +3,22 @@
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
+#include "UI_view2d.h"
+
 #include "KER_screen.h"
 
+#include "io_ops.h"
+
 void ED_spacetypes_init() {
+	ED_spacetype_file();
 	ED_spacetype_statusbar();
 	ED_spacetype_topbar();
 	ED_spacetype_view3d();
 	ED_spacetype_properties();
 
 	ED_operatortypes_screen();
+	ED_operatortypes_view2d();
+	ED_operatortypes_io();
 
 	ListBase *lb = KER_spacetype_list();
 
@@ -30,6 +37,7 @@ void ED_spacetypes_exit() {
 
 void ED_spacetypes_keymap(wmKeyConfig *keyconf) {
 	ED_keymap_screen(keyconf);
+	ED_keymap_view2d(keyconf);
 
 	ListBase *lb = KER_spacetype_list();
 

@@ -341,6 +341,89 @@ void LIB_duplicatelist(ListBase *dst, const ListBase *src) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Sort Methods
+ * \{ */
+
+ROSE_INLINE void listbase_split(ListBase *lb, ListBase *left, ListBase *right) {
+	Link *slow = (Link *)lb->first;
+	Link *fast = (Link *)lb->first;
+
+	if (!slow || !slow->next) {
+		*left = *lb;
+		right->first = right->last = NULL;
+		return;
+	}
+
+	/* Fast advances 2, slow advances 1, slow lands at midpoint */
+	while (fast->next && ((Link *)fast->next)->next) {
+		slow = (Link *)slow->next;
+		fast = (Link *)((Link *)fast->next)->next;
+	}
+
+	left->first = lb->first;
+	left->last = slow;
+
+	right->first = slow->next;
+	right->last = lb->last;
+
+	/* Terminate left half */
+	((Link *)left->last)->next = NULL;
+	/* Terminate right half (prev already points backward, fix head) */
+	((Link *)right->first)->prev = NULL;
+}
+
+ROSE_INLINE void listbase_concat(ListBase *result, ListBase *left, ListBase *right, int (*cmp)(const void *, const void *, void *), void *user_data) {
+	Link *tail = NULL;
+
+	Link *l = (Link *)left->first;
+	Link *r = (Link *)right->first;
+
+	LIB_listbase_clear(result);
+
+	while (l && r) {
+		if (cmp(l, r, user_data) <= 0) {
+			Link *next = (Link *)l->next;
+			LIB_addtail(result, l);
+			l = next;
+		}
+		else {
+			Link *next = (Link *)r->next;
+			LIB_addtail(result, r);
+			r = next;
+		}
+	}
+
+	while (l) {
+		Link *next = (Link *)l->next;
+		LIB_addtail(result, l);
+		l = next;
+	}
+	while (r) {
+		Link *next = (Link *)r->next;
+		LIB_addtail(result, r);
+		r = next;
+	}
+}
+
+ROSE_STATIC void mergesort_listbase(ListBase *lb, int (*cmp)(const void *, const void *, void *), void *user_data) {
+	if (LIB_listbase_is_empty(lb) || LIB_listbase_is_single(lb)) {
+		return;
+	}
+
+	ListBase left, right;
+	listbase_split(lb, &left, &right);
+	mergesort_listbase(&left, cmp, user_data);
+	mergesort_listbase(&right, cmp, user_data);
+	listbase_concat(lb, &left, &right, cmp, user_data);
+}
+
+void LIB_listbase_sort(ListBase *lb, int (*cmp)(const void *, const void *, void *), void *user_data) {
+	mergesort_listbase(lb, cmp, user_data);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Query Methods
  * \{ */
 

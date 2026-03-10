@@ -7,6 +7,7 @@
 #include "LIB_math_vector.h"
 #include "LIB_vector.hh"
 
+#include <iostream>
 #include <string>
 
 namespace rose::gpu {

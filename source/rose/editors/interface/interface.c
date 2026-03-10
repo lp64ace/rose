@@ -12,6 +12,7 @@
 #include "UI_view2d.h"
 
 #include "KER_context.h"
+#include "KER_screen.h"
 
 #include "GPU_framebuffer.h"
 #include "GPU_matrix.h"
@@ -60,6 +61,9 @@ ROSE_INLINE bool ui_but_equals_old(const uiBut *but_new, const uiBut *but_old) {
 		return false;
 	}
 	if (but_new->poin != but_old->poin || but_new->pointype != but_old->pointype) {
+		return false;
+	}
+	if (but_new->ot != but_old->ot || but_new->op_ctx != but_old->op_ctx || but_new->op_ptr != but_old->op_ptr) {
 		return false;
 	}
 	if (!STREQ(but_new->name, but_old->name)) {
@@ -162,6 +166,11 @@ void ui_block_to_region_fl(const ARegion *region, const uiBlock *block, float *x
 	float gx = *x;
 	float gy = *y;
 
+	if (block->panel) {
+		gx += block->panel->ofsx;
+		gy += block->panel->ofsy;
+	}
+
 	*x = ((float)getsizex) * (0.5f + 0.5f * (gx * block->winmat[0][0] + gy * block->winmat[1][0] + block->winmat[3][0]));
 	*y = ((float)getsizey) * (0.5f + 0.5f * (gx * block->winmat[0][1] + gy * block->winmat[1][1] + block->winmat[3][1]));
 }
@@ -203,6 +212,11 @@ void ui_window_to_block_fl(const ARegion *region, const uiBlock *block, float *x
 
 	*y = (a * (py - f) + d * (c - px)) / (a * e - d * b);
 	*x = (px - b * (*y) - c) / a;
+
+	if (block->panel) {
+		*x -= block->panel->ofsx;
+		*y -= block->panel->ofsy;
+	}
 }
 
 ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const uiBlock *block, const uiBut *but) {
@@ -215,12 +229,13 @@ ROSE_INLINE void ui_but_to_pixelrect(rcti *rect, const ARegion *region, const ui
 	memcpy(rect, &recti, sizeof(recti));
 }
 
-ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max) {
+ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, int icon, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max) {
 	uiBut *but = (uiBut *)MEM_callocN(sizeof(uiBut), "uiBut");
 
 	but->name = LIB_strdupN(name);
 
 	switch (pointype) {
+		case UI_POINTER_NIL:
 		case UI_POINTER_STR: {
 			but->maxlength = (int)(max) ? (int)(max) : 64;
 		} break;
@@ -229,7 +244,7 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 		} break;
 	}
 
-	but->drawstr = MEM_mallocN(but->maxlength, "uiBut::DrawStr");
+	but->drawstr = MEM_mallocN(but->maxlength + 1, "uiBut::DrawStr");
 	LIB_strcpy(but->drawstr, but->maxlength, but->name);
 
 	but->pointype = pointype;
@@ -242,6 +257,7 @@ ROSE_INLINE uiBut *ui_def_but(uiBlock *block, int type, const char *name, int x,
 	but->rect.ymin = y;
 	but->rect.xmax = but->rect.xmin + w;
 	but->rect.ymax = but->rect.ymin + h;
+	but->icon = icon;
 	but->type = type;
 	but->flag = 0;
 
@@ -279,7 +295,7 @@ ROSE_INLINE uiBut *ui_def_but_rna(uiBlock *block, int type, const char *name, in
 		} break;
 	}
 
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h, NULL, UI_POINTER_NIL, min, max);
+	uiBut *but = ui_def_but(block, type, ICON_NONE, name, x, y, w, h, NULL, UI_POINTER_NIL, min, max);
 
 	if (pointer) {
 		but->rna_pointer = *pointer;
@@ -298,11 +314,13 @@ ROSE_INLINE uiBut *ui_def_but_rna(uiBlock *block, int type, const char *name, in
 		but->rna_pointer = PointerRNA_NULL;
 	}
 
+	ui_but_update(but, true);
+
 	return but;
 }
 
-uiBut *uiDefBut(uiBlock *block, int type, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw) {
-	uiBut *but = ui_def_but(block, type, name, x, y, w, h, poin, pointype, min, max);
+uiBut *uiDefBut(uiBlock *block, int type, int icon, const char *name, int x, int y, int w, int h, void *poin, int pointype, float min, float max, int draw) {
+	uiBut *but = ui_def_but(block, type, icon, name, x, y, w, h, poin, pointype, min, max);
 	if (but) {
 		but->draw = draw;
 	}
@@ -352,6 +370,16 @@ void UI_but_func_set(uiBut *but, uiButHandleFunc func, void *arg1, void *arg2) {
 void UI_but_menu_set(uiBut *but, uiBlockCreateFunc func, void *arg) {
 	but->menu_create_func = func;
 	but->arg = arg;
+}
+
+void UI_but_op_set(uiBut *but, wmOperatorType *ot) {
+	but->ot = ot;
+}
+
+void UI_but_row_set(uiBut *but, int row) {
+	but->draw |= UI_BUT_GRID;
+	but->draw |= UI_BUT_ROW;
+	but->draw |= DRAW_INDX(row);
 }
 
 bool ui_region_contains_point_px(const ARegion *region, const int xy[2]) {
@@ -531,6 +559,23 @@ ROSE_INLINE void ui_block_bounds_calc(uiBlock *block) {
 	block->rect.xmax = block->rect.xmin + ROSE_MAX(LIB_rctf_size_x(&block->rect), block->minbounds);
 }
 
+
+ROSE_INLINE void ui_offset_panel_block(uiBlock *block) {
+	/* Compute bounds and offset. */
+	ui_block_bounds_calc(block);
+
+	const int ofsy = block->panel->sizey;
+
+	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
+		but->rect.ymin += ofsy;
+		but->rect.ymax += ofsy;
+	}
+
+	block->rect.xmax = block->panel->sizex;
+	block->rect.ymax = block->panel->sizey;
+	block->rect.xmin = block->rect.ymin = 0.0;
+}
+
 void UI_block_end_ex(rContext *C, uiBlock *block, const int xy[2], int r_xy[2]) {
 	wmWindow *window = CTX_wm_window(C);
 	ARegion *region = CTX_wm_region(C);
@@ -568,6 +613,8 @@ void UI_block_draw(const rContext *C, uiBlock *block) {
 	GPU_matrix_push();
 	GPU_matrix_identity_set();
 
+	ED_region_pixelspace(region);
+
 	RFT_batch_draw_begin();
 
 	rcti rect;
@@ -575,9 +622,12 @@ void UI_block_draw(const rContext *C, uiBlock *block) {
 
 	ui_draw_menu_back(region, block, &rect);
 
+	// fprintf(stdout, "[Editor] Drawing uiBlock \"%s\" [xmin: %d, xmax: %d, ymin: %d, ymax: %d]\n", block->name, rect.xmin, rect.xmax, rect.ymin, rect.ymax);
+	// fprintf(stdout, "ARegion [xmin: %d, xmax: %d, ymin: %d, ymax: %d]\n", region->winrct.xmin, region->winrct.xmax, region->winrct.ymin, region->winrct.ymax);
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 		ui_but_to_pixelrect(&rect, region, block, but);
 		if (rect.xmin < rect.xmax && rect.ymin < rect.ymax) {
+			// fprintf(stdout, "\tuiBut : \"%s\" [xmin: %d, xmax: %d, ymin: %d, ymax: %d]\n", but->name, rect.xmin, rect.xmax, rect.ymin, rect.ymax);
 			ui_draw_but(C, region, but, &rect);
 		}
 	}
@@ -673,6 +723,294 @@ void UI_block_free(rContext *C, uiBlock *block) {
 
 	MEM_freeN(block->name);
 	MEM_freeN(block);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name UI Panel
+ * \{ */
+
+static void panels_layout_begin_clear_flags(ListBase *lb) {
+	LISTBASE_FOREACH(Panel *, panel, lb) {
+		/* Flags to copy over to the next layout pass. */
+		const short flag_copy = 0;
+
+		const bool was_active = panel->flag_ex & PANEL_ACTIVE;
+		panel->flag_ex &= flag_copy;
+
+		panels_layout_begin_clear_flags(&panel->children);
+	}
+}
+
+static int get_panel_size_y(const Panel *panel) {
+	if (panel->type && (panel->type->flag & PANEL_TYPE_NO_HEADER)) {
+		return panel->sizey;
+	}
+
+	return UI_UNIT_Y + panel->sizey;
+}
+
+static int get_panel_real_size_y(const Panel *panel) {
+	const int sizey = panel->sizey;
+
+	if (panel->type && (panel->type->flag & PANEL_TYPE_NO_HEADER)) {
+		return sizey;
+	}
+
+	return UI_UNIT_Y + sizey;
+}
+
+static float panel_region_offset_x_get(const ARegion *region) {
+	if (RGN_ALIGN_ENUM_FROM_MASK(region->alignment) != RGN_ALIGN_RIGHT) {
+		return UI_UNIT_X;
+	}
+
+	return 0.0f;
+}
+
+/**
+ * Starting from the "block size" set in #UI_panel_end, calculate the full size
+ * of the panel including the sub-panel headers and buttons.
+ */
+static void panel_calculate_size_recursive(ARegion *region, Panel *panel) {
+	int width = panel->blocksizex;
+	int height = panel->blocksizey;
+
+	LISTBASE_FOREACH(Panel *, child_panel, &panel->children) {
+		if (child_panel->flag_ex & PANEL_ACTIVE) {
+			panel_calculate_size_recursive(region, child_panel);
+			width = ROSE_MAX(width, child_panel->sizex);
+			height += get_panel_real_size_y(child_panel);
+		}
+	}
+
+	/* Update total panel size. */
+	if (panel->flag_ex & PANEL_NEW_ADDED) {
+		panel->flag_ex &= ~PANEL_NEW_ADDED;
+		panel->sizex = width;
+		panel->sizey = height;
+	}
+	else {
+		const int old_sizex = panel->sizex, old_sizey = panel->sizey;
+		const int old_region_ofsx = panel->runtime.region_ofsx;
+
+		/* Update width/height if non-zero. */
+		if (width != 0) {
+			panel->sizex = width;
+		}
+		if (height != 0) {
+			panel->sizey = height;
+		}
+
+		if (panel->sizex != old_sizex || panel->sizey != old_sizey) {
+			panel->ofsy += old_sizey - panel->sizey;
+		}
+
+		panel->runtime.region_ofsx = panel_region_offset_x_get(region);
+	}
+}
+
+void UI_panels_begin(const rContext *C, ARegion *region) {
+	panels_layout_begin_clear_flags(&region->panels);
+}
+
+/**
+ * This function is needed because #uiBlock and Panel itself don't
+ * change #Panel.sizey or location when closed.
+ */
+static int get_panel_real_ofsy(Panel *panel) {
+	return panel->ofsy + panel->sizey;
+}
+
+bool UI_panel_should_show_background(const ARegion *region, const PanelType *panel_type) {
+	if (region->alignment == RGN_ALIGN_FLOAT) {
+		return false;
+	}
+
+	if (panel_type && panel_type->flag & PANEL_TYPE_NO_HEADER) {
+		if (region->regiontype == RGN_TYPE_TOOLS) {
+			/* We never want a background around active tools. */
+			return false;
+		}
+		/* Without a header there is no background except for region overlap. */
+		return region->overlap != 0;
+	}
+
+	return true;
+}
+
+static void ui_panels_size(ARegion *region, int *r_x, int *r_y) {
+	int sizex = 0;
+	int sizey = 0;
+	bool has_panel_with_background = false;
+
+	/* Compute size taken up by panels, for setting in view2d. */
+	LISTBASE_FOREACH(Panel *, panel, &region->panels) {
+		if (panel->flag_ex & PANEL_ACTIVE) {
+			const int pa_sizex = panel->ofsx + panel->sizex;
+			const int pa_sizey = get_panel_real_ofsy(panel);
+
+			sizex = ROSE_MAX(sizex, pa_sizex);
+			sizey = ROSE_MIN(sizey, pa_sizey);
+			if (UI_panel_should_show_background(region, panel->type)) {
+				has_panel_with_background = true;
+			}
+		}
+	}
+
+	if (sizex == 0) {
+		sizex = (15 * UI_UNIT_X);
+	}
+	if (sizey == 0) {
+		sizey = -(15 * UI_UNIT_X);
+	}
+	/* Extra margin after the list so the view scrolls a few pixels further than the panel border.
+	 * Also makes the bottom match the top margin. */
+	if (has_panel_with_background) {
+		sizey -= UI_UNIT_Y;
+	}
+
+	*r_x = sizex;
+	*r_y = sizey;
+}
+
+void UI_panels_end(const rContext *C, ARegion *region, int *r_x, int *r_y) {
+	ScrArea *area = CTX_wm_area(C);
+
+	LISTBASE_FOREACH(Panel *, panel, &region->panels) {
+		if (panel->flag_ex & PANEL_ACTIVE) {
+			ROSE_assert(panel->runtime.block != NULL);
+			panel_calculate_size_recursive(region, panel);
+		}
+	}
+
+	LISTBASE_FOREACH(uiBlock *, block, &region->uiblocks) {
+		if (block->panel) {
+			ui_offset_panel_block(block);
+		}
+	}
+
+	/* Compute size taken up by panels. */
+	ui_panels_size(region, r_x, r_y);
+}
+
+void UI_panels_draw(const rContext *C, ARegion *region) {
+	/* Draw in reverse order, because #uiBlocks are added in reverse order
+	 * and we need child panels to draw on top. */
+	LISTBASE_FOREACH_BACKWARD(uiBlock *, block, &region->uiblocks) {
+		if (block->panel) {
+			UI_block_draw(C, block);
+		}
+	}
+}
+
+void UI_panel_drawname_set(Panel *panel, const char *drawname) {
+	MEM_SAFE_FREE(panel->drawname);
+	panel->drawname = LIB_strdupN(drawname);
+}
+
+Panel *UI_panel_begin(ARegion *region, ListBase *lb, uiBlock *block, PanelType *pt, Panel *panel) {
+	Panel *panel_last;
+	const char *drawname = pt->label;
+	const bool newpanel = (panel == NULL);
+
+	if (newpanel) {
+		panel = KER_panel_new(pt);
+
+		panel->ofsx = 0;
+		panel->ofsy = 0;
+		panel->sizex = 0;
+		panel->sizey = 0;
+		panel->blocksizex = 0;
+		panel->blocksizey = 0;
+		panel->flag_ex |= PANEL_NEW_ADDED;
+
+		LIB_addtail(lb, panel);
+	}
+	else {
+		/* Panel already exists. */
+		panel->type = pt;
+	}
+
+	panel->runtime.block = block;
+
+	UI_panel_drawname_set(panel, drawname);
+
+	/* If a new panel is added, we insert it right after the panel that was last added.
+	 * This way new panels are inserted in the right place between versions. */
+	for (panel_last = (Panel *)(lb->first); panel_last; panel_last = panel_last->next) {
+		if (panel_last->flag_ex & PANEL_LAST_ADDED) {
+			LIB_remlink(lb, panel);
+			LIB_insertlinkafter(lb, panel_last, panel);
+			break;
+		}
+	}
+
+	if (newpanel) {
+		panel->sortorder = (panel_last) ? panel_last->sortorder + 1 : 0;
+
+		LISTBASE_FOREACH(Panel *, panel_next, lb) {
+			if (panel_next != panel && panel_next->sortorder >= panel->sortorder) {
+				panel_next->sortorder++;
+			}
+		}
+	}
+
+	if (panel_last) {
+		panel_last->flag_ex &= ~PANEL_LAST_ADDED;
+	}
+
+	/* Assign the new panel to the block. */
+	block->panel = panel;
+	panel->flag_ex |= PANEL_ACTIVE | PANEL_LAST_ADDED;
+
+	return panel;
+}
+
+void UI_panel_header_buttons_begin(Panel *panel) {
+	uiBlock *block = panel->runtime.block;
+
+	// ui_block_new_button_group(block, UI_BUTTON_GROUP_LOCK | UI_BUTTON_GROUP_PANEL_HEADER);
+}
+
+void UI_panel_header_buttons_end(Panel *panel) {
+	uiBlock *block = panel->runtime.block;
+
+	/* Always add a new button group. Although this may result in many empty groups, without it,
+	 * new buttons in the panel body not protected with a #ui_block_new_button_group call would
+	 * end up in the panel header group. */
+	// ui_block_new_button_group(block, 0);
+}
+
+void UI_panel_end(Panel *panel, int width, int height) {
+	/* Store the size of the buttons layout in the panel. The actual panel size
+	 * (including sub-panels) is calculated in #UI_panels_end. */
+	panel->blocksizex = width;
+	panel->blocksizey = height;
+}
+
+Panel *UI_panel_find_by_type(ListBase *lb, const PanelType *pt) {
+	const char *idname = pt->idname;
+
+	LISTBASE_FOREACH(Panel *, panel, lb) {
+		if (STREQLEN(panel->name, idname, sizeof(panel->name))) {
+			return panel;
+		}
+	}
+	return NULL;
+}
+
+void UI_panel_label_offset(const uiBlock *block, int *r_x, int *r_y) {
+	Panel *panel = block->panel;
+	const bool is_subpanel = (panel->type && panel->type->parent);
+
+	*r_x = UI_UNIT_X * 1.0f;
+	*r_y = UI_UNIT_Y * 1.5f;
+
+	if (is_subpanel) {
+		*r_x += (0.7f * UI_UNIT_X);
+	}
 }
 
 /** \} */

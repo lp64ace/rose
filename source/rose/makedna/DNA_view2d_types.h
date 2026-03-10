@@ -7,6 +7,16 @@
 extern "C" {
 #endif
 
+typedef struct View2D_Runtime {
+	int ui_scroll;
+} View2D_Runtime;
+
+/** #View2D_Runtime->ui_scroll */
+enum {
+	V2D_SCROLL_H_ACTIVE = 1 << 0,
+	V2D_SCROLL_V_ACTIVE = 1 << 0,
+};
+
 typedef struct View2D {
 	/** tot - area that data can be drawn in; cur - region of tot that is visible in viewport. */
 	rctf tot, cur;
@@ -30,6 +40,8 @@ typedef struct View2D {
 	int flag;
 	int scroll;
 	int align;
+
+	View2D_Runtime runtime;
 } View2D;
 
 /** #View2D->keeptot. */
@@ -77,6 +89,7 @@ enum {
 	V2D_PIXELOFS_Y = 1 << 1,
 
 	V2D_IS_INIT = 1 << 16,
+	V2D_IS_NAVIGATING = 1 << 17,
 };
 
 /** #View2D->scroll */

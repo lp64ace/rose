@@ -212,6 +212,8 @@ typedef struct ActionChannelBag {
 
 	struct FCurve **fcurves;
 	int totcurve;
+
+	int flag;
 } ActionChannelBag;
 
 enum {

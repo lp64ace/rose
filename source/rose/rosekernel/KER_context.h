@@ -50,6 +50,12 @@ void CTX_wm_region_set(struct rContext *C, struct ARegion *);
 void CTX_data_main_set(struct rContext *C, struct Main *);
 void CTX_data_scene_set(struct rContext *C, struct Scene *);
 
+struct SpaceLink;
+struct SpaceFile;
+
+struct SpaceLink *CTX_wm_space_data(const struct rContext *C);
+struct SpaceFile *CTX_wm_space_file(const struct rContext *C);
+
 /**
  * Gets pointer to the dependency graph.
  * If it doesn't exist yet, it will be allocated.

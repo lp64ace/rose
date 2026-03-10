@@ -32,6 +32,8 @@ typedef struct wmEvent {
 	int modifier;		 // The currently pressed modifier keys.
 	char input[4];
 
+	void *customdata;
+
 	// event state information
 
 	int prev_type;	 // The previous value of `wmEvent.type`.
@@ -135,6 +137,8 @@ typedef struct wmEventHandler_Op {
 
 	struct wmOperator *op;
 
+	bool is_fileselect;
+
 	struct {
 		/**
 		 * To override the window, and hence the screen.
@@ -166,6 +170,18 @@ void WM_do_notifiers(struct rContext *C);
 void WM_event_remove_handlers(struct rContext *C, ListBase *handlers);
 void WM_event_modal_handler_area_replace(struct wmWindow *win, const struct ScrArea *old_area, struct ScrArea *new_area);
 void WM_event_modal_handler_region_replace(struct wmWindow *win, const struct ARegion *old_region, struct ARegion *new_region);
+
+struct wmEvent *WM_event_add(struct wmWindow *win, const struct wmEvent *event_to_add);
+void WM_event_add_mouse_move(struct wmWindow *win);
+
+/**
+ * The idea here is to keep a handler alive on window queue, owning the operator.
+ * The file window can send event to make it execute, thus ensuring
+ * executing happens outside of lower level queues, with UI refreshed.
+ * Should also allow multi-window solutions.
+ */
+void WM_event_add_fileselect(struct rContext *C, struct wmOperator *op);
+void WM_event_fileselect_event(struct WindowManager *wm, void *ophandle, int eventval);
 
 /** \} */
 

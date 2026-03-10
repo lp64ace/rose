@@ -3,8 +3,10 @@
 
 set(SRC
 	ED_armature.h
+	ED_fileselect.h
 	ED_screen.h
 	ED_space_api.h
+	UI_icons.h
 	UI_interface.h
 	UI_resource.h
 	UI_view2d.h

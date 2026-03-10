@@ -11,8 +11,10 @@
 #include FT_MULTIPLE_MASTERS_H /* Variable font support. */
 
 #include "LIB_listbase.h"
+#include "LIB_math_color.h"
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
+#include "LIB_string.h"
 #include "LIB_string_utf.h"
 #include "LIB_thread.h"
 
@@ -20,9 +22,13 @@
 
 #include "GPU_info.h"
 
+#include "svg_icons.h"
+
 #include "rft_internal.h"
 #include "rft_internal_types.h"
 
+#include <nanosvg.h>
+#include <nanosvgrast.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -299,8 +305,101 @@ static GlyphRFT *rft_glyph_cache_add_glyph(FontRFT *font, GlyphCacheRFT *gc, FT_
 	}
 
 	LIB_addhead(&(gc->bucket[rft_hash(g->c << 6 | subpixel)]), g);
-
 	return g;
+}
+
+static GlyphRFT *rft_glyph_cache_add_blank(GlyphCacheRFT *gc, const uint charcode) {
+	GlyphRFT *g = (GlyphRFT *)MEM_callocN(sizeof(GlyphRFT), "rft_glyph_cache_add_blank");
+	g->c = charcode;
+	LIB_addhead(&(gc->bucket[rft_hash(g->c << 6)]), g);
+	return g;
+}
+
+static GlyphRFT *rft_glyph_cache_add_svg(GlyphCacheRFT *gc, const unsigned int charcode, const bool color) {
+	 const char *constsvg = rose_get_icon_svg(charcode - RFT_ICON_OFFSET);
+	char *svg = LIB_strdupN(constsvg);
+
+	 NSVGimage *image = nsvgParse(svg, "px", 96.0f);
+
+	 if (image == NULL) {
+		 MEM_freeN(svg);
+		 return rft_glyph_cache_add_blank(gc, charcode);
+	 }
+
+	 if (image->width == 0 || image->height == 0) {
+		 nsvgDelete(image);
+		 MEM_freeN(svg);
+		 return rft_glyph_cache_add_blank(gc, charcode);
+	 }
+
+	 NSVGrasterizer *rast = nsvgCreateRasterizer();
+	 if (rast == NULL) {
+		 nsvgDelete(image);
+		 MEM_freeN(svg);
+		 return rft_glyph_cache_add_blank(gc, charcode);
+	 }
+
+	 float scale = (gc->size / 1600.0f);
+	 const float dest_w = ceilf(image->width * scale);
+	 const float dest_h = ceilf(image->height * scale);
+	 scale = dest_w / image->width;
+
+	 unsigned char *render_bmp = MEM_mallocN(sizeof(unsigned char) * (size_t)dest_w * (size_t)dest_h * 4, __func__);
+
+	 nsvgRasterize(rast, image, 0.0f, 0.0f, scale, render_bmp, (int)dest_w, (int)dest_h, dest_w * 4);
+	 nsvgDeleteRasterizer(rast);
+
+	  /* Bitmaps vary in size, so calculate the offsets needed when drawn. */
+	 const int offset_x = ROSE_MAX(round((gc->size - (image->width * scale)) / 2.0f), -100.0f * scale);
+	 const int offset_y = ROSE_MAX(ceil((gc->size + dest_h) / 2.0f), dest_h - 100.0f * scale);
+
+	 nsvgDelete(image);
+	 MEM_freeN(svg);
+
+	 GlyphRFT *g = (GlyphRFT *)MEM_callocN(sizeof(GlyphRFT), "rft_glyph_cache_add_svg");
+
+	 g->c = charcode;
+	 g->idx = 0;
+	 g->advance_x = dest_w * 64;
+	 g->subpixel = 0;
+	 g->box_xmin = 0;
+	 g->box_xmax = dest_w * 64;
+	 g->box_ymin = 0;
+	 g->box_ymax = dest_h * 64;
+	 g->lsb_delta = 0;
+	 g->rsb_delta = 0;
+	 g->pos[0] = offset_x;
+	 g->pos[1] = offset_y;
+	 g->dims[0] = dest_w;
+	 g->dims[1] = dest_h;
+	 g->pitch = dest_w;
+	 g->depth = (color) ? 4 : 1;
+
+	 const size_t buffer_size = sizeof(unsigned char) * g->dims[0] * g->dims[1] * g->depth;
+	 g->bitmap = MEM_mallocN(buffer_size, "glyph bitmap");
+
+	 if (color) {
+		 memcpy(g->bitmap, render_bmp, buffer_size);
+	 }
+	 else {
+		 /* Convert from RGBA to coverage map. */
+		 for (size_t y = 0; y < g->dims[1]; y++) {
+			 for (size_t x = 0; x < g->dims[0]; x++) {
+				 size_t offs_in = (y * (size_t)dest_w * 4) + (x * 4);
+				 size_t offs_out = (y * (size_t)g->dims[0] + x);
+
+				 float a = ((float)render_bmp[offs_in + 3]) / 255.0f;
+
+				 g->bitmap[offs_out] = rgb_to_grayscale_byte(&render_bmp[offs_in]);
+				 g->bitmap[offs_out] = (unsigned char)(a * (float)g->bitmap[offs_out]);
+			 }
+		 }
+	 }
+
+	 MEM_freeN(render_bmp);
+
+	 LIB_addhead(&(gc->bucket[rft_hash(g->c << 6)]), g);
+	 return g;
 }
 
 /** \} */
@@ -1170,6 +1269,14 @@ static FT_GlyphSlot rft_glyph_render(FontRFT *settings_font, FontRFT *glyph_font
 		return glyph;
 	}
 	return NULL;
+}
+
+GlyphRFT *rft_glyph_ensure_icon(GlyphCacheRFT *gc, unsigned int icon_id, bool color) {
+	GlyphRFT *g = rft_glyph_cache_find_glyph(gc, icon_id + RFT_ICON_OFFSET, 0);
+	if (g) {
+		return g;
+	}
+	return rft_glyph_cache_add_svg(gc, icon_id + RFT_ICON_OFFSET, color);
 }
 
 static GlyphRFT *rft_glyph_ensure_ex(FontRFT *font, GlyphCacheRFT *gc, const unsigned int charcode, uint8_t subpixel) {

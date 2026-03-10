@@ -7,6 +7,8 @@
 #include "LIB_assert.h"
 #include "LIB_ghash.h"
 #include "LIB_listbase.h"
+#include "LIB_rect.h"
+#include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include <stdio.h>
@@ -191,6 +193,7 @@ ListBase *KER_spacetype_list(void) {
 SpaceType *KER_spacetype_from_id(int spaceid) {
 	return LIB_findbytes(&space_types, &spaceid, sizeof(int), offsetof(SpaceType, spaceid));
 }
+
 ARegionType *KER_regiontype_from_id(const SpaceType *type, int regionid) {
 	return LIB_findbytes(&type->regiontypes, &regionid, sizeof(int), offsetof(ARegionType, regionid));
 }
@@ -200,14 +203,84 @@ void KER_spacetype_register(SpaceType *st) {
 	ROSE_assert(st->spaceid != SPACE_EMPTY);
 	LIB_addtail(&space_types, st);
 }
+
 bool KER_spacetype_exist(int spaceid) {
 	return KER_spacetype_from_id(spaceid) != NULL;
 }
+
 void KER_spacetype_free(void) {
 	LISTBASE_FOREACH(SpaceType *, st, &space_types) {
+		LISTBASE_FOREACH(ARegionType *, art, &st->regiontypes) {
+			LISTBASE_FOREACH(PanelType *, pt, &art->paneltypes) {
+				LIB_freelistN(&pt->children);
+			}
+			LIB_freelistN(&art->paneltypes);
+		}
 		LIB_freelistN(&st->regiontypes);
 	}
 	LIB_freelistN(&space_types);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Area
+ * \{ */
+
+ARegion *KER_area_find_region_type(const ScrArea *area, int region_type) {
+	if (area) {
+		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+			if (region->regiontype == region_type) {
+				return region;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+ARegion *KER_area_find_region_active_win(const ScrArea *area) {
+	if (area == NULL) {
+		return NULL;
+	}
+
+	return KER_area_find_region_type(area, RGN_TYPE_WINDOW);
+}
+
+ARegion *KER_area_find_region_xy(const ScrArea *area, int regiontype, const int xy[2]) {
+	if (area == NULL) {
+		return NULL;
+	}
+
+	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		if (ELEM(regiontype, RGN_TYPE_ANY, region->regiontype)) {
+			if (LIB_rcti_isect_pt_v(&region->winrct, xy)) {
+				return region;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Panel
+ * \{ */
+
+Panel *KER_panel_new(PanelType *pt) {
+	Panel *panel = MEM_callocN(sizeof(Panel), "Panel");
+	panel->type = pt;
+	if (pt) {
+		LIB_strcpy(panel->name, ARRAY_SIZE(panel->name), pt->idname);
+	}
+	return panel;
+}
+
+void KER_panel_free(Panel *panel) {
+	MEM_SAFE_FREE(panel->drawname);
+	MEM_SAFE_FREE(panel);
 }
 
 /** \} */
@@ -219,6 +292,7 @@ void KER_spacetype_free(void) {
 void KER_screen_free_data(Screen *screen) {
 	screen_free_data((ID *)screen);
 }
+
 void KER_spacedata_freelist(ListBase *lb) {
 	LISTBASE_FOREACH(SpaceLink *, sl, lb) {
 		SpaceType *st = KER_spacetype_from_id(sl->spacetype);
@@ -234,6 +308,25 @@ void KER_spacedata_freelist(ListBase *lb) {
 	}
 	LIB_freelistN(lb);
 }
+
+static void area_region_panels_free_recursive(Panel *panel) {
+	LISTBASE_FOREACH_MUTABLE(Panel *, child_panel, &panel->children) {
+		area_region_panels_free_recursive(child_panel);
+	}
+	KER_panel_free(panel);
+}
+
+void KER_area_region_panels_free(ListBase *panels) {
+	LISTBASE_FOREACH_MUTABLE(Panel *, panel, panels) {
+		/* Delete custom data just for parent panels to avoid a double deletion. */
+		if (panel->runtime.custom_data_ptr) {
+			MEM_freeN(panel->runtime.custom_data_ptr);
+		}
+		area_region_panels_free_recursive(panel);
+	}
+	LIB_listbase_clear(panels);
+}
+
 void KER_area_region_free(SpaceType *st, ARegion *region) {
 	if (st) {
 		ARegionType *art = KER_regiontype_from_id(st, region->regiontype);
@@ -246,6 +339,8 @@ void KER_area_region_free(SpaceType *st, ARegion *region) {
 		region->type->free(region);
 	}
 
+	KER_area_region_panels_free(&region->panels);
+
 	if (region->regiondata) {
 		fprintf(stderr, "[Kernel] SpaceType failed to free #regiondata.\n");
 	}
@@ -255,6 +350,7 @@ void KER_area_region_free(SpaceType *st, ARegion *region) {
 		region->runtime.block_name_map = NULL;
 	}
 }
+
 void KER_screen_area_free(ScrArea *area) {
 	SpaceType *st = KER_spacetype_from_id(area->spacetype);
 
@@ -267,6 +363,7 @@ void KER_screen_area_free(ScrArea *area) {
 
 	KER_spacedata_freelist(&area->spacedata);
 }
+
 void KER_screen_area_map_free(ScrAreaMap *area_map) {
 	LISTBASE_FOREACH_MUTABLE(ScrArea *, area, &area_map->areabase) {
 		KER_screen_area_free(area);

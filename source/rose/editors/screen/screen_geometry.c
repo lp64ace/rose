@@ -110,7 +110,7 @@ void screen_area_set_geometry_rect(ScrArea *area, const rcti *rect) {
 }
 
 void screen_geom_select_connected_edge(wmWindow *window, ScrEdge *edge) {
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 
 	/* 'dir_axis' is the direction of EDGE */
 	char axis;
@@ -180,7 +180,7 @@ bool screen_geom_vertices_scale_pass(wmWindow *window, Screen *screen, rcti *scr
 			CLAMP(vert->vec.y, screen_rect->ymin, screen_rect->ymax);
 		}
 
-		int headery = UI_UNIT_Y;
+		int headery = PIXELSIZE + UI_UNIT_Y;
 
 		if (facy < 1) {
 			/** make each window at least a single header size high. */

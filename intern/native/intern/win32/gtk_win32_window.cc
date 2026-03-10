@@ -27,30 +27,36 @@ GTKWindowWin32::~GTKWindowWin32() {
 }
 
 bool GTKWindowWin32::Create(GTKWindowInterface *vparent, const char *name, int width, int height, int state) {
-	this->windowclass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+	this->windowclass.style = CS_HREDRAW | CS_VREDRAW;
 	this->windowclass.cbClsExtra = 0;
 	this->windowclass.cbWndExtra = 0;
 	this->windowclass.lpfnWndProc = WindowProcedure;
 	this->windowclass.hInstance = GetModuleHandle(NULL);
 	this->windowclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	this->windowclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	this->windowclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	this->windowclass.hbrBackground = (HBRUSH)GetStockObject(DKGRAY_BRUSH);
 	this->windowclass.lpszMenuName = NULL;
 	this->windowclass.lpszClassName = name;
 	RegisterClass(&this->windowclass);
 
 	GTKWindowWin32 *parent = static_cast<GTKWindowWin32 *>(vparent);
 
+	const DWORD dwDefault = WS_OVERLAPPEDWINDOW;
+	const DWORD dwChild = WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+	const DWORD dwStyle = (parent) ? dwChild : dwDefault;
+	const DWORD dwStyleEx = (parent) ? 0 : WS_EX_APPWINDOW;
+	const HWND hParent = (parent) ? parent->GetHandle() : HWND_DESKTOP;
+
 	this->hwnd = CreateWindowEx(
-		WS_EX_APPWINDOW,
+		dwStyleEx,
 		name,
 		name,
-		WS_OVERLAPPEDWINDOW & ~WS_VISIBLE,
+		dwStyle & ~WS_VISIBLE,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		width,
 		height,
-		(parent) ? parent->hwnd : HWND_DESKTOP,
+		hParent,
 		NULL,
 		GetModuleHandle(NULL),
 		NULL
@@ -171,7 +177,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam,
 		return DefWindowProc(hwnd, message, wparam, lparam);
 	}
 
-	float time = static_cast<float>(GetMessageTime()) / 1000.0;
+	float time = static_cast<float>(manager->Time());
 
 	switch (message) {
 		case WM_DESTROY: {
@@ -225,6 +231,11 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam,
 		case WM_INPUTLANGCHANGE: {
 			manager->keyboard_layout = (HKL)lparam;
 		} break;
+		case WM_GETMINMAXINFO: {
+			MINMAXINFO *mmi = (MINMAXINFO *)lparam;
+			mmi->ptMinTrackSize.x = 640;
+			mmi->ptMinTrackSize.y = 360;
+		} return 0;
 		case WM_INPUT: {
 			if (GetActiveWindow() != hwnd) {
 				break;

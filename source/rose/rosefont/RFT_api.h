@@ -100,6 +100,8 @@ typedef struct ResultRFT {
  */
 void RFT_draw_ex(int fontid, const char *str, size_t str_len, struct ResultRFT *r_info);
 void RFT_draw(int fontid, const char *str, size_t str_len);
+void RFT_draw_svg_icon(int iconid, float x, float y, float size, const unsigned char color[4], float outline_alpha, bool multicolor);
+
 int RFT_draw_mono(int fontid, const char *str, size_t str_len, int cwidth, int tab_columns);
 
 /** \} */

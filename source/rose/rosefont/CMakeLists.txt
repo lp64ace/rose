@@ -43,7 +43,11 @@ set(SRC
 
 set(LIB
 	# Internal Include Directories
+	rose::resources::icons
+
+	rose::extern::nanosvg
 	rose::intern::guardedalloc
+
 	rose::source::gpu
 	rose::source::roselib
 	
@@ -62,10 +66,12 @@ set(LIB
 # Internal Fonts
 
 set(FONTS_SRC
-	fonts/Courier.ttf
 	fonts/DejaVuSans.ttf
 	fonts/DejaVuSansMono.ttf
-	fonts/FSEX300.ttf
+	fonts/GoogleSansCode.ttf
+	fonts/Monospaceland.ttf
+	fonts/RealTimeRoundedTest.otf
+	fonts/Roboto.ttf
 )
 
 set(FONTS_C

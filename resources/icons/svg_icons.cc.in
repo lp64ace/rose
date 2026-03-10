@@ -1,0 +1,10 @@
+#include "UI_resource.h"
+
+#include "svg_icons.h"
+
+const char *rose_get_icon_svg(int icon) {
+	switch (icon)  {
+@SVG_CONTENTS_C@
+		default: return nullptr;
+	}
+}

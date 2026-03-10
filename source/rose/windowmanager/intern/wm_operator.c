@@ -1,9 +1,17 @@
 #include "MEM_guardedalloc.h"
 
+#include "DNA_screen_types.h"
+#include "DNA_windowmanager_types.h"
+
+#include "UI_interface.h"
+#include "UI_resource.h"
+
 #include "KER_context.h"
 #include "KER_idprop.h"
 #include "KER_global.h"
 #include "KER_main.h"
+
+#include "LIB_string.h"
 
 #include "RNA_access.h"
 #include "RNA_define.h"
@@ -34,6 +42,18 @@ ROSE_INLINE void wm_operatortype_append_end(wmOperatorType *ot) {
 	LIB_addtail(&operator_types, ot);
 }
 
+bool WM_operator_last_properties_init(wmOperator *op) {
+	return false;
+}
+
+bool WM_operator_last_properties_store(wmOperator *op) {
+	return false;
+}
+
+const char *WM_operatortype_name(wmOperatorType *ot, PointerRNA *pointer) {
+	return RNA_struct_name(ot->srna);
+}
+
 void WM_operatortype_append(void (*opfunc)(wmOperatorType *ot)) {
 	wmOperatorType *ot = wm_operatortype_append_begin();
 	opfunc(ot);
@@ -59,7 +79,7 @@ wmOperatorType *WM_operatortype_find(const char *idname, bool quiet) {
 	}
 
 	if (!quiet) {
-		fprintf(stderr, "[WindowManager] Search for unkown operator \"%s\".", idname);
+		fprintf(stderr, "[WindowManager] Search for unkown operator \"%s\".\n", idname);
 	}
 
 	return NULL;
@@ -132,6 +152,30 @@ void WM_operator_free(wmOperator *op) {
 
 	MEM_SAFE_FREE(op->customdata);
 	MEM_freeN(op);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Operator Properties
+ * \{ */
+
+void WM_operator_properties_filesel(wmOperatorType *ot, int filter, int type, int action, int flag) {
+	PropertyRNA *property = NULL;
+	if (flag & WM_FILESEL_FILEPATH) {
+		property = RNA_def_string_file_path(ot->srna, "filepath", NULL, FILE_MAX, "File Path", "Path to file");
+	}
+	if (flag & WM_FILESEL_DIRECTORY) {
+		property = RNA_def_string_dir_path(ot->srna, "directory", NULL, FILE_MAX, "Directory", "Directory of the file");
+	}
+	if (flag & WM_FILESEL_FILENAME) {
+		property = RNA_def_string_file_name(ot->srna, "filename", NULL, FILE_MAX, "File Name", "Name of the file");
+	}
+	if (flag & WM_FILESEL_FILES) {
+		property = RNA_def_collection_runtime(ot->srna, "files", &RNA_OperatorFileListElement, "Files", "");
+	}
+
+	property = RNA_def_int(ot->srna, "filemode", type, FILE_ROSE, FILE_ROSE, "File Browser Mode", "The setting for the file browser mode to load a .blend file, a library or a special file", FILE_ROSE, FILE_ROSE);
 }
 
 /** \} */

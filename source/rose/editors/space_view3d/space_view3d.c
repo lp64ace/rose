@@ -57,7 +57,7 @@ ROSE_INLINE RegionView3D *region_view3d_init(RegionView3D *rv3d) {
 	unit_m4(rv3d->winmat);
 	unit_m4(rv3d->viewmat);
 	unit_qt(rv3d->viewquat);
-	copy_v3_fl3(rv3d->viewloc, 0.0f, 2.0f, 2.0f);
+	copy_v3_fl3(rv3d->viewloc, 0.0f, 1.0f, 1.0f);
 	return rv3d;
 }
 
@@ -158,6 +158,7 @@ void ED_spacetype_view3d() {
 	st->exit = view3d_exit;
 	st->operatortypes = view3d_operatortypes;
 	st->keymap = view3d_keymap;
+	st->keymapflag = ED_KEYMAP_UI;
 
 	// Header Region
 	{
@@ -167,17 +168,19 @@ void ED_spacetype_view3d() {
 		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 	// Main Region
 	{
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Main");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_WINDOW;
-		art->layout = view3d_main_region_layout;
+		art->layout = NULL;
 		art->draw = view3d_main_region_draw;
 		art->init = view3d_main_region_init;
 		art->exit = ED_region_default_exit;
 		art->free = view3d_main_region_free;
+		art->keymapflag = ED_KEYMAP_UI;
 	}
 
 	KER_spacetype_register(st);

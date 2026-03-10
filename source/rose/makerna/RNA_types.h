@@ -45,6 +45,28 @@ typedef struct PathResolvedRNA {
 
 typedef bool (*IteratorSkipFunc)(struct CollectionPropertyIterator *iter, void *data);
 
+typedef struct ArrayIterator {
+	char *ptr;
+	/** Past the last valid pointer, only for comparisons, ignores skipped values. */
+	char *endptr;
+	/** Will be freed if set. */
+	void *free_ptr;
+	int itemsize;
+
+	/**
+	 * Array length with no skip functions applied,
+	 * take care not to compare against index from animsys or Python indices.
+	 */
+	int length;
+
+	/**
+	 * Optional skip function,
+	 * when set the array as viewed by rna can contain only a subset of the members.
+	 * this changes indices so quick array index lookups are not possible when skip function is used.
+	 */
+	IteratorSkipFunc skip;
+} ArrayIterator;
+
 typedef struct ListBaseIterator {
 	struct Link *link;
 	int flag;
@@ -57,6 +79,7 @@ typedef struct CollectionPropertyIterator {
 	struct PropertyRNA *property;
 
 	union {
+		ArrayIterator array;
 		ListBaseIterator listbase;
 		void *custom;
 	} internal;
@@ -113,17 +136,20 @@ enum {
 typedef enum ePropertySubType {
 	PROP_NONE = 0,
 
-	PROP_UNSIGNED = 1,
-	PROP_PIXEL = 2,
-	PROP_DISTANCE = 3 | PROP_UNIT_LENGTH,
-	PROP_FACTOR = 4,
-	PROP_COLOR = 5,
-	PROP_TRANSLATION = 6 | PROP_UNIT_LENGTH,
-	PROP_EULER = 7 | PROP_UNIT_ROTATION,
-	PROP_AXISANGLE = 8,
-	PROP_XYZ = 9,
-	PROP_XYZ_LENGTH = 10 | PROP_UNIT_LENGTH,
-	PROP_COORDS = 11,
+	PROP_FILEPATH = 1,
+	PROP_DIRPATH = 2,
+	PROP_FILENAME = 3,
+	PROP_UNSIGNED = 4,
+	PROP_PIXEL = 5,
+	PROP_DISTANCE = 6 | PROP_UNIT_LENGTH,
+	PROP_FACTOR = 7,
+	PROP_COLOR = 8,
+	PROP_TRANSLATION = 9 | PROP_UNIT_LENGTH,
+	PROP_EULER = 10 | PROP_UNIT_ROTATION,
+	PROP_AXISANGLE = 11,
+	PROP_XYZ = 12,
+	PROP_XYZ_LENGTH = 13 | PROP_UNIT_LENGTH,
+	PROP_COORDS = 14,
 } ePropertySubType;
 
 typedef enum ePropertyFlag {

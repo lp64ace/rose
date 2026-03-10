@@ -1,6 +1,8 @@
 #ifndef KER_LIBRARY_H
 #define KER_LIBRARY_H
 
+#include "DNA_ID.h"
+
 #include "LIB_utildefines.h"
 
 #ifdef __cplusplus

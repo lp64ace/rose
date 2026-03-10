@@ -1,4 +1,5 @@
 #include "KER_anim_data.h"
+#include "KER_anim_sys.h"
 #include "KER_fcurve.h"
 
 #include "deg_builder_cache.hh"
@@ -46,28 +47,21 @@ void animated_property_cb(ID *id, FCurve *fcurve, void *data_v) {
 	}
 	AnimatedPropertyCallbackData *data = static_cast<AnimatedPropertyCallbackData *>(data_v);
 	/* Resolve property. */
-	PointerRNA pointer_rna;
-	PropertyRNA *property_rna = nullptr;
-	if (fcurve->runtime.static_path) {
-		if (!RNA_static_path_resolve_property(&data->pointer_rna, fcurve->runtime.static_path, &pointer_rna, &property_rna)) {
-			return;
-		}
-	}
-	else {
-		if (!RNA_path_resolve_property(&data->pointer_rna, fcurve->path, &pointer_rna, &property_rna)) {
-			return;
-		}
+	PathResolvedRNA resolved;
+
+	if (!KER_animsys_rna_curve_resolve(&data->pointer_rna, fcurve, &resolved)) {
+		return;
 	}
 	/**
 	 * Get storage for the ID.
 	 * This is needed to deal with cases when nested datablock is animated by its parent.
 	 */
 	AnimatedPropertyStorage *animated_property_storage = data->animated_property_storage;
-	if (pointer_rna.owner != data->pointer_rna.owner) {
-		animated_property_storage = data->builder_cache->ensureAnimatedPropertyStorage(pointer_rna.owner);
+	if (resolved.ptr.owner != data->pointer_rna.owner) {
+		animated_property_storage = data->builder_cache->ensureAnimatedPropertyStorage(resolved.ptr.owner);
 	}
 	/* Set the property as animated. */
-	animated_property_storage->tagPropertyAsAnimated(&pointer_rna, property_rna);
+	animated_property_storage->tagPropertyAsAnimated(&resolved.ptr, resolved.property);
 }
 
 }  // namespace

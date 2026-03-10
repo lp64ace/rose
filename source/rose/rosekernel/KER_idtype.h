@@ -17,6 +17,9 @@ struct Main;
 struct RoseWriter;
 struct RoseDataReader;
 
+typedef struct RoseDataReader RoseDataReader;
+typedef struct RoseWriter RoseWriter;
+
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
  * \{ */

@@ -60,6 +60,45 @@ void WM_render_context_destroy(struct WindowManager *wm, void *render);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Worker
+ * \{ */
+
+/**
+ * Communication/status data owned by the wmJob, and passed to the worker code when calling
+ * `startjob` callback.
+ *
+ * `OUTPUT` members mean that they are defined by the worker thread, and read/used by the wmJob
+ * management code from the main thread. And vice-versa for `INPUT` members.
+ *
+ * \warning There is currently no thread-safety or synchronization when accessing these values.
+ * This is fine as long as:
+ *   - All members are independent of each other, value-wise.
+ *   - Each member is 'simple enough' that accessing it or setting it can be considered as atomic.
+ *   - There is no requirement of immediate synchronization of these values between the main
+ *     controlling thread (i.e. wmJob management code) and the worker thread.
+ */
+typedef struct wmJobWorkerStatus {
+	/**
+	 * OUTPUT - Set to true by the worker to request update processing from the main thread (as part
+	 * of the wmJob 'event loop', see #wm_jobs_timer).
+	 */
+	bool do_update;
+
+	/**
+	 * INPUT - Set by the wmJob management code to request a worker to stop/abort its processing.
+	 *
+	 * \note Some job types (rendering or baking ones e.g.) also use the #Global.is_break flag to
+	 * cancel their processing.
+	 */
+	bool stop;
+
+	/** OUTPUT - Progress as reported by the worker, from `0.0f` to `1.0f`. */
+	float progress;
+} wmJobWorkerStatus;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Operator Type
  * \{ */
 
@@ -89,6 +128,14 @@ typedef struct wmOperatorType {
 	wmOperatorStatus (*invoke)(struct rContext *C, struct wmOperator *op, const struct wmEvent *event);
 
 	/**
+	 * This callback executes on a running operator whenever as property
+	 * is changed. It can correct its own properties or report errors for
+	 * invalid settings in exceptional cases.
+	 * Boolean return value, True denotes a change has been made and to redraw.
+	 */
+	bool (*check)(struct rContext *C, struct wmOperator *op);
+
+	/**
 	 * Called when a modal operator is canceled (not used often).
 	 * Internal cleanup can be done here if needed.
 	 */
@@ -103,7 +150,7 @@ typedef struct wmOperatorType {
 	wmOperatorStatus (*modal)(struct rContext *C, struct wmOperator *op, const struct wmEvent *event);
 
 	/** Verify if enabled in the current context, use #WM_keymap_poll instead of direct calls. */
-	int (*poll)(struct rContext *);
+	bool (*poll)(struct rContext *);
 
 	/** RNA for properties. */
 	struct StructRNA *srna;
@@ -112,7 +159,13 @@ typedef struct wmOperatorType {
 enum {
 	OPTYPE_BLOCKING = 1 << 0,
 	OPTYPE_INTERNAL = 1 << 1,
+	OPTYPE_MODAL_PRIORITY = 1 << 2,
 };
+
+bool WM_operator_last_properties_init(struct wmOperator *op);
+bool WM_operator_last_properties_store(struct wmOperator *op);
+
+const char *WM_operatortype_name(struct wmOperatorType *ot, struct PointerRNA *pointer);
 
 void WM_operatortype_append(void (*opfunc)(struct wmOperatorType *ot));
 void WM_operatortype_clear(void);
@@ -123,10 +176,13 @@ void WM_operatortype_clear(void);
 /** \name Operator
  * \{ */
 
+wmOperatorStatus WM_operator_name_call_ptr(struct rContext *C, struct wmOperatorType *ot, eOpCallContext context, struct PointerRNA *ptr, const struct wmEvent *event);
+
 struct wmOperatorType *WM_operatortype_find(const char *idname, bool quiet);
 
 bool WM_operator_poll(struct rContext *C, struct wmOperatorType *ot);
 
+void WM_operator_properties_filesel(struct wmOperatorType *ot, int filter, int type, int action, int flag);
 void WM_operator_properties_alloc(struct PointerRNA **ptr, struct IDProperty **properties, const char *opstring);
 void WM_operator_properties_free(struct PointerRNA *ptr);
 void WM_operator_free(struct wmOperator *op);

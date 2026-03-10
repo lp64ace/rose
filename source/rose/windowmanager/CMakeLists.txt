@@ -30,6 +30,7 @@ set(SRC
 	intern/wm.c
 	intern/wm_draw.c
 	intern/wm_event.c
+	intern/wm_file.c
 	intern/wm_keymap.c
 	intern/wm_handler.c
 	intern/wm_operator.c
@@ -48,6 +49,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::rosemesh
 	rose::source::rosefont
+	rose::source::roseloader
 	rose::source::gpu
 	rose::source::draw
 	rose::source::io::fbx

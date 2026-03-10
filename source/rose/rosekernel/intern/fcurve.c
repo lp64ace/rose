@@ -43,7 +43,6 @@ FCurve *KER_fcurve_copy(const struct FCurve *fcu) {
 
 	/* Copy rna-path. */
 	fcu_d->path = MEM_dupallocN(fcu_d->path);
-	fcu_d->runtime.static_path = NULL;
 
 	return fcu_d;
 }
@@ -72,10 +71,6 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_SAFE_FREE(fcurve->fpt);
 	MEM_SAFE_FREE(fcurve->path);
 	
-	if (fcurve->runtime.static_path) {
-		RNA_path_free(fcurve->runtime.static_path);
-	}
-
 	MEM_freeN(fcurve);
 }
 
@@ -582,10 +577,6 @@ void KER_fcurve_bezt_resize(FCurve *fcurve, int totvert) {
 void KER_fcurve_path_set_ex(FCurve *fcurve, const char *newpath, bool compile) {
 	if (fcurve->path == NULL || !STREQ(fcurve->path, newpath)) {
 		MEM_SAFE_FREE(fcurve->path);
-
-		if (fcurve->runtime.static_path) {
-			RNA_path_free(fcurve->runtime.static_path);
-		}
 
 		/**
 		 * Copy the new path over and invalidate the runtime canonical path.

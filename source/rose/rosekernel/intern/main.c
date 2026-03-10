@@ -1,6 +1,7 @@
 #include "MEM_guardedalloc.h"
 
 #include "KER_lib_id.h"
+#include "KER_global.h"
 #include "KER_main.h"
 #include "KER_main_id_name_map.h"
 #include "KER_main_name_map.h"
@@ -106,6 +107,14 @@ bool KER_main_is_empty(struct Main *main) {
 	}
 
 	return true;
+}
+
+const char *KER_main_rosefile_path(const Main *main) {
+	return main->filepath;
+}
+
+const char *KER_main_rosefile_path_from_global() {
+	return KER_main_rosefile_path(G_MAIN);
 }
 
 int set_listbasepointers(Main *main, ListBase *lb[]) {

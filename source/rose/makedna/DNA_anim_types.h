@@ -20,13 +20,6 @@ typedef struct FPoint {
 	float vec[2];
 } FPoint;
 
-typedef struct FCurve_Runtime {
-	/**
-	 * This stores the static path for fast property resolve using RNA.
-	 */
-	struct StaticPathRNA *static_path;
-} FCurve_Runtime;
-
 typedef struct FCurve {
 	struct FCurve *prev, *next;
 
@@ -45,9 +38,6 @@ typedef struct FCurve {
 	 */
 	char *path;
 	int index;
-
-	/** This is runtime data and should not be saved to file. */
-	FCurve_Runtime runtime;
 } FCurve;
 
 /** \} */

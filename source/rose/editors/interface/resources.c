@@ -38,6 +38,9 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 			case SPACE_PROPERTIES: {
 				ts = &theme->space_properties;
 			} break;
+			case SPACE_FILE: {
+				ts = &theme->space_file;
+			} break;
 			default: {
 				ROSE_assert_unreachable();
 			} break;
@@ -45,10 +48,10 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 
 		switch (color) {
 			case TH_BACK: {
-				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW, RGN_TYPE_TEMPORARY)) {
+				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW, RGN_TYPE_UI, RGN_TYPE_TOOLS, RGN_TYPE_TEMPORARY)) {
 					cp = ts->back;
 				}
-				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
+				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_EXECUTE, RGN_TYPE_FOOTER)) {
 					cp = ts->header;
 				}
 				else {
@@ -56,10 +59,10 @@ const unsigned char *UI_GetThemeColorPtr(Theme *theme, int spacetype, int color)
 				}
 			} break;
 			case TH_BACK_HI: {
-				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW)) {
+				if (ELEM(theme_state.regionid, RGN_TYPE_WINDOW, RGN_TYPE_UI, RGN_TYPE_TOOLS)) {
 					cp = ts->back;
 				}
-				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
+				else if (ELEM(theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_EXECUTE, RGN_TYPE_FOOTER)) {
 					cp = ts->header_hi;
 				}
 				else {

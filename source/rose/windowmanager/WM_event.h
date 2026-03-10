@@ -191,6 +191,9 @@ enum {
 
 	WINDEACTIVATE = 0x0104, /* Window is deactivated, focus lost, (260). */
 	WINQUIT = 0x0105,
+
+	/* Misc Rose internals: 0x502x. */
+	EVT_FILESELECT = 0x5020, /* 20512 */
 };
 
 /* clang-format off */
@@ -218,6 +221,19 @@ enum {
 #define ISKEYBOARD_OR_BUTTON(event_type) (ISMOUSE_BUTTON(event_type) || ISKEYBOARD(event_type))
 
 /* clang-format on */
+
+/* -------------------------------------------------------------------- */
+/** \name #wmEvent->val Values
+ * \{ */
+
+enum {
+	EVT_FILESELECT_FULL_OPEN = 1,
+	EVT_FILESELECT_EXEC = 2,
+	EVT_FILESELECT_CANCEL = 3,
+	EVT_FILESELECT_EXTERNAL_CANCEL = 4,
+};
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Exposed Methods

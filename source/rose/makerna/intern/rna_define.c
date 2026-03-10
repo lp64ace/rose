@@ -584,40 +584,41 @@ void RNA_def_struct_system_idprops_func(StructRNA *srna, const char *system_idpr
 /** \name Property RNA Definition
  * \{ */
 
-const char *RNA_property_typename(ePropertyType type) {
-	const char *compileropt[] = {
-		[PROP_BOOLEAN] = "PROP_BOOLEAN",
-		[PROP_INT] = "PROP_INT",
-		[PROP_FLOAT] = "PROP_FLOAT",
-		[PROP_STRING] = "PROP_STRING",
-		[PROP_ENUM] = "PROP_ENUM",
-		[PROP_POINTER] = "PROP_POINTER",
-		[PROP_COLLECTION] = "PROP_COLLECTION",
-	};
-	return compileropt[type];
+const char *RNA_property_type_typename(ePropertyType type) {
+	switch (type) {
+		case PROP_BOOLEAN: return "PROP_BOOLEAN";
+		case PROP_INT: return "PROP_INT";
+		case PROP_FLOAT: return "PROP_FLOAT";
+		case PROP_STRING: return "PROP_STRING";
+		case PROP_ENUM: return "PROP_ENUM";
+		case PROP_POINTER: return "PROP_POINTER";
+		case PROP_COLLECTION: return "PROP_COLLECTION";
+	}
+	return "PROP_INVALID";
 }
 
-const char *RNA_property_rawtypename(eRawPropertyType type) {
-	const char *compileropt[] = {
-		[PROP_RAW_BOOLEAN] = "PROP_RAW_BOOLEAN",
-		[PROP_RAW_CHAR] = "PROP_RAW_CHAR",
-		[PROP_RAW_SHORT] = "PROP_RAW_SHORT",
-		[PROP_RAW_INT] = "PROP_RAW_INT",
-		[PROP_RAW_FLOAT] = "PROP_RAW_FLOAT",
-		[PROP_RAW_DOUBLE] = "PROP_RAW_DOUBLE",
-		[PROP_RAW_INT8] = "PROP_RAW_INT8",
-		[PROP_RAW_UINT8] = "PROP_RAW_UINT8",
-		[PROP_RAW_UINT16] = "PROP_RAW_UINT16",
-		[PROP_RAW_INT64] = "PROP_RAW_INT64",
-		[PROP_RAW_UINT64] = "PROP_RAW_UINT64",
+const char *RNA_property_type_rawtypename(eRawPropertyType type) {
+	switch (type) {
+		case PROP_RAW_BOOLEAN: return "PROP_RAW_BOOLEAN";
+		case PROP_RAW_CHAR: return "PROP_RAW_CHAR";
+		case PROP_RAW_SHORT: return "PROP_RAW_SHORT";
+		case PROP_RAW_INT: return "PROP_RAW_INT";
+		case PROP_RAW_FLOAT: return "PROP_RAW_FLOAT";
+		case PROP_RAW_DOUBLE: return "PROP_RAW_DOUBLE";
+		case PROP_RAW_INT8: return "PROP_RAW_INT8";
+		case PROP_RAW_UINT8: return "PROP_RAW_UINT8";
+		case PROP_RAW_UINT16: return "PROP_RAW_UINT16";
+		case PROP_RAW_INT64: return "PROP_RAW_INT64";
+		case PROP_RAW_UINT64: return "PROP_RAW_UINT64";
 	};
-	return compileropt[type];
+	return "PROP_RAW_INVALID";
 }
 
-const char *RNA_property_subtypename(enum ePropertySubType type) {
+const char *RNA_property_type_subtypename(ePropertySubType type) {
 	/* clang-format off */
 	switch (RNA_SUBTYPE_VALUE(type)) {
 		case RNA_SUBTYPE_VALUE(PROP_NONE): return "PROP_NONE";
+		case RNA_SUBTYPE_VALUE(PROP_FILENAME): return "PROP_FILENAME";
 		case RNA_SUBTYPE_VALUE(PROP_UNSIGNED): return "PROP_UNSIGNED";
 		case RNA_SUBTYPE_VALUE(PROP_PIXEL): return "PROP_PIXEL";
 		case RNA_SUBTYPE_VALUE(PROP_DISTANCE): return "PROP_DISTANCE";
@@ -636,7 +637,7 @@ const char *RNA_property_subtypename(enum ePropertySubType type) {
 	return "PROP_NONE";
 }
 
-ROSE_STATIC size_t rna_property_type_sizeof(int type) {
+ROSE_STATIC size_t rna_property_type_sizeof(ePropertyType type) {
 	/* clang-format off */
 	
 	switch (type) {
@@ -795,7 +796,7 @@ ROSE_INLINE void rna_def_property_boolean_sdna(PropertyRNA *property, const char
 
 	/* Error check to ensure floats are not wrapped as integers/booleans. */
 	if (defproperty->dnatype && IS_DNATYPE_BOOLEAN_COMPAT(defproperty->dnatype) == 0) {
-		fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s'.\n", nstruct->identifier, property->identifier, RNA_property_typename(property->type));
+		fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s'.\n", nstruct->identifier, property->identifier, RNA_property_type_typename(property->type));
 		DefRNA.error = true;
 		return;
 	}
@@ -804,7 +805,7 @@ ROSE_INLINE void rna_def_property_boolean_sdna(PropertyRNA *property, const char
 	if (is_bitset_array) {
 		const short max_length = (defproperty->dnasize * 8) - (IS_DNATYPE_BOOLEAN_BITSHIFT_FULLRANGE_COMPAT(defproperty->dnatype) ? 0 : 1);
 		if ((bit_index + length) > max_length) {
-			fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s' 'bitset array' of %d items starting at bit %u.\n", nstruct->identifier, property->identifier, RNA_property_typename(property->type), length, bit_index);
+			fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s' 'bitset array' of %d items starting at bit %u.\n", nstruct->identifier, property->identifier, RNA_property_type_typename(property->type), length, bit_index);
 			DefRNA.error = true;
 			return;
 		}
@@ -919,7 +920,7 @@ void RNA_def_property_int_sdna(PropertyRNA *property, const char *structname, co
 	if ((defproperty = rna_def_property_sdna(property, structname, propname))) {
 		/* Error check to ensure floats are not wrapped as integers/booleans. */
 		if (defproperty->dnatype && IS_DNATYPE_INT_COMPAT(defproperty->dnatype) == 0) {
-			fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s'.\n", nstruct->identifier, property->identifier, RNA_property_typename(property->type));
+			fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s'.\n", nstruct->identifier, property->identifier, RNA_property_type_typename(property->type));
 			DefRNA.error = true;
 			return;
 		}
@@ -1029,7 +1030,7 @@ void RNA_def_property_float_sdna(PropertyRNA *property, const char *structname, 
 	if ((defproperty = rna_def_property_sdna(property, structname, propname))) {
 		/* silent is for internal use */
 		if (defproperty->dnatype && IS_DNATYPE_FLOAT_COMPAT(defproperty->dnatype) == 0) {
-			fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s'.\n", srna->identifier, property->identifier, RNA_property_typename(property->type));
+			fprintf(stderr, "[RNA] %s.%s is wrapped as type '%s'.\n", srna->identifier, property->identifier, RNA_property_type_typename(property->type));
 			DefRNA.error = true;
 			return;
 		}
@@ -1424,6 +1425,17 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 	return property;
 }
 
+PropertyRNA *RNA_def_boolean(void *vcontainer, const char *identifier, bool default_value, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_BOOLEAN, PROP_NONE);
+	RNA_def_property_boolean_default(prop, default_value);
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
 PropertyRNA *RNA_def_int(void *vcontainer, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax) {
 	ContainerRNA *container = (ContainerRNA *)(vcontainer);
 	PropertyRNA *prop;
@@ -1439,6 +1451,119 @@ PropertyRNA *RNA_def_int(void *vcontainer, const char *identifier, int default_v
 	return prop;
 }
 
+PropertyRNA *RNA_def_string(void *vcontainer, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	ROSE_assert(default_value == NULL || default_value[0] != '\0');
+
+	prop = RNA_def_property(container, identifier, PROP_STRING, PROP_NONE);
+	if (maxlen != 0) {
+		RNA_def_property_string_maxlength(prop, maxlen);
+	}
+	if (default_value) {
+		RNA_def_property_string_default(prop, default_value);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_string_file_path(void *vcontainer, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	ROSE_assert(default_value == NULL || default_value[0] != '\0');
+
+	prop = RNA_def_property(container, identifier, PROP_STRING, PROP_FILEPATH);
+	if (maxlen != 0) {
+		RNA_def_property_string_maxlength(prop, maxlen);
+	}
+	if (default_value) {
+		RNA_def_property_string_default(prop, default_value);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_string_file_name(void *vcontainer, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	ROSE_assert(default_value == NULL || default_value[0] != '\0');
+
+	prop = RNA_def_property(container, identifier, PROP_STRING, PROP_FILENAME);
+	if (maxlen != 0) {
+		RNA_def_property_string_maxlength(prop, maxlen);
+	}
+	if (default_value) {
+		RNA_def_property_string_default(prop, default_value);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_string_dir_path(void *vcontainer, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	ROSE_assert(default_value == NULL || default_value[0] != '\0');
+
+	prop = RNA_def_property(container, identifier, PROP_STRING, PROP_DIRPATH);
+	if (maxlen != 0) {
+		RNA_def_property_string_maxlength(prop, maxlen);
+	}
+	if (default_value) {
+		RNA_def_property_string_default(prop, default_value);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
+void RNA_def_property_struct_runtime(ContainerRNA *container, PropertyRNA *prop, StructRNA *type) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	if (DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] \"%s\" is only available at runtime.\n", __func__);
+		return;
+	}
+
+	const bool is_id_type = (type->flag & STRUCT_ID) != 0;
+
+	switch (prop->type) {
+		case PROP_POINTER: {
+			PointerPropertyRNA *pprop = (PointerPropertyRNA *)prop;
+			pprop->srna = type;
+
+			if (type && (type->flag & STRUCT_ID_REFCOUNT)) {
+				prop->flag |= PROP_ID_REFCOUNT;
+			}
+		} break;
+		case PROP_COLLECTION: {
+			CollectionPropertyRNA *cprop = (CollectionPropertyRNA *)prop;
+			cprop->element = type;
+		} break;
+	}
+
+	if (is_id_type) {
+		RNA_def_property_flag(prop, PROP_PTR_NO_OWNERSHIP);
+	}
+}
+
+PropertyRNA *RNA_def_collection_runtime(void *vcontainer, const char *identifier, StructRNA *type, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_COLLECTION, PROP_NONE);
+	RNA_def_property_struct_runtime(container, prop, type);
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+
+	return prop;
+}
+
 void RNA_def_property_int_default(PropertyRNA *prop, int value) {
 	StructRNA *srna = DefRNA.nstruct;
 
@@ -1446,6 +1571,55 @@ void RNA_def_property_int_default(PropertyRNA *prop, int value) {
 		case PROP_INT: {
 			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
 			iprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_boolean_default(PropertyRNA *prop, bool value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_BOOLEAN: {
+			BoolPropertyRNA *bprop = (BoolPropertyRNA *)prop;
+			bprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_string_default(PropertyRNA *prop, const char *value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_STRING: {
+			StringPropertyRNA *sprop = (StringPropertyRNA *)prop;
+			
+			if (value == NULL) {
+				fprintf(stderr, "[RNA] \"%s.%s\", NULL string passed (don't call in this case).\n", srna->identifier, prop->identifier);
+				DefRNA.error = true;
+				break;
+			}
+
+			if (!value[0]) {
+				fprintf(stderr, "[RNA] \"%s.%s\", empty string passed (don't call in this case).\n", srna->identifier, prop->identifier);
+				DefRNA.error = true;
+				break;
+			}
+
+#ifndef RNA_RUNTIME
+			if (sprop->defaultvalue != NULL && sprop->defaultvalue[0]) {
+				fprintf(stderr, "[RNA] \"%s.%s\", set from DNA.\n", srna->identifier, prop->identifier);
+			}
+#endif
+			sprop->defaultvalue = value;
+
 			break;
 		}
 		default:

@@ -41,14 +41,15 @@ set(LIB
 	rose::source::functions
 	rose::source::depsgraph
 	rose::source::gpu
-	rose::source::io::fbx
 	rose::source::windowmanager
+	rose::source::editors::io
 	rose::source::editors::screen
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar
 	rose::source::editors::space_view3d
 	rose::source::editors::space_properties
+	rose::source::io::fbx
 	rose::source::rosemesh
 	rose::source::roseloader
 

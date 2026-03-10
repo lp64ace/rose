@@ -516,6 +516,44 @@ void KER_id_free(struct Main *main, void *idv) {
 /** \name Datablock Reference Management
  * \{ */
 
+ROSE_INLINE int id_refcount_recompute_callback(LibraryIDLinkCallbackData *cb_data) {
+	ID **id_pointer = cb_data->self_ptr;
+	const int cb_flag = cb_data->cb_flag;
+	const bool do_linked_only = POINTER_AS_INT(cb_data->user_data);
+
+	if (*id_pointer == NULL) {
+		return IDWALK_RET_NOP;
+	}
+	if (do_linked_only && !ID_IS_LINKED(*id_pointer)) {
+		return IDWALK_RET_NOP;
+	}
+
+	if (cb_flag & IDWALK_CB_USER) {
+		id_us_add(*id_pointer);
+	}
+
+	return IDWALK_RET_NOP;
+}
+
+void KER_main_id_refcount_recompute(Main *main, bool do_linked_only) {
+	ID *id;
+
+	FOREACH_MAIN_ID_BEGIN(main, id) {
+		if (!ID_IS_LINKED(id) && do_linked_only) {
+			continue;
+		}
+		id->user = ID_FAKE_USERS(id);
+	}
+	FOREACH_MAIN_ID_END;
+
+	/* Go over whole Main database to re-generate proper user-counts. */
+	FOREACH_MAIN_ID_BEGIN(main, id) {
+		KER_library_foreach_ID_link(main, id, id_refcount_recompute_callback, POINTER_FROM_INT(do_linked_only), IDWALK_READONLY | IDWALK_INCLUDE_UI);
+	}
+	FOREACH_MAIN_ID_END;
+
+}
+
 ROSE_INLINE int id_us_min(struct ID *id) {
 	/**
 	 * If there is a fake user set,
@@ -578,7 +616,113 @@ bool KER_id_new_name_validate(Main *main, ListBase *lb, ID *id, const char *tnam
 		KER_main_idmap_insert_id(main->id_map, id);
 	}
 
+	id_sort_by_name(lb, id, NULL);
+
 	return result;
+}
+
+void id_sort_by_name(ListBase *lb, ID *id, ID *id_sorting_hint) {
+#define ID_SORT_STEP_SIZE 512
+
+	ID *idtest;
+
+	/* insert alphabetically */
+	if (lb->first == lb->last) {
+		return;
+	}
+
+	LIB_remlink(lb, id);
+
+	/* Check if we can actually insert id before or after id_sorting_hint, if given. */
+	if (!ELEM(id_sorting_hint, NULL, id) && id_sorting_hint->lib == id->lib) {
+		ROSE_assert(LIB_haslink(lb, id_sorting_hint));
+
+		ID *id_sorting_hint_next = (ID *)(id_sorting_hint->next);
+		if (strcasecmp(id_sorting_hint->name, id->name) < 0 && (id_sorting_hint_next == NULL || id_sorting_hint_next->lib != id->lib || strcasecmp(id_sorting_hint_next->name, id->name) > 0)) {
+			LIB_insertlinkafter(lb, id_sorting_hint, id);
+			return;
+		}
+
+		ID *id_sorting_hint_prev = (ID *)(id_sorting_hint->prev);
+		if (strcasecmp(id_sorting_hint->name, id->name) > 0 && (id_sorting_hint_prev == NULL || id_sorting_hint_prev->lib != id->lib || strcasecmp(id_sorting_hint_prev->name, id->name) < 0)) {
+			LIB_insertlinkbefore(lb, id_sorting_hint, id);
+			return;
+		}
+	}
+
+	void *item_array[ID_SORT_STEP_SIZE];
+	int item_array_index;
+
+	/* Step one: We go backward over a whole chunk of items at once, until we find a limit item
+	 * that is lower than, or equal (should never happen!) to the one we want to insert. */
+	/* NOTE: We start from the end, because in typical 'heavy' case (insertion of lots of IDs at
+	 * once using the same base name), newly inserted items will generally be towards the end
+	 * (higher extension numbers). */
+	bool is_in_library = false;
+	item_array_index = ID_SORT_STEP_SIZE - 1;
+	for (idtest = (ID *)(lb->last); idtest != NULL; idtest = (ID *)(idtest->prev)) {
+		if (is_in_library) {
+			if (idtest->lib != id->lib) {
+				/* We got out of expected library 'range' in the list, so we are done here and can move on
+				 * to the next step. */
+				break;
+			}
+		}
+		else if (idtest->lib == id->lib) {
+			/* We are entering the expected library 'range' of IDs in the list. */
+			is_in_library = true;
+		}
+
+		if (!is_in_library) {
+			continue;
+		}
+
+		item_array[item_array_index] = idtest;
+		if (item_array_index == 0) {
+			if (strcasecmp(idtest->name, id->name) <= 0) {
+				break;
+			}
+			item_array_index = ID_SORT_STEP_SIZE;
+		}
+		item_array_index--;
+	}
+
+	/* Step two: we go forward in the selected chunk of items and check all of them, as we know
+	 * that our target is in there. */
+
+	/* If we reached start of the list, current item_array_index is off-by-one.
+	 * Otherwise, we already know that it points to an item lower-or-equal-than the one we want to
+	 * insert, no need to redo the check for that one.
+	 * So we can increment that index in any case. */
+	for (item_array_index++; item_array_index < ID_SORT_STEP_SIZE; item_array_index++) {
+		idtest = (ID *)(item_array[item_array_index]);
+		if (strcasecmp(idtest->name, id->name) > 0) {
+			LIB_insertlinkbefore(lb, idtest, id);
+			break;
+		}
+	}
+	if (item_array_index == ID_SORT_STEP_SIZE) {
+		if (idtest == NULL) {
+			/* If idtest is nullptr here, it means that in the first loop, the last comparison was
+			 * performed exactly on the first item of the list, and that it also failed. And that the
+			 * second loop was not walked at all.
+			 *
+			 * In other words, if `id` is local, all the items in the list are greater than the inserted
+			 * one, so we can put it at the start of the list. Or, if `id` is linked, it is the first one
+			 * of its library, and we can put it at the very end of the list. */
+			if (ID_IS_LINKED(id)) {
+				LIB_addtail(lb, id);
+			}
+			else {
+				LIB_addhead(lb, id);
+			}
+		}
+		else {
+			LIB_insertlinkafter(lb, idtest, id);
+		}
+	}
+
+#undef ID_SORT_STEP_SIZE
 }
 
 const char *KER_id_name(const ID *id) {

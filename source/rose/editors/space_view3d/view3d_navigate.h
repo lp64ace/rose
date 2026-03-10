@@ -19,6 +19,9 @@ extern "C" {
 
 typedef enum eViewOpsFlag {
 	VIEWOPS_FLAG_NONE = 0,
+	/** When enabled, use the depth under the cursor for navigation. */
+	VIEWOPS_FLAG_DEPTH_NAVIGATE = (1 << 1),
+	VIEWOPS_FLAG_ZOOM_TO_MOUSE = (1 << 2),
 } eViewOpsFlag;
 
 ENUM_OPERATORS(eViewOpsFlag, VIEWOPS_FLAG_NONE)
@@ -36,7 +39,7 @@ struct ViewOpsData;
 typedef struct ViewOpsType {
 	eViewOpsFlag flag;
 	const char *idname;
-	int (*poll_fn)(struct rContext *C);
+	bool (*poll_fn)(struct rContext *C);
 	enum wmOperatorStatus (*init_fn)(struct rContext *C, struct ViewOpsData *vod, const struct wmEvent *event, struct PointerRNA *ptr);
 	enum wmOperatorStatus (*apply_fn)(struct rContext *C, struct ViewOpsData *vod, const eV3D_OpEvent event_code, const int xy[2]);
 } ViewOpsType;
@@ -51,10 +54,12 @@ typedef struct ViewOpsData {
 
 	struct {
 		float viewquat[4];
+		float viewloc[3];
 	} initial;
 
 	struct {
 		float viewquat[4];
+		float viewloc[3];
 	} current;
 
 	int event_type;

@@ -211,6 +211,8 @@ void KER_id_free(struct Main *main, void *idv);
 /** \name Datablock Reference Management
  * \{ */
 
+void KER_main_id_refcount_recompute(struct Main *main, bool do_linked_only);
+
 void id_us_add(struct ID *id);
 void id_us_rem(struct ID *id);
 
@@ -221,6 +223,16 @@ void id_us_rem(struct ID *id);
  * \{ */
 
 bool KER_id_new_name_validate(struct Main *main, struct ListBase *lb, struct ID *id, const char *name);
+
+/**
+ * Sort given \a id into given \a lb list, using case-insensitive comparison of the id names.
+ *
+ * \note All other IDs beside given one are assumed already properly sorted in the list.
+ *
+ * \param id_sorting_hint: Ignored if NULL. Otherwise, used to check if we can insert \a id
+ * immediately before or after that pointer. It must always be into given \a lb list.
+ */
+void id_sort_by_name(struct ListBase *lb, struct ID *id, struct ID *id_sorting_hint);
 
 const char *KER_id_name(const struct ID *id);
 

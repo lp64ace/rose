@@ -79,7 +79,7 @@ ROSE_INLINE void viewrotate_apply(ViewOpsData *vod, const int event_xy[2]) {
 /**
  * Return's false if we should deny rotation to the user of the View3D!
  */
-ROSE_INLINE int view3d_rotation_poll(rContext *C) {
+ROSE_INLINE bool view3d_rotation_poll(rContext *C) {
 	return true;
 }
 
@@ -140,6 +140,187 @@ static void VIEW3D_OT_rotate(wmOperatorType *ot) {
 	ot->flag = 0;
 }
 
+ROSE_INLINE void viewpan_apply(ViewOpsData *vod, const int event_xy[2]) {
+	RegionView3D *rv3d = (RegionView3D *)vod->region->regiondata;
+
+	if (true) {
+		const float sensitivity = U.view_rotate_sensitivity_turntable / PIXELSIZE;
+
+		/* Camera forward vector (Z axis in camera space) */
+		float dX[3], dY[3];
+		float mat[3][3];
+
+		quat_to_mat3(mat, vod->current.viewquat);
+
+		mul_v3_v3fl(dX, mat[0], sensitivity * -(event_xy[0] - vod->prev_xy[0]));
+		mul_v3_v3fl(dY, mat[1], sensitivity * -(event_xy[1] - vod->prev_xy[1]));
+
+		add_v3_v3(vod->current.viewloc, dX);
+		add_v3_v3(vod->current.viewloc, dY);
+	}
+
+	/**
+	 * use a working copy so view location locking doesn't overwrite the locked
+	 * location back into the view we calculate with
+	 */
+	copy_v3_v3(rv3d->viewloc, vod->current.viewloc);
+
+	vod->prev_xy[0] = event_xy[0];
+	vod->prev_xy[1] = event_xy[1];
+
+	ED_region_tag_redraw(vod->region);
+}
+
+/**
+ * Return's false if we should deny move to the user of the View3D!
+ */
+ROSE_INLINE bool view3d_pan_poll(rContext *C) {
+	return true;
+}
+
+ROSE_INLINE wmOperatorStatus viewpan_invoke_impl(rContext *C, ViewOpsData *vod, const wmEvent *event, PointerRNA *ptr) {
+	eV3D_OpEvent event_code = ELEM(event->type, MOUSEROTATE, MOUSEPAN) ? VIEW_CONFIRM : VIEW_PASS;
+
+	if (event_code == VIEW_CONFIRM) {
+		viewpan_apply(vod, event->mouse_xy);
+
+		return OPERATOR_FINISHED;
+	}
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+ROSE_INLINE wmOperatorStatus viewpan_modal_impl(rContext *C, ViewOpsData *vod, const eV3D_OpEvent event_code, const int xy[2]) {
+	if (ELEM(event_code, VIEW_APPLY, VIEW_CONFIRM)) {
+		viewpan_apply(vod, xy);
+	}
+
+	switch (event_code) {
+		case VIEW_CONFIRM: {
+			return OPERATOR_FINISHED;
+		} break;
+		case VIEW_CANCEL: {
+			return OPERATOR_CANCELLED;
+		} break;
+	}
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+const ViewOpsType ViewOpsType_pan = {
+	.flag = VIEWOPS_FLAG_NONE,
+	.idname = "VIEW3D_OT_pan",
+	.poll_fn = view3d_pan_poll,
+	.init_fn = viewpan_invoke_impl,
+	.apply_fn = viewpan_modal_impl,
+};
+
+static wmOperatorStatus viewpan_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	return view3d_navigate_invoke_impl(C, op, event, &ViewOpsType_pan);
+}
+
+static void VIEW3D_OT_pan(wmOperatorType *ot) {
+/* identifiers */
+	ot->name = "Pan View";
+	ot->description = "Pan the view";
+	ot->idname = ViewOpsType_pan.idname;
+
+	/* API callbacks. */
+	ot->invoke = viewpan_invoke;
+	ot->modal = view3d_navigate_modal_fn;
+	ot->poll = view3d_pan_poll;
+	ot->cancel = view3d_navigate_cancel_fn;
+
+	/* flags */
+	ot->flag = 0;
+}
+
+ROSE_INLINE void viewzoom_apply(ViewOpsData *vod, int delta) {
+	RegionView3D *rv3d = (RegionView3D *)vod->region->regiondata;
+
+	if (true) {
+		const float sensitivity = U.view_rotate_sensitivity_turntable / PIXELSIZE;
+
+		float dZ[3];
+		float mat[3][3];
+
+		quat_to_mat3(mat, vod->current.viewquat);
+
+		mul_v3_v3fl(dZ, mat[2], sensitivity * -delta);
+
+		add_v3_v3(vod->current.viewloc, dZ);
+	}
+
+	/**
+	 * use a working copy so view location locking doesn't overwrite the locked
+	 * location back into the view we calculate with
+	 */
+	copy_v3_v3(rv3d->viewloc, vod->current.viewloc);
+
+	ED_region_tag_redraw(vod->region);
+}
+
+/**
+ * Return's false if we should deny zoom to the user of the View3D!
+ */
+ROSE_INLINE bool view3d_zoom_poll(rContext *C) {
+	return true;
+}
+
+ROSE_INLINE wmOperatorStatus viewzoom_invoke_impl(rContext *C, ViewOpsData *vod, const wmEvent *event, PointerRNA *ptr) {
+	int xy[2];
+
+	PropertyRNA *property = RNA_struct_find_property(ptr, "delta");
+
+	const int delta = RNA_property_is_set(ptr, property) ? RNA_property_int_get(ptr, property) : 0;
+	if (delta) {
+		viewzoom_apply(vod, delta);
+		return OPERATOR_FINISHED;
+	}
+
+	ROSE_assert_unreachable();
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+ROSE_INLINE wmOperatorStatus viewzoom_modal_impl(rContext *C, ViewOpsData *vod, const eV3D_OpEvent event_code, const int xy[2]) {
+	return OPERATOR_FINISHED;
+}
+
+const ViewOpsType ViewOpsType_zoom = {
+	.flag = VIEWOPS_FLAG_NONE,
+	.idname = "VIEW3D_OT_zoom",
+	.poll_fn = view3d_zoom_poll,
+	.init_fn = viewzoom_invoke_impl,
+	.apply_fn = viewzoom_modal_impl,
+};
+
+ROSE_INLINE wmOperatorStatus viewzoom_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	/* Near duplicate logic in #viewdolly_invoke(), changes here may apply there too. */
+	return view3d_navigate_invoke_impl(C, op, event, &ViewOpsType_zoom);
+}
+
+ROSE_INLINE wmOperatorStatus viewzoom_exec(rContext *C, wmOperator *op) {
+	return OPERATOR_RUNNING_MODAL;
+}
+
+static void VIEW3D_OT_zoom(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Zoom View";
+	ot->description = "Zoom in/out in the view";
+	ot->idname = ViewOpsType_zoom.idname;
+
+	/* API callbacks. */
+	ot->invoke = viewzoom_invoke;
+	ot->exec = viewzoom_exec;
+	ot->modal = view3d_navigate_modal_fn;
+	ot->poll = view3d_zoom_poll;
+	ot->cancel = view3d_navigate_cancel_fn;
+
+	/* rna */
+	RNA_def_int(ot->srna, "delta", 0, INT_MIN, INT_MAX, "Delta", "", INT_MIN, INT_MAX);
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -148,6 +329,8 @@ static void VIEW3D_OT_rotate(wmOperatorType *ot) {
 
 void view3d_operatortypes() {
 	WM_operatortype_append(VIEW3D_OT_rotate);
+	WM_operatortype_append(VIEW3D_OT_pan);
+	WM_operatortype_append(VIEW3D_OT_zoom);
 }
 
 /** \} */
@@ -167,6 +350,32 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 		.value = KM_PRESS,
 		.modifier = KM_NOTHING,
 	});
+
+	WM_keymap_add_item(keymap, "VIEW3D_OT_pan", &(KeyMapItem_Params){
+		.type = RIGHTMOUSE,
+		.value = KM_PRESS,
+		.modifier = KM_SHIFT,
+	});
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_zoom", &(KeyMapItem_Params){
+			.type = WHEELUPMOUSE,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+
+		RNA_int_set(kmi->ptr, "delta", 40);
+	} while(false);
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_zoom", &(KeyMapItem_Params){
+			.type = WHEELDOWNMOUSE,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+
+		RNA_int_set(kmi->ptr, "delta", -40);
+	} while(false);
 
 	/* clang-format on */
 }

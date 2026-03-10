@@ -46,6 +46,7 @@ typedef struct Theme {
 	ThemeUI tui;
 
 	ThemeSpace space_empty;
+	ThemeSpace space_file;
 	ThemeSpace space_view3d;
 	ThemeSpace space_topbar;
 	ThemeSpace space_statusbar;
@@ -55,10 +56,22 @@ typedef struct Theme {
 typedef struct UserDef {
 	char engine[64];
 
+	int flag_ui;
+
 	float view_rotate_sensitivity_turntable;
 
 	ListBase themes;
 } UserDef;
+
+/** #UserDef->flag_ui */
+enum {
+	/**
+	 * Controls whether menus close when clicking outside or when the mouse leaves the region:
+	 *  - ON  | The menu region will exit when the mouse leaves the region.
+	 *  - OFF | The menu region will exit only on mouse button press outside the region.
+	 */
+	UI_MENU_EXIT_AUTO = 1 << 0,
+};
 
 extern UserDef U;
 

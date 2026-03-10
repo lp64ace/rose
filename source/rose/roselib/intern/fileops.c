@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #if defined(WIN32)
+#	include <shlwapi.h>
 #	include <windows.h>
 #else
 #	include <dirent.h>
@@ -19,10 +20,24 @@
 /** \name File Utils
  * \{ */
 
+int LIB_access(const char *filepath, int mode) {
+	ROSE_assert(!LIB_path_is_rel(filepath));
+
+#ifdef WIN32
+	wchar_t lpFileName[FILE_MAX];
+	MultiByteToWideChar(CP_UTF8, 0, filepath, -1, lpFileName, ARRAYSIZE(lpFileName));
+	return _waccess(lpFileName, mode);
+#else
+	return access(filepath, mode);
+#endif
+}
+
 #ifdef WIN32
 int LIB_stat(const char *filepath, RoseFileStat *r_stat) {
 #	if defined(_MSC_VER)
-	return _stat64(filepath, (struct _stat64 *)r_stat);
+	wchar_t lpFileName[FILE_MAX];
+	MultiByteToWideChar(CP_UTF8, 0, filepath, -1, lpFileName, ARRAYSIZE(lpFileName));
+	return _wstat64(lpFileName, (struct _stat64 *)r_stat);
 #	else
 	return _stat(filepath, (struct _stat *)r_stat);
 #	endif
@@ -34,7 +49,13 @@ int LIB_stat(const char *filepath, RoseFileStat *r_stat) {
 #endif
 
 int LIB_open(const char *filepath, int oflag, int pmode) {
+#ifdef WIN32
+	wchar_t lpFileName[FILE_MAX];
+	MultiByteToWideChar(CP_UTF8, 0, filepath, -1, lpFileName, ARRAYSIZE(lpFileName));
+	return _wopen(lpFileName, oflag, pmode);
+#else
 	return open(filepath, oflag, pmode);
+#endif
 }
 
 uint64_t LIB_read(int fd, void *buffer, size_t size) {
@@ -68,6 +89,64 @@ uint64_t LIB_seek(int fd, size_t offset, int whence) {
 #endif
 }
 
+int LIB_exists(const char *path) {
+#if defined(WIN32)
+	RoseFileStat st;
+	char tmp[FILE_MAX];
+	LIB_strcpy(tmp, FILE_MAX, path);
+
+	size_t len = LIB_strlen(tmp);
+	/* in Windows #stat doesn't recognize dir ending on a slash
+	 * so we remove it here */
+	if ((len > 3) && ELEM(tmp[len - 1], '\\', '/')) {
+		tmp[len - 1] = '\0';
+	}
+	/* two special cases where the trailing slash is needed:
+	 * 1. after the share part of a UNC path
+	 * 2. after the C:\ when the path is the volume only
+	 */
+	if ((len >= 3) && (tmp[0] == '\\') && (tmp[1] == '\\')) {
+		LIB_path_normalize_unc(tmp, FILE_MAX);
+	}
+
+	if ((tmp[1] == ':') && (tmp[2] == '\0')) {
+		tmp[2] = '\\';
+		tmp[3] = '\0';
+	}
+
+	if (LIB_stat(tmp, &st) == -1) {
+		return 0;
+	}
+#else
+	struct stat st;
+	ROSE_assert(!LIB_path_is_rel(path));
+	if (stat(path, &st)) {
+		return 0;
+	}
+#endif
+	return (st.st_mode);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name File Utils
+ * \{ */
+
+bool LIB_is_file(const char *path) {
+	return S_ISREG(LIB_exists(path));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Dir Utils
+ * \{ */
+
+bool LIB_is_dir(const char *path) {
+	return S_ISDIR(LIB_exists(path));
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -89,12 +168,11 @@ ROSE_STATIC size_t lib_filelist_path(char out[MAX_PATH], const char *dirname) {
 	if (!ELEM(out[length - 1], SEP, ALTSEP)) {
 		out[length++] = SEP;  // defined in "LIB_path_utils.h"
 	}
-	out[length++] = '*';
-	out[length++] = '\0';
+	out[length] = '\0';
 	return length;
 }
 
-ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATA *e) {
+ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATAW *e) {
 	if (e->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 		return RDT_DIR;
 	}
@@ -105,12 +183,19 @@ ROSE_STATIC int lib_filelist_type(WIN32_FIND_DATA *e) {
 }
 
 ROSE_STATIC size_t lib_filelist_dir_contents_win32(const char *dirname, DirEntry **r_list) {
-	char absolute[MAX_PATH];
+	char absolute[FILE_MAX];
 	lib_filelist_path(absolute, dirname);
 
-	WIN32_FIND_DATA e;
+	WIN32_FIND_DATAW e;
 
-	HANDLE hFind = FindFirstFile(absolute, &e);
+	WCHAR lpQuery[FILE_MAX];
+	int length;
+	if ((length = MultiByteToWideChar(CP_UTF8, 0, absolute, -1, lpQuery, MAX_PATH)) > 0) {
+		lpQuery[length - 1] = L'*';
+		lpQuery[length++] = L'\0';
+	}
+
+	HANDLE hFind = FindFirstFileW(lpQuery, &e);
 	if (hFind == INVALID_HANDLE_VALUE) {
 		return -1;
 	}
@@ -119,16 +204,22 @@ ROSE_STATIC size_t lib_filelist_dir_contents_win32(const char *dirname, DirEntry
 
 	size_t count = 0;
 	do {
+		if (e.dwFileAttributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) {
+			continue;
+		}
+
 		size_t index = count++;
 		(*r_list) = MEM_recallocN_id(*r_list, sizeof(DirEntry) * count, "DirEntryArray");
 
+		WideCharToMultiByte(CP_UTF8, 0, e.cFileName, ARRAYSIZE(e.cFileName), (*r_list)[index].name, ARRAY_SIZE((*r_list)[index].name), NULL, NULL);
+
 		(*r_list)[index].type = lib_filelist_type(&e);
 		if ((*r_list)[index].type == RDT_REG) {
-			LIB_path_join(full, MAX_PATH, dirname, SEP_STR, e.cFileName);
+			LIB_path_join(full, ARRAY_SIZE(full), absolute, (*r_list)[index].name);
 			LIB_stat(full, &(*r_list)[index].info);
 		}
-		LIB_strcpy((*r_list)[index].name, ARRAY_SIZE((*r_list)[index].name), e.cFileName);
-	} while (FindNextFile(hFind, &e));
+
+	} while (FindNextFileW(hFind, &e));
 
 	return count;
 }

@@ -20,6 +20,8 @@
 
 #include "LIB_ghash.h"
 #include "LIB_listbase.h"
+#include "LIB_math_color.h"
+#include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
 #include "LIB_string.h"
@@ -34,12 +36,16 @@
 
 #include "interface_intern.h"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name UI Button Draw
  * \{ */
 
 ROSE_INLINE uiWidgetColors *widget_colors(int type) {
 	Theme *theme = UI_GetTheme();
+
+	ROSE_assert(theme);
 
 	switch (type) {
 		case UI_BTYPE_HSPR:
@@ -222,37 +228,41 @@ ROSE_STATIC bool ui_draw_but_row_extended_right(uiBut *but) {
 	return false;
 }
 
-ROSE_STATIC bool ui_draw_but_row_hovered(uiBut *but) {
+ROSE_STATIC bool ui_draw_but_row_hovered(uiBut *but, int flag) {
 	if ((but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW) != 0) {
 		int row = DRAW_INDX(but->draw);
 		for (uiBut *l = but->prev; l && ui_draw_but_row_extended_left(l->next); l = l->prev) {
-			if (l->flag & UI_HOVER) {
+			if (l->flag & flag) {
 				return true;
 			}
 		}
 		for (uiBut *r = but->next; r && ui_draw_but_row_extended_right(r->prev); r = r->next) {
-			if (r->flag & UI_HOVER) {
+			if (r->flag & flag) {
 				return true;
 			}
 		}
-		return but->flag & UI_HOVER;
+		return but->flag & flag;
 	}
 	return false;
 }
 
-ROSE_STATIC void ui_draw_text_back(uiWidgetColors *wcol, uiBut *but, const rcti *recti, bool selected) {
-	selected |= ui_draw_but_row_hovered(but);
+ROSE_STATIC void ui_draw_text_back(uiWidgetColors *wcol, uiBut *but, const rcti *recti, bool hovered) {
+	hovered |= ui_draw_but_row_hovered(but, UI_HOVER);
 	/** Remove the left or right roundbox if we are rendering a list. */
-	if (but->draw & UI_BUT_GRID) {
-		int lcorner = selected && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
-		int rcorner = selected && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
+	if (but && but->draw & UI_BUT_GRID) {
+		int lcorner = hovered && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
+		int rcorner = hovered && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
 		UI_draw_roundbox_corner_set(0 /* lcorner | rcorner */);
 	}
-	const unsigned char *inner = selected ? wcol->inner_sel : wcol->inner;
+	const unsigned char *inner = hovered ? wcol->inner_sel : wcol->inner;
+
+	if (but && ui_draw_but_row_hovered(but, UI_SELECT)) {
+		inner = wcol->inner_sel;
+	}
 
 	unsigned char alpha = inner[3];
 	/** Add a little background for items that are in a list. */
-	if (!selected && (but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW)) {
+	if (but && !hovered && (but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW)) {
 		alpha = (wcol->inner_sel[3] + wcol->inner[3]) / (2 + DRAW_INDX(but->draw) % 2);
 	}
 
@@ -274,20 +284,28 @@ ROSE_STATIC void ui_draw_text_font_clip_end(int font) {
 	RFT_disable(font, RFT_CLIPPING);
 }
 
-ROSE_STATIC void ui_draw_text_font_position(uiBut *but, int font, const rcti *rect, const char *text, int *r_x, int *r_y) {
+ROSE_STATIC void ui_draw_text_position_ex(uiBut *but, const rcti *rect, int w, int h, int *r_x, int *r_y, int extra_x, int extra_y) {
 	if (ELEM(but->type, UI_BTYPE_TEXT, UI_BTYPE_PUSH, UI_BTYPE_MENU, UI_BTYPE_EDIT)) {
-		*r_y = LIB_rcti_cent_y(rect) - RFT_height_max(font) / 3;
+		*r_y = LIB_rcti_cent_y(rect) - (h + extra_y) / 3;
 	}
 	else {
-		*r_y = rect->ymax - RFT_height_max(font);
+		*r_y = rect->ymax - (h + extra_y);
 	}
+
 	if (but->draw & UI_BUT_TEXT_LEFT) {
-		*r_x = rect->xmin;
+		*r_x = rect->xmin + extra_x;
 	}
 	else {
-		float width = ROSE_MIN(RFT_width(font, text, -1), LIB_rcti_size_x(rect));
+		float width = ROSE_MIN(w + extra_x, LIB_rcti_size_x(rect));
+
 		*r_x = (but->draw & UI_BUT_TEXT_RIGHT) ? rect->xmax - width : LIB_rcti_cent_x(rect) - width / 2;
 	}
+}
+
+ROSE_STATIC void ui_draw_text_font_position(uiBut *but, int font, const rcti *rect, const char *text, int *r_x, int *r_y, int extra_x, int extra_y) {
+	int w = RFT_width(font, text, -1);
+	int h = RFT_height_max(font);
+	ui_draw_text_position_ex(but, rect, w, h, r_x, r_y, extra_x, extra_y);
 	RFT_position(font, *r_x, *r_y, 0);
 }
 
@@ -325,45 +343,17 @@ ROSE_STATIC void ui_draw_text_font(uiWidgetColors *wcol, uiBut *but, const rcti 
 
 	int x, y;
 	ui_draw_text_font_clip_begin(font, &rect);
-	ui_draw_text_font_position(but, font, &rect, text + but->scroll, &x, &y);
+
+	int offx = 0;
+	if (ELEM(but->type, UI_BTYPE_TEXT, UI_BTYPE_PUSH) && but->icon != ICON_NONE) {
+		ui_draw_text_position_ex(but, &rect, WIDGET_UNIT, WIDGET_UNIT, &x, &y, 0, 0);
+		RFT_draw_svg_icon(but->icon, x, y, ICON_UNIT, wcol->text, 1.0f, false);
+		offx += WIDGET_UNIT;
+	}
+	ui_draw_text_font_position(but, font, &rect, text + but->scroll, &x, &y, offx, 0);
 	ui_draw_text_font_draw(wcol, but, &rect, font, text + but->scroll, x, y);
 	ui_draw_text_font_caret(but, &rect, font, text + but->scroll, x, y);
 	ui_draw_text_font_clip_end(font);
-}
-
-ROSE_STATIC void ui_draw_scroll_thumb(uiWidgetColors *wcol, uiBut *but, const rcti *recti, bool selected) {
-	selected |= ui_draw_but_row_hovered(but);
-	/** Remove the left or right roundbox if we are rendering a list. */
-	if (but->draw & UI_BUT_GRID) {
-		int lcorner = selected && !ui_draw_but_row_extended_left(but) ? UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT : UI_CNR_NONE;
-		int rcorner = selected && !ui_draw_but_row_extended_right(but) ? UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT : UI_CNR_NONE;
-		UI_draw_roundbox_corner_set(/* lcorner | rcorner */ UI_CNR_NONE);
-	}
-	const unsigned char *inner = selected ? wcol->text_sel : wcol->text;
-
-	unsigned char alpha = inner[3];
-	/** Add a little background for items that are in a list. */
-	if (!selected && (but->draw & UI_BUT_GRID) != 0 && (but->draw & UI_BUT_ROW)) {
-		alpha = (wcol->text_sel[3] + wcol->text[3]) / (2 + DRAW_INDX(but->draw) % 2);
-	}
-
-	if (alpha > 1e-3f) {
-		double value;
-		ui_but_value_get(but, &value);
-
-		double thumby = (but->softmax - value) / (but->softmax - but->softmin + 1);
-		double thumbr = 1.0 / (but->softmax - but->softmin + 1);
-
-		rctf rect;
-		LIB_rctf_rcti_copy(&rect, recti);
-
-		rect.ymin = recti->ymin + (thumby + 0.0) * LIB_rcti_size_y(recti);
-		rect.ymax = recti->ymin + (thumby + thumbr) * LIB_rcti_size_y(recti);
-
-		UI_draw_roundbox_3ub_alpha(&rect, true, ui_widget_roundness(wcol, recti), inner, alpha);
-	}
-
-	UI_draw_roundbox_corner_set(UI_CNR_ALL);
 }
 
 ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
@@ -375,15 +365,6 @@ ROSE_STATIC void ui_draw_text(uiWidgetColors *wcol, uiBut *but, const rcti *rect
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
 }
 
-ROSE_STATIC void ui_draw_scroll(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
-	bool in_menu = but->block->handle != NULL;
-	/** menu items do not get a background when not hovered! */
-	if (!in_menu || (but->flag & UI_HOVER) != 0) {
-		ui_draw_text_back(wcol, but, recti, (but->flag & UI_HOVER) != 0);
-	}
-	ui_draw_scroll_thumb(wcol, but, recti, (but->flag & UI_HOVER) != 0);
-}
-
 ROSE_STATIC void ui_draw_widget(uiWidgetColors *wcol, uiBut *but, const rcti *recti) {
 	bool in_menu = but->block->handle != NULL;
 	/** menu items do not get a background when not hovered! */
@@ -391,6 +372,53 @@ ROSE_STATIC void ui_draw_widget(uiWidgetColors *wcol, uiBut *but, const rcti *re
 		ui_draw_text_back(wcol, but, recti, (but->flag & UI_HOVER) != 0);
 	}
 	ui_draw_text_font(wcol, but, recti, ui_but_text_font(but), ui_but_text(but));
+}
+
+void UI_draw_widget_scroll(const struct uiWidgetColors *wcol, const struct rcti *rect, const struct rcti *slider, int state) {
+	/* determine horizontal/vertical */
+	const bool horizontal = (LIB_rcti_size_x(rect) > LIB_rcti_size_y(rect));
+	const float rad = (horizontal) ? wcol->roundness * LIB_rcti_size_y(rect) : wcol->roundness * LIB_rcti_size_x(rect);
+
+	rctf frect;
+	LIB_rctf_rcti_copy(&frect, rect);
+
+	if (state & UI_SCROLL_PRESSED != 0) {
+		UI_draw_roundbox_3ub_alpha(&frect, true, rad, wcol->inner_sel, wcol->inner_sel[3]);
+	}
+	else {
+		UI_draw_roundbox_3ub_alpha(&frect, true, rad, wcol->inner, wcol->inner[3]);
+	}
+
+	/* slider */
+	if ((LIB_rcti_size_x(slider) < 2) || (LIB_rcti_size_y(slider) < 2)) {
+		/* pass */
+	}
+	else {
+		unsigned char thumb[4];
+		if (state & UI_SCROLL_PRESSED != 0) {
+			memcpy(thumb, wcol->text_sel, sizeof(unsigned char[4]));
+		}
+		else {
+			memcpy(thumb, wcol->text, sizeof(unsigned char[4]));
+		}
+
+		rctf fslider;
+		LIB_rctf_rcti_copy(&fslider, slider);
+
+		UI_draw_roundbox_3ub_alpha(&fslider, true, rad, thumb, thumb[3]);
+
+		if (state & UI_SCROLL_ARROWS) {
+			if (horizontal) {
+				rcti slider_inset = *slider;
+				slider_inset.xmin += 0.05 * WIDGET_UNIT;
+				slider_inset.xmax -= 0.05 * WIDGET_UNIT;
+				ROSE_assert_unreachable(); // TODO!
+			}
+			else {
+				ROSE_assert_unreachable(); // TODO!
+			}
+		}
+	}
 }
 
 void ui_draw_but(const rContext *C, ARegion *region, uiBut *but, const rcti *rect) {
@@ -422,7 +450,7 @@ void ui_draw_but(const rContext *C, ARegion *region, uiBut *but, const rcti *rec
 			ui_draw_text(&mcolors, but, rect);
 		} break;
 		case UI_BTYPE_SCROLL: {
-			ui_draw_scroll(&mcolors, but, rect);
+			ROSE_assert_unreachable(); // TODO!
 		} break;
 		default: {
 			ui_draw_widget(&mcolors, but, rect);

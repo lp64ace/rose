@@ -48,6 +48,7 @@ set(GLSL_SRC
 	engines/alice/shaders/alice_vert.glsl
 	engines/overlay/shaders/armature_shape_solid_frag.glsl
 	engines/overlay/shaders/armature_shape_solid_vert.glsl
+	engines/overlay/shaders/overlay_common_lib.glsl
 
 	intern/shaders/draw_shader_shared.h
 

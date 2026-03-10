@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 
+struct ID;
 struct RoseDataReader;
 struct RoseWriter;
 struct UserDef;
@@ -49,6 +50,18 @@ void RLO_write_double_array(struct RoseWriter *writer, size_t length, const doub
 void RLO_write_pointer_array(struct RoseWriter *writer, size_t length, const void **ptr);
 /** Write a null termianted string. */
 void RLO_write_string(struct RoseWriter *writer, const char *ptr);
+
+#define RLO_write_struct(writer, _struct, data)                            \
+	do {                                                                   \
+		RLO_write_struct_by_name(writer, #_struct, (const _struct *)data); \
+	} while (false)
+
+void rlo_write_id_struct(struct RoseWriter *writer, const char *name, const void *id_address, const struct ID *id);
+
+#define RLO_write_id_struct(writer, _struct, id_address, id)   \
+	do {                                                       \
+		rlo_write_id_struct(writer, #_struct, id_address, id); \
+	} while (false)
 
 /** \} */
 

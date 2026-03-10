@@ -34,6 +34,21 @@ void DEG_graph_build_from_view_layer(Depsgraph *graph) {
 	builder.build();
 }
 
+void DEG_graph_tag_relations_update(Depsgraph *graph) {
+	deg::Depsgraph *deg_graph = reinterpret_cast<deg::Depsgraph *>(graph);
+	deg_graph->need_update = true;
+
+	/* NOTE: When relations are updated, it's quite possible that we've got new bases in the scene.
+	 * This means, we need to re-create flat array of bases in view layer. */
+	/* TODO(sergey): It is expected that bases manipulation tags scene for update to tag bases array
+	 * for re-creation. Once it is ensured to happen from all places this implicit tag can be
+	 * removed. */
+	deg::IDNode *id_node = deg_graph->find_id_node(&deg_graph->scene->id);
+	if (id_node != nullptr) {
+		graph_id_tag_update(deg_graph->main, deg_graph, &deg_graph->scene->id, 0, deg::DEG_UPDATE_SOURCE_RELATIONS);
+	}
+}
+
 void DEG_graph_relations_update(Depsgraph *graph) {
 	deg::Depsgraph *deg_graph = (deg::Depsgraph *)graph;
 	if (!deg_graph->need_update) {
@@ -45,6 +60,6 @@ void DEG_graph_relations_update(Depsgraph *graph) {
 
 void DEG_relations_tag_update(Main *main) {
 	for (deg::Depsgraph *depsgraph : deg::get_all_registered_graphs(main)) {
-		DEG_graph_relations_update(reinterpret_cast<Depsgraph *>(depsgraph));
+		DEG_graph_tag_relations_update(reinterpret_cast<Depsgraph *>(depsgraph));
 	}
 }

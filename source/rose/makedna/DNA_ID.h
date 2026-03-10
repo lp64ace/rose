@@ -3,7 +3,7 @@
 
 #include "DNA_ID_enums.h"
 #include "DNA_session_uuid_types.h"
-
+#include "DNA_space_types.h"
 #include "DNA_listbase.h"
 
 #ifdef __cplusplus
@@ -95,7 +95,7 @@ typedef struct Library_Runtime {
 typedef struct Library {
 	ID id;
 
-	char filepath[1024];
+	char filepath[FILE_MAX];
 
 	struct Library_Runtime runtime;
 } Library;
@@ -118,6 +118,8 @@ enum {
 	 */
 	ID_FLAG_EMBEDDED_DATA = 1 << 1,
 };
+
+#define ID_IS_LINKED(id) ((id)->lib != NULL)
 
 /**
  * Amount of 'fake user' usages of this ID.
@@ -143,6 +145,7 @@ enum {
  * Keep in sync with #KER_id_eval_properties_copy.
  */
 #define ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW(id_type) ELEM(id_type, ID_ME)
+#define ID_TYPE_SUPPORTS_ASSET_EDITABLE(id_type) ELEM(id_type, ID_MA)
 
 enum {
 	/**

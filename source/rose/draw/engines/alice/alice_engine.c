@@ -96,7 +96,7 @@ ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	DRWAliceViewportPrivateData *impl = stl->data;
 
 	switch (object->type) {
-		case OB_MESH: return alice_cache_populate_mesh(vdata, object);
+		case OB_MESH: alice_cache_populate_mesh(vdata, object);
 	}
 }
 

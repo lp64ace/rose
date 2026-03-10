@@ -74,7 +74,7 @@ Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, const i
 }
 
 Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
-	return ED_screen_add_ex(main, name, rect, NULL, 2);
+	return ED_screen_add_ex(main, name, rect, NULL, 1);
 }
 
 /** \} */
@@ -84,7 +84,7 @@ Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
  * \{ */
 
 void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2]) {
-	Screen *screen = WM_window_screen_get(window);
+	Screen *screen = WM_window_get_active_screen(window);
 	if (screen == NULL) {
 		return;
 	}

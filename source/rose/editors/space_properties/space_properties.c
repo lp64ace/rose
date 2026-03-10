@@ -66,8 +66,8 @@ ROSE_INLINE void propeties_main_region_layout(rContext *C, ARegion *region) {
 	if ((block = UI_block_begin(C, region, "PROPERTIES_main"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROOT, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_col(root, PIXELSIZE);
-		but = uiDefBut(block, UI_BTYPE_TEXT, "Read Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
-		but = uiDefBut(block, UI_BTYPE_EDIT, "Edit Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "Read Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
+		but = uiDefBut(block, UI_BTYPE_EDIT, ICON_NONE, "Edit Me", 0, 0, 8 * UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);
 		UI_block_end(C, block);
 	}
 }
@@ -98,3 +98,37 @@ void ED_spacetype_properties() {
 
 	KER_spacetype_register(st);
 }
+
+/* -------------------------------------------------------------------- */
+/** \name Helper Routines
+ * \{ */
+
+bool ED_operator_areaactive(rContext *C) {
+	if (CTX_wm_window(C) == NULL) {
+		return false;
+	}
+	if (CTX_wm_screen(C) == NULL) {
+		return false;
+	}
+	if (CTX_wm_area(C) == NULL) {
+		return false;
+	}
+	return true;
+}
+
+ROSE_INLINE bool ed_spacetype_test(rContext *C, int spacetype) {
+	if (ED_operator_areaactive(C)) {
+		SpaceLink *sl = (SpaceLink *)CTX_wm_space_data(C);
+		return sl && (sl->spacetype == spacetype);
+	}
+	return false;
+}
+
+bool ED_operator_file_browsing_active(rContext *C) {
+	if (ed_spacetype_test(C, SPACE_FILE)) {
+		return CTX_wm_space_file(C) != NULL;
+	}
+	return false;
+}
+
+/** \} */

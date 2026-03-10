@@ -47,6 +47,8 @@ typedef struct SpaceType {
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
 
+	int keymapflag;
+
 	/* region type definitions */
 	ListBase regiontypes;
 } SpaceType;
@@ -75,13 +77,49 @@ typedef struct ARegionType {
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
 
+	int keymapflag;
+
 	int minsizex;
 	int minsizey;
 	int prefsizex;
 	int prefsizey;
+
+	ListBase paneltypes;
 } ARegionType;
 
 struct ARegionType *KER_regiontype_from_id(const struct SpaceType *type, int regionid);
+
+typedef struct PanelType {
+	struct PanelType *prev, *next;
+
+	/** Unique name. */
+	char idname[64];
+	/** For panel header. */
+	char label[64];
+	/** For panel tooltip. */
+	const char *description;
+
+	int spacetype;
+	int regiontype;
+
+	int flag;
+
+	/** Verify if the panel should draw or not. */
+	bool (*poll)(const struct rContext *C, struct PanelType *pt);
+	/** Draw header (optional) */
+	void (*draw_header)(const struct rContext *C, struct Panel *panel);
+	/** Draw entirely, view changes should be handled here. */
+	void (*draw)(const struct rContext *C, Panel *panel);
+
+	/** Sub panels. */
+	struct PanelType *parent;
+	ListBase children;
+} PanelType;
+
+/** #PanelType->flag */
+enum {
+	PANEL_TYPE_NO_HEADER = 1 << 0,
+};
 
 /** \} */
 
@@ -110,6 +148,34 @@ struct ListBase *KER_spacetype_list(void);
 void KER_spacetype_register(struct SpaceType *st);
 bool KER_spacetype_exist(int spaceid);
 void KER_spacetype_free(void);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Area
+ * \{ */
+
+/**
+ * Find a region of type \a region_type in the currently active space of \a area.
+ *
+ * \note This does _not_ work if the region to look up is not in the active space.
+ * Use #BKE_spacedata_find_region_type if that may be the case.
+ */
+struct ARegion *KER_area_find_region_type(const struct ScrArea *area, int region_type);
+struct ARegion *KER_area_find_region_active_win(const struct ScrArea *area);
+struct ARegion *KER_area_find_region_xy(const struct ScrArea *area, int regiontype, const int xy[2]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Panel
+ * \{ */
+
+/**
+ * Create and free panels.
+ */
+struct Panel *KER_panel_new(PanelType *panel_type);
+void KER_panel_free(Panel *panel);
 
 /** \} */
 

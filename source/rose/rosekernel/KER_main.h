@@ -5,6 +5,8 @@
 #include "LIB_thread.h"
 #include "LIB_utildefines.h"
 
+#include "DNA_space_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,7 +36,7 @@ typedef struct Main {
 	 * to read data temporarily (preferences & startup) for e.g.
 	 * where the `filepath` is not persistent or used as a basis for other paths.
 	 */
-	char filepath[1024];
+	char filepath[FILE_MAX];
 
 	bool is_action_slot_to_id_map_dirty;
 	bool is_global_main;
@@ -99,6 +101,15 @@ void *KER_main_id_lookup(struct Main *main, short type, const char *name);
 
 /** Check whether given \a main is empty or contains some IDs. */
 bool KER_main_is_empty(struct Main *main);
+
+/**
+ * Return file-path of global main #G_MAIN.
+ *
+ * \warning Usage is not recommended,
+ * you should always try to get a valid Main pointer from context.
+ */
+const char *KER_main_rosefile_path(const struct Main *main);
+const char *KER_main_rosefile_path_from_global();
 
 /** \} */
 

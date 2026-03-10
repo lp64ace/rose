@@ -60,6 +60,14 @@ jobs:
     - name: Install Mesa on Ubuntu
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
+      
+    - name: Install PNG on Ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y libpng-dev
+      
+    - name: Install Zlib and BZip2 on Ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y zlib1g-dev libbz2-dev
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.

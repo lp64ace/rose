@@ -22,32 +22,38 @@ typedef struct IDRemapper {
 	bool allow_idtype_mismatch;
 } IDRemapper;
 
-ROSE_INLINE void KER_id_remapper_init(IDRemapper *me) {
+void KER_id_remapper_init(IDRemapper *me) {
 	me->mappings = LIB_ghash_ptr_new("IDRemapper::mappings");
 	me->filter = 0;
 	me->allow_idtype_mismatch = false;
 }
 
-ROSE_INLINE void KER_id_remapper_clear(IDRemapper *me) {
+IDRemapper *KER_id_remapper_new() {
+	IDRemapper *me = MEM_mallocN(sizeof(IDRemapper), __func__);
+	KER_id_remapper_init(me);
+	return me;
+}
+
+void KER_id_remapper_clear(IDRemapper *me) {
 	/** Remove every mapping we have. */
 	LIB_ghash_clear(me->mappings, NULL, NULL);
 	me->filter = 0;
 }
 
-ROSE_INLINE void KER_id_remapper_free(IDRemapper *me) {
+void KER_id_remapper_free(IDRemapper *me) {
 	LIB_ghash_free(me->mappings, NULL, NULL);
 	MEM_freeN(me);
 }
 
-ROSE_INLINE bool KER_id_remapper_empty(const IDRemapper *me) {
+bool KER_id_remapper_empty(const IDRemapper *me) {
 	return LIB_ghash_len(me->mappings) == 0;
 }
 
-ROSE_INLINE bool KER_id_remapper_contains_mapping_for_any(const IDRemapper *me, int filter) {
+bool KER_id_remapper_contains_mapping_for_any(const IDRemapper *me, int filter) {
 	return (me->filter & filter) != 0;
 }
 
-ROSE_STATIC void KER_id_remapper_add(IDRemapper *me, void *old_idv, void *new_idv) {
+void KER_id_remapper_add(IDRemapper *me, void *old_idv, void *new_idv) {
 	ID *old_id = (ID *)(old_idv);
 	ID *new_id = (ID *)(new_idv);
 	ROSE_assert(old_idv != NULL);
@@ -57,7 +63,8 @@ ROSE_STATIC void KER_id_remapper_add(IDRemapper *me, void *old_idv, void *new_id
 	LIB_ghash_insert(me->mappings, old_idv, new_idv);
 	me->filter |= KER_idtype_idcode_to_idfilter(GS(old_id->name));
 }
-ROSE_STATIC void KER_id_remapper_add_overwrite(IDRemapper *me, void *old_idv, void *new_idv) {
+
+void KER_id_remapper_add_overwrite(IDRemapper *me, void *old_idv, void *new_idv) {
 	ID *old_id = (ID *)(old_idv);
 	ID *new_id = (ID *)(new_idv);
 	ROSE_assert(old_idv != NULL);
@@ -68,32 +75,7 @@ ROSE_STATIC void KER_id_remapper_add_overwrite(IDRemapper *me, void *old_idv, vo
 	me->filter |= KER_idtype_idcode_to_idfilter(GS(old_id->name));
 }
 
-enum {
-	ID_REMAP_RESULT_SOURCE_UNAVAILABLE,
-	ID_REMAP_RESULT_SOURCE_NOT_MAPPABLE,
-	ID_REMAP_RESULT_SOURCE_REMAPPED,
-	ID_REMAP_RESULT_SOURCE_UNASSIGNED,
-};
-
-enum {
-	/**
-	 * Update the user count of the old and new ID data-block.
-	 *
-	 * For remapping the old ID users will be decremented and the new ID users will be
-	 * incremented. When un-assigning the old ID users will be decremented.
-	 */
-	ID_REMAP_APPLY_UPDATE_REFCOUNT = (1 << 0),
-	/**
-	 * Unassign instead of remap when the new ID pointer would point to itself.
-	 *
-	 * To use this option #KER_id_remapper_mapping_apply must be used with a non-null self_idv parameter.
-	 */
-	ID_REMAP_APPLY_UNMAP_WHEN_REMAPPING_TO_SELF = (1 << 1),
-
-	ID_REMAP_APPLY_DEFAULT = 0,
-};
-
-ROSE_STATIC int KER_id_remapper_mapping_result(const IDRemapper *me, void *idv, int options, const void *self_idv) {
+int KER_id_remapper_mapping_result(const IDRemapper *me, void *idv, int options, const void *self_idv) {
 	ID *id = (ID *)(idv);
 	ID *id_self = (ID *)(self_idv);
 	if (!LIB_ghash_haskey(me->mappings, idv)) {
@@ -108,7 +90,8 @@ ROSE_STATIC int KER_id_remapper_mapping_result(const IDRemapper *me, void *idv, 
 	}
 	return ID_REMAP_RESULT_SOURCE_REMAPPED;
 }
-ROSE_STATIC int KER_id_remapper_mapping_apply(const IDRemapper *me, void **idv, int options, const void *self_idv) {
+
+int KER_id_remapper_mapping_apply(const IDRemapper *me, void **idv, int options, const void *self_idv) {
 	ID **id_ptr = (ID **)idv;
 	ID *id_self = (ID *)self_idv;
 	ROSE_assert(idv != NULL);
@@ -237,6 +220,9 @@ ROSE_STATIC void libblock_remap_data(Main *main, ID *id, int type, IDRemapper *i
 	};
 
 	int foreach_id_flags = 0;
+	if ((flag & ID_REMAP_FORCE_UI_POINTERS) != 0) {
+		foreach_id_flags |= IDWALK_INCLUDE_UI;
+	}
 	if ((flag & ID_REMAP_FORCE_INTERNAL_RUNTIME_POINTERS) != 0) {
 		foreach_id_flags |= IDWALK_DO_INTERNAL_RUNTIME_POINTERS;
 	}
@@ -266,20 +252,41 @@ ROSE_STATIC void libblock_remap_data(Main *main, ID *id, int type, IDRemapper *i
 }
 
 /* -------------------------------------------------------------------- */
-/** \name Main Remap
+/** \name Main Remap (Multiple)
  * \{ */
 
-ROSE_STATIC void KER_libblock_remap_multiple_locked(Main *main, IDRemapper *id_remapper, int flag) {
-	if (KER_id_remapper_empty(id_remapper)) {
+void KER_libblock_remap_multiple_locked(Main *main, IDRemapper *mappings, const int flag) {
+	if (KER_id_remapper_empty(mappings)) {
 		return;
 	}
 
-	libblock_remap_data(main, NULL, ID_REMAP_TYPE_REMAP, id_remapper, flag);
+	libblock_remap_data(main, NULL, ID_REMAP_TYPE_REMAP, mappings, flag);
 }
 
+void KER_libblock_remap_multiple(Main *main, IDRemapper *mappings, const int flag) {
+	KER_main_lock(main);
+	KER_libblock_remap_multiple_locked(main, mappings, flag);
+	KER_main_unlock(main);
+}
+
+void KER_libblock_remap_multiple_raw(Main *main, IDRemapper *mappings, const int flag) {
+	if (KER_id_remapper_empty(mappings)) {
+		/* Early exit nothing to do. */
+		return;
+	}
+
+	libblock_remap_data(main, NULL, ID_REMAP_TYPE_REMAP, mappings, flag | ID_REMAP_SKIP_USER_REFCOUNT);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Main Remap
+ * \{ */
+
+
 void KER_libblock_remap_locked(Main *main, void *old_idv, void *new_idv, int flag) {
-	IDRemapper *id_remapper = MEM_mallocN(sizeof(IDRemapper), __func__);
-	KER_id_remapper_init(id_remapper);
+	IDRemapper *id_remapper = KER_id_remapper_new();
 	ID *old_id = (ID *)(old_idv);
 	ID *new_id = (ID *)(new_idv);
 	KER_id_remapper_add(id_remapper, old_id, new_id);
@@ -317,8 +324,7 @@ void KER_libblock_relink_ex(Main *main, void *idv, void *old_idv, void *new_idv,
 
 	int type = ID_REMAP_TYPE_REMAP;
 
-	IDRemapper *id_remapper = MEM_mallocN(sizeof(IDRemapper), __func__);
-	KER_id_remapper_init(id_remapper);
+	IDRemapper *id_remapper = KER_id_remapper_new();
 
 	if (old_id != NULL) {
 		ROSE_assert((new_id == NULL) || GS(old_id->name) == GS(new_id->name));

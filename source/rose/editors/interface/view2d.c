@@ -1,5 +1,7 @@
 #include "DNA_view2d_types.h"
 
+#include "KER_context.h"
+
 #include "LIB_assert.h"
 #include "LIB_math_base.h"
 #include "LIB_rect.h"
@@ -7,7 +9,11 @@
 
 #include "GPU_matrix.h"
 
+#include "UI_interface.h"
+#include "UI_resource.h"
 #include "UI_view2d.h"
+
+#include <stdio.h>
 
 ROSE_STATIC void ui_view2d_cur_rect_validate_resize(View2D *v2d, bool resize);
 ROSE_STATIC int view2d_scroll_mapped(int scroll);
@@ -45,6 +51,22 @@ void UI_view2d_region_reinit(View2D *v2d, int type, int winx, int winy) {
 				memcpy(&v2d->cur, &v2d->tot, sizeof(rctf));
 			}
 		} break;
+		case V2D_COMMONVIEW_LIST: {
+			/* zoom + aspect ratio are locked */
+			v2d->keepzoom = (V2D_LOCKZOOM_X | V2D_LOCKZOOM_Y | V2D_LIMITZOOM | V2D_KEEPASPECT);
+			v2d->minzoom = v2d->maxzoom = 1.0f;
+
+			/* tot rect has strictly regulated placement, and must only occur in +/- quadrant */
+			v2d->align = (V2D_ALIGN_NO_NEG_X | V2D_ALIGN_NO_POS_Y);
+			v2d->keeptot = V2D_KEEPTOT_STRICT;
+			
+			if (!init) {
+				changed |= true;
+			}
+
+			/* scroller settings are currently not set here... that is left for regions... */
+			break;
+		}
 		case V2D_COMMONVIEW_HEADER: {
 			v2d->keepzoom = (V2D_LOCKZOOM_X | V2D_LOCKZOOM_Y | V2D_LIMITZOOM | V2D_KEEPASPECT);
 			v2d->align = (V2D_ALIGN_NO_NEG_X | V2D_ALIGN_NO_POS_Y);
@@ -62,6 +84,35 @@ void UI_view2d_region_reinit(View2D *v2d, int type, int winx, int winy) {
 			/** Absolutely no scrollers allowed. */
 			v2d->keepofs = V2D_LOCKOFS_Y;
 			v2d->scroll = 0;
+		} break;
+		case V2D_COMMONVIEW_PANELS_UI: {
+			/* for now, aspect ratio should be maintained,
+			 * and zoom is clamped within sane default limits */
+			v2d->keepzoom = (V2D_KEEPASPECT | V2D_LIMITZOOM | V2D_KEEPZOOM);
+			v2d->minzoom = 0.5f;
+			v2d->maxzoom = 2.0f;
+
+			v2d->align = (V2D_ALIGN_NO_NEG_X | V2D_ALIGN_NO_POS_Y);
+			v2d->keeptot = V2D_KEEPTOT_BOUNDS;
+
+			/* NOTE: scroll is being flipped in #ED_region_panels() drawing. */
+			v2d->scroll |= (V2D_SCROLL_HORIZONTAL_HIDE | V2D_SCROLL_VERTICAL_HIDE);
+
+			if (!init) {
+				const float panelzoom = 1.0f;
+
+				v2d->tot.xmin = 0.0f;
+				v2d->tot.xmax = winx;
+
+				v2d->tot.ymax = 0.0f;
+				v2d->tot.ymin = -winy;
+
+				v2d->cur.xmin = 0.0f;
+				v2d->cur.xmax = winx * panelzoom;
+
+				v2d->cur.ymax = 0.0f;
+				v2d->cur.ymin = -winy * panelzoom;
+			}
 		} break;
 		default:
 			break;
@@ -131,8 +182,16 @@ void UI_view2d_tot_rect_set_resize(View2D *v2d, int width, int height, bool resi
 	ui_view2d_cur_rect_validate_resize(v2d, resize);
 }
 
-void UI_view2d_tot_rect_set(struct View2D *v2d, int width, int height) {
+void UI_view2d_tot_rect_set(View2D *v2d, int width, int height) {
 	UI_view2d_tot_rect_set_resize(v2d, width, height, false);
+}
+
+void UI_view2d_cur_rect_validate(View2D *v2d) {
+	ui_view2d_cur_rect_validate_resize(v2d, false);
+}
+
+void UI_view2d_cur_rect_changed(rContext *C, View2D *v2d) {
+	UI_view2d_cur_rect_validate(v2d);
 }
 
 void UI_view2d_scroller_size_get(const View2D *v2d, float *r_x, float *r_y) {
@@ -670,6 +729,209 @@ ROSE_STATIC void view2d_masks(View2D *v2d, const rcti *mask_scroll) {
 			v2d->hor = *mask_scroll;
 			v2d->hor.ymin = v2d->hor.ymax - scroll_height;
 		}
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scrollers
+ * \{ */
+
+typedef struct View2DScrollers {
+	/* focus bubbles */
+	int ver_min;
+	int ver_max;
+	int hor_min;
+	int hor_max;
+
+	/** Exact size of slider backdrop. */
+	rcti hor;
+	rcti ver;
+} View2DScrollers;
+
+void view2d_scrollers_calc(View2D *v2d, const rcti *mask_custom, View2DScrollers *r_scrollers) {
+	rcti vert, hor;
+	float fac1, fac2, totsize, scrollsize;
+	const int scroll = view2d_scroll_mapped(v2d->scroll);
+
+	/* Always update before drawing (for dynamically sized scrollers). */
+	view2d_masks(v2d, mask_custom);
+
+	vert = v2d->vert;
+	hor = v2d->hor;
+
+	/* Pad scroll-bar drawing away from region edges. */
+	const int edge_pad = BORDERPADDING;
+	if (scroll & V2D_SCROLL_BOTTOM) {
+		hor.ymin += edge_pad;
+	}
+	else {
+		hor.ymax -= edge_pad;
+	}
+
+	if (scroll & V2D_SCROLL_LEFT) {
+		vert.xmin += edge_pad;
+	}
+	else {
+		vert.xmax -= edge_pad;
+	}
+
+	CLAMP_MAX(vert.ymin, vert.ymax - V2D_SCROLL_HANDLE_SIZE_HOTSPOT);
+	CLAMP_MAX(hor.xmin, hor.xmax - V2D_SCROLL_HANDLE_SIZE_HOTSPOT);
+
+	/* store in scrollers, used for drawing */
+	r_scrollers->ver = vert;
+	r_scrollers->hor = hor;
+
+	/* horizontal scrollers */
+	if (scroll & V2D_SCROLL_HORIZONTAL) {
+		/* scroller 'button' extents */
+		totsize = LIB_rctf_size_x(&v2d->tot);
+		scrollsize = LIB_rcti_size_x(&hor);
+		if (totsize == 0.0f) {
+			totsize = 1.0f; /* avoid divide by zero */
+		}
+
+		fac1 = (v2d->cur.xmin - v2d->tot.xmin) / totsize;
+		if (fac1 <= 0.0f) {
+			r_scrollers->hor_min = hor.xmin;
+		}
+		else {
+			r_scrollers->hor_min = hor.xmin + (fac1 * scrollsize);
+		}
+
+		fac2 = (v2d->cur.xmax - v2d->tot.xmin) / totsize;
+		if (fac2 >= 1.0f) {
+			r_scrollers->hor_max = hor.xmax;
+		}
+		else {
+			r_scrollers->hor_max = hor.xmin + (fac2 * scrollsize);
+		}
+
+		/* prevent inverted sliders */
+		r_scrollers->hor_min = ROSE_MIN(r_scrollers->hor_min, r_scrollers->hor_max);
+		/* prevent sliders from being too small to grab */
+		if ((r_scrollers->hor_max - r_scrollers->hor_min) < WIDGET_UNIT) {
+			r_scrollers->hor_max = r_scrollers->hor_min + WIDGET_UNIT;
+
+			CLAMP(r_scrollers->hor_max, hor.xmin + WIDGET_UNIT, hor.xmax);
+			CLAMP(r_scrollers->hor_min, hor.xmin, hor.xmax - WIDGET_UNIT);
+		}
+	}
+
+	/* vertical scrollers */
+	if (scroll & V2D_SCROLL_VERTICAL) {
+		/* scroller 'button' extents */
+		totsize = LIB_rctf_size_y(&v2d->tot);
+		scrollsize = LIB_rcti_size_y(&vert);
+		if (totsize == 0.0f) {
+			totsize = 1.0f; /* avoid divide by zero */
+		}
+
+		fac1 = (v2d->cur.ymin - v2d->tot.ymin) / totsize;
+		if (fac1 <= 0.0f) {
+			r_scrollers->ver_min = vert.ymin;
+		}
+		else {
+			r_scrollers->ver_min = vert.ymin + (fac1 * scrollsize);
+		}
+
+		fac2 = (v2d->cur.ymax - v2d->tot.ymin) / totsize;
+		if (fac2 >= 1.0f) {
+			r_scrollers->ver_max = vert.ymax;
+		}
+		else {
+			r_scrollers->ver_max = vert.ymin + (fac2 * scrollsize);
+		}
+
+		/* prevent inverted sliders */
+		r_scrollers->ver_min = ROSE_MIN(r_scrollers->ver_min, r_scrollers->ver_max);
+		/* prevent sliders from being too small to grab */
+		if ((r_scrollers->ver_max - r_scrollers->ver_min) < WIDGET_UNIT) {
+			r_scrollers->ver_max = r_scrollers->ver_min + WIDGET_UNIT;
+
+			CLAMP(r_scrollers->ver_max, vert.ymin + WIDGET_UNIT, vert.ymax);
+			CLAMP(r_scrollers->ver_min, vert.ymin, vert.ymax - WIDGET_UNIT);
+		}
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scroll-bar Drawing
+ * \{ */
+
+void UI_view2d_scrollers_draw(View2D *v2d, const rcti *mask_custom) {
+	View2DScrollers scrollers;
+	view2d_scrollers_calc(v2d, mask_custom, &scrollers);
+
+	Theme *theme = UI_GetTheme();
+
+	rcti ver, hor;
+	const int scroll = view2d_scroll_mapped(v2d->scroll);
+
+	/* make copies of rects for less typing */
+	ver = scrollers.ver;
+	hor = scrollers.hor;
+
+	/* Horizontal scroll-bar. */
+	if (scroll & V2D_SCROLL_HORIZONTAL) {
+		const uiWidgetColors *wcol = &theme->tui.wcol_scroll;
+
+		rcti slider;
+		int state;
+
+		slider.xmin = scrollers.hor_min;
+		slider.xmax = scrollers.hor_max;
+		slider.ymin = hor.ymin;
+		slider.ymax = hor.ymax;
+
+		state = (v2d->runtime.ui_scroll & V2D_SCROLL_H_ACTIVE) ? UI_SCROLL_PRESSED : 0;
+
+		/**
+		 * show zoom handles if:
+		 * - zooming on x-axis is allowed (no scroll otherwise)
+		 * - slider bubble is large enough (no overdraw confusion)
+		 * - scale is shown on the scroller
+		 *   (workaround to make sure that button windows don't show these,
+		 *   and only the time-grids with their zoom-ability can do so).
+		 */
+		if ((v2d->keepzoom & V2D_LOCKZOOM_X) == 0 && (v2d->scroll & V2D_SCROLL_HORIZONTAL_HANDLES) && (LIB_rcti_size_x(&slider) > V2D_SCROLL_HANDLE_SIZE_HOTSPOT)) {
+			state |= UI_SCROLL_ARROWS;
+		}
+
+		UI_draw_widget_scroll(wcol, &hor, &slider, state);
+	}
+
+	/* Vertical scroll-bar. */
+	if (scroll & V2D_SCROLL_VERTICAL) {
+		const uiWidgetColors *wcol = &theme->tui.wcol_scroll;
+
+		rcti slider;
+		int state;
+
+		slider.xmin = ver.xmin;
+		slider.xmax = ver.xmax;
+		slider.ymin = scrollers.ver_min;
+		slider.ymax = scrollers.ver_max;
+
+		state = (v2d->runtime.ui_scroll & V2D_SCROLL_V_ACTIVE) ? UI_SCROLL_PRESSED : 0;
+
+		/**
+		 * show zoom handles if:
+		 * - zooming on x-axis is allowed (no scroll otherwise)
+		 * - slider bubble is large enough (no overdraw confusion)
+		 * - scale is shown on the scroller
+		 *   (workaround to make sure that button windows don't show these,
+		 *   and only the time-grids with their zoom-ability can do so).
+		 */
+		if ((v2d->keepzoom & V2D_LOCKZOOM_Y) == 0 && (v2d->scroll & V2D_SCROLL_VERTICAL_HANDLES) && (LIB_rcti_size_y(&slider) > V2D_SCROLL_HANDLE_SIZE_HOTSPOT)) {
+			state |= UI_SCROLL_ARROWS;
+		}
+
+		UI_draw_widget_scroll(wcol, &ver, &slider, state);
 	}
 }
 
