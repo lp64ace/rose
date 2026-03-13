@@ -51,6 +51,7 @@ void DRW_alice_opaque_cache_init(DRWAliceData *vdata) {
 	}
 
 	impl->depth_shgroup = DRW_shading_group_new(opaque, psl->depth_pass);
+	DRW_shading_group_clear_ex(impl->depth_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, 0x00);
 
 	for (size_t index = 0; index < ARRAY_SIZE(psl->opaque_pass); index++) {
 		impl->opaque_shgroup[index] = DRW_shading_group_new(opaque, psl->opaque_pass[index]);

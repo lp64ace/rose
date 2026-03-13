@@ -59,7 +59,7 @@ DRWGlobal GDraw;
 void DRW_engines_register(void) {
 	// DRW_engine_register(&draw_engine_basic_type);
 	DRW_engine_register(&draw_engine_alice_type);
-	DRW_engine_register(&draw_engine_overlay_type);
+	// DRW_engine_register(&draw_engine_overlay_type);
 
 	{
 		KER_mesh_batch_cache_tag_dirty_cb = DRW_mesh_batch_cache_tag_dirty;
