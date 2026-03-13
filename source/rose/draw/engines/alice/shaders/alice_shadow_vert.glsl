@@ -25,4 +25,5 @@ void main() {
 	vData.pos = co;
 	vData.frontPosition = ProjectionMatrix * ModelMatrix * float4(co, 1.0);
 	vData.backPosition = ProjectionMatrix * ModelMatrix * float4(co + lightDirection * lightDistance, 1.0);
+    vData.frontPosition.z += 1e-3;
 }
