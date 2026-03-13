@@ -71,10 +71,10 @@ enum {
 typedef struct DRWUniform {
 	struct DRWUniform *prev, *next;
 
-	int location;
-	int type;
-	int veclen;
-	int arrlen;
+	unsigned int location;
+	unsigned int type;
+	unsigned int veclen;
+	unsigned int arrlen;
 
 	union {
 		const void *pvalue;
@@ -113,6 +113,17 @@ typedef struct DRWCommandClear {
 	float depth;
 } DRWCommandClear;
 
+typedef struct DRWCommandSetMutableState {
+	DRWState enable;
+	DRWState disable;
+} DRWCommandSetMutableState;
+
+typedef struct DRWCommandSetStencil {
+	unsigned int write;
+	unsigned int reference;
+	unsigned int compare;
+} DRWCommandSetStencil;
+
 typedef struct DRWCommandDraw {
 	struct GPUBatch *batch;
 	unsigned int vcount;
@@ -142,10 +153,13 @@ typedef struct DRWCommandUniformBlock {
 
 enum {
 	DRW_COMMAND_CLEAR,
+	DRW_COMMAND_DRWSTATE,
+	DRW_COMMAND_STENCIL,
 	DRW_COMMAND_DRAW,
 	DRW_COMMAND_DRAW_RANGE,
 	DRW_COMMAND_DRAW_INSTANCE,
 	DRW_COMMAND_DRAW_INSTANCE_RANGE,
+	DRW_COMMAND_UNIFORM,
 	DRW_COMMAND_UNIFORM_BLOCK,
 };
 
@@ -156,6 +170,8 @@ typedef struct DRWCommand {
 
 	union {
 		struct DRWCommandClear clear;
+		struct DRWCommandSetMutableState state;
+		struct DRWCommandSetStencil stencil;
 		struct DRWCommandDraw draw;
 		struct DRWCommandDrawRange draw_range;
 		struct DRWCommandDrawInstance draw_instance;
@@ -176,6 +192,8 @@ typedef struct DRWShadingGroup {
 	struct DRWShadingGroup *prev, *next;
 
 	struct GPUShader *shader;
+
+	DRWResourceHandle pass;
 
 	ListBase uniforms;	// #DRWUniform
 	ListBase commands;	// #DRWCommand
@@ -206,6 +224,7 @@ typedef struct DRWPass {
 
 	char name[64];
 
+	DRWResourceHandle handle;
 	DRWState state;
 } DRWPass;
 

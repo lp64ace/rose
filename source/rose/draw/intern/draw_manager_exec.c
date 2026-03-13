@@ -154,6 +154,9 @@ typedef struct DRWCommandState {
 	int resourceid_loc;
 
 	size_t chunk;
+
+	DRWState enabled;
+	DRWState disabled;
 } DRWCommandState;
 
 ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResourceHandle *handle) {
@@ -165,6 +168,7 @@ ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResour
 				if (state->chunk != (size_t)-1) {
 					GPU_uniformbuf_unbind(GDrawManager.vdata_pool->matrices_ubo[state->chunk]);
 				}
+
 				GPU_uniformbuf_bind(GDrawManager.vdata_pool->matrices_ubo[chunk], state->obmat_block_loc);
 			}
 		}
@@ -278,8 +282,7 @@ ROSE_STATIC void draw_update_uniforms(DRWShadingGroup *group, DRWCommandState *s
 /** \name Draw Pass
  * \{ */
 
-
-ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group) {
+ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group, DRWState draw_state) {
 	GPU_shader_bind(group->shader);
 
 	DRWCommandState state;
@@ -287,6 +290,9 @@ ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group) {
 	memset(&state, 0xff, sizeof(DRWCommandState));
 
 	draw_update_uniforms(group, &state);
+
+	state.enabled = 0;
+	state.disabled = 0;
 
 	LISTBASE_FOREACH(DRWCommand *, cmd, &group->commands) {
 		switch (cmd->type) {
@@ -297,6 +303,16 @@ ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group) {
 				float b = ((float)cmd->clear.b) / 255.0f;
 				float a = ((float)cmd->clear.a) / 255.0f;
 				GPU_framebuffer_clear(fb, cmd->clear.bits, (const float[4]){r, g, b, a}, cmd->clear.depth, cmd->clear.stencil);
+			} break;
+			case DRW_COMMAND_DRWSTATE: {
+				state.enabled |= cmd->state.enable;
+				state.disabled |= cmd->state.disable;
+				draw_state_set((draw_state & ~state.disabled) | state.enabled);
+			} break;
+			case DRW_COMMAND_STENCIL: {
+				GPU_stencil_write_mask_set(cmd->stencil.write);
+				GPU_stencil_reference_set(cmd->stencil.reference);
+				GPU_stencil_compare_mask_set(cmd->stencil.compare);
 			} break;
 			case DRW_COMMAND_DRAW: {
 				draw_call_single_do(group, &state, cmd, cmd->draw.batch, 0, cmd->draw.vcount, 0, 0);
@@ -332,7 +348,7 @@ ROSE_STATIC void draw_draw_pass_ex(DRWPass *pass, DRWShadingGroup *first, DRWSha
 	draw_state_set(pass->state);
 
 	for (DRWShadingGroup *group = first; group; group = group->next) {
-		draw_draw_shading_group(group);
+		draw_draw_shading_group(group, pass->state);
 
 		if (group == last) {
 			break;

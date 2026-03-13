@@ -18,7 +18,7 @@ void main() {
 	const float s = 0.2; /* [0.0-0.5] range */
 	float fac = clamp((n * (1.0 - s)) + s, 0.0, 1.0);
 	finalColor.rgb = mix(color2.rgb, color1.rgb, fac * fac);
-	finalColor.a = 0.5;
+	finalColor.a = 1.0;
 
 	gl_Position = ProjectionMatrix * InstanceModelMatrixFinal * vec4(pos, 1.0);
 }

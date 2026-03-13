@@ -479,6 +479,7 @@ void GPU_clear_color(float red, float green, float blue, float alpha);
  * DEPRECATED: Use `GPU_framebuffer_clear_color` with explicit frame-buffer.
  */
 void GPU_clear_depth(float depth);
+void GPU_clear_stencil(unsigned char mask);
 
 /** \} */
 

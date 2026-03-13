@@ -35,8 +35,10 @@ set(ALICE
 	engines/alice/alice_engine.h
 	engines/alice/alice_engine.c
 	engines/alice/alice_modifier.c
+	engines/alice/alice_opaque.c
 	engines/alice/alice_private.h
 	engines/alice/alice_shader.c
+	engines/alice/alice_shadow.c
 )
 
 set(BASIC
@@ -45,6 +47,10 @@ set(BASIC
 )
 
 set(GLSL_SRC
+	engines/alice/shaders/alice_frag.glsl
+	engines/alice/shaders/alice_shadow_caps_geom.glsl
+	engines/alice/shaders/alice_shadow_geom.glsl
+	engines/alice/shaders/alice_shadow_vert.glsl
 	engines/alice/shaders/alice_vert.glsl
 	engines/overlay/shaders/armature_shape_solid_frag.glsl
 	engines/overlay/shaders/armature_shape_solid_vert.glsl
@@ -60,6 +66,7 @@ set(SRC
 	DRW_render.h
 
 	intern/mesh/extract_mesh.h
+	intern/mesh/extract_mesh_ibo_lines_adjacency.cc
 	intern/mesh/extract_mesh_ibo_tris.cc
 	intern/mesh/extract_mesh_vbo_pos.cc
 	intern/mesh/extract_mesh_vbo_lnor.cc

@@ -7,7 +7,7 @@
 #include "mesh/extract_mesh.h"
 
 void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
-	if (!DRW_vbo_requested(cache->buffers.vbo.pos) && !DRW_ibo_requested(cache->buffers.ibo.tris) && !DRW_vbo_requested(cache->buffers.vbo.weights)) {
+	if (!DRW_vbo_requested(cache->buffers.vbo.pos) && !DRW_ibo_requested(cache->buffers.ibo.tris) && !DRW_ibo_requested(cache->buffers.ibo.lines_adjacency) && !DRW_vbo_requested(cache->buffers.vbo.weights)) {
 		return;
 	}
 
@@ -24,5 +24,8 @@ void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
 	}
 	if (DRW_ibo_requested(cache->buffers.ibo.tris)) {
 		extract_triangles(mesh, cache->buffers.ibo.tris);
+	}
+	if (DRW_ibo_requested(cache->buffers.ibo.lines_adjacency)) {
+		extract_lines_adjacency(cache, mesh, cache->buffers.ibo.lines_adjacency);
 	}
 }

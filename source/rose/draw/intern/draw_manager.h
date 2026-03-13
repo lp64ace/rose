@@ -47,6 +47,7 @@ typedef struct DRWManager {
 	/** This is reset each time we render so that we re-evaluate the resource data! */
 	DRWResourceHandle resource_handle;
 	DRWResourceHandle objcache_handle;
+	DRWResourceHandle pass_handle;
 } DRWManager;
 
 extern DRWManager GDrawManager;

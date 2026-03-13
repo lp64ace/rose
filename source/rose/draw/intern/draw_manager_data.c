@@ -162,6 +162,37 @@ void DRW_shading_group_clear_ex(DRWShadingGroup *shgroup, unsigned char bits, co
 	draw_command_clear(shgroup, bits, rgba[0], rgba[1], rgba[2], rgba[3], depth, stencil);
 }
 
+ROSE_STATIC void draw_command_set_mutable_state(DRWShadingGroup *shgroup, DRWState enable, DRWState disable) {
+	DRWCommandSetMutableState *cmd = draw_command_new(shgroup, -1, DRW_COMMAND_DRWSTATE);
+
+	cmd->enable = enable;
+	cmd->disable = disable;
+}
+
+void DRW_shading_group_state_disable(DRWShadingGroup *shgroup, int state) {
+	draw_command_set_mutable_state(shgroup, state, 0x0);
+}
+
+void DRW_shading_group_state_enable(DRWShadingGroup *shgroup, int state) {
+	draw_command_set_mutable_state(shgroup, state, 0x0);
+}
+
+ROSE_STATIC void draw_command_set_stencil_mask(DRWShadingGroup *shgroup, unsigned int write, unsigned int reference, unsigned int compare) {
+	ROSE_assert(write <= 0xFF);
+	ROSE_assert(reference <= 0xFF);
+	ROSE_assert(compare <= 0xFF);
+
+	DRWCommandSetStencil *cmd = draw_command_new(shgroup, -1, DRW_COMMAND_STENCIL);
+
+	cmd->write = write;
+	cmd->reference = reference;
+	cmd->compare = compare;
+}
+
+void DRW_shading_group_stencil_mask(DRWShadingGroup *shgroup, unsigned int mask) {
+	draw_command_set_stencil_mask(shgroup, 0xFF, mask, 0xFF);
+}
+
 void DRW_shading_group_call_ex(DRWShadingGroup *shgroup, Object *ob, const float (*obmat)[4], struct GPUBatch *batch) {
 	DRWResourceHandle handle = draw_resource_handle(shgroup, obmat, ob);
 
@@ -224,8 +255,8 @@ ROSE_STATIC DRWShadingGroup *draw_shading_group_new_ex(GPUShader *shader, DRWPas
 	return shgroup;
 }
 
-ROSE_STATIC void draw_shading_group_uniform_create_ex(DRWShadingGroup *shgroup, int loc, int type, const void *value, GPUSamplerState sampler, int veclen, int arrlen) {
-	if (loc == -1) {
+ROSE_STATIC void draw_shading_group_uniform_create_ex(DRWShadingGroup *shgroup, int loc, unsigned int type, const void *value, GPUSamplerState sampler, unsigned int veclen, unsigned int arrlen) {
+	if (loc < 0) {
 		return;
 	}
 
@@ -269,6 +300,39 @@ ROSE_STATIC void draw_shading_group_uniform_create_ex(DRWShadingGroup *shgroup, 
 	LIB_addtail(&shgroup->uniforms, uniform);
 }
 
+ROSE_INLINE void draw_shading_group_uniform(DRWShadingGroup *shgroup, const char *name, unsigned int type, const void *value, unsigned int length, unsigned int arraysize) {
+	ROSE_assert(arraysize > 0 && arraysize <= 16);
+	ROSE_assert(length >= 0 && length <= 16);
+	ROSE_assert(!ELEM(type, DRW_UNIFORM_STORAGE_BLOCK, DRW_UNIFORM_STORAGE_BLOCK_REF, DRW_UNIFORM_BLOCK, DRW_UNIFORM_BLOCK_REF, DRW_UNIFORM_TEXTURE, DRW_UNIFORM_TEXTURE_REF));
+
+	int location = GPU_shader_get_uniform(shgroup->shader, name);
+
+	draw_shading_group_uniform_create_ex(shgroup, location, type, value, GPU_SAMPLER_DEFAULT, length, arraysize);
+}
+
+void DRW_shading_group_uniform_bool(DRWShadingGroup *shgroup, const char *name, const bool value) {
+	DRW_shading_group_uniform_int(shgroup, name, (int)value);
+}
+
+void DRW_shading_group_uniform_int(DRWShadingGroup *shgroup, const char *name, const int value) {
+	draw_shading_group_uniform(shgroup, name, DRW_UNIFORM_INT_COPY, &value, 1, 1);
+}
+
+void DRW_shading_group_uniform_float(DRWShadingGroup *shgroup, const char *name, const float value) {
+	draw_shading_group_uniform(shgroup, name, DRW_UNIFORM_FLOAT_COPY, &value, 1, 1);
+}
+
+void DRW_shading_group_uniform_v2(DRWShadingGroup *shgroup, const char *name, const float vec[2], unsigned int arraysize) {
+	draw_shading_group_uniform(shgroup, name, DRW_UNIFORM_FLOAT_COPY, vec, 2, arraysize);
+}
+
+void DRW_shading_group_uniform_v3(DRWShadingGroup *shgroup, const char *name, const float vec[3], unsigned int arraysize) {
+	draw_shading_group_uniform(shgroup, name, DRW_UNIFORM_FLOAT_COPY, vec, 3, arraysize);
+}
+void DRW_shading_group_uniform_v4(DRWShadingGroup *shgroup, const char *name, const float vec[4], unsigned int arraysize) {
+	draw_shading_group_uniform(shgroup, name, DRW_UNIFORM_FLOAT_COPY, vec, 4, arraysize);
+}
+
 /**
  * Builtin uniforms should be handled here, when applicable!
  */
@@ -298,7 +362,30 @@ ROSE_STATIC void draw_shading_group_init(DRWShadingGroup *shgroup) {
 
 DRWShadingGroup *DRW_shading_group_new(GPUShader *shader, DRWPass *pass) {
 	DRWShadingGroup *shgroup = draw_shading_group_new_ex(shader, pass);
+	
 	draw_shading_group_init(shgroup);
+
+	shgroup->pass = pass->handle;
+
+	return shgroup;
+}
+
+DRWShadingGroup *DRW_shading_subgroup_new(DRWShadingGroup *parent) {
+	DRWShadingGroup *shgroup = LIB_memory_block_alloc(GDrawManager.vdata_pool->shgroups);
+
+	memcpy(shgroup, parent, sizeof(DRWShadingGroup));
+
+	LIB_listbase_clear(&shgroup->commands);
+	LIB_listbase_clear(&shgroup->uniforms);
+
+	draw_shading_group_init(shgroup);
+
+	size_t chunk = DRW_handle_chunk_get(&parent->pass);
+	size_t elem = DRW_handle_elem_get(&parent->pass);
+	DRWPass *pass = LIB_memory_block_elem_get(GDrawManager.vdata_pool->passes, chunk, elem);
+
+	LIB_addtail(&pass->groups, shgroup);
+
 	return shgroup;
 }
 

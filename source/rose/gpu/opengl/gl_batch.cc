@@ -7,6 +7,7 @@
 #include "gl_debug.hh"
 #include "gl_index_buffer.hh"
 #include "gl_primitive.hh"
+#include "gl_shader.hh"
 #include "gl_shader_interface.hh"
 #include "gl_storage_buffer.hh"
 #include "gl_vertex_array.hh"

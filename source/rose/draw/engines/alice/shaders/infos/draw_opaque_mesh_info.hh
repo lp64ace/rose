@@ -17,7 +17,10 @@ GPU_SHADER_CREATE_INFO(alice_mesh)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(alice_opaque)
-	.additional_info("gpu_shader_simple_lighting");
+    .vertex_out(smooth_normal_iface)
+    .fragment_out(0, Type::VEC4, "fragColor")
+    .push_constant(Type::BOOL, "forceShadowing")
+    .fragment_source("alice_frag.glsl");
 
 /** \} */
 

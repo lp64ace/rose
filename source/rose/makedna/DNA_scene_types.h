@@ -26,6 +26,8 @@ typedef struct Scene {
     struct Object *camera;
     struct World *world;
 
+    float light_direction[3];
+
     struct RenderData r;
 
     /** None of the dependency graph vars is mean to be saved. */
