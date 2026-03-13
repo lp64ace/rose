@@ -260,6 +260,7 @@ void ED_fileselect_change_dir_ex(rContext *C, ScrArea *area) {
 		}
 
 		ED_folderlist_pushdir(&sfile->folders_prev, params->dir);
+		ED_area_tag_redraw(area);
 	}
 }
 

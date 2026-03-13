@@ -7,6 +7,8 @@
 #include "LIB_thread.h"
 #include "LIB_utildefines.h"
 
+struct BoundBox;
+struct DRWViewData;
 struct DrawData;
 struct DrawDataList;
 struct DrawEngineType;
