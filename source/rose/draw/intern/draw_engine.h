@@ -1,6 +1,8 @@
 #ifndef DRAW_ENGINE_H
 #define DRAW_ENGINE_H
 
+#include "DNA_object_types.h"
+
 #include "GPU_batch.h"
 #include "GPU_framebuffer.h"
 #include "GPU_texture.h"
@@ -72,6 +74,9 @@ typedef struct DRWViewData {
 	DefaultTextureList dtxl;
 
 	ViewInfos storage;
+
+	BoundBox frustum_corners;
+	float frustum_planes[6][4];
 
 	int flag;
 

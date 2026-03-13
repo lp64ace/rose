@@ -57,8 +57,10 @@ void KER_object_apply_mat4(struct Object *object, const float mat[4][4], bool us
 /** \name Object Geometry Evaluation
  * \{ */
 
-/** Note that the resulting bound box has no transform applied. */
+void KER_boundbox_init_from_minmax(struct BoundBox *bb, const float min[3], const float max[3]);
 void KER_object_evaluated_geometry_bounds(struct Object *object, struct BoundBox **r_bb, bool use_subdivision);
+
+const struct BoundBox *KER_object_boundbox_get(struct Object *object);
 
 /** \} */
 

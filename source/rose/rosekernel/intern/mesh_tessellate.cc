@@ -244,6 +244,8 @@ const MLoopTri *KER_mesh_looptris(const struct Mesh *mesh) {
 	return looptris.data();
 }
 
+ROSE_STATIC_ASSERT(sizeof(MLoopTri) == sizeof(uint3), "sizeof(MLoopTri) != sizeof(uint3), drawing will break!");
+
 const int *KER_mesh_looptri_polys(const Mesh *mesh) {
 	mesh->runtime->looptri_polys_cache.ensure([&](rose::Array<int> &r_data) {
 		const rose::OffsetIndices<int> polys = rose::Span<int>(

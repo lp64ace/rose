@@ -407,6 +407,14 @@ void GPU_clear_depth(float depth) {
 	Context::get()->active_fb->clear(GPU_DEPTH_BIT, clear_col, depth, 0x0);
 }
 
+void GPU_clear_stencil(unsigned char mask) {
+	ROSE_assert_msg(Context::get()->active_fb->get_use_explicit_loadstore() == false,
+					"Using GPU_framebuffer_clear_* functions in conjunction with custom load-store "
+					"state via GPU_framebuffer_bind_ex is invalid.");
+	float clear_col[4] = {0};
+	Context::get()->active_fb->clear(GPU_STENCIL_BIT, clear_col, 1.0f, mask);
+}
+
 void GPU_framebuffer_read_depth(GPUFrameBuffer *gpu_fb, int x, int y, int w, int h, DataFormat format, void *data) {
 	int rect[4] = {x, y, w, h};
 	unwrap(gpu_fb)->read(GPU_DEPTH_BIT, format, rect, 1, 1, data);

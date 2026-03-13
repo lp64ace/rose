@@ -33,6 +33,7 @@ set(GLSL_SRC
 	shaders/gpu_shader_3D_vert.glsl
 	shaders/gpu_shader_cfg_world_clip_lib.glsl
 	shaders/gpu_shader_colorspace_lib.glsl
+	shaders/gpu_shader_depth_only_frag.glsl
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
@@ -255,6 +256,7 @@ set(INFO_SRC
 	infos/gpu_shader_test_info.hh
 
 	../draw/engines/alice/shaders/infos/draw_opaque_mesh_info.hh
+	../draw/engines/alice/shaders/infos/draw_shadow_info.hh
 	../draw/engines/overlay/shaders/infos/draw_armature_info.hh
 	../draw/intern/shaders/infos/draw_view_info.hh
 )

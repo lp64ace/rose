@@ -15,10 +15,36 @@ typedef struct DeformGroup {
 	char name[64];
 } DeformGroup;
 
+/**
+ * The following illustrates the orientation of the
+ * bounding box in local space
+ *
+ * <pre>
+ *
+ * Z  Y
+ * | /
+ * |/
+ * .-----X
+ *     2----------6
+ *    /|         /|
+ *   / |        / |
+ *  1----------5  |
+ *  |  |       |  |
+ *  |  3-------|--7
+ *  | /        | /
+ *  |/         |/
+ *  0----------4
+ * </pre>
+ */
 typedef struct BoundBox {
-	float min[3];
-	float max[3];
+	float vec[8][3];
+	int flag;
 } BoundBox;
+
+/** #BoundBox.flag */
+enum {
+	BOUNDBOX_DIRTY = (1 << 0),
+};
 
 typedef struct Object_Runtime {
 	/** Axis aligned bound-box (in local-space). */

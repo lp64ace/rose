@@ -27,6 +27,7 @@ typedef struct MeshBufferList {
 	} vbo;
 	struct {
 		GPUIndexBuf *tris;
+		GPUIndexBuf *lines_adjacency;
 	} ibo;
 } MeshBufferList;
 
@@ -37,9 +38,12 @@ typedef struct MeshBatchCache {
 	 */
 	GPUBatch **surfaces;
 	GPUIndexBuf **triangles;
+
 	GPUBatch *surface;
+	GPUBatch *edge_detection;
 
 	bool is_dirty;
+	bool is_manifold;
 
 	size_t materials;
 } MeshBatchCache;

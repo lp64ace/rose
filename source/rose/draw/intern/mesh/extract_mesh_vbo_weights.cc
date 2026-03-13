@@ -17,6 +17,7 @@
 
 #include "LIB_assert.h"
 #include "LIB_array_utils.hh"
+#include "LIB_math_matrix.h"
 #include "LIB_math_matrix_types.hh"
 #include "LIB_math_vector_types.hh"
 #include "LIB_listbase.h"
@@ -64,8 +65,8 @@ ROSE_INLINE ArmatureDeviceDeformParams get_armature_device_deform_params(const O
 			deform_params.pose_channel_by_vertex_group[index] = NULL;
 		}
 
-		deform_params.armature_to_target = float4x4(KER_object_world_to_object(obtarget));
-		deform_params.target_to_armature = float4x4(KER_object_object_to_world(obtarget));
+		deform_params.armature_to_target = float4x4::identity();
+		deform_params.target_to_armature = float4x4::identity();
 	}
 
 	return deform_params;
@@ -81,7 +82,7 @@ ROSE_STATIC GPUVertFormat *extract_weights_format() {
 }
 
 struct MDeformDeviceData {
-	int4 defgroup = int4(-1, -1, -1, -1);
+	int4 defgroup = int4(0, 0, 0, 0);
 	float4 weight = float4(0, 0, 0, 0);
 };
 

@@ -256,6 +256,8 @@ DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
 
 	npass->original = original;
 	npass->state = state;
+	npass->handle = GDrawManager.pass_handle;
+	DRW_handle_increment(&GDrawManager.pass_handle);
 
 	LIB_strcpy(npass->name, ARRAY_SIZE(npass->name), name);
 
@@ -264,6 +266,84 @@ DRWPass *DRW_pass_new_ex(const char *name, DRWPass *original, int state) {
 
 DRWPass *DRW_pass_new(const char *name, int state) {
 	return DRW_pass_new_ex(name, NULL, state);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Culling
+ * \{ */
+
+void DRW_culling_frustum_planes_get(DRWViewData *view, float planes[6][4]) {
+	if (view == NULL) {
+		view = GDrawManager.vdata_engine;
+	}
+
+	ROSE_assert(view);
+
+	memcpy(planes, view->frustum_planes, sizeof(view->frustum_planes));
+}
+
+void DRW_culling_frustum_corners_get(DRWViewData *view, BoundBox *corners) {
+	if (view == NULL) {
+		view = GDrawManager.vdata_engine;
+	}
+
+	ROSE_assert(view);
+
+	memcpy(corners, &view->frustum_corners, sizeof(view->frustum_corners));
+}
+
+ROSE_INLINE bool draw_culling_box_test(const float (*frustum_planes)[4], const BoundBox *box) {
+	for (int p = 0; p < 6; p++) {
+		for (int v = 0; v < 8; v++) {
+			float dist = plane_point_side_v3(frustum_planes[p], box->vec[v]);
+			if (dist > 0.0f) {
+				/** At least one point in front of this plane, go to next plane. */
+				break;
+			}
+			if (v == 7) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool DRW_culling_box_test(const DRWViewData *view, const BoundBox *box) {
+	if (view == NULL) {
+		view = GDrawManager.vdata_engine;
+	}
+
+	ROSE_assert(view);
+
+	return draw_culling_box_test(view->frustum_planes, box);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name View
+ * \{ */
+
+void DRW_view_viewmat_get(DRWViewData *view, float mat[4][4], bool inverted) {
+	if (view == NULL) {
+		view = GDrawManager.vdata_engine;
+	}
+
+	ROSE_assert(view);
+
+	copy_m4_m4(mat, !inverted ? view->storage.viewmat : view->storage.viewinv);
+}
+
+void DRW_view_winmat_get(DRWViewData *view, float mat[4][4], bool inverted) {
+	if (view == NULL) {
+		view = GDrawManager.vdata_engine;
+	}
+
+	ROSE_assert(view);
+
+	copy_m4_m4(mat, !inverted ? view->storage.winmat : view->storage.wininv);
 }
 
 /** \} */
@@ -294,6 +374,47 @@ ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
 	DRW_instance_data_list_free_unused(ddata->ibuffers);
 	DRW_instance_data_list_resize(ddata->ibuffers);
 	DRW_instance_data_list_reset(ddata->ibuffers);
+}
+
+ROSE_INLINE void draw_frustum_boundbox_calc(const float viewinv[4][4], const float projmat[4][4], BoundBox *r_box) {
+	float left, right, bottom, top, near, far;
+
+	projmat_dimensions(projmat, &left, &right, &bottom, &top, &near, &far);
+
+	r_box->vec[0][2] = r_box->vec[3][2] = r_box->vec[7][2] = r_box->vec[4][2] = -near;
+	r_box->vec[0][0] = r_box->vec[3][0] = left;
+	r_box->vec[4][0] = r_box->vec[7][0] = right;
+	r_box->vec[0][1] = r_box->vec[4][1] = bottom;
+	r_box->vec[7][1] = r_box->vec[3][1] = top;
+
+	/* Get the coordinates of the far plane, when the matrix is perspective */
+	if (projmat[3][3] == 0.0f) {
+		float scale = far / near;
+		left *= scale;
+		right *= scale;
+		bottom *= scale;
+		top *= scale;
+	}
+
+	r_box->vec[1][2] = r_box->vec[2][2] = r_box->vec[6][2] = r_box->vec[5][2] = -far;
+	r_box->vec[1][0] = r_box->vec[2][0] = left;
+	r_box->vec[6][0] = r_box->vec[5][0] = right;
+	r_box->vec[1][1] = r_box->vec[5][1] = bottom;
+	r_box->vec[2][1] = r_box->vec[6][1] = top;
+
+	/* Transform into world space. */
+	for (int i = 0; i < 8; i++) {
+		mul_m4_v3(viewinv, r_box->vec[i]);
+	}
+}
+
+ROSE_INLINE void draw_frustum_culling_planes_calc(const float persmat[4][4], float frustum_planes[6][4]) {
+	planes_from_projmat(persmat, frustum_planes[0], frustum_planes[5], frustum_planes[1], frustum_planes[3], frustum_planes[4], frustum_planes[2]);
+
+	/* Normalize. */
+	for (size_t p = 0; p < 6; p++) {
+		frustum_planes[p][3] /= normalize_v3(frustum_planes[p]);
+	}
 }
 
 void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
@@ -338,6 +459,8 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 
 	ViewInfos *storage = &GDrawManager.vdata_engine->storage;
 	if (scene->camera) {
+		ROSE_assert_unreachable(); // TODO!
+
 		Object *camera = scene->camera;
 
 		float projmat[4][4], viewmat[4][4];
@@ -349,14 +472,31 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 		RegionView3D *rv3d = region->regiondata;
 
 		if (rv3d) {
-			mul_m4_m4m4(storage->winmat, rv3d->winmat, rv3d->viewmat);
+			copy_m4_m4(storage->winmat, rv3d->winmat);
+			copy_m4_m4(storage->viewmat, rv3d->viewmat);
+
+			mul_m4_m4m4(storage->persmat, storage->winmat, storage->viewmat);
+
+			invert_m4_m4(storage->wininv, storage->winmat);
+			invert_m4_m4(storage->viewinv, storage->viewmat);
+			invert_m4_m4(storage->persinv, storage->persmat);
 		}
 		else {
 			unit_m4(storage->winmat);
+			unit_m4(storage->viewmat);
+			unit_m4(storage->persmat);
+
+			unit_m4(storage->wininv);
+			unit_m4(storage->viewinv);
+			unit_m4(storage->persinv);
 		}
 	}
 
+	draw_frustum_boundbox_calc(storage->viewinv, storage->winmat, &GDrawManager.vdata_engine->frustum_corners);
+	draw_frustum_culling_planes_calc(storage->persmat, GDrawManager.vdata_engine->frustum_planes);
+
 	GDrawManager.resource_handle = 0;
+	GDrawManager.pass_handle = 0;
 
 	if (GDraw.view == NULL) {
 		GDraw.view = GPU_uniformbuf_create_ex(sizeof(ViewInfos), NULL, "GDraw.view");

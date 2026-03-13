@@ -76,6 +76,7 @@ ROSE_STATIC void mesh_batch_cache_clear(Mesh *mesh) {
 		MEM_SAFE_FREE(cache->surfaces);
 
 		GPU_BATCH_DISCARD_SAFE(cache->surface);
+		GPU_BATCH_DISCARD_SAFE(cache->edge_detection);
 
 		cache->materials = 0;
 

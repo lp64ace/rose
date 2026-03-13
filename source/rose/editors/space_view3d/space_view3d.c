@@ -38,7 +38,7 @@
 ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4]) {
 	/* default, human vertical fov is 120 degrees. */
 	const float fov = M_PI_2 * 2.0f / 3.0f;
-	const float clip_start = 1e-1f;
+	const float clip_start = 1e-2f;
 	const float clip_end = 1e+3f;
 
 	float tangent = tanf(fov * 0.5f);
@@ -57,7 +57,7 @@ ROSE_INLINE RegionView3D *region_view3d_init(RegionView3D *rv3d) {
 	unit_m4(rv3d->winmat);
 	unit_m4(rv3d->viewmat);
 	unit_qt(rv3d->viewquat);
-	copy_v3_fl3(rv3d->viewloc, 0.0f, 1.0f, 1.0f);
+	copy_v3_fl3(rv3d->viewloc, 0.0f, 1.0f, 2.0f);
 	return rv3d;
 }
 

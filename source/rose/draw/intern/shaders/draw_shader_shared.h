@@ -27,11 +27,16 @@ struct DVertGroupMatrices {
 
 struct ViewInfos {
 	/* View matrices */
+	float4x4 persmat;
+	float4x4 persinv;
+	float4x4 viewmat;
+	float4x4 viewinv;
 	float4x4 winmat;
+	float4x4 wininv;
 };
 
 #ifdef USE_GPU_SHADER_CREATE_INFO
-#	define ProjectionMatrix (drw_view.winmat)
+#	define ProjectionMatrix (drw_view.persmat)
 #endif
 
 #define resource_id drw_ResourceID

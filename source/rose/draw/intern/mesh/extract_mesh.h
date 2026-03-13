@@ -13,6 +13,7 @@ struct GPUUniformBuf;
 struct GPUVertBuf;
 
 struct Mesh;
+struct MeshBatchCache;
 struct Object;
 
 #ifdef __cplusplus
@@ -37,6 +38,7 @@ void extract_matrices(const Object *obarmature, const Object *obtarget, const Me
  * \{ */
 
 void extract_triangles(const struct Mesh *mesh, struct GPUIndexBuf *ibo);
+void extract_lines_adjacency(struct MeshBatchCache *cache, const struct Mesh *mesh, struct GPUIndexBuf *ibo);
 
 /** \} */
 

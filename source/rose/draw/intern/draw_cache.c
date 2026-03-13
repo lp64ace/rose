@@ -195,6 +195,7 @@ ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache)
 		GPU_BATCH_DISCARD_SAFE(cache->surfaces[index]);
 	}
 	GPU_BATCH_DISCARD_SAFE(cache->surface);
+	GPU_BATCH_DISCARD_SAFE(cache->edge_detection);
 }
 
 void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
@@ -204,6 +205,7 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 		GPU_BATCH_CLEAR_SAFE(cache->surfaces[index]);
 	}
 	GPU_BATCH_CLEAR_SAFE(cache->surface);
+	GPU_BATCH_CLEAR_SAFE(cache->edge_detection);
 
 	for (size_t index = 0; index < cache->materials; index++) {
 		if (DRW_batch_requested(cache->surfaces[index], GPU_PRIM_TRIS)) {
@@ -222,6 +224,17 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 		 */
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
 	}
+	if (DRW_batch_requested(cache->edge_detection, GPU_PRIM_LINES_ADJ)) {
+		DRW_ibo_request(cache->edge_detection, &cache->buffers.ibo.lines_adjacency);
+		DRW_vbo_request(cache->edge_detection, &cache->buffers.vbo.pos);
+		DRW_vbo_request(cache->edge_detection, &cache->buffers.vbo.nor);
+
+		/**
+		 * Always created since running the modifier on device can leave
+		 * things unitialize for objects that have no deformation.
+		 */
+		DRW_vbo_request(cache->edge_detection, &cache->buffers.vbo.weights);
+	}
 
 	DRW_cache_mesh_create(cache, object, mesh);
 }
@@ -230,6 +243,19 @@ GPUBatch *DRW_cache_mesh_surface_get(Object *object) {
 	ROSE_assert(object->type == OB_MESH);
 	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
 	return mesh_batch_cache_request_surface_batches(cache);
+}
+
+GPUBatch *DRW_cache_mesh_edge_detection_get(Object *object, bool *r_is_manifold) {
+	ROSE_assert(object->type == OB_MESH);
+	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
+	/**
+	 * Even if is_manifold is not correct (not updated),
+	 * the default (not manifold) is just the worst case.
+	 */
+	if (r_is_manifold) {
+		*r_is_manifold = cache->is_manifold;
+	}
+	return DRW_batch_request(&cache->edge_detection);
 }
 
 /** \} */
@@ -286,6 +312,18 @@ GPUBatch *DRW_cache_object_surface_get(Object *object) {
 
 	switch (object->type) {
 		ROUTE(OB_MESH, DRW_cache_mesh_surface_get);
+	}
+
+#undef ROUTE
+
+	return NULL;
+}
+
+GPUBatch *DRW_cache_object_edge_detection_get(Object *object, bool *r_is_manifold) {
+#define ROUTE(obtype, function) case obtype: return function(object, r_is_manifold); break;
+
+	switch (object->type) {
+		ROUTE(OB_MESH, DRW_cache_mesh_edge_detection_get);
 	}
 
 #undef ROUTE

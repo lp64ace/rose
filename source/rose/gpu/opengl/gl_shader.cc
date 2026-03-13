@@ -1126,6 +1126,14 @@ bool GLShader::finalize(const shader::ShaderCreateInfo *info) {
 		geometry_shader_from_glsl(sources);
 	}
 
+#ifndef NDEBUG
+	// Set up transform feedback before linking
+	if (this->geom_shader_) {
+		const char *varyings[] = {"gl_Position"};
+		glTransformFeedbackVaryings(shader_program_, 1, varyings, GL_INTERLEAVED_ATTRIBS);
+	}
+#endif
+
 	glLinkProgram(shader_program_);
 
 	GLint status;

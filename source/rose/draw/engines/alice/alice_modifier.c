@@ -23,6 +23,7 @@ ROSE_INLINE void alice_draw_data_init(DrawData *dd) {
     AliceDrawData *add = (AliceDrawData *)dd;
 
 	add->defgroup = GPU_uniformbuf_create_ex(sizeof(DVertGroupMatrices), NULL, "DVertGroupMatrices");
+	add->flag |= ALICE_SHADOW_BOX_DIRTY;
 }
 
 ROSE_INLINE void alice_draw_data_free(DrawData *dd) {
