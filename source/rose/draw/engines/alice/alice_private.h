@@ -67,6 +67,7 @@ typedef struct AliceWorldUBO {
  * Returns the shader for the depth pass, builds the shader if not already built.
  * Call #DRW_alice_shaders_free to free all the loaded shaders!
  */
+struct GPUShader *DRW_alice_shader_depth_get(void);
 struct GPUShader *DRW_alice_shader_opaque_get(void);
 struct GPUShader *DRW_alice_shader_shadow_pass_get(bool manifold);
 struct GPUShader *DRW_alice_shader_shadow_fail_get(bool manifold, bool cap);

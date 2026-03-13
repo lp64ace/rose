@@ -22,7 +22,16 @@ GPU_SHADER_CREATE_INFO(alice_opaque)
     .push_constant(Type::BOOL, "forceShadowing")
     .fragment_source("alice_frag.glsl");
 
+GPU_SHADER_CREATE_INFO(alice_depth)
+    .vertex_out(smooth_normal_iface)
+    .fragment_source("gpu_shader_depth_only_frag.glsl");
+
 /** \} */
+
+GPU_SHADER_CREATE_INFO(alice_depth_mesh)
+	.additional_info("alice_mesh")
+	.additional_info("alice_depth")
+	.do_static_compilation(true);
 
 GPU_SHADER_CREATE_INFO(alice_opaque_mesh)
 	.additional_info("alice_mesh")
