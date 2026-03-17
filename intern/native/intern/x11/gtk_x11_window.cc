@@ -10,6 +10,10 @@ GTKWindowX11::GTKWindowX11(GTKManagerX11 *manager) : GTKWindowInterface(manager)
 }
 
 GTKWindowX11::~GTKWindowX11() {
+	if (this->visual_info) {
+		XFree(this->visual_info);
+    	this->visual_info = nullptr;
+	}
 	if (this->window) {
 		XDestroyWindow(this->display, this->window);
 	}

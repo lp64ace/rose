@@ -12,6 +12,10 @@ GTKRenderXGL::GTKRenderXGL(GTKWindowX11 *window) : GTKRenderInterface(window), c
 }
 
 GTKRenderXGL::~GTKRenderXGL() {
+	if (this->visual_info) {
+		XFree(this->visual_info);
+    	this->visual_info = nullptr;
+	}
 	if (this->context) {
 		if (SharedContextHandle != this->context || SharedContextCounter == 1) {
 			if (--SharedContextCounter == 0) {
