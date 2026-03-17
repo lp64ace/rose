@@ -32,6 +32,7 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::native
+	rose::intern::libc_compat
 	
 	rose::source::dna
 	rose::source::rna

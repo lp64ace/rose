@@ -64,7 +64,7 @@ if(UNIX)
 	mark_as_advanced(WITH_COMPILER_CCACHE)
 endif()
 
-option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." OFF)
+option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." ON)
 mark_as_advanced(WITH_TBB)
 
 # ----------------------------------------------------------------------------

@@ -37,6 +37,10 @@ FCurve *KER_fcurve_copy(const struct FCurve *fcu) {
 	fcu_d->next = fcu_d->prev = NULL;
 	fcu_d->group = NULL;
 
+	if (fcu->runtime.static_path) {
+		fcu_d->runtime.static_path = RNA_path_copy(fcu->runtime.static_path);
+	}
+
 	/* Copy curve data. */
 	fcu_d->bezt = MEM_dupallocN(fcu_d->bezt);
 	fcu_d->fpt = MEM_dupallocN(fcu_d->fpt);
@@ -70,6 +74,11 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_SAFE_FREE(fcurve->bezt);
 	MEM_SAFE_FREE(fcurve->fpt);
 	MEM_SAFE_FREE(fcurve->path);
+
+	if (fcurve->runtime.static_path) {
+		RNA_path_free(fcurve->runtime.static_path);
+		fcurve->runtime.static_path = NULL;
+	}
 	
 	MEM_freeN(fcurve);
 }
@@ -582,6 +591,11 @@ void KER_fcurve_path_set_ex(FCurve *fcurve, const char *newpath, bool compile) {
 		 * Copy the new path over and invalidate the runtime canonical path.
 		 */
 		fcurve->path = LIB_strdupN(newpath);
+
+		if (fcurve->runtime.static_path) {
+			RNA_path_free(fcurve->runtime.static_path);
+			fcurve->runtime.static_path = NULL;
+		}
 	}
 }
 

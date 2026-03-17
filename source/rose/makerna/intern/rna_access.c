@@ -513,8 +513,6 @@ ROSE_INLINE bool rna_path_parse_callback(const PointerRNA *ptr, const char *path
 }
 
 typedef struct StaticPathComponentRNA {
-	struct StaticPathComponentRNA *prev, *next;
-
 	struct StructRNA *type;
 	struct PropertyRNA *property;
 
@@ -662,11 +660,37 @@ StaticPathRNA *RNA_path_new(const PointerRNA *ptr, const char *path, PointerRNA 
 	return newpath;
 }
 
+StaticPathRNA *RNA_path_copy(const StaticPathRNA *src) {
+	StaticPathRNA *newpath = MEM_mallocN(sizeof(StaticPathRNA), "StaticPathRNA");
+
+	newpath->type = src->type;
+	newpath->components = MEM_mallocN(sizeof(StaticPathComponentRNA) * src->totcomponents, "StaticPathComponentRNA");
+	for (size_t index = 0; index < src->totcomponents; index++) {
+		newpath->components[index].type = src->components[index].type;
+		newpath->components[index].property = src->components[index].property;
+
+		if (src->components[index].token) {
+			newpath->components[index].token = LIB_strdupN(src->components[index].token);
+		}
+		else {
+			newpath->components[index].token = NULL;
+		}
+
+		newpath->components[index].flag = src->components[index].flag;
+	}
+	newpath->totcomponents = src->totcomponents;
+
+	return newpath;
+}
+
 void RNA_path_free(StaticPathRNA *path) {
 	for (StaticPathComponentRNA *component = path->components; component != path->components + path->totcomponents; component++) {
 		MEM_SAFE_FREE(component->token);
 	}
 	MEM_SAFE_FREE(path->components);
+
+	path->totcomponents = 0;
+
 	MEM_freeN(path);
 }
 

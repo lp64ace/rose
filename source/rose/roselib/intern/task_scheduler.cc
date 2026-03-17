@@ -4,12 +4,16 @@
 #include "LIB_task.h"
 #include "LIB_thread.h"
 
+#include <stdio.h>
+
 /* Task Scheduler */
 
 static int task_scheduler_num_threads = 1;
 
 void LIB_task_scheduler_init() {
 	task_scheduler_num_threads = LIB_system_thread_count();
+
+	fprintf(stdout, "[Info] Task Scheduler will use %d threads.\n", task_scheduler_num_threads);
 }
 
 void LIB_task_scheduler_exit() {
