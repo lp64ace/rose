@@ -20,6 +20,29 @@ LinkData *LIB_generic_nodeN(void *data) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Helper Methods
+ * \{ */
+
+void LIB_move_list_to_list(ListBase *dst, ListBase *src) {
+	if (src->first == NULL) {
+		return;
+	}
+
+	if (dst->first == NULL) {
+		dst->first = src->first;
+		dst->last = src->last;
+	}
+	else {
+		((Link *)dst->last)->next = src->first;
+		((Link *)src->first)->prev = dst->last;
+		dst->last = src->last;
+	}
+	src->first = src->last = NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Listbase Insert Methods
  * \{ */
 
