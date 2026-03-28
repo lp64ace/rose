@@ -13,6 +13,8 @@
 #include "KER_main_id_name_map.h"
 #include "KER_main_name_map.h"
 
+#include "RLO_read_write.h"
+
 #include "atomic_ops.h"
 
 /* -------------------------------------------------------------------- */
@@ -749,6 +751,18 @@ void KER_id_eval_properties_copy(struct ID *id_cow, struct ID *id) {
 	}
 	else {
 		ROSE_assert_unreachable();
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Datablock Write
+ * \{ */
+
+void KER_id_rose_write(RoseWriter *writer, ID *id) {
+	if (id->properties && !ELEM(GS(id->name), ID_WM)) {
+		IDP_RoseWrite(writer, id->properties);
 	}
 }
 

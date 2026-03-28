@@ -45,6 +45,12 @@ GTKManagerX11::~GTKManagerX11() {
     if (this->xkb_descr) {
         XkbFreeKeyboard(this->xkb_descr, XkbAllComponentsMask, true);
     }
+#if defined(WITH_X11_XINPUT) && defined(X_HAVE_UTF8_STRING)
+	if (this->xim) {
+		XCloseIM(this->xim);
+		this->xim = NULL;
+	}
+#endif
     if (this->display) {
         XCloseDisplay(this->display);
     }
@@ -268,6 +274,8 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 						// the window demands user attention
 					}
 				}
+
+				XFree(properties);
 			}
 		} break;
 		
@@ -605,9 +613,9 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 				break;
 			}
 			
-			const char *atomName = XGetAtomName(this->display, evt->xclient.message_type);
+			char *atomName = XGetAtomName(this->display, evt->xclient.message_type);
 			if (atomName != nullptr) {
-				// ?
+				XFree((void *)atomName);
 			}
 		} break;
 	}

@@ -22,6 +22,14 @@ void KER_mesh_runtime_init_data(Mesh *mesh) {
 	mesh->runtime = MEM_new<rose::kernel::MeshRuntime>("rose::kernel::MeshRuntime");
 }
 
+void KER_mesh_runtime_shallow_zero_initialize(Mesh *mesh) {
+	if (mesh->runtime == NULL) {
+		return;
+	}
+
+	memset(mesh->runtime, 0, sizeof(rose::kernel::MeshRuntime));
+}
+
 void KER_mesh_runtime_free_data(Mesh *mesh) {
 	if (mesh->runtime) {
 		KER_mesh_runtime_clear_cache(mesh);

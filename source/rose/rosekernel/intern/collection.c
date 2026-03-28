@@ -11,6 +11,10 @@
 
 #include "DEG_depsgraph.h"
 
+#include "RLO_read_write.h"
+
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Prototypes
  * \{ */
@@ -30,8 +34,34 @@ ROSE_STATIC CollectionChild *collection_find_child_recursive(const Collection *p
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Collection Runtime Data
+ * \{ */
+
+void KER_collection_runtime_init(Collection *collection) {
+	collection->runtime = MEM_callocN(sizeof(Collection_Runtime), "Collection_Runtime");
+}
+
+void KER_collection_runtime_free(Collection *collection) {
+	if (collection->runtime) {
+		Collection_Runtime *runtime = collection->runtime;
+		LIB_freelistN(&runtime->object_cache);
+		LIB_freelistN(&runtime->parents);
+		MEM_freeN(runtime);
+	}
+	collection->runtime = NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Collection Data-block
  * \{ */
+
+ROSE_STATIC void collection_init_data(ID *id) {
+	Collection *collection = (Collection *)id;
+
+	KER_collection_runtime_init(collection);
+}
 
 ROSE_STATIC void collection_copy_data(Main *main, ID *id_dst, const ID *id_src, const int flag) {
 	ROSE_assert((((const Collection *)id_src)->flag & COLLECTION_IS_MASTER) != 0);
@@ -39,14 +69,11 @@ ROSE_STATIC void collection_copy_data(Main *main, ID *id_dst, const ID *id_src, 
 	Collection *dst = (Collection *)id_dst;
 
 	dst->flag &= ~COLLECTION_HAS_OBJECT_CACHE;
-	dst->flag &= ~COLLECTION_HAS_OBJECT_CACHE_INSTANCED;
-
-	LIB_listbase_clear(&dst->object_cache);
-	LIB_listbase_clear(&dst->object_cache_instanced);
 
 	LIB_listbase_clear(&dst->objects);
 	LIB_listbase_clear(&dst->children);
-	LIB_listbase_clear(&dst->parents);
+
+	KER_collection_runtime_init(dst);
 
 	LISTBASE_FOREACH(const CollectionChild *, child, &((const Collection *)id_src)->children) {
 		collection_child_add(dst, child->collection, flag, false);
@@ -61,9 +88,9 @@ ROSE_STATIC void collection_free_data(ID *id) {
 
 	LIB_freelistN(&collection->objects);
 	LIB_freelistN(&collection->children);
-	LIB_freelistN(&collection->parents);
 
 	KER_collection_object_cache_free(collection);
+	KER_collection_runtime_free(collection);
 }
 
 ROSE_STATIC void collection_foreach_id(ID *id, struct LibraryForeachIDData *data) {
@@ -75,9 +102,68 @@ ROSE_STATIC void collection_foreach_id(ID *id, struct LibraryForeachIDData *data
 	LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
 		KER_LIB_FOREACHID_PROCESS_IDSUPER(data, child->collection, IDWALK_CB_NEVER_SELF | IDWALK_CB_USER);
 	}
-	LISTBASE_FOREACH(CollectionParent *, parent, &collection->parents) {
-		KER_LIB_FOREACHID_PROCESS_IDSUPER(data, parent->collection, IDWALK_CB_NEVER_SELF);
+	if (collection->runtime) {
+		Collection_Runtime *runtime = collection->runtime;
+		LISTBASE_FOREACH(CollectionParent *, parent, &runtime->parents) {
+			KER_LIB_FOREACHID_PROCESS_IDSUPER(data, parent->collection, IDWALK_CB_NEVER_SELF);
+		}
 	}
+}
+
+void KER_collection_rose_write_prepare_nolib(RoseWriter *writer, Collection *collection) {
+	collection->runtime = NULL;
+}
+
+void KER_collection_rose_write_nolib(RoseWriter *writer, Collection *collection) {
+	KER_id_rose_write(writer, &collection->id);
+
+	LISTBASE_FOREACH(CollectionObject *, cob, &collection->objects) {
+		RLO_write_struct(writer, CollectionObject, cob);
+	}
+	LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
+		RLO_write_struct(writer, CollectionChild, child);
+	}
+}
+
+ROSE_STATIC void collection_rose_write(RoseWriter *writer, ID *id, const void *address) {
+	Collection *collection = (Collection *)id;
+
+	KER_collection_rose_write_prepare_nolib(writer, collection);
+	RLO_write_id_struct(writer, Collection, address, &collection->id);
+	KER_collection_rose_write_nolib(writer, collection);
+}
+
+void KER_collection_rose_read_data(RoseDataReader *reader, Collection *collection) {
+	KER_collection_runtime_init(collection);
+
+	RLO_read_struct_list(reader, CollectionObject, &collection->objects);
+	RLO_read_struct_list(reader, CollectionChild, &collection->children);
+}
+
+ROSE_STATIC void collection_rose_read_data(RoseDataReader *reader, ID *id) {
+	Collection *collection = (Collection *)id;
+
+	KER_collection_rose_read_data(reader, collection);
+}
+
+void KER_collection_rose_read_lib_ex(RoseLibReader *reader, Library *lib, Collection *collection) {
+	LISTBASE_FOREACH_MUTABLE(CollectionObject *, cob, &collection->objects) {
+		if (cob->object == NULL) {
+			LIB_freelinkN(&collection->objects, cob);
+			continue;
+		}
+
+		RLO_read_id_address(reader, lib, &cob->object);
+	}
+	LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
+		RLO_read_id_address(reader, lib, &child->collection);
+	}
+}
+
+ROSE_STATIC void collection_rose_read_lib(RoseLibReader *reader, ID *id) {
+	Collection *collection = (Collection *)id;
+
+	KER_collection_rose_read_lib_ex(reader, collection->id.lib, collection);
 }
 
 /** This will return the #Scene that owns the #Collection. */
@@ -123,10 +209,14 @@ Collection *KER_collection_add(Main *main, Collection *parent, const char *name)
 
 Collection *KER_collection_master_add() {
 	Collection *master_collection = KER_libblock_alloc(NULL, ID_GR, "Colleciton", LIB_ID_CREATE_NO_MAIN);
+
 	do {
 		master_collection->id.flag |= ID_FLAG_EMBEDDED_DATA;
 		master_collection->flag |= COLLECTION_IS_MASTER;
 	} while (false);
+
+	KER_collection_runtime_init(master_collection);
+
 	return master_collection;
 }
 
@@ -160,7 +250,7 @@ bool KER_collection_delete(Main *main, Collection *collection, bool hierarchy) {
 	}
 	else {
 		LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
-			LISTBASE_FOREACH(CollectionParent *, cparent, &collection->parents) {
+			LISTBASE_FOREACH(CollectionParent *, cparent, &collection->runtime->parents) {
 				Collection *parent = cparent->collection;
 				collection_child_add(parent, child->collection, 0, true);
 			}
@@ -170,7 +260,7 @@ bool KER_collection_delete(Main *main, Collection *collection, bool hierarchy) {
 
 		CollectionObject *object = (CollectionObject *)collection->objects.first;
 		while (object != NULL) {
-			LISTBASE_FOREACH(CollectionParent *, cparent, &collection->parents) {
+			LISTBASE_FOREACH(CollectionParent *, cparent, &collection->runtime->parents) {
 				Collection *parent = cparent->collection;
 				collection_object_add(main, parent, object->object, 0, true);
 			}
@@ -195,7 +285,7 @@ bool KER_collection_is_in_scene(Collection *collection) {
 		return true;
 	}
 
-	LISTBASE_FOREACH(CollectionParent *, cparent, &collection->parents) {
+	LISTBASE_FOREACH(CollectionParent *, cparent, &collection->runtime->parents) {
 		if (KER_collection_is_in_scene(cparent->collection)) {
 			return true;
 		}
@@ -210,20 +300,6 @@ bool KER_collection_is_in_scene(Collection *collection) {
 /** \name Collection Children
  * \{ */
 
-ROSE_STATIC bool collection_instance_find_recursive(Collection *collection, Collection *instance_collection) {
-	LISTBASE_FOREACH(CollectionObject *, object, &collection->objects) {
-		if (object->object != NULL && ELEM(object->object->instance_collection, instance_collection, collection)) {
-			return true;
-		}
-	}
-	LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
-		if (child->collection != NULL && collection_instance_find_recursive(child->collection, instance_collection)) {
-			return true;
-		}
-	}
-	return false;
-}
-
 /** Returns true if we add #collection as a child of #new_ancestor there will be cycles. */
 bool KER_collection_cycle_find(Collection *new_ancenstor, Collection *collection) {
 	if (collection == new_ancenstor) {
@@ -232,12 +308,12 @@ bool KER_collection_cycle_find(Collection *new_ancenstor, Collection *collection
 	if (collection == NULL) {
 		collection = new_ancenstor;
 	}
-	LISTBASE_FOREACH(CollectionParent *, parent, &new_ancenstor->parents) {
+	LISTBASE_FOREACH(CollectionParent *, parent, &new_ancenstor->runtime->parents) {
 		if (KER_collection_cycle_find(parent->collection, collection)) {
 			return true;
 		}
 	}
-	return collection_instance_find_recursive(collection, new_ancenstor);
+	return false;
 }
 
 ROSE_STATIC bool collection_child_add(Collection *parent, Collection *collection, const int flag, const bool us) {
@@ -254,7 +330,7 @@ ROSE_STATIC bool collection_child_add(Collection *parent, Collection *collection
 	if ((flag & LIB_ID_CREATE_NO_MAIN) == 0) {
 		CollectionParent *cparent = MEM_mallocN(sizeof(CollectionParent), "CollectionParent");
 		cparent->collection = parent;
-		LIB_addtail(&collection->parents, cparent);
+		LIB_addtail(&collection->runtime->parents, cparent);
 	}
 
 	if (us) {
@@ -272,7 +348,7 @@ ROSE_STATIC bool collection_child_rem(Collection *parent, Collection *collection
 	}
 
 	CollectionParent *cparent = collection_find_parent(collection, parent);
-	LIB_remlink(&collection->parents, cparent);
+	LIB_remlink(&collection->runtime->parents, cparent);
 	LIB_remlink(&parent->children, child);
 	MEM_freeN(cparent);
 	MEM_freeN(child);
@@ -284,7 +360,7 @@ ROSE_STATIC bool collection_child_rem(Collection *parent, Collection *collection
 }
 
 ROSE_STATIC CollectionParent *collection_find_parent(Collection *collection, const Collection *parent) {
-	return (CollectionParent *)LIB_findptr(&collection->parents, parent, offsetof(CollectionParent, collection));
+	return (CollectionParent *)LIB_findptr(&collection->runtime->parents, parent, offsetof(CollectionParent, collection));
 }
 
 ROSE_STATIC bool collection_has_child(Collection *parent, const Collection *collection) {
@@ -349,7 +425,7 @@ bool KER_collection_is_empty(const Collection *collection) {
 /** \name Object List Cache
  * \{ */
 
-ROSE_STATIC void collection_object_cache_fill(ListBase *lb, Collection *collection, int parent_restrict, bool instances) {
+ROSE_STATIC void collection_object_cache_fill(ListBase *lb, Collection *collection, int parent_restrict) {
 	int child_restrict = collection->flag | parent_restrict;
 
 	LISTBASE_FOREACH(CollectionObject *, cobj, &collection->objects) {
@@ -359,9 +435,6 @@ ROSE_STATIC void collection_object_cache_fill(ListBase *lb, Collection *collecti
 			base = MEM_callocN(sizeof(Base), "Object Base");
 			base->object = cobj->object;
 			LIB_addtail(lb, base);
-			if (instances && cobj->object->instance_collection) {
-				collection_object_cache_fill(lb, cobj->object->instance_collection, child_restrict, instances);
-			}
 		}
 
 		if (((child_restrict & COLLECTION_HIDE_VIEWPORT) == 0)) {
@@ -373,7 +446,7 @@ ROSE_STATIC void collection_object_cache_fill(ListBase *lb, Collection *collecti
 	}
 
 	LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
-		collection_object_cache_fill(lb, child->collection, child_restrict, instances);
+		collection_object_cache_fill(lb, child->collection, child_restrict);
 	}
 }
 
@@ -383,37 +456,20 @@ ListBase KER_collection_object_cache_get(Collection *collection) {
 
 		LIB_mutex_lock(&cache_lock);
 		if (!(collection->flag & COLLECTION_HAS_OBJECT_CACHE)) {
-			collection_object_cache_fill(&collection->object_cache, collection, 0, false);
+			collection_object_cache_fill(&collection->runtime->object_cache, collection, 0);
 			collection->flag |= COLLECTION_HAS_OBJECT_CACHE;
 		}
 		LIB_mutex_unlock(&cache_lock);
 	}
 
-	return collection->object_cache;
-}
-
-ListBase KER_collection_object_cache_instanced_get(Collection *collection) {
-	if (!(collection->flag & COLLECTION_HAS_OBJECT_CACHE_INSTANCED)) {
-		static ThreadMutex cache_lock = ROSE_MUTEX_INITIALIZER;
-
-		LIB_mutex_lock(&cache_lock);
-		if (!(collection->flag & COLLECTION_HAS_OBJECT_CACHE_INSTANCED)) {
-			collection_object_cache_fill(&collection->object_cache_instanced, collection, 0, true);
-			collection->flag |= COLLECTION_HAS_OBJECT_CACHE_INSTANCED;
-		}
-		LIB_mutex_unlock(&cache_lock);
-	}
-
-	return collection->object_cache_instanced;
+	return collection->runtime->object_cache;
 }
 
 ROSE_STATIC void collection_object_cache_free(Collection *collection) {
 	collection->flag &= ~COLLECTION_HAS_OBJECT_CACHE;
-	collection->flag &= ~COLLECTION_HAS_OBJECT_CACHE_INSTANCED;
-	LIB_freelistN(&collection->object_cache);
-	LIB_freelistN(&collection->object_cache_instanced);
+	LIB_freelistN(&collection->runtime->object_cache);
 
-	LISTBASE_FOREACH(CollectionParent *, parent, &collection->parents) {
+	LISTBASE_FOREACH(CollectionParent *, parent, &collection->runtime->parents) {
 		collection_object_cache_free(parent->collection);
 	}
 }
@@ -435,7 +491,7 @@ ROSE_STATIC void collection_tag_update_parent_recursive(Main *main, Collection *
 
 	DEG_id_tag_update_ex(main, &collection->id, flag);
 
-	LISTBASE_FOREACH(CollectionParent *, cparent, &collection->parents) {
+	LISTBASE_FOREACH(CollectionParent *, cparent, &collection->runtime->parents) {
 		if (cparent->collection->flag & COLLECTION_IS_MASTER) {
 			continue;
 		}
@@ -458,14 +514,6 @@ bool KER_collection_has_object_recursive(Collection *collection, Object *object)
 	return (LIB_findptr(&objects, object, offsetof(Base, object)) != NULL);
 }
 
-bool KER_collection_has_object_recursive_instanced(Collection *collection, Object *object) {
-	if (ELEM(NULL, collection, object)) {
-		return false;
-	}
-	const ListBase objects = KER_collection_object_cache_instanced_get(collection);
-	return (LIB_findptr(&objects, object, offsetof(Base, object)) != NULL);
-}
-
 static Collection *collection_parent_editable_find_recursive(const ViewLayer *view_layer, Collection *collection) {
 	if (view_layer == NULL || KER_view_layer_has_collection(view_layer, collection)) {
 		return collection;
@@ -475,7 +523,7 @@ static Collection *collection_parent_editable_find_recursive(const ViewLayer *vi
 		return NULL;
 	}
 
-	LISTBASE_FOREACH(CollectionParent *, collection_parent, &collection->parents) {
+	LISTBASE_FOREACH(CollectionParent *, collection_parent, &collection->runtime->parents) {
 		if (view_layer != NULL && !KER_view_layer_has_collection(view_layer, collection_parent->collection)) {
 			/* In case this parent collection is not in given view_layer, there is no point in
 			 * searching in its ancestors either, we can skip that whole parenting branch. */
@@ -488,11 +536,6 @@ static Collection *collection_parent_editable_find_recursive(const ViewLayer *vi
 }
 
 bool collection_object_add(Main *main, Collection *collection, Object *object, const int flag, const bool us) {
-	if (object->instance_collection) {
-		if (collection_find_child_recursive(object->instance_collection, collection) || object->instance_collection == collection) {
-			return false;
-		}
-	}
 	CollectionObject *cobject = (CollectionObject *)LIB_findptr(&collection->objects, object, offsetof(CollectionObject, object));
 	if (cobject) {
 		return false;
@@ -607,14 +650,15 @@ IDTypeInfo IDType_ID_GR = {
 
 	.flag = IDTYPE_FLAGS_NO_ANIMDATA,
 
-	.init_data = NULL,
+	.init_data = collection_init_data,
 	.copy_data = collection_copy_data,
 	.free_data = collection_free_data,
 
 	.foreach_id = collection_foreach_id,
 
-	.write = NULL,
-	.read_data = NULL,
+	.write = collection_rose_write,
+	.read_data = collection_rose_read_data,
+	.read_lib = collection_rose_read_lib,
 };
 
 /** \} */

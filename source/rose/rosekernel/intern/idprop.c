@@ -1,8 +1,10 @@
 #include "MEM_guardedalloc.h"
 
+#include "LIB_endian_switch.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
+#include "KER_idtype.h"
 #include "KER_idprop.h"
 
 #include <math.h>
@@ -10,6 +12,8 @@
 #ifndef NDEBUG
 #	include <stdio.h>
 #endif
+
+#include "RLO_read_write.h"
 
 #define DEFAULT_ALLOC_FOR_NULL_STRINGS 64
 #define IDP_ARRAY_REALLOC_LIMIT 200
@@ -155,7 +159,7 @@ bool IDP_EqualsProperties_ex(const IDProperty *left, const IDProperty *right, bo
 				return false;
 			}
 
-			for (size_t index = 0; index < left->length; index++) {
+			for (int index = 0; index < left->length; index++) {
 				if (!IDP_EqualsProperties_ex(&array1[index], &array2[index], strict)) {
 					return false;
 				}
@@ -318,6 +322,221 @@ void IDP_Reset(IDProperty *property, const IDProperty *reference) {
 	}
 }
 
+void IDP_WriteProperty_OnlyData(const IDProperty *property, RoseWriter *writer);
+
+ROSE_INLINE void IDP_WriteArray(const IDProperty *prop, RoseWriter *writer) {
+	/* Remember to set #IDProperty.totallen to len in the linking code! */
+	if (prop->data.pointer) {
+		RLO_write_raw(writer, MEM_allocN_length(prop->data.pointer), prop->data.pointer);
+
+    	if (prop->subtype == IDP_GROUP) {
+			IDProperty **array = prop->data.pointer;
+
+			for (int a = 0; a < prop->length; a++) {
+				IDP_RoseWrite(writer, array[a]);
+			}
+		}
+	}
+}
+
+static void IDP_WriteIDPArray(const IDProperty *prop, RoseWriter *writer) {
+	/* Remember to set #IDProperty.totallen to len in the linking code! */
+	if (prop->data.pointer) {
+		const IDProperty *array = prop->data.pointer;
+
+		RLO_write_struct_array(writer, IDProperty, prop->length, array);
+
+		for (int a = 0; a < prop->length; a++) {
+			IDP_WriteProperty_OnlyData(&array[a], writer);
+		}
+	}
+}
+
+static void IDP_WriteString(const IDProperty *prop, RoseWriter *writer) {
+	/* Remember to set #IDProperty.totallen to len in the linking code! */
+	RLO_write_raw(writer, (size_t)prop->length, prop->data.pointer);
+}
+
+static void IDP_WriteGroup(const IDProperty *prop, RoseWriter *writer) {
+	LISTBASE_FOREACH (IDProperty *, loop, &prop->data.group) {
+		IDP_RoseWrite(writer, loop);
+	}
+}
+
+void IDP_WriteProperty_OnlyData(const IDProperty *property, RoseWriter *writer) {
+	switch (property->type) {
+		case IDP_GROUP:
+			IDP_WriteGroup(property, writer);
+			break;
+		case IDP_STRING:
+			IDP_WriteString(property, writer);
+			break;
+		case IDP_ARRAY:
+			IDP_WriteArray(property, writer);
+			break;
+		case IDP_IDPARRAY:
+			IDP_WriteIDPArray(property, writer);
+			break;
+	}
+}
+
+void IDP_RoseWrite(RoseWriter *writer, IDProperty *property) {
+	RLO_write_struct(writer, IDProperty, property);
+	IDP_WriteProperty_OnlyData(property, writer);
+}
+
+void IDP_DirectLinkProperty(IDProperty *prop, RoseDataReader *reader);
+void IDP_LibLinkProperty(IDProperty *prop, RoseDataReader *reader);
+
+void IDP_DirectLinkIDPArray(IDProperty *prop, RoseDataReader *reader) {
+	IDProperty *array;
+	int i;
+
+	/* since we didn't save the extra buffer, set totallen to len */
+	prop->alloc = prop->length;
+	RLO_read_data_address(reader, &prop->data.pointer);
+
+	array = (IDProperty *)prop->data.pointer;
+
+	/* note!, idp-arrays didn't exist in 2.4x, so the pointer will be cleared
+	* theres not really anything we can do to correct this, at least don't crash */
+	if (array == NULL) {
+		prop->length = 0;
+		prop->alloc = 0;
+	}
+
+	for (i = 0; i < prop->length; i++) {
+		IDP_DirectLinkProperty(&array[i], reader);
+	}
+}
+
+void IDP_DirectLinkArray(IDProperty *prop, RoseDataReader *reader) {
+
+	/* since we didn't save the extra buffer, set totallen to len */
+	prop->alloc = prop->length;
+
+	if (prop->subtype == IDP_GROUP) {
+		RLO_read_pointer_array(reader, prop->length, &prop->data.pointer);
+		IDProperty **array = (IDProperty **)prop->data.pointer;
+
+		for (int i = 0; i < prop->length; i++) {
+			IDP_DirectLinkProperty(array[i], reader);
+		}
+	}
+	else if (prop->subtype == IDP_DOUBLE) {
+		RLO_read_double_array(reader, prop->length, (double **)&prop->data.pointer);
+	}
+	else {
+		RLO_read_int32_array(reader, prop->length, (int32_t **)&prop->data.pointer);
+	}
+}
+
+void IDP_DirectLinkString(IDProperty *prop, RoseDataReader *reader) {
+	/*since we didn't save the extra string buffer, set totallen to len.*/
+	prop->length = prop->length;
+	RLO_read_data_address(reader, &prop->data.pointer);
+}
+
+void IDP_DirectLinkGroup(IDProperty *prop, RoseDataReader *reader) {
+	ListBase *lb = &prop->data.group;
+
+	RLO_read_list(reader, lb);
+
+	/*Link child id properties now*/
+	LISTBASE_FOREACH(IDProperty *, loop, &prop->data.group) {
+		IDP_DirectLinkProperty(loop, reader);
+	}
+}
+
+void IDP_DirectLinkProperty(IDProperty *prop, RoseDataReader *reader) {
+	switch (prop->type) {
+		case IDP_GROUP:
+			IDP_DirectLinkGroup(prop, reader);
+			break;
+		case IDP_STRING:
+			IDP_DirectLinkString(prop, reader);
+			break;
+		case IDP_ARRAY:
+			IDP_DirectLinkArray(prop, reader);
+			break;
+		case IDP_IDPARRAY:
+			IDP_DirectLinkIDPArray(prop, reader);
+			break;
+		case IDP_DOUBLE:
+			/* erg, stupid doubles.  since I'm storing them
+			* in the same field as int val; val2 in the
+			* IDPropertyData struct, they have to deal with
+			* endianness specifically
+			*
+			* in theory, val and val2 would've already been swapped
+			* if switch_endian is true, so we have to first unswap
+			* them then reswap them as a single 64-bit entity.
+			*/
+			if (RLO_read_requires_endian_switch(reader)) {
+				LIB_endian_switch_int32(&prop->data.value1);
+				LIB_endian_switch_int32(&prop->data.value2);
+				LIB_endian_switch_int64((int64_t *)&prop->data.value1);
+			}
+			break;
+		case IDP_INT:
+		case IDP_FLOAT:
+		case IDP_ID:
+			break; /* Nothing special to do here. */
+		default:
+			/* Unknown IDP type, nuke it (we cannot handle unknown types everywhere in code,
+			* IDP are way too polymorphic to do it safely. */
+			printf("%s: found unknown IDProperty type %d, reset to Integer one !\n", __func__, prop->type);
+			/* Note: we do not attempt to free unknown prop, we have no way to know how to do that! */
+			prop->type = IDP_INT;
+			prop->subtype = 0;
+			IDP_Int(prop) = 0;
+	}
+}
+
+void IDP_RoseReadData(RoseDataReader *reader, IDProperty **property, const char *allocname) {
+	if (*property) {
+		if ((*property)->type == IDP_GROUP) {
+			IDP_DirectLinkGroup(*property, reader);
+		}
+		else {
+			/* corrupt file! */
+			printf("%s: found non group data, freeing type %d!\n", allocname, (*property)->type);
+			/* don't risk id, data's likely corrupt. */
+			// IDP_FreePropertyContent(*prop);
+			*property = NULL;
+		}
+	}
+}
+
+void IDP_RoseReadLib(RoseLibReader *reader, IDProperty *property) {
+	if (!property) {
+		return;
+	}
+
+	switch (property->type) {
+		case IDP_ID: {
+			void *newaddr = RLO_read_get_new_id_address(reader, NULL, IDP_Id(property));
+#ifndef NDEBUG
+			if (IDP_Id(property) && !newaddr) {
+				fprintf(stderr, "[Kernel] Error while loading \"%s\". Data not found in file!\n", property->name);
+			}
+#endif
+			property->data.pointer = newaddr;
+		} break;
+		case IDP_IDPARRAY: {
+			IDProperty *idp_array = IDP_IDPArray(property);
+			for (int i = 0; i < property->length; i++) {
+				IDP_RoseReadLib(reader, &(idp_array[i]));
+			}
+		} break;
+		case IDP_GROUP: {
+			LISTBASE_FOREACH (IDProperty *, loop, &property->data.group) {
+				IDP_RoseReadLib(reader, loop);
+			}
+		} break;
+	}
+}
+
 void IDP_foreach_property(IDProperty *property, int type_filter, LibraryIDPropertyCallback callback, void *user_data) {
 	if (!property) {
 		return;
@@ -458,7 +677,7 @@ IDProperty *IDP_DuplicateArray(const IDProperty *property, const int flag) {
 		if (property->type == IDP_GROUP) {
 			IDProperty **array = (IDProperty **)IDP_Array(newp);
 
-			for (size_t index = 0; index < property->length; index++) {
+			for (int index = 0; index < property->length; index++) {
 				array[index] = IDP_DuplicateProperty_ex(array[index], flag);
 			}
 		}
@@ -609,7 +828,7 @@ void IDP_ResizeIDPArray(IDProperty *property, size_t length) {
 	/* first check if the array buffer size has room */
 	if (length <= property->alloc) {
 		if (length < property->length && property->alloc - length < IDP_ARRAY_REALLOC_LIMIT) {
-			for (size_t index = length; index < property->length; index++) {
+			for (int index = length; index < property->length; index++) {
 				IDP_FreePropertyContent(GETPROP(property, index));
 			}
 
@@ -623,7 +842,7 @@ void IDP_ResizeIDPArray(IDProperty *property, size_t length) {
 	}
 
 	if (length < property->length) {
-		for (size_t index = length; index < property->length; index++) {
+		for (int index = length; index < property->length; index++) {
 			IDP_FreePropertyContent(GETPROP(property, index));
 		}
 	}
@@ -638,7 +857,7 @@ void IDP_ResizeIDPArray(IDProperty *property, size_t length) {
 void IDP_FreeIDPArray(IDProperty *property, const bool do_user) {
 	ROSE_assert(property->type == IDP_IDPARRAY);
 
-	for (size_t index = 0; index < property->length; index++) {
+	for (int index = 0; index < property->length; index++) {
 		IDP_FreePropertyContent_ex(GETPROP(property, index), do_user);
 	}
 
@@ -680,13 +899,13 @@ void IDP_ResizeGroupArray(IDProperty *property, int length, void *data) {
 	if (property->subtype == IDP_GROUP) {
 		if (length >= property->length) {
 			IDProperty **array = (IDProperty **)data;
-			for (size_t index = property->length; index < length; index++) {
+			for (int index = property->length; index < length; index++) {
 				array[index] = IDP_New(IDP_GROUP, NULL, 0, "IDP_ResizeArray::Group", 0);
 			}
 		}
 		else {
 			IDProperty **array = (IDProperty **)IDP_Array(property);
-			for (size_t index = length; index < property->length; index++) {
+			for (int index = length; index < property->length; index++) {
 				IDP_FreeProperty(array[index]);
 			}
 		}

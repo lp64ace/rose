@@ -52,6 +52,7 @@ bool RNA_static_path_resolve_property(const struct PointerRNA *ptr, const struct
 bool RNA_path_can_do_static_compilation(const struct PointerRNA *ptr, const char *path);
 
 struct StaticPathRNA *RNA_path_new(const struct PointerRNA *ptr, const char *path, struct PointerRNA *r_ptr, struct PropertyRNA **r_property);
+struct StaticPathRNA *RNA_path_copy(const struct StaticPathRNA *src);
 
 void RNA_path_free(struct StaticPathRNA *path);
 

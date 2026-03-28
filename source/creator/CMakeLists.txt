@@ -32,26 +32,27 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::native
+	rose::intern::libc_compat
 	
 	rose::source::dna
 	rose::source::rna
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::roseloader
 	rose::source::rosefont
 	rose::source::functions
 	rose::source::depsgraph
 	rose::source::gpu
 	rose::source::windowmanager
-	rose::source::editors::io
 	rose::source::editors::screen
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar
 	rose::source::editors::space_view3d
 	rose::source::editors::space_properties
+	rose::source::editors::io
 	rose::source::io::fbx
 	rose::source::rosemesh
-	rose::source::roseloader
 
 	rose::resources::models
 	

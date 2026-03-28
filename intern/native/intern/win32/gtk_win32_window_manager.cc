@@ -89,7 +89,7 @@ bool GTKManagerWin32::GetClipboard(char **r_buffer, unsigned int *r_length, bool
 		*r_length = static_cast<unsigned int>(ret);
 
 		if (::WideCharToMultiByte(CP_UTF8, 0, buffer, ret, *r_buffer, *r_length, NULL, NULL) < 0) {
-			r_buffer[0] = '\0';
+			*r_buffer[0] = '\0';
 		}
 
 		*r_length = strlen(*r_buffer);

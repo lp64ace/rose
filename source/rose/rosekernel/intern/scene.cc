@@ -15,12 +15,14 @@
 #include "DEG_depsgraph_build.h"
 #include "DEG_depsgraph_query.h"
 
+#include "RLO_read_write.hh"
+
 /* -------------------------------------------------------------------- */
 /** \name Scene Creation
  * \{ */
 
 Scene *KER_scene_new(Main *main, const char *name) {
-	return KER_id_new(main, ID_SCE, name);
+	return static_cast<Scene *>(KER_id_new(main, ID_SCE, name));
 }
 
 /** \} */
@@ -158,7 +160,7 @@ ROSE_INLINE Depsgraph **scene_get_depsgraph_p(Scene *scene, ViewLayer *view_laye
 	}
 
 	/* Depsgraph was not found in the ghash, but the key still needs allocating. */
-	*key_ptr = MEM_callocN(sizeof(DepsgraphKey), __func__);
+	*key_ptr = static_cast<DepsgraphKey *>(MEM_callocN(sizeof(DepsgraphKey), __func__));
 	**key_ptr = key;
 
 	*depsgraph_ptr = NULL;
@@ -279,6 +281,7 @@ ROSE_STATIC void scene_copy_data(Main *main, ID *id_dst, const ID *id_src, const
 ROSE_STATIC void scene_free_data(ID *id) {
 	Scene *scene = (Scene *)id;
 
+
 	LISTBASE_FOREACH_MUTABLE(ViewLayer *, view_layer, &scene->view_layers) {
 		LIB_remlink(&scene->view_layers, view_layer);
 		KER_view_layer_free_ex(view_layer, false);
@@ -326,7 +329,58 @@ ROSE_STATIC void scene_foreach_id(ID *id, struct LibraryForeachIDData *data) {
 	}
 }
 
- IDTypeInfo IDType_ID_SCE = {
+ROSE_STATIC void scene_rose_write(RoseWriter *writer, ID *id, const void *address) {
+	Scene *scene = (Scene *)id;
+
+	RLO_write_id_struct(writer, Scene, address, &scene->id);
+	KER_id_rose_write(writer, &scene->id);
+
+	LISTBASE_FOREACH(ViewLayer *, view_layer, &scene->view_layers) {
+		KER_view_layer_rose_write(writer, scene, view_layer);
+	}
+
+	if (scene->master_collection) {
+		RLO_Write_IDBuffer temp_embedded_id_buffer(scene->master_collection->id, writer);
+		Collection *temp_collection = reinterpret_cast<Collection *>(temp_embedded_id_buffer.get());
+		KER_collection_rose_write_prepare_nolib(writer, temp_collection);
+		RLO_write_struct_at_address(writer, Collection, scene->master_collection, temp_collection);
+		KER_collection_rose_write_nolib(writer, temp_collection);
+	}
+}
+
+ROSE_STATIC void scene_rose_read_data(RoseDataReader *reader, ID *id) {
+	Scene *scene = (Scene *)id;
+
+	scene->depsgraph_hash = NULL;
+
+	RLO_read_list(reader, &scene->view_layers);
+	LISTBASE_FOREACH(ViewLayer *, view_layer, &scene->view_layers) {
+		KER_view_layer_rose_read_data(reader, view_layer);
+	}
+
+	RLO_read_struct(reader, Collection, &scene->master_collection);
+
+	if (scene->master_collection) {
+		KER_collection_rose_read_data(reader, scene->master_collection);
+	}
+}
+
+ROSE_STATIC void scene_rose_read_lib(RoseLibReader *reader, ID *id) {
+	Scene *scene = (Scene *)id;
+
+	RLO_read_id_address(reader, scene->id.lib, &scene->camera);
+	RLO_read_id_address(reader, scene->id.lib, &scene->world);
+
+	if (scene->master_collection) {
+		KER_collection_rose_read_lib_ex(reader, scene->id.lib, scene->master_collection);
+	}
+
+	LISTBASE_FOREACH(ViewLayer *, view_layer, &scene->view_layers) {
+		KER_view_layer_rose_read_lib(reader, scene, view_layer);
+	}
+}
+
+IDTypeInfo IDType_ID_SCE = {
 	.idcode = ID_SCE,
 
 	.filter = FILTER_ID_SCE,
@@ -345,8 +399,9 @@ ROSE_STATIC void scene_foreach_id(ID *id, struct LibraryForeachIDData *data) {
 
 	.foreach_id = scene_foreach_id,
 
-	.write = NULL,
-	.read_data = NULL,
+	.write = scene_rose_write,
+	.read_data = scene_rose_read_data,
+	.read_lib = scene_rose_read_lib,
 };
 
 /** \} */

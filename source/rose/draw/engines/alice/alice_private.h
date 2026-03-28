@@ -45,6 +45,7 @@ typedef struct AliceDrawData {
 /** #AliceDrawData->flag */
 enum {
 	ALICE_SHADOW_BOX_DIRTY = 1 << 0,
+	ALICE_DEFGROUP_UBO_DIRTY = 1 << 1,
 };
 
 /** This needs to be aligned to 16 for Uniform Buffer usage */
@@ -67,6 +68,7 @@ typedef struct AliceWorldUBO {
  * Returns the shader for the depth pass, builds the shader if not already built.
  * Call #DRW_alice_shaders_free to free all the loaded shaders!
  */
+struct GPUShader *DRW_alice_shader_depth_get(void);
 struct GPUShader *DRW_alice_shader_opaque_get(void);
 struct GPUShader *DRW_alice_shader_shadow_pass_get(bool manifold);
 struct GPUShader *DRW_alice_shader_shadow_fail_get(bool manifold, bool cap);

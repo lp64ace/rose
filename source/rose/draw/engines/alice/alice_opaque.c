@@ -38,6 +38,7 @@ void DRW_alice_opaque_cache_init(DRWAliceData *vdata) {
 
 	DRWAliceViewportPrivateData *impl = stl->data;
 
+	GPUShader *depth = DRW_alice_shader_depth_get();
 	GPUShader *opaque = DRW_alice_shader_opaque_get();
 
 	if (!(psl->depth_pass = DRW_pass_new("Depth", DRW_STATE_WRITE_DEPTH | DRW_STATE_DEPTH_LESS_EQUAL))) {
@@ -50,7 +51,18 @@ void DRW_alice_opaque_cache_init(DRWAliceData *vdata) {
 		return;
 	}
 
-	impl->depth_shgroup = DRW_shading_group_new(opaque, psl->depth_pass);
+	/**
+	 * Depth shader group does not handle any material related composition since 
+	 * that would be a waste, there is no COLOR_WRITE anyway!
+	 * 
+	 * The opaque shading groups are used to draw parts that are not in shadow 
+	 * and parts that are, respectively, that means that they share the same 
+	 * shader and we pass a single variable #forceShadowing to determine each state!
+	 */
+
+	impl->depth_shgroup = DRW_shading_group_new(depth, psl->depth_pass);
+	DRW_shading_group_clear_ex(impl->depth_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, 0x00);
+	DRW_shading_group_clear_ex(impl->depth_shgroup, GPU_STENCIL_BIT, NULL, 1.0f, 0x00);
 
 	for (size_t index = 0; index < ARRAY_SIZE(psl->opaque_pass); index++) {
 		impl->opaque_shgroup[index] = DRW_shading_group_new(opaque, psl->opaque_pass[index]);
@@ -58,12 +70,12 @@ void DRW_alice_opaque_cache_init(DRWAliceData *vdata) {
 		switch(index) {
 			case 0: {
 				DRW_shading_group_state_enable(impl->opaque_shgroup[index], DRW_STATE_STENCIL_EQUAL);
-				DRW_shading_group_stencil_mask(impl->opaque_shgroup[index], 0xFF);
+				DRW_shading_group_stencil_mask(impl->opaque_shgroup[index], 0x00);
 				DRW_shading_group_uniform_bool(impl->opaque_shgroup[index], "forceShadowing", (bool)false);
 			} break;
 			case 1: {
 				DRW_shading_group_state_enable(impl->opaque_shgroup[index], DRW_STATE_STENCIL_NEQUAL);
-				DRW_shading_group_stencil_mask(impl->opaque_shgroup[index], 0xFF);
+				DRW_shading_group_stencil_mask(impl->opaque_shgroup[index], 0x00);
 				DRW_shading_group_uniform_bool(impl->opaque_shgroup[index], "forceShadowing", (bool)true);
 			} break;
 		}

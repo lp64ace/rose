@@ -5,6 +5,7 @@
 #include "alice_private.h"
 
 typedef struct DRWAliceShaderList {
+	GPUShader *depth;
 	GPUShader *opaque;
 
 	struct GPUShader *shadow_pass[2];
@@ -28,6 +29,13 @@ ROSE_INLINE GPUShader *draw_alice_shader_shadow_pass_get_ex(bool depth, bool man
 	}
 
 	return *shader;
+}
+
+GPUShader *DRW_alice_shader_depth_get(void) {
+	if (GAliceShaderList.depth == NULL) {
+		GAliceShaderList.depth = GPU_shader_create_from_info_name("alice_depth_mesh");
+	}
+	return GAliceShaderList.depth;
 }
 
 GPUShader *DRW_alice_shader_opaque_get(void) {

@@ -25,6 +25,17 @@ struct LinkData *LIB_generic_nodeN(void *data);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Helper Methods
+ * \{ */
+
+ /**
+ * Moves the entire contents of \a src onto the end of \a dst.
+ */
+void LIB_move_list_to_list(ListBase *dst, ListBase *src);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Insert Methods
  * \{ */
 

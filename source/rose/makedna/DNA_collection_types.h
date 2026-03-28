@@ -18,6 +18,17 @@ typedef struct CollectionChild {
     struct Collection *collection;
 } CollectionChild;
 
+typedef struct Collection_Runtime {
+	/**
+	 * Cache of objects in this collection and all its children.
+	 * This is created on demand when e.g. some physics simulation needs it,
+	 * we don't want to have it for every collections due to memory usage reasons.
+	 */
+	ListBase object_cache;
+	/** List of collections that are a parent of this data-block. */
+	ListBase parents;
+} Collection_Runtime;
+
 typedef struct Collection {
     ID id;
 
@@ -29,11 +40,10 @@ typedef struct Collection {
      * \note ID datablocks in general are owned by #Main, and cannot be shared between different #ListBase containers.
      */
     ListBase objects;
-    ListBase object_cache;
-    ListBase object_cache_instanced;
     /** Similar with the #objects ListBase this only stores #CollectionChild datablocks. */
     ListBase children;
-    ListBase parents;
+
+	Collection_Runtime *runtime;
 } Collection;
 
 enum {
@@ -42,8 +52,7 @@ enum {
 	COLLECTION_HIDE_SELECT = (1 << 2),	 /** This object is not selectable in viewport. */
 	COLLECTION_HIDE_RENDER = (1 << 3),	 /** This object should be disabled for renders. */
 
-	COLLECTION_HAS_OBJECT_CACHE = (1 << 30),
-	COLLECTION_HAS_OBJECT_CACHE_INSTANCED = (1 << 31),
+	COLLECTION_HAS_OBJECT_CACHE = (1 << 31),
 };
 
 #ifdef __cplusplus

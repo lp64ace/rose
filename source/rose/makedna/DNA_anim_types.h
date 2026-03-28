@@ -20,6 +20,11 @@ typedef struct FPoint {
 	float vec[2];
 } FPoint;
 
+
+typedef struct FCurve_Runtime {
+ 	struct StaticPathRNA *static_path;
+} FCurve_Runtime;
+
 typedef struct FCurve {
 	struct FCurve *prev, *next;
 
@@ -30,6 +35,7 @@ typedef struct FCurve {
 	FPoint *fpt;
 	/** Total number of points which define the curve (i.e. size of arrays in FPoints). */
 	int totvert;
+	int flag;
 
 	/**
 	 * RNA-path to resolve data-access, see: #RNA_path_resolve_property.
@@ -38,7 +44,13 @@ typedef struct FCurve {
 	 */
 	char *path;
 	int index;
+
+	FCurve_Runtime runtime;
 } FCurve;
+
+enum {
+	FCURVE_DO_STATIC_COMPILATION = 1 << 0,
+};
 
 /** \} */
 

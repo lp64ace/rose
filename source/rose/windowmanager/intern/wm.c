@@ -14,14 +14,16 @@
 #include "KER_context.h"
 #include "KER_cpp_types.h"
 #include "KER_idtype.h"
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
-#include "KER_rose.h"
-#include "KER_scene.h"
 #include "KER_object.h"
+#include "KER_rose.h"
+#include "KER_rosefile.h"
+#include "KER_scene.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -32,20 +34,28 @@
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
-#include "GPU_init_exit.h"
 #include "GPU_context.h"
+#include "GPU_init_exit.h"
 
+#include "LIB_listbase.h"
 #include "LIB_math_base.h"
 #include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
-#include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "IO_fbx.h"
 
-#include "RFT_api.h"
 #include "GTK_api.h"
+#include "RFT_api.h"
+
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_build.h"
+
+#include "RLO_readfile.h"
+#include "RLO_writefile.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name Window Updates
@@ -238,15 +248,18 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 /** \name Init & Exit Methods
  * \{ */
 
-
 extern const int datatoc_sarah_fbx_size;
 extern const char datatoc_sarah_fbx[];
 
-ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *window) {
+extern const int datatoc_skeleton_fbx_size;
+extern const char datatoc_skeleton_fbx[];
+
+ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	// FBX_import_memory(C, datatoc_sarah_fbx, datatoc_sarah_fbx_size, 1.0f);
+
+	FBX_import_memory(C, datatoc_sarah_fbx, datatoc_sarah_fbx_size, 1.0f);
 }
 
 void WM_keyconfig_init(rContext *C) {
@@ -460,6 +473,7 @@ IDTypeInfo IDType_ID_WM = {
 
 	.write = NULL,
 	.read_data = NULL,
+	.read_lib = NULL,
 };
 
 /** \} */

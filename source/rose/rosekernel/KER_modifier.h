@@ -4,7 +4,9 @@
 #include "DNA_modifier_types.h"
 
 #include "KER_customdata.h"
+#include "KER_idtype.h"
 
+#include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
 struct ID;
@@ -13,6 +15,9 @@ struct ModifierData;
 struct ModifierEvalContext;
 struct Object;
 struct Scene;
+struct RoseDataReader;
+struct RoseLibReader;
+struct RoseWriter;
 
 #ifdef __cplusplus
 extern "C" {
@@ -153,6 +158,23 @@ typedef struct ModifierTypeInfo {
 	 *    more like "ensure the data is freed".
 	 */
 	void (*free_runtime_data)(void *runtime_data);
+
+	/**
+	 * Is called when the modifier is written to a file. The modifier data struct itself is written
+	 * already.
+	 *
+	 * This method should write any additional arrays and referenced structs that should be
+	 * stored in the file.
+	 */
+	void (*write)(struct RoseWriter *writer, struct ModifierData *md);
+
+	/**
+	 * Is called when the modifier is read from a file.
+	 *
+	 * It can be used to update pointers to arrays and other structs. Furthermore, fields that have
+	 * not been written (e.g. runtime data) can be reset.
+	 */
+	void (*read)(struct RoseDataReader *reader, struct ModifierData *md);
 } ModifierTypeInfo;
 
 /** \} */
@@ -196,6 +218,16 @@ bool KER_modifier_deform_verts(struct ModifierData *md, const struct ModifierEva
  * \{ */
 
 void KER_modifiers_foreach_ID_link(struct Object *object, IDWalkFunc walk, void *user_data);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Modifier List Read/Write
+ * \{ */
+
+void KER_modifier_rose_write(struct RoseWriter *writer, struct ListBase *modifiers);
+void KER_modifier_rose_read_data(struct RoseDataReader *reader, struct ListBase *modifiers);
+void KER_modifier_rose_read_lib(struct RoseLibReader *reader, struct Object *object);
 
 /** \} */
 

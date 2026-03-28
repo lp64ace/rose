@@ -1,6 +1,7 @@
 ﻿#include "MEM_guardedalloc.h"
 
 #include "KER_action.h"
+#include "KER_anim_data.h"
 #include "KER_armature.h"
 #include "KER_idtype.h"
 #include "KER_idprop.h"
@@ -19,6 +20,8 @@
 
 #include "DEG_depsgraph.h"
 #include "DEG_depsgraph_build.h"
+
+#include "RLO_read_write.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Armature Edit Routines
@@ -276,7 +279,7 @@ void KER_pose_rebuild(Main *main, Object *object, Armature *armature, bool do_id
 	KER_pose_clear_pointers(pose);
 
 	Bone *prev_bone = NULL;
-	LISTBASE_FOREACH(Bone *, bone, &armature->bonebase) {
+	for (Bone *bone = armature->bonebase.first; bone; bone = bone->next) {
 		counter = rebuild_pose_bone(pose, bone, NULL, counter, &prev_bone);
 	}
 
@@ -921,6 +924,82 @@ ROSE_STATIC void armature_foreach_id(ID *id, struct LibraryForeachIDData *data) 
 	}
 }
 
+void write_bone(RoseWriter *writer, Bone *bone) {
+	RLO_write_struct(writer, Bone, bone);
+
+	if (bone->prop) {
+		IDP_RoseWrite(writer, bone->prop);
+	}
+
+	LISTBASE_FOREACH (Bone *, cbone, &bone->childbase) {
+		write_bone(writer, cbone);
+	}
+}
+
+ROSE_STATIC void armature_rose_write(RoseWriter *writer, ID *id, const void *address) {
+	Armature *armature = (Armature *)id;
+
+	armature->bonehash = NULL;
+	armature->ebonebase = NULL;
+
+	RLO_write_id_struct(writer, Armature, address, &armature->id);
+	KER_id_rose_write(writer, &armature->id);
+
+	if (armature->adt) {
+		KER_animdata_rose_write(writer, armature->adt);
+	}
+
+	LISTBASE_FOREACH(Bone *, bone, &armature->bonebase) {
+		write_bone(writer, bone);
+	}
+}
+
+void direct_link_bones(RoseDataReader *reader, Bone *bone) {
+	RLO_read_data_address(reader, &bone->parent);
+	RLO_read_data_address(reader, &bone->prop);
+	IDP_RoseReadData(reader, &bone->prop, __func__);
+
+	RLO_read_list(reader, &bone->childbase);
+
+	LISTBASE_FOREACH (Bone *, child, &bone->childbase) {
+		direct_link_bones(reader, child);
+	}
+}
+
+ROSE_STATIC void armature_rose_read_data(RoseDataReader *reader, ID *id) {
+	Armature *armature = (Armature *)id;
+
+	armature->bonehash = NULL;
+	armature->ebonebase = NULL;
+
+	RLO_read_list(reader, &armature->bonebase);
+
+	RLO_read_data_address(reader, &armature->adt);
+	KER_animdata_rose_read_data(reader, armature->adt);
+
+	LISTBASE_FOREACH(Bone *, bone, &armature->bonebase) {
+		direct_link_bones(reader, bone);
+	}
+
+	KER_armature_bone_hash_make(armature);
+}
+
+void lib_link_bones(RoseLibReader *reader, Bone *bone) {
+	IDP_RoseReadLib(reader, bone->prop);
+
+	LISTBASE_FOREACH (Bone *, curbone, &bone->childbase) {
+		lib_link_bones(reader, curbone);
+	}
+}
+
+ROSE_STATIC void armature_rose_read_lib(RoseLibReader *reader, ID *id) {
+	Armature *armature = (Armature *)id;
+
+	LISTBASE_FOREACH (Bone *, curbone, &armature->bonebase) {
+		lib_link_bones(reader, curbone);
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -946,8 +1025,9 @@ IDTypeInfo IDType_ID_AR = {
 
 	.foreach_id = armature_foreach_id,
 
-	.write = NULL,
-	.read_data = NULL,
+	.write = armature_rose_write,
+	.read_data = armature_rose_read_data,
+	.read_lib = armature_rose_read_lib,
 };
 
 /** \} */

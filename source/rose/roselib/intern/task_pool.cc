@@ -12,6 +12,13 @@
 #include "LIB_mempool.h"
 #include "LIB_task.h"
 #include "LIB_thread.h"
+#include "LIB_vector.hh"
+
+#ifdef WITH_TBB
+#	include <tbb/blocked_range.h>
+#	include <tbb/task_arena.h>
+#	include <tbb/task_group.h>
+#endif
 
 /* Task
  *
@@ -51,7 +58,21 @@ public:
 		other.freedata = nullptr;
 	}
 
+/* TBB has a check in `tbb/include/task_group.h` where `__TBB_CPP11_RVALUE_REF_PRESENT` should
+ * evaluate to true as with the other MSVC build. However, because of the clang compiler
+ * it does not and we attempt to call a deleted constructor in the tbb_task_pool_run function.
+ * This check fixes this issue and keeps our Task constructor valid. */
+#if (defined(WITH_TBB) && TBB_INTERFACE_VERSION_MAJOR < 10) || (defined(_MSC_VER) && defined(__clang__) && TBB_INTERFACE_VERSION_MAJOR < 12)
+	Task(const Task &other) : pool(other.pool), run(other.run), taskdata(other.taskdata), free_taskdata(other.free_taskdata), freedata(other.freedata) {
+		((Task &)other).pool = nullptr;
+		((Task &)other).run = nullptr;
+		((Task &)other).taskdata = nullptr;
+		((Task &)other).free_taskdata = false;
+		((Task &)other).freedata = nullptr;
+	}
+#else
 	Task(const Task &other) = delete;
+#endif
 
 	Task &operator=(const Task &other) = delete;
 	Task &operator=(Task &&other) = delete;
@@ -69,15 +90,51 @@ enum TaskPoolType {
 	TASK_POOL_BACKGROUND_SERIAL,
 };
 
+/**
+ * TBB Task Group.
+ *
+ * Subclass since there seems to be no other way to set priority.
+ */
+
+#ifdef WITH_TBB
+class TBBTaskGroup : public tbb::task_group {
+public:
+	TBBTaskGroup(eTaskPriority priority) {
+#	if TBB_INTERFACE_VERSION_MAJOR >= 12
+		/* TODO: support priorities in TBB 2021, where they are only available as
+		* part of task arenas, no longer for task groups. Or remove support for
+		* task priorities if they are no longer useful. */
+		UNUSED_VARS(priority);
+#	else
+		switch (priority) {
+			case TASK_PRIORITY_LOW:
+				my_context.set_priority(tbb::priority_low);
+				break;
+			case TASK_PRIORITY_HIGH:
+				my_context.set_priority(tbb::priority_normal);
+				break;
+		}
+#	endif
+	}
+
+	MEM_CXX_CLASS_ALLOC_FUNCS("TBBTaskGroup");
+};
+#endif
+
 struct TaskPool {
 	TaskPoolType type;
 	bool use_threads;
+
+#ifdef WITH_TBB
+	/* TBB task pool. */
+	TBBTaskGroup *tbb_group;
+#endif
 
 	ThreadMutex user_mutex;
 	void *userdata;
 
 	volatile bool is_suspended;
-	MemPool *suspended_mempool;
+	rose::Vector<Task> suspended_tasks;
 
 	/* Background task pool. */
 	ListBase background_threads;
@@ -101,17 +158,21 @@ void Task::operator()() const {
 static void tbb_task_pool_create(TaskPool *pool, eTaskPriority priority) {
 	if (pool->type == TASK_POOL_TBB_SUSPENDED) {
 		pool->is_suspended = true;
-		pool->suspended_mempool = LIB_memory_pool_create(sizeof(Task), 512, 512, ROSE_MEMPOOL_ALLOW_ITER);
 	}
 
+#ifdef WITH_TBB
+	if (pool->use_threads) {
+		pool->tbb_group = MEM_new<TBBTaskGroup>("TBBTaskGroup", priority);
+	}
+#else
 	EXPR_NOP(priority);
+#endif
 }
 
 static void tbb_task_pool_run(TaskPool *pool, Task &&task) {
 	if (pool->is_suspended) {
 		/* Suspended task that will be executed in work_and_wait(). */
-		Task *task_mem = (Task *)LIB_memory_pool_malloc(pool->suspended_mempool);
-		new (task_mem) Task(std::move(task));
+    	pool->suspended_tasks.append(std::move(task));
 #ifdef __GNUC__
 		/* Work around apparent compiler bug where task is not properly copied
 		 * to task_mem. This appears unrelated to the use of placement new or
@@ -120,6 +181,12 @@ static void tbb_task_pool_run(TaskPool *pool, Task &&task) {
 		std::atomic_thread_fence(std::memory_order_release);
 #endif
 	}
+#ifdef WITH_TBB
+	else if (pool->use_threads) {
+		/* Execute in TBB task group. */
+		pool->tbb_group->run(std::move(task));
+	}
+#endif
 	else {
 		/* Execute immediately. */
 		task();
@@ -128,33 +195,59 @@ static void tbb_task_pool_run(TaskPool *pool, Task &&task) {
 
 static void tbb_task_pool_work_and_wait(TaskPool *pool) {
 	/* Start any suspended task now. */
-	if (pool->suspended_mempool) {
+	if (!pool->suspended_tasks.is_empty()) {
 		pool->is_suspended = false;
 
 		MemPoolIter iter;
-		LIB_memory_pool_iternew(pool->suspended_mempool, &iter);
-		while (Task *task = (Task *)LIB_memory_pool_iterstep(&iter)) {
-			tbb_task_pool_run(pool, std::move(*task));
+		for (Task &task: pool->suspended_tasks) {
+			tbb_task_pool_run(pool, std::move(task));
 		}
 
-		LIB_memory_pool_clear(pool->suspended_mempool, 0);
+		pool->suspended_tasks.clear();
 	}
+
+#ifdef WITH_TBB
+	if (pool->use_threads) {
+		/**
+		 * This is called wait(), but internally it can actually do work. This
+		 * matters because we don't want recursive usage of task pools to run
+		 * out of threads and get stuck.
+		 */
+		pool->tbb_group->wait();
+	}
+#endif
 }
 
 static void tbb_task_pool_cancel(TaskPool *pool) {
+#ifdef WITH_TBB
+	if (pool->use_threads) {
+		pool->tbb_group->cancel();
+		pool->tbb_group->wait();
+	}
+#else
 	EXPR_NOP(pool);
+#endif
 }
 
 static bool tbb_task_pool_canceled(TaskPool *pool) {
+#ifdef WITH_TBB
+	if (pool->use_threads) {
+		return tbb::is_current_task_group_canceling();
+	}
+#else
 	EXPR_NOP(pool);
+#endif
 
 	return false;
 }
 
 static void tbb_task_pool_free(TaskPool *pool) {
-	if (pool->suspended_mempool) {
-		LIB_memory_pool_destroy(pool->suspended_mempool);
-	}
+	tbb_task_pool_work_and_wait(pool);
+	pool->suspended_tasks.clear();
+
+#ifdef WITH_TBB
+	MEM_delete(pool->tbb_group);
+#endif
 }
 
 /* Background Task Pool.
@@ -233,7 +326,7 @@ static TaskPool *task_pool_create_ex(void *userdata, TaskPoolType type, eTaskPri
 	}
 
 	/* Allocate task pool. */
-	TaskPool *pool = (TaskPool *)MEM_callocN(sizeof(TaskPool), "TaskPool");
+	TaskPool *pool = MEM_new<TaskPool>("TaskPool");
 
 	pool->type = type;
 	pool->use_threads = use_threads;
@@ -244,13 +337,13 @@ static TaskPool *task_pool_create_ex(void *userdata, TaskPoolType type, eTaskPri
 	switch (type) {
 		case TASK_POOL_TBB:
 		case TASK_POOL_TBB_SUSPENDED:
-		case TASK_POOL_NO_THREADS:
+		case TASK_POOL_NO_THREADS: {
 			tbb_task_pool_create(pool, priority);
-			break;
+		} break;
 		case TASK_POOL_BACKGROUND:
-		case TASK_POOL_BACKGROUND_SERIAL:
+		case TASK_POOL_BACKGROUND_SERIAL: {
 			background_task_pool_create(pool);
-			break;
+		} break;
 	}
 
 	return pool;
@@ -318,8 +411,7 @@ void LIB_task_pool_free(TaskPool *pool) {
 	}
 
 	LIB_mutex_end(&pool->user_mutex);
-
-	MEM_freeN(pool);
+	MEM_delete(pool);
 }
 
 void LIB_task_pool_push(TaskPool *pool, TaskRunFunction run, void *taskdata, bool free_taskdata, TaskFreeFunction freedata) {

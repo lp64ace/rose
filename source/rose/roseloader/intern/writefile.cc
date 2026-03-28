@@ -7,6 +7,7 @@
 #include "LIB_fileops.h"
 #include "LIB_listbase.h"
 #include "LIB_memory_utils.hh"
+#include "LIB_set.hh"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
@@ -15,7 +16,7 @@
 #include "KER_lib_id.h"
 #include "KER_main.h"
 
-#include "RLO_read_write.h"
+#include "RLO_read_write.hh"
 #include "RLO_writefile.h"
 
 #include "RT_parser.h"
@@ -75,6 +76,12 @@ typedef struct WriteData {
 		bool error;
 	} validation;
 
+	/**
+	 * Keeps track of which shared data has been written for the current ID. This is necessary to
+	 * avoid writing the same data more than once.
+	 */
+	rose::Set<const void *> per_id_written_shared_addresses;
+
 	/** Wrap writing, so we can use zstd or other compression types later! */
 	WriteWrap *ww;
 } WriteData;
@@ -84,7 +91,7 @@ typedef struct RoseWriter {
 } RoseWriter;
 
 ROSE_INLINE WriteData *writedata_new(WriteWrap *ww) {
-	WriteData *wd = MEM_cnew<WriteData>("WriteData");
+	WriteData *wd = MEM_new<WriteData>("WriteData");
 	wd->dna = DNA_sdna_new_current();
 	wd->ww = ww;
 	return wd;
@@ -112,7 +119,7 @@ ROSE_INLINE void writedata_free(WriteData *wd) {
 		DNA_sdna_free(wd->dna);
 	}
 
-	MEM_freeN(wd);
+	MEM_delete(wd);
 }
 
 /** \} */
@@ -166,6 +173,8 @@ ROSE_STATIC void writedata(WriteData *wd, int fildecode, size_t length, const vo
 	head.address = (uint64_t)address;
 	head.dnatype = 0;
 
+	ROSE_assert(head.size);
+
 	writedata_do_write(wd, &head, sizeof(RHead));
 	writedata_do_write(wd, address, head.size);
 }
@@ -196,6 +205,12 @@ void RLO_write_struct_by_name(RoseWriter *writer, const char *struct_name, const
 	uint64_t struct_nr = DNA_sdna_struct_id(writer->wd->dna, struct_name);
 
 	writestruct_nr(writer->wd, RLO_CODE_DATA, struct_nr, 1, data);
+}
+
+void RLO_write_struct_by_name_at_address(struct RoseWriter *writer, const char *struct_name, const void *address, const void *data) {
+	uint64_t struct_nr = DNA_sdna_struct_id(writer->wd->dna, struct_name);
+
+	writestruct_at_address_nr(writer->wd, RLO_CODE_DATA, struct_nr, 1, address, data);
 }
 
 void RLO_write_raw(RoseWriter *writer, size_t size, const void *ptr) {
@@ -238,10 +253,49 @@ void RLO_write_string(struct RoseWriter *writer, const char *ptr) {
 	RLO_write_raw(writer, LIB_strlen(ptr) + 1, ptr);
 }
 
+void RLO_write_struct_array_by_name(struct RoseWriter *writer, const char *struct_name, size_t length, const void *data) {
+	uint64_t struct_nr = DNA_sdna_struct_id(writer->wd->dna, struct_name);
+
+	writestruct_nr(writer->wd, RLO_CODE_DATA, struct_nr, length, data);
+}
+
+void RLO_write_struct_array_at_address_by_name(struct RoseWriter *writer, const char *struct_name, size_t length, const void *address, const void *data) {
+	uint64_t struct_nr = DNA_sdna_struct_id(writer->wd->dna, struct_name);
+
+	writestruct_at_address_nr(writer->wd, RLO_CODE_DATA, struct_nr, length, address, data);
+}
+
 void rlo_write_id_struct(struct RoseWriter *writer, const char *struct_name, const void *id_address, const ID *id) {
 	uint64_t struct_nr = DNA_sdna_struct_id(writer->wd->dna, struct_name);
 
 	writestruct_at_address_nr(writer->wd, GS(id->name), struct_nr, 1, id_address, id);
+}
+
+void RLO_write_shared_tag(struct RoseWriter *writer, const void *data) {
+	if (data == NULL) {
+		return;
+	}
+
+	// In case of UNDO we need to store the pointer to restore it later.
+}
+
+void RLO_write_shared(struct RoseWriter *writer, const void *data, size_t approximate_size_in_bytes, const ImplicitSharingInfoHandle *info, rose::FunctionRef<void()> write_fn) {
+	if (data == NULL) {
+		return;
+	}
+	if (info) {
+		RLO_write_shared_tag(writer, data);
+	}
+	
+	// TODO; handle UNDO here!
+
+	if (info != NULL) {
+		if (!writer->wd->per_id_written_shared_addresses.add(data)) {
+			/* Was written already. */
+			return;
+		}
+	}
+	write_fn();
 }
 
 /** \} */
@@ -249,28 +303,6 @@ void rlo_write_id_struct(struct RoseWriter *writer, const char *struct_name, con
 /* -------------------------------------------------------------------- */
 /** \name ID Writing (Private)
  * \{ */
-
-/**
- * Specific code to prepare IDs to be written.
- *
- * Required for writing properly embedded IDs currently.
- *
- * \note Once there is a better generic handling of embedded IDs,
- * this may go back to private code in `writefile.cc`.
- */
-struct RLO_Write_IDBuffer {
-private:
-	static constexpr int static_size = 8192;
-	rose::DynamicStackBuffer<static_size> buffer_;
-
-public:
-	RLO_Write_IDBuffer(ID &id, bool is_placeholder);
-	RLO_Write_IDBuffer(ID &id, RoseWriter *writer);
-
-	ID *get() {
-		return static_cast<ID *>(buffer_.buffer());
-	};
-};
 
 RLO_Write_IDBuffer::RLO_Write_IDBuffer(ID &id, const bool is_placeholder) : buffer_(is_placeholder ? sizeof(ID) : KER_idtype_get_info_from_id(&id)->size, alignof(ID)) {
 	const IDTypeInfo *id_type = KER_idtype_get_info_from_id(&id);
@@ -321,6 +353,8 @@ ROSE_STATIC void write_id(RoseWriter *writer, ID *id) {
 		RLO_Write_IDBuffer id_buffer{*id, false};
 		id_type->write(writer, id_buffer.get(), id);
 	}
+
+	writer->wd->per_id_written_shared_addresses.clear();
 }
 
 /** \} */

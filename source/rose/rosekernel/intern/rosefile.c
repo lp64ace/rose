@@ -17,8 +17,12 @@
 #include "KER_rosefile.h"
 #include "KER_userdef.h"
 
+#include "RLO_readfile.h"
+
 #include "DNA_userdef_types.h"
 #include "DNA_windowmanager_types.h"
+
+#include <stdio.h>
 
 /* -------------------------------------------------------------------- */
 /** \name App Data
@@ -401,6 +405,9 @@ ROSE_INLINE void swap_wm_data_for_rosefile(ReuseOldMainData *reuse_data, const b
 		/* WindowManager and UI swapping is not currently implemented! */
 		ROSE_assert_unreachable();
 	}
+	else {
+		swap_old_main_data_for_rosefile(reuse_data, ID_WM);
+	}
 }
 
 ROSE_INLINE int swap_old_main_data_for_rosefile_dependencies_process_cb(LibraryIDLinkCallbackData *cb_data) {
@@ -586,20 +593,22 @@ ROSE_STATIC void setup_app_userdef(RoseFileData *rfd) {
 	}
 }
 
-ROSE_STATIC void setup_app_main(RoseFileData *rfd) {
-	if (rfd->main) {
-		// Handle new main data-block(s) here!
-		rfd->main = NULL;
-	}
-}
-
-ROSE_STATIC void setup_app_rose_file_data(RoseFileData *rfd) {
+ROSE_STATIC void setup_app_rose_file_data(rContext *C, RoseFileData *rfd) {
 	setup_app_userdef(rfd);
-	setup_app_main(rfd);
+	setup_app_data(C, rfd);
 }
 
-void KER_rosefile_read_setup(RoseFileData *rfd) {
-	setup_app_rose_file_data(rfd);
+RoseFileData *KER_rosefile_read(const char *filepath, int flag) {
+	RoseFileData *rfd = RLO_read_from_file(filepath, flag);
+	if (!rfd) {
+		fprintf(stderr, "[Kernel] Loading \"%s\" failed.\n", filepath);
+	}
+	return rfd;
+}
+
+void KER_rosefile_read_setup(rContext *C, RoseFileData *rfd) {
+	setup_app_rose_file_data(C, rfd);
+	RLO_rosefile_data_free(rfd);
 }
 
 /** \} */

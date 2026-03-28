@@ -2,6 +2,8 @@
 #	include "MEM_guardedalloc.h"
 #endif
 
+#include "LIB_task.h"
+
 #include "KER_context.h"
 #include "KER_modifier.h"
 
@@ -14,6 +16,8 @@ int main(void) {
 	MEM_init_memleak_detection();
 	MEM_enable_fail_on_memleak();
 	MEM_use_guarded_allocator();
+#else
+	LIB_task_scheduler_init();
 #endif
 
 	rContext *C = CTX_new();

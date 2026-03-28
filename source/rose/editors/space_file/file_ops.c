@@ -455,10 +455,13 @@ ROSE_INLINE eFileSelect file_select_do(rContext *C, size_t index, bool do_dirope
 	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
 
 	size_t total = filelist_files_ensure(sfile->files);
-	const FileDirEntry *file;
+	FileDirEntry *file;
 
 	eFileSelect ret = FILE_SELECT_NOTHING;
 	if ((0 <= index) && (index < total) && (file = filelist_file(sfile->files, index))) {
+		/** Mark it as selected before we change directory! */
+		file->flag |= FILE_SEL_SELECTED;
+
 		if ((file->type & FILE_TYPE_DIR) != 0) {
 			const bool is_parent_dir = FILENAME_IS_PARENT(file->relpath);
 
@@ -558,12 +561,9 @@ ROSE_INLINE wmOperatorStatus file_select_exec(rContext *C, wmOperator *op) {
 			}
 		} break;
 		case FILE_SELECT_DIR: {
-			// Handled by #file_select_do!
 		} break;
 		case FILE_SELECT_FILE: {
 			FileDirEntry *file = filelist_file(sfile->files, index);
-
-			file->flag |= FILE_SEL_SELECTED;
 
 			if (do_open) {
 				WM_event_fileselect_event(wm, sfile->op, EVT_FILESELECT_EXEC);

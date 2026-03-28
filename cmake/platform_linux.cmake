@@ -42,3 +42,10 @@ find_package(FREETYPE REQUIRED
 )
 
 set(EIGEN3_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/Eigen3)
+
+if(WITH_TBB)
+	find_package(TBB REQUIRED)
+
+	get_target_property(TBB_LIBRARIES TBB::tbb LOCATION)
+	get_target_property(TBB_INCLUDE_DIRS TBB::tbb INTERFACE_INCLUDE_DIRECTORIES)
+endif()

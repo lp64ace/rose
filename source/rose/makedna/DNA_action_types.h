@@ -71,8 +71,6 @@ typedef struct Action {
 
 	int flag;
 
-	ListBase markers;
-
 	/**
 	 * Start and end of the manually set intended playback frame range.
 	 * \note This doesn't directly affect animation evaluation in any way.

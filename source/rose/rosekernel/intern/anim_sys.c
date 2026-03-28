@@ -266,7 +266,6 @@ bool KER_animsys_rna_static_path_resolve(PointerRNA *ptr, StaticPathRNA *path, i
 }
 
 bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolvedRNA *result) {
-#if 0
 	if (fcurve->runtime.static_path != NULL) {
 		if (KER_animsys_rna_static_path_resolve(ptr, fcurve->runtime.static_path, fcurve->index, result)) {
 			return true;
@@ -277,7 +276,31 @@ bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolved
 		 * \note This is costly but it should never happen in production!
 		 */
 	}
-#endif
+	else {
+		/** 
+		 * Since each #ActionSlot is tied to a specific IDType we can resolve path as if the starting pointer StructRNA is known!
+		 */
+		if ((fcurve->flag & FCURVE_DO_STATIC_COMPILATION) != 0) {
+			if (RNA_path_can_do_static_compilation(ptr, fcurve->path)) {
+				fcurve->runtime.static_path = RNA_path_new(ptr, fcurve->path, &result->ptr, &result->property);
+
+				if (ptr->owner == NULL || !RNA_property_animateable(&result->ptr, result->property)) {
+					return false;
+				}
+
+				int length = RNA_property_array_length(&result->ptr, result->property);
+				if (length && fcurve->index >= length) {
+					fprintf(stderr, "[Kernel] Invalid array index, ID = '%s', '%s[%d]', array length is %d.\n", ptr->owner ? ptr->owner->name + 2 : "<No ID>", fcurve->path, fcurve->index, length - 1);
+					return false;
+				}
+
+				result->index = length ? fcurve->index : -1;
+				return true;
+			}
+			// When the #FCURVE_DO_STATIC_COMPILATION flag is enabled we should always be able to do that!
+			// ROSE_assert(fcurve->runtime.static_path);
+		}
+	}
 
 	return KER_animsys_rna_path_resolve(ptr, fcurve->path, fcurve->index, result);
 }

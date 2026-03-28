@@ -21,7 +21,7 @@
 
 namespace rose::kernel::mesh {
 
-ROSE_INLINE void mesh_calc_tessellation_for_face_impl(const Span<int> corner_verts, const OffsetIndices<int> polys, const Span<float3> positions, int poly_index, MLoopTri *mlt, MemArena **pf_arena_p, const bool face_normal, const float normal_precalc[3]) {
+ROSE_INLINE void mesh_calc_tessellation_for_face_impl(const Span<int> corner_verts, const OffsetIndices<int> polys, const Span<float3> positions, int poly_index, MLoopTri *mlt, MemArena **pf_arena_p, const bool face_normal, const float normal_precalc[3]) {	
 	const size_t loop_start = polys[poly_index].start();
 	const size_t loop_length = polys[poly_index].size();
 
@@ -146,7 +146,7 @@ ROSE_STATIC void mesh_calc_tessellation_for_face_fn(void *userdata, const int in
 
 	TesselationUserTLS *tls = static_cast<TesselationUserTLS *>(tls_v->userdata_chunk);
 	int i = (int)poly_to_tri_count(index, data->polys[index].start());
-	mesh_calc_tessellation_for_face_impl(data->corner_verts, data->polys, data->positions, i, &data->mlooptri[index], &tls->pf_arena, false, NULL);
+	mesh_calc_tessellation_for_face_impl(data->corner_verts, data->polys, data->positions, index, &data->mlooptri[i], &tls->pf_arena, false, NULL);
 }
 
 ROSE_STATIC void mesh_calc_tessellation_for_face_with_normal_fn(void *userdata, const int index, const TaskParallelTLS *tls_v) {
@@ -154,7 +154,7 @@ ROSE_STATIC void mesh_calc_tessellation_for_face_with_normal_fn(void *userdata, 
 
 	TesselationUserTLS *tls = static_cast<TesselationUserTLS *>(tls_v->userdata_chunk);
 	int i = (int)poly_to_tri_count(index, data->polys[index].start());
-	mesh_calc_tessellation_for_face_impl(data->corner_verts, data->polys, data->positions, i, &data->mlooptri[index], &tls->pf_arena, true, data->poly_normals[index]);
+	mesh_calc_tessellation_for_face_impl(data->corner_verts, data->polys, data->positions, index, &data->mlooptri[i], &tls->pf_arena, true, data->poly_normals[index]);
 }
 
 ROSE_STATIC void mesh_calc_tessellation_for_face_free_fn(const void *userdata, void *tls_v) {

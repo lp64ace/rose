@@ -441,6 +441,9 @@ bool DNA_sdna_read_type(const SDNA *sdna, const void **rest, const void *ptr, co
 			case TP_STRUCT: {
 				ntp = RT_type_new_struct(sdna->context, NULL);
 			} break;
+			case TP_QUALIFIED: {
+				ntp = RT_type_new_qualified(sdna->context, NULL);
+			} break;
 			default: {
 				ntp = RT_type_new_empty_basic(sdna->context, kind);
 			} break;
@@ -971,7 +974,7 @@ ROSE_STATIC void dna_reconstruct_free_step(ReconstructStep *step) {
 	MEM_freeN(step);
 }
 
-void *DNA_sdna_struct_reconstruct(const SDNA *dna_old, const SDNA *dna_new, uint64_t struct_nr, const void *data_old, const char *blockname) {
+void *DNA_sdna_struct_reconstruct(const SDNA *dna_old, const SDNA *dna_new, uint64_t struct_nr, size_t length, const void *data_old, const char *blockname) {
 	const RTType *struct_old = LIB_ghash_lookup(dna_old->visit, (void *)struct_nr);
 	if (!struct_old) {
 		fprintf(stderr, "Invalid reconstruct for struct %p.\n", (void *)struct_nr);
@@ -983,10 +986,15 @@ void *DNA_sdna_struct_reconstruct(const SDNA *dna_old, const SDNA *dna_new, uint
 		return NULL;
 	}
 
-	void *data_new = MEM_callocN(dna_find_type_size(dna_new, struct_new), blockname);
+	void *data_new = MEM_callocN(dna_find_type_size(dna_new, struct_new) * length, blockname);
 
 	ReconstructStep *step = dna_create_reconstruct_step_for_struct(dna_old, dna_new, struct_old, struct_new);
-	dna_reconstruct_struct(data_new, data_old, step);
+	for (size_t index = 0; index < length; index++) {
+		size_t new_offset = dna_find_type_size(dna_new, struct_new) * index;
+		size_t old_offset = dna_find_type_size(dna_new, struct_new) * index;
+
+		dna_reconstruct_struct(POINTER_OFFSET(data_new, new_offset), POINTER_OFFSET(data_old, old_offset), step);
+	}
 	dna_reconstruct_free_step(step);
 
 	return data_new;

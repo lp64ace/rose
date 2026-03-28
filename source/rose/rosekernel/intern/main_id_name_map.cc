@@ -83,6 +83,10 @@ IDNameLib_Map *KER_main_idmap_create(Main *main, const bool create_valid_ids_set
 }
 
 void KER_main_idmap_clear(IDNameLib_Map *id_map) {
+    if (!id_map) {
+        return;
+    }
+
     for (IDNameLib_TypeMap &type_map : id_map->type_maps) {
         if(type_map.map) {
             LIB_ghash_clear(type_map.map, NULL, NULL);

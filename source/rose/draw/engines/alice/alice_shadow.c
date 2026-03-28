@@ -146,9 +146,6 @@ void DRW_alice_shadow_cache_init(DRWAliceData *vdata) {
 		shader = DRW_alice_shader_shadow_fail_get((bool)manifold, true);
 		impl->shadow_caps_shgroup[manifold] = DRW_shading_group_new(shader, psl->shadow_pass[1]);
 	}
-
-	/* Needed once to set the stencil state for the pass. */
-	DRW_shading_group_clear_ex(impl->shadow_pass_shgroup[0], GPU_STENCIL_BIT, NULL, 1.0f, 0xFF);
 }
 
 ROSE_INLINE const BoundBox *alice_shadow_object_shadow_box_get(DRWAliceViewportPrivateData *impl, Object *object, AliceDrawData *add) {
@@ -293,7 +290,7 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 			/** Ready all the required modifier data blocks for rendering on this group. */
 			DRW_alice_modifier_list_build(shgroup, object);
 			DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
-			DRW_shading_group_uniform_float(shgroup, "lightDistance", 1e5f);
+			DRW_shading_group_uniform_float(shgroup, "lightDistance", 1e4f);
 			DRW_shading_group_call_ex(shgroup, object, object->obmat, shadow_geometry);
 		}
 		else {

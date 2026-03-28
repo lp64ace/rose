@@ -232,6 +232,7 @@ set(LIB
 	rose::intern::atomic
 	rose::intern::wcwidth
 	rose::intern::eigen
+	rose::intern::libc_compat
 	
 	# External Library Dependencies
 	PUBLIC ${PTHREADS_LIBRARIES}

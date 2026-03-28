@@ -15,13 +15,8 @@ char free_after_leak_detection_message[] =
 
 namespace {
 
-#ifndef NDEBUG
-bool fail_on_memleak = true;
-bool ignore_memleak = false;
-#else
 bool fail_on_memleak = false;
 bool ignore_memleak = false;
-#endif
 
 class MemLeakPrinter {
 public:

@@ -3,11 +3,10 @@
 
 set(INC
 	# Internal Include Directories
-	PUBLIC ../include
-	.
-	
+	PUBLIC .
+
 	# External Include Directories
-	
+
 )
 
 # -----------------------------------------------------------------------------
@@ -15,21 +14,14 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
-	
+
 )
 
 # -----------------------------------------------------------------------------
 # Define Source Files
 
 set(SRC
-	filelist/filelist.c
-	filelist/filelist.h
-
-	file.c
-	file.h
-	file_ops.c
-	space_file.c
-	
+	libc_compat.c
 )
 
 # -----------------------------------------------------------------------------
@@ -37,20 +29,14 @@ set(SRC
 
 set(LIB
 	# Internal Library Dependencies
-	rose::intern::guardedalloc
-	rose::source::rosekernel
-	rose::source::roseloader
-	rose::source::dna
-	rose::source::rna
-	rose::source::windowmanager
-	rose::source::editors::screen
-	
+
 	# External Library Dependencies
-	
+
 )
 
 # -----------------------------------------------------------------------------
-# Declare Library
+# Define Library
 
-rose_add_lib(space_file "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::editors::space_file ALIAS space_file)
+rose_add_lib(libc_compat "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::intern::libc_compat ALIAS libc_compat)
+

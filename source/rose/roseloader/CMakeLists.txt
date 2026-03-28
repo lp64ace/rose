@@ -22,6 +22,7 @@ set(INC_SYS
 
 set(SRC
 	RLO_read_write.h
+	RLO_read_write.hh
 	RLO_readfile.h
 	RLO_writefile.h
 	
@@ -38,8 +39,8 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::dna
 	rose::source::roselib
-	rose::source::rosekernel
 	rose::source::translator
+	rose::source::rosekernel
 	
 	# External Library Dependencies
 	

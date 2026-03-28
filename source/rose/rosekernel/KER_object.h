@@ -31,6 +31,14 @@ void *KER_object_obdata_add_from_type(struct Main *main, int type, const char *n
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Object Read/Write
+ * \{ */
+
+ void KER_object_modifiers_lib_link_common(void *userdata, struct Object *object, struct ID **idpointer, int flag);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Object Transform
  * \{ */
 

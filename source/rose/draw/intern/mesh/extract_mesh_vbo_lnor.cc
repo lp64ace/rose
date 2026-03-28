@@ -64,7 +64,7 @@ template<> inline short4 convert_normal(const float3 &src) {
 
 template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, rose::MutableSpan<T> normals) {
 
-#if DEBUG_POLY_NORMALS
+#if DRAW_POLY_NORMALS
 	rose::Span<float3> poly_normals = KER_mesh_poly_normals_span(mesh);
 	rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
 	rose::OffsetIndices<int> polys = KER_mesh_poly_offsets_span(mesh);
@@ -91,7 +91,7 @@ template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, ros
 	return;
 #endif
 
-#if DEBUG_VERT_NORMALS
+#if DRAW_VERT_NORMALS
 	rose::Span<float3> vert_normals = KER_mesh_vert_normals_span(mesh);
 	rose::Span<int> corner_verts = KER_mesh_corner_verts_span(mesh);
 

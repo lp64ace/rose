@@ -448,9 +448,9 @@ size_t LIB_system_thread_count() {
 #ifdef WIN32
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
-	return ROSE_MIN(1, info.dwNumberOfProcessors);
+	return ROSE_MAX(1, info.dwNumberOfProcessors);
 #else
-	return ROSE_MIN(1, sysconf(_SC_NPROCESSORS_ONLN));
+	return ROSE_MAX(1, sysconf(_SC_NPROCESSORS_ONLN));
 #endif
 }
 

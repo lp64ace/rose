@@ -434,6 +434,9 @@ void filelist_readjob_start(FileList *filelist, const rContext *C) {
 }
 
 int ED_path_extension_type(const char *path) {
+	if (LIB_path_extension_check(path, ".rose")) {
+		return FILE_TYPE_ROSE;
+	}
 	if (LIB_path_extension_check(path, ".fbx")) {
 		return FILE_TYPE_FBX;
 	}
@@ -449,9 +452,15 @@ int ED_file_extension_icon(const char *path) {
 int ED_file_type_icon(int type) {
 	ROSE_assert((type & FILE_TYPE_DIR) == 0);
 
+	/* clang-format off */
+
 	switch (type) {
 		case FILE_TYPE_DIR: return ICON_FILE_FOLDER;
 		case FILE_TYPE_FBX: return ICON_FILE_3D;
+		case FILE_TYPE_ROSE: return ICON_FILE_ROSE;
 	}
+
+	/* clang-format on */
+
 	return ICON_FILE_BLANK;
 }

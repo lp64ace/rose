@@ -11,7 +11,11 @@ extern "C" {
 #endif
 
 struct Collection;
+struct Library;
 struct Main;
+struct RoseDataReader;
+struct RoseLibReader;
+struct RoseWriter;
 
 typedef struct CollectionParent {
 	struct CollectionParent *prev, *next;
@@ -22,7 +26,11 @@ struct Collection *KER_collection_add(struct Main *main, struct Collection *pare
 struct Collection *KER_collection_master_add(void);
 
 void KER_collection_object_cache_free(struct Collection *collection);
-	/** Free (or release) any data used by this collection (doe not free the collection itself). */
+void KER_collection_rose_read_data(struct RoseDataReader *reader, struct Collection *collection);
+void KER_collection_rose_read_lib_ex(struct RoseLibReader *reader, struct Library *lib, struct Collection *collection);
+void KER_collection_rose_write_prepare_nolib(struct RoseWriter *writer, struct Collection *collection);
+void KER_collection_rose_write_nolib(struct RoseWriter *writer, struct Collection *collection);
+/** Free (or release) any data used by this collection (doe not free the collection itself). */
 void KER_collection_free_data(struct Collection *collection);
 /** Remove a collection, optionally removing its child objects or moving them to parent collections. */
 bool KER_collection_delete(struct Main *main, struct Collection *collection, bool hierarchy);

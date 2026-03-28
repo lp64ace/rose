@@ -32,6 +32,7 @@ extern "C" {
 #endif
 
 void WM_OT_fbx_import(wmOperatorType *ot);
+void WM_OT_rose_open(wmOperatorType *ot);
 
 #ifdef __cplusplus
 }

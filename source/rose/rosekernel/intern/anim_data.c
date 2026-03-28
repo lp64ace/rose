@@ -9,6 +9,12 @@
 
 #include "LIB_utildefines.h"
 
+#include "RLO_read_write.h"
+
+/* -------------------------------------------------------------------- */
+/** \name Animation Data Creation/Deletion
+ * \{ */
+
 bool id_type_can_have_animdata(const short id_type) {
 	const IDTypeInfo *typeinfo = KER_idtype_get_info_from_idcode(id_type);
 	if (typeinfo != NULL) {
@@ -88,3 +94,31 @@ void KER_animdata_free(ID *id, const bool do_id_user) {
 	MEM_freeN(adt);
 	iat->adt = NULL;
 }
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose Read/Write
+ * \{ */
+
+void KER_animdata_rose_write(RoseWriter *writer, AnimData *adt) {
+	RLO_write_struct(writer, AnimData, adt);
+}
+
+void KER_animdata_rose_read_data(RoseDataReader *reader, AnimData *adt) {
+	if (adt == NULL) {
+		return;
+	}
+
+	// No-op
+}
+
+void KER_animdata_rose_read_lib(RoseLibReader *reader, ID *id, AnimData *adt) {
+	if (adt == NULL) {
+		return;
+	}
+
+	RLO_read_id_address(reader, id->lib, &adt->action);
+}
+
+/** \} */

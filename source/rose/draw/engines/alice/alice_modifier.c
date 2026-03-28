@@ -24,6 +24,7 @@ ROSE_INLINE void alice_draw_data_init(DrawData *dd) {
 
 	add->defgroup = GPU_uniformbuf_create_ex(sizeof(DVertGroupMatrices), NULL, "DVertGroupMatrices");
 	add->flag |= ALICE_SHADOW_BOX_DIRTY;
+	add->flag |= ALICE_DEFGROUP_UBO_DIRTY;
 }
 
 ROSE_INLINE void alice_draw_data_free(DrawData *dd) {
@@ -41,6 +42,10 @@ AliceDrawData *DRW_alice_drawdata(Object *object) {
 GPUUniformBuf *DRW_alice_defgroup_ubo(Object *object, ModifierData *md) {
 	AliceDrawData *add = DRW_alice_drawdata(object);
 
+	if ((add->flag & ALICE_DEFGROUP_UBO_DIRTY) == 0) {
+		return add->defgroup;
+	}
+
     if (md) {
 		ArmatureModifierData *amd = (ArmatureModifierData *)md;
 		ROSE_assert((md->type == MODIFIER_TYPE_ARMATURE) && (md->flag & MODIFIER_DEVICE_ONLY) != 0);
@@ -57,6 +62,8 @@ GPUUniformBuf *DRW_alice_defgroup_ubo(Object *object, ModifierData *md) {
 		extract_matrices(NULL, object, object->data, add->defgroup);
 	}
 
+	add->flag &= ~ALICE_DEFGROUP_UBO_DIRTY;
+
     return add->defgroup;
 }
 
@@ -64,6 +71,7 @@ ROSE_INLINE bool alice_modifier_supported(int mdtype) {
 	return ELEM(mdtype, MODIFIER_TYPE_ARMATURE);
 }
 
+// TODO; skinning should only happen once!
 void DRW_alice_modifier_list_build(DRWShadingGroup *shgroup, Object *object) {
 	bool has_defgroup_modifier = false;
 
@@ -79,7 +87,6 @@ void DRW_alice_modifier_list_build(DRWShadingGroup *shgroup, Object *object) {
 				if (block) {
 					/** Currently we only support a single armature modifier on device. */
 					ROSE_assert_msg(!has_defgroup_modifier, "Too many armature modifiers for device.");
-
 					has_defgroup_modifier |= true;
 				}
 			} break;

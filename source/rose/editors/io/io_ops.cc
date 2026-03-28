@@ -6,4 +6,5 @@
 
 void ED_operatortypes_io() {
 	WM_operatortype_append(WM_OT_fbx_import);
+	WM_operatortype_append(WM_OT_rose_open);
 }

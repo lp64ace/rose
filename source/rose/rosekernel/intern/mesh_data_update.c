@@ -45,7 +45,6 @@ ROSE_STATIC void mesh_calc_modifiers(Scene *scene, Object *object, const bool us
 	for (; md; md = md->next) {
 		const ModifierTypeInfo *mti = KER_modifier_get_info((eModifierType)md->type);
 
-
 		if (!mti) {
 			return;
 		}

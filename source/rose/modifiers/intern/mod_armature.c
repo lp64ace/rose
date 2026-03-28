@@ -30,6 +30,7 @@ ROSE_STATIC void deform_copy_data(const ModifierData *source, ModifierData *targ
 ModifierTypeInfo MODType_ARMATURE = {
 	.idname = "Armature",
 	.name = "Armature",
+	.dnastruct = "ArmatureModifierData",
 	.size = sizeof(ArmatureModifierData),
 
 	.type = OnlyDeform,

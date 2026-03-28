@@ -87,9 +87,14 @@ typedef struct ID {
 	struct Library *lib;
 } ID;
 
+#define MAX_ID_NAME (ARRAY_SIZE(((ID *)NULL)->name) - 2)
+
 typedef struct Library_Runtime {
 	/* Used for efficient calculations of unique names. */
 	struct UniqueName_Map *name_map;
+	struct FileData *filedata;
+	/** Used when reading the library from file to store the index of the main in mainlist! */
+	int index;
 } Library_Runtime;
 
 typedef struct Library {
@@ -177,6 +182,12 @@ enum {
 	 */
 	ID_TAG_NOT_ALLOCATED = 1 << 18,
 
+	/**
+	 * Used on read to link ID.
+	 * 
+	 * RESET_AFTER_USE
+	 */
+  	ID_TAG_NEED_LINK = 1 << 29,
 	/**
 	 * ID is newly duplicated/copied (see #ID_NEW_SET macro above).
 	 *

@@ -29,7 +29,10 @@
 #include "LIB_utildefines.h"
 
 #include "KER_customdata.h"
+#include "KER_deform.h"
 #include "KER_main.h"
+
+#include "RLO_read_write.h"
 
 #include <inttypes.h>
 #include <optional>
@@ -898,8 +901,8 @@ static const char *LAYERTYPENAMES[CD_NUMTYPES] = {
 	"Unkown",
 	/* UNKOWN = 1 */
 	"Unkown",
-	/* UNKOWN = 2 */
-	"Unkown",
+	/* CD_MDEFORMVERT = 2 */
+	"CDMDeformVert",
 	/* UNKOWN = 3 */
 	"Unkown",
 	/* UNKOWN = 4 */
@@ -1945,6 +1948,167 @@ void CustomData_free_layers(CustomData *data, const eCustomDataType type, const 
 	while (CustomData_free_layer(data, type, totelem, index)) {
 		/* pass */
 	}
+}
+
+void CustomData_rose_write_prepare(CustomData *data, CustomDataLayer **r_write_layers, CustomDataLayer *write_layers_buff, size_t length) {
+	CustomDataLayer *write_layers = write_layers_buff;
+	const size_t chunk_size = (length > 0) ? length : CD_TEMP_CHUNK_SIZE;
+
+	const int totlayer = data->totlayer;
+
+	for (int i = 0, j = 0; i < totlayer; i++) {
+		CustomDataLayer *layer = &data->layers[i];
+
+		/* Layers with this flag set are not written to file. */
+		if ((layer->flag & CD_FLAG_NOCOPY) != 0) {
+			data->totlayer--;
+			continue;
+		}
+
+		if (j >= length) {
+			if (write_layers == write_layers_buff) {
+				write_layers = (CustomDataLayer *)MEM_mallocN(sizeof(CustomDataLayer) * (length + chunk_size), __func__);
+				if (write_layers_buff) {
+					memcpy(write_layers, write_layers_buff, sizeof(CustomDataLayer) * length);
+				}
+			}
+			else {
+				write_layers = (CustomDataLayer *)MEM_reallocN(write_layers, sizeof(CustomDataLayer) * (length + chunk_size));
+			}
+			length += chunk_size;
+		}
+
+		memcpy(&write_layers[j++], layer, sizeof(CustomDataLayer));
+	}
+
+	/* We only write that much of data! */
+	data->maxlayer = data->totlayer;
+
+	if (r_write_layers) {
+		*r_write_layers = write_layers;
+	}
+}
+
+void CustomData_external_write(CustomData *data, ID *id, eCustomDataMask mask, int totelem, int free) {
+	ROSE_assert_unreachable(); // TODO;
+}
+
+void CustomData_file_write_info(eCustomDataType type, const char **r_struct_name, int *r_struct_size) {
+	const LayerTypeInfo *typeInfo = layerType_getInfo(type);
+
+	*r_struct_name = typeInfo->structname;
+	*r_struct_size = typeInfo->structnum;
+}
+
+void CustomData_rose_write(RoseWriter *writer, CustomData *data, CustomDataLayer *layers, int count, eCustomDataMask mask, ID *id) {
+	if (data->external)	 {
+		CustomData_external_write(data, id, mask, count, 0);
+	}
+
+	RLO_write_struct_array_at_address(writer, CustomDataLayer, data->totlayer, data->layers, layers);
+
+	for (int i = 0; i < data->totlayer; i++) {
+		CustomDataLayer *layer = &layers[i];
+
+		switch (layer->type) {
+			case CD_MDEFORMVERT: {
+				KER_defvert_rose_write(writer, count, static_cast<MDeformVert *>(layer->data));
+			} break;
+			case CD_PROP_BOOL: {
+				const bool *layer_data = static_cast<const bool *>(layer->data);
+				RLO_write_raw(writer, sizeof(*layer_data) * count, layer_data);
+			} break;
+			default: {
+				const char *structname;
+				int structnum;
+
+				CustomData_file_write_info(static_cast<eCustomDataType>(layer->type), &structname, &structnum);
+
+				if (structnum) {
+					size_t datasize = structnum * count;
+					RLO_write_struct_array_by_name(writer, structname, datasize, layer->data);
+				}
+			} break;
+		}
+	}
+
+	if (data->external) {
+		RLO_write_struct(writer, CustomDataExternal, data->external);
+	}
+}
+
+bool CustomData_verify_versions(struct CustomData *data, int index) {
+	CustomDataLayer *layer = &data->layers[index];
+
+	bool keep = true;
+	if (layer->type >= CD_NUMTYPES) {
+		keep = false;
+	}
+	else {
+		const LayerTypeInfo *info = layerType_getInfo(static_cast<eCustomDataType>(layer->type));
+
+		if (!info->defaultname && (index > 0) && data->layers[index - 1].type == layer->type) {
+			keep = false; /* multiple layers of which we only support one */
+		}
+		else if (info->structnum == 0) {
+			keep = false;
+		}
+	}
+
+	if (!keep) {
+		for (int i = index + 1; i < data->totlayer; i++) {
+			data->layers[i - 1] = data->layers[i];
+		}
+		data->totlayer--;
+	}
+
+	return keep;
+}
+
+void CustomData_rose_read(RoseDataReader *reader, CustomData *data, int count) {
+	RLO_read_data_address(reader, &data->layers);
+
+	if (count == 0 && data->layers == NULL && data->totlayer != 0) {
+		CustomData_reset(data);
+		return;
+	}
+
+	RLO_read_data_address(reader, &data->external);
+
+	int i = 0;
+	while (i < data->totlayer) {
+		CustomDataLayer *layer = &data->layers[i];
+
+		if (layer->flag & CD_FLAG_EXTERNAL) {
+			layer->flag &= ~CD_FLAG_EXTERNAL;
+		}
+
+		if (CustomData_verify_versions(data, i)) {
+			RLO_read_data_address(reader, &layer->data);
+			if (layer->data == NULL && count > 0 && layer->type == CD_PROP_BOOL) {
+				const LayerTypeInfo *info = layerType_getInfo(static_cast<eCustomDataType>(layer->type));
+				layer->data = MEM_callocN(count * info->size, layerType_getName(static_cast<eCustomDataType>(layer->type)));
+				if (info->set_default_value) {
+					info->set_default_value(layer->data, count);
+				}
+			}
+
+			switch(layer->type) {
+				case CD_MDEFORMVERT: {
+					KER_defvert_rose_read(reader, count, static_cast<MDeformVert *>(layer->data));
+				} break;
+			}
+
+			/** Create the shading info */
+			layer->sharing_info = make_implicit_sharing_info_for_layer(static_cast<eCustomDataType>(layer->type), layer->data, count);
+
+			i++;
+		}
+	}
+
+	data->maxlayer = data->totlayer;
+
+	CustomData_update_typemap(data);
 }
 
 bool CustomData_has_layer(const CustomData *data, const eCustomDataType type) {

@@ -59,6 +59,7 @@ IDTypeInfo IDType_ID_LI = {
 
 	.write = NULL,
 	.read_data = NULL,
+	.read_lib = NULL,
 };
 
 /** \} */

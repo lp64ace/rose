@@ -6,6 +6,7 @@
 #include "LIB_string.h"
 
 #include "KER_action.h"
+#include "KER_anim_data.h"
 #include "KER_armature.h"
 #include "KER_camera.h"
 #include "KER_derived_mesh.h"
@@ -18,6 +19,8 @@
 #include "KER_modifier.h"
 #include "KER_object.h"
 #include "KER_scene.h"
+
+#include "RLO_read_write.h"
 
 #include "DEG_depsgraph.h"
 #include "DEG_depsgraph_query.h"
@@ -151,22 +154,76 @@ ROSE_INLINE void object_foreach_id(struct ID *id, struct LibraryForeachIDData *d
  * typedef void (*IDTypeRoseReadDataFunction)(struct RoseDataReader *reader, struct ID *id);
  */
 
-ROSE_INLINE void object_write(RoseWriter *writer, ID *id, const void *address) {
+void object_rose_write(RoseWriter *writer, ID *id, const void *address) {
 	Object *ob = (Object *)id;
 
-	// Write pose!
+	KER_object_runtime_reset(ob);
 
-	LISTBASE_FOREACH(ModifierData *, md, &ob->modifiers) {
-		// Write modifiers!
+	RLO_write_id_struct(writer, Object, address, &ob->id);
+
+	if (ob->adt) {
+		KER_animdata_rose_write(writer, ob->adt);
 	}
 
-	memset(&ob->runtime, 0, sizeof(Object_Runtime));
+	Armature *armature = NULL;
+	if (ob->type == OB_ARMATURE) {
+		armature = (Armature *)ob->data;
+	}
+
+	KER_pose_rose_write(writer, ob->pose, armature);
+	KER_modifier_rose_write(writer, &ob->modifiers);
 }
 
-ROSE_INLINE void object_read_data(RoseDataReader *reader, ID *id) {
+void object_rose_read_data(RoseDataReader *reader, ID *id) {
 	Object *ob = (Object *)id;
 
+	RLO_read_data_address(reader, &ob->adt);
+	KER_animdata_rose_read_data(reader, ob->adt);
 
+	RLO_read_data_address(reader, &ob->pose);
+	KER_pose_rose_read_data(reader, ob->pose);
+
+	KER_modifier_rose_read_data(reader, &ob->modifiers);
+}
+
+void KER_object_modifiers_lib_link_common(void *userdata, Object *object, ID **idpointer, int flag) {
+	RoseLibReader *reader = (RoseLibReader *)userdata;
+
+	RLO_read_id_address(reader, object->id.lib, idpointer);
+	if (*idpointer != NULL && (flag & IDWALK_CB_USER) != 0) {
+		id_us_add(*idpointer);
+	}
+}
+
+void object_rose_read_lib(RoseLibReader *reader, ID *id) {
+	Object *ob = (Object *)id;
+
+	RLO_read_id_address(reader, ob->id.lib, &ob->parent);
+	RLO_read_id_address(reader, ob->id.lib, &ob->track);
+
+	void *data = ob->data;
+
+	RLO_read_id_address(reader, ob->id.lib, &ob->data);
+
+	if (ob->data == NULL && data != NULL) {
+		ob->type = OB_EMPTY;
+
+		if (ob->pose) {
+			/** Can we actually call KER_pose_free() here because of library linking?! */
+			KER_pose_free(ob->pose);
+			ob->pose = NULL;
+		}
+
+		if (ob->id.lib) {
+			fprintf(stderr, "[Kernel] Can't find object data of \"%s\" in \"%s\"\n", ob->id.name + 2, ob->id.lib->filepath);
+		}
+		else {
+			fprintf(stderr, "[Kernel] Object \"%s\" lost data\n", ob->id.name + 2);
+		}
+	}
+
+	KER_pose_rose_read_lib(reader, ob, ob->pose);
+	KER_modifier_rose_read_lib(reader, ob);
 }
 
 ROSE_STATIC void object_init(Object *ob, int type) {
@@ -762,8 +819,9 @@ IDTypeInfo IDType_ID_OB = {
 
 	.foreach_id = object_foreach_id,
 
-	.write = NULL,
-	.read_data = NULL,
+	.write = object_rose_write,
+	.read_data = object_rose_read_data,
+	.read_lib = object_rose_read_lib,
 };
 
 /** \} */

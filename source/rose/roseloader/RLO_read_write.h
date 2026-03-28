@@ -37,6 +37,7 @@ enum {
  * \{ */
 
 void RLO_write_struct_by_name(struct RoseWriter *writer, const char *name, const void *ptr);
+void RLO_write_struct_by_name_at_address(struct RoseWriter *writer, const char *name, const void *address, const void *ptr);
 
 void RLO_write_raw(struct RoseWriter *writer, size_t size, const void *ptr);
 
@@ -51,9 +52,27 @@ void RLO_write_pointer_array(struct RoseWriter *writer, size_t length, const voi
 /** Write a null termianted string. */
 void RLO_write_string(struct RoseWriter *writer, const char *ptr);
 
+void RLO_write_struct_array_by_name(struct RoseWriter *writer, const char *name, size_t length, const void *data);
+void RLO_write_struct_array_at_address_by_name(struct RoseWriter *writer, const char *name, size_t length, const void *address, const void *data);
+
+#define RLO_write_struct_array(writer, _struct, length, data)           \
+	do {                                                                \
+		RLO_write_struct_array_by_name(writer, #_struct, length, data); \
+	} while (false)
+
+#define RLO_write_struct_array_at_address(writer, _struct, length, address, data)            \
+	do {                                                                                     \
+		RLO_write_struct_array_at_address_by_name(writer, #_struct, length, address, data);  \
+	} while (false)
+
 #define RLO_write_struct(writer, _struct, data)                            \
 	do {                                                                   \
 		RLO_write_struct_by_name(writer, #_struct, (const _struct *)data); \
+	} while (false)
+
+#define RLO_write_struct_at_address(writer, _struct, address, data)                            \
+	do {                                                                                       \
+		RLO_write_struct_by_name_at_address(writer, #_struct, address, (const _struct *)data); \
 	} while (false)
 
 void rlo_write_id_struct(struct RoseWriter *writer, const char *name, const void *id_address, const struct ID *id);
@@ -83,6 +102,9 @@ void *RLO_read_struct_array_with_size(struct RoseDataReader *reader, const void 
 void RLO_read_struct_list_with_size(struct RoseDataReader *reader, size_t esize, ListBase *list);
 #define RLO_read_struct_list(reader, struct_name, list) RLO_read_struct_list_with_size(reader, sizeof(struct_name), list)
 
+/** Use #RLO_read_struct_list when possible! */
+void RLO_read_list(struct RoseDataReader *reader, struct ListBase *lb);
+
 /* Update data pointers and correct byte-order if necessary. */
 
 void RLO_read_char_array(RoseDataReader *reader, int array_size, char **ptr_p);
@@ -93,6 +115,23 @@ void RLO_read_uint32_array(RoseDataReader *reader, int array_size, uint32_t **pt
 void RLO_read_float_array(RoseDataReader *reader, int array_size, float **ptr_p);
 void RLO_read_double_array(RoseDataReader *reader, int array_size, double **ptr_p);
 void RLO_read_pointer_array(RoseDataReader *reader, int array_size, void **ptr_p);
+
+bool RLO_read_requires_endian_switch(RoseDataReader *reader);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose Read Lib API
+ * This API does almost the same as the Blend Read Data API.
+ * However, now only pointers to ID data blocks are updated.
+ * \{ */
+
+typedef struct RoseLibReader RoseLibReader;
+
+struct ID *RLO_read_get_new_id_address(RoseLibReader *reader, struct Library *lib, struct ID *id);
+
+#define RLO_read_id_address(reader, lib, id_ptr_p) \
+	*((void **)id_ptr_p) = (void *)RLO_read_get_new_id_address((reader), (lib), (ID *)*(id_ptr_p))
 
 /** \} */
 

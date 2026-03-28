@@ -9,6 +9,9 @@
 
 struct Depsgraph;
 struct Scene;
+struct RoseDataReader;
+struct RoseLibReader;
+struct RoseWriter;
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +31,10 @@ enum {
 struct ViewLayer *KER_view_layer_find(const struct Scene *scene, const char *layer_name);
 /** Adds a new layer, this can either add a new,empty or a copy from source layer, use the respective VIEWLAYER_ADD_XXX enum. */
 struct ViewLayer *KER_view_layer_add(struct Scene *scene, const char *name, struct ViewLayer *view_layer_source, int type);
+
+void KER_view_layer_rose_read_data(struct RoseDataReader *reader, struct ViewLayer *view_layer);
+void KER_view_layer_rose_read_lib(struct RoseLibReader *reader, struct Scene *scene, struct ViewLayer *view_layer);
+void KER_view_layer_rose_write(struct RoseWriter *writer, const struct Scene *scene, struct ViewLayer *view_layer);
 
 void KER_view_layer_free(struct ViewLayer *view_layer);
 void KER_view_layer_free_ex(struct ViewLayer *view_layer, bool us);

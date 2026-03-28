@@ -177,6 +177,8 @@ enum {
 	CD_FLAG_IN_MEMORY = (1 << 4),
 };
 
+#define CD_TEMP_CHUNK_SIZE 128
+
 #ifdef __cplusplus
 }
 #endif

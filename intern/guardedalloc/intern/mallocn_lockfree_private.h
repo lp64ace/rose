@@ -42,6 +42,8 @@ typedef struct LMemoryHead {
 
 /** Returns the size of the allocated memory block. */
 size_t MEM_lockfree_allocN_length(const void *vptr);
+/** Returns the identifier of the allocated memory block. */
+const char *MEM_lockfree_allocN_name(const void *vptr);
 
 /** \} */
 

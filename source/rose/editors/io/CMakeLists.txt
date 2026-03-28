@@ -25,6 +25,7 @@ set(SRC
 	io_fbx.cc
 	io_ops.cc
 	io_ops.h
+	io_rose.cc
 	io_utils.cc
 	io_utils.hh
 	
@@ -36,9 +37,10 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::source::rosekernel
 	rose::source::roselib
+	rose::source::rosekernel
 	rose::source::dna
+	rose::source::rna
 	rose::source::io::fbx
 	rose::source::windowmanager
 	
