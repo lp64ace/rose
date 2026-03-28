@@ -386,15 +386,6 @@ void DepsgraphRelationBuilder::build_collection(LayerCollection *from_layer_coll
 			if (find_node(object_geometry_key) != nullptr) {
 				add_relation(object_geometry_key, collection_geometry_key, "Collection Geometry");
 			}
-
-			/* An instance is part of the geometry of the collection. */
-			if (cob->object->type == OB_EMPTY) {
-				Collection *collection_instance = cob->object->instance_collection;
-				if (collection_instance != nullptr) {
-					OperationKey collection_instance_key{&collection_instance->id, NodeType::GEOMETRY, OperationCode::GEOMETRY_EVAL_DONE};
-					add_relation(collection_instance_key, collection_geometry_key, "Collection Geometry");
-				}
-			}
 		}
 		LISTBASE_FOREACH(CollectionChild *, child, &collection->children) {
 			build_collection(nullptr, nullptr, child->collection);
