@@ -44,13 +44,13 @@ set(LIB
 	rose::source::depsgraph
 	rose::source::gpu
 	rose::source::windowmanager
-	rose::source::editors::io
 	rose::source::editors::screen
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar
 	rose::source::editors::space_view3d
 	rose::source::editors::space_properties
+	rose::source::editors::io
 	rose::source::io::fbx
 	rose::source::rosemesh
 
