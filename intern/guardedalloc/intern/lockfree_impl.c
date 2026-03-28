@@ -35,6 +35,21 @@ size_t MEM_lockfree_allocN_length(const void *vptr) {
 	return 0;
 }
 
+const char *MEM_lockfree_allocN_name(const void *vptr) {
+	if (vptr) {
+		LMemoryHead *head = (LMemoryHead *)vptr;
+		--head;
+
+		if (head->size & MEMHEAD_ALIGN_FLAG) {
+			return "Aligned memblock";
+		}
+		else {
+			return "Not-aligned memblock";
+		}
+	}
+	return "NULL";
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

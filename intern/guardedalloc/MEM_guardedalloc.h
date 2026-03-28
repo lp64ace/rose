@@ -37,6 +37,8 @@ extern "C" {
 
 /** Returns the size of the allocated memory block. */
 extern size_t (*MEM_allocN_length)(const void *vptr);
+/** Returns the identifier of the allocated memory block. */
+extern const char *(*MEM_allocN_name)(const void *vptr);
 
 /** \} */
 

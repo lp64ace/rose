@@ -64,6 +64,8 @@ typedef struct GMemoryTail {
 
 /** Returns the size of the allocated memory block. */
 size_t MEM_guarded_allocN_length(const void *vptr);
+/** Returns the identifier of the allocated memory block. */
+const char *MEM_guarded_allocN_name(const void *vptr);
 
 /** \} */
 

@@ -345,7 +345,7 @@ void MEM_guarded_freeN(void *vptr) {
 				__aligned_free(((char *)head) - MEMHEAD_ALIGN_PADDING(head->align));
 			}
 			else {
-				free(head);
+				// free(head);
 			}
 
 			return;
@@ -406,6 +406,28 @@ size_t MEM_guarded_allocN_length(const void *vptr) {
 		return 0;
 	}
 	return 0;
+}
+
+const char *MEM_guarded_allocN_name(const void *vptr) {
+	if (vptr) {
+		const GMemoryHead *head = vptr;
+
+		head--;
+		if (head->tag1 == MEMFREE && head->tag2 == MEMFREE) {
+			return "Freed block";
+		}
+
+		if ((head->tag1 == MEMTAG1) && (head->tag2 == MEMTAG2)) {
+			GMemoryTail *tail = (GMemoryTail *)((char *)(head + 1) + head->size);
+
+			if (tail->tag3 == MEMTAG3) {
+				return head->identity;
+			}
+		}
+
+		return "Corrupted block";
+	}
+	return "NULL";
 }
 
 /** \} */
