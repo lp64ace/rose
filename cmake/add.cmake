@@ -436,8 +436,8 @@ function(rose_add_test_executable name sources includes includes_sys library_dep
 	add_executable(${target_name} ${sources})
 	setup_platform_linker_flags(${target_name})
 	
-	rose_target_include_dirs(${target_name} includes)
-	rose_target_include_dirs_sys(${target_name} includes_sys)
+	rose_target_include_dirs(${target_name} ${includes})
+	rose_target_include_dirs_sys(${target_name} ${includes_sys})
 	
 	target_link_libraries(${target_name} rose::intern::testing)
 	target_link_libraries(${target_name} ${library_deps})
