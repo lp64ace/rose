@@ -46,10 +46,10 @@ set(LIB
 	rose::intern::native
 	rose::source::rna
 	rose::source::roselib
+	rose::source::roseloader
 	rose::source::rosekernel
 	rose::source::rosemesh
 	rose::source::rosefont
-	rose::source::roseloader
 	rose::source::gpu
 	rose::source::draw
 	rose::source::io::fbx

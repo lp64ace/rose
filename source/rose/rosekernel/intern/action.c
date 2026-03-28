@@ -2,10 +2,12 @@
 
 #include "KER_action.h"
 #include "KER_anim_data.h"
+#include "KER_armature.h"
 #include "KER_fcurve.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
 #include "KER_main.h"
+#include "KER_object.h"
 
 #include "LIB_ghash.h"
 #include "LIB_hash_mm2a.h"
@@ -17,6 +19,8 @@
 #include "LIB_session_uuid.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
+
+#include "RLO_read_write.h"
 
 bool KER_id_foreach_action_slot_use(ID *animated, fnActionSlotCallback callback, void *userdata) {
 	AnimData *adt = KER_animdata_from_id(animated);
@@ -512,7 +516,7 @@ bool KER_action_slot_suitable_for_id(ActionSlot *slot, ID *id) {
  * \{ */
 
 void KER_pose_channel_runtime_reset(PoseChannel_Runtime *runtime) {
-	memset(&runtime->uuid, 0, sizeof(PoseChannel_Runtime));
+	memset(runtime, 0, sizeof(PoseChannel_Runtime));
 }
 
 void KER_pose_channel_runtime_free(PoseChannel_Runtime *runtime) {
@@ -536,7 +540,7 @@ PoseChannel *KER_pose_channel_ensure(Pose *pose, const char *name) {
 	}
 
 	/* If not, create it and add it */
-	chan = MEM_callocN(sizeof(PoseChannel), "VerifyPoseChannel");
+	chan = MEM_callocN(sizeof(PoseChannel), "PoseChannel");
 
 	LIB_strcpy(chan->name, ARRAY_SIZE(chan->name), name);
 
@@ -612,6 +616,70 @@ void KER_pose_copy_data(Pose **dst_p, const Pose *src, const int flag) {
 	}
 
 	*dst_p = dst;
+}
+
+void KER_pose_rose_write(RoseWriter *writer, Pose *pose, Armature *armature) {
+	if (pose == NULL) {
+		return;
+	}
+
+	ROSE_assert(armature != NULL);
+
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+		Bone *bone = (pose->flag & POSE_RECALC) ? KER_armature_find_bone_name(armature, pchannel->name) : pchannel->bone;
+		if (bone != NULL) {
+			// No-op
+		}
+
+		RLO_write_struct(writer, PoseChannel, pchannel);
+	}
+
+	RLO_write_struct(writer, Pose, pose);
+}
+
+void KER_pose_channel_session_uuid_generate(PoseChannel *pchannel) {
+	PoseChannel_Runtime *runtime = &pchannel->runtime;
+
+	runtime->uuid = LIB_session_uuid_generate();
+}
+
+void KER_pose_rose_read_data(RoseDataReader *reader, Pose *pose) {
+	if (pose == NULL) {
+		return;
+	}
+
+	RLO_read_struct_list(reader, PoseChannel, &pose->channelbase);
+	
+	pose->channelhash = NULL;
+	pose->channels = NULL;
+
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+		KER_pose_channel_runtime_reset(&pchannel->runtime);
+
+		/**
+		 * Calculating the bone requires the #Armature data, 
+		 * handled in #KER_pose_rose_read_lib
+		 */
+		pchannel->bone = NULL;
+
+		RLO_read_data_address(reader, &pchannel->parent);
+		RLO_read_data_address(reader, &pchannel->child);
+		
+		 /* in case this value changes in future, clamp else we get undefined behavior */
+		CLAMP(pchannel->rotmode, ROT_MODE_MIN, ROT_MODE_MAX);
+	}
+}
+
+void KER_pose_rose_read_lib(RoseLibReader *reader, Object *object, Pose *pose) {
+	Armature *armature = (Armature *)object->data;
+
+	if (armature == NULL || pose == NULL) {
+		return;
+	}
+
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
+		pchannel->bone = KER_armature_find_bone_name(armature, pchannel->name);
+	}
 }
 
 void KER_pose_channels_hash_ensure(Pose *pose) {
@@ -1088,6 +1156,157 @@ ROSE_STATIC void action_foreach_id(ID *id, struct LibraryForeachIDData *data) {
 	}
 }
 
+ROSE_INLINE void write_channelbag(RoseWriter *writer, ActionChannelBag *bag) {
+	RLO_write_struct(writer, ActionChannelBag, bag);
+
+	RLO_write_pointer_array(writer, bag->totgroup, (const void **)bag->groups);
+	for (int index = 0; index < bag->totgroup; index++) {
+		RLO_write_struct(writer, ActionGroup, bag->groups[index]);
+	}
+
+	RLO_write_pointer_array(writer, bag->totcurve, (const void **)bag->fcurves);
+	for (int index = 0; index < bag->totcurve; index++) {
+		KER_fcurve_rose_write_data(writer, bag->fcurves[index]);
+	}
+}
+
+ROSE_INLINE void write_strip_keyframe_data(RoseWriter *writer, ActionStripKeyframeData *data) {
+	RLO_write_struct(writer, ActionStripKeyframeData, data);
+
+	RLO_write_pointer_array(writer, data->totchannelbag, (const void **)data->channelbags);
+	for (int index = 0; index < data->totchannelbag; index++) {
+		write_channelbag(writer, data->channelbags[index]);
+	}
+}
+
+ROSE_INLINE void write_strip_keyframe_data_array(RoseWriter *writer, ActionStripKeyframeData **stripkeyframedata, int length) {
+	RLO_write_pointer_array(writer, length, (const void **)stripkeyframedata);
+	for (int index = 0; index < length; index++) {
+		write_strip_keyframe_data(writer, stripkeyframedata[index]);
+	}
+}
+
+ROSE_INLINE void write_strip(RoseWriter *writer, ActionStrip *strip) {
+	RLO_write_struct(writer, ActionStrip, strip);
+}
+
+ROSE_INLINE void write_layer(RoseWriter *writer, ActionLayer *layer) {
+	RLO_write_struct(writer, ActionLayer, layer);
+
+	RLO_write_pointer_array(writer, layer->totstrip, (const void **)layer->strips);
+	for (int index = 0; index < layer->totstrip; index++) {
+		write_strip(writer, layer->strips[index]);
+	}
+}
+
+ROSE_INLINE void write_layers(RoseWriter *writer, ActionLayer **layers, int length) {
+	RLO_write_pointer_array(writer, length, (const void **)layers);
+	for (int index = 0; index < length; index++) {
+		write_layer(writer, layers[index]);
+	}
+}
+
+ROSE_INLINE void write_slot(RoseWriter *writer, ActionSlot *slot) {
+	ActionSlot shallow_copy;
+	memcpy(&shallow_copy, slot, sizeof(ActionSlot));
+	shallow_copy.runtime = NULL;
+
+	RLO_write_struct_at_address(writer, ActionSlot, slot, &shallow_copy);
+}
+
+ROSE_INLINE void write_slots(RoseWriter *writer, ActionSlot **slots, int length) {
+	RLO_write_pointer_array(writer, length, (const void **)slots);
+	for (int index = 0; index < length; index++) {
+		write_slot(writer, slots[index]);
+	}
+}
+
+ROSE_STATIC void action_rose_write(RoseWriter *writer, ID *id, const void *address) {
+	Action *action = (Action *)id;
+
+	RLO_write_id_struct(writer, Action, address, &action->id);
+	KER_id_rose_write(writer, &action->id);
+
+	write_strip_keyframe_data_array(writer, action->stripkeyframedata, action->totstripkeyframedata);
+	write_layers(writer, action->layers, action->totlayer);
+	write_slots(writer, action->slots, action->totslot);
+}
+
+ROSE_INLINE void read_channelbag(RoseDataReader *reader, ActionChannelBag *bag) {
+	RLO_read_pointer_array(reader, bag->totgroup, (void **)&bag->groups);
+	for (int index = 0; index < bag->totgroup; index++) {
+		RLO_read_struct(reader, ActionGroup, &bag->groups[index]);
+		
+		/** Restore the pointer to the channelbag! */
+		bag->groups[index]->channelbag = bag;
+	}
+
+	RLO_read_pointer_array(reader, bag->totcurve, (void **)&bag->fcurves);
+	for (int index = 0; index < bag->totcurve; index++) {
+		RLO_read_struct(reader, FCurve, &bag->fcurves[index]);
+
+		FCurve *fcurve = bag->fcurves[index];
+
+		fcurve->prev = NULL;
+		fcurve->next = NULL;
+
+		KER_fcurve_rose_read_data(reader, fcurve);
+	}
+}
+
+ROSE_INLINE void read_strip_keyframe_data(RoseDataReader *reader, ActionStripKeyframeData *data) {
+	RLO_read_pointer_array(reader, data->totchannelbag, (void **)&data->channelbags);
+	for (int index = 0; index < data->totchannelbag; index++) {
+		RLO_read_struct(reader, ActionChannelBag, &data->channelbags[index]);
+		read_channelbag(reader, data->channelbags[index]);
+	}
+}
+
+ROSE_INLINE void read_strip_keyframe_data_array(RoseDataReader *reader, Action *action) {
+	RLO_read_pointer_array(reader, action->totstripkeyframedata, (void **)&action->stripkeyframedata);
+	for (int index = 0; index < action->totstripkeyframedata; index++) {
+		RLO_read_struct(reader, ActionStripKeyframeData, &action->stripkeyframedata[index]);
+		read_strip_keyframe_data(reader, action->stripkeyframedata[index]);
+	}
+}
+
+ROSE_INLINE void read_layers(RoseDataReader *reader, Action *action) {
+	RLO_read_pointer_array(reader, action->totlayer, (void **)&action->layers);
+	for (int index = 0; index < action->totlayer; index++) {
+		RLO_read_struct(reader, ActionLayer, &action->layers[index]);
+		ActionLayer *layer = action->layers[index];
+
+		RLO_read_pointer_array(reader, layer->totstrip, (void **)&layer->strips);
+		for (int strip = 0; strip < layer->totstrip; strip++) {
+			RLO_read_struct(reader, ActionStrip, &layer->strips[strip]);
+
+			if (layer->strips[strip] == NULL) {
+				layer->strips[strip] = KER_action_layer_strip_add(action, layer, ACTION_STRIP_KEYFRAME);
+			}
+		}
+	}
+}
+
+ROSE_INLINE void read_slots(RoseDataReader *reader, Action *action) {
+	RLO_read_pointer_array(reader, action->totslot, (void **)&action->slots);
+	for (int index = 0; index < action->totslot; index++) {
+		RLO_read_struct(reader, ActionSlot, &action->slots[index]);
+		KER_action_slot_runtime_init(action->slots[index]);
+	}
+}
+
+ROSE_STATIC void action_rose_read_data(RoseDataReader *reader, ID *id) {
+	Action *action = (Action *)id;
+
+	read_strip_keyframe_data_array(reader, action);
+	read_layers(reader, action);
+	read_slots(reader, action);
+}
+
+ROSE_STATIC void action_rose_read_lib(RoseLibReader *reader, ID *id) {
+	Action *action = (Action *)id;
+}
+
 IDTypeInfo IDType_ID_AC = {
 	.idcode = ID_AC,
 
@@ -1107,8 +1326,9 @@ IDTypeInfo IDType_ID_AC = {
 
 	.foreach_id = action_foreach_id,
 
-	.write = NULL,
-	.read_data = NULL,
+	.write = action_rose_write,
+	.read_data = action_rose_read_data,
+	.read_lib = action_rose_read_lib,
 };
 
 /** \} */

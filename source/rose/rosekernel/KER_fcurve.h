@@ -5,6 +5,9 @@
 
 #include "RNA_define.h"
 
+struct RoseDataReader;
+struct RoseWriter;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,6 +43,9 @@ struct FCurve *KER_fcurve_copy(const struct FCurve *fcurve);
 
 void KER_fcurves_free(struct ListBase *list);
 void KER_fcurve_free(struct FCurve *fcurve);
+
+void KER_fcurve_rose_read_data(struct RoseDataReader *reader, struct FCurve *fcurve);
+void KER_fcurve_rose_write_data(struct RoseWriter *writer, struct FCurve *fcurve);
 
 /** \} */
 

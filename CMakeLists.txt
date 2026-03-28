@@ -64,7 +64,7 @@ if(UNIX)
 	mark_as_advanced(WITH_COMPILER_CCACHE)
 endif()
 
-option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." ON)
+option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." OFF)
 mark_as_advanced(WITH_TBB)
 
 # ----------------------------------------------------------------------------
@@ -102,9 +102,9 @@ endif()
 # -----------------------------------------------------------------------------
 # Extra Compile Flags
 
-# Select C++17 as the standard for C++ projects.
-set(CMAKE_CXX_STANDARD 17)
-# If C++17 is not available, downgrading to an earlier standard is NOT OK.
+# Select C++20 as the standard for C++ projects.
+set(CMAKE_CXX_STANDARD 20)
+# If C++20 is not available, downgrading to an earlier standard is NOT OK.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Do not enable compiler specific language extensions.
 set(CMAKE_CXX_EXTENSIONS OFF)

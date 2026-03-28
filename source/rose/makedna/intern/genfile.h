@@ -298,7 +298,7 @@ const size_t DNA_sdna_offsetof(struct SDNA *sdna, const struct DNATypeStruct *ty
  * when for example we are casting `unsigned char [3]` to `float [3]` for a color, then we would end up with unormalized
  * float values, instead a warning is thrown!
  */
-void *DNA_sdna_struct_reconstruct(const struct SDNA *dna_old, const struct SDNA *dna_new, uint64_t struct_nr, const void *data_old, const char *blockname);
+void *DNA_sdna_struct_reconstruct(const struct SDNA *dna_old, const struct SDNA *dna_new, uint64_t struct_nr, size_t length, const void *data_old, const char *blockname);
 
 /** \} */
 

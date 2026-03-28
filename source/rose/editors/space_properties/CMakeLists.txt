@@ -35,6 +35,7 @@ set(LIB
 	rose::source::draw
 	rose::source::gpu
 	rose::source::dna
+	rose::source::rna
 	rose::source::windowmanager
 	rose::source::editors::interface
 	

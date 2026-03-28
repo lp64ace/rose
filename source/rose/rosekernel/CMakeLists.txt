@@ -83,7 +83,6 @@ set(SRC
 	intern/main.c
 	intern/main_id_name_map.cc
 	intern/main_name_map.cc
-	intern/mesh.c
 	intern/mesh.cc
 	intern/mesh_data_update.c
 	intern/mesh_normals.cc
@@ -95,7 +94,7 @@ set(SRC
 	intern/object_runtime.cc
 	intern/rose.c
 	intern/rosefile.c
-	intern/scene.c
+	intern/scene.cc
 	intern/screen.c
 	intern/userdef.c
 	
@@ -108,14 +107,15 @@ set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
 	rose::intern::atomic
-	PUBLIC rose::source::depsgraph
-	PUBLIC rose::source::roselib
+	rose::source::depsgraph
+	rose::source::roselib
+	rose::source::roseloader
 	PUBLIC rose::source::dna
 	PUBLIC rose::source::rna
-	PUBLIC rose::source::functions
-	PUBLIC rose::source::modifiers
-	PUBLIC rose::source::editors::interface
-	
+	rose::source::functions
+	rose::source::modifiers
+	rose::source::editors::interface
+
 	# External Library Dependencies
 	
 )
@@ -163,6 +163,7 @@ set(LIB
 	rose::source::roselib
 	rose::source::dna
 	rose::source::rosemesh
+	rose::source::roseloader
 	rose::source::rosekernel
 	rose::source::windowmanager
 	

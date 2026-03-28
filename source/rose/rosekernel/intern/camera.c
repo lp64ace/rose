@@ -138,6 +138,7 @@ IDTypeInfo IDType_ID_CA = {
 
 	.write = NULL,
 	.read_data = NULL,
+	.read_lib = NULL,
 };
 
 /** \} */

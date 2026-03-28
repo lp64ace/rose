@@ -9,10 +9,15 @@
 
 struct Action;
 struct ActionSlot;
+struct Armature;
 struct FCurveDescriptor;
 struct Main;
+struct Object;
 struct Pose;
 struct PoseChannel;
+struct RoseDataReader;
+struct RoseLibReader;
+struct RoseWriter;
 
 #ifdef __cplusplus
 extern "C" {
@@ -147,6 +152,9 @@ void KER_pose_channel_free_ex(struct PoseChannel *pchan, bool do_id_user);
  * \{ */
 
 void KER_pose_copy_data(struct Pose **dst_p, const struct Pose *src, const int flag);
+void KER_pose_rose_write(struct RoseWriter *writer, struct Pose *pose, struct Armature *armature);
+void KER_pose_rose_read_data(struct RoseDataReader *reader, struct Pose *pose);
+void KER_pose_rose_read_lib(struct RoseLibReader *reader, struct Object *object, struct Pose *pose);
 
 /**
  * Removes the hash for quick lookup of channels, must be done when adding/removing channels.

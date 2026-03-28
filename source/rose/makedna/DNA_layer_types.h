@@ -19,7 +19,7 @@ typedef struct Base {
     int flag;
 	int flag_collection;
 
-    unsigned int local_view_bits;
+	unsigned int local_view_bits;
 	unsigned int local_collections_bits;
 
     struct Object *object;
@@ -77,7 +77,6 @@ typedef struct ViewLayer {
     struct Base *active;
 
     ListBase bases;
-    ListBase drawdata;
 	struct Base **object_bases_array;
 	struct GHash *object_bases_hash;
 

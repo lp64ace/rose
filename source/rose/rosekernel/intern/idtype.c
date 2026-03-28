@@ -219,6 +219,7 @@ IDTypeInfo IDType_ID_LINK_PLACEHOLDER = {
 
 	.write = NULL,
 	.read_data = NULL,
+	.read_lib = NULL,
 };
 
 /** \} */

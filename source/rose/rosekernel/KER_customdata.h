@@ -12,6 +12,8 @@ extern "C" {
 struct CustomData;
 struct CustomData_MeshMasks;
 struct ID;
+struct RoseDataReader;
+struct RoseWriter;
 
 enum eCustomDataType;
 
@@ -209,6 +211,31 @@ bool CustomData_free_layer_active(struct CustomData *data, eCustomDataType type,
  * Same as above, but free all layers with type.
  */
 void CustomData_free_layers(struct CustomData *data, eCustomDataType type, int totelem);
+
+/**
+ * Prepare given custom data for file writing.
+ *
+ * \param data: the custom-data to tweak for .blend file writing (modified in place).
+ * \param r_write_layers: contains a reduced set of layers to be written to file,
+ * use it with #writestruct_at_address()
+ * (caller must free it if != \a write_layers_buff).
+ * \param write_layers_buff: An optional buffer for r_write_layers (to avoid allocating it).
+ * \param write_layers_size: The size of pre-allocated \a write_layer_buff.
+ * 
+ * \warning After this function has ran, given custom data is no more valid from Rose POV
+ * (its `totlayer` is invalid). This function shall always be called with localized data
+ * (as it is in write_meshes()).
+ *
+ * \note `data->typemap` is not updated here, since it is always rebuilt on file read anyway.
+ * This means written `typemap` does not match written layers (as returned by \a r_write_layers).
+ * Trivial to fix is ever needed.
+ */
+void CustomData_rose_write_prepare(struct CustomData *data, CustomDataLayer **r_write_layers, CustomDataLayer *write_layers_buff, size_t length);
+/**
+ * \param layers: The layers argument assigned by #CustomData_blend_write_prepare.
+ */
+void CustomData_rose_write(struct RoseWriter *writer, struct CustomData *data, CustomDataLayer *layers, int count, eCustomDataMask mask, struct ID *id);
+void CustomData_rose_read(struct RoseDataReader *reader, struct CustomData *data, int count);
 
 /**
  * Returns true if a layer with the specified type exists.

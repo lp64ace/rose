@@ -7,6 +7,9 @@
 
 struct AnimData;
 struct Main;
+struct RoseDataReader;
+struct RoseLibReader;
+struct RoseWriter;
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +31,16 @@ struct AnimData *KER_animdata_ensure_id(struct ID *id);
 struct AnimData *KER_animdata_copy_ex(struct Main *main, struct AnimData *adt, int flag);
 
 void KER_animdata_free(struct ID *id, const bool do_id_user);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose Read/Write
+ * \{ */
+
+void KER_animdata_rose_write(struct RoseWriter *writer, struct AnimData *adt);
+void KER_animdata_rose_read_data(struct RoseDataReader *reader, struct AnimData *adt);
+void KER_animdata_rose_read_lib(struct RoseLibReader *reader, struct ID *id, struct AnimData *adt);
 
 /** \} */
 

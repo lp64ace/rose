@@ -16,8 +16,10 @@ struct LibraryForeachIDData;
 struct Main;
 struct RoseWriter;
 struct RoseDataReader;
+struct RoseLibReader;
 
 typedef struct RoseDataReader RoseDataReader;
+typedef struct RoseLibReader RoseLibReader;
 typedef struct RoseWriter RoseWriter;
 
 /* -------------------------------------------------------------------- */
@@ -32,6 +34,7 @@ typedef void (*IDTypeForeachIDFunction)(struct ID *id, struct LibraryForeachIDDa
 
 typedef void (*IDTypeRoseWriteFunction)(struct RoseWriter *writer, struct ID *id, const void *address);
 typedef void (*IDTypeRoseReadDataFunction)(struct RoseDataReader *reader, struct ID *id);
+typedef void (*IDTypeRoseReadLibFunction)(struct RoseLibReader *reader, struct ID *id);
 
 typedef struct IDTypeInfo {
 
@@ -108,6 +111,7 @@ typedef struct IDTypeInfo {
 	 * Update pointers for all structs directly owned by this data block.
 	 */
 	IDTypeRoseReadDataFunction read_data;
+	IDTypeRoseReadLibFunction read_lib;
 
 	/** \} */
 

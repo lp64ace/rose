@@ -1,6 +1,8 @@
 #ifndef KER_ROSEFILE_H
 #define KER_ROSEFILE_H
 
+struct rContext;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,7 +19,8 @@ typedef struct RoseFileData {
 /** \name Util Methods
  * \{ */
 
-void KER_rosefile_read_setup(struct RoseFileData *rfd);
+struct RoseFileData *KER_rosefile_read(const char *filepath, int flag);
+void KER_rosefile_read_setup(struct rContext *C, struct RoseFileData *rfd);
 
 /** \} */
 

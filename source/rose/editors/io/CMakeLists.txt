@@ -39,6 +39,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::roselib
 	rose::source::dna
+	rose::source::rna
 	rose::source::io::fbx
 	rose::source::windowmanager
 	

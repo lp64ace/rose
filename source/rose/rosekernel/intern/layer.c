@@ -1,6 +1,7 @@
 #include "MEM_guardedalloc.h"
 
 #include "KER_collection.h"
+#include "KER_idtype.h"
 #include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_main.h"
@@ -15,6 +16,8 @@
 #include "LIB_thread.h"
 
 #include "DEG_depsgraph.h"
+
+#include "RLO_read_write.h"
 
 #include <stdio.h>
 
@@ -185,6 +188,89 @@ ViewLayer *KER_view_layer_add(Scene *scene, const char *name, ViewLayer *view_la
 	return view_layer_new;
 }
 
+ROSE_STATIC void write_layer_collections(RoseWriter *writer, ListBase *lb) {
+	LISTBASE_FOREACH(LayerCollection *, lc, lb) {
+		RLO_write_struct(writer, LayerCollection, lc);
+
+		write_layer_collections(writer, &lc->layer_collections);
+	}
+}
+
+void KER_view_layer_rose_write(RoseWriter *writer, const Scene *scene, ViewLayer *view_layer) {
+	KER_layer_collection_sync(scene, view_layer);
+
+	RLO_write_struct(writer, ViewLayer, view_layer);
+
+	LISTBASE_FOREACH(Base *, base, &view_layer->bases) {
+		RLO_write_struct(writer, Base, base);
+	}
+
+	write_layer_collections(writer, &view_layer->layer_collections);
+}
+
+ROSE_STATIC void direct_link_layer_collections(RoseDataReader *reader, ViewLayer *view_layer, ListBase *lb, bool master, bool *r_active_collection_found) {
+	RLO_read_struct_list(reader, LayerCollection, lb);
+
+	LISTBASE_FOREACH(LayerCollection *, lc, lb) {
+		/* Master collection is not a real data-block. */
+		if (master) {
+			RLO_read_struct(reader, Collection, &lc->collection);
+		}
+
+		if (lc == view_layer->active_collection) {
+			*r_active_collection_found = true;
+		}
+
+		direct_link_layer_collections(reader, view_layer, &lc->layer_collections, false, r_active_collection_found);
+	}
+}
+
+void KER_view_layer_rose_read_data(RoseDataReader *reader, ViewLayer *view_layer) {
+	RLO_read_struct_list(reader, Base, &view_layer->bases);
+	RLO_read_struct(reader, Base, &view_layer->active);
+
+	bool active_collection_found = false;
+	RLO_read_struct(reader, LayerCollection, &view_layer->active_collection);
+
+	direct_link_layer_collections(reader, view_layer, &view_layer->layer_collections, true, &active_collection_found);
+
+	if (!active_collection_found) {
+		/* Ensure pointer is valid, in case of corrupt rose file. */
+		view_layer->active_collection = (LayerCollection *)view_layer->layer_collections.first;
+	}
+
+	view_layer->object_bases_array = NULL;
+	view_layer->object_bases_hash = NULL;
+}
+
+ROSE_STATIC void lib_link_layer_collections(RoseLibReader *reader, Scene *scene, ViewLayer *view_layer, ListBase *lb, bool master) {
+	LISTBASE_FOREACH(LayerCollection *, lc, lb) {
+		if (!master) {
+			RLO_read_id_address(reader, scene->id.lib, &lc->collection);
+		}
+
+		lib_link_layer_collections(reader, scene, view_layer, &lc->layer_collections, false);
+	}
+}
+
+void KER_view_layer_rose_read_lib(RoseLibReader *reader, Scene *scene, ViewLayer *view_layer) {
+	LISTBASE_FOREACH_MUTABLE(Base *, base, &view_layer->bases) {
+		RLO_read_id_address(reader, scene->id.lib, &base->object);
+
+		ROSE_assert(base->runtime.base_orig == NULL);
+
+		if (base->object == NULL) {
+			if (view_layer->active == base) {
+				view_layer->active = NULL;
+			}
+
+			LIB_freelinkN(&view_layer->bases, base);
+		}
+	}
+
+	lib_link_layer_collections(reader, scene, view_layer, &view_layer->layer_collections, true);
+}
+
 void KER_view_layer_free(ViewLayer *view_layer) {
 	KER_view_layer_free_ex(view_layer, true);
 }
@@ -201,11 +287,6 @@ void KER_view_layer_free_ex(ViewLayer *view_layer, bool us) {
 		layer_collection_free(view_layer, lc);
 	}
 	LIB_freelistN(&view_layer->layer_collections);
-
-	LISTBASE_FOREACH(void *, dd, &view_layer->drawdata) {
-		fprintf(stderr, "[Kernel] ViewLayer - drawing engine data need to be freed!");
-	}
-	LIB_freelistN(&view_layer->drawdata);
 
 	MEM_SAFE_FREE(view_layer->object_bases_array);
 	MEM_freeN(view_layer);
@@ -297,7 +378,7 @@ ROSE_STATIC bool layer_collection_hidden(ViewLayer *view_layer, LayerCollection 
 	if (lc->flag & LAYER_COLLECTION_HIDE || lc->collection->flag & COLLECTION_HIDE_VIEWPORT) {
 		return true;
 	}
-	CollectionParent *parent = lc->collection->parents.first;
+	CollectionParent *parent = lc->collection->runtime->parents.first;
 	if (parent) {
 		lc = KER_layer_collection_first_from_scene_collection(view_layer, parent->collection);
 
@@ -319,7 +400,7 @@ bool KER_layer_collection_activate(ViewLayer *view_layer, LayerCollection *lc) {
 }
 
 LayerCollection *KER_layer_collection_activate_parent(ViewLayer *view_layer, LayerCollection *lc) {
-	CollectionParent *parent = lc->collection->parents.first;
+	CollectionParent *parent = lc->collection->runtime->parents.first;
 
 	if (parent) {
 		lc = KER_layer_collection_first_from_scene_collection(view_layer, parent->collection);
@@ -1089,7 +1170,6 @@ ROSE_STATIC void layer_collections_copy_data(ViewLayer *view_layer_dst, const Vi
 }
 
 void KER_view_layer_copy_data(Scene *scene_dst, const Scene *scene_src, ViewLayer *view_layer_dst, const ViewLayer *view_layer_src, const int flag) {
-	LIB_listbase_clear(&view_layer_dst->drawdata);
 	view_layer_dst->object_bases_array = NULL;
 	view_layer_dst->object_bases_hash = NULL;
 

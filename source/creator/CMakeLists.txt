@@ -38,6 +38,7 @@ set(LIB
 	rose::source::rna
 	rose::source::roselib
 	rose::source::rosekernel
+	rose::source::roseloader
 	rose::source::rosefont
 	rose::source::functions
 	rose::source::depsgraph
@@ -52,7 +53,6 @@ set(LIB
 	rose::source::editors::space_properties
 	rose::source::io::fbx
 	rose::source::rosemesh
-	rose::source::roseloader
 
 	rose::resources::models
 	

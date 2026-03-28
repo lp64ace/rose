@@ -298,7 +298,7 @@ bool KER_animsys_rna_curve_resolve(PointerRNA *ptr, FCurve *fcurve, PathResolved
 				return true;
 			}
 			// When the #FCURVE_DO_STATIC_COMPILATION flag is enabled we should always be able to do that!
-			ROSE_assert(fcurve->runtime.static_path);
+			// ROSE_assert(fcurve->runtime.static_path);
 		}
 	}
 

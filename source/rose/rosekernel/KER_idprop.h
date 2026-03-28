@@ -12,6 +12,9 @@ extern "C" {
 struct ID;
 struct IDPropertyData;
 struct IDProperty;
+struct RoseDataReader;
+struct RoseLibReader;
+struct RoseWriter;
 
 /* -------------------------------------------------------------------- */
 /** \name Data Structures
@@ -50,9 +53,9 @@ typedef struct IDProperty {
 	IDPropertyData data;
 
 	/** The length of the array and importantly `LIB_strlen(string) + 1` in case of string. */
-	size_t length;
+	int length;
 	/** The allocated length of the buffer of the array or string, in elements. */
-	size_t alloc;
+	int alloc;
 } IDProperty;
 
 enum eIDPropertyType {
@@ -140,6 +143,9 @@ void IDP_FreeProperty(IDProperty *property);
 
 void IDP_ClearProperty(IDProperty *property);
 void IDP_Reset(IDProperty *property, const IDProperty *reference);
+void IDP_RoseWrite(struct RoseWriter *writer, IDProperty *property);
+void IDP_RoseReadData(struct RoseDataReader *reader, IDProperty **property, const char *allocname);
+void IDP_RoseReadLib(struct RoseLibReader *reader, IDProperty *property);
 
 #define IDP_Int(property) ((property)->data.value1)
 #define IDP_Bool(property) ((property)->data.value1)

@@ -10,7 +10,11 @@
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
+#include "KER_action.h"
+#include "KER_idtype.h"
 #include "KER_fcurve.h"
+
+#include "RLO_read_write.h"
 
 #define SMALL -1.0e-10
 
@@ -81,6 +85,35 @@ void KER_fcurve_free(FCurve *fcurve) {
 	}
 	
 	MEM_freeN(fcurve);
+}
+
+void KER_fcurve_rose_read_data(RoseDataReader *reader, FCurve *fcurve) {
+	RLO_read_struct_array(reader, BezTriple, fcurve->totvert, &fcurve->bezt);
+	RLO_read_struct_array(reader, FPoint, fcurve->totvert, &fcurve->fpt);
+
+	RLO_read_data_address(reader, &fcurve->path);
+	RLO_read_struct(reader, ActionGroup, &fcurve->group);
+
+	memset(&fcurve->runtime, 0, sizeof(FCurve_Runtime));
+}
+
+void KER_fcurve_rose_write_data(RoseWriter *writer, FCurve *fcurve) {
+	if (fcurve->bezt) {
+		RLO_write_struct_array(writer, BezTriple, fcurve->totvert, fcurve->bezt);
+	}
+	if (fcurve->fpt) {
+		RLO_write_struct_array(writer, FPoint, fcurve->totvert, fcurve->fpt);
+	}
+
+	if (fcurve->path) {
+		RLO_write_string(writer, fcurve->path);
+	}
+
+	FCurve shallow_copy;
+	memcpy(&shallow_copy, fcurve, sizeof(FCurve));
+	memset(&shallow_copy.runtime, 0, sizeof(FCurve_Runtime));
+
+	RLO_write_struct_at_address(writer, FCurve, fcurve, &shallow_copy);
 }
 
 /** \} */

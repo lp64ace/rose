@@ -20,9 +20,10 @@
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
-#include "KER_rose.h"
-#include "KER_scene.h"
 #include "KER_object.h"
+#include "KER_rose.h"
+#include "KER_rosefile.h"
+#include "KER_scene.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
@@ -33,23 +34,26 @@
 #include "ED_screen.h"
 #include "ED_space_api.h"
 
-#include "GPU_init_exit.h"
 #include "GPU_context.h"
+#include "GPU_init_exit.h"
 
+#include "LIB_listbase.h"
 #include "LIB_math_base.h"
 #include "LIB_math_geom.h"
 #include "LIB_math_matrix.h"
-#include "LIB_listbase.h"
 #include "LIB_string.h"
 #include "LIB_utildefines.h"
 
 #include "IO_fbx.h"
 
-#include "RFT_api.h"
 #include "GTK_api.h"
+#include "RFT_api.h"
 
 #include "DEG_depsgraph.h"
 #include "DEG_depsgraph_build.h"
+
+#include "RLO_readfile.h"
+#include "RLO_writefile.h"
 
 #include <stdio.h>
 
@@ -244,73 +248,18 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 /** \name Init & Exit Methods
  * \{ */
 
+extern const int datatoc_sarah_fbx_size;
+extern const char datatoc_sarah_fbx[];
 
 extern const int datatoc_skeleton_fbx_size;
 extern const char datatoc_skeleton_fbx[];
 
-ROSE_INLINE void wm_init_scene(rContext *C, struct Main *main, struct wmWindow *window) {
+ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-	FBX_import_memory(C, datatoc_skeleton_fbx, datatoc_skeleton_fbx_size, 1.0f);
 
-	Object *obarmature = KER_main_id_lookup(main, ID_OB, "Armature");
-	Object *obmesh = KER_main_id_lookup(main, ID_OB, "SM_Skeleton_Base");
-
-	ROSE_assert(obarmature);
-	ROSE_assert(obmesh);
-
-	Action *action = KER_main_id_lookup(main, ID_AC, "Take 001");
-
-	ROSE_assert(action);
-
-	ViewLayer *view_layer = CTX_data_view_layer(C);
-
-	LayerCollection *lc = KER_layer_collection_get_active(view_layer);
-
-	const float total = 11.0f;
-	for (float count = -(total - 1) / 2; count <= (total - 1) / 2; count += 1.0f) {
-		Object *armature = (Object *)KER_id_copy(main, &obarmature->id);
-		KER_action_assign(action, &armature->id);
-
-		AnimData *adt = KER_animdata_from_id(&armature->id);
-		if (adt) {
-			adt->stime = count * scene->r.fps;
-		}
-
-		armature->loc[0] += 8.0f * sin(count * M_PI / total);
-		armature->loc[2] -= 8.0f * cos(count * M_PI / total);
-
-		Object *mesh = (Object *)KER_id_copy(main, &obmesh->id);
-
-		mesh->parent = armature;
-
-		KER_object_free_modifiers(mesh, 0);
-
-		ModifierData *md = KER_modifier_new(MODIFIER_TYPE_ARMATURE);
-
-		/**
-		 * Assign the modifier to the object that is to be deformed.
-		 */
-		LIB_addtail(&mesh->modifiers, md);
-
-		ArmatureModifierData *ad = (ArmatureModifierData *)(md);
-		ad->modifier.flag |= MODIFIER_DEVICE_ONLY;
-		/**
-		 * Assign the armature object to the modifier.
-		 */
-		ad->object = armature;
-
-		KER_collection_object_add(main, lc->collection, armature);
-		KER_collection_object_add(main, lc->collection, mesh);
-
-		int flags = ID_RECALC_TRANSFORM | ID_RECALC_GEOMETRY | ID_RECALC_ANIMATION;
-		DEG_id_tag_update_ex(main, &armature->id, flags);
-		DEG_id_tag_update_ex(main, &mesh->id, flags);
-	}
-
-	DEG_id_tag_update(&lc->collection->id, ID_RECALC_COPY_ON_WRITE);
-	DEG_relations_tag_update(main);
+	FBX_import_memory(C, datatoc_sarah_fbx, datatoc_sarah_fbx_size, 1.0f);
 }
 
 void WM_keyconfig_init(rContext *C) {
@@ -524,6 +473,7 @@ IDTypeInfo IDType_ID_WM = {
 
 	.write = NULL,
 	.read_data = NULL,
+	.read_lib = NULL,
 };
 
 /** \} */

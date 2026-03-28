@@ -134,12 +134,12 @@ ROSE_INLINE ColorTheme4<uint8_t> LIB_color_convert_to_theme4b(const ColorTheme4<
 
 template<eAlpha Alpha> class ColorSceneLinear4f final : public ColorRGBA<float, eSpace::SceneLinear, Alpha> {
 public:
-	constexpr ColorSceneLinear4f<Alpha>() = default;
+	constexpr ColorSceneLinear4f() = default;
 
-	constexpr ColorSceneLinear4f<Alpha>(const float *rgba) : ColorRGBA<float, eSpace::SceneLinear, Alpha>(rgba) {
+	constexpr ColorSceneLinear4f(const float *rgba) : ColorRGBA<float, eSpace::SceneLinear, Alpha>(rgba) {
 	}
 
-	constexpr ColorSceneLinear4f<Alpha>(float r, float g, float b, float a) : ColorRGBA<float, eSpace::SceneLinear, Alpha>(r, g, b, a) {
+	constexpr ColorSceneLinear4f(float r, float g, float b, float a) : ColorRGBA<float, eSpace::SceneLinear, Alpha>(r, g, b, a) {
 	}
 
 	/**

@@ -6,6 +6,8 @@
 struct Object;
 struct MDeformVert;
 struct MDeformWeight;
+struct RoseDataReader;
+struct RoseWriter;
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,6 +22,9 @@ struct MDeformWeight *KER_defvert_find_index(const struct MDeformVert *dv, const
 /** Ensures that `dv` has a deform weight entry for the specified defweight group. */
 struct MDeformWeight *KER_defvert_ensure_index(struct MDeformVert *dv, int defgroup);
 
+void KER_defvert_rose_write(struct RoseWriter *writer, int count, struct MDeformVert *dvlist);
+void KER_defvert_rose_read(struct RoseDataReader *reader, int count, struct MDeformVert *dvlist);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -27,6 +32,7 @@ struct MDeformWeight *KER_defvert_ensure_index(struct MDeformVert *dv, int defgr
  * \{ */
 
 void KER_defgroup_copy_list(struct ListBase *outbase, const struct ListBase *inbase);
+void KER_defgroup_rose_write(struct RoseWriter *writer, const struct ListBase *defgroup);
 
 /** \} */
 

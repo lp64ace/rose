@@ -5,7 +5,10 @@
 #include "LIB_string.h"
 
 #include "KER_deform.h"
+#include "KER_idtype.h"
 #include "KER_object_deform.h"
+
+#include "RLO_read_write.h"
 
 /* -------------------------------------------------------------------- */
 /** \name Deform Vertex
@@ -59,6 +62,49 @@ MDeformWeight *KER_defvert_ensure_index(MDeformVert *dvert, int defgroup) {
 	return dw_new;
 }
 
+void KER_defvert_rose_write(RoseWriter *writer, int count, MDeformVert *dvlist) {
+	if (dvlist == NULL) {
+		return;
+	}
+
+	RLO_write_struct_array(writer, MDeformVert, count, dvlist);
+
+	for (int i = 0; i < count; i++) {
+		if (dvlist[i].dw) {
+			ROSE_assert(dvlist[i].totweight > 0);
+			
+			RLO_write_struct_array(writer, MDeformWeight, dvlist[i].totweight, dvlist[i].dw);
+		}
+	}
+}
+
+void KER_defvert_rose_read(RoseDataReader *reader, int count, MDeformVert *dvlist) {
+	if (dvlist == NULL) {
+		return;
+	}
+
+	for (int i = count; i > 0; i--, dvlist++) {
+		MDeformWeight *dw;
+		if (dvlist->dw && (dw = RLO_read_get_new_data_address(reader, dvlist->dw))) {
+			const size_t size = sizeof(MDeformWeight) * dvlist->totweight;
+			if (size) {
+				void *dw_tmp = MEM_mallocN(size, __func__);
+				memcpy(dw_tmp, dw, size);
+				dvlist->dw = dw_tmp;
+			}
+			else {
+				dvlist->dw = NULL;
+				dvlist->totweight = 0;
+			}
+			MEM_freeN(dw);
+		}
+		else {
+			dvlist->dw = NULL;
+			dvlist->totweight = 0;
+		}
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -73,6 +119,12 @@ void KER_defgroup_copy_list(ListBase *outbase, const ListBase *inbase) {
 	for (defgroup = inbase->first; defgroup; defgroup = defgroup->next) {
 		defgroupn = KER_defgroup_duplicate(defgroup);
 		LIB_addtail(outbase, defgroupn);
+	}
+}
+
+void KER_defgroup_rose_write(RoseWriter *writer, const ListBase *defbase) {
+	LISTBASE_FOREACH (DeformGroup *, defgroup, defbase) {
+		RLO_write_struct(writer, DeformGroup, defgroup);
 	}
 }
 

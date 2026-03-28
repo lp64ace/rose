@@ -19,6 +19,7 @@ set(SVG_FILENAMES_NOEXT
 	file_blank
 	file_folder
 	file_parent
+	file_rose
 	forward
 )
 

@@ -75,8 +75,6 @@ typedef struct Object {
 	int partype;
 	int rotmode;
 
-	struct Collection *instance_collection;
-	
 	struct Pose *pose;
 
 	/** String describing sub-object info. */

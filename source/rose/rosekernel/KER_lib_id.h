@@ -19,6 +19,7 @@ struct ID;
 struct IDProperty;
 struct Library;
 struct Main;
+struct RoseWriter;
 
 /* -------------------------------------------------------------------- */
 /** \name Datablock DrawData
@@ -248,6 +249,14 @@ const char *KER_id_name(const struct ID *id);
  * \note Keep in sync with #ID_TYPE_SUPPORTS_PARAMS_WITHOUT_COW.
  */
 void KER_id_eval_properties_copy(struct ID *id_cow, struct ID *id);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Datablock Write
+ * \{ */
+
+void KER_id_rose_write(struct RoseWriter *writer, struct ID *id);
 
 /** \} */
 

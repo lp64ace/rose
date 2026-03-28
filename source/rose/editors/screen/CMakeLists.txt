@@ -40,6 +40,7 @@ set(LIB
 	rose::intern::guardedalloc
 	rose::source::rosekernel
 	rose::source::dna
+	rose::source::rna
 	rose::source::gpu
 	rose::source::windowmanager
 	

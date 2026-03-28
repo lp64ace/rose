@@ -34,6 +34,7 @@ set(LIB
 	rose::source::rosekernel
 	rose::source::roseloader
 	rose::source::dna
+	rose::source::rna
 	rose::source::windowmanager
 	rose::source::editors::screen
 	

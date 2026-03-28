@@ -3,6 +3,7 @@
 #include "MOD_modifiertypes.h"
 
 #include "LIB_listbase.h"
+#include "LIB_session_uuid.h"
 #include "LIB_string.h"
 
 #include "KER_scene.h"
@@ -11,6 +12,8 @@
 #include "KER_lib_query.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
+
+#include "RLO_read_write.h"
 
 static ModifierTypeInfo *mod_types[NUM_MODIFIER_TYPES];
 
@@ -166,6 +169,55 @@ void KER_modifiers_foreach_ID_link(Object *object, IDWalkFunc walk, void *user_d
 			mti->foreach_ID_link(md, object, walk, user_data);
 		}
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Modifier List Read/Write
+ * \{ */
+
+void KER_modifier_rose_write(RoseWriter *writer, ListBase *modifiers) {
+	if (modifiers == NULL) {
+		return;
+	}
+
+	LISTBASE_FOREACH(ModifierData *, md, modifiers) {
+		const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+		if (mti == NULL) {
+			continue;
+		}
+
+		RLO_write_struct_by_name(writer, mti->dnastruct, md);
+
+		if (mti->write) {
+			mti->write(writer, md);
+		}
+	}
+}
+
+void KER_modifier_rose_read_data(RoseDataReader *reader, ListBase *modifiers) {
+	RLO_read_list(reader, modifiers);
+
+	LISTBASE_FOREACH(ModifierData *, md, modifiers) {
+		md->uuid = LIB_session_uuid_generate();
+
+		md->error = NULL;
+		md->runtime = NULL;
+
+		const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+		if (mti == NULL) {
+			md->type = MODIFIER_TYPE_NONE;
+		}
+
+		if ((mti != NULL) && (mti->read != NULL)) {
+			mti->read(reader, md);
+		}
+	}
+}
+
+void KER_modifier_rose_read_lib(RoseLibReader *reader, Object *object) {
+	KER_modifiers_foreach_ID_link(object, KER_object_modifiers_lib_link_common, reader);
 }
 
 /** \} */
