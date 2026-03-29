@@ -69,6 +69,7 @@ GPU_SHADER_CREATE_INFO(alice_shadow_no_debug)
       .additional_info("alice_shadow_common", "alice_shadow_no_manifold", __VA_ARGS__) \
       .do_static_compilation(true); \
   GPU_SHADER_CREATE_INFO(alice_shadow_fail_manifold_caps##suffix) \
+      .define("SHADOW_CAPS") \
       .define("SHADOW_FAIL") \
       .additional_info("alice_shadow_common", "alice_shadow_caps", __VA_ARGS__) \
       .do_static_compilation(true); \
@@ -77,6 +78,7 @@ GPU_SHADER_CREATE_INFO(alice_shadow_no_debug)
       .additional_info("alice_shadow_common", "alice_shadow_manifold", __VA_ARGS__) \
       .do_static_compilation(true); \
   GPU_SHADER_CREATE_INFO(alice_shadow_fail_no_manifold_caps##suffix) \
+      .define("SHADOW_CAPS") \
       .define("SHADOW_FAIL") \
       .define("DOUBLE_MANIFOLD") \
       .additional_info("alice_shadow_common", "alice_shadow_caps", __VA_ARGS__) \
