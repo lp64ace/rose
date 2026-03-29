@@ -179,3 +179,14 @@ void WM_operator_properties_filesel(wmOperatorType *ot, int filter, int type, in
 }
 
 /** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Operator Registration & Keymaps
+ * \{ */
+
+void WM_operatortypes_register() {
+	WM_operatortype_append(WM_OT_open_mainfile);
+	WM_operatortype_append(WM_OT_save_mainfile);
+}
+
+/** \} */

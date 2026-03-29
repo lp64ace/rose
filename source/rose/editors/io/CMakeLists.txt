@@ -25,7 +25,6 @@ set(SRC
 	io_fbx.cc
 	io_ops.cc
 	io_ops.h
-	io_rose.cc
 	io_utils.cc
 	io_utils.hh
 	

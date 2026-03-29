@@ -169,6 +169,10 @@ const char *WM_operatortype_name(struct wmOperatorType *ot, struct PointerRNA *p
 
 void WM_operatortype_append(void (*opfunc)(struct wmOperatorType *ot));
 void WM_operatortype_clear(void);
+void WM_operatortypes_register();
+
+void WM_OT_open_mainfile(struct wmOperatorType *ot);
+void WM_OT_save_mainfile(struct wmOperatorType *ot);
 
 /** \} */
 
