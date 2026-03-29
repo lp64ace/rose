@@ -260,6 +260,34 @@ void FILE_OT_parent(wmOperatorType *ot) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Refresh Operator
+ * \{ */
+
+static wmOperatorStatus file_refresh_exec(rContext *C, wmOperator *op) {
+	WindowManager *wm = CTX_wm_manager(C);
+	Main *main = CTX_data_main(C);
+	SpaceFile *sfile = CTX_wm_space_file(C);
+	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+
+	ED_fileselect_clear(wm, sfile);
+
+	return OPERATOR_FINISHED;
+}
+
+void FILE_OT_refresh(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Refresh File List";
+	ot->description = "Refresh the file list";
+	ot->idname = "FILE_OT_refresh";
+
+	/* API callbacks. */
+	ot->exec = file_refresh_exec;
+	ot->poll = ED_operator_file_browsing_active; /* <- important, handler is on window level */
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Navigate Previous Operator
  * \{ */
 
@@ -709,6 +737,7 @@ void file_operatortypes() {
 	WM_operatortype_append(FILE_OT_cancel);
 	WM_operatortype_append(FILE_OT_parent);
 	WM_operatortype_append(FILE_OT_previous);
+	WM_operatortype_append(FILE_OT_refresh);
 	WM_operatortype_append(FILE_OT_next);
 }
 

@@ -246,12 +246,15 @@ ROSE_INLINE void file_panel_ui_file_select_path_draw(const rContext *C, Panel *p
 				wmOperatorType *prev = WM_operatortype_find("FILE_OT_previous", false);
 				wmOperatorType *next = WM_operatortype_find("FILE_OT_next", false);
 				wmOperatorType *parent = WM_operatortype_find("FILE_OT_parent", false);
+				wmOperatorType *refresh = WM_operatortype_find("FILE_OT_refresh", false);
 
 				uiBut *but;
-				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_BACK, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Back
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_BACK, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	 // Back
 				UI_but_op_set(but, prev);
 				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FORWARD, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	// Forward
 				UI_but_op_set(but, next);
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FILE_REFRESH, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	 // Refresh
+				UI_but_op_set(but, refresh);
 				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FILE_PARENT, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	// Parent
 				UI_but_op_set(but, parent);
 			}
