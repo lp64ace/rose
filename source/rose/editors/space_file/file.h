@@ -24,6 +24,7 @@ void file_draw_check_ex(struct rContext *C, struct ScrArea *area);
 void file_draw_check(struct rContext *C);
 
 void file_sfile_to_operator(struct rContext *C, struct Main *main, struct wmOperator *op, struct SpaceFile *sfile);
+void file_sfile_to_operator_ex(struct rContext *C, struct Main *main, struct wmOperator *op, struct SpaceFile *sfile, char *filepath);
 void file_operator_to_sfile(struct Main *main, struct SpaceFile *sfile, struct wmOperator *op);
 
 /** \} */

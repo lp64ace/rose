@@ -30,7 +30,7 @@ set(SRC
 	intern/wm.c
 	intern/wm_draw.c
 	intern/wm_event.c
-	intern/wm_file.c
+	intern/wm_files.cc
 	intern/wm_keymap.c
 	intern/wm_handler.c
 	intern/wm_operator.c

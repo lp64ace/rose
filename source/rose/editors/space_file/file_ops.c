@@ -139,6 +139,7 @@ void file_draw_check(rContext *C) {
  * Execute the active file, as set in the file select params.
  */
 ROSE_INLINE bool file_execute(rContext *C, SpaceFile *sfile) {
+	Main *main = CTX_data_main(C);
 	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
 
 	/* Opening file, sends events now, so things get handled on window-queue level. */
@@ -147,6 +148,9 @@ ROSE_INLINE bool file_execute(rContext *C, SpaceFile *sfile) {
 		wmOperator *op = sfile->op;
 
 		sfile->op = NULL;
+
+		char filepath[FILE_MAX];
+		file_sfile_to_operator_ex(C, main, op, sfile, filepath);
 
 		WM_event_fileselect_event(CTX_wm_manager(C), op, EVT_FILESELECT_EXEC);
 	}

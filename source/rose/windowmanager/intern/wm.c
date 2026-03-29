@@ -317,6 +317,8 @@ void WM_init(rContext *C) {
 
 	DRW_engines_register();
 
+	WM_operatortypes_register();
+
 	RFT_init();
 
 	ED_spacetypes_init();

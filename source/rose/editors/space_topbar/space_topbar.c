@@ -91,10 +91,14 @@ ROSE_INLINE uiBlock *topbar_header_file_menu(rContext *C, ARegion *region, uiBut
 	if ((block = UI_block_begin(C, region, "TOPBAR_menu_file"))) {
 		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_COL, 0, 0, 6 * UI_UNIT_X, 0);
 
-		wmOperatorType *open = WM_operatortype_find("WM_OT_rose_open", false);
+		wmOperatorType *open = WM_operatortype_find("WM_OT_open_mainfile", false);
+		wmOperatorType *save = WM_operatortype_find("WM_OT_save_mainfile", false);
 
 		but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Open", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
 		UI_but_op_set(but, open);
+
+		but = uiDefBut(block, UI_BTYPE_PUSH, ICON_NONE, "Save", 0, 0, 6 * UI_UNIT_X, UI_UNIT_Y, NULL, 0, 0, 0, UI_BUT_TEXT_LEFT);
+		UI_but_op_set(but, save);
 
 		uiDefBut(block, UI_BTYPE_HSPR, ICON_NONE, "", 0, 0, 6 * UI_UNIT_X, BORDERPADDING, NULL, 0, 0, 0, 0);
 
