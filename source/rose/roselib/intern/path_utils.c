@@ -428,10 +428,10 @@ const char *LIB_path_basename(const char *path) {
  * \{ */
 
 /**
- * Implementation for #BLI_path_normalize & #BLI_path_normalize_native.
+ * Implementation for #LIB_path_normalize & #LIB_path_normalize_native.
  * \return The path length.
  */
-static int path_normalize_impl(char *path, bool check_blend_relative_prefix) {
+static int path_normalize_impl(char *path, bool check_rose_relative_prefix) {
 	const char *path_orig = path;
 	int path_len = strlen(path);
 
@@ -439,7 +439,7 @@ static int path_normalize_impl(char *path, bool check_blend_relative_prefix) {
 	 * Skip absolute prefix.
 	 * ---------------------
 	 */
-	if (check_blend_relative_prefix && (path[0] == '/' && path[1] == '/')) {
+	if (check_rose_relative_prefix && (path[0] == '/' && path[1] == '/')) {
 		path = path + 2; /* Leave the initial `//` untouched. */
 		path_len -= 2;
 
@@ -485,7 +485,7 @@ static int path_normalize_impl(char *path, bool check_blend_relative_prefix) {
 	/* NOTE(@ideasman42):
 	 *   `memmove(start, eind, strlen(eind) + 1);`
 	 * is the same as
-	 *   `BLI_strncpy(start, eind, ...);`
+	 *   `LIB_strcpy(start, eind, ...);`
 	 * except string-copy should not be used because there is overlap,
 	 * so use `memmove` 's slightly more obscure syntax. */
 
@@ -707,10 +707,9 @@ void LIB_path_split_dir_part(const char *filepath, char *dir, size_t dir_maxncpy
 size_t LIB_path_parent_dir(char *path, const size_t maxncpy) {
 	size_t length = LIB_strnlen(path, maxncpy);
 	if (length > 1) {
-		length--;
 		do {
 			length--;
-		} while (length && !LIB_path_slash_is_native_compat(path[length]));
+		} while (length && !LIB_path_slash_is_native_compat(path[length - 1]));
 		path[length] = '\0';
 	}
 	return length;
