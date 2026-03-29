@@ -59,8 +59,6 @@ set(LIB
 	rose::source::editors::space_view3d
 	rose::source::editors::screen
 
-	rose::resources::models
-	
 	# External Library Dependencies
 	
 )

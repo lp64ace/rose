@@ -54,8 +54,6 @@ set(LIB
 	rose::source::io::fbx
 	rose::source::rosemesh
 
-	rose::resources::models
-	
 	# External Library Dependencies
 	${PTHREADS_LIBRARIES}
 	

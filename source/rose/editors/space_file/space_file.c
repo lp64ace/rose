@@ -121,9 +121,15 @@ ROSE_INLINE void file_refresh(const rContext *C, ScrArea *area) {
 }
 
 ROSE_INLINE void file_exit(WindowManager *wm, ScrArea *area) {
-	SpaceFile *file = (SpaceFile *)area->spacedata.first;
+	SpaceFile *sfile = (SpaceFile *)area->spacedata.first;
 
-	MEM_SAFE_FREE(file->params);
+	/** Clear the file list so that the next time we refresh it! */
+	if (sfile->files) {
+		filelist_free(sfile->files);
+		sfile->files = NULL;
+	}
+
+	MEM_SAFE_FREE(sfile->params);
 }
 
 /** \} */

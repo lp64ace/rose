@@ -6,6 +6,7 @@
 
 #include "RNA_access.h"
 
+#include "LIB_string.h"
 #include "LIB_path_utils.h"
 #include "LIB_vector.hh"
 
@@ -15,6 +16,21 @@
 #include "WM_handler.h"
 
 #include "RLO_writefile.h"
+
+ROSE_INLINE void wm_rose_recent_filepath_set(rContext *C, wmOperator *op) {
+	Main *main = CTX_data_main(C);
+
+	PropertyRNA *property = RNA_struct_find_property(op->ptr, "filepath");
+	if (!RNA_property_is_set(op->ptr, property)) {
+		const char *rosefile = KER_main_rosefile_path(main);
+
+		char filepath[FILE_MAX];
+		if (!rosefile[0] == '\0') {
+			LIB_strcpy(filepath, ARRAY_SIZE(filepath), rosefile);
+			RNA_property_string_set(op->ptr, property, filepath);
+		}
+	}
+}
 
 /* -------------------------------------------------------------------- */
 /** \name Rose Open
@@ -27,6 +43,8 @@ ROSE_STATIC wmOperatorStatus wm_rose_open_select_file_path_exec(rContext *C, wmO
 	if (CTX_wm_window(C) == nullptr) {
 		return OPERATOR_CANCELLED;
 	}
+
+	wm_rose_recent_filepath_set(C, op);
 
 	WM_event_add_fileselect(C, op);
 	return OPERATOR_RUNNING_MODAL;
@@ -83,6 +101,8 @@ void WM_OT_open_mainfile(wmOperatorType *ot) {
  * \{ */
 
 ROSE_STATIC wmOperatorStatus wm_rose_save_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	wm_rose_recent_filepath_set(C, op);
+	
 	WM_event_add_fileselect(C, op);
 	return OPERATOR_RUNNING_MODAL;
 }

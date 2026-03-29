@@ -2,8 +2,6 @@
 # Make Resource
 
 set(MODELS_SRC
-	sarah.fbx
-	skeleton.fbx
 )
 
 set(MODELS_C
