@@ -250,6 +250,8 @@ void ED_fileselect_change_dir_ex(rContext *C, ScrArea *area) {
 	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
 	if (params) {
 		WindowManager *wm = CTX_wm_manager(C);
+		ED_fileselect_clear(wm, sfile);
+
 		if (!filelist_is_dir(sfile->files, params->dir)) {
 			LIB_strcpy(params->dir, ARRAY_SIZE(params->dir), filelist_dir(sfile->files));
 			/* could return but just refresh the current dir */

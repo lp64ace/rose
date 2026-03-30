@@ -22,6 +22,7 @@
 #include "KER_main.h"
 #include "KER_scene.h"
 #include "KER_screen.h"
+#include "KER_report.h"
 
 #include "DEG_depsgraph.h"
 
@@ -188,7 +189,7 @@ ROSE_INLINE ARegion *region_event_inside(rContext *C, const int xy[2]) {
 	return NULL;
 }
 
-ROSE_INLINE wmOperator *wm_operator_create(WindowManager *wm, wmOperatorType *ot, PointerRNA *properties) {
+ROSE_INLINE wmOperator *wm_operator_create(WindowManager *wm, wmOperatorType *ot, PointerRNA *properties, ReportList *reports) {
 	wmOperator *op = MEM_callocN(sizeof(wmOperator), "wmOperator");
 	
 	op->type = ot;
@@ -203,6 +204,14 @@ ROSE_INLINE wmOperator *wm_operator_create(WindowManager *wm, wmOperatorType *ot
 		op->properties = IDP_New(IDP_GROUP, NULL, 0, "wmOperatorProperties", 0);
 	}
 	*op->ptr = RNA_pointer_create_discrete(&wm->id, ot->srna, op->properties);
+
+	if (reports) {
+		op->reports = reports;
+	}
+	else {
+		op->reports = MEM_callocN(sizeof(ReportList), "RepotList");
+		KER_reports_init(op->reports, RPT_STORE | RPT_FREE);
+	}
 
 	return op;
 }
@@ -293,7 +302,7 @@ wmOperatorStatus wm_operator_invoke(rContext *C, wmOperatorType *ot, const wmEve
 
 	if (WM_operator_poll(C, ot)) {
 		WindowManager *wm = CTX_wm_manager(C);
-		wmOperator *op = wm_operator_create(wm, ot, properties);
+		wmOperator *op = wm_operator_create(wm, ot, properties, &wm->runtime->reports);
 
 		if (op->type->invoke && event) {
 			/* Make a copy of the event as it's `const` and the #wmEvent.mval to be written into. */

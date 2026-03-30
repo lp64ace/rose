@@ -151,7 +151,7 @@ ROSE_INLINE void file_execution_region_init(WindowManager *wm, ARegion *region) 
 	region->v2d.keepzoom |= V2D_LOCKZOOM_X | V2D_LOCKZOOM_Y;
 
 	/* own keymap */
-	keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW);
+	keymap = WM_keymap_ensure(wm->runtime->defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW);
 	// WM_event_add_keymap_handler_v2d_mask(&region->handlers, keymap);
 }
 
@@ -291,7 +291,7 @@ void file_ui_region_panels_register(ARegionType *art) {
 ROSE_INLINE void file_main_region_init(WindowManager *wm, ARegion *region) {
 	wmKeyMap *keymap;
 
-	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
+	if ((keymap = WM_keymap_ensure(wm->runtime->defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
 		WM_event_add_keymap_handler(&region->handlers, keymap);
 	}
 

@@ -376,7 +376,7 @@ void ED_region_panels_init(struct WindowManager *wm, struct ARegion *region) {
 		region->v2d.scroll |= V2D_SCROLL_RIGHT;
 	}
 
-	wmKeyMap *keymap = WM_keymap_ensure(wm->runtime.defaultconf, "View2D Buttons List", SPACE_EMPTY, RGN_TYPE_WINDOW);
+	wmKeyMap *keymap = WM_keymap_ensure(wm->runtime->defaultconf, "View2D Buttons List", SPACE_EMPTY, RGN_TYPE_WINDOW);
 	WM_event_add_keymap_handler(&region->handlers, keymap);
 }
 

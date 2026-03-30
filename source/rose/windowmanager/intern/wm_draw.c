@@ -360,7 +360,7 @@ void wm_window_update_animation_time(WindowManager *wm, wmWindow *window) {
 	window->fps = 1.0f / (float)dt;
 
 	/** 30 frames per second updates for the statistics. */
-	if (t - window->runtime.last_frame_statistics_reset_time >= 1.0f) {
+	if (t - window->runtime.last_frame_statistics_reset_time >= 0.5f) {
 		double duration = t - window->runtime.last_frame_statistics_reset_time;
 		memcpy(&window->runtime.last, &window->runtime.next, sizeof(window->runtime.last));
 		window->runtime.last_frame_statistics_reset_time = t;

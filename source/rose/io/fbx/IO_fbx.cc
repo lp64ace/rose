@@ -5,6 +5,7 @@
 #include "KER_mesh.h"
 #include "KER_scene.h"
 #include "KER_object.h"
+#include "KER_report.h"
 
 #include "LIB_fileops.h"
 #include "LIB_task.hh"
@@ -115,7 +116,7 @@ void importer_scene(Main *main, Scene *scene, ViewLayer *view_layer, ufbx_scene 
 	DEG_relations_tag_update(main);
 }
 
-void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void *memory, size_t size, float unit) {
+bool importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, ReportList *reports, const void *memory, size_t size, float unit) {
 	ufbx_load_opts opts = {};
 	opts.evaluate_skinning = false;
 	opts.evaluate_caches = false;
@@ -137,19 +138,21 @@ void importer_memory(Main *main, Scene *scene, ViewLayer *view_layer, const void
 	ufbx_scene *fbx = ufbx_load_memory(memory, size, &opts, &fbx_error);
 
 	if (!fbx) {
-		fprintf(stderr, "[FBX] Cannot import resource file : %s\n", fbx_error.description.data);
-		return;
+		KER_reportf(reports, RPT_ERROR, "[FBX] Error \"%s\"", fbx_error.description);
+		return false;
 	}
 
 	importer_scene(main, scene, view_layer, fbx, "");
 
 	ufbx_free_scene(fbx);
+
+	return true;
 }
 
-void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *filepath, float unit) {
+void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, ReportList *reports, const char *filepath, float unit) {
 	int fd = LIB_open(filepath, O_BINARY | O_RDONLY, 0);
 	if (!fd) {
-		fprintf(stderr, "[FBX] Cannot open resource file '%s'\n", filepath);
+		KER_reportf(reports, RPT_ERROR, "[FBX] Cannot open file \"%s\"", filepath);
 		return;
 	}
 
@@ -159,7 +162,9 @@ void importer_file(Main *main, Scene *scene, ViewLayer *view_layer, const char *
 		LIB_seek(fd, 0, SEEK_SET);
 		LIB_read(fd, memory, size);
 
-		importer_memory(main, scene, view_layer, memory, size, unit);
+		if (importer_memory(main, scene, view_layer, reports, memory, size, unit)) {
+			KER_reportf(reports, RPT_ERROR, "[FBX] Loaded \"%s\"", filepath);
+		}
 
 		MEM_freeN(memory);
 	}
@@ -171,14 +176,16 @@ void FBX_import(rContext *C, const char *filepath, float unit) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);
+	ReportList *reports = CTX_wm_reports(C);
 
-	importer_file(main, scene, view_layer, filepath, unit);
+	importer_file(main, scene, view_layer, reports, filepath, unit);
 }
 
 void FBX_import_memory(rContext *C, const void *memory, size_t size, float unit) {
 	Main *main = CTX_data_main(C);
 	Scene *scene = CTX_data_scene(C);
 	ViewLayer *view_layer = CTX_data_view_layer(C);
+	ReportList *reports = CTX_wm_reports(C);
 
-	importer_memory(main, scene, view_layer, memory, size, unit);
+	importer_memory(main, scene, view_layer, reports, memory, size, unit);
 }

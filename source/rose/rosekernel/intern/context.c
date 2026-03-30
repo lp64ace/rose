@@ -68,6 +68,14 @@ struct ARegion *CTX_wm_region(const rContext *ctx) {
 	return ctx->wm.region;
 }
 
+struct ReportList *CTX_wm_reports(const rContext *C) {
+	if (C->wm.manager) {
+		return &C->wm.manager->runtime->reports;
+	}
+
+	return NULL;
+}
+
 struct Main *CTX_data_main(const rContext *ctx) {
 	return ctx->data.main;
 }

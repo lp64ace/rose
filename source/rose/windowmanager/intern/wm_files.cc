@@ -3,6 +3,7 @@
 #include "KER_context.h"
 #include "KER_main.h"
 #include "KER_rosefile.h"
+#include "KER_report.h"
 
 #include "RNA_access.h"
 
@@ -61,13 +62,17 @@ ROSE_STATIC wmOperatorStatus wm_rose_open_exec(rContext *C, wmOperator *op) {
 
 	if (filepath[0]) {
 		RoseFileData *rfd = KER_rosefile_read(filepath, 0);
-		if (rfd) {
-			KER_rosefile_read_setup(C, rfd);
-			return OPERATOR_FINISHED;
+		if (!rfd) {
+			KER_reportf(op->reports, RPT_ERROR, "[WM] Cannot load file \"%s\"", filepath);
+			return OPERATOR_CANCELLED;
 		}
+
+		KER_rosefile_read_setup(C, rfd);
+
+		KER_reportf(op->reports, RPT_INFO, "[WM] Loaded \"%s\"", filepath);
 	}
 
-	return OPERATOR_CANCELLED;
+	return OPERATOR_FINISHED;
 }
 
 ROSE_STATIC bool wm_rose_open_check(rContext *C, wmOperator *op) {

@@ -25,6 +25,7 @@ void CTX_free(struct rContext *C);
 struct ARegion;
 struct ScrArea;
 struct Screen;
+struct ReportList;
 struct WindowManager;
 struct wmWindow;
 
@@ -38,6 +39,7 @@ struct wmWindow *CTX_wm_window(const struct rContext *C);
 struct Screen *CTX_wm_screen(const struct rContext *C);
 struct ScrArea *CTX_wm_area(const struct rContext *C);
 struct ARegion *CTX_wm_region(const struct rContext *C);
+struct ReportList *CTX_wm_reports(const struct rContext *C);
 struct Main *CTX_data_main(const struct rContext *C);
 struct Scene *CTX_data_scene(const struct rContext *C);
 struct ViewLayer *CTX_data_view_layer(const struct rContext *C);

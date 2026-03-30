@@ -76,12 +76,55 @@ enum {
 	WINDOW_ADD_MOUSE_MOVE = 1 << 0,
 };
 
+typedef struct Report {
+	struct Report *prev, *next;
+
+	int type;
+	int flag;
+
+	/** `LIB_strlen(message)`, saves some time calculating the word wrap. */
+	int length;
+	const char *typestr;
+	const char *message;
+} Report;
+
+/** #Report->type */
+enum {
+	RPT_DEBUG = 1 << 0,
+	RPT_INFO = 1 << 1,
+	RPT_WARNING = 1 << 2,
+	RPT_ERROR = 1 << 3,
+};
+
+typedef struct ReportList {
+	int printlevel;
+	int storelevel;
+	int flag;
+
+	ListBase reports;
+
+	/** Mutex for thread-safety, runtime only. */
+	void *lock;
+} ReportList;
+
+/** #ReportList->flag */
+enum {
+	RPT_PRINT = 1 << 0,
+	RPT_STORE = 1 << 1,
+	RPT_FREE = 1 << 2,
+
+	/** Don't print (the owner of the #ReportList will handle printing to the `stdout`). */
+	RPT_PRINT_HANDLED_BY_OWNER = 1 << 30,
+};
+
 typedef struct WindowManager_Runtime {
 	struct wmKeyConfig *defaultconf;
 
 	ListBase operators;
 	ListBase keymaps;
 	ListBase keyconfigs;
+
+	ReportList reports;
 } WindowManager_Runtime;
 
 typedef struct WindowManager {
@@ -98,7 +141,7 @@ typedef struct WindowManager {
 	/** A list of all #wmWindow links that are allocated. */
 	ListBase windows;
 
-	WindowManager_Runtime runtime;
+	WindowManager_Runtime *runtime;
 } WindowManager;
 
 typedef struct wmKeyMapItem {
@@ -208,7 +251,10 @@ typedef struct wmOperator {
 
 	int flag;
 
+	/** Rna pointer to access properties. */
 	struct PointerRNA *ptr;
+	/** Errors and warnings storage. */
+	struct ReportList *reports;
 } wmOperator;
 
 typedef enum eOpCallContext {

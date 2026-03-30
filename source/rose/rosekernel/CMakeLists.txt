@@ -53,6 +53,7 @@ set(SRC
 	KER_modifier.h
 	KER_object.h
 	KER_object_deform.h
+	KER_report.h
 	KER_rose.h
 	KER_rosefile.h
 	KER_scene.h
@@ -92,6 +93,7 @@ set(SRC
 	intern/object.c
 	intern/object_deform.c
 	intern/object_runtime.cc
+	intern/report.cc
 	intern/rose.c
 	intern/rosefile.c
 	intern/scene.cc

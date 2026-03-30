@@ -23,7 +23,7 @@ ROSE_INLINE wmOperator *rna_OperatorProperties_find_operator(PointerRNA *ptr) {
 	}
 
 	WindowManager *wm = (WindowManager *)ptr->owner;
-	for (wmOperator *op = (wmOperator *)(wm->runtime.operators.last); op; op = op->prev) {
+	for (wmOperator *op = (wmOperator *)(wm->runtime->operators.last); op; op = op->prev) {
 		if (op->properties == ptr->data) {
 			return op;
 		}

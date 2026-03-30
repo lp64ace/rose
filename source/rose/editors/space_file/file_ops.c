@@ -98,10 +98,11 @@ void file_directory_enter_handle(struct rContext *C, struct uiBut *but, void *un
 	}
 
 	if (filelist_is_dir(sfile->files, params->dir)) {
-		/* If directory exists, enter it immediately. */
+		if (!STREQ(params->dir, filelist_dir(sfile->files))) {
+			ED_fileselect_change_dir(C);
+		}
 	}
 
-	ED_fileselect_change_dir(C);
 	ED_area_tag_redraw(area);
 }
 

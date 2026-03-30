@@ -39,7 +39,7 @@ ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4]) {
 	/* default, human vertical fov is 120 degrees. */
 	const float fov = M_PI_2 * 2.0f / 3.0f;
 	const float clip_start = 1e-2f;
-	const float clip_end = 1e+3f;
+	const float clip_end = 1e+4f;
 
 	float tangent = tanf(fov * 0.5f);
 	float aspect = (float)region->sizex / (float)region->sizey;
@@ -98,7 +98,7 @@ ROSE_INLINE void view3d_main_region_init(WindowManager *wm, ARegion *region) {
 	RegionView3D *rv3d = (RegionView3D *)region->regiondata;
 	wmKeyMap *keymap;
 	
-	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "3D View", SPACE_VIEW3D, RGN_TYPE_WINDOW)) != NULL) {
+	if ((keymap = WM_keymap_ensure(wm->runtime->defaultconf, "3D View", SPACE_VIEW3D, RGN_TYPE_WINDOW)) != NULL) {
 		WM_event_add_keymap_handler(&region->handlers, keymap);
 	}
 
