@@ -22,9 +22,7 @@ void main() {
 
     co = (float4x4(ArmatureToTargetMatrix) * vec4(co, 1.0)).xyz;
 
-	// 3cm offset?! this is a huge offset but tackles low poly models weird shadows!
-
 	vData.pos = co;
-	vData.frontPosition = ProjectionMatrix * ModelMatrix * float4(co + lightDirection * 3e-2f, 1.0);
+	vData.frontPosition = ProjectionMatrix * ModelMatrix * float4(co, 1.0);
 	vData.backPosition = ProjectionMatrix * ModelMatrix * float4(co + lightDirection * lightDistance, 1.0);
 }
