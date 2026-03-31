@@ -1,78 +1,70 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
-   width="1600"
-   height="1600"
+   width="372.65515mm"
+   viewBox="0 0 1552.7297 1670.7602"
    version="1.1"
-   id="svg1"
-   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
-   sodipodi:docname="file_rose.svg"
-   inkscape:export-filename="file_rose.svg"
-   inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   id="svg7"
+   height="400.98245mm"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview1"
-     pagecolor="#a6a6a6"
-     bordercolor="#000000"
-     borderopacity="0"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:document-units="mm"
-     showguides="true"
-     inkscape:zoom="0.5"
-     inkscape:cx="541"
-     inkscape:cy="798"
-     inkscape:window-width="1920"
-     inkscape:window-height="1011"
-     inkscape:window-x="1920"
-     inkscape:window-y="32"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
   <defs
-     id="defs1">
-    <linearGradient
-       id="swatch1"
-       inkscape:swatch="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop1" />
-    </linearGradient>
-  </defs>
+     id="defs7" />
   <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
-    <path
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.252311;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
-       d="m 1147.4022,740.89438 c -40.5737,-29.2842 -99.375,-58.3246 -137.6653,-67.9893 -28.95154,-7.30748 -64.42646,-7.53903 -81.66586,-0.53308 -25.29031,10.2778 -43.20848,31.8114 -47.00515,56.48947 -0.88979,5.78396 -2.48202,11.76198 -3.53818,13.28446 -2.48133,3.577 -47.56544,-9.03586 -72.9986,-20.42231 l -18.08975,-8.0988 20.65586,-21.41171 c 42.59977,-44.15853 81.68831,-99.02218 115.89553,-162.66798 l 19.91825,-37.0598 20.31148,-5.98278 c 96.89172,-28.53965 200.91062,-42.79012 312.49122,-42.81092 73.2566,-0.0129 107.4154,2.9781 159.076,13.93236 91.8098,19.46764 145.659,55.9312 145.659,98.63198 0,64.83739 -116.8738,135.99422 -287.3598,174.95464 -40.028,9.14743 -109.5796,20.72523 -122.8956,20.45758 -5.414,-0.10898 -12.9465,-3.6699 -22.7891,-10.77384 z"
-       id="path77" />
-    <path
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.252311;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
-       d="m 711.68473,757.98104 c 0,-6.38441 -18.78729,-49.16549 -34.76288,-79.15957 C 654.55751,636.83261 615.1034,578.75531 584.54244,542.83702 l -8.62403,-10.1358 6.27674,-25.58717 C 629.5409,314.10998 759.95141,121.16058 875.6567,72.921634 c 25.65052,-10.694021 47.24748,-13.492483 66.14875,-8.571349 17.55736,4.571229 36.5925,18.402775 46.90798,34.084828 31.64407,48.106537 32.92907,145.181497 3.35298,253.298337 -8.61675,31.4989 -31.63205,94.98379 -44.33554,122.29425 l -7.5895,16.31613 -22.67417,8.13587 c -112.09629,40.22184 -179.83771,92.36708 -183.78106,141.46855 -0.71947,8.95815 0.0676,19.58819 1.79661,24.25468 5.13798,13.87009 17.84652,29.56782 32.01573,39.54628 l 13.43811,9.46357 -15.24582,12.90274 c -8.38519,7.09651 -22.46331,17.20646 -31.28456,22.46654 -22.6817,13.52494 -22.72148,13.5414 -22.72148,9.39898 z"
-       id="path78" />
-    <path
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.252311;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
-       d="m 255.91876,1154.3272 c -119.637,-9.107 -201.253213,-38.5412 -230.729099,-83.2102 -6.068636,-9.1968 -7.178052,-13.6439 -7.178052,-28.7742 0,-24.1883 10.271414,-43.08916 35.994401,-66.23467 64.84492,-58.34744 201.07479,-106.78208 359.34423,-127.75982 l 26.44883,-3.50562 12.3113,9.16909 c 21.20961,15.79614 63.61061,40.29818 90.61628,52.36389 40.31478,18.01207 66.4546,24.75116 96.78401,24.95182 31.29504,0.20729 48.15341,-5.49467 64.16629,-21.70189 10.47571,-10.60288 21.33669,-31.79531 21.41429,-41.78463 0.0909,-11.68764 3.09122,-12.26683 27.04757,-5.22131 12.30026,3.61757 30.47154,10.18526 40.38071,14.59494 l 18.0167,8.01764 -20.37999,21.19137 c -42.8469,44.55292 -82.51892,100.28019 -115.8951,162.79789 l -20.04835,37.5531 -21.38492,6.0606 c -62.2101,17.6305 -134.26255,31.1595 -201.82011,37.895 -45.9325,4.5794 -137.4777,6.4601 -175.08899,3.597 z"
-       id="path79" />
-    <path
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.252311;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
-       d="m 714.10535,850.83622 c -1.75435,-1.56297 -46.18558,-8.08226 -74.59469,-10.94513 -32.79575,-3.30496 -132.87431,-3.28492 -169.49534,0.0305 -33.43013,3.02954 -28.09964,5.20538 -67.77483,-27.66455 C 294.16364,722.7214 197.20591,594.19569 157.23195,487.48065 141.31876,444.99862 136.0143,417.15554 137.72231,385.07477 c 1.5942,-29.94309 6.50926,-43.49237 21.15411,-58.31496 15.73602,-15.92708 28.31643,-20.92221 55.82269,-22.16485 52.03928,-2.35095 117.32087,23.74117 195.39926,78.09829 31.2672,21.76782 96.9014,79.40231 128.00102,112.3999 38.40212,40.74571 35.6237,34.55691 30.42013,67.75986 -6.34377,40.47839 -5.75289,99.96745 1.28563,129.43933 16.87206,70.64716 64.3177,99.91089 125.99908,77.71433 l 15.29169,-5.5029 2.85542,8.54798 c 5.05293,15.12635 11.09896,50.43962 11.09896,64.8259 0,11.96603 -0.70518,13.97726 -4.90069,13.97726 -2.69541,0 -5.4153,-0.45878 -6.04426,-1.01884 z"
-       id="path80" />
-    <path
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.252311;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
-       d="m 652.6333,1534.0363 c -14.87028,-4.0811 -34.7726,-19.1788 -44.225,-33.5488 -44.58389,-67.7782 -27.01119,-227.6028 41.36869,-376.2496 l 7.2935,-15.855 31.0221,-11.2109 c 105.45913,-38.1111 171.48428,-90.1492 175.34306,-138.19764 0.71939,-8.95806 -0.0684,-19.58815 -1.79659,-24.25466 -5.15179,-13.90715 -17.85957,-29.57694 -32.14443,-39.63683 l -13.56676,-9.5541 12.70135,-10.70081 c 26.54381,-22.363 61.16359,-42.5013 63.41303,-36.88729 0.70485,1.7586 5.05907,12.84267 9.67659,24.63121 21.24257,54.232 63.6255,124.74133 106.98516,177.98302 7.184,8.8214 13.0619,17.8017 13.0619,19.9563 0,2.1545 -3.1284,16.3708 -6.952,31.5917 -27.26706,108.5448 -77.41331,214.2858 -143.00606,301.5505 -59.62361,79.3233 -119.96525,127.6797 -175.36841,140.5363 -18.5103,4.2955 -27.71333,4.2632 -43.80613,-0.1532 z"
-       id="path81" />
-    <path
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.252311;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
-       d="m 1345.2127,1290.4365 c -87.3425,-21.9051 -200.0977,-100.0723 -293.1063,-203.195 l -26.9852,-29.9196 2.3475,-12.8307 c 8.5417,-46.68515 7.2036,-112.93051 -2.9991,-148.47119 -17.2675,-60.15093 -62.26439,-86.57998 -117.72582,-69.14656 -6.36894,2.00201 -12.44628,2.81554 -13.50509,1.80775 -6.2698,-5.96755 -17.13658,-84.09088 -11.24564,-80.84721 1.51961,0.83674 17.65179,3.80471 35.84915,6.59556 42.49747,6.51747 149.6607,8.90273 207.0716,4.60897 33.5589,-2.50979 39.5036,-2.42246 44.7807,0.65768 11.2928,6.59231 76.0536,63.57873 98.7399,86.88657 86.8515,89.23114 150.1453,182.64543 181.0181,267.16193 15.2509,41.7502 19.4957,64.7165 18.0023,97.4002 -0.6963,15.2398 -2.6571,31.6542 -4.3573,36.4766 -5.3825,15.2663 -19.386,30.6806 -35.0229,38.5512 -13.0298,6.5583 -17.2473,7.3987 -40.0256,7.976 -18.3943,0.4664 -30.2836,-0.564 -42.8363,-3.7125 z"
-       id="path82" />
+     transform="matrix(4.4453678,0,0,4.4453678,776.36482,835.38021)"
+     style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="g7">
+    <g
+       style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="g1">
+      <path
+         id="ellipse1"
+         style="opacity:1;stroke-width:1.05833px"
+         d="m 37.791305,-130.17158 a 74.083333,40.216667 70 0 1 -12.453313,83.370476 74.083333,40.216667 70 0 1 -63.129297,-55.860656 74.083333,40.216667 70 0 1 12.453313,-83.37046 74.083333,40.216667 70 0 1 63.129297,55.86064 z" />
+    </g>
+    <g
+       transform="rotate(60)"
+       style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="g2">
+      <path
+         id="ellipse2"
+         style="opacity:1;stroke-width:1.05833px"
+         d="m 37.791305,-130.17158 a 74.083333,40.216667 70 0 1 -12.453313,83.370476 74.083333,40.216667 70 0 1 -63.129297,-55.860656 74.083333,40.216667 70 0 1 12.453313,-83.37046 74.083333,40.216667 70 0 1 63.129297,55.86064 z" />
+    </g>
+    <g
+       transform="rotate(120)"
+       style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="g3">
+      <path
+         id="ellipse3"
+         style="opacity:1;stroke-width:1.05833px"
+         d="m 37.791305,-130.17158 a 74.083333,40.216667 70 0 1 -12.453313,83.370476 74.083333,40.216667 70 0 1 -63.129297,-55.860656 74.083333,40.216667 70 0 1 12.453313,-83.37046 74.083333,40.216667 70 0 1 63.129297,55.86064 z" />
+    </g>
+    <g
+       transform="scale(-1)"
+       style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="g4">
+      <path
+         id="ellipse4"
+         style="opacity:1;stroke-width:1.05833px"
+         d="m 37.791305,-130.17158 a 74.083333,40.216667 70 0 1 -12.453313,83.370476 74.083333,40.216667 70 0 1 -63.129297,-55.860656 74.083333,40.216667 70 0 1 12.453313,-83.37046 74.083333,40.216667 70 0 1 63.129297,55.86064 z" />
+    </g>
+    <g
+       transform="rotate(-120)"
+       style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="g5">
+      <path
+         id="ellipse5"
+         style="opacity:1;stroke-width:1.05833px"
+         d="m 37.791305,-130.17158 a 74.083333,40.216667 70 0 1 -12.453313,83.370476 74.083333,40.216667 70 0 1 -63.129297,-55.860656 74.083333,40.216667 70 0 1 12.453313,-83.37046 74.083333,40.216667 70 0 1 63.129297,55.86064 z" />
+    </g>
+    <g
+       transform="rotate(-60)"
+       style="color:#fbfbfe;font-weight:400;font-size:16px;font-family:'Anthropic Sans', '-apple-system', BlinkMacSystemFont, 'Segoe UI', sans-serif;dominant-baseline:auto;text-anchor:start;opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="g6">
+      <path
+         id="ellipse6"
+         style="opacity:1;stroke-width:1.05833px"
+         d="m 37.791305,-130.17158 a 74.083333,40.216667 70 0 1 -12.453313,83.370476 74.083333,40.216667 70 0 1 -63.129297,-55.860656 74.083333,40.216667 70 0 1 12.453313,-83.37046 74.083333,40.216667 70 0 1 63.129297,55.86064 z" />
+    </g>
   </g>
 </svg>
