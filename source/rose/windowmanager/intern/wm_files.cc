@@ -124,7 +124,9 @@ ROSE_STATIC wmOperatorStatus wm_rose_save_exec(rContext *C, wmOperator *op) {
 	Main *main = CTX_data_main(C);
 
 	if (filepath[0]) {
-		RLO_write_file(main, filepath, 0);
+		if (RLO_write_file(main, filepath, 0)) {
+			KER_reportf(op->reports, RPT_INFO, "[WM] Saved \"%s\"", filepath);
+		}
 	}
 
 	return OPERATOR_FINISHED;
