@@ -79,7 +79,7 @@ const char *KER_report_type_str(int type) {
 
 void KER_report(ReportList *reports, int type, const char *message) {
 	if (reports && (type >= reports->printlevel)) {
-		fprintf(stdout, "%s\n");
+		fprintf(stdout, "%s\n", message);
 	}
 
 	if (reports && (reports->flag & RPT_STORE) && (type >= reports->storelevel)) {
