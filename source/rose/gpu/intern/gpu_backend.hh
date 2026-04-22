@@ -14,6 +14,7 @@ class PixelBuffer;
 class Shader;
 class StorageBuf;
 class Texture;
+class QueryPool;
 class UniformBuf;
 class VertBuf;
 
@@ -36,6 +37,7 @@ public:
 	virtual Shader *shader_alloc(const char *name) = 0;
 	virtual StorageBuf *storagebuf_alloc(size_t size, UsageType usage, const char *name) = 0;
 	virtual Texture *texture_alloc(const char *name) = 0;
+	virtual QueryPool *querypool_alloc() = 0;
 	virtual UniformBuf *uniformbuf_alloc(size_t size, const char *name) = 0;
 	virtual VertBuf *vertbuf_alloc() = 0;
 };

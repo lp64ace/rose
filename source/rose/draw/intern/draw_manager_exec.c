@@ -1,8 +1,12 @@
 #include "GPU_batch.h"
 #include "GPU_state.h"
+#include "GPU_select.h"
+#include "GPU_primitive.h"
 #include "GPU_framebuffer.h"
 #include "GPU_texture.h"
 #include "GPU_viewport.h"
+
+#include "KER_global.h"
 
 #include "DRW_engine.h"
 #include "DRW_cache.h"
@@ -147,11 +151,14 @@ ROSE_STATIC void draw_state_set(DRWState state) {
  * \{ */
 
 typedef struct DRWCommandState {
-	int obmat_block_loc;
+	GPUVertBuf *select;
 
+	int obmat_block_loc;
 	int obmat_loc;
 	int obinv_loc;
 	int resourceid_loc;
+
+	unsigned int selectid;
 
 	size_t chunk;
 
@@ -188,8 +195,45 @@ ROSE_STATIC void draw_call_geometry_do(DRWShadingGroup *group, GPUBatch *geometr
 	GPU_batch_draw_advanced(geometry, vfirst, vcount, ifirst, icount);
 }
 
+ROSE_STATIC void draw_call_batching_start(DRWCommandState *state) {
+	state->select = NULL;
+	state->selectid = -1;
+}
+
+ROSE_STATIC void draw_select_buffer(DRWShadingGroup *group, DRWCommandState *state, GPUBatch *batch, const DRWResourceHandle *handle) {
+	int *select_id = (void *)GPU_vertbuf_get_data(state->select);
+
+	int vcount = 1;
+	if (batch->inst[0] == NULL) {
+		vcount = GPU_indexbuf_primitive_len(batch->prim_type);
+		ROSE_assert(vcount > 0);
+	}
+
+	const bool is_instancing = (batch->inst[0] != NULL);
+	const unsigned int total = is_instancing ? GPU_vertbuf_get_vertex_len(batch->inst[0]) : GPU_vertbuf_get_vertex_len(batch->verts[0]);
+
+	for (unsigned int vstart = 0; vstart < total; vstart += vcount) {
+		GPU_select_load_id(select_id[vstart]);
+		if (is_instancing) {
+			draw_call_geometry_do(group, batch, 0, 0, vstart, vcount);
+		}
+		else {
+			draw_call_geometry_do(group, batch, vstart, vcount, 0, 0);
+		}
+	}
+}
+
 ROSE_STATIC void draw_call_single_do(DRWShadingGroup *group, DRWCommandState *state, DRWCommand *cmd, GPUBatch *batch, int vfirst, int vcount, int ifirst, int icount) {
 	draw_call_resource_bind(state, &cmd->handle);
+
+	if (G.flag & G_FLAG_PICKSEL) {
+		if (state->select != NULL) {
+			draw_select_buffer(group, state, batch, &cmd->handle);
+			return;
+		}
+
+		GPU_select_load_id(state->selectid);
+	}
 
 	// Bind the matrix? The matrix should have been bound from the shading group uniforms!
 	draw_call_geometry_do(group, batch, vfirst, vcount, ifirst, icount);
@@ -294,6 +338,8 @@ ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group, DRWState draw_s
 	state.enabled = 0;
 	state.disabled = 0;
 
+	draw_call_batching_start(&state);
+
 	LISTBASE_FOREACH(DRWCommand *, cmd, &group->commands) {
 		switch (cmd->type) {
 			case DRW_COMMAND_CLEAR: {
@@ -308,6 +354,10 @@ ROSE_STATIC void draw_draw_shading_group(DRWShadingGroup *group, DRWState draw_s
 				state.enabled |= cmd->state.enable;
 				state.disabled |= cmd->state.disable;
 				draw_state_set((draw_state & ~state.disabled) | state.enabled);
+			} break;
+			case DRW_COMMAND_SELECT: {
+				state.select = cmd->select.buffer;
+				state.selectid = cmd->select.id;
 			} break;
 			case DRW_COMMAND_STENCIL: {
 				GPU_stencil_write_mask_set(cmd->stencil.write);

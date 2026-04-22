@@ -172,7 +172,7 @@ void GPU_stencil_compare_mask_set(unsigned int compare_mask);
 
 FaceCullTest GPU_face_culling_get(void);
 Blend GPU_blend_get(void);
-DepthTest GPU_deth_test_get(void);
+DepthTest GPU_depth_test_get(void);
 WriteMask GPU_write_mask_get(void);
 unsigned int GPU_stencil_mask_get(void);
 StencilTest GPU_stencil_test_get(void);

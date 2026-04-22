@@ -5,6 +5,7 @@
 #include "DRW_render.h"
 
 #include "KER_object.h"
+#include "KER_global.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
 
@@ -139,6 +140,15 @@ ROSE_STATIC void *draw_command_clear(DRWShadingGroup *shgroup, unsigned char bit
 	return cmd;
 }
 
+ROSE_STATIC void draw_command_set_select_id(DRWShadingGroup *shgroup, GPUVertBuf *buffer, unsigned int id) {
+	DRWCommandSelectId *cmd = draw_command_new(shgroup, -1, DRW_COMMAND_SELECT);
+
+	cmd->buffer = buffer;
+	cmd->id = id;
+
+	ROSE_assert(buffer == NULL || id == -1);
+}
+
 ROSE_STATIC void draw_command_draw(DRWShadingGroup *shgroup, DRWResourceHandle handle, struct GPUBatch *batch, unsigned int vcount) {
 	DRWCommandDraw *cmd = draw_command_new(shgroup, handle, DRW_COMMAND_DRAW);
 
@@ -194,16 +204,26 @@ void DRW_shading_group_stencil_mask(DRWShadingGroup *shgroup, unsigned int mask)
 }
 
 void DRW_shading_group_call_ex(DRWShadingGroup *shgroup, Object *ob, const float (*obmat)[4], struct GPUBatch *batch) {
+	if (G.flag & G_FLAG_PICKSEL) {
+		draw_command_set_select_id(shgroup, NULL, GDrawManager.selectid);
+	}
+
 	DRWResourceHandle handle = draw_resource_handle(shgroup, obmat, ob);
 
 	draw_command_draw(shgroup, handle, batch, 0);
 }
 
 void DRW_shading_group_call_range_ex(DRWShadingGroup *shgroup, Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount) {
+	if (G.flag & G_FLAG_PICKSEL) {
+		draw_command_set_select_id(shgroup, NULL, GDrawManager.selectid);
+	}
+
 	DRWResourceHandle handle = draw_resource_handle(shgroup, obmat, ob);
 	
 	draw_command_draw_range(shgroup, handle, batch, vfirst, vcount);
 }
+
+static GPUVertFormat GInstanceSelectFormat;
 
 DRWCallBuffer *DRW_shading_group_call_buffer(DRWShadingGroup *shgroup, GPUVertFormat *format, PrimType prim_type) {
 	ROSE_assert(ELEM(prim_type, GPU_PRIM_POINTS, GPU_PRIM_LINES, GPU_PRIM_TRI_FAN));
@@ -216,6 +236,14 @@ DRWCallBuffer *DRW_shading_group_call_buffer(DRWShadingGroup *shgroup, GPUVertFo
 	callbuf->buffer = DRW_temp_buffer_request(dd->ibuffers, format, &callbuf->count);
 	callbuf->count = 0;
 
+	if (G.flag & G_FLAG_PICKSEL) {
+		if (GInstanceSelectFormat.attr_len == 0) {
+			GPU_vertformat_add(&GInstanceSelectFormat, "selectId", GPU_COMP_I32, 1, GPU_FETCH_INT);
+		}
+		callbuf->select = DRW_temp_buffer_request(dd->ibuffers, &GInstanceSelectFormat, &callbuf->count);
+		draw_command_set_select_id(shgroup, callbuf->select, -1);
+	}
+
 	GPUBatch *batch = DRW_temp_batch_request(dd->ibuffers, callbuf->buffer, prim_type);
 	draw_command_draw(shgroup, handle, batch, 0);
 
@@ -226,14 +254,22 @@ DRWCallBuffer *DRW_shading_group_call_buffer_instance(DRWShadingGroup *shgroup, 
 	DRWResourceHandle handle = draw_resource_handle(shgroup, NULL, NULL);
 	DRWData *dd = GDrawManager.vdata_pool;
 
-	DRWCallBuffer *call = LIB_memory_block_alloc(dd->calls);
-	call->buffer = DRW_temp_buffer_request(dd->ibuffers, format, &call->count);
-	call->count = 0;
+	DRWCallBuffer *callbuf = LIB_memory_block_alloc(dd->calls);
+	callbuf->buffer = DRW_temp_buffer_request(dd->ibuffers, format, &callbuf->count);
+	callbuf->count = 0;
 
-	GPUBatch *batch = DRW_temp_batch_instance_request(dd->ibuffers, call->buffer, NULL, geometry);
+	if (G.flag & G_FLAG_PICKSEL) {
+		if (GInstanceSelectFormat.attr_len == 0) {
+			GPU_vertformat_add(&GInstanceSelectFormat, "selectId", GPU_COMP_I32, 1, GPU_FETCH_INT);
+		}
+		callbuf->select = DRW_temp_buffer_request(dd->ibuffers, &GInstanceSelectFormat, &callbuf->count);
+		draw_command_set_select_id(shgroup, callbuf->select, -1);
+	}
 
+	GPUBatch *batch = DRW_temp_batch_instance_request(dd->ibuffers, callbuf->buffer, NULL, geometry);
 	draw_command_draw(shgroup, handle, batch, 0);
-	return call;
+
+	return callbuf;
 }
 
 void DRW_shading_group_bind_uniform_block(DRWShadingGroup *shgroup, GPUUniformBuf *block, unsigned int location) {

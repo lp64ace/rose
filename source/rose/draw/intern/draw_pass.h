@@ -118,6 +118,11 @@ typedef struct DRWCommandSetMutableState {
 	DRWState disable;
 } DRWCommandSetMutableState;
 
+typedef struct DRWCommandSelectId {
+	struct GPUVertBuf *buffer;
+	unsigned int id;
+} DRWCommandSelectId;
+
 typedef struct DRWCommandSetStencil {
 	unsigned int write;
 	unsigned int reference;
@@ -154,6 +159,7 @@ typedef struct DRWCommandUniformBlock {
 enum {
 	DRW_COMMAND_CLEAR,
 	DRW_COMMAND_DRWSTATE,
+	DRW_COMMAND_SELECT,
 	DRW_COMMAND_STENCIL,
 	DRW_COMMAND_DRAW,
 	DRW_COMMAND_DRAW_RANGE,
@@ -171,6 +177,7 @@ typedef struct DRWCommand {
 	union {
 		struct DRWCommandClear clear;
 		struct DRWCommandSetMutableState state;
+		struct DRWCommandSelectId select;
 		struct DRWCommandSetStencil stencil;
 		struct DRWCommandDraw draw;
 		struct DRWCommandDrawRange draw_range;
@@ -185,6 +192,7 @@ typedef struct DRWCommand {
 /** Used for aggregating calls into #GPUVertBuf's. */
 typedef struct DRWCallBuffer {
 	struct GPUVertBuf *buffer;
+	struct GPUVertBuf *select;
 	int count;
 } DRWCallBuffer;
 

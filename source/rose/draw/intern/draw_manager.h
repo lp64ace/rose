@@ -48,6 +48,7 @@ typedef struct DRWManager {
 	DRWResourceHandle resource_handle;
 	DRWResourceHandle objcache_handle;
 	DRWResourceHandle pass_handle;
+	unsigned int selectid;
 } DRWManager;
 
 extern DRWManager GDrawManager;

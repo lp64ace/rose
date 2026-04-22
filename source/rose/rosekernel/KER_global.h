@@ -17,7 +17,13 @@ typedef struct Global {
 	 * Otherwise access via #G_MAIN.
 	 */
 	struct Main *main;
+
+	int flag;
 } Global;
+
+enum {
+	G_FLAG_PICKSEL = 1 << 0,
+};
 
 /** \} */
 
