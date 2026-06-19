@@ -21,7 +21,9 @@ extern "C" {
 
 typedef struct MeshBufferList {
 	struct {
+		GPUVertBuf *mpos;
 		GPUVertBuf *pos;
+		GPUVertBuf *mnor;
 		GPUVertBuf *nor;
 		GPUVertBuf *weights;
 	} vbo;
@@ -29,6 +31,9 @@ typedef struct MeshBufferList {
 		GPUIndexBuf *tris;
 		GPUIndexBuf *lines_adjacency;
 	} ibo;
+	struct {
+		GPUUniformBuf *defgroup;
+	} ubo;
 } MeshBufferList;
 
 typedef struct MeshBatchCache {

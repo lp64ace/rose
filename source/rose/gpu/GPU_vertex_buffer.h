@@ -62,7 +62,9 @@ void GPU_vertbuf_init_build_on_device(struct GPUVertBuf *buffer, struct GPUVertF
 
 #define GPU_vertbuf_init_with_format(buffer, format) GPU_vertbuf_init_with_format_ex(buffer, format, GPU_USAGE_STATIC)
 
-struct GPUVertBuf *GPU_vertbuf_duplicate(struct GPUVertBuf *buffer);
+struct GPUVertBuf *GPU_vertbuf_duplicate(const struct GPUVertBuf *src);
+void GPU_vertbuf_copy(struct GPUVertBuf *dst, const struct GPUVertBuf *src);
+void GPU_vertbuf_copy_ex(struct GPUVertBuf *dst, const struct GPUVertBuf *src, bool force_generate);
 
 /** Create a new allocation, discarding any existing data. */
 void GPU_vertbuf_data_alloc(struct GPUVertBuf *buffer, unsigned int vertex_length);

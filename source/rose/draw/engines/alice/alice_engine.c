@@ -38,14 +38,6 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	AliceDrawData *add = (AliceDrawData *)KER_drawdata_get(&object->id, &draw_engine_alice_type);
 
-	/**
-	 * Invalidate data that need to be recalculated each frame!
-	 * \note These might be requested multiple times but we only upload them once.
-	 */
-	if (add) {
-		add->flag |= ALICE_DEFGROUP_UBO_DIRTY;
-	}
-
 	DRW_alice_shadow_cache_populate((DRWAliceData *)vdata, object);
 	DRW_alice_opaque_cache_populate((DRWAliceData *)vdata, object);
 }

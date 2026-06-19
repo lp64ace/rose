@@ -37,15 +37,11 @@ typedef struct AliceDrawData {
 	BoundBox shadow_box;
 
 	int flag;
-
-	/** The uniform buffer used to deform the bones of a mesh, see #alice_modifier.c */
-	GPUUniformBuf *defgroup;
 } AliceDrawData;
 
 /** #AliceDrawData->flag */
 enum {
 	ALICE_SHADOW_BOX_DIRTY = 1 << 0,
-	ALICE_DEFGROUP_UBO_DIRTY = 1 << 1,
 };
 
 /** This needs to be aligned to 16 for Uniform Buffer usage */
@@ -133,6 +129,8 @@ typedef struct DRWAliceViewportStorageList {
 
 typedef struct DRWAliceData {
 	struct ViewportEngineData *prev, *next;
+
+	int flag;
 
 	void *engine;
 	DRWViewportEmptyList *fbl;

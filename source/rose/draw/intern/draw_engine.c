@@ -108,7 +108,7 @@ void DRW_view_data_default_lists_from_viewport(DRWViewData *view_data, GPUViewpo
 void DRW_view_data_use_engine(DRWViewData *view_data, DrawEngineType *engine_type) {
 	ViewportEngineData *engine = DRW_view_data_engine_data_get_ensure(view_data, engine_type);
 
-	UNUSED_VARS(engine);
+	engine->flag |= DRW_ENGINE_DATA_ENABLED;
 }
 
 ViewportEngineData *DRW_view_data_engine_data_get_ensure(DRWViewData *view_data, DrawEngineType *engine_type) {

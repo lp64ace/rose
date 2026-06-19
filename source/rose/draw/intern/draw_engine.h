@@ -46,6 +46,8 @@ typedef struct DRWViewportEngineDataStorageList {
 typedef struct ViewportEngineData {
 	struct ViewportEngineData *prev, *next;
 
+	int flag;
+
 	DrawEngineType *engine;
 
 	DRWViewportEngineDataFramebufferList *fbl;
@@ -53,6 +55,10 @@ typedef struct ViewportEngineData {
 	DRWViewportEngineDataPassList *psl;
 	DRWViewportEngineDataStorageList *stl;
 } ViewportEngineData;
+
+enum {
+	DRW_ENGINE_DATA_ENABLED = 1 << 31,
+};
 
 /** \} */
 

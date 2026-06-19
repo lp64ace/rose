@@ -108,6 +108,8 @@ void KER_object_free_derived_caches(struct Object *ob);
 void KER_object_free_caches(struct Object *object);
 
 void KER_object_runtime_reset(struct Object *object);
+/** NOTE: This function is slow, should only be used for UI. */
+void KER_object_update_select_id(struct Main *main);
 
 /** \} */
 

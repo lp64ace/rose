@@ -5,6 +5,7 @@
 
 #include "LIB_listbase.h"
 #include "LIB_thread.h"
+#include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
 struct BoundBox;
@@ -110,6 +111,15 @@ void DRW_buffer_add_entry_array(struct DRWCallBuffer *callbuf, const void *attr[
 struct DRWInstanceDataList *DRW_instance_data_list_create(void);
 void DRW_instance_data_list_free(struct DRWInstanceDataList *list);
 
+enum {
+	DRW_SELECT_PASS_PRE = 1,
+	DRW_SELECT_PASS_POST,
+};
+
+typedef bool (*fnSelectPass)(int stage, void *user_data);
+typedef bool (*fnObjectFilter)(struct Object *ob, void *user_data);
+
+void DRW_draw_select_loop(struct Depsgraph *depsgraph, struct ARegion *region, struct View3D *v3d, const rcti *rect, fnSelectPass select_pass_fn, void *select_pass_user_data, fnObjectFilter object_filter_fn, void *object_filter_user_data);
 void DRW_draw_view(const struct rContext *C);
 void DRW_draw_pass(struct DRWPass *ps);
 void DRW_draw_pass_range(struct DRWPass *ps, struct DRWShadingGroup *first, struct DRWShadingGroup *last);

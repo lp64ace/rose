@@ -288,7 +288,6 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 		if (use_shadow_pass_technique) {
 			shgroup = DRW_shading_subgroup_new(impl->shadow_pass_shgroup[is_manifold]);
 			/** Ready all the required modifier data blocks for rendering on this group. */
-			DRW_alice_modifier_list_build(shgroup, object);
 			DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
 			DRW_shading_group_uniform_float(shgroup, "lightDistance", 1e4f);
 			DRW_shading_group_call_ex(shgroup, object, object->obmat, shadow_geometry);
@@ -300,7 +299,6 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 			if (need_caps) {
 				shgroup = DRW_shading_subgroup_new(impl->shadow_caps_shgroup[is_manifold]);
 				/** Ready all the required modifier data blocks for rendering on this group. */
-				DRW_alice_modifier_list_build(shgroup, object);
 				DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
 				DRW_shading_group_uniform_float(shgroup, "lightDistance", extrude);
 				DRW_shading_group_call_ex(shgroup, object, object->obmat, geometry);
@@ -308,7 +306,6 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 
 			shgroup = DRW_shading_subgroup_new(impl->shadow_fail_shgroup[is_manifold]);
 			/** Ready all the required modifier data blocks for rendering on this group. */
-			DRW_alice_modifier_list_build(shgroup, object);
 			DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
 			DRW_shading_group_uniform_float(shgroup, "lightDistance", extrude);
 			DRW_shading_group_call_ex(shgroup, object, object->obmat, shadow_geometry);

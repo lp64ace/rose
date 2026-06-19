@@ -258,6 +258,7 @@ set(INFO_SRC
 	../draw/engines/alice/shaders/infos/draw_opaque_mesh_info.hh
 	../draw/engines/alice/shaders/infos/draw_shadow_info.hh
 	../draw/engines/overlay/shaders/infos/draw_armature_info.hh
+	../draw/intern/shaders/infos/draw_modifier_info.hh
 	../draw/intern/shaders/infos/draw_view_info.hh
 )
 

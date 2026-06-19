@@ -55,6 +55,8 @@ typedef struct DRWOverlayViewportStorageList {
 typedef struct DRWOverlayData {
 	struct ViewportEngineData *prev, *next;
 
+	int flag;
+
 	void *engine;
 	DRWViewportEmptyList *fbl;
 	DRWViewportEmptyList *txl;

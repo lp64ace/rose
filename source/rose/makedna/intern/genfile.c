@@ -710,8 +710,13 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 	const RTType *struct_new = dna_find_struct_with_matching_name(dna_new, RT_token_as_string(struct_old->tp_struct.identifier));
 	const RTField *field_old = dna_find_member_with_matching_name(dna_old, struct_old, RT_token_as_string(field_new->identifier));
 
-	fprintf(stdout, "reconstruct info | struct: %s(new), %s(old) | ", RT_token_as_string(struct_new->tp_struct.identifier), RT_token_as_string(struct_old->tp_struct.identifier));
-	fprintf(stdout, "field: %s(new), %s(old) | ", RT_token_as_string(field_new->identifier), (field_old) ? RT_token_as_string(field_old->identifier) : "(null)");
+	fprintf(stdout, "DNA | ");
+	if (!STREQ(RT_token_as_string(struct_new->tp_struct.identifier), RT_token_as_string(struct_old->tp_struct.identifier)) || !(field_old && STREQ(RT_token_as_string(field_new->identifier), RT_token_as_string(field_old->identifier)))) {
+		fprintf(stdout, "property: [new]%s:%s, [old]%s:%s | ", RT_token_as_string(struct_new->tp_struct.identifier), RT_token_as_string(field_new->identifier), RT_token_as_string(struct_old->tp_struct.identifier), field_old ? RT_token_as_string(field_old->identifier) : "undefined");
+	}
+	else {
+		fprintf(stdout, "property: %s:%s | ", RT_token_as_string(struct_new->tp_struct.identifier), RT_token_as_string(field_old->identifier));
+	}
 
 	if (!field_old) {
 		/** Could not find an old member to copy the data to the new member, init to zero! */
@@ -777,7 +782,7 @@ ROSE_STATIC void dna_init_reconstruct_step_for_member(const SDNA *dna_old, const
 		r_step->reconstruct.length = carr_len;
 		r_step->reconstruct.steps = nfields;
 		r_step->reconstruct.info = MEM_mallocN(sizeof(ReconstructStep) * nfields, "ReconstructStep[]");
-		fprintf(stdout, "reconstruct [%zd <- %zd x %zu]\n", r_step->offset_new, r_step->offset_old, carr_len);
+		fprintf(stdout, "build [%zd <- %zd x %zu]\n", r_step->offset_new, r_step->offset_old, carr_len);
 
 		size_t index;
 		LISTBASE_FOREACH_INDEX(RTField *, field, &type_new->tp_struct.fields, index) {

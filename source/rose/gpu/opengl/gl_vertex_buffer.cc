@@ -39,16 +39,19 @@ void GLVertBuf::release_data() {
 	MEM_SAFE_FREE(data);
 }
 
-void GLVertBuf::duplicate_data(VertBuf *dst_) {
+void GLVertBuf::duplicate_data(VertBuf *dst_, bool force_generate) const {
 	ROSE_assert(GLContext::get() != nullptr);
-	GLVertBuf *src = this;
+	const GLVertBuf *src = this;
 	GLVertBuf *dst = static_cast<GLVertBuf *>(dst_);
 	dst->buffer_texture_ = nullptr;
 
 	if (src->vbo_id_ != 0) {
 		dst->vbo_size_ = src->size_used_get();
 
-		glGenBuffers(1, &dst->vbo_id_);
+		if (force_generate || dst->vbo_id_ == 0) {
+			glGenBuffers(1, &dst->vbo_id_);
+		}
+
 		glBindBuffer(GL_COPY_WRITE_BUFFER, dst->vbo_id_);
 		glBufferData(GL_COPY_WRITE_BUFFER, dst->vbo_size_, nullptr, to_gl(dst->usage_));
 

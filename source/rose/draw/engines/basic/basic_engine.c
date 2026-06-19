@@ -13,6 +13,8 @@
 typedef struct DRWBasicData {
 	struct ViewportEngineData *prev, *next;
 
+	int flag;
+
 	void *engine;
 	DRWViewportEmptyList *fbl;
 	DRWViewportEmptyList *txl;

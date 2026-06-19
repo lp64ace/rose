@@ -56,6 +56,7 @@ set(GLSL_SRC
 	engines/overlay/shaders/armature_shape_solid_vert.glsl
 	engines/overlay/shaders/overlay_common_lib.glsl
 
+	intern/shaders/draw_shader_armature_compute.glsl
 	intern/shaders/draw_shader_shared.h
 
 )
@@ -85,6 +86,8 @@ set(SRC
 	intern/draw_manager.h
 	intern/draw_manager_data.c
 	intern/draw_manager_exec.c
+	intern/draw_modifiers.c
+	intern/draw_modifiers.h
 	intern/draw_pass.h
 	intern/draw_state.h
 

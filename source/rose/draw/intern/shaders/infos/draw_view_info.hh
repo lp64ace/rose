@@ -32,7 +32,10 @@ GPU_SHADER_CREATE_INFO(draw_modelmat)
 /** \} */
 
 GPU_SHADER_CREATE_INFO(draw_mesh)
-	.uniform_buf(DRW_DVGROUP_UBO_SLOT, "DVertGroupMatrices", "grp_matrices", Frequency::BATCH)
-    .define("TargetToArmatureMatrix", "(grp_matrices.drw_TargetToArmature)")
-    .define("ArmatureToTargetMatrix", "(grp_matrices.drw_ArmatureToTarget)")
 	.additional_info("draw_modelmat", "draw_resource_id_uniform");
+
+GPU_SHADER_CREATE_INFO(draw_mesh_attributes)
+    .vertex_in(0, Type::VEC3, "pos")
+    .vertex_in(1, Type::VEC3, "nor")
+    .vertex_in(2, Type::IVEC4, "defgroup")
+    .vertex_in(3, Type::VEC4, "weight");

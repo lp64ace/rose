@@ -57,6 +57,7 @@ typedef struct Object_Runtime {
 
 	int is_data_eval_owned;
 	int local_collections_bits;
+	int select_id;
 } Object_Runtime;
 
 typedef struct Object {

@@ -88,13 +88,9 @@ ROSE_INLINE void draw_alice_opaque_cache_populate_mesh(DRWAliceData *vdata, Obje
 
 	GPUBatch *surface = DRW_cache_object_surface_get(object);
 
-	/** Ready all the required modifier data blocks for rendering on this group. */
-	DRW_alice_modifier_list_build(impl->depth_shgroup, object);
 	DRW_shading_group_call_ex(impl->depth_shgroup, object, object->obmat, surface);
 
 	for (size_t index = 0; index < ARRAY_SIZE(impl->opaque_shgroup); index++) {
-		/** Ready all the required modifier data blocks for rendering on this group. */
-		DRW_alice_modifier_list_build(impl->opaque_shgroup[index], object);
 		DRW_shading_group_call_ex(impl->opaque_shgroup[index], object, object->obmat, surface);
 	}
 }

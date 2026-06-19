@@ -53,6 +53,13 @@ typedef struct DRWManager {
 
 extern DRWManager GDrawManager;
 
+typedef struct DRWSelectBuffer {
+	struct GPUFrameBuffer *framebuffer_depth_only;
+	struct GPUTexture *texture_depth;
+} DRWSelectBuffer;
+
+extern DRWSelectBuffer GSelectBuffer;
+
 typedef struct DRWGlobal {
 	struct GPUUniformBuf *view;
 } DRWGlobal;

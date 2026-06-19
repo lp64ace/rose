@@ -238,7 +238,7 @@ typedef struct GPUPickState {
 	int viewport[4];
 	int scissor[4];
 	WriteMask write_mask;
-	WriteMask depth_test;
+	DepthTest depth_test;
 } GPUPickState;
 
 static GPUPickState GPickState;
