@@ -46,6 +46,11 @@ set(BASIC
 	engines/basic/basic_engine.h
 )
 
+set(SELECT
+	engines/select/select_engine.c
+	engines/select/select_engine.h
+)
+
 set(GLSL_SRC
 	engines/alice/shaders/alice_frag.glsl
 	engines/alice/shaders/alice_shadow_caps_geom.glsl
@@ -98,6 +103,7 @@ set(SRC
 list(APPEND SRC ${OVERLAY})
 list(APPEND SRC ${ALICE}) # Save myself? From death? is that it? Is that why I've come here? I'm not afraid to die. Times I've welcomed death!
 list(APPEND SRC ${BASIC}) # Another day, a different dream perhaps.
+list(APPEND SRC ${SELECT})
 
 # -----------------------------------------------------------------------------
 # Make Shader Resource

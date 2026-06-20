@@ -581,6 +581,21 @@ void DRW_render_context_disable_ex(bool restore) {
  * Draw Away!
  * \{ */
 
+#ifndef NDEBUG
+ROSE_INLINE void draw_object_modifier_list_debug_check(Object *object) {
+	LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
+		if (md == (ModifierData *)object->modifiers.last) {
+			continue;
+		}
+
+		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			/** Only the last modifier can be applied on device, the rest must be applied on the host. */
+			ROSE_assert_unreachable();
+		}
+	}
+}
+#endif
+
 ROSE_STATIC void drw_engine_cache_init(void) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		if (!DRW_engine_used(vdata->engine)) {
@@ -620,24 +635,31 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 		draw_modifier_cache_populate(md, object);
 	}
 
-	// @TODO assign a different thread to generate these!
+	/**
+	 * @TODO assign a different thread to generate these!
+	 * \note Device modifiers depend on these!
+	 */
 	DRW_batch_cache_generate(object);
-}
 
 #ifndef NDEBUG
-ROSE_INLINE void draw_object_modifier_list_debug_check(Object *object) {
-	LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
-		if (md == (ModifierData *)object->modifiers.last) {
-			continue;
-		}
+	draw_object_modifier_list_debug_check(object);
+#endif
 
-		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
-			/** Only the last modifier can be applied on device, the rest must be applied on the host. */
-			ROSE_assert_unreachable();
+	// Remember us motherfucker, we are still waiting for modifier overrides, calculate them here!
+	if (!LIB_listbase_is_empty(&object->modifiers)) {
+		ModifierData *md = (ModifierData *)object->modifiers.last;
+
+		if (draw_modifier_is_device(md)) {
+			/**
+			 * Finally since the modifier is tagged by the user to be built on the device,
+			 * we force built it on device.
+			 *
+			 * \note Not all modifiers are allowed to be computed on device, unsupported modifiers will be ignored.
+			 */
+			draw_modifier_cache_build(md, object);
 		}
 	}
 }
-#endif
 
 ROSE_STATIC void drw_engine_cache_finish(ListBase *bases) {
 	// @TODO wait for any threads that have beed dispatched by #drw_engine_cache_populate
@@ -651,35 +673,6 @@ ROSE_STATIC void drw_engine_cache_finish(ListBase *bases) {
 			vdata->engine->cache_finish(vdata);
 		}
 	}
-
-	// Remember us motherfucker, we are still waiting for modifier overrides, calculate them here!
-	LISTBASE_FOREACH(struct Base *, base, bases) {
-		Object *object = base->object;
-
-		if (LIB_listbase_is_empty(&object->modifiers)) {
-			continue;
-		}
-
-#ifndef NDEBUG
-		draw_object_modifier_list_debug_check(object);
-#endif
-
-		ModifierData *md = (ModifierData *)object->modifiers.last;
-
-		if (!draw_modifier_is_device(md)) {
-			continue;
-		}
-
-		/**
-		 * Finally since the modifier is tagged by the user to be built on the device, 
-		 * we force built it on device.
-		 * 
-		 * \note Not all modifiers are allowed to be computed on device, unsupported modifiers will be ignored.
-		 */
-		draw_modifier_cache_build(md, object);
-	}
-
-	GPU_memory_barrier(GPU_BARRIER_SHADER_STORAGE | GPU_BARRIER_VERTEX_ATTRIB_ARRAY);
 
 	DRW_render_buffer_finish();
 }

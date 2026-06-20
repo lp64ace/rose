@@ -26,7 +26,7 @@
 #include <limits.h>
 #include <zstd.h>
 
-#define ZSTD_COMPRESSION_LEVEL 7
+#define ZSTD_COMPRESSION_LEVEL 3
 
 /* -------------------------------------------------------------------- */
 /** \name Internal Write Wrapper's (Abstracts Compression)

@@ -9,6 +9,8 @@
 #include "KER_mesh.h"
 #include "KER_modifier.h"
 
+#include "GPU_state.h"
+
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
 #include "LIB_memblock.h"
@@ -107,6 +109,8 @@ ROSE_STATIC void draw_resource_buffer_finish(DRWData *dd) {
 
 		GPU_uniformbuf_update(dd->matrices_ubo[chunk], data);
 	}
+
+	GPU_memory_barrier(GPU_BARRIER_SHADER_STORAGE | GPU_BARRIER_VERTEX_ATTRIB_ARRAY);
 }
 
 void DRW_render_buffer_finish() {
