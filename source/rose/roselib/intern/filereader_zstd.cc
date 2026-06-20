@@ -285,7 +285,7 @@ FileReader *LIB_filereader_new_zstd(FileReader *base) {
 		zstd->reader.seek = nullptr;
 
 		zstd->in_buf_max_size = ZSTD_DStreamInSize();
-		zstd->in_buf.src = MEM_mallocN(zstd->in_buf_max_size, __file__);
+		zstd->in_buf.src = MEM_mallocN(zstd->in_buf_max_size, __func__);
 		zstd->in_buf.size = zstd->in_buf_max_size;
 		/* This signals that the buffer has run out,
 		 * which will make the read function refill it on the first call. */
