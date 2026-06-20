@@ -155,6 +155,20 @@ void LIB_thread_queue_nowait(ThreadQueue *queue);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Condition
+ * \{ */
+
+typedef pthread_cond_t ThreadCondition;
+
+void LIB_condition_init(ThreadCondition *cond);
+void LIB_condition_wait(ThreadCondition *cond, ThreadMutex *mutex);
+void LIB_condition_notify_one(ThreadCondition *cond);
+void LIB_condition_notify_all(ThreadCondition *cond);
+void LIB_condition_end(ThreadCondition *cond);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name System Information
  * \{ */
 

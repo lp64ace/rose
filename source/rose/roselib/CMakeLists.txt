@@ -18,6 +18,7 @@ set(INC_SYS
 	${PTHREADS_INCLUDE_DIRS}
 	${TBB_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
+	${ZSTD_INCLUDE_DIRS}
 	
 )
 
@@ -174,6 +175,7 @@ set(SRC
 	intern/endian_switch.c
 	intern/fileops.c
 	intern/filereader.c
+	intern/filereader_zstd.cc
 	intern/generic_vector_array.cc
 	intern/generic_virtual_array.cc
 	intern/generic_virtual_vector_array.cc
@@ -237,6 +239,7 @@ set(LIB
 	# External Library Dependencies
 	PUBLIC ${PTHREADS_LIBRARIES}
 	PUBLIC ${TBB_LIBRARIES}
+	PUBLIC ${ZSTD_LIBRARIES}
 	
 )
 

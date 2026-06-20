@@ -24,6 +24,9 @@
 #include "intern/genfile.h"	 // DNA
 
 #include <limits.h>
+#include <zstd.h>
+
+#define ZSTD_COMPRESSION_LEVEL 7
 
 /* -------------------------------------------------------------------- */
 /** \name Internal Write Wrapper's (Abstracts Compression)
@@ -60,6 +63,201 @@ bool RawWriteWrap::close() {
 
 bool RawWriteWrap::write(const void *buffer, size_t length) {
 	return ::write(this->fd, buffer, length) == length;
+}
+
+struct ZstdFrame {
+	ZstdFrame *prev, *next;
+
+	uint32_t compressed_size;
+	uint32_t uncompressed_size;
+};
+
+class ZstdWriteWrap : public WriteWrap {
+	struct ZstdWriteBlockTask;
+
+public:
+	ZstdWriteWrap(WriteWrap &base_wrap) : base_wrap(base_wrap) {
+		LIB_listbase_clear(&this->tasks);
+		LIB_listbase_clear(&this->threadpool);
+		LIB_listbase_clear(&this->frames);
+	}
+
+	bool open(const char *filepath) override;
+	bool close() override;
+	bool write(const void *but, size_t lenth) override;
+
+protected:
+	void write_task(ZstdWriteBlockTask *task);
+	void write_u32_le(uint32_t val);
+	void write_seekable_frames();
+
+private:
+	WriteWrap &base_wrap;
+	
+	ListBase tasks;
+	ListBase threadpool;
+	ThreadMutex mutex;
+	ThreadCondition condition;
+
+	ListBase frames;
+	size_t next_frame = 0;
+	size_t num_frames = 0;
+
+	bool write_error = false;
+};
+
+struct ZstdWriteWrap::ZstdWriteBlockTask {
+	ZstdWriteBlockTask *prev, *next;
+
+	void *data;
+	size_t size;
+	int frame_number;
+	ZstdWriteWrap *ww;
+
+	static void *write_task(void *userdata) {
+		auto *task = static_cast<ZstdWriteBlockTask *>(userdata);
+		task->ww->write_task(task);
+		return nullptr;
+	}
+};
+
+void ZstdWriteWrap::write_task(ZstdWriteBlockTask *task) {
+	size_t out_buf_len = ZSTD_compressBound(task->size);
+	void *out_buf = MEM_mallocN(out_buf_len, "Zstd out buffer");
+	size_t out_size = ZSTD_compress(out_buf, out_buf_len, task->data, task->size, ZSTD_COMPRESSION_LEVEL);
+
+	MEM_freeN(task->data);
+
+	LIB_mutex_lock(&mutex);
+
+	while (next_frame != task->frame_number) {
+		LIB_condition_wait(&condition, &mutex);
+	}
+
+	if (ZSTD_isError(out_size)) {
+		write_error = true;
+	}
+	else {
+		if (base_wrap.write(out_buf, out_size)) {
+			ZstdFrame *frameinfo = static_cast<ZstdFrame *>(MEM_mallocN(sizeof(ZstdFrame), "ZstdFrame"));
+			frameinfo->uncompressed_size = task->size;
+			frameinfo->compressed_size = out_size;
+			LIB_addtail(&frames, frameinfo);
+		}
+		else {
+			write_error = true;
+		}
+	}
+
+	next_frame++;
+
+	LIB_mutex_unlock(&mutex);
+	LIB_condition_notify_all(&condition);
+
+	MEM_freeN(out_buf);
+}
+
+void ZstdWriteWrap::write_u32_le(uint32_t val) {
+	/* NOTE: this is endianness-sensitive. This value must always be written as little-endian. */
+#ifndef __LITTLE_ENDIAN__
+	ROSE_assert_unreachable();
+#endif
+	base_wrap.write(&val, sizeof(uint32_t));
+}
+
+/* In order to implement efficient seeking when reading the .rose, we append
+ * a skippable frame that encodes information about the other frames present
+ * in the file.
+ * The format here follows the upstream spec for seekable files:
+ * https://github.com/facebook/zstd/blob/master/contrib/seekable_format/zstd_seekable_compression_format.md
+ * If this information is not present in a file (e.g. if it was compressed
+ * with external tools), it can still be opened in Rose, but seeking will
+ * not be supported, so more memory might be needed. */
+void ZstdWriteWrap::write_seekable_frames() {
+	/* Write seek table header (magic number and frame size). */
+	write_u32_le(0x184D2A5E);
+
+	/* The actual frame number might not match num_frames if there was a write error. */
+	const size_t num_frames = LIB_listbase_count(&frames);
+	/* Each frame consists of two u32, so 8 bytes each.
+	 * After the frames, a footer containing two u32 and one byte (9 bytes total) is written. */
+	const size_t frame_size = num_frames * 8 + 9;
+	write_u32_le(frame_size);
+
+	/* Write seek table entries. */
+	LISTBASE_FOREACH(ZstdFrame *, frame, &this->frames) {
+		write_u32_le(frame->compressed_size);
+		write_u32_le(frame->uncompressed_size);
+	}
+
+	/* Write seek table footer (number of frames, option flags and second magic number). */
+	write_u32_le(num_frames);
+	const char flags = 0; /* We don't store checksums for each frame. */
+	base_wrap.write(&flags, 1);
+	write_u32_le(0x8F92EAB1);
+}
+
+bool ZstdWriteWrap::open(const char *filepath) {
+	if (!this->base_wrap.open(filepath)) {
+		return false;
+	}
+
+	/* Leave one thread open for the main writing logic, unless we only have one HW thread. */
+	size_t num_threads = ROSE_MAX(1, LIB_system_thread_count() - 1);
+
+	LIB_threadpool_init(&this->threadpool, ZstdWriteBlockTask::write_task, num_threads);
+	LIB_mutex_init(&this->mutex);
+	LIB_condition_init(&this->condition);
+
+	return true;
+}
+
+bool ZstdWriteWrap::write(const void *buf, const size_t buf_len) {
+	if (write_error) {
+		return false;
+	}
+
+	ZstdWriteBlockTask *task = static_cast<ZstdWriteBlockTask *>(MEM_mallocN(sizeof(ZstdWriteBlockTask), "ZstdWriteBlockTask"));
+	task->data = MEM_mallocN(buf_len, __func__);
+	memcpy(task->data, buf, buf_len);
+	task->size = buf_len;
+	task->frame_number = num_frames++;
+	task->ww = this;
+
+	LIB_mutex_lock(&mutex);
+	LIB_addtail(&tasks, task);
+
+	/* If there's a free worker thread, just push the block into that thread.
+	 * Otherwise, we wait for the earliest thread to finish.
+	 * We look up the earliest thread while holding the mutex, but release it
+	 * before joining the thread to prevent a deadlock. */
+	ZstdWriteBlockTask *first_task = static_cast<ZstdWriteBlockTask *>(tasks.first);
+	LIB_mutex_unlock(&mutex);
+	if (!LIB_available_threads(&threadpool)) {
+		LIB_threadpool_remove(&threadpool, first_task);
+
+		/* If the task list was empty before we pushed our task, there should
+		 * always be a free thread. */
+		ROSE_assert(first_task != task);
+		LIB_remlink(&tasks, first_task);
+		MEM_freeN(first_task);
+	}
+	LIB_threadpool_insert(&threadpool, task);
+
+	return true;
+}
+
+bool ZstdWriteWrap::close() {
+	LIB_threadpool_end(&threadpool);
+	LIB_freelistN(&tasks);
+
+	LIB_mutex_end(&mutex);
+	LIB_condition_end(&condition);
+
+	write_seekable_frames();
+	LIB_freelistN(&frames);
+
+	return base_wrap.close() && !write_error;
 }
 
 /** \} */
@@ -416,7 +614,9 @@ ROSE_STATIC bool write_file_handle(Main *main, WriteWrap *ww, int flag) {
 /** \} */
 
 bool RLO_write_file(Main *main, const char *filepath, int flag) {
-	RawWriteWrap ww;
+	RawWriteWrap raw_ww;
+
+	ZstdWriteWrap ww(raw_ww);
 	if (!ww.open(filepath)) {
 		return false;
 	}

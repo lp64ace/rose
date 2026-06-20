@@ -44,3 +44,29 @@ FileReader *LIB_filereader_new_file(int descr) {
 
 	return (FileReader *)rawreader;
 }
+
+bool LIB_file_magic_is_zstd(const char header[4]) {
+	/* ZSTD files consist of concatenated frames, each either a ZSTD frame or a skippable frame.
+	 * Both types of frames start with a magic number: `0xFD2FB528` for ZSTD frames and `0x184D2A5`
+	 * for skippable frames, with the * being anything from 0 to F.
+	 *
+	 * To check whether a file is ZSTD-compressed, we just check whether the first frame matches
+	 * either. Seeking through the file until a ZSTD frame is found would make things more
+	 * complicated and the probability of a false positive is rather low anyways.
+	 *
+	 * Note that LZ4 uses a compatible format, so even though its compressed frames have a
+	 * different magic number, a valid LZ4 file might also start with a skippable frame matching
+	 * the second check here.
+	 *
+	 * For more details, see https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md
+	 */
+
+	uint32_t magic = *((uint32_t *)((char *)(header)));
+	if (magic == 0xFD2FB528) {
+		return true;
+	}
+	if ((magic >> 4) == 0x184D2A5) {
+		return true;
+	}
+	return false;
+}

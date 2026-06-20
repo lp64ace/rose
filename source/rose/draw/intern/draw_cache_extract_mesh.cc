@@ -22,14 +22,20 @@ void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
 
 	if (DRW_vbo_requested(cache->buffers.vbo.mpos) || DRW_vbo_requested(cache->buffers.vbo.pos)) {
 		if (DRW_vbo_requested(cache->buffers.vbo.mpos)) {
+			/**
+			 * If the #cache->buffers.vbo.mpos vertex buffer is requested then this buffer will 
+			 * be used to populate #cache->buffers.vbo.pos!
+			 */
 			extract_positions(mesh, cache->buffers.vbo.mpos);
 		}
 		else {
+			/** No modifier stack running on device, just copy the original positions over! */
 			extract_positions(mesh, cache->buffers.vbo.pos);
 		}
 	}
 	if (DRW_vbo_requested(cache->buffers.vbo.mnor) || DRW_vbo_requested(cache->buffers.vbo.nor)) {
 		if (DRW_vbo_requested(cache->buffers.vbo.mnor)) {
+			/** Similar to #cache->buffers.vbo.mpos, this will be used to compute #cache->buffers.vbo.nor! */
 			extract_normals(mesh, cache->buffers.vbo.mnor, false);
 		}
 		else {

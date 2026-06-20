@@ -34,6 +34,7 @@
 
 #include <limits.h>
 #include <stdio.h>
+#include <zstd.h>
 
 /* -------------------------------------------------------------------- */
 /** \name OldNewMap API
@@ -941,8 +942,39 @@ ROSE_STATIC FileData *rlo_decode_and_check(FileData *fd) {
 	return fd;
 }
 
+FileReader *RLO_file_reader_uncompressed(FileReader *rawfile) {
+	if (!rawfile) {
+		return nullptr;
+	}
+
+	char first_bytes[4];
+	if (rawfile->read(rawfile, first_bytes, sizeof(first_bytes)) != sizeof(first_bytes)) {
+		/* The file is too small to possibly be a valid rose file. */
+		rawfile->close(rawfile);
+		return nullptr;
+	}
+
+	/* Rewind to the start of the file. */
+	rawfile->seek(rawfile, 0, SEEK_SET);
+
+	if (memcmp(first_bytes, "ROSE", sizeof(first_bytes)) == 0) {
+		/* The file is uncompressed. */
+		return rawfile;
+	}
+	if (LIB_file_magic_is_zstd(first_bytes)) {
+		/* The new reader takes ownership of the rawfile. */
+		return LIB_filereader_new_zstd(rawfile);
+	}
+	rawfile->close(rawfile);
+	return nullptr;
+}
+
+FileReader *RLO_file_reader_uncompressed_from_descriptor(int fd) {
+	return RLO_file_reader_uncompressed(LIB_filereader_new_file(fd));
+}
+
 ROSE_STATIC FileData *rlo_filedata_from_file_descriptor(int descr) {
-	FileReader *rawfile = LIB_filereader_new_file(descr), *file = NULL;
+	FileReader *rawfile = RLO_file_reader_uncompressed_from_descriptor(descr), *file = NULL;
 
 	char header[4];
 	if (rawfile == NULL || rawfile->read(rawfile, header, sizeof(header)) != sizeof(header)) {
