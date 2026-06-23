@@ -42,9 +42,11 @@
 #include "draw_manager.h"
 #include "draw_modifiers.h"
 
-#include "engines/alice/alice_engine.h"
+#include "engines/select/select_engine.h"
 #include "engines/basic/basic_engine.h"
+#include "engines/alice/alice_engine.h"
 #include "engines/overlay/overlay_engine.h"
+
 #include "shaders/draw_shader_shared.h"
 
 struct Object;
@@ -60,6 +62,7 @@ DRWSelectBuffer GSelectBuffer;
 DRWGlobal GDraw;
 
 void DRW_engines_register(void) {
+	DRW_engine_register(&draw_engine_select_type);
 	DRW_engine_register(&draw_engine_basic_type);
 	DRW_engine_register(&draw_engine_alice_type);
 	DRW_engine_register(&draw_engine_overlay_type);
@@ -516,6 +519,9 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 }
 
 void DRW_manager_exit(DRWManager *manager) {
+	/** Disable the engines that were used! */
+	DRW_engines_disable();
+
 	if (manager->viewport) {
 		// The data are persistent within the viewport, see the #GPU_viewport_free function!
 	}
@@ -533,14 +539,19 @@ void DRW_manager_exit(DRWManager *manager) {
 void DRW_render_context_create(struct WindowManager *wm) {
 	ROSE_assert(GDrawManager.render == NULL);
 
-	GDrawManager.mutex = LIB_mutex_alloc();
-	GDrawManager.render = WM_render_context_create(wm);
-	GDrawManager.context = GPU_context_create(NULL, GDrawManager.render);
-	
-	wm_window_reset_drawable(wm);
+	if (GDrawManager.render == NULL) {
+		GDrawManager.mutex = LIB_mutex_alloc();
+		GDrawManager.render = WM_render_context_create(wm);
+		GDrawManager.context = GPU_context_create(NULL, GDrawManager.render);
+		wm_window_reset_drawable(wm);
+	}
+
+	DRW_modifier_init();
 }
 
 void DRW_render_context_destroy(struct WindowManager *wm) {
+	DRW_modifier_exit();
+
 	if (GDrawManager.render != NULL) {
 		WM_render_context_activate(GDrawManager.render);
 		GPU_context_active_set(GDrawManager.context);
@@ -727,8 +738,6 @@ void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct G
 	drw_engine_draw_scene();
 
 	DRW_manager_exit(&GDrawManager);
-
-	DRW_engines_disable();
 }
 
 ROSE_INLINE void drw_select_framebuffer_depth_only_setup(const int size[2]) {
@@ -756,7 +765,7 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	const int viewport_size[2] = {LIB_rcti_size_x(rect), LIB_rcti_size_y(rect)};
 
 	DRW_manager_init(&GDrawManager, region, scene, view_layer, NULL, viewport_size);
-	// Enable the select engine here!
+	DRW_engine_use(&draw_engine_select_type);
 	DRW_engines_init(depsgraph);
 
 	// We really ough to make a Dependency Graph to iterate the objects in order!

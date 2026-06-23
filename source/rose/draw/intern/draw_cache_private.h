@@ -26,6 +26,7 @@ typedef struct MeshBufferList {
 		GPUVertBuf *mnor;
 		GPUVertBuf *nor;
 		GPUVertBuf *weights;
+		GPUVertBuf *poly_idx;
 	} vbo;
 	struct {
 		GPUIndexBuf *tris;
@@ -46,6 +47,9 @@ typedef struct MeshBatchCache {
 
 	GPUBatch *surface;
 	GPUBatch *edge_detection;
+	GPUBatch *face_selection;
+	GPUBatch *edge_selection;
+	GPUBatch *vert_selection;
 
 	bool is_dirty;
 	bool is_manifold;

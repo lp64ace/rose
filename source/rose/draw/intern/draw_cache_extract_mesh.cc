@@ -15,6 +15,7 @@ void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
 		!DRW_vbo_requested(cache->buffers.vbo.mnor) &&
 		!DRW_vbo_requested(cache->buffers.vbo.nor) &&
 		!DRW_vbo_requested(cache->buffers.vbo.weights) &&
+		!DRW_vbo_requested(cache->buffers.vbo.poly_idx) &&
 		!DRW_ibo_requested(cache->buffers.ibo.tris) &&
 		!DRW_ibo_requested(cache->buffers.ibo.lines_adjacency)) {
 		return;
@@ -44,6 +45,9 @@ void DRW_cache_mesh_create(MeshBatchCache *cache, Object *object, Mesh *mesh) {
 	}
 	if (DRW_vbo_requested(cache->buffers.vbo.weights)) {
 		extract_weights(object, mesh, cache->buffers.vbo.weights);
+	}
+	if (DRW_vbo_requested(cache->buffers.vbo.poly_idx)) {
+		extract_poly_idx(mesh, cache->buffers.vbo.poly_idx);
 	}
 	if (DRW_ibo_requested(cache->buffers.ibo.tris)) {
 		extract_triangles(mesh, cache->buffers.ibo.tris);

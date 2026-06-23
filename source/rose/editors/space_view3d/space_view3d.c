@@ -115,7 +115,7 @@ ROSE_INLINE void view3d_main_region_layout(rContext *C, ARegion *region) {
 	}
 }
 
-ROSE_INLINE void view3d_viewmatrix_set(RegionView3D *rv3d) {
+void ED_view3d_draw_setup_view(RegionView3D *rv3d) {
 	quat_to_mat4(rv3d->viewmat, rv3d->viewquat);
 	add_v3_v3(rv3d->viewmat[3], rv3d->viewloc);
 	invert_m4(rv3d->viewmat);
@@ -129,7 +129,7 @@ ROSE_INLINE void view3d_main_region_draw(rContext *C, ARegion *region) {
 	GPU_matrix_push_projection();
 	GPU_matrix_identity_projection_set();
 
-	view3d_viewmatrix_set(rv3d);
+	ED_view3d_draw_setup_view(rv3d);
 
 	DRW_draw_view(C);
 

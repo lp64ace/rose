@@ -105,6 +105,15 @@ void DRW_view_data_default_lists_from_viewport(DRWViewData *view_data, GPUViewpo
 	view_data->flag |= DRW_VIEW_DATA_VIEWPORT;
 }
 
+DefaultTextureList *DRW_view_data_texture_list_get(DRWViewData *view_data, GPUViewport *viewport) {
+	int view = GPU_viewport_active_view_get(viewport);
+
+	DefaultFramebufferList *dfbl = &view_data->dfbl;
+	DefaultTextureList *dtxl = &view_data->dtxl;
+
+	return dtxl;
+}
+
 void DRW_view_data_use_engine(DRWViewData *view_data, DrawEngineType *engine_type) {
 	ViewportEngineData *engine = DRW_view_data_engine_data_get_ensure(view_data, engine_type);
 

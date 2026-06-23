@@ -31,6 +31,10 @@ void extract_weights(const Object *obtarget, const Mesh *mesh, struct GPUVertBuf
 /** Extract the uniform buffer with the matrices for deformation. */
 void extract_matrices(const Object *obarmature, const Object *obtarget, const Mesh *mesh, struct GPUUniformBuf *ubo);
 
+void extract_poly_idx(const Mesh *mesh, struct GPUVertBuf *vbo);
+// void extract_edge_idx(const Mesh *mesh, struct GPUVertBuf *vbo);
+// void extract_vert_idx(const Mesh *mesh, struct GPUVertBuf *vbo);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

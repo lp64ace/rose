@@ -9,6 +9,10 @@
 #include "RNA_access.h"
 #include "RNA_define.h"
 
+#include "DEG_depsgraph.h"
+
+#include "DRW_engine.h"
+
 #include "ED_screen.h"
 
 #include "LIB_assert.h"
@@ -18,14 +22,19 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "KER_global.h"
 #include "KER_screen.h"
 #include "KER_scene.h"
 #include "KER_object.h"
+
+#include "GPU_matrix.h"
+#include "GPU_select.h"
 
 #include "WM_api.h"
 #include "WM_draw.h"
 #include "WM_window.h"
 
+#include "view3d_intern.h"
 #include "view3d_navigate.h"
 
 #include <stdio.h>
@@ -324,6 +333,117 @@ static void VIEW3D_OT_zoom(wmOperatorType *ot) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Select
+ * \{ */
+
+ROSE_INLINE void view3d_region_requires_gpu_context(wmWindow *window, ARegion *region) {
+	if ((region == NULL) || (region->regiontype != RGN_TYPE_WINDOW)) {
+		fprintf(stderr, "[Editors] #%s failed, wrong region\n", __func__);
+	}
+	else {
+		RegionView3D *rv3d = region->regiondata;
+
+		ED_region_pixelspace(region);
+
+		GPU_matrix_projection_set(rv3d->winmat);
+		GPU_matrix_set(rv3d->viewmat);
+	}
+}
+
+ROSE_INLINE void view3d_operator_requires_gpu_context(rContext *C) {
+	wmWindow *window = CTX_wm_window(C);
+	ARegion *region = CTX_wm_region(C);
+
+	view3d_region_requires_gpu_context(window, region);
+}
+
+ROSE_INLINE bool view3d_select_pass(int stage, void *user_data) {
+	switch (stage) {
+		case DRW_SELECT_PASS_PRE: {
+			// GPU_select_begin();
+		} return true;
+		case DRW_SELECT_PASS_POST: {
+		} return false;
+	}
+	return false;
+}
+ROSE_INLINE bool view3d_object_filter(struct Object *ob, void *user_data) {
+	return true;
+}
+
+ROSE_INLINE void view3d_gpu_select_ex(rContext *C, Depsgraph *depsgraph, const rcti *rect) {
+	ARegion *region = CTX_wm_region(C);
+	View3D *v3d = CTX_wm_space_view3d(C);
+
+	RegionView3D *rv3d = region->regiondata;
+
+	G.flag |= G_FLAG_PICKSEL;
+
+	ED_view3d_draw_setup_view(rv3d);
+	
+	DRW_draw_select_loop(depsgraph, region, v3d, rect, view3d_select_pass, NULL, view3d_object_filter, NULL);
+}
+
+void ED_object_select_pick(rContext *C, int x, int y) {
+	Depsgraph *depsgraph = CTX_data_ensure_evaluated_depsgraph(C);
+
+	rcti rect;
+	LIB_rcti_init(&rect, x - 12, x + 12, y - 12, y + 12);
+
+	view3d_operator_requires_gpu_context(C);
+	view3d_gpu_select_ex(C, depsgraph, &rect);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Select Operators
+ * \{ */
+
+ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op);
+
+ROSE_INLINE wmOperatorStatus view3d_select_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	RNA_int_set(op->ptr, "x", event->mouse_xy[0]);
+	RNA_int_set(op->ptr, "y", event->mouse_xy[1]);
+
+	return view3d_select_exec(C, op);
+}
+
+ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op) {
+	Scene *scene = CTX_data_scene(C);
+
+	int x = RNA_int_get(op->ptr, "x");
+	int y = RNA_int_get(op->ptr, "y");
+
+	KER_object_update_select_id(CTX_data_main(C));
+
+	ED_object_select_pick(C, x, y);
+
+	return OPERATOR_PASS_THROUGH | OPERATOR_FINISHED;
+}
+
+/**
+ * Return's false if we should deny select to the user!
+ */
+ROSE_INLINE bool view3d_select_poll(rContext *C) {
+	return CTX_wm_space_view3d(C) != NULL;
+}
+
+void VIEW3D_OT_select(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Select";
+	ot->description = "Select and activate item(s)";
+	ot->idname = "VIEW3D_OT_select";
+
+	/* API callbacks. */
+	ot->invoke = view3d_select_invoke;
+	ot->exec = view3d_select_exec;
+	ot->poll = view3d_select_poll;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Assigning Operator Types
  * \{ */
 
@@ -331,6 +451,7 @@ void view3d_operatortypes() {
 	WM_operatortype_append(VIEW3D_OT_rotate);
 	WM_operatortype_append(VIEW3D_OT_pan);
 	WM_operatortype_append(VIEW3D_OT_zoom);
+	WM_operatortype_append(VIEW3D_OT_select);
 }
 
 /** \} */
@@ -369,12 +490,40 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 
 	do {
 		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_zoom", &(KeyMapItem_Params){
+			.type = EVT_PLUSKEY,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+
+		RNA_int_set(kmi->ptr, "delta", 40);
+	} while(false);
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_zoom", &(KeyMapItem_Params){
 			.type = WHEELDOWNMOUSE,
 			.value = KM_PRESS,
 			.modifier = KM_NOTHING,
 		});
 
 		RNA_int_set(kmi->ptr, "delta", -40);
+	} while(false);
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_zoom", &(KeyMapItem_Params){
+			.type = EVT_MINUSKEY,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+
+		RNA_int_set(kmi->ptr, "delta", -40);
+	} while(false);
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_select", &(KeyMapItem_Params){
+			.type = LEFTMOUSE,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
 	} while(false);
 
 	/* clang-format on */

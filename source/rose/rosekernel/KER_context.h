@@ -57,6 +57,7 @@ struct SpaceFile;
 
 struct SpaceLink *CTX_wm_space_data(const struct rContext *C);
 struct SpaceFile *CTX_wm_space_file(const struct rContext *C);
+struct View3D *CTX_wm_space_view3d(const struct rContext *C);
 
 /**
  * Gets pointer to the dependency graph.

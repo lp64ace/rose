@@ -20,6 +20,29 @@
 /** \name Modifier Device Support
  * \{ */
 
+typedef struct DRWModifierShader {
+	GPUShader *draw_armature;
+} DRWModifierShader;
+
+static struct DRWModifierShader GModifierShader;  // = NULL;
+
+void DRW_modifier_init(void) {
+	if (!GModifierShader.draw_armature) {
+		GModifierShader.draw_armature = GPU_shader_create_from_info_name("draw_armature_modifier");
+	}
+}
+
+void DRW_modifier_exit(void) {
+	if (GModifierShader.draw_armature) {
+		GPU_shader_free(GModifierShader.draw_armature);
+		GModifierShader.draw_armature = NULL;
+	}
+}
+
+ROSE_INLINE GPUShader *draw_modifier_armature_shader() {
+	return GModifierShader.draw_armature;
+}
+
 bool draw_modifier_is_device(ModifierData *md) {
 	if (md != NULL && (md->flag & MODIFIER_DEVICE_ONLY) != 0) {
 		return true;
@@ -144,7 +167,7 @@ ROSE_INLINE void draw_modifier_armature_cache_build_mesh(ArmatureModifierData *a
 	 * For each vertex, we read the bone matrices from the defgroup UBO and apply the skinning algorithm to deform the vertex position and normal.
 	 */
 
-	GPUShader *shader = GPU_shader_create_from_info_name("draw_armature_modifier");
+	GPUShader *shader = draw_modifier_armature_shader();
 
 	GPU_shader_bind(shader);
 
@@ -158,7 +181,6 @@ ROSE_INLINE void draw_modifier_armature_cache_build_mesh(ArmatureModifierData *a
 	size_t length = GPU_vertbuf_get_vertex_len(cache->buffers.vbo.pos);
 
 	GPU_compute_dispatch(shader, (length + 63) / 64, 1, 1);
-	GPU_shader_free(shader);
 }
 
 ROSE_INLINE void draw_modifier_armature_cache_build(ArmatureModifierData *amd, Object *object) {

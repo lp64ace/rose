@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+void DRW_modifier_init(void);
+void DRW_modifier_exit(void);
+
 bool draw_modifier_is_device(struct ModifierData *md);
 bool draw_modifier_is_device_supported(struct ModifierData *md);
 

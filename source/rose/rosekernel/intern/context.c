@@ -149,6 +149,14 @@ struct SpaceFile *CTX_wm_space_file(const rContext *C) {
 	return NULL;
 }
 
+struct View3D *CTX_wm_space_view3d(const rContext *C) {
+	ScrArea *area = CTX_wm_area(C);
+	if (area && area->spacetype == SPACE_VIEW3D) {
+		return (struct View3D *)(area->spacedata.first);
+	}
+	return NULL;
+}
+
 void CTX_wm_manager_set(rContext *ctx, struct WindowManager *manager) {
 	ctx->wm.manager = manager;
 }

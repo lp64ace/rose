@@ -21,6 +21,14 @@ void view3d_keymap(struct wmKeyConfig *keyconf);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Drawing Utility Functions
+ * \{ */
+
+void ED_view3d_draw_setup_view(struct RegionView3D *rv3d);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

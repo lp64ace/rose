@@ -49,6 +49,8 @@ set(BASIC
 set(SELECT
 	engines/select/select_engine.c
 	engines/select/select_engine.h
+	engines/select/select_private.h
+	engines/select/select_shader.c
 )
 
 set(GLSL_SRC
@@ -60,6 +62,8 @@ set(GLSL_SRC
 	engines/overlay/shaders/armature_shape_solid_frag.glsl
 	engines/overlay/shaders/armature_shape_solid_vert.glsl
 	engines/overlay/shaders/overlay_common_lib.glsl
+	engines/select/shaders/select_id_frag.glsl
+	engines/select/shaders/select_id_vert.glsl
 
 	intern/shaders/draw_shader_armature_compute.glsl
 	intern/shaders/draw_shader_shared.h
@@ -74,6 +78,7 @@ set(SRC
 	intern/mesh/extract_mesh.h
 	intern/mesh/extract_mesh_ibo_lines_adjacency.cc
 	intern/mesh/extract_mesh_ibo_tris.cc
+	intern/mesh/extract_mesh_idx.cc
 	intern/mesh/extract_mesh_vbo_pos.cc
 	intern/mesh/extract_mesh_vbo_lnor.cc
 	intern/mesh/extract_mesh_vbo_weights.cc

@@ -38,6 +38,7 @@ const struct Object *DRW_batch_cache_device_armature(const struct Object *object
  * This shall queue the build for the requested batch and shall be ready upon cache finish!
  */
 struct GPUBatch *DRW_cache_object_surface_get(struct Object *object);
+struct GPUBatch *DRW_cache_object_surface_with_select_id_get(struct Object *object);
 struct GPUBatch *DRW_cache_object_edge_detection_get(struct Object *object, bool *r_is_manifold);
 
 /** Ensure that the buffer and draw batches are alloacted */
