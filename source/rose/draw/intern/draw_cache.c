@@ -197,23 +197,32 @@ ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache)
 	GPU_BATCH_DISCARD_SAFE(cache->surface);
 	GPU_BATCH_DISCARD_SAFE(cache->edge_detection);
 	GPU_BATCH_DISCARD_SAFE(cache->face_selection);
+	GPU_BATCH_DISCARD_SAFE(cache->edge_selection);
+	GPU_BATCH_DISCARD_SAFE(cache->vert_selection);
 }
 
 void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
 
-	mesh_batch_cache_discard_surface_batches(cache);
+	for (size_t index = 0; index < cache->materials; index++) {
+		GPU_BATCH_CLEAR_SAFE(cache->surfaces[index]);
+	}
+	GPU_BATCH_CLEAR_SAFE(cache->surface);
+	GPU_BATCH_CLEAR_SAFE(cache->edge_detection);
+	GPU_BATCH_CLEAR_SAFE(cache->face_selection);
+	GPU_BATCH_CLEAR_SAFE(cache->edge_selection);
+	GPU_BATCH_CLEAR_SAFE(cache->vert_selection);
 
 	for (size_t index = 0; index < cache->materials; index++) {
 		if (DRW_batch_requested(cache->surfaces[index], GPU_PRIM_TRIS)) {
-			// DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 			// DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
+			// DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 		}
 	}
 	if (DRW_batch_requested(cache->surface, GPU_PRIM_TRIS)) {
+		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.nor);
-		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 	}
 	if (DRW_batch_requested(cache->edge_detection, GPU_PRIM_LINES_ADJ)) {
 		DRW_ibo_request(cache->edge_detection, &cache->buffers.ibo.lines_adjacency);
