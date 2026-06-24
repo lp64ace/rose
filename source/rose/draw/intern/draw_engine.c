@@ -106,7 +106,7 @@ void DRW_view_data_default_lists_from_viewport(DRWViewData *view_data, GPUViewpo
 }
 
 DefaultTextureList *DRW_view_data_texture_list_get(DRWViewData *view_data, GPUViewport *viewport) {
-	int view = GPU_viewport_active_view_get(viewport);
+	// int view = GPU_viewport_active_view_get(viewport);
 
 	DefaultFramebufferList *dfbl = &view_data->dfbl;
 	DefaultTextureList *dtxl = &view_data->dtxl;

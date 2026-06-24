@@ -768,6 +768,17 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	DRW_engine_use(&draw_engine_select_type);
 	DRW_engines_init(depsgraph);
 
+	/* Setup frame-buffer. */
+	drw_select_framebuffer_depth_only_setup(viewport_size);
+
+	GPU_framebuffer_bind(GSelectBuffer.framebuffer_depth_only);
+	GPU_framebuffer_clear_depth(GSelectBuffer.framebuffer_depth_only, 1.0f);
+
+	ROSE_assert(GDrawManager.vdata_engine->dtxl.depth == NULL);
+	GDrawManager.vdata_engine->dtxl.depth = GSelectBuffer.texture_depth;
+
+	drw_engine_cache_init();
+
 	// We really ough to make a Dependency Graph to iterate the objects in order!
 	LISTBASE_FOREACH(struct Base *, base, &view_layer->bases) {
 		if (object_filter_fn(base->object, object_filter_user_data) == false) {
@@ -785,15 +796,6 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	drw_engine_cache_finish(&view_layer->bases);
 
 	DRW_render_instance_buffer_finish();
-
-	/* Setup frame-buffer. */
-	drw_select_framebuffer_depth_only_setup(viewport_size);
-
-	GPU_framebuffer_bind(GSelectBuffer.framebuffer_depth_only);
-	GPU_framebuffer_clear_depth(GSelectBuffer.framebuffer_depth_only, 1.0f);
-
-	ROSE_assert(GDrawManager.vdata_engine->dtxl.depth == NULL);
-	GDrawManager.vdata_engine->dtxl.depth = GSelectBuffer.texture_depth;
 
 	/* Only 1-2 passes. */
 	while (true) {

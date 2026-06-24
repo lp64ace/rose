@@ -42,6 +42,7 @@ void KER_view_layer_free_ex(struct ViewLayer *view_layer, bool us);
 /** Tag all the selected objects of a render-layer. */
 void KER_view_layer_selected_objects_tag(struct ViewLayer *view_layer, int tag);
 
+struct Base **KER_view_layer_array_from_bases(struct ViewLayer *view_layer, struct View3D *v3d, size_t *r_bases_length);
 struct Base *KER_view_layer_base_find(struct ViewLayer *view_layer, struct Object *object);
 void KER_view_layer_base_deselect_all(struct ViewLayer *view_layer);
 void KER_view_layer_base_select_and_set_active(struct ViewLayer *view_layer, struct Base *selbase);

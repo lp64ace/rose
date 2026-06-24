@@ -11,6 +11,7 @@
 
 #include "KER_armature.h"
 #include "KER_object.h"
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
@@ -91,6 +92,20 @@ enum {
 static DRWSelectContext GSelectContext = {
 	.flag = SELECT_CONTEXT_IS_DIRTY,
 };
+
+void DRW_select_buffer_context_create(Base **bases, const size_t bases_length) {
+	GSelectContext.objects = MEM_recallocN(GSelectContext.objects, sizeof(*GSelectContext.objects) * bases_length);
+	GSelectContext.objects_drawn = MEM_recallocN(GSelectContext.objects_drawn, sizeof(*GSelectContext.objects_drawn) * bases_length);
+	GSelectContext.objects_offsets_indices = MEM_recallocN(GSelectContext.objects_offsets_indices, sizeof(*GSelectContext.objects_offsets_indices) * bases_length);
+
+	for (size_t index = 0; index < bases_length; index++) {
+		Object *obj = bases[index]->object;
+		GSelectContext.objects[index] = obj;
+
+		/* Weak but necessary for `DRW_select_buffer_elem_get`. */
+		obj->runtime.select_id = index;
+	}
+}
 
 /** \} */
 
@@ -197,6 +212,7 @@ ROSE_STATIC void select_cache_init(void *vdata) {
 	if ((psl->select_id_face_pass = DRW_pass_new("Depth Pass", DRW_STATE_DEFAULT))) {
 		stl->data->shgrp_face_flat = DRW_shading_group_new(flat, psl->select_id_face_pass);
 		stl->data->shgrp_face_unif = DRW_shading_group_new(unif, psl->select_id_face_pass);
+		DRW_shading_group_uniform_int(stl->data->shgrp_face_unif, "id", 0);
 	}
 
 	ViewInfos *storage = &GDrawManager.vdata_engine->storage;
@@ -255,7 +271,7 @@ ROSE_INLINE void select_draw_mesh(DRWSelectViewportPrivateData *impl, Object *ob
 
 	if (false /* vert */) {
 		// DRWShadingGroup *vert_shgrp = DRW_shading_subgroup_new(impl->shgrp_vert);
-		// DRW_shading_group_uniform_int(edge_shgrp, "offset", *r_edge_offset);
+		// DRW_shading_group_uniform_int(vert_shgrp, "offset", *r_edge_offset);
 		*r_vert_offset = *r_edge_offset + mesh->totvert;
 	}
 	else {
@@ -351,6 +367,10 @@ ROSE_STATIC void select_draw(void *vdata) {
 }
 
 ROSE_STATIC void select_free(void) {
+	GPU_TEXTURE_FREE_SAFE(GSelectContext.objects);
+	GPU_TEXTURE_FREE_SAFE(GSelectContext.objects_drawn);
+	GPU_TEXTURE_FREE_SAFE(GSelectContext.objects_offsets_indices);
+
 	DRW_select_shaders_free();
 }
 

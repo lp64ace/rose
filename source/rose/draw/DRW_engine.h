@@ -126,6 +126,14 @@ void DRW_draw_pass_range(struct DRWPass *ps, struct DRWShadingGroup *first, stru
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Select
+ * \{ */
+
+void DRW_select_buffer_context_create(struct Base **bases, const size_t bases_length);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

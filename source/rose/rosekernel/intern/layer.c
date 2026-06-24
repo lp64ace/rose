@@ -315,6 +315,23 @@ ROSE_STATIC bool find_scene_collection_in_scene_collections(ListBase *lb, const 
 	return false;
 }
 
+Base **KER_view_layer_array_from_bases(ViewLayer *view_layer, View3D *v3d, size_t *r_bases_length) {
+	size_t length = LIB_listbase_count(&view_layer->bases);
+
+	Base **bases = MEM_mallocN(sizeof(Base) * length, __func__);
+
+	size_t index;
+	LISTBASE_FOREACH_INDEX(Base *, base, &view_layer->bases, index) {
+		bases[index] = base;
+	}
+
+	if (r_bases_length) {
+		*r_bases_length = length;
+	}
+
+	return bases;
+}
+
 Base *KER_view_layer_base_find(ViewLayer *view_layer, Object *object) {
 	if (!view_layer->object_bases_hash) {
 		view_layer_bases_hash_create(view_layer, false);

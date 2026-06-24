@@ -10,6 +10,7 @@
 #include "RNA_define.h"
 
 #include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
 
 #include "DRW_engine.h"
 
@@ -23,6 +24,7 @@
 #include "LIB_utildefines.h"
 
 #include "KER_global.h"
+#include "KER_layer.h"
 #include "KER_screen.h"
 #include "KER_scene.h"
 #include "KER_object.h"
@@ -371,9 +373,24 @@ ROSE_INLINE bool view3d_object_filter(struct Object *ob, void *user_data) {
 	return true;
 }
 
+ROSE_INLINE void view3d_select_buffer_cache_init(View3D *v3d, ViewLayer *layer) {
+	size_t bases_length = 0;
+	Base **bases = KER_view_layer_array_from_bases(layer, v3d, &bases_length);
+	DRW_select_buffer_context_create(bases, bases_length);
+	MEM_freeN(bases);
+}
+
+ROSE_INLINE void view3d_select_buffer_cache_init_with_generic_userdata(void *userdata, View3D *v3d, ViewLayer *layer) {
+	view3d_select_buffer_cache_init(v3d, layer);
+	UNUSED_VARS(userdata);
+}
+
 ROSE_INLINE void view3d_gpu_select_ex(rContext *C, Depsgraph *depsgraph, const rcti *rect) {
+	ViewLayer *layer = DEG_get_evaluated_view_layer(depsgraph);
 	ARegion *region = CTX_wm_region(C);
 	View3D *v3d = CTX_wm_space_view3d(C);
+
+	view3d_select_buffer_cache_init_with_generic_userdata(NULL, v3d, layer);
 
 	RegionView3D *rv3d = region->regiondata;
 
@@ -418,6 +435,8 @@ ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op) {
 	KER_object_update_select_id(CTX_data_main(C));
 
 	ED_object_select_pick(C, x, y);
+
+	exit(0);
 
 	return OPERATOR_PASS_THROUGH | OPERATOR_FINISHED;
 }
