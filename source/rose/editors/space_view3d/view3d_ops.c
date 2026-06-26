@@ -41,6 +41,15 @@
 
 #include <stdio.h>
 
+/**
+ * The default value for the maximum number of elements that can be selected at once
+ * using view-port selection.
+ *
+ * \note in many cases this defines the size of fixed-size stack buffers,
+ * so take care increasing this value.
+ */
+#define MAXPICKELEMS 2500
+
 /* -------------------------------------------------------------------- */
 /** \name Navigate
  * \{ */
@@ -408,6 +417,7 @@ void ED_object_select_pick(rContext *C, int x, int y) {
 	LIB_rcti_init(&rect, x - 12, x + 12, y - 12, y + 12);
 
 	view3d_operator_requires_gpu_context(C);
+
 	view3d_gpu_select_ex(C, depsgraph, &rect);
 }
 

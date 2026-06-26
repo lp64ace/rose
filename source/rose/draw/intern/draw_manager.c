@@ -23,6 +23,7 @@
 #include "GPU_matrix.h"
 #include "GPU_framebuffer.h"
 #include "GPU_viewport.h"
+#include "GPU_select.h"
 #include "GPU_state.h"
 
 #include "LIB_listbase.h"
@@ -48,6 +49,8 @@
 #include "engines/overlay/overlay_engine.h"
 
 #include "shaders/draw_shader_shared.h"
+
+#include <stdio.h>
 
 struct Object;
 
@@ -460,8 +463,8 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 		manager->size[1] = GPU_texture_height(texture);
 	}
 	else {
-		manager->size[0] = 1.0f;
-		manager->size[1] = 1.0f;
+		manager->size[0] = size[0];
+		manager->size[1] = size[1];
 	}
 
 	manager->vdata_engine = manager->vdata_pool->vdata_engine[view];
@@ -528,6 +531,8 @@ void DRW_manager_exit(DRWManager *manager) {
 	else {
 		DRW_viewport_data_free(manager->vdata_pool);
 	}
+
+	GPU_framebuffer_restore();
 }
 
 /** \} */
@@ -698,8 +703,6 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 			vdata->engine->draw(vdata);
 		}
 	}
-
-	GPU_framebuffer_restore();
 }
 
 void DRW_render_instance_buffer_finish(void) {
@@ -762,7 +765,7 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	Scene *scene = DEG_get_evaluated_scene(depsgraph);
 	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
 
-	const int viewport_size[2] = {LIB_rcti_size_x(rect), LIB_rcti_size_y(rect)};
+	const int viewport_size[2] = {region->sizex, region->sizey};
 
 	DRW_manager_init(&GDrawManager, region, scene, view_layer, NULL, viewport_size);
 	DRW_engine_use(&draw_engine_select_type);
@@ -796,7 +799,7 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	drw_engine_cache_finish(&view_layer->bases);
 
 	DRW_render_instance_buffer_finish();
-
+	
 	/* Only 1-2 passes. */
 	while (true) {
 		if (!select_pass_fn(DRW_SELECT_PASS_PRE, select_pass_user_data)) {
@@ -813,8 +816,6 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	GDrawManager.vdata_engine->dtxl.depth = NULL;
 
 	DRW_manager_exit(&GDrawManager);
-
-	GPU_framebuffer_restore();
 }
 
 void DRW_draw_view(const rContext *C) {

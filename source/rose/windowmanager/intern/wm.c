@@ -253,6 +253,10 @@ ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window)
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
+	RoseFileData *rfd = KER_rosefile_read("C:\\Users\\Jim\\Downloads\\rose-v0.1.1-windows-amd64\\compressed.rose", 0);
+	if (rfd != NULL) {
+		KER_rosefile_read_setup(C, rfd);
+	}
 }
 
 void WM_keyconfig_init(rContext *C) {

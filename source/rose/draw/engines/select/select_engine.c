@@ -249,12 +249,13 @@ ROSE_INLINE void select_draw_mesh(DRWSelectViewportPrivateData *impl, Object *ob
 
 	DRWShadingGroup *face_shgrp;
 	if (false /* face */) {
-		// face_shgrp = DRW_shading_subgroup_new(impl->shgrp_face_flat);
-		// DRW_shading_group_uniform_int(face_shgrp, "offset", offset);
+		face_shgrp = DRW_shading_subgroup_new(impl->shgrp_face_flat);
+		DRW_shading_group_uniform_int(face_shgrp, "offset", offset);
 		*r_face_offset = offset + mesh->totedge;
 	}
 	else {
 		face_shgrp = impl->shgrp_face_unif;
+		DRW_shading_group_uniform_int(face_shgrp, "id", offset);
 		*r_face_offset = offset;
 	}
 
