@@ -765,7 +765,7 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 	Scene *scene = DEG_get_evaluated_scene(depsgraph);
 	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
 
-	const int viewport_size[2] = {region->sizex, region->sizey};
+	const int viewport_size[2] = {LIB_rcti_size_x(rect), LIB_rcti_size_y(rect)};
 
 	DRW_manager_init(&GDrawManager, region, scene, view_layer, NULL, viewport_size);
 	DRW_engine_use(&draw_engine_select_type);
@@ -788,10 +788,14 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 			continue;
 		}
 
-		/* Depsgraph usually does this, but we use a different iterator. So we have to do it manually. */
-		base->object->runtime.select_id = DEG_get_original_object(base->object)->runtime.select_id;
+		Object *object = base->object;
 
-		drw_engine_cache_populate(base->object);
+		/* Depsgraph usually does this, but we use a different iterator. So we have to do it manually. */
+		object->runtime.select_id = DEG_get_original_object(object)->runtime.select_id;
+
+		DRW_select_load_id(object->runtime.select_id);
+
+		drw_engine_cache_populate(object);
 	}
 
 	DRW_engines_exit(depsgraph);

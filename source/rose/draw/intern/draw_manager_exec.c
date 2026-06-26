@@ -166,6 +166,11 @@ typedef struct DRWCommandState {
 	DRWState disabled;
 } DRWCommandState;
 
+void DRW_select_load_id(unsigned int id) {
+	ROSE_assert(G.flag & G_FLAG_PICKSEL);
+	GDrawManager.selectid = id;
+}
+
 ROSE_STATIC void draw_call_resource_bind(DRWCommandState *state, const DRWResourceHandle *handle) {
 	size_t chunk = DRW_handle_chunk_get(handle);
 	size_t elem = DRW_handle_elem_get(handle);

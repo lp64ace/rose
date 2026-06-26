@@ -53,6 +53,8 @@ typedef struct DrawEngineType {
 	void (*engine_free)(void);
 } DrawEngineType;
 
+void DRW_select_load_id(unsigned int id);
+
 #ifdef __cplusplus
 }
 #endif
