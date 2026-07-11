@@ -10,6 +10,8 @@
 
 struct BoundBox;
 struct DRWViewData;
+struct Base;
+struct Depsgraph;
 struct DrawData;
 struct DrawDataList;
 struct DrawEngineType;
