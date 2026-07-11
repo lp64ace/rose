@@ -368,9 +368,9 @@ ROSE_STATIC void select_draw(void *vdata) {
 }
 
 ROSE_STATIC void select_free(void) {
-	GPU_TEXTURE_FREE_SAFE(GSelectContext.objects);
-	GPU_TEXTURE_FREE_SAFE(GSelectContext.objects_drawn);
-	GPU_TEXTURE_FREE_SAFE(GSelectContext.objects_offsets_indices);
+	MEM_SAFE_FREE(GSelectContext.objects);
+	MEM_SAFE_FREE(GSelectContext.objects_drawn);
+	MEM_SAFE_FREE(GSelectContext.objects_offsets_indices);
 
 	DRW_select_shaders_free();
 }
