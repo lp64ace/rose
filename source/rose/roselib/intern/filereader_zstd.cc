@@ -1,6 +1,7 @@
 #include "MEM_guardedalloc.h"
 
 #include "LIB_filereader.h"
+#include "LIB_utildefines.h"
 
 #include <zstd.h>
 
@@ -189,7 +190,7 @@ static uint64_t zstd_read_seekable(FileReader *reader, void *buffer, size_t size
 			break;
 		}
 
-		size_t frame_end_offset = std::min(zstd->seek.uncompressed_ofs[frame + 1], end_offset);
+		size_t frame_end_offset = ROSE_MIN(zstd->seek.uncompressed_ofs[frame + 1], end_offset);
 		size_t frame_read_len = frame_end_offset - zstd->reader.offset;
 
 		size_t offset_in_frame = zstd->reader.offset - zstd->seek.uncompressed_ofs[frame];
