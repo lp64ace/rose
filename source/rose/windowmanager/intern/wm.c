@@ -431,12 +431,12 @@ void WM_manager_runtime_free(WindowManager *manager) {
 ROSE_INLINE void window_manager_init_data(struct ID *id) {
 	WindowManager *wm = (WindowManager *)id;
 
+	WM_manager_runtime_init(wm);
+
 	wm->handle = GTK_window_manager_new(GTK_WINDOW_MANAGER_NONE);
 	if (!wm->handle) {
 		return;
 	}
-
-	WM_manager_runtime_init(wm);
 
 	DRW_render_context_create(wm);
 }

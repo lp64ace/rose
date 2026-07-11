@@ -564,6 +564,7 @@ void DRW_render_context_destroy(struct WindowManager *wm) {
 		WM_render_context_destroy(wm, GDrawManager.render);
 		LIB_mutex_free(GDrawManager.mutex);
 	}
+	GDrawManager.render = NULL;
 }
 
 void DRW_render_context_enable() {
