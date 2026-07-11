@@ -9,6 +9,7 @@
 #include "LIB_utildefines.h"
 
 struct BoundBox;
+struct ARegion;
 struct DRWViewData;
 struct Base;
 struct Depsgraph;
