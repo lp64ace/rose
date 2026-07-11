@@ -24,6 +24,7 @@ struct Mesh;
 struct Scene;
 struct Object;
 struct rContext;
+struct View3D;
 struct WindowManager;
 
 #ifdef __cplusplus
