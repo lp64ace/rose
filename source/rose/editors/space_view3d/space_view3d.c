@@ -35,22 +35,39 @@
 /** \name View3D SpaceType Methods
  * \{ */
 
-ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4]) {
+ROSE_INLINE void view3d_viewplane_get(ARegion *region, rctf *r_viewplane, const float near, const float far) {
 	/* default, human vertical fov is 120 degrees. */
 	const float fov = M_PI_2 * 2.0f / 3.0f;
-	const float clip_start = 1e-2f;
-	const float clip_end = 1e+4f;
 
-	float tangent = tanf(fov * 0.5f);
+	float tangent = tan(fov * 0.5f);
 	float aspect = (float)region->sizex / (float)region->sizey;
 
-	rctf viewplane;
-	viewplane.xmin = -tangent * aspect * clip_start;
-	viewplane.xmax = +tangent * aspect * clip_start;
-	viewplane.ymin = -tangent * clip_start;
-	viewplane.ymax = +tangent * clip_start;
+	r_viewplane->xmin = -tangent * aspect * near;
+	r_viewplane->xmax = +tangent * aspect * near;
+	r_viewplane->ymin = -tangent * near;
+	r_viewplane->ymax = +tangent * near;
+}
 
-	perspective_m4(r_winmat, viewplane.xmin, viewplane.xmax, viewplane.ymin, viewplane.ymax, clip_start, clip_end);
+ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4], const rcti *rect) {
+	const float near = 1e-1f;
+	const float far = 1e+3f;
+
+	rctf fullplane;
+	view3d_viewplane_get(region, &fullplane, near, far);
+
+	rctf viewplane;
+	if (rect) {
+		/* Smaller viewplane subset for selection picking. */
+		viewplane.xmin = fullplane.xmin + (LIB_rctf_size_x(&fullplane) * ((float)rect->xmin / (float)region->sizex));
+		viewplane.ymin = fullplane.ymin + (LIB_rctf_size_y(&fullplane) * ((float)rect->ymin / (float)region->sizey));
+		viewplane.xmax = fullplane.xmin + (LIB_rctf_size_x(&fullplane) * ((float)rect->xmax / (float)region->sizex));
+		viewplane.ymax = fullplane.ymin + (LIB_rctf_size_y(&fullplane) * ((float)rect->ymax / (float)region->sizey));
+	}
+	else {
+		memcpy(&viewplane, &fullplane, sizeof(rctf));
+	}
+
+	perspective_m4(r_winmat, viewplane.xmin, viewplane.xmax, viewplane.ymin, viewplane.ymax, near, far);
 }
 
 ROSE_INLINE RegionView3D *region_view3d_init(RegionView3D *rv3d) {
@@ -104,7 +121,7 @@ ROSE_INLINE void view3d_main_region_init(WindowManager *wm, ARegion *region) {
 
 	ED_region_default_init(wm, region);
 
-	view3d_window_matrix(region, rv3d->winmat);
+	view3d_window_matrix(region, rv3d->winmat, NULL);
 }
 
 ROSE_INLINE void view3d_main_region_layout(rContext *C, ARegion *region) {
@@ -115,21 +132,37 @@ ROSE_INLINE void view3d_main_region_layout(rContext *C, ARegion *region) {
 	}
 }
 
-void ED_view3d_draw_setup_view(RegionView3D *rv3d) {
-	quat_to_mat4(rv3d->viewmat, rv3d->viewquat);
-	add_v3_v3(rv3d->viewmat[3], rv3d->viewloc);
-	invert_m4(rv3d->viewmat);
+ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv3d, const float viewmat[4][4], const float winmat[4][4], rcti *rect) {
+	if (winmat) {
+		copy_m4_m4(rv3d->winmat, winmat);
+	}
+	else {
+		view3d_window_matrix(region, rv3d->winmat, rect);
+	}
+
+	if (viewmat) {
+		copy_m4_m4(rv3d->viewmat, viewmat);
+	}
+	else {
+		quat_to_mat4(rv3d->viewmat, rv3d->viewquat);
+		add_v3_v3(rv3d->viewmat[3], rv3d->viewloc);
+		invert_m4(rv3d->viewmat);
+	}
+}
+
+void ED_view3d_draw_setup_view(ARegion *region, const float viewmat[4][4], const float winmat[4][4], rcti *rect) {
+	RegionView3D *rv3d = (RegionView3D *)region->regiondata;
+
+	view3d_main_region_setup_view(region, rv3d, viewmat, winmat, rect);
 }
 
 ROSE_INLINE void view3d_main_region_draw(rContext *C, ARegion *region) {
-	RegionView3D *rv3d = (RegionView3D *)region->regiondata;
-
 	GPU_matrix_push();
 	GPU_matrix_identity_set();
 	GPU_matrix_push_projection();
 	GPU_matrix_identity_projection_set();
 
-	ED_view3d_draw_setup_view(rv3d);
+	ED_view3d_draw_setup_view(region, NULL, NULL, NULL);
 
 	DRW_draw_view(C);
 

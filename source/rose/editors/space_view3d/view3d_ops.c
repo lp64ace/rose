@@ -368,15 +368,39 @@ ROSE_INLINE void view3d_operator_requires_gpu_context(rContext *C) {
 	view3d_region_requires_gpu_context(window, region);
 }
 
-ROSE_INLINE bool view3d_select_pass(int stage, void *user_data) {
-	switch (stage) {
-		case DRW_SELECT_PASS_PRE: {
-			// GPU_select_begin();
-		} return true;
-		case DRW_SELECT_PASS_POST: {
-		} return false;
+typedef struct DrawSelectLoopUserData {
+	int select;
+	int pass;
+	int hits;
+	GPUSelectResult *buffer;
+	size_t maxlen;
+	const rcti *rect;
+} DrawSelectLoopUserData;
+
+ROSE_INLINE bool view3d_select_pass(int stage, void *userdata) {
+	DrawSelectLoopUserData *data = (DrawSelectLoopUserData *)userdata;
+
+	bool need_another_pass = false;
+
+	if (stage == DRW_SELECT_PASS_PRE) {
+		GPU_select_begin(data->buffer, data->maxlen, data->rect, data->select, data->hits);
+		/* always run POST after PRE. */
+		need_another_pass |= true;
 	}
-	return false;
+	else if (stage == DRW_SELECT_PASS_POST) {
+		int hits = GPU_select_end();
+		if (data->pass == 0) {
+			/* quirk of GPU_select_end, only take hits value from first call. */
+			data->hits = hits;
+		}
+		if (data->select == GPU_SELECT_NEAREST_FIRST_PASS) {
+			data->select = GPU_SELECT_NEAREST_SECOND_PASS;
+			need_another_pass |= (hits > 0);
+		}
+		data->pass += 1;
+	}
+
+	return need_another_pass;
 }
 ROSE_INLINE bool view3d_object_filter(struct Object *ob, void *user_data) {
 	return true;
@@ -394,31 +418,63 @@ ROSE_INLINE void view3d_select_buffer_cache_init_with_generic_userdata(void *use
 	UNUSED_VARS(userdata);
 }
 
-ROSE_INLINE void view3d_gpu_select_ex(rContext *C, Depsgraph *depsgraph, const rcti *rect) {
+ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_t maxlen, Depsgraph *depsgraph, const rcti *rect) {
 	ViewLayer *layer = DEG_get_evaluated_view_layer(depsgraph);
 	ARegion *region = CTX_wm_region(C);
 	View3D *v3d = CTX_wm_space_view3d(C);
+	RegionView3D *rv3d = region->regiondata;
+
+	GPU_matrix_push();
+	GPU_matrix_identity_set();
+	GPU_matrix_push_projection();
+	GPU_matrix_identity_projection_set();
 
 	view3d_select_buffer_cache_init_with_generic_userdata(NULL, v3d, layer);
 
-	RegionView3D *rv3d = region->regiondata;
-
 	G.flag |= G_FLAG_PICKSEL;
 
-	ED_view3d_draw_setup_view(rv3d);
+	ED_view3d_draw_setup_view(region, NULL, NULL, rect);
+
+	/* Re-use cache (rect must be smaller than the cached)
+	 * other context is assumed to be unchanged */
+	if (GPU_select_is_cached()) {
+		GPU_select_begin(buffer, maxlen, &rect, GPU_SELECT_PICK_NEAREST, 0);
+		GPU_select_cache_load_id();
+		return GPU_select_end();
+	}
+
+	/* We need to call "GPU_select_*" API's inside DRW_draw_select_loop
+	 * because the OpenGL context created & destroyed inside this function. */
+	struct DrawSelectLoopUserData drw_select_loop_user_data = {
+		.pass = 0,
+		.hits = 0,
+		.buffer = buffer,
+		.maxlen = maxlen,
+		.rect = rect,
+		.select = GPU_SELECT_PICK_NEAREST,
+	};
 	
-	DRW_draw_select_loop(depsgraph, region, v3d, rect, view3d_select_pass, NULL, view3d_object_filter, NULL);
+	DRW_draw_select_loop(depsgraph, region, v3d, rect, view3d_select_pass, &drw_select_loop_user_data, view3d_object_filter, NULL);
+
+	G.flag &= ~G_FLAG_PICKSEL;
+
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
+
+	ED_view3d_draw_setup_view(region, NULL, NULL, NULL);
+
+	return drw_select_loop_user_data.hits;
 }
 
-void ED_object_select_pick(rContext *C, int x, int y) {
+int ED_object_select_pick(rContext *C, GPUSelectResult *buffer, size_t maxlen, int x, int y, int radius) {
 	Depsgraph *depsgraph = CTX_data_ensure_evaluated_depsgraph(C);
 
 	rcti rect;
-	LIB_rcti_init(&rect, x - 12, x + 12, y - 12, y + 12);
+	LIB_rcti_init_pt_radius(&rect, x, y, radius);
 
 	view3d_operator_requires_gpu_context(C);
 
-	view3d_gpu_select_ex(C, depsgraph, &rect);
+	return view3d_gpu_select_ex(C, buffer, maxlen, depsgraph, &rect);
 }
 
 /** \} */
@@ -430,8 +486,8 @@ void ED_object_select_pick(rContext *C, int x, int y) {
 ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op);
 
 ROSE_INLINE wmOperatorStatus view3d_select_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
-	RNA_int_set(op->ptr, "x", event->mouse_xy[0]);
-	RNA_int_set(op->ptr, "y", event->mouse_xy[1]);
+	RNA_int_set(op->ptr, "x", event->mouse_local[0]);
+	RNA_int_set(op->ptr, "y", event->mouse_local[1]);
 
 	return view3d_select_exec(C, op);
 }
@@ -441,12 +497,25 @@ ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op) {
 
 	int x = RNA_int_get(op->ptr, "x");
 	int y = RNA_int_get(op->ptr, "y");
+	int radius = RNA_int_get(op->ptr, "radius");
 
 	KER_object_update_select_id(CTX_data_main(C));
 
-	ED_object_select_pick(C, x, y);
+	const size_t maxlen = MAXPICKELEMS;
 
-	exit(0);
+	GPUSelectResult *buffer = MEM_mallocN(maxlen * sizeof(GPUSelectResult), "SelectionBuffer");
+
+	int hits = ED_object_select_pick(C, buffer, maxlen, x, y, radius);
+
+	fprintf(stdout, "Hits : %d\n", hits);
+
+	if (hits > 0) {
+		for (const GPUSelectResult *buf_iter = buffer, *buf_end = buf_iter + hits; buf_iter < buf_end; buf_iter++) {
+			fprintf(stdout, "Base ID : %d\n", buf_iter->id);
+		}
+	}
+
+	MEM_freeN(buffer);
 
 	return OPERATOR_PASS_THROUGH | OPERATOR_FINISHED;
 }
@@ -468,6 +537,11 @@ void VIEW3D_OT_select(wmOperatorType *ot) {
 	ot->invoke = view3d_select_invoke;
 	ot->exec = view3d_select_exec;
 	ot->poll = view3d_select_poll;
+
+	/* rna */
+	RNA_def_int(ot->srna, "x", 0, INT_MIN, INT_MAX, "X", "", INT_MIN, INT_MAX);
+	RNA_def_int(ot->srna, "y", 0, INT_MIN, INT_MAX, "Y", "", INT_MIN, INT_MAX);
+	RNA_def_int(ot->srna, "radius", 1, INT_MIN, INT_MAX, "Radius", "", INT_MIN, INT_MAX);
 }
 
 /** \} */

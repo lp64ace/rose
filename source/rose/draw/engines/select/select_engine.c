@@ -251,7 +251,7 @@ ROSE_INLINE void select_draw_mesh(DRWSelectViewportPrivateData *impl, Object *ob
 	if (false /* face */) {
 		face_shgrp = DRW_shading_subgroup_new(impl->shgrp_face_flat);
 		DRW_shading_group_uniform_int(face_shgrp, "offset", offset);
-		*r_face_offset = offset + mesh->totedge;
+		*r_face_offset = offset + mesh->totpoly;
 	}
 	else {
 		face_shgrp = impl->shgrp_face_unif;
@@ -329,7 +329,7 @@ ROSE_STATIC void select_cache_populate(void *vdata, Object *object) {
 		GSelectContext.objects_offsets_indices_length = offsets->vert;
 		GSelectContext.objects_drawn[GSelectContext.objects_drawn_length] = object;
 		GSelectContext.objects_drawn_length++;
-		GSelectContext.objects_offsets_indices++;
+		GSelectContext.objects_offsets_indices_length++;
 		impl->runtime_new_objects++;
 	}
 }

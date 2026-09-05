@@ -85,6 +85,10 @@ void DRW_engines_free(void) {
 			engine->engine_free();
 		}
 	}
+
+	GPU_TEXTURE_FREE_SAFE(GSelectBuffer.texture_depth);
+	GPU_FRAMEBUFFER_FREE_SAFE(GSelectBuffer.framebuffer_depth_only);
+
 	LIB_listbase_clear(&GEngineList);
 }
 
@@ -795,6 +799,8 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 		object->runtime.select_id = DEG_get_original_object(object)->runtime.select_id;
 
 		DRW_select_load_id(object->runtime.select_id);
+
+		fprintf(stdout, "Drawing %s with ID := %d\n", KER_id_name(&object->id), object->runtime.select_id);
 
 		drw_engine_cache_populate(object);
 	}

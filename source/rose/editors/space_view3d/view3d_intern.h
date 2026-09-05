@@ -25,7 +25,7 @@ void view3d_keymap(struct wmKeyConfig *keyconf);
 /** \name Drawing Utility Functions
  * \{ */
 
-void ED_view3d_draw_setup_view(struct RegionView3D *rv3d);
+void ED_view3d_draw_setup_view(struct ARegion *rv3d, const float viewmat[4][4], const float winmat[4][4], struct rcti *rect);
 
 /** \} */
 

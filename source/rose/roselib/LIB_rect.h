@@ -15,6 +15,7 @@ extern "C" {
 
 void LIB_rctf_init(struct rctf *rect, float xmin, float xmax, float ymin, float ymax);
 void LIB_rcti_init(struct rcti *rect, int xmin, int xmax, int ymin, int ymax);
+void LIB_rcti_init_pt_radius(struct rcti *rect, int cx, int cy, int radius);
 
 void LIB_rctf_init_minmax(struct rctf *rect);
 void LIB_rcti_init_minmax(struct rcti *rect);

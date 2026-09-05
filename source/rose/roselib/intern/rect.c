@@ -25,6 +25,13 @@ void LIB_rcti_init(rcti *rect, int xmin, int xmax, int ymin, int ymax) {
 	LIB_rcti_sanitize(rect);
 }
 
+void LIB_rcti_init_pt_radius(rcti *rect, int cx, int cy, int radius) {
+	rect->xmin = cx - radius;
+	rect->xmax = cx + radius;
+	rect->ymin = cy - radius;
+	rect->ymax = cy + radius;
+}
+
 void LIB_rctf_init_minmax(rctf *rect) {
 	rect->xmin = rect->ymin = FLT_MAX;
 	rect->xmax = rect->ymax = -FLT_MAX;
