@@ -344,8 +344,6 @@ void WM_exit(rContext *C) {
 	KER_rose_globals_clear();
 	KER_rose_userdef_clear();
 
-	DRW_engines_free();
-
 	RFT_exit();
 
 	RNA_exit();
@@ -453,6 +451,10 @@ ROSE_INLINE void window_manager_free_data(struct ID *id) {
 	while ((keyconf = LIB_pophead(&wm->runtime->keyconfigs))) {
 		WM_keyconfig_free(keyconf);
 	}
+
+	DRW_render_context_enable();
+
+	DRW_engines_free();
 
 	DRW_render_context_destroy(wm);
 

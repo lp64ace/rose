@@ -431,11 +431,13 @@ ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_
 
 	/* Re-use cache (rect must be smaller than the cached)
 	 * other context is assumed to be unchanged */
-	if (GPU_select_is_cached()) {
-		GPU_select_begin(buffer, maxlen, &rect, GPU_SELECT_PICK_NEAREST, 0);
-		GPU_select_cache_load_id();
-		return GPU_select_end();
-	}
+	// if (GPU_select_is_cached()) {
+	// 	GPU_select_begin(buffer, maxlen, &rect, GPU_SELECT_PICK_NEAREST, 0);
+	// 	GPU_select_cache_load_id();
+	// 	GPU_select_end();
+	// }
+
+	DRW_render_context_enable(true);
 
 	GPU_matrix_push();
 	GPU_matrix_identity_set();
@@ -457,10 +459,12 @@ ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_
 	
 	DRW_draw_select_loop(depsgraph, region, v3d, rect, view3d_select_pass, &drw_select_loop_user_data, view3d_object_filter, NULL);
 
-	G.flag &= ~G_FLAG_PICKSEL;
-
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
+
+	DRW_render_context_disable(true);
+
+	G.flag &= ~G_FLAG_PICKSEL;
 
 	ED_view3d_draw_setup_view(region, NULL, NULL, NULL);
 
@@ -475,7 +479,17 @@ int ED_object_select_pick(rContext *C, GPUSelectResult *buffer, size_t maxlen, i
 
 	view3d_operator_requires_gpu_context(C);
 
-	return view3d_gpu_select_ex(C, buffer, maxlen, depsgraph, &rect);
+	int hits = view3d_gpu_select_ex(C, buffer, maxlen, depsgraph, &rect);
+
+	struct WindowManager *wm = CTX_wm_manager(C);
+
+	/**
+	 * Since #view3d_gpu_select_ex usually ends up doing nasty GPU operations we need to 
+	 * restore the WindowManager's GPU context in order to continue rendering the UI/handlers.
+	 */
+	wm_window_reset_drawable(wm);
+
+	return hits;
 }
 
 /** \} */
