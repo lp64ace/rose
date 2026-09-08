@@ -29,6 +29,7 @@
 #include "KER_scene.h"
 #include "KER_object.h"
 
+#include "GPU_framebuffer.h"
 #include "GPU_matrix.h"
 #include "GPU_select.h"
 
@@ -424,16 +425,9 @@ ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_
 	View3D *v3d = CTX_wm_space_view3d(C);
 	RegionView3D *rv3d = region->regiondata;
 
-	GPU_matrix_push();
-	GPU_matrix_identity_set();
-	GPU_matrix_push_projection();
-	GPU_matrix_identity_projection_set();
-
 	view3d_select_buffer_cache_init_with_generic_userdata(NULL, v3d, layer);
 
 	G.flag |= G_FLAG_PICKSEL;
-
-	ED_view3d_draw_setup_view(region, NULL, NULL, rect);
 
 	/* Re-use cache (rect must be smaller than the cached)
 	 * other context is assumed to be unchanged */
@@ -442,6 +436,13 @@ ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_
 		GPU_select_cache_load_id();
 		return GPU_select_end();
 	}
+
+	GPU_matrix_push();
+	GPU_matrix_identity_set();
+	GPU_matrix_push_projection();
+	GPU_matrix_identity_projection_set();
+
+	ED_view3d_draw_setup_view(region, NULL, NULL, rect);
 
 	/* We need to call "GPU_select_*" API's inside DRW_draw_select_loop
 	 * because the OpenGL context created & destroyed inside this function. */
@@ -511,6 +512,9 @@ ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op) {
 
 	if (hits > 0) {
 		for (const GPUSelectResult *buf_iter = buffer, *buf_end = buf_iter + hits; buf_iter < buf_end; buf_iter++) {
+			if (buf_iter->depth == 0xffffffffu) {
+				continue;
+			}
 			fprintf(stdout, "Base ID : %d\n", buf_iter->id);
 		}
 	}

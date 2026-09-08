@@ -173,8 +173,6 @@ ROSE_INLINE void select_init_framebuffer(void *vdata) {
 	DefaultTextureList *dtxl = DRW_view_data_texture_list_get(GDrawManager.vdata_engine, GDrawManager.viewport);
 	if (fbl->select_id == NULL) {
 		fbl->select_id = GPU_framebuffer_create("SelectFramebuffer");
-
-		fprintf(stdout, "[DRAW] Framebuffer [select] created!\n");
 	}
 
 	const int size[2] = {GPU_texture_width(dtxl->depth), GPU_texture_height(dtxl->depth)};
@@ -192,8 +190,6 @@ ROSE_INLINE void select_init_framebuffer(void *vdata) {
 		txl->texture_id = GPU_texture_create_2d("SelectBufferId", size[0], size[1], 1, GPU_R32UI, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
 		GPU_framebuffer_texture_attach(fbl->select_id, txl->texture_id, 0, 0);
 		GPU_framebuffer_check_valid(fbl->select_id, NULL);
-
-		fprintf(stdout, "[DRAW] Texture [select] created!\n");
 	}
 }
 

@@ -800,8 +800,6 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 
 		DRW_select_load_id(object->runtime.select_id);
 
-		fprintf(stdout, "Drawing %s with ID := %d\n", KER_id_name(&object->id), object->runtime.select_id);
-
 		drw_engine_cache_populate(object);
 	}
 

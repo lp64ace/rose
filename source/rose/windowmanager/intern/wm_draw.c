@@ -301,6 +301,11 @@ ROSE_INLINE void wm_draw_window_offscreen(rContext *C, wmWindow *window) {
 ROSE_INLINE void wm_draw_window_onscreen(rContext *C, wmWindow *window, int view) {
 	Screen *screen = WM_window_get_active_screen(window);
 
+	GPU_matrix_push();
+	GPU_matrix_identity_set();
+	GPU_matrix_push_projection();
+	GPU_matrix_identity_projection_set();
+
 	GPU_clear_color(0.0f, 0.0f, 0.0f, 1.0f);
 
 	/** A #ED_screen_areas_iter gives us the global areas first! */
@@ -345,6 +350,9 @@ ROSE_INLINE void wm_draw_window_onscreen(rContext *C, wmWindow *window, int view
 		}
 		wm_draw_region_blit(region, view);
 	}
+
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
 }
 
 void wm_window_draw(rContext *C, wmWindow *window) {
