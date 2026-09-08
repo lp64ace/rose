@@ -354,6 +354,8 @@ ROSE_STATIC void select_draw(void *vdata) {
 	DRWSelectViewportFramebufferList *fbl = ((DRWSelectData *)vdata)->fbl;
 	DRWSelectViewportPassList *psl = ((DRWSelectData *)vdata)->psl;
 
+	GPU_framebuffer_bind(fbl->select_id);
+	GPU_framebuffer_clear_color_depth(fbl->select_id, (const float[4]){0.0f}, 1.0f);
 	DRW_draw_pass(psl->depth_only);
 
 	GPU_framebuffer_bind(fbl->select_id);

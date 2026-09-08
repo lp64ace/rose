@@ -759,7 +759,7 @@ ROSE_INLINE void drw_select_framebuffer_depth_only_setup(const int size[2]) {
 	}
 
 	if (GSelectBuffer.texture_depth == NULL) {
-		GSelectBuffer.texture_depth = GPU_texture_create_2d("SelectDepth", size[0], size[1], 1, GPU_DEPTH_COMPONENT32F, GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
+		GSelectBuffer.texture_depth = GPU_texture_create_2d("SelectDepth", size[0], size[1], 1, GPU_DEPTH_COMPONENT24, GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
 
 		GPU_framebuffer_texture_attach(GSelectBuffer.framebuffer_depth_only, GSelectBuffer.texture_depth, 0, 0);
 		GPU_framebuffer_check_valid(GSelectBuffer.framebuffer_depth_only, NULL);

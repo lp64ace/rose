@@ -529,7 +529,7 @@ ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op) {
 			if (buf_iter->depth == 0xffffffffu) {
 				continue;
 			}
-			fprintf(stdout, "Base ID : %d\n", buf_iter->id);
+			fprintf(stdout, "Base ID : %d | Depth : 0x%08x | %s\n", buf_iter->id, buf_iter->depth, buf_iter->depth == 0xffffffff ? "Void" : "Item");
 		}
 	}
 
