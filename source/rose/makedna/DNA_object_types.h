@@ -120,11 +120,6 @@ enum {
 	OB_HIDE_SELECT = (1 << 2),
 };
 
-/** #Object->flag */
-enum {
-	OBJECT_SELECTED = (1 << 0),
-};
-
 /** #Object->type */
 enum {
 	OB_EMPTY,

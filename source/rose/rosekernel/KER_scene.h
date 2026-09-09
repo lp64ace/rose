@@ -12,7 +12,31 @@ struct ViewLayer;
 extern "C" {
 #endif
 
+/* -------------------------------------------------------------------- */
+/** \name Scene Create/Destroy
+ * \{ */
+
 struct Scene *KER_scene_new(struct Main *main, const char *name);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scene Object Data
+ * \{ */
+
+/**
+ * Synchronize object base flags
+ *
+ * This is usually handled by the depsgraph.
+ * However, in rare occasions we need to use the latest object flags
+ * before depsgraph is fully updated.
+ *
+ * It should (ideally) only run for copy-on-written objects since this is
+ * runtime data generated per-view-layer.
+ */
+void KER_scene_object_base_flag_sync_from_base(struct Base *base);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Scene Render Data

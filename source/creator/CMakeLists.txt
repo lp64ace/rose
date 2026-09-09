@@ -45,6 +45,7 @@ set(LIB
 	rose::source::gpu
 	rose::source::windowmanager
 	rose::source::editors::screen
+	rose::source::editors::object
 	rose::source::editors::space_api
 	rose::source::editors::space_statusbar
 	rose::source::editors::space_topbar

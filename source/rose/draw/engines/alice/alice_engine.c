@@ -10,6 +10,7 @@
 #include "GPU_viewport.h"
 
 #include "KER_armature.h"
+#include "KER_layer.h"
 #include "KER_object.h"
 #include "KER_modifier.h"
 
@@ -26,6 +27,8 @@
 #include "intern/draw_defines.h"
 #include "intern/draw_manager.h"
 
+#include <stdio.h>
+
 /* -------------------------------------------------------------------- */
 /** \name Alice Draw Engine Cache
  * \{ */
@@ -37,6 +40,10 @@ ROSE_STATIC void alice_cache_init(void *vdata) {
 
 ROSE_STATIC void alice_cache_populate(void *vdata, Object *object) {
 	AliceDrawData *add = (AliceDrawData *)KER_drawdata_get(&object->id, &draw_engine_alice_type);
+
+	if ((object->flag_base & BASE_SELECTED) != 0) {
+		fprintf(stdout, "[Draw] Object \"%s\" is SELECTED.\n", KER_id_name(&object->id));
+	}
 
 	DRW_alice_shadow_cache_populate((DRWAliceData *)vdata, object);
 	DRW_alice_opaque_cache_populate((DRWAliceData *)vdata, object);

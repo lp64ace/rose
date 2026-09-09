@@ -49,7 +49,7 @@ ROSE_STATIC Base *object_base_new(Object *object) {
 	Base *base = MEM_callocN(sizeof(Base), "Object Base");
 	base->object = object;
 	base->local_view_bits = ~0u;
-	if ((object->flag & OBJECT_SELECTED) != 0) {
+	if ((object->flag_base & BASE_SELECTED) != 0) {
 		base->flag |= BASE_SELECTED;
 	}
 	return base;

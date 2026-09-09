@@ -21,12 +21,7 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	space_view3d.c
-	view3d_intern.h
-	view3d_navigate.c
-	view3d_navigate.h
-	view3d_ops.c
-	view3d_project.c
+	object_select.c
 	
 )
 
@@ -36,14 +31,8 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
+	rose::source::roselib
 	rose::source::rosekernel
-	rose::source::draw
-	rose::source::gpu
-	rose::source::dna
-	rose::source::rna
-	rose::source::windowmanager
-	rose::source::editors::interface
-	rose::source::editors::object
 	
 	# External Library Dependencies
 	
@@ -52,5 +41,5 @@ set(LIB
 # -----------------------------------------------------------------------------
 # Declare Library
 
-rose_add_lib(space_view3d "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
-add_library(rose::source::editors::space_view3d ALIAS space_view3d)
+rose_add_lib(object "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+add_library(rose::source::editors::object ALIAS object)

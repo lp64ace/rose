@@ -9,6 +9,7 @@
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_object.h"
 #include "KER_scene.h"
 
 #include "DEG_depsgraph.h"
@@ -23,6 +24,17 @@
 
 Scene *KER_scene_new(Main *main, const char *name) {
 	return static_cast<Scene *>(KER_id_new(main, ID_SCE, name));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scene Object Data
+ * \{ */
+
+void KER_scene_object_base_flag_sync_from_base(Base *base) {
+	Object *object = base->object;
+	object->flag_base = base->flag;
 }
 
 /** \} */

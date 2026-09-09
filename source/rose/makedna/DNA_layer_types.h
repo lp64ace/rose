@@ -90,6 +90,10 @@ typedef struct ViewLayer {
     struct LayerCollection *active_collection;
 } ViewLayer;
 
+#define FIRSTBASE(_view_layer) ((Base *)((_view_layer)->bases.first))
+#define LASTBASE(_view_layer) ((Base *)((_view_layer)->bases.last))
+#define BASACT(_view_layer) ((_view_layer)->active)
+
 /** #ViewLayer->flag */
 enum {
     VIEW_LAYER_RENDER = (1 << 0),
