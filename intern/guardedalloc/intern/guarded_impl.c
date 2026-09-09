@@ -345,7 +345,7 @@ void MEM_guarded_freeN(void *vptr) {
 				__aligned_free(((char *)head) - MEMHEAD_ALIGN_PADDING(head->align));
 			}
 			else {
-				// free(head);
+				free(head);
 			}
 
 			return;

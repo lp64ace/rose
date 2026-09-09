@@ -66,20 +66,12 @@ ROSE_INLINE void statusbar_exit(WindowManager *wm, ScrArea *area) {
 ROSE_STATIC void statusbar_header_region_layout(rContext *C, ARegion *region) {
 	wmWindow *window = CTX_wm_window(C);
 
-	ReportList *reports = CTX_wm_reports(C);
-	Report *report = KER_reports_last_displayable(reports);
-
-	const char *msg = (report) ? report->message : "(no reports)";
-	const int len = (report) ? report->length : 16;
-
 	uiBlock *block;
-	if ((block = UI_block_begin(C, region, "statusbar"))) {
-		uiLayout *root = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, region->sizey, region->sizex, 0);
+	uiBut *but;
+	if ((block = UI_block_begin(C, region, "STATUSBAR_menu"))) {
+		uiLayout *root = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_COL, 0, region->sizey, 0, 0);
 		uiLayout *layout = UI_layout_row(root, PIXELSIZE);
-
-		uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "", 0, 0, 3 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frames_per_second, UI_POINTER_FLT, 0, FLT_MAX, UI_BUT_TEXT_LEFT);
-		uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, msg, 0, 0, 0, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, len, 0);
-
+		but = uiDefBut(block, UI_BTYPE_TEXT, ICON_NONE, "(null)", 0, 0, 2 * UI_UNIT_X, UI_UNIT_Y, &window->runtime.last.frames_per_second, UI_POINTER_FLT, INT_MIN, INT_MAX, UI_BUT_TEXT_LEFT);
 		UI_block_end(C, block);
 	}
 }

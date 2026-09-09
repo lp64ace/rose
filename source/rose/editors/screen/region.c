@@ -204,6 +204,8 @@ void ED_region_do_layout(rContext *C, ARegion *region) {
 
 	UI_blocklist_free_inactive(C, region);
 
+	ScrArea *area = CTX_wm_area(C);
+
 	if (region->type && region->type->layout) {
 		region->type->layout(C, region);
 	}
