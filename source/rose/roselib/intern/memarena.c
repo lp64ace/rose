@@ -135,7 +135,7 @@ void LIB_memory_arena_clear(MemArena *arena) {
 		memory_arena_free_all(arena, cbuf->next);
 
 #ifndef NDEBUG
-		memset(arena, 0xff, arena->bufsize);
+		memset(cbuf->data, 0xff, arena->bufsize);
 #endif
 
 		/** Reset the offset inside the current buffer. */
