@@ -45,7 +45,7 @@
 
 #include "engines/select/select_engine.h"
 #include "engines/basic/basic_engine.h"
-#include "engines/alice/alice_engine.h"
+#include "engines/workbench/workbench_engine.h"
 #include "engines/overlay/overlay_engine.h"
 
 #include "shaders/draw_shader_shared.h"
@@ -67,7 +67,7 @@ DRWGlobal GDraw;
 void DRW_engines_register(void) {
 	DRW_engine_register(&draw_engine_select_type);
 	DRW_engine_register(&draw_engine_basic_type);
-	DRW_engine_register(&draw_engine_alice_type);
+	DRW_engine_register(&draw_engine_workbench_type);
 	DRW_engine_register(&draw_engine_overlay_type);
 
 	{
@@ -444,6 +444,13 @@ ROSE_INLINE void draw_frustum_culling_planes_calc(const float persmat[4][4], flo
 	}
 }
 
+ROSE_INLINE void draw_manager_viewport_size_set(DRWManager *manager, const int size[2]) {
+	manager->size[0] = size[0];
+	manager->size[1] = size[1];
+	manager->inv_size[0] = 1.0f / size[0];
+	manager->inv_size[1] = 1.0f / size[1];
+}
+
 void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
 	manager->viewport = viewport;
 	manager->scene = scene;
@@ -463,12 +470,10 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 
 	if (viewport) {
 		GPUTexture *texture = GPU_viewport_color_texture(viewport, view);
-		manager->size[0] = GPU_texture_width(texture);
-		manager->size[1] = GPU_texture_height(texture);
+		draw_manager_viewport_size_set(manager, (const int[2]){GPU_texture_width(texture), GPU_texture_height(texture)});
 	}
 	else {
-		manager->size[0] = size[0];
-		manager->size[1] = size[1];
+		draw_manager_viewport_size_set(manager, size);
 	}
 
 	manager->vdata_engine = manager->vdata_pool->vdata_engine[view];

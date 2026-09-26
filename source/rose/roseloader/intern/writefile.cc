@@ -602,7 +602,9 @@ ROSE_STATIC bool write_file_handle(Main *main, WriteWrap *ww, int flag) {
 	writedata_do_write(wd, header, sizeof(header));
 
 	write_dna(&writer, wd->dna);
-	write_userdef(&writer, &U);
+	if ((flag & ROSE_WRITE_USERDEF) != 0) {
+		write_userdef(&writer, &U);
+	}
 	write_libraries(&writer, main);
 	write_end(&writer);
 

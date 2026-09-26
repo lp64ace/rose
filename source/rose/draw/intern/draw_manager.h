@@ -33,6 +33,7 @@ typedef struct DRWManager {
 	struct ViewLayer *view_layer;
 
 	float size[2];
+	float inv_size[2];
 
 	/**
 	 * \brief The native system rendering context, see WM_render_*!

@@ -30,15 +30,17 @@ set(OVERLAY
 	engines/overlay/overlay_armature.c
 )
 
-set(ALICE
-	# And yes... you are right... this is inspired through Alice in Madness
-	engines/alice/alice_engine.h
-	engines/alice/alice_engine.c
-	engines/alice/alice_modifier.c
-	engines/alice/alice_opaque.c
-	engines/alice/alice_private.h
-	engines/alice/alice_shader.c
-	engines/alice/alice_shadow.c
+set(WORKBENCH
+	engines/workbench/workbench_data.c
+	engines/workbench/workbench_effect_outline.c
+	engines/workbench/workbench_engine.h
+	engines/workbench/workbench_engine.c
+	engines/workbench/workbench_modifier.c
+	engines/workbench/workbench_opaque.c
+	engines/workbench/workbench_private.h
+	engines/workbench/workbench_shader.c
+	engines/workbench/workbench_shader_shared.h
+	engines/workbench/workbench_shadow.c
 )
 
 set(BASIC
@@ -54,17 +56,20 @@ set(SELECT
 )
 
 set(GLSL_SRC
-	engines/alice/shaders/alice_frag.glsl
-	engines/alice/shaders/alice_shadow_caps_geom.glsl
-	engines/alice/shaders/alice_shadow_geom.glsl
-	engines/alice/shaders/alice_shadow_vert.glsl
-	engines/alice/shaders/alice_vert.glsl
+	engines/workbench/shaders/workbench_effect_outline_frag.glsl
+	engines/workbench/shaders/workbench_frag.glsl
+	engines/workbench/shaders/workbench_shadow_caps_geom.glsl
+	engines/workbench/shaders/workbench_shadow_geom.glsl
+	engines/workbench/shaders/workbench_shadow_vert.glsl
+	engines/workbench/shaders/workbench_vert.glsl
+	engines/workbench/workbench_shader_shared.h
 	engines/overlay/shaders/armature_shape_solid_frag.glsl
 	engines/overlay/shaders/armature_shape_solid_vert.glsl
 	engines/overlay/shaders/overlay_common_lib.glsl
 	engines/select/shaders/select_id_frag.glsl
 	engines/select/shaders/select_id_vert.glsl
 
+	intern/shaders/common_fullscreen_vert.glsl
 	intern/shaders/draw_shader_armature_compute.glsl
 	intern/shaders/draw_shader_shared.h
 
@@ -106,8 +111,8 @@ set(SRC
 )
 
 list(APPEND SRC ${OVERLAY})
-list(APPEND SRC ${ALICE}) # Save myself? From death? is that it? Is that why I've come here? I'm not afraid to die. Times I've welcomed death!
-list(APPEND SRC ${BASIC}) # Another day, a different dream perhaps.
+list(APPEND SRC ${WORKBENCH})
+list(APPEND SRC ${BASIC})
 list(APPEND SRC ${SELECT})
 
 # -----------------------------------------------------------------------------

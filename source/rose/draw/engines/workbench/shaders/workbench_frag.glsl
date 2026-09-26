@@ -9,4 +9,5 @@ void main() {
 
 	fragColor = vec4(1.0);
 	fragColor.xyz *= clamp(factor, 0.1, 1.0);
+	objectId = uint(object_id);
 }

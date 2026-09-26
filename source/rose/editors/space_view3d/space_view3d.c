@@ -70,12 +70,22 @@ ROSE_INLINE void view3d_window_matrix(ARegion *region, float r_winmat[4][4], con
 	perspective_m4(r_winmat, viewplane.xmin, viewplane.xmax, viewplane.ymin, viewplane.ymax, near, far);
 }
 
-ROSE_INLINE RegionView3D *region_view3d_init(RegionView3D *rv3d) {
-	unit_m4(rv3d->winmat);
-	unit_m4(rv3d->viewmat);
-	unit_qt(rv3d->viewquat);
-	copy_v3_fl3(rv3d->viewloc, 0.0f, 1.80f, 4.0f);
-	return rv3d;
+RegionView3D *ED_view3d_region_view_init(ARegion *v3d, RegionView3D *rv3d) {
+	ROSE_assert(ELEM(v3d->regiontype, RGN_TYPE_WINDOW));
+	if (ELEM(v3d->regiontype, RGN_TYPE_WINDOW)) {
+		if (!rv3d) {
+			rv3d = (RegionView3D *)v3d->regiondata;
+		}
+
+		unit_m4(rv3d->winmat);
+		unit_m4(rv3d->viewmat);
+		unit_qt(rv3d->viewquat);
+
+		copy_v3_fl3(rv3d->viewloc, 0.0f, 1.80f, 4.0f);
+
+		return rv3d;
+	}
+	return NULL;
 }
 
 ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
@@ -88,7 +98,7 @@ ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 		region->regiontype = RGN_TYPE_WINDOW;
 
 		RegionView3D *rv3d = MEM_callocN(sizeof(RegionView3D), "RegionView3D");
-		region->regiondata = region_view3d_init(rv3d);
+		region->regiondata = ED_view3d_region_view_init(region, rv3d);
 		region->flag |= RGN_FLAG_ALWAYS_REDRAW;
 	}
 	view3d->spacetype = SPACE_VIEW3D;

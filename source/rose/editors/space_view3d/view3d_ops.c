@@ -403,6 +403,36 @@ static void VIEW3D_OT_zoom(wmOperatorType *ot) {
 	RNA_def_int(ot->srna, "delta", 0, INT_MIN, INT_MAX, "Delta", "", INT_MIN, INT_MAX);
 }
 
+ROSE_INLINE wmOperatorStatus view3d_reset_view_exec(rContext *C, wmOperator *op) {
+	ARegion *region = CTX_wm_region(C);
+
+	if (ED_view3d_region_view_init(region, NULL)) {
+		return OPERATOR_FINISHED;
+	}
+
+	return OPERATOR_CANCELLED;
+}
+
+ROSE_INLINE wmOperatorStatus view3d_reset_view_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	return view3d_reset_view_exec(C, op);
+}
+
+ROSE_INLINE bool view3d_reset_view_poll(rContext *C) {
+	return CTX_wm_space_view3d(C) != NULL;
+}
+
+static void VIEW3D_OT_reset(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Reset View";
+	ot->description = "Reset the zoom/pad and rotation of the view";
+	ot->idname = "VIEW3D_OT_reset";
+
+	/* API callbacks. */
+	ot->invoke = view3d_reset_view_invoke;
+	ot->exec = view3d_reset_view_exec;
+	ot->poll = view3d_reset_view_poll;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -798,6 +828,7 @@ void view3d_operatortypes() {
 	WM_operatortype_append(VIEW3D_OT_pan);
 	WM_operatortype_append(VIEW3D_OT_zoom);
 	WM_operatortype_append(VIEW3D_OT_select);
+	WM_operatortype_append(VIEW3D_OT_reset);
 }
 
 /** \} */
@@ -862,6 +893,14 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 		});
 
 		RNA_int_set(kmi->ptr, "delta", -40);
+	} while(false);
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "VIEW3D_OT_reset", &(KeyMapItem_Params){
+			.type = EVT_PAD0,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
 	} while(false);
 
 	do {

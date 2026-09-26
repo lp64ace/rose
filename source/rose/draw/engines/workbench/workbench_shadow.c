@@ -22,8 +22,8 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
-#include "alice_engine.h"
-#include "alice_private.h"
+#include "workbench_engine.h"
+#include "workbench_private.h"
 
 #include "intern/draw_defines.h"
 #include "intern/draw_manager.h"
@@ -31,7 +31,7 @@
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
-/** \name Alice Draw Engine Routines
+/** \name Workbench Draw Engine Routines
  * \{ */
 
 ROSE_INLINE void compute_parallel_lines_nor_and_dist(const float v1[2], const float v2[2], const float v3[2], float r_line[4]) {
@@ -48,7 +48,7 @@ ROSE_INLINE void compute_parallel_lines_nor_and_dist(const float v1[2], const fl
 	}
 }
 
-ROSE_INLINE void alice_shadow_update(DRWAliceViewportPrivateData *impl) {
+ROSE_INLINE void workbench_shadow_update(DRWWorkbenchViewportPrivateData *impl) {
 	if (!equals_v3_v3(impl->shadow_cached_direction, impl->shadow_direction_ws)) {
 		const float up[3] = {0.0f, 0.0f, 1.0f};
 
@@ -86,7 +86,7 @@ ROSE_INLINE void alice_shadow_update(DRWAliceViewportPrivateData *impl) {
 	compute_parallel_lines_nor_and_dist(shadow_near_corners[1], shadow_near_corners[2], shadow_near_corners[0], impl->shadow_near_sides[1]);
 }
 
-ROSE_INLINE void alice_shadow_data_update(DRWAliceViewportPrivateData *impl, AliceWorldUBO *data) {
+void DRW_workbench_shadow_data_update(DRWWorkbenchViewportPrivateData *impl, WorkbenchWorldUBO *data) {
 	Scene *scene = GDrawManager.scene;
 
 	float view_matrix[4][4];
@@ -112,15 +112,15 @@ ROSE_INLINE void alice_shadow_data_update(DRWAliceViewportPrivateData *impl, Ali
 	data->shadow_add = 1.0f - data->shadow_mul;
 }
 
-void DRW_alice_shadow_cache_init(DRWAliceData *vdata) {
-	DRWViewportEmptyList *fbl = (vdata)->fbl;
-	DRWViewportEmptyList *txl = (vdata)->txl;
-	DRWAliceViewportPassList *psl = (vdata)->psl;
-	DRWAliceViewportStorageList *stl = (vdata)->stl;
+void DRW_workbench_shadow_cache_init(DRWWorkbenchData *vdata) {
+	DRWWorkbenchViewportFramebufferList *fbl = (vdata)->fbl;
+	DRWWorkbenchViewportTextureList *txl = (vdata)->txl;
+	DRWWorkbenchViewportPassList *psl = (vdata)->psl;
+	DRWWorkbenchViewportStorageList *stl = (vdata)->stl;
 
-	DRWAliceViewportPrivateData *impl = stl->data;
+	DRWWorkbenchViewportPrivateData *impl = stl->data;
 
-	alice_shadow_update(impl);
+	workbench_shadow_update(impl);
 
 	DRWState depth_pass_state = DRW_STATE_WRITE_STENCIL_SHADOW_PASS;
 	DRWState depth_fail_state = DRW_STATE_WRITE_STENCIL_SHADOW_FAIL;
@@ -137,19 +137,19 @@ void DRW_alice_shadow_cache_init(DRWAliceData *vdata) {
 
 	/* Stencil Shadow passes. */
 	for (int manifold = 0; manifold < 2; manifold++) {
-		shader = DRW_alice_shader_shadow_pass_get((bool)manifold);
+		shader = DRW_workbench_shader_shadow_pass_get((bool)manifold);
 		impl->shadow_pass_shgroup[manifold] = DRW_shading_group_new(shader, psl->shadow_pass[0]);
 
-		shader = DRW_alice_shader_shadow_fail_get((bool)manifold, false);
+		shader = DRW_workbench_shader_shadow_fail_get((bool)manifold, false);
 		impl->shadow_fail_shgroup[manifold] = DRW_shading_group_new(shader, psl->shadow_pass[1]);
 
-		shader = DRW_alice_shader_shadow_fail_get((bool)manifold, true);
+		shader = DRW_workbench_shader_shadow_fail_get((bool)manifold, true);
 		impl->shadow_caps_shgroup[manifold] = DRW_shading_group_new(shader, psl->shadow_pass[1]);
 	}
 }
 
-ROSE_INLINE const BoundBox *alice_shadow_object_shadow_box_get(DRWAliceViewportPrivateData *impl, Object *object, AliceDrawData *add) {
-	if ((add->flag & ALICE_SHADOW_BOX_DIRTY) != 0 || impl->shadow_changed) {
+ROSE_INLINE const BoundBox *workbench_shadow_object_shadow_box_get(DRWWorkbenchViewportPrivateData *impl, Object *object, WorkbenchDrawData *add) {
+	if ((add->flag & WORKBENCH_SHADOW_BOX_DIRTY) != 0 || impl->shadow_changed) {
 		float mat[4][4];
 		mul_m4_m4m4(mat, impl->shadow_inv, object->obmat);
 
@@ -177,20 +177,20 @@ ROSE_INLINE const BoundBox *alice_shadow_object_shadow_box_get(DRWAliceViewportP
 		for (size_t i = 0; i < 8; i++) {
 			mul_m4_v3(impl->shadow_mat, add->shadow_box.vec[i]);
 		}
-		add->flag &= ~ALICE_SHADOW_BOX_DIRTY;
+		add->flag &= ~WORKBENCH_SHADOW_BOX_DIRTY;
 	}
 
 	return &add->shadow_box;
 }
 
-ROSE_INLINE bool alice_shadow_object_cast_visible_shadow(DRWAliceViewportPrivateData *impl, Object *object, AliceDrawData *add) {
-	const BoundBox *shadow_box = alice_shadow_object_shadow_box_get(impl, object, add);
+ROSE_INLINE bool workbench_shadow_object_cast_visible_shadow(DRWWorkbenchViewportPrivateData *impl, Object *object, WorkbenchDrawData *add) {
+	const BoundBox *shadow_box = workbench_shadow_object_shadow_box_get(impl, object, add);
 
 	return DRW_culling_box_test(NULL, shadow_box);
 }
 
-ROSE_INLINE float alice_shadow_object_shadow_distance(DRWAliceViewportPrivateData *impl, Object *object, AliceDrawData *add) {
-	const BoundBox *shadow_bbox = alice_shadow_object_shadow_box_get(impl, object, add);
+ROSE_INLINE float workbench_shadow_object_shadow_distance(DRWWorkbenchViewportPrivateData *impl, Object *object, WorkbenchDrawData *add) {
+	const BoundBox *shadow_bbox = workbench_shadow_object_shadow_box_get(impl, object, add);
 
 	const size_t corners[4] = {0, 3, 4, 7};
 
@@ -212,9 +212,9 @@ ROSE_INLINE float alice_shadow_object_shadow_distance(DRWAliceViewportPrivateDat
 	return ROSE_MAX(dist - add->shadow_depth, 0);
 }
 
-ROSE_INLINE bool alice_shadow_camera_in_object_shadow(DRWAliceViewportPrivateData *impl, Object *object, AliceDrawData *add) {
+ROSE_INLINE bool workbench_shadow_camera_in_object_shadow(DRWWorkbenchViewportPrivateData *impl, Object *object, WorkbenchDrawData *add) {
 	/* Just to be sure the min, max are updated. */
-	alice_shadow_object_shadow_box_get(impl, object, add);
+	workbench_shadow_object_shadow_box_get(impl, object, add);
 	/* Test if near plane is in front of the shadow. */
 	if (add->shadow_min[2] > impl->shadow_near_max[2]) {
 		return false;
@@ -261,8 +261,8 @@ ROSE_INLINE bool alice_shadow_camera_in_object_shadow(DRWAliceViewportPrivateDat
 	return true;
 }
 
-void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
-	DRWAliceViewportPrivateData *impl = vdata->stl->data;
+void DRW_workbench_shadow_cache_populate(DRWWorkbenchData *vdata, Object *object) {
+	DRWWorkbenchViewportPrivateData *impl = vdata->stl->data;
 
 	bool is_manifold;
 	struct GPUBatch *shadow_geometry = DRW_cache_object_edge_detection_get(object, &is_manifold);
@@ -270,13 +270,13 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 		return;
 	}
 
-	AliceDrawData *add = DRW_alice_drawdata(object);
+	WorkbenchDrawData *add = DRW_workbench_drawdata(object);
 
-	if (alice_shadow_object_cast_visible_shadow(impl, object, add)) {
+	if (workbench_shadow_object_cast_visible_shadow(impl, object, add)) {
 		mul_v3_mat3_m4v3(add->shadow_dir, object->invmat, impl->shadow_direction_ws);
 
 		DRWShadingGroup *shgroup;
-		bool use_shadow_pass_technique = !alice_shadow_camera_in_object_shadow(impl, object, add);
+		bool use_shadow_pass_technique = !workbench_shadow_camera_in_object_shadow(impl, object, add);
 
 		/* We cannot use Shadow Pass technique on non-manifold object. */
 		if (use_shadow_pass_technique && !is_manifold) {
@@ -293,7 +293,7 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 			DRW_shading_group_call_ex(shgroup, object, object->obmat, shadow_geometry);
 		}
 		else {
-			float extrude = alice_shadow_object_shadow_distance(impl, object, add);
+			float extrude = workbench_shadow_object_shadow_distance(impl, object, add);
 
 			const bool need_caps = true;
 			if (need_caps) {
@@ -313,7 +313,7 @@ void DRW_alice_shadow_cache_populate(DRWAliceData *vdata, Object *object) {
 	}
 }
 
-void DRW_alice_shadow_cache_finish(DRWAliceData *vdata) {
+void DRW_workbench_shadow_cache_finish(DRWWorkbenchData *vdata) {
 }
 
 /** \} */

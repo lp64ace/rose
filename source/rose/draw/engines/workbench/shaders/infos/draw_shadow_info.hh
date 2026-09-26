@@ -4,19 +4,19 @@
 /** \name Common
  * \{ */
 
-GPU_SHADER_INTERFACE_INFO(alice_shadow_iface, "vData")
+GPU_SHADER_INTERFACE_INFO(workbench_shadow_iface, "vData")
 	.smooth(Type::VEC3, "pos")
 	.smooth(Type::VEC4, "frontPosition")
 	.smooth(Type::VEC4, "backPosition");
 
-GPU_SHADER_CREATE_INFO(alice_shadow_common)
+GPU_SHADER_CREATE_INFO(workbench_shadow_common)
     .vertex_in(0, Type::VEC3, "pos")
     .vertex_in(2, Type::IVEC4, "defgroup")
     .vertex_in(3, Type::VEC4, "weight")
-    .vertex_out(alice_shadow_iface)
+    .vertex_out(workbench_shadow_iface)
     .push_constant(Type::FLOAT, "lightDistance")
     .push_constant(Type::VEC3, "lightDirection")
-    .vertex_source("alice_shadow_vert.glsl")
+    .vertex_source("workbench_shadow_vert.glsl")
     .additional_info("draw_mesh");
 
 /** \} */
@@ -25,13 +25,13 @@ GPU_SHADER_CREATE_INFO(alice_shadow_common)
 /** \name Manifold Type
  * \{ */
 
-GPU_SHADER_CREATE_INFO(alice_shadow_manifold)
+GPU_SHADER_CREATE_INFO(workbench_shadow_manifold)
     .geometry_layout(PrimitiveIn::LINES_ADJACENCY, PrimitiveOut::TRIANGLE_STRIP, 4, 1)
-    .geometry_source("alice_shadow_geom.glsl");
+    .geometry_source("workbench_shadow_geom.glsl");
 
-GPU_SHADER_CREATE_INFO(alice_shadow_no_manifold)
+GPU_SHADER_CREATE_INFO(workbench_shadow_no_manifold)
     .geometry_layout(PrimitiveIn::LINES_ADJACENCY, PrimitiveOut::TRIANGLE_STRIP, 4, 2)
-    .geometry_source("alice_shadow_geom.glsl");
+    .geometry_source("workbench_shadow_geom.glsl");
 
 /** \} */
 
@@ -39,9 +39,9 @@ GPU_SHADER_CREATE_INFO(alice_shadow_no_manifold)
 /** \name Caps Type
  * \{ */
 
-GPU_SHADER_CREATE_INFO(alice_shadow_caps)
+GPU_SHADER_CREATE_INFO(workbench_shadow_caps)
     .geometry_layout(PrimitiveIn::TRIANGLES, PrimitiveOut::TRIANGLE_STRIP, 3, 2)
-    .geometry_source("alice_shadow_caps_geom.glsl");
+    .geometry_source("workbench_shadow_caps_geom.glsl");
 
 /** \} */
 
@@ -49,7 +49,7 @@ GPU_SHADER_CREATE_INFO(alice_shadow_caps)
 /** \name Debug Type
  * \{ */
 
-GPU_SHADER_CREATE_INFO(alice_shadow_no_debug)
+GPU_SHADER_CREATE_INFO(workbench_shadow_no_debug)
     .fragment_source("gpu_shader_depth_only_frag.glsl");
 
 /** \} */
@@ -58,38 +58,38 @@ GPU_SHADER_CREATE_INFO(alice_shadow_no_debug)
 /** \name Variations Declaration
  * \{ */
 
-#define ALICE_SHADOW_VARIATIONS(suffix, ...) \
-  GPU_SHADER_CREATE_INFO(alice_shadow_pass_manifold_no_caps##suffix) \
+#define WORKBENCH_SHADOW_VARIATIONS(suffix, ...) \
+  GPU_SHADER_CREATE_INFO(workbench_shadow_pass_manifold_no_caps##suffix) \
       .define("SHADOW_PASS") \
-      .additional_info("alice_shadow_common", "alice_shadow_manifold", __VA_ARGS__) \
+      .additional_info("workbench_shadow_common", "workbench_shadow_manifold", __VA_ARGS__) \
       .do_static_compilation(true); \
-  GPU_SHADER_CREATE_INFO(alice_shadow_pass_no_manifold_no_caps##suffix) \
+  GPU_SHADER_CREATE_INFO(workbench_shadow_pass_no_manifold_no_caps##suffix) \
       .define("SHADOW_PASS") \
       .define("DOUBLE_MANIFOLD") \
-      .additional_info("alice_shadow_common", "alice_shadow_no_manifold", __VA_ARGS__) \
+      .additional_info("workbench_shadow_common", "workbench_shadow_no_manifold", __VA_ARGS__) \
       .do_static_compilation(true); \
-  GPU_SHADER_CREATE_INFO(alice_shadow_fail_manifold_caps##suffix) \
+  GPU_SHADER_CREATE_INFO(workbench_shadow_fail_manifold_caps##suffix) \
       .define("SHADOW_CAPS") \
       .define("SHADOW_FAIL") \
-      .additional_info("alice_shadow_common", "alice_shadow_caps", __VA_ARGS__) \
+      .additional_info("workbench_shadow_common", "workbench_shadow_caps", __VA_ARGS__) \
       .do_static_compilation(true); \
-  GPU_SHADER_CREATE_INFO(alice_shadow_fail_manifold_no_caps##suffix) \
+  GPU_SHADER_CREATE_INFO(workbench_shadow_fail_manifold_no_caps##suffix) \
       .define("SHADOW_FAIL") \
-      .additional_info("alice_shadow_common", "alice_shadow_manifold", __VA_ARGS__) \
+      .additional_info("workbench_shadow_common", "workbench_shadow_manifold", __VA_ARGS__) \
       .do_static_compilation(true); \
-  GPU_SHADER_CREATE_INFO(alice_shadow_fail_no_manifold_caps##suffix) \
+  GPU_SHADER_CREATE_INFO(workbench_shadow_fail_no_manifold_caps##suffix) \
       .define("SHADOW_CAPS") \
       .define("SHADOW_FAIL") \
       .define("DOUBLE_MANIFOLD") \
-      .additional_info("alice_shadow_common", "alice_shadow_caps", __VA_ARGS__) \
+      .additional_info("workbench_shadow_common", "workbench_shadow_caps", __VA_ARGS__) \
       .do_static_compilation(true); \
-  GPU_SHADER_CREATE_INFO(alice_shadow_fail_no_manifold_no_caps##suffix) \
+  GPU_SHADER_CREATE_INFO(workbench_shadow_fail_no_manifold_no_caps##suffix) \
       .define("SHADOW_FAIL") \
       .define("DOUBLE_MANIFOLD") \
-      .additional_info("alice_shadow_common", "alice_shadow_no_manifold", __VA_ARGS__) \
+      .additional_info("workbench_shadow_common", "workbench_shadow_no_manifold", __VA_ARGS__) \
       .do_static_compilation(true);
 
 
-ALICE_SHADOW_VARIATIONS(, "alice_shadow_no_debug")
+WORKBENCH_SHADOW_VARIATIONS(, "workbench_shadow_no_debug")
 
 /** \} */

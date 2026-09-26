@@ -255,10 +255,12 @@ set(INFO_SRC
 	
 	infos/gpu_shader_test_info.hh
 
-	../draw/engines/alice/shaders/infos/draw_opaque_mesh_info.hh
-	../draw/engines/alice/shaders/infos/draw_shadow_info.hh
+	../draw/engines/workbench/shaders/infos/draw_workbench_effect_outline_info.hh
+	../draw/engines/workbench/shaders/infos/draw_opaque_mesh_info.hh
+	../draw/engines/workbench/shaders/infos/draw_shadow_info.hh
 	../draw/engines/overlay/shaders/infos/draw_armature_info.hh
 	../draw/engines/select/shaders/infos/draw_select_id_info.hh
+	../draw/intern/shaders/infos/draw_fullscreen_info.hh
 	../draw/intern/shaders/infos/draw_modifier_info.hh
 	../draw/intern/shaders/infos/draw_view_info.hh
 )

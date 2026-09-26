@@ -288,6 +288,16 @@ void KER_view_layer_free_ex(ViewLayer *view_layer, bool us) {
 	}
 	LIB_freelistN(&view_layer->layer_collections);
 
+	LISTBASE_FOREACH(ViewLayerEngineData *, sled, &view_layer->drawdata) {
+		if (sled->storage) {
+			if (sled->free) {
+				sled->free(sled->storage);
+			}
+			MEM_freeN(sled->storage);
+		}
+	}
+	LIB_freelistN(&view_layer->drawdata);
+
 	MEM_SAFE_FREE(view_layer->object_bases_array);
 	MEM_freeN(view_layer);
 }

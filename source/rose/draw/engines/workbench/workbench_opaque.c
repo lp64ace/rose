@@ -20,26 +20,26 @@
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
-#include "alice_engine.h"
-#include "alice_private.h"
+#include "workbench_engine.h"
+#include "workbench_private.h"
 
 #include "intern/draw_defines.h"
 #include "intern/draw_manager.h"
 
 /* -------------------------------------------------------------------- */
-/** \name Alice Draw Engine Routines
+/** \name Workbench Draw Engine Routines
  * \{ */
 
-void DRW_alice_opaque_cache_init(DRWAliceData *vdata) {
-	DRWViewportEmptyList *fbl = (vdata)->fbl;
-	DRWViewportEmptyList *txl = (vdata)->txl;
-	DRWAliceViewportPassList *psl = (vdata)->psl;
-	DRWAliceViewportStorageList *stl = (vdata)->stl;
+void DRW_workbench_opaque_cache_init(DRWWorkbenchData *vdata) {
+	DRWWorkbenchViewportFramebufferList *fbl = (vdata)->fbl;
+	DRWWorkbenchViewportTextureList *txl = (vdata)->txl;
+	DRWWorkbenchViewportPassList *psl = (vdata)->psl;
+	DRWWorkbenchViewportStorageList *stl = (vdata)->stl;
 
-	DRWAliceViewportPrivateData *impl = stl->data;
+	DRWWorkbenchViewportPrivateData *impl = stl->data;
 
-	GPUShader *depth = DRW_alice_shader_depth_get();
-	GPUShader *opaque = DRW_alice_shader_opaque_get();
+	GPUShader *depth = DRW_workbench_shader_depth_get();
+	GPUShader *opaque = DRW_workbench_shader_opaque_get();
 
 	if (!(psl->depth_pass = DRW_pass_new("Depth", DRW_STATE_WRITE_DEPTH | DRW_STATE_DEPTH_LESS_EQUAL))) {
 		return;
@@ -82,9 +82,9 @@ void DRW_alice_opaque_cache_init(DRWAliceData *vdata) {
 	}
 }
 
-ROSE_INLINE void draw_alice_opaque_cache_populate_mesh(DRWAliceData *vdata, Object *object) {
-	DRWAliceViewportStorageList *stl = (vdata)->stl;
-	DRWAliceViewportPrivateData *impl = stl->data;
+ROSE_INLINE void draw_workbench_opaque_cache_populate_mesh(DRWWorkbenchData *vdata, Object *object) {
+	DRWWorkbenchViewportStorageList *stl = (vdata)->stl;
+	DRWWorkbenchViewportPrivateData *impl = stl->data;
 
 	GPUBatch *surface = DRW_cache_object_surface_get(object);
 
@@ -92,20 +92,21 @@ ROSE_INLINE void draw_alice_opaque_cache_populate_mesh(DRWAliceData *vdata, Obje
 
 	for (size_t index = 0; index < ARRAY_SIZE(impl->opaque_shgroup); index++) {
 		DRW_shading_group_call_ex(impl->opaque_shgroup[index], object, object->obmat, surface);
+		DRW_shading_group_call_ex(impl->opaque_shgroup[index], object, object->obmat, surface);
 	}
 }
 
-void DRW_alice_opaque_cache_populate(DRWAliceData *vdata, Object *object) {
-	DRWAliceViewportStorageList *stl = (vdata)->stl;
-	DRWAliceViewportPrivateData *impl = stl->data;
+void DRW_workbench_opaque_cache_populate(DRWWorkbenchData *vdata, Object *object) {
+	DRWWorkbenchViewportStorageList *stl = (vdata)->stl;
+	DRWWorkbenchViewportPrivateData *impl = stl->data;
 
 	switch (object->type) {
 		case OB_MESH:
-			draw_alice_opaque_cache_populate_mesh(vdata, object);
+			draw_workbench_opaque_cache_populate_mesh(vdata, object);
 	}
 }
 
-void DRW_alice_opaque_cache_finish(DRWAliceData *vdata) {
+void DRW_workbench_opaque_cache_finish(DRWWorkbenchData *vdata) {
 	// No-op
 }
 

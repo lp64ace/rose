@@ -107,6 +107,13 @@ void DRW_view_data_texture_list_size_validate(struct DRWViewData *view_data, con
 void DRW_view_data_default_lists_from_viewport(struct DRWViewData *view_data, struct GPUViewport *viewport);
 void DRW_view_data_use_engine(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
 
+void *DRW_view_layer_engine_data_get(struct DrawEngineType *engine);
+void **DRW_view_layer_engine_data_ensure_ex(struct ViewLayer *view_layer, struct DrawEngineType *engine, void (*callback)(void *storage));
+void **DRW_view_layer_engine_data_ensure(struct DrawEngineType *engine, void (*callback)(void *storage));
+
+const float *DRW_viewport_size_get(void);
+const float *DRW_viewport_invert_size_get(void);
+
 /** \} */
 
 #ifdef __cplusplus

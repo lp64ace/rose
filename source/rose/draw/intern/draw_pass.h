@@ -151,6 +151,11 @@ typedef struct DRWCommandDrawInstanceRange {
 	unsigned int icount;
 } DRWCommandDrawInstanceRange;
 
+typedef struct DRWCommandDrawProcedural {
+	struct GPUBatch *batch;
+	unsigned int vcount;
+} DRWCommandDrawProcedural;
+
 typedef struct DRWCommandUniformBlock {
 	struct GPUUniformBuf *block;
 	unsigned int location;
@@ -165,6 +170,7 @@ enum {
 	DRW_COMMAND_DRAW_RANGE,
 	DRW_COMMAND_DRAW_INSTANCE,
 	DRW_COMMAND_DRAW_INSTANCE_RANGE,
+	DRW_COMMAND_DRAW_PROCEDURAL,
 	DRW_COMMAND_UNIFORM,
 	DRW_COMMAND_UNIFORM_BLOCK,
 };
@@ -183,6 +189,7 @@ typedef struct DRWCommand {
 		struct DRWCommandDrawRange draw_range;
 		struct DRWCommandDrawInstance draw_instance;
 		struct DRWCommandDrawInstanceRange draw_instance_range;
+		struct DRWCommandDrawProcedural draw_procedural;
 		struct DRWCommandUniformBlock uniform_block;
 	};
 

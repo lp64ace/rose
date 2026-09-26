@@ -39,6 +39,13 @@ enum {
     BASE_ENABLED_RENDER = (1 << 6),
 };
 
+typedef struct ViewLayerEngineData {
+	struct ViewLayerEngineData *next, *prev;
+	struct DrawEngineType *engine;
+	void *storage;
+	void (*free)(void *storage);
+} ViewLayerEngineData;
+
 typedef struct LayerCollection {
 	struct LayerCollection *prev, *next;
 	struct Collection *collection;
@@ -76,6 +83,8 @@ typedef struct ViewLayer {
 
     struct Base *active;
 
+    /** ViewLayers are not #ID data-blocks but still contain draw-data! */
+    ListBase drawdata;
     ListBase bases;
 	struct Base **object_bases_array;
 	struct GHash *object_bases_hash;

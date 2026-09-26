@@ -1144,7 +1144,12 @@ ROSE_STATIC RoseFileData *rlo_read_file_internal(FileData *fd, const char *filep
 				head = rlo_rhead_next(fd, head);
 			} break;
 			case RLO_CODE_USER: {
-				head = read_userdef(rfd, fd, head);
+				if ((flag & ROSE_READ_USERDEF) != 0) {
+					head = read_userdef(rfd, fd, head);
+				}
+				else {
+					head = rlo_rhead_next(fd, head);
+				}
 			} break;
 			default: {
 				head = read_libblock(fd, rfd->main, head, NULL);

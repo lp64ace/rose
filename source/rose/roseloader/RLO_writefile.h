@@ -7,6 +7,10 @@ extern "C" {
 
 struct Main;
 
+enum {
+	ROSE_WRITE_USERDEF = 1 << 0,
+};
+
 bool RLO_write_file(struct Main *main, const char *filepath, int flag);
 
 #ifdef __cplusplus

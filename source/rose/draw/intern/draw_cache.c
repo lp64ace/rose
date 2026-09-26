@@ -16,6 +16,7 @@
 typedef struct DRWCache {
 	GPUBatch *draw_fullscreen_quad;
 	GPUBatch *draw_bone_octahedral;
+	GPUBatch *draw_procedural_tris;
 } DRWCache;
 
 static struct DRWCache GCache; // = NULL;
@@ -63,11 +64,11 @@ GPUBatch *DRW_cache_fullscreen_quad_get(void) {
 		ROSE_assert(fabs(u - 1.0f) < FLT_EPSILON && abs(v - 1.0f) < FLT_EPSILON);
 #endif
 
-		static GPUVertFormat format;
+		GPUVertFormat format;
 		GPU_vertformat_clear(&format);
 
-		int apos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
-		int atex = GPU_vertformat_add(&format, "uv", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+		unsigned int apos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+		unsigned int atex = GPU_vertformat_add(&format, "uv", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
 		GPU_vertformat_alias_add(&format, "texCoord");
 
 		do {
@@ -90,12 +91,12 @@ GPUBatch *DRW_cache_fullscreen_quad_get(void) {
  * \{ */
 
 static const float bone_octahedral_verts[6][3] = {
-	{ 0.0f, 0.0f,  0.0f},
-	{ 0.1f, 0.1f,  0.1f},
-	{ 0.1f, 0.1f, -0.1f},
-	{-0.1f, 0.1f, -0.1f},
-	{-0.1f, 0.1f,  0.1f},
-	{ 0.0f, 1.0f,  0.0f},
+	{ 0.00f, 0.00f,  0.00f},
+	{ 0.08f, 0.10f,  0.08f},
+	{ 0.08f, 0.10f, -0.08f},
+	{-0.08f, 0.10f, -0.08f},
+	{-0.08f, 0.10f,  0.08f},
+	{ 0.00f, 1.00f,  0.00f},
 };
 
 static const float bone_octahedral_smooth_normals[6][3] = {
@@ -136,14 +137,10 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 	if (!GCache.draw_bone_octahedral) {
 		unsigned int v_idx = 0;
 
-		static GPUVertFormat format = {0};
-		static struct {
-			uint pos, nor, snor;
-		} attr_id;
-		if (format.attr_len == 0) {
-			attr_id.pos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
-			attr_id.nor = GPU_vertformat_add(&format, "nor", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
-		}
+		GPUVertFormat format;
+		GPU_vertformat_clear(&format);
+		unsigned int pos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
+		unsigned int nor = GPU_vertformat_add(&format, "nor", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
 
 		/* Vertices */
 		GPUVertBuf *vbo = GPU_vertbuf_create_with_format(&format);
@@ -151,8 +148,8 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 3; j++) {
-				GPU_vertbuf_attr_set(vbo, attr_id.pos, v_idx, bone_octahedral_verts[bone_octahedral_solid_tris[i][j]]);
-				GPU_vertbuf_attr_set(vbo, attr_id.nor, v_idx, bone_octahedral_solid_normals[i]);
+				GPU_vertbuf_attr_set(vbo, pos, v_idx, bone_octahedral_verts[bone_octahedral_solid_tris[i][j]]);
+				GPU_vertbuf_attr_set(vbo, nor, v_idx, bone_octahedral_solid_normals[i]);
 				v_idx++;
 			}
 		}
@@ -160,6 +157,26 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 		GCache.draw_bone_octahedral = GPU_batch_create_ex(GPU_PRIM_TRIS, vbo, NULL, GPU_BATCH_OWNS_VBO);
 	}
 	return GCache.draw_bone_octahedral;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Default cache Objects
+ * \{ */
+
+GPUBatch *DRW_cache_procedural_triangles_get(void) {
+	if (!GCache.draw_procedural_tris) {
+		GPUVertFormat format;
+		GPU_vertformat_clear(&format);
+		GPU_vertformat_add(&format, "dummy", GPU_COMP_F32, 1, GPU_FETCH_FLOAT);
+
+		GPUVertBuf *vbo = GPU_vertbuf_create_with_format(&format);
+		GPU_vertbuf_data_alloc(vbo, 1);
+
+		GCache.draw_procedural_tris = GPU_batch_create_ex(GPU_PRIM_TRIS, vbo, NULL, GPU_BATCH_OWNS_VBO);
+	}
+	return GCache.draw_procedural_tris;
 }
 
 /** \} */
