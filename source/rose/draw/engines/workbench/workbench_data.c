@@ -29,8 +29,6 @@
 #include "intern/draw_engine.h"
 #include "intern/draw_manager.h"
 
-#include <stdio.h>
-
 ROSE_STATIC void workbench_view_layer_data_free(void *storage) {
 	WorkbenchViewLayerDrawData *vldata = (WorkbenchViewLayerDrawData *)storage;
 
@@ -38,7 +36,7 @@ ROSE_STATIC void workbench_view_layer_data_free(void *storage) {
 }
 
 ROSE_STATIC WorkbenchViewLayerDrawData *workbench_view_layer_data_ensure_ex(ViewLayer *view_layer) {
-#define UNIQUE_ENGINE_PTR (WorkbenchViewLayerDrawData *)&workbench_view_layer_data_ensure_ex
+#define UNIQUE_ENGINE_PTR (DrawEngineType *)&workbench_view_layer_data_ensure_ex
 
 	WorkbenchViewLayerDrawData **vldata = (WorkbenchViewLayerDrawData **)DRW_view_layer_engine_data_ensure_ex(view_layer, UNIQUE_ENGINE_PTR, &workbench_view_layer_data_free);
 	if (*vldata == NULL) {

@@ -28,8 +28,6 @@
 #include "intern/draw_engine.h"
 #include "intern/draw_manager.h"
 
-#include <stdio.h>
-
 /* -------------------------------------------------------------------- */
 /** \name Workbench Draw Engine Cache
  * \{ */
@@ -42,10 +40,6 @@ ROSE_STATIC void workbench_cache_init(void *vdata) {
 
 ROSE_STATIC void workbench_cache_populate(void *vdata, Object *object) {
 	WorkbenchDrawData *add = (WorkbenchDrawData *)KER_drawdata_get(&object->id, &draw_engine_workbench_type);
-
-	if ((object->flag_base & BASE_SELECTED) != 0) {
-		fprintf(stdout, "[Draw] Object \"%s\" is SELECTED.\n", KER_id_name(&object->id));
-	}
 
 	DRW_workbench_shadow_cache_populate((DRWWorkbenchData *)vdata, object);
 	DRW_workbench_opaque_cache_populate((DRWWorkbenchData *)vdata, object);

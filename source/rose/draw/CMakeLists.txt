@@ -22,12 +22,14 @@ set(INC_SYS
 # Define Source Files
 
 set(OVERLAY
+	engines/overlay/overlay_data.c
+	engines/overlay/overlay_armature.c
 	engines/overlay/overlay_engine.c
 	engines/overlay/overlay_engine.h
+	engines/overlay/overlay_outline.c
 	engines/overlay/overlay_private.h
 	engines/overlay/overlay_shader.c
-
-	engines/overlay/overlay_armature.c
+	engines/overlay/overlay_shader_shared.h
 )
 
 set(WORKBENCH
@@ -66,6 +68,11 @@ set(GLSL_SRC
 	engines/overlay/shaders/armature_shape_solid_frag.glsl
 	engines/overlay/shaders/armature_shape_solid_vert.glsl
 	engines/overlay/shaders/overlay_common_lib.glsl
+	engines/overlay/shaders/overlay_effect_outline_frag.glsl
+	engines/overlay/shaders/overlay_geometry_prepass_frag.glsl
+	engines/overlay/shaders/overlay_geometry_vert.glsl
+	engines/overlay/shaders/overlay_vert.glsl
+	engines/overlay/overlay_shader_shared.h
 	engines/select/shaders/select_id_frag.glsl
 	engines/select/shaders/select_id_vert.glsl
 

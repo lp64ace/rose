@@ -31,6 +31,18 @@ GPU_SHADER_CREATE_INFO(draw_modelmat)
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Geometry Material Interface
+ * \{ */
+
+GPU_SHADER_INTERFACE_INFO(geometry_material_iface, "")
+    .flat(Type::INT, "object_id");
+
+GPU_SHADER_CREATE_INFO(geometry_material)
+    .vertex_out(geometry_material_iface);
+
+/** \} */
+
 GPU_SHADER_CREATE_INFO(draw_mesh)
 	.additional_info("draw_modelmat", "draw_resource_id_uniform");
 

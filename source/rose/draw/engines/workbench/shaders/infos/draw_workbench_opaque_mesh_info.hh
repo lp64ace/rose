@@ -1,16 +1,4 @@
 /* -------------------------------------------------------------------- */
-/** \name Material Interface
- * \{ */
-
-GPU_SHADER_INTERFACE_INFO(workbench_material_iface, "")
-	.flat(Type::INT, "object_id");
-
-GPU_SHADER_CREATE_INFO(workbench_material)
-	.vertex_out(workbench_material_iface);
-
-/** \} */
-
-/* -------------------------------------------------------------------- */
 /** \name Object types
  * \{ */
 
@@ -42,11 +30,11 @@ GPU_SHADER_CREATE_INFO(workbench_depth)
 GPU_SHADER_CREATE_INFO(workbench_depth_mesh)
 	.additional_info("workbench_mesh")
 	.additional_info("workbench_depth")
-	.additional_info("workbench_material")
+	.additional_info("geometry_material")
 	.do_static_compilation(true);
 
 GPU_SHADER_CREATE_INFO(workbench_opaque_mesh)
 	.additional_info("workbench_mesh")
 	.additional_info("workbench_opaque")
-	.additional_info("workbench_material")
+	.additional_info("geometry_material")
 	.do_static_compilation(true);
