@@ -36,17 +36,13 @@ ROSE_STATIC void workbench_view_layer_data_free(void *storage) {
 }
 
 ROSE_STATIC WorkbenchViewLayerDrawData *workbench_view_layer_data_ensure_ex(ViewLayer *view_layer) {
-#define UNIQUE_ENGINE_PTR (DrawEngineType *)&workbench_view_layer_data_ensure_ex
-
-	WorkbenchViewLayerDrawData **vldata = (WorkbenchViewLayerDrawData **)DRW_view_layer_engine_data_ensure_ex(view_layer, UNIQUE_ENGINE_PTR, &workbench_view_layer_data_free);
+	WorkbenchViewLayerDrawData **vldata = (WorkbenchViewLayerDrawData **)DRW_view_layer_engine_data_ensure_ex(view_layer, &draw_engine_workbench_type, &workbench_view_layer_data_free);
 	if (*vldata == NULL) {
 		*vldata = (WorkbenchViewLayerDrawData *)MEM_callocN(sizeof(**vldata), "WorkbenchViewLayerDrawData");
 		(*vldata)->world_ubo = GPU_uniformbuf_create_ex(sizeof(WorkbenchWorldUBO), NULL, "WorkbenchWorldUBO");
 	}
 
 	return *vldata;
-
-#undef UNIQUE_ENGINE_PTR
 }
 
 void DRW_workbench_private_data_init(DRWWorkbenchViewportPrivateData *impl) {

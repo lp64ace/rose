@@ -92,7 +92,6 @@ ROSE_INLINE void draw_workbench_opaque_cache_populate_mesh(DRWWorkbenchData *vda
 
 	for (size_t index = 0; index < ARRAY_SIZE(impl->opaque_shgroup); index++) {
 		DRW_shading_group_call_ex(impl->opaque_shgroup[index], object, object->obmat, surface);
-		// DRW_shading_group_call_ex(impl->opaque_shgroup[index], object, object->obmat, surface);
 	}
 }
 

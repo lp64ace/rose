@@ -36,17 +36,13 @@ ROSE_STATIC void overlay_view_layer_data_free(void *storage) {
 }
 
 ROSE_STATIC OverlayViewLayerDrawData *overlay_view_layer_data_ensure_ex(ViewLayer *view_layer) {
-#define UNIQUE_ENGINE_PTR (DrawEngineType *)&overlay_view_layer_data_ensure_ex
-
-	OverlayViewLayerDrawData **vldata = (OverlayViewLayerDrawData **)DRW_view_layer_engine_data_ensure_ex(view_layer, UNIQUE_ENGINE_PTR, &overlay_view_layer_data_free);
+	OverlayViewLayerDrawData **vldata = (OverlayViewLayerDrawData **)DRW_view_layer_engine_data_ensure_ex(view_layer, &draw_engine_overlay_type, &overlay_view_layer_data_free);
 	if (*vldata == NULL) {
 		*vldata = (OverlayViewLayerDrawData *)MEM_callocN(sizeof(**vldata), "OverlayViewLayerDrawData");
 		(*vldata)->world_ubo = GPU_uniformbuf_create_ex(sizeof(OverlayWorldUBO), NULL, "OverlayWorldUBO");
 	}
 
 	return *vldata;
-
-#undef UNIQUE_ENGINE_PTR
 }
 
 void DRW_overlay_private_data_init(DRWOverlayViewportPrivateData *impl) {

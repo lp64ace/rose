@@ -40,7 +40,7 @@ enum {
 };
 
 typedef struct ViewLayerEngineData {
-	struct ViewLayerEngineData *next, *prev;
+	struct ViewLayerEngineData *prev, *next;
 	struct DrawEngineType *engine;
 	void *storage;
 	void (*free)(void *storage);
