@@ -54,7 +54,7 @@ void DRW_overlay_private_data_init(DRWOverlayViewportPrivateData *impl) {
 void DRW_overlay_update_world_ubo(DRWOverlayViewportPrivateData *impl) {
 	OverlayWorldUBO data;
 
-	copy_v4_fl4(data.object_outline_color, 1.0f, 0.5f, 0.25f, 1.0f);
+	copy_v4_fl4(data.object_outline_color, 0.9f, 0.5f, 0.2f, 1.0f);
 	copy_v2_v2(data.viewport_size, DRW_viewport_size_get());
 	copy_v2_v2(data.viewport_size_inv, DRW_viewport_invert_size_get());
 
