@@ -13,6 +13,13 @@ extern "C" {
 /** \name Assigning Operator Types
  * \{ */
 
+void VIEW3D_OT_rotate(wmOperatorType *ot);
+void VIEW3D_OT_pan(wmOperatorType *ot);
+void VIEW3D_OT_zoom(wmOperatorType *ot);
+void VIEW3D_OT_select(wmOperatorType *ot);
+void VIEW3D_OT_reset(wmOperatorType *ot);
+void VIEW3D_OT_select(wmOperatorType *ot);
+
 void view3d_operatortypes();
 
 /** \} */
@@ -20,6 +27,9 @@ void view3d_operatortypes();
 /* -------------------------------------------------------------------- */
 /** \name Operator Key Map
  * \{ */
+
+void view3d_navigate_keymap(struct wmKeyMap *keymap);
+void view3d_select_keymap(struct wmKeyMap *keymap);
 
 void view3d_keymap(struct wmKeyConfig *keyconf);
 
