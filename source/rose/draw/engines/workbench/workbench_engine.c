@@ -39,7 +39,7 @@ ROSE_STATIC void workbench_cache_init(void *vdata) {
 }
 
 ROSE_STATIC void workbench_cache_populate(void *vdata, Object *object) {
-	WorkbenchDrawData *add = (WorkbenchDrawData *)KER_drawdata_get(&object->id, &draw_engine_workbench_type);
+	WorkbenchDrawData *wdd = (WorkbenchDrawData *)KER_drawdata_get(&object->id, &draw_engine_workbench_type);
 
 	DRW_workbench_shadow_cache_populate((DRWWorkbenchData *)vdata, object);
 	DRW_workbench_opaque_cache_populate((DRWWorkbenchData *)vdata, object);
@@ -66,9 +66,6 @@ ROSE_STATIC void workbench_init(void *vdata) {
 	}
 
 	DRWWorkbenchViewportPrivateData *impl = stl->data;
-
-	copy_v3_fl3(impl->shadow_direction_ws, -0.5f, -0.5f, -0.5f);
-	normalize_v3(impl->shadow_direction_ws);
 
 	DefaultTextureList *dtxl = DRW_view_data_texture_list_get(GDrawManager.vdata_engine, GDrawManager.viewport);
 
@@ -102,25 +99,13 @@ ROSE_STATIC void workbench_init(void *vdata) {
 }
 
 ROSE_STATIC void workbench_draw(void *vdata) {
-	DRWWorkbenchViewportFramebufferList *fbl = ((DRWWorkbenchData *)vdata)->fbl;
-	DRWWorkbenchViewportTextureList *txl = ((DRWWorkbenchData *)vdata)->txl;
 	DRWWorkbenchViewportPassList *psl = ((DRWWorkbenchData *)vdata)->psl;
 
 	DRW_draw_pass(psl->depth_pass);
 	DRW_draw_pass(psl->shadow_pass[0]);
 	DRW_draw_pass(psl->shadow_pass[1]);
-
-	/**
-	 * Do the opaque pass, this will also update #psl->opaque_fb to write the #txl->texture_object_id.
-	 */
-	GPU_framebuffer_bind(fbl->opaque_fb);
 	DRW_draw_pass(psl->opaque_pass[0]);
 	DRW_draw_pass(psl->opaque_pass[1]);
-
-	if (psl->outline_pass) {
-		GPU_framebuffer_bind(fbl->color_only_fb);
-		DRW_draw_pass(psl->outline_pass);
-	}
 }
 
 ROSE_STATIC void workbench_free(void) {

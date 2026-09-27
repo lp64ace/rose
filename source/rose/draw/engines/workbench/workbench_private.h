@@ -57,6 +57,7 @@ typedef struct WorkbenchWorldUBO {
 
 	float object_outline_color[4];
 	float shadow_direction_vs[4];
+	float shadow_direction_ws[4];
 
 	float shadow_shift;
 	float shadow_focus;

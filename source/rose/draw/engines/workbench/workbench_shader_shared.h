@@ -13,6 +13,7 @@ struct WorldData {
 	float4 viewport_size;
 	float4 object_outline_color;
 	float4 shadow_direction_vs;
+	float4 shadow_direction_ws;
 
 	float shadow_focus;
 	float shadow_shift;

@@ -1,7 +1,5 @@
 void main() {
-	const vec3 light = vec3(1.0, 1.0, 1.0);
-
-	float factor = dot(normalize(normal), normalize(light));
+	float factor = dot(normal, -worldData.shadow_direction_ws.xyz);
 	
 	if (forceShadowing) {
 		factor = 0.5 * factor;

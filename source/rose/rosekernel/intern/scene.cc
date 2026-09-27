@@ -1,6 +1,7 @@
 #include "MEM_guardedalloc.h"
 
 #include "LIB_ghash.h"
+#include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
 #include "KER_collection.h"
@@ -260,6 +261,8 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	scene->r.cframe = 0;
 	scene->r.eframe = INT_MAX;
 	scene->r.fps = 30;
+
+	copy_v3_fl(scene->light_direction, -0.5f);
 
 	/* Master Collection */
 	scene->master_collection = KER_collection_master_add();

@@ -94,12 +94,10 @@ void DRW_workbench_shadow_data_update(DRWWorkbenchViewportPrivateData *impl, Wor
 
 	/* Turn the light in a way where it's more user friendly to control. */
 	copy_v3_v3(impl->shadow_direction_ws, scene->light_direction);
-	SWAP(float, impl->shadow_direction_ws[2], impl->shadow_direction_ws[1]);
-	impl->shadow_direction_ws[2] = -impl->shadow_direction_ws[2];
-	impl->shadow_direction_ws[0] = -impl->shadow_direction_ws[0];
 
-	/* Shadow direction. */
+	/* Shadow/Light direction. */
 	mul_v3_m4v3(data->shadow_direction_vs, view_matrix, impl->shadow_direction_ws);
+	copy_v3_v3(data->shadow_direction_ws, impl->shadow_direction_ws);
 
 	const float focus = 0.0f;
 	const float shift = 0.1f;
@@ -270,13 +268,13 @@ void DRW_workbench_shadow_cache_populate(DRWWorkbenchData *vdata, Object *object
 		return;
 	}
 
-	WorkbenchDrawData *add = DRW_workbench_drawdata(object);
+	WorkbenchDrawData *wdd = DRW_workbench_drawdata(object);
 
-	if (workbench_shadow_object_cast_visible_shadow(impl, object, add)) {
-		mul_v3_mat3_m4v3(add->shadow_dir, object->invmat, impl->shadow_direction_ws);
+	if (workbench_shadow_object_cast_visible_shadow(impl, object, wdd)) {
+		mul_v3_mat3_m4v3(wdd->shadow_dir, object->invmat, impl->shadow_direction_ws);
 
 		DRWShadingGroup *shgroup;
-		bool use_shadow_pass_technique = !workbench_shadow_camera_in_object_shadow(impl, object, add);
+		bool use_shadow_pass_technique = !workbench_shadow_camera_in_object_shadow(impl, object, wdd);
 
 		/* We cannot use Shadow Pass technique on non-manifold object. */
 		if (use_shadow_pass_technique && !is_manifold) {
@@ -288,25 +286,25 @@ void DRW_workbench_shadow_cache_populate(DRWWorkbenchData *vdata, Object *object
 		if (use_shadow_pass_technique) {
 			shgroup = DRW_shading_subgroup_new(impl->shadow_pass_shgroup[is_manifold]);
 			/** Ready all the required modifier data blocks for rendering on this group. */
-			DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
+			DRW_shading_group_uniform_v3(shgroup, "lightDirection", wdd->shadow_dir, 1);
 			DRW_shading_group_uniform_float(shgroup, "lightDistance", 1e4f);
 			DRW_shading_group_call_ex(shgroup, object, object->obmat, shadow_geometry);
 		}
 		else {
-			float extrude = workbench_shadow_object_shadow_distance(impl, object, add);
+			float extrude = workbench_shadow_object_shadow_distance(impl, object, wdd);
 
 			const bool need_caps = true;
 			if (need_caps) {
 				shgroup = DRW_shading_subgroup_new(impl->shadow_caps_shgroup[is_manifold]);
 				/** Ready all the required modifier data blocks for rendering on this group. */
-				DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
+				DRW_shading_group_uniform_v3(shgroup, "lightDirection", wdd->shadow_dir, 1);
 				DRW_shading_group_uniform_float(shgroup, "lightDistance", extrude);
 				DRW_shading_group_call_ex(shgroup, object, object->obmat, geometry);
 			}
 
 			shgroup = DRW_shading_subgroup_new(impl->shadow_fail_shgroup[is_manifold]);
 			/** Ready all the required modifier data blocks for rendering on this group. */
-			DRW_shading_group_uniform_v3(shgroup, "lightDirection", add->shadow_dir, 1);
+			DRW_shading_group_uniform_v3(shgroup, "lightDirection", wdd->shadow_dir, 1);
 			DRW_shading_group_uniform_float(shgroup, "lightDistance", extrude);
 			DRW_shading_group_call_ex(shgroup, object, object->obmat, shadow_geometry);
 		}

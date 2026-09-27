@@ -79,6 +79,8 @@ void DRW_workbench_opaque_cache_init(DRWWorkbenchData *vdata) {
 				DRW_shading_group_uniform_bool(impl->opaque_shgroup[index], "forceShadowing", (bool)true);
 			} break;
 		}
+
+		DRW_shading_group_uniform_block(impl->opaque_shgroup[index], "worldData", impl->world_ubo);
 	}
 }
 
