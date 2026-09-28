@@ -347,10 +347,21 @@ ROSE_INLINE Base *mouse_select_eval_buffer(ARegion *region, ViewLayer *view_laye
 	return activate_base;
 }
 
+void ED_object_base_active_refresh(Main *bmain, Scene *scene, ViewLayer *view_layer) {
+	DEG_id_tag_update(&scene->id, ID_RECALC_SELECT);
+}
+
+void ED_object_base_activate(rContext *C, Base *base) {
+	Scene *scene = CTX_data_scene(C);
+	ViewLayer *view_layer = CTX_data_view_layer(C);
+	view_layer->active = base;
+	ED_object_base_active_refresh(CTX_data_main(C), scene, view_layer);
+}
+
 int ED_object_select_pick(rContext *C, GPUSelectResult *buffer, size_t maxlen, int x, int y, int radius, const SelectPick_Params *params) {
 	Depsgraph *depsgraph = CTX_data_ensure_evaluated_depsgraph(C);
 
-	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
+	ViewLayer *view_layer = CTX_data_view_layer(C);
 	ARegion *region = CTX_wm_region(C);
 	View3D *v3d = CTX_wm_space_view3d(C);
 
@@ -398,6 +409,7 @@ int ED_object_select_pick(rContext *C, GPUSelectResult *buffer, size_t maxlen, i
 					break;
 				case SEL_OP_XOR:
 					if ((new_base->flag & BASE_SELECTED)) {
+						/* Keep selected if the base is to be activated. */
 						ED_object_base_select(new_base, BA_DESELECT);
 					}
 					else {
@@ -413,6 +425,15 @@ int ED_object_select_pick(rContext *C, GPUSelectResult *buffer, size_t maxlen, i
 					break;
 			}
 		}
+
+		changed = true;
+	}
+
+	ED_object_base_activate(C, new_base);
+
+	if (changed) {
+		Scene *scene = CTX_data_scene(C);
+		DEG_id_tag_update(&scene->id, ID_RECALC_SELECT);
 	}
 
 	struct WindowManager *wm = CTX_wm_manager(C);

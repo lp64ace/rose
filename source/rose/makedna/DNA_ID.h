@@ -233,6 +233,11 @@ enum {
 
 	/* Runs on frame-change (used for seeking audio too). */
 	ID_RECALC_FRAME_CHANGE = (1 << 4),
+	/**
+	 * Selection of the ID itself or its components (for example, vertices) did
+	 * change, and all the drawing data is to be updated.
+	 */
+	ID_RECALC_SELECT = (1 << 5),
 
 	/**
 	 * Update copy on write component.
@@ -240,7 +245,7 @@ enum {
 	 * This is most generic tag which should only be used when nothing else
 	 * matches.
 	 */
-	ID_RECALC_COPY_ON_WRITE = (1 << 5),
+	ID_RECALC_COPY_ON_WRITE = (1 << 6),
 
 	/* Identifies that SOMETHING has been changed in this ID. */
 	ID_RECALC_ALL = ~(0),

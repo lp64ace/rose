@@ -49,6 +49,32 @@ void depsgraph_geometry_tag_to_component(const ID *id, NodeType *component_type)
 	}
 }
 
+void depsgraph_select_tag_to_component_opcode(const ID *id, NodeType *component_type, OperationCode *operation_code) {
+	const ID_Type id_type = GS(id->name);
+	if (id_type == ID_SCE) {
+		/**
+		 * We need to flush base flags to all objects in a scene since we
+		 * don't know which ones changed. However, we don't want to update
+		 * the whole scene, so pick up some operation which will do as less
+		 * as possible.
+		 *
+		 * TODO(sergey): We can introduce explicit exit operation which
+		 * does nothing and which is only used to cascade flush down the
+		 * road.
+		 */
+		*component_type = NodeType::LAYER_COLLECTIONS;
+		*operation_code = OperationCode::VIEW_LAYER_EVAL;
+	}
+	else if (id_type == ID_OB) {
+		*component_type = NodeType::OBJECT_FROM_LAYER;
+		*operation_code = OperationCode::OBJECT_FROM_LAYER_ENTRY;
+	}
+	else {
+		*component_type = NodeType::COPY_ON_WRITE;
+		*operation_code = OperationCode::COPY_ON_WRITE;
+	}
+}
+
 int deg_recalc_flags_for_legacy_zero() {
 	return ID_RECALC_ALL & ~(ID_RECALC_ANIMATION | ID_RECALC_FRAME_CHANGE);
 }
@@ -111,6 +137,9 @@ void depsgraph_tag_to_component_opcode(const ID *id, int recalc, NodeType *compo
 			break;
 		case ID_RECALC_PARAMETERS:
 			*component_type = NodeType::PARAMETERS;
+			break;
+		case ID_RECALC_SELECT:
+			depsgraph_select_tag_to_component_opcode(id, component_type, operation_code);
 			break;
 		case ID_RECALC_COPY_ON_WRITE:
 			*component_type = NodeType::COPY_ON_WRITE;
