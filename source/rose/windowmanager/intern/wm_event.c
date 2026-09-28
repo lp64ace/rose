@@ -1170,9 +1170,22 @@ ROSE_STATIC void wm_event_prev_values_set(wmEvent *evt, wmEvent *event_state) {
 	evt->prev_type = event_state->prev_type = event_state->type;
 }
 
+ROSE_STATIC bool wm_event_drag_test_with_delta(const wmEvent *event, const int drag_delta[2]) {
+	return abs(drag_delta[0]) > 4 || abs(drag_delta[1]) > 4;
+}
+
+ROSE_STATIC bool wm_event_drag_test(const wmEvent *event, const int prev_xy[2]) {
+	int drag_delta[2];
+	sub_v2_v2v2_int(drag_delta, prev_xy, event->mouse_xy);
+	return wm_event_drag_test_with_delta(event, drag_delta);
+}
+
 ROSE_STATIC bool wm_event_is_double_click(wmEvent *evt, const double event_time, const double prev_press_event_time) {
 	if ((evt->type == evt->prev_type) && (evt->prev_value == KM_RELEASE) && (evt->value == KM_PRESS)) {
-		if ((event_time - prev_press_event_time) < 0.25) {
+		if (ISMOUSE(evt->type) && wm_event_drag_test(evt, evt->prev_press_xy)) {
+			/* Pass. */
+		}
+		else if ((event_time - prev_press_event_time) < 0.25) {
 			return true;
 		}
 	}
