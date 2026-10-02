@@ -40,7 +40,7 @@ void view3d_keymap(struct wmKeyConfig *keyconf);
  * \{ */
 
 struct RegionView3D *ED_view3d_region_view_init(struct ARegion *v3d, struct RegionView3D *rv3d);
-void ED_view3d_draw_setup_view(struct ARegion *v3d, const float viewmat[4][4], const float winmat[4][4], struct rcti *rect);
+void ED_view3d_draw_setup_view(struct ARegion *v3d, const float viewmat[4][4], const float winmat[4][4], const struct rcti *rect);
 
 /** \} */
 
