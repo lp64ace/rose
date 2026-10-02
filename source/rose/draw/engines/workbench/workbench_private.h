@@ -15,7 +15,9 @@
 struct DRWShadingGroup;
 struct ModifierData;
 struct Object;
+struct GPUFrameBuffer;
 struct GPUShader;
+struct GPUTexture;
 struct GPUUniformBuf;
 
 #ifdef __cplusplus

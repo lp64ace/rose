@@ -8,7 +8,9 @@
 #include "DRW_render.h"
 
 struct DRWPass;
+struct GPUFrameBuffer;
 struct GPUShader;
+struct GPUTexture;
 struct Object;
 
 #ifdef __cplusplus
