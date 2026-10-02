@@ -21,6 +21,7 @@
 #include "KER_mesh.h"
 #include "KER_modifier.h"
 #include "KER_object.h"
+#include "KER_report.h"
 #include "KER_rose.h"
 #include "KER_rosefile.h"
 #include "KER_scene.h"
@@ -248,28 +249,20 @@ ROSE_INLINE void wm_handle_key_up_event(struct GTKWindow *handle, int key, float
 /** \name Init & Exit Methods
  * \{ */
 
-extern const int datatoc_sarah_fbx_size;
-extern const char datatoc_sarah_fbx[];
-
-extern const int datatoc_skeleton_fbx_size;
-extern const char datatoc_skeleton_fbx[];
-
 ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window) {
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-
-	FBX_import_memory(C, datatoc_sarah_fbx, datatoc_sarah_fbx_size, 1.0f);
 }
 
 void WM_keyconfig_init(rContext *C) {
 	WindowManager *wm = CTX_wm_manager(C);
 
-	if (wm->runtime.defaultconf == NULL) {
-		wm->runtime.defaultconf = WM_keyconfig_new(wm, "Rose");
+	if (wm->runtime->defaultconf == NULL) {
+		wm->runtime->defaultconf = WM_keyconfig_new(wm, "Rose");
 	}
 
-	ED_spacetypes_keymap(wm->runtime.defaultconf);
+	ED_spacetypes_keymap(wm->runtime->defaultconf);
 }
 
 ROSE_INLINE void wm_init_manager(rContext *C, struct Main *main) {
@@ -351,8 +344,6 @@ void WM_exit(rContext *C) {
 	KER_rose_globals_clear();
 	KER_rose_userdef_clear();
 
-	DRW_engines_free();
-
 	RFT_exit();
 
 	RNA_exit();
@@ -373,7 +364,7 @@ void WM_exit(rContext *C) {
 char *WM_clipboard_text_get_firstline(rContext *C, bool selection, unsigned int *r_len) {
 	WindowManager *wm = CTX_wm_manager(C);
 
-	char *ret;
+	char *ret = NULL;
 	if (!GTK_get_clipboard(wm->handle, &ret, r_len, selection)) {
 		MEM_SAFE_FREE(ret);
 	}
@@ -407,11 +398,34 @@ float WM_time(rContext *C) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Window Manage Runtime
+ * \{ */
+
+void WM_manager_runtime_init(WindowManager *manager) {
+	WindowManager_Runtime *runtime = MEM_callocN(sizeof(WindowManager_Runtime), "WindowManager_Runtime");
+	KER_reports_init(&runtime->reports, RPT_STORE);
+	manager->runtime = runtime;
+}
+
+void WM_manager_runtime_free(WindowManager *manager) {
+	if (manager->runtime) {
+		WindowManager_Runtime *runtime = manager->runtime;
+		KER_reports_free(&runtime->reports);
+		MEM_freeN(runtime);
+	}
+	manager->runtime = NULL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name WindowManager Data-block definition
  * \{ */
 
 ROSE_INLINE void window_manager_init_data(struct ID *id) {
 	WindowManager *wm = (WindowManager *)id;
+
+	WM_manager_runtime_init(wm);
 
 	wm->handle = GTK_window_manager_new(GTK_WINDOW_MANAGER_NONE);
 	if (!wm->handle) {
@@ -429,16 +443,22 @@ ROSE_INLINE void window_manager_free_data(struct ID *id) {
 	}
 
 	wmOperator *op;
-	while ((op = LIB_pophead(&wm->runtime.operators))) {
+	while ((op = LIB_pophead(&wm->runtime->operators))) {
 		WM_operator_free(op);
 	}
 
 	wmKeyConfig *keyconf;
-	while ((keyconf = LIB_pophead(&wm->runtime.keyconfigs))) {
+	while ((keyconf = LIB_pophead(&wm->runtime->keyconfigs))) {
 		WM_keyconfig_free(keyconf);
 	}
 
+	DRW_render_context_enable();
+
+	DRW_engines_free();
+
 	DRW_render_context_destroy(wm);
+
+	WM_manager_runtime_free(wm);
 
 	if (wm->handle) {
 		GTK_window_manager_free(wm->handle);

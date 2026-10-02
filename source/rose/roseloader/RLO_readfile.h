@@ -48,6 +48,10 @@ enum {
 	FD_FLAG_HAS_INVALID_ID_NAMES = 1 << 5,
 };
 
+enum {
+	ROSE_READ_USERDEF = 1 << 0,
+};
+
 struct RoseFileData *RLO_read_from_file(const char *filepath, int flag);
 // struct RoseFileData *RLO_read_from_memory(const void *memory, size_t length, int flag);
 

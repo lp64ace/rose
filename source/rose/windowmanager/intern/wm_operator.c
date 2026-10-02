@@ -10,6 +10,7 @@
 #include "KER_idprop.h"
 #include "KER_global.h"
 #include "KER_main.h"
+#include "KER_report.h"
 
 #include "LIB_string.h"
 
@@ -80,6 +81,7 @@ wmOperatorType *WM_operatortype_find(const char *idname, bool quiet) {
 
 	if (!quiet) {
 		fprintf(stderr, "[WindowManager] Search for unkown operator \"%s\".\n", idname);
+		ROSE_assert_unreachable();
 	}
 
 	return NULL;
@@ -148,6 +150,12 @@ void WM_operator_free(wmOperator *op) {
 
 	if (op->properties) {
 		IDP_FreeProperty(op->properties);
+	}
+
+	if (op->reports && (op->reports->flag & RPT_FREE)) {
+		KER_reports_free(op->reports);
+		MEM_freeN(op->reports);
+		op->reports = NULL;
 	}
 
 	MEM_SAFE_FREE(op->customdata);

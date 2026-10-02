@@ -38,7 +38,7 @@ public:
 	virtual void bind_as_ssbo(unsigned int binding) = 0;
 	virtual void bind_as_texture(unsigned int binding) = 0;
 
-	VertBuf *duplicate();
+	void copy(const VertBuf *source, bool force_generate = true);
 
 	size_t size_alloc_get() const;
 	size_t size_used_get() const;
@@ -59,7 +59,7 @@ protected:
 	virtual void resize_data() = 0;
 	virtual void release_data() = 0;
 	virtual void upload_data() = 0;
-	virtual void duplicate_data(VertBuf *dst) = 0;
+	virtual void duplicate_data(VertBuf *dst, bool force_generate = true) const = 0;
 };
 
 /* Syntactic sugar. */

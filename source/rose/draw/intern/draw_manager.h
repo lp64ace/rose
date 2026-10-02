@@ -33,6 +33,7 @@ typedef struct DRWManager {
 	struct ViewLayer *view_layer;
 
 	float size[2];
+	float inv_size[2];
 
 	/**
 	 * \brief The native system rendering context, see WM_render_*!
@@ -48,9 +49,17 @@ typedef struct DRWManager {
 	DRWResourceHandle resource_handle;
 	DRWResourceHandle objcache_handle;
 	DRWResourceHandle pass_handle;
+	unsigned int selectid;
 } DRWManager;
 
 extern DRWManager GDrawManager;
+
+typedef struct DRWSelectBuffer {
+	struct GPUFrameBuffer *framebuffer_depth_only;
+	struct GPUTexture *texture_depth;
+} DRWSelectBuffer;
+
+extern DRWSelectBuffer GSelectBuffer;
 
 typedef struct DRWGlobal {
 	struct GPUUniformBuf *view;

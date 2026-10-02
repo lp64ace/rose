@@ -26,6 +26,8 @@ set(SRC
 	view3d_navigate.c
 	view3d_navigate.h
 	view3d_ops.c
+	view3d_project.c
+	view3d_select.c
 	
 )
 
@@ -42,6 +44,7 @@ set(LIB
 	rose::source::rna
 	rose::source::windowmanager
 	rose::source::editors::interface
+	rose::source::editors::object
 	
 	# External Library Dependencies
 	

@@ -81,11 +81,6 @@ ROSE_STATIC GPUVertFormat *extract_weights_format() {
 	return &format;
 }
 
-struct MDeformDeviceData {
-	int4 defgroup = int4(0, 0, 0, 0);
-	float4 weight = float4(0, 0, 0, 0);
-};
-
 void extract_weights_mesh_ubo(const Object *obarmature, const Object *obtarget, const Mesh *metarget, DVertGroupMatrices *r_ubo_data) {
 	const ListBase *defbase = NULL;
 	if (metarget) {
@@ -194,5 +189,5 @@ void extract_matrices(const Object *obarmature, const Object *obtarget, const Me
 	ubo_data.drw_TargetToArmature = float4x4::identity();
 
 	extract_weights_mesh_ubo(obarmature, obtarget, mesh, &ubo_data);
-	GPU_uniformbuf_update(ubo, &ubo_data);
+	GPU_uniformbuf_update_ex(ubo, &ubo_data, sizeof(ubo_data));
 }

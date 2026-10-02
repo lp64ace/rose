@@ -49,7 +49,7 @@ ROSE_STATIC Base *object_base_new(Object *object) {
 	Base *base = MEM_callocN(sizeof(Base), "Object Base");
 	base->object = object;
 	base->local_view_bits = ~0u;
-	if ((object->flag & OBJECT_SELECTED) != 0) {
+	if ((object->flag_base & BASE_SELECTED) != 0) {
 		base->flag |= BASE_SELECTED;
 	}
 	return base;
@@ -288,6 +288,16 @@ void KER_view_layer_free_ex(ViewLayer *view_layer, bool us) {
 	}
 	LIB_freelistN(&view_layer->layer_collections);
 
+	LISTBASE_FOREACH(ViewLayerEngineData *, sled, &view_layer->drawdata) {
+		if (sled->storage) {
+			if (sled->free) {
+				sled->free(sled->storage);
+			}
+			MEM_freeN(sled->storage);
+		}
+	}
+	LIB_freelistN(&view_layer->drawdata);
+
 	MEM_SAFE_FREE(view_layer->object_bases_array);
 	MEM_freeN(view_layer);
 }
@@ -313,6 +323,23 @@ ROSE_STATIC bool find_scene_collection_in_scene_collections(ListBase *lb, const 
 		}
 	}
 	return false;
+}
+
+Base **KER_view_layer_array_from_bases(ViewLayer *view_layer, View3D *v3d, size_t *r_bases_length) {
+	size_t length = LIB_listbase_count(&view_layer->bases);
+
+	Base **bases = MEM_mallocN(sizeof(Base) * length, __func__);
+
+	size_t index;
+	LISTBASE_FOREACH_INDEX(Base *, base, &view_layer->bases, index) {
+		bases[index] = base;
+	}
+
+	if (r_bases_length) {
+		*r_bases_length = length;
+	}
+
+	return bases;
 }
 
 Base *KER_view_layer_base_find(ViewLayer *view_layer, Object *object) {

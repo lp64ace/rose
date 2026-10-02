@@ -106,6 +106,8 @@ FileSelectParams *ED_fileselect_ensure_active_params(SpaceFile *file) {
 		if (is_filepath && RNA_struct_property_is_set_ex(op->ptr, "filepath", false)) {
 			char filepath[FILE_MAX];
 			RNA_string_get(op->ptr, "filepath", filepath);
+
+			LIB_path_split_dir_file(filepath, params->dir, ARRAY_SIZE(params->dir), params->file, ARRAY_SIZE(params->file));
 		}
 		else {
 			if (is_directory && RNA_struct_property_is_set_ex(op->ptr, "directory", false)) {
@@ -248,6 +250,8 @@ void ED_fileselect_change_dir_ex(rContext *C, ScrArea *area) {
 	FileSelectParams *params = ED_fileselect_get_active_params(sfile);
 	if (params) {
 		WindowManager *wm = CTX_wm_manager(C);
+		ED_fileselect_clear(wm, sfile);
+
 		if (!filelist_is_dir(sfile->files, params->dir)) {
 			LIB_strcpy(params->dir, ARRAY_SIZE(params->dir), filelist_dir(sfile->files));
 			/* could return but just refresh the current dir */

@@ -17,7 +17,7 @@ TEST(IDRemap, Unlink) {
 
 	Main *main = KER_main_new();
 	do {
-		WindowManager *wm = reinterpret_cast<WindowManager *>(KER_libblock_alloc(main, ID_WM, "WindowManager", 0));
+		WindowManager *wm = reinterpret_cast<WindowManager *>(KER_id_new(main, ID_WM, "WindowManager"));
 		wmWindow *win;
 		EXPECT_NE(wm, nullptr);
 		LIB_addtail(&wm->windows, win = reinterpret_cast<wmWindow *>(MEM_mallocN(sizeof(wmWindow), "wmWindow")));
@@ -37,7 +37,7 @@ TEST(IDRemap, UnlinkMultiple) {
 
 	Main *main = KER_main_new();
 	do {
-		WindowManager *wm = reinterpret_cast<WindowManager *>(KER_libblock_alloc(main, ID_WM, "WindowManager", 0));
+		WindowManager *wm = reinterpret_cast<WindowManager *>(KER_id_new(main, ID_WM, "WindowManager"));
 		wmWindow *win1, *win2;
 		EXPECT_NE(wm, nullptr);
 		LIB_addtail(&wm->windows, win1 = reinterpret_cast<wmWindow *>(MEM_mallocN(sizeof(wmWindow), "wmWindow")));

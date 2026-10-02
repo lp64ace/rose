@@ -109,8 +109,10 @@ enum class NodeType {
 	EVAL_POSE,
 	/* Bone Component - Child/Subcomponent of Pose */
 	BONE,
-	/* Duplication system. Used to force duplicated objects visible when
-	 * when duplicator is visible. */
+	/**
+	 * Duplication system. Used to force duplicated objects visible when
+	 * when duplicator is visible.
+	 */
 	DUPLI,
 	/* Synchronization back to original datablock. */
 	SYNCHRONIZATION,

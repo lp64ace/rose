@@ -14,6 +14,7 @@
 #include "KER_layer.h"
 #include "KER_main.h"
 #include "KER_mesh.h"
+#include "KER_modifier.h"
 #include "KER_scene.h"
 #include "KER_object.h"
 
@@ -22,6 +23,7 @@
 #include "GPU_matrix.h"
 #include "GPU_framebuffer.h"
 #include "GPU_viewport.h"
+#include "GPU_select.h"
 #include "GPU_state.h"
 
 #include "LIB_listbase.h"
@@ -39,11 +41,16 @@
 #include "draw_engine.h"
 #include "draw_instance_data.h"
 #include "draw_manager.h"
+#include "draw_modifiers.h"
 
-#include "engines/alice/alice_engine.h"
+#include "engines/select/select_engine.h"
 #include "engines/basic/basic_engine.h"
+#include "engines/workbench/workbench_engine.h"
 #include "engines/overlay/overlay_engine.h"
+
 #include "shaders/draw_shader_shared.h"
+
+#include <stdio.h>
 
 struct Object;
 
@@ -54,11 +61,13 @@ struct Object;
 ListBase GEngineList;
 
 DRWManager GDrawManager;
+DRWSelectBuffer GSelectBuffer;
 DRWGlobal GDraw;
 
 void DRW_engines_register(void) {
-	// DRW_engine_register(&draw_engine_basic_type);
-	DRW_engine_register(&draw_engine_alice_type);
+	DRW_engine_register(&draw_engine_select_type);
+	DRW_engine_register(&draw_engine_basic_type);
+	DRW_engine_register(&draw_engine_workbench_type);
 	DRW_engine_register(&draw_engine_overlay_type);
 
 	{
@@ -76,6 +85,10 @@ void DRW_engines_free(void) {
 			engine->engine_free();
 		}
 	}
+
+	GPU_TEXTURE_FREE_SAFE(GSelectBuffer.texture_depth);
+	GPU_FRAMEBUFFER_FREE_SAFE(GSelectBuffer.framebuffer_depth_only);
+
 	LIB_listbase_clear(&GEngineList);
 }
 
@@ -89,10 +102,6 @@ DrawEngineType *DRW_engine_find(const char *name) {
 		engine = LIB_findstr(&GEngineList, "ROSE_BASIC", offsetof(DrawEngineType, name));
 	}
 	return engine;
-}
-
-DrawEngineType *DRW_engine_type(const rContext *C, struct Scene *scene) {
-	return DRW_engine_find(U.engine);
 }
 
 /** \} */
@@ -226,8 +235,15 @@ ROSE_STATIC void DRW_engine_use(DrawEngineType *engine_type) {
 }
 
 ROSE_STATIC bool DRW_engine_used(DrawEngineType *engine_type) {
-	return DRW_view_data_engine_data_get(GDrawManager.vdata_engine, engine_type) != NULL;
+	ViewportEngineData *engine = DRW_view_data_engine_data_get(GDrawManager.vdata_engine, engine_type);
+	if (engine != NULL) {
+		return (engine->flag & DRW_ENGINE_DATA_ENABLED) != 0;
+	}
+	return false;
 }
+
+void DRW_engines_enable_required(ViewLayer *view_layer, DrawEngineType *draw_engine_type);
+void DRW_engines_disable(void);
 
 // Called once before starting rendering using our (used/active) draw engines
 void DRW_engines_init(Depsgraph *depsgraph) {
@@ -376,6 +392,17 @@ ROSE_STATIC void draw_viewport_data_reset(DRWData *ddata) {
 	DRW_instance_data_list_reset(ddata->ibuffers);
 }
 
+void DRW_engines_enable_required(ViewLayer *view_layer, DrawEngineType *draw_engine_type) {
+	DRW_engine_use(draw_engine_type);
+	DRW_engine_use(&draw_engine_overlay_type);
+}
+
+void DRW_engines_disable(void) {
+	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
+		vdata->flag &= ~DRW_ENGINE_DATA_ENABLED;
+	}
+}
+
 ROSE_INLINE void draw_frustum_boundbox_calc(const float viewinv[4][4], const float projmat[4][4], BoundBox *r_box) {
 	float left, right, bottom, top, near, far;
 
@@ -417,6 +444,13 @@ ROSE_INLINE void draw_frustum_culling_planes_calc(const float persmat[4][4], flo
 	}
 }
 
+ROSE_INLINE void draw_manager_viewport_size_set(DRWManager *manager, const int size[2]) {
+	manager->size[0] = size[0];
+	manager->size[1] = size[1];
+	manager->inv_size[0] = 1.0f / size[0];
+	manager->inv_size[1] = 1.0f / size[1];
+}
+
 void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene *scene, struct ViewLayer *view_layer, GPUViewport *viewport, const int size[2]) {
 	manager->viewport = viewport;
 	manager->scene = scene;
@@ -436,12 +470,10 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 
 	if (viewport) {
 		GPUTexture *texture = GPU_viewport_color_texture(viewport, view);
-		manager->size[0] = GPU_texture_width(texture);
-		manager->size[1] = GPU_texture_height(texture);
+		draw_manager_viewport_size_set(manager, (const int[2]){GPU_texture_width(texture), GPU_texture_height(texture)});
 	}
 	else {
-		manager->size[0] = 1.0f;
-		manager->size[1] = 1.0f;
+		draw_manager_viewport_size_set(manager, size);
 	}
 
 	manager->vdata_engine = manager->vdata_pool->vdata_engine[view];
@@ -450,11 +482,6 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 
 	if (viewport) {
 		DRW_view_data_default_lists_from_viewport(manager->vdata_engine, viewport);
-	}
-
-	// We should enable the needed engines!
-	LISTBASE_FOREACH(ViewportEngineData *, vdata, &manager->vdata_engine->viewport_engine_data) {
-		DRW_engine_use(vdata->engine);
 	}
 
 	ViewInfos *storage = &GDrawManager.vdata_engine->storage;
@@ -504,12 +531,17 @@ void DRW_manager_init(DRWManager *manager, struct ARegion *region, struct Scene 
 }
 
 void DRW_manager_exit(DRWManager *manager) {
+	/** Disable the engines that were used! */
+	DRW_engines_disable();
+
 	if (manager->viewport) {
 		// The data are persistent within the viewport, see the #GPU_viewport_free function!
 	}
 	else {
 		DRW_viewport_data_free(manager->vdata_pool);
 	}
+
+	GPU_framebuffer_restore();
 }
 
 /** \} */
@@ -521,14 +553,19 @@ void DRW_manager_exit(DRWManager *manager) {
 void DRW_render_context_create(struct WindowManager *wm) {
 	ROSE_assert(GDrawManager.render == NULL);
 
-	GDrawManager.mutex = LIB_mutex_alloc();
-	GDrawManager.render = WM_render_context_create(wm);
-	GDrawManager.context = GPU_context_create(NULL, GDrawManager.render);
-	
-	wm_window_reset_drawable(wm);
+	if (GDrawManager.render == NULL) {
+		GDrawManager.mutex = LIB_mutex_alloc();
+		GDrawManager.render = WM_render_context_create(wm);
+		GDrawManager.context = GPU_context_create(NULL, GDrawManager.render);
+		wm_window_reset_drawable(wm);
+	}
+
+	DRW_modifier_init();
 }
 
 void DRW_render_context_destroy(struct WindowManager *wm) {
+	DRW_modifier_exit();
+
 	if (GDrawManager.render != NULL) {
 		WM_render_context_activate(GDrawManager.render);
 		GPU_context_active_set(GDrawManager.context);
@@ -536,6 +573,7 @@ void DRW_render_context_destroy(struct WindowManager *wm) {
 		WM_render_context_destroy(wm, GDrawManager.render);
 		LIB_mutex_free(GDrawManager.mutex);
 	}
+	GDrawManager.render = NULL;
 }
 
 void DRW_render_context_enable() {
@@ -569,6 +607,21 @@ void DRW_render_context_disable_ex(bool restore) {
  * Draw Away!
  * \{ */
 
+#ifndef NDEBUG
+ROSE_INLINE void draw_object_modifier_list_debug_check(Object *object) {
+	LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
+		if (md == (ModifierData *)object->modifiers.last) {
+			continue;
+		}
+
+		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			/** Only the last modifier can be applied on device, the rest must be applied on the host. */
+			ROSE_assert_unreachable();
+		}
+	}
+}
+#endif
+
 ROSE_STATIC void drw_engine_cache_init(void) {
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		if (!DRW_engine_used(vdata->engine)) {
@@ -596,11 +649,45 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 		}
 	}
 
-	// @TODO assign a different thread to generate these!
+	ModifierData *md = (ModifierData *)object->modifiers.last;
+
+	if (draw_modifier_is_device(md)) {
+		/**
+		 * Finally since the modifier is tagged by the user to be built on the device,
+		 * we force cache population for it on device.
+		 *
+		 * \note Not all modifiers are allowed to be computed on device, unsupported modifiers will be ignored.
+		 */
+		draw_modifier_cache_populate(md, object);
+	}
+
+	/**
+	 * @TODO assign a different thread to generate these!
+	 * \note Device modifiers depend on these!
+	 */
 	DRW_batch_cache_generate(object);
+
+#ifndef NDEBUG
+	draw_object_modifier_list_debug_check(object);
+#endif
+
+	// Remember us motherfucker, we are still waiting for modifier overrides, calculate them here!
+	if (!LIB_listbase_is_empty(&object->modifiers)) {
+		ModifierData *md = (ModifierData *)object->modifiers.last;
+
+		if (draw_modifier_is_device(md)) {
+			/**
+			 * Finally since the modifier is tagged by the user to be built on the device,
+			 * we force built it on device.
+			 *
+			 * \note Not all modifiers are allowed to be computed on device, unsupported modifiers will be ignored.
+			 */
+			draw_modifier_cache_build(md, object);
+		}
+	}
 }
 
-ROSE_STATIC void drw_engine_cache_finish(void) {
+ROSE_STATIC void drw_engine_cache_finish(ListBase *bases) {
 	// @TODO wait for any threads that have beed dispatched by #drw_engine_cache_populate
 
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
@@ -617,10 +704,6 @@ ROSE_STATIC void drw_engine_cache_finish(void) {
 }
 
 ROSE_STATIC void drw_engine_draw_scene(void) {
-	DefaultFramebufferList *dfbl = &GDrawManager.vdata_engine->dfbl;
-
-	GPU_framebuffer_bind(dfbl->default_fb);
-
 	LISTBASE_FOREACH(ViewportEngineData *, vdata, &GDrawManager.vdata_engine->viewport_engine_data) {
 		if (!DRW_engine_used(vdata->engine)) {
 			continue;
@@ -630,8 +713,6 @@ ROSE_STATIC void drw_engine_draw_scene(void) {
 			vdata->engine->draw(vdata);
 		}
 	}
-
-	GPU_framebuffer_restore();
 }
 
 void DRW_render_instance_buffer_finish(void) {
@@ -648,8 +729,11 @@ void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct G
 	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
 
 	DRW_manager_init(&GDrawManager, region, scene, view_layer, viewport, NULL);
-	DRW_engines_init(depsgraph);
 
+	DrawEngineType *draw_engine_type = DRW_engine_find(U.engine);
+
+	DRW_engines_enable_required(view_layer, draw_engine_type);
+	DRW_engines_init(depsgraph);
 	drw_engine_cache_init();
 
 	// We really ough to make a Dependency Graph to iterate the objects in order!
@@ -658,13 +742,94 @@ void DRW_draw_render_loop(Depsgraph *depsgraph, struct ARegion *region, struct G
 	}
 
 	DRW_engines_exit(depsgraph);
-	DRW_manager_exit(&GDrawManager);
 
-	drw_engine_cache_finish();
-
+	drw_engine_cache_finish(&view_layer->bases);
 	DRW_render_instance_buffer_finish();
 
+	GPU_framebuffer_bind(GDrawManager.vdata_engine->dfbl.default_fb);
+
 	drw_engine_draw_scene();
+
+	DRW_manager_exit(&GDrawManager);
+}
+
+ROSE_INLINE void drw_select_framebuffer_depth_only_setup(const int size[2]) {
+	if (GSelectBuffer.framebuffer_depth_only == NULL) {
+		GSelectBuffer.framebuffer_depth_only = GPU_framebuffer_create("SelectFramebuffer");
+	}
+
+	if ((GSelectBuffer.texture_depth != NULL) && (GPU_texture_width(GSelectBuffer.texture_depth) != size[0] || GPU_texture_height(GSelectBuffer.texture_depth) != size[1])) {
+		GPU_texture_free(GSelectBuffer.texture_depth);
+		GSelectBuffer.texture_depth = NULL;
+	}
+
+	if (GSelectBuffer.texture_depth == NULL) {
+		GSelectBuffer.texture_depth = GPU_texture_create_2d("SelectDepth", size[0], size[1], 1, GPU_DEPTH_COMPONENT24, GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
+
+		GPU_framebuffer_texture_attach(GSelectBuffer.framebuffer_depth_only, GSelectBuffer.texture_depth, 0, 0);
+		GPU_framebuffer_check_valid(GSelectBuffer.framebuffer_depth_only, NULL);
+	}
+}
+
+void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, const rcti *rect, fnSelectPass select_pass_fn, void *select_pass_user_data, fnObjectFilter object_filter_fn, void *object_filter_user_data) {
+	Scene *scene = DEG_get_evaluated_scene(depsgraph);
+	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
+
+	const int viewport_size[2] = {LIB_rcti_size_x(rect), LIB_rcti_size_y(rect)};
+
+	DRW_manager_init(&GDrawManager, region, scene, view_layer, NULL, viewport_size);
+	DRW_engine_use(&draw_engine_select_type);
+	DRW_engines_init(depsgraph);
+
+	/* Setup frame-buffer. */
+	drw_select_framebuffer_depth_only_setup(viewport_size);
+
+	GPU_framebuffer_bind(GSelectBuffer.framebuffer_depth_only);
+	GPU_framebuffer_clear_depth(GSelectBuffer.framebuffer_depth_only, 1.0f);
+
+	ROSE_assert(GDrawManager.vdata_engine->dtxl.depth == NULL);
+	GDrawManager.vdata_engine->dtxl.depth = GSelectBuffer.texture_depth;
+
+	drw_engine_cache_init();
+
+	// We really ough to make a Dependency Graph to iterate the objects in order!
+	LISTBASE_FOREACH(struct Base *, base, &view_layer->bases) {
+		if (object_filter_fn(base->object, object_filter_user_data) == false) {
+			continue;
+		}
+
+		Object *object = base->object;
+
+		/* Depsgraph usually does this, but we use a different iterator. So we have to do it manually. */
+		object->runtime.select_id = DEG_get_original_object(object)->runtime.select_id;
+
+		DRW_select_load_id(object->runtime.select_id);
+
+		drw_engine_cache_populate(object);
+	}
+
+	DRW_engines_exit(depsgraph);
+
+	drw_engine_cache_finish(&view_layer->bases);
+
+	DRW_render_instance_buffer_finish();
+	
+	/* Only 1-2 passes. */
+	while (true) {
+		if (!select_pass_fn(DRW_SELECT_PASS_PRE, select_pass_user_data)) {
+			break;
+		}
+
+		drw_engine_draw_scene();
+
+		if (!select_pass_fn(DRW_SELECT_PASS_POST, select_pass_user_data)) {
+			break;
+		}
+	}
+
+	GDrawManager.vdata_engine->dtxl.depth = NULL;
+
+	DRW_manager_exit(&GDrawManager);
 }
 
 void DRW_draw_view(const rContext *C) {

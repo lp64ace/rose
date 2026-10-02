@@ -3,7 +3,9 @@
 #include "overlay_private.h"
 
 typedef struct DRWOverlayShaderList {
+	GPUShader *geometry_prepass;
 	GPUShader *armature_shape_solid;
+	GPUShader *outline;
 } DRWOverlayShaderList;
 
 static DRWOverlayShaderList GOverlayShaderList;
@@ -24,6 +26,20 @@ void DRW_overlay_shader_instance_formats_free() {
 			MEM_SAFE_FREE(format_array[index]);
 		}
 	}
+}
+
+GPUShader *DRW_overlay_shader_geometry_prepass_get() {
+	if (GOverlayShaderList.geometry_prepass == NULL) {
+		GOverlayShaderList.geometry_prepass = GPU_shader_create_from_info_name("overlay_geometry_prepass_mesh");
+	}
+	return GOverlayShaderList.geometry_prepass;
+}
+
+GPUShader *DRW_overlay_shader_outline_get() {
+	if (GOverlayShaderList.outline == NULL) {
+		GOverlayShaderList.outline = GPU_shader_create_from_info_name("overlay_outline");
+	}
+	return GOverlayShaderList.outline;
 }
 
 GPUShader *DRW_overlay_shader_armature_shape() {

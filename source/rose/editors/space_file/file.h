@@ -52,6 +52,14 @@ void ED_folder_history_list_free(struct SpaceFile *file);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name File List
+ * \{ */
+
+void ED_fileselect_clear(struct WindowManager *wm, struct SpaceFile *sfile);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name File Select Params
  * \{ */
 

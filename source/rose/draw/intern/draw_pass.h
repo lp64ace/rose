@@ -118,6 +118,11 @@ typedef struct DRWCommandSetMutableState {
 	DRWState disable;
 } DRWCommandSetMutableState;
 
+typedef struct DRWCommandSelectId {
+	struct GPUVertBuf *buffer;
+	unsigned int id;
+} DRWCommandSelectId;
+
 typedef struct DRWCommandSetStencil {
 	unsigned int write;
 	unsigned int reference;
@@ -146,6 +151,11 @@ typedef struct DRWCommandDrawInstanceRange {
 	unsigned int icount;
 } DRWCommandDrawInstanceRange;
 
+typedef struct DRWCommandDrawProcedural {
+	struct GPUBatch *batch;
+	unsigned int vcount;
+} DRWCommandDrawProcedural;
+
 typedef struct DRWCommandUniformBlock {
 	struct GPUUniformBuf *block;
 	unsigned int location;
@@ -154,11 +164,13 @@ typedef struct DRWCommandUniformBlock {
 enum {
 	DRW_COMMAND_CLEAR,
 	DRW_COMMAND_DRWSTATE,
+	DRW_COMMAND_SELECT,
 	DRW_COMMAND_STENCIL,
 	DRW_COMMAND_DRAW,
 	DRW_COMMAND_DRAW_RANGE,
 	DRW_COMMAND_DRAW_INSTANCE,
 	DRW_COMMAND_DRAW_INSTANCE_RANGE,
+	DRW_COMMAND_DRAW_PROCEDURAL,
 	DRW_COMMAND_UNIFORM,
 	DRW_COMMAND_UNIFORM_BLOCK,
 };
@@ -171,11 +183,13 @@ typedef struct DRWCommand {
 	union {
 		struct DRWCommandClear clear;
 		struct DRWCommandSetMutableState state;
+		struct DRWCommandSelectId select;
 		struct DRWCommandSetStencil stencil;
 		struct DRWCommandDraw draw;
 		struct DRWCommandDrawRange draw_range;
 		struct DRWCommandDrawInstance draw_instance;
 		struct DRWCommandDrawInstanceRange draw_instance_range;
+		struct DRWCommandDrawProcedural draw_procedural;
 		struct DRWCommandUniformBlock uniform_block;
 	};
 
@@ -185,6 +199,7 @@ typedef struct DRWCommand {
 /** Used for aggregating calls into #GPUVertBuf's. */
 typedef struct DRWCallBuffer {
 	struct GPUVertBuf *buffer;
+	struct GPUVertBuf *select;
 	int count;
 } DRWCallBuffer;
 

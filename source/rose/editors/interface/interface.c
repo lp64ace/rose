@@ -142,6 +142,11 @@ ROSE_STATIC bool ui_but_update_from_old_block(rContext *C, uiBlock *block, uiBut
 }
 
 ROSE_STATIC void ui_but_mem_delete(uiBut *but) {
+	if (but->op_ptr) {
+		WM_operator_properties_free(but->op_ptr);
+		MEM_freeN(but->op_ptr);
+	}
+
 	MEM_SAFE_FREE(but->name);
 	MEM_SAFE_FREE(but->drawstr);
 	MEM_freeN(but);

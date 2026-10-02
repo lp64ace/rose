@@ -653,6 +653,16 @@ void KER_object_runtime_reset(Object *object) {
 	memset(&object->runtime, 0, sizeof(object->runtime));
 }
 
+void KER_object_update_select_id(Main *main) {
+	ListBase *lb = which_libbase(main, ID_OB);
+
+	Object *ob = (Object *)lb->first;
+	for (int select_id = 1; ob; select_id++) {
+		ob->runtime.select_id = select_id;
+		ob = (Object *)ob->id.next;
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

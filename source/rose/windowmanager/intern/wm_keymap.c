@@ -57,7 +57,7 @@ wmKeyMap *WM_keymap_active(WindowManager *wm, wmKeyMap *keymap) {
 	}
 
 	/* First user defined keymaps. */
-	wmKeyMap *km = WM_keymap_list_find(&wm->runtime.keymaps, keymap->idname, keymap->spaceid, keymap->regionid);
+	wmKeyMap *km = WM_keymap_list_find(&wm->runtime->keymaps, keymap->idname, keymap->spaceid, keymap->regionid);
 
 	if (km) {
 		return km;
@@ -145,11 +145,11 @@ bool WM_keymap_poll(rContext *C, wmKeyMap *keymap) {
  * \{ */
 
 wmKeyConfig *WM_keyconfig_new(WindowManager *wm, const char *idname) {
-	ROSE_assert(!LIB_findstr(&wm->runtime.keyconfigs, idname, offsetof(wmKeyConfig, idname)));
+	ROSE_assert(!LIB_findstr(&wm->runtime->keyconfigs, idname, offsetof(wmKeyConfig, idname)));
 	/* Create new configuration. */
 	wmKeyConfig *keyconf = MEM_callocN(sizeof(wmKeyConfig), "wmKeyConfig");
 	LIB_strcpy(keyconf->idname, ARRAY_SIZE(keyconf->idname), idname);
-	LIB_addtail(&wm->runtime.keyconfigs, keyconf);
+	LIB_addtail(&wm->runtime->keyconfigs, keyconf);
 
 	return keyconf;
 }

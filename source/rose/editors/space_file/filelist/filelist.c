@@ -433,6 +433,14 @@ void filelist_readjob_start(FileList *filelist, const rContext *C) {
 	filelist_readjob_start_ex(filelist, C, true);
 }
 
+void ED_fileselect_clear(WindowManager *wm, SpaceFile *sfile) {
+	if (sfile->files) {
+		filelist_clear(sfile->files);
+	}
+
+	filelist_tag_force_reset(sfile->files);
+}
+
 int ED_path_extension_type(const char *path) {
 	if (LIB_path_extension_check(path, ".rose")) {
 		return FILE_TYPE_ROSE;

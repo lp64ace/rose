@@ -16,6 +16,7 @@
 typedef struct DRWCache {
 	GPUBatch *draw_fullscreen_quad;
 	GPUBatch *draw_bone_octahedral;
+	GPUBatch *draw_procedural_tris;
 } DRWCache;
 
 static struct DRWCache GCache; // = NULL;
@@ -63,11 +64,11 @@ GPUBatch *DRW_cache_fullscreen_quad_get(void) {
 		ROSE_assert(fabs(u - 1.0f) < FLT_EPSILON && abs(v - 1.0f) < FLT_EPSILON);
 #endif
 
-		static GPUVertFormat format;
+		GPUVertFormat format;
 		GPU_vertformat_clear(&format);
 
-		int apos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
-		int atex = GPU_vertformat_add(&format, "uv", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+		unsigned int apos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+		unsigned int atex = GPU_vertformat_add(&format, "uv", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
 		GPU_vertformat_alias_add(&format, "texCoord");
 
 		do {
@@ -90,12 +91,12 @@ GPUBatch *DRW_cache_fullscreen_quad_get(void) {
  * \{ */
 
 static const float bone_octahedral_verts[6][3] = {
-	{ 0.0f, 0.0f,  0.0f},
-	{ 0.1f, 0.1f,  0.1f},
-	{ 0.1f, 0.1f, -0.1f},
-	{-0.1f, 0.1f, -0.1f},
-	{-0.1f, 0.1f,  0.1f},
-	{ 0.0f, 1.0f,  0.0f},
+	{ 0.00f, 0.00f,  0.00f},
+	{ 0.08f, 0.10f,  0.08f},
+	{ 0.08f, 0.10f, -0.08f},
+	{-0.08f, 0.10f, -0.08f},
+	{-0.08f, 0.10f,  0.08f},
+	{ 0.00f, 1.00f,  0.00f},
 };
 
 static const float bone_octahedral_smooth_normals[6][3] = {
@@ -136,14 +137,10 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 	if (!GCache.draw_bone_octahedral) {
 		unsigned int v_idx = 0;
 
-		static GPUVertFormat format = {0};
-		static struct {
-			uint pos, nor, snor;
-		} attr_id;
-		if (format.attr_len == 0) {
-			attr_id.pos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
-			attr_id.nor = GPU_vertformat_add(&format, "nor", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
-		}
+		GPUVertFormat format;
+		GPU_vertformat_clear(&format);
+		unsigned int pos = GPU_vertformat_add(&format, "pos", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
+		unsigned int nor = GPU_vertformat_add(&format, "nor", GPU_COMP_F32, 3, GPU_FETCH_FLOAT);
 
 		/* Vertices */
 		GPUVertBuf *vbo = GPU_vertbuf_create_with_format(&format);
@@ -151,8 +148,8 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 3; j++) {
-				GPU_vertbuf_attr_set(vbo, attr_id.pos, v_idx, bone_octahedral_verts[bone_octahedral_solid_tris[i][j]]);
-				GPU_vertbuf_attr_set(vbo, attr_id.nor, v_idx, bone_octahedral_solid_normals[i]);
+				GPU_vertbuf_attr_set(vbo, pos, v_idx, bone_octahedral_verts[bone_octahedral_solid_tris[i][j]]);
+				GPU_vertbuf_attr_set(vbo, nor, v_idx, bone_octahedral_solid_normals[i]);
 				v_idx++;
 			}
 		}
@@ -160,6 +157,26 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 		GCache.draw_bone_octahedral = GPU_batch_create_ex(GPU_PRIM_TRIS, vbo, NULL, GPU_BATCH_OWNS_VBO);
 	}
 	return GCache.draw_bone_octahedral;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Default cache Objects
+ * \{ */
+
+GPUBatch *DRW_cache_procedural_triangles_get(void) {
+	if (!GCache.draw_procedural_tris) {
+		GPUVertFormat format;
+		GPU_vertformat_clear(&format);
+		GPU_vertformat_add(&format, "dummy", GPU_COMP_F32, 1, GPU_FETCH_FLOAT);
+
+		GPUVertBuf *vbo = GPU_vertbuf_create_with_format(&format);
+		GPU_vertbuf_data_alloc(vbo, 1);
+
+		GCache.draw_procedural_tris = GPU_batch_create_ex(GPU_PRIM_TRIS, vbo, NULL, GPU_BATCH_OWNS_VBO);
+	}
+	return GCache.draw_procedural_tris;
 }
 
 /** \} */
@@ -196,6 +213,9 @@ ROSE_STATIC void mesh_batch_cache_discard_surface_batches(MeshBatchCache *cache)
 	}
 	GPU_BATCH_DISCARD_SAFE(cache->surface);
 	GPU_BATCH_DISCARD_SAFE(cache->edge_detection);
+	GPU_BATCH_DISCARD_SAFE(cache->face_selection);
+	GPU_BATCH_DISCARD_SAFE(cache->edge_selection);
+	GPU_BATCH_DISCARD_SAFE(cache->vert_selection);
 }
 
 void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
@@ -206,34 +226,31 @@ void DRW_mesh_batch_cache_create(Object *object, Mesh *mesh) {
 	}
 	GPU_BATCH_CLEAR_SAFE(cache->surface);
 	GPU_BATCH_CLEAR_SAFE(cache->edge_detection);
+	GPU_BATCH_CLEAR_SAFE(cache->face_selection);
+	GPU_BATCH_CLEAR_SAFE(cache->edge_selection);
+	GPU_BATCH_CLEAR_SAFE(cache->vert_selection);
 
 	for (size_t index = 0; index < cache->materials; index++) {
 		if (DRW_batch_requested(cache->surfaces[index], GPU_PRIM_TRIS)) {
-			// DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 			// DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
+			// DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 		}
 	}
 	if (DRW_batch_requested(cache->surface, GPU_PRIM_TRIS)) {
+		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.pos);
 		DRW_vbo_request(cache->surface, &cache->buffers.vbo.nor);
-		DRW_ibo_request(cache->surface, &cache->buffers.ibo.tris);
-
-		/**
-		 * Always created since running the modifier on device can leave 
-		 * things unitialize for objects that have no deformation.
-		 */
-		DRW_vbo_request(cache->surface, &cache->buffers.vbo.weights);
 	}
 	if (DRW_batch_requested(cache->edge_detection, GPU_PRIM_LINES_ADJ)) {
 		DRW_ibo_request(cache->edge_detection, &cache->buffers.ibo.lines_adjacency);
 		DRW_vbo_request(cache->edge_detection, &cache->buffers.vbo.pos);
 		DRW_vbo_request(cache->edge_detection, &cache->buffers.vbo.nor);
-
-		/**
-		 * Always created since running the modifier on device can leave
-		 * things unitialize for objects that have no deformation.
-		 */
-		DRW_vbo_request(cache->edge_detection, &cache->buffers.vbo.weights);
+	}
+	if (DRW_batch_requested(cache->face_selection, GPU_PRIM_TRIS)) {
+		DRW_ibo_request(cache->face_selection, &cache->buffers.ibo.tris);
+		DRW_vbo_request(cache->face_selection, &cache->buffers.vbo.pos);
+		DRW_vbo_request(cache->face_selection, &cache->buffers.vbo.nor);
+		DRW_vbo_request(cache->face_selection, &cache->buffers.vbo.poly_idx);
 	}
 
 	DRW_cache_mesh_create(cache, object, mesh);
@@ -243,6 +260,13 @@ GPUBatch *DRW_cache_mesh_surface_get(Object *object) {
 	ROSE_assert(object->type == OB_MESH);
 	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
 	return mesh_batch_cache_request_surface_batches(cache);
+}
+
+GPUBatch *DRW_cache_mesh_surface_with_select_id_get(Object *object) {
+	ROSE_assert(object->type == OB_MESH);
+	MeshBatchCache *cache = mesh_batch_cache_get(object->data);
+	DRW_batch_request(&cache->face_selection);
+	return cache->face_selection;
 }
 
 GPUBatch *DRW_cache_mesh_edge_detection_get(Object *object, bool *r_is_manifold) {
@@ -313,6 +337,16 @@ GPUBatch *DRW_cache_object_surface_get(Object *object) {
 	switch (object->type) {
 		ROUTE(OB_MESH, DRW_cache_mesh_surface_get);
 	}
+
+#undef ROUTE
+
+	return NULL;
+}
+
+GPUBatch *DRW_cache_object_surface_with_select_id_get(Object *object) {
+#define ROUTE(obtype, function)  case obtype: return function(object); break;
+
+	switch (object->type) { ROUTE(OB_MESH, DRW_cache_mesh_surface_with_select_id_get); }
 
 #undef ROUTE
 

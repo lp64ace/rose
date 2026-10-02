@@ -441,6 +441,32 @@ void LIB_thread_queue_wait_finish(ThreadQueue *queue) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Condition
+ * \{ */
+
+void LIB_condition_init(ThreadCondition *cond) {
+	pthread_cond_init(cond, NULL);
+}
+
+void LIB_condition_wait(ThreadCondition *cond, ThreadMutex *mutex) {
+	pthread_cond_wait(cond, mutex);
+}
+
+void LIB_condition_notify_one(ThreadCondition *cond) {
+	pthread_cond_signal(cond);
+}
+
+void LIB_condition_notify_all(ThreadCondition *cond) {
+	pthread_cond_broadcast(cond);
+}
+
+void LIB_condition_end(ThreadCondition *cond) {
+	pthread_cond_destroy(cond);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name System Information
  * \{ */
 

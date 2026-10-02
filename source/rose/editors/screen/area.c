@@ -455,7 +455,7 @@ ROSE_INLINE void ed_default_handlers(WindowManager *wm, ScrArea *area, ARegion *
 	}
 	if (flag & ED_KEYMAP_VIEW2D) {
 		/* 2d-viewport handling+manipulation */
-		wmKeyMap *keymap = WM_keymap_ensure(wm->runtime.defaultconf, "View2D", SPACE_EMPTY, RGN_TYPE_WINDOW);
+		wmKeyMap *keymap = WM_keymap_ensure(wm->runtime->defaultconf, "View2D", SPACE_EMPTY, RGN_TYPE_WINDOW);
 		WM_event_add_keymap_handler(handlers, keymap);
 	}
 }

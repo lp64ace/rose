@@ -45,15 +45,13 @@ void VertBuf::clear() {
 	flag = GPU_VERTBUF_INVALID;
 }
 
-VertBuf *VertBuf::duplicate() {
-	VertBuf *dst = GPUBackend::get()->vertbuf_alloc();
-	/* Full copy. */
-	*dst = *this;
-	/* Almost full copy... */
-	dst->handle_refcount_ = 1;
-	/* Duplicate all needed implementation specifics data. */
-	this->duplicate_data(dst);
-	return dst;
+void VertBuf::copy(const VertBuf *source, bool force_generate) {
+	/** We only copy the buffer data, not the implementation specifics. */
+	memcpy(this, source, sizeof(VertBuf));
+	this->handle_refcount_ = 1;
+
+	/** Implementation-specific initialization should happen here. */
+	source->duplicate_data(this, force_generate);
 }
 
 size_t VertBuf::size_alloc_get() const {
@@ -147,8 +145,18 @@ void GPU_vertbuf_init_build_on_device(GPUVertBuf *buffer, GPUVertFormat *format,
 	GPU_vertbuf_data_alloc(buffer, vertex_length);
 }
 
-GPUVertBuf *GPU_vertbuf_duplicate(GPUVertBuf *buffer) {
-	return wrap(unwrap(buffer)->duplicate());
+GPUVertBuf *GPU_vertbuf_duplicate(const GPUVertBuf *src) {
+	GPUVertBuf *dst = GPU_vertbuf_calloc();
+	unwrap(dst)->copy(unwrap(src), true);
+	return dst;
+}
+
+void GPU_vertbuf_copy(GPUVertBuf *dst, const GPUVertBuf *src) {
+	unwrap(dst)->copy(unwrap(src), false);
+}
+
+void GPU_vertbuf_copy_ex(GPUVertBuf *dst, const GPUVertBuf *src, bool force_generate) {
+	unwrap(dst)->copy(unwrap(src), force_generate);
 }
 
 void GPU_vertbuf_data_alloc(GPUVertBuf *buffer, unsigned int vertex_length) {

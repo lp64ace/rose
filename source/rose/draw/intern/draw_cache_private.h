@@ -21,14 +21,20 @@ extern "C" {
 
 typedef struct MeshBufferList {
 	struct {
+		GPUVertBuf *mpos;
 		GPUVertBuf *pos;
+		GPUVertBuf *mnor;
 		GPUVertBuf *nor;
 		GPUVertBuf *weights;
+		GPUVertBuf *poly_idx;
 	} vbo;
 	struct {
 		GPUIndexBuf *tris;
 		GPUIndexBuf *lines_adjacency;
 	} ibo;
+	struct {
+		GPUUniformBuf *defgroup;
+	} ubo;
 } MeshBufferList;
 
 typedef struct MeshBatchCache {
@@ -41,6 +47,9 @@ typedef struct MeshBatchCache {
 
 	GPUBatch *surface;
 	GPUBatch *edge_detection;
+	GPUBatch *face_selection;
+	GPUBatch *edge_selection;
+	GPUBatch *vert_selection;
 
 	bool is_dirty;
 	bool is_manifold;

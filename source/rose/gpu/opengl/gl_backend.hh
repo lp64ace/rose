@@ -14,6 +14,7 @@
 #include "gl_state.hh"
 #include "gl_storage_buffer.hh"
 #include "gl_texture.hh"
+#include "gl_query.hh"
 #include "gl_uniform_buffer.hh"
 #include "gl_vertex_buffer.hh"
 
@@ -82,6 +83,9 @@ public:
 	}
 	Texture *texture_alloc(const char *name) override {
 		return MEM_new<GLTexture>("rose::gpu::GLTexture", name);
+	}
+	QueryPool *querypool_alloc() override {
+		return MEM_new<GLQueryPool>("rose::gpu::GLQueryPool");
 	}
 	UniformBuf *uniformbuf_alloc(size_t size, const char *name) override {
 		return MEM_new<GLUniformBuf>("rose::gpu::GLUniformBuf", size, name);

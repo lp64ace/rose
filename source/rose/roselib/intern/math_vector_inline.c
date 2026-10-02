@@ -462,6 +462,21 @@ ROSE_INLINE void sub_v4_v4v4(float r[4], const float a[4], const float b[4]) {
 	r[2] = a[2] - b[2];
 	r[3] = a[3] - b[3];
 }
+ROSE_INLINE void sub_v2_v2v2_int(int r[2], const int a[2], const int b[2]) {
+	r[0] = a[0] - b[0];
+	r[1] = a[1] - b[1];
+}
+ROSE_INLINE void sub_v3_v3v3_int(int r[3], const int a[3], const int b[3]) {
+	r[0] = a[0] - b[0];
+	r[1] = a[1] - b[1];
+	r[2] = a[2] - b[2];
+}
+ROSE_INLINE void sub_v4_v4v4_int(int r[4], const int a[4], const int b[4]) {
+	r[0] = a[0] - b[0];
+	r[1] = a[1] - b[1];
+	r[2] = a[2] - b[2];
+	r[3] = a[3] - b[3];
+}
 ROSE_INLINE void sub_v2_v2v2_db(double r[2], const double a[2], const double b[2]) {
 	r[0] = a[0] - b[0];
 	r[1] = a[1] - b[1];

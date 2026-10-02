@@ -27,12 +27,27 @@ GPU_SHADER_CREATE_INFO(draw_modelmat)
     .uniform_buf(DRW_OBJ_MAT_UBO_SLOT, "ObjectMatrices", "drw_matrices[DRW_RESOURCE_CHUNK_LEN]", Frequency::BATCH)
     .define("ModelMatrix", "(drw_matrices[resource_id].drw_modelMatrix)")
     .define("ModelMatrixInverse", "(drw_matrices[resource_id].drw_modelMatrixInverse)")
-    .additional_info("draw_view");
+    .additional_info("draw_view", "draw_resource_id_uniform");
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Geometry Material Interface
+ * \{ */
+
+GPU_SHADER_INTERFACE_INFO(geometry_material_iface, "")
+    .flat(Type::INT, "object_id");
+
+GPU_SHADER_CREATE_INFO(geometry_material)
+    .vertex_out(geometry_material_iface);
 
 /** \} */
 
 GPU_SHADER_CREATE_INFO(draw_mesh)
-	.uniform_buf(DRW_DVGROUP_UBO_SLOT, "DVertGroupMatrices", "grp_matrices", Frequency::BATCH)
-    .define("TargetToArmatureMatrix", "(grp_matrices.drw_TargetToArmature)")
-    .define("ArmatureToTargetMatrix", "(grp_matrices.drw_ArmatureToTarget)")
 	.additional_info("draw_modelmat", "draw_resource_id_uniform");
+
+GPU_SHADER_CREATE_INFO(draw_mesh_attributes)
+    .vertex_in(0, Type::VEC3, "pos")
+    .vertex_in(1, Type::VEC3, "nor")
+    .vertex_in(2, Type::IVEC4, "defgroup")
+    .vertex_in(3, Type::VEC4, "weight");

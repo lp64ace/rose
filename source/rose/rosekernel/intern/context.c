@@ -68,6 +68,14 @@ struct ARegion *CTX_wm_region(const rContext *ctx) {
 	return ctx->wm.region;
 }
 
+struct ReportList *CTX_wm_reports(const rContext *C) {
+	if (C->wm.manager) {
+		return &C->wm.manager->runtime->reports;
+	}
+
+	return NULL;
+}
+
 struct Main *CTX_data_main(const rContext *ctx) {
 	return ctx->data.main;
 }
@@ -137,6 +145,14 @@ struct SpaceFile *CTX_wm_space_file(const rContext *C) {
 	ScrArea *area = CTX_wm_area(C);
 	if (area && area->spacetype == SPACE_FILE) {
 		return (struct SpaceFile *)(area->spacedata.first);
+	}
+	return NULL;
+}
+
+struct View3D *CTX_wm_space_view3d(const rContext *C) {
+	ScrArea *area = CTX_wm_area(C);
+	if (area && area->spacetype == SPACE_VIEW3D) {
+		return (struct View3D *)(area->spacedata.first);
 	}
 	return NULL;
 }

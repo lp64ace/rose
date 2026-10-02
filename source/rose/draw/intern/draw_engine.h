@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+struct ViewLayer;
+
 /* -------------------------------------------------------------------- */
 /** \name Draw View Engine Data
  * \{ */
@@ -46,6 +48,8 @@ typedef struct DRWViewportEngineDataStorageList {
 typedef struct ViewportEngineData {
 	struct ViewportEngineData *prev, *next;
 
+	int flag;
+
 	DrawEngineType *engine;
 
 	DRWViewportEngineDataFramebufferList *fbl;
@@ -53,6 +57,10 @@ typedef struct ViewportEngineData {
 	DRWViewportEngineDataPassList *psl;
 	DRWViewportEngineDataStorageList *stl;
 } ViewportEngineData;
+
+enum {
+	DRW_ENGINE_DATA_ENABLED = 1 << 31,
+};
 
 /** \} */
 
@@ -96,9 +104,18 @@ void DRW_view_data_free(struct DRWViewData *view_data);
 
 struct ViewportEngineData *DRW_view_data_engine_data_get_ensure(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
 struct ViewportEngineData *DRW_view_data_engine_data_get(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
+struct DefaultFramebufferList *DRW_view_data_framebuffer_list_get(struct DRWViewData *view_data, struct GPUViewport *viewport);
+struct DefaultTextureList *DRW_view_data_texture_list_get(struct DRWViewData *view_data, struct GPUViewport *viewport);
 void DRW_view_data_texture_list_size_validate(struct DRWViewData *view_data, const int size[2]);
 void DRW_view_data_default_lists_from_viewport(struct DRWViewData *view_data, struct GPUViewport *viewport);
 void DRW_view_data_use_engine(struct DRWViewData *view_data, struct DrawEngineType *engine_type);
+
+void *DRW_view_layer_engine_data_get(struct DrawEngineType *engine);
+void **DRW_view_layer_engine_data_ensure_ex(struct ViewLayer *view_layer, struct DrawEngineType *engine, void (*callback)(void *storage));
+void **DRW_view_layer_engine_data_ensure(struct DrawEngineType *engine, void (*callback)(void *storage));
+
+const float *DRW_viewport_size_get(void);
+const float *DRW_viewport_invert_size_get(void);
 
 /** \} */
 

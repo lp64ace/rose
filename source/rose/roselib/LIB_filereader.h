@@ -25,6 +25,9 @@ typedef struct FileReader {
 
 /** Raw byte read from simple native file descriptor! */
 FileReader *LIB_filereader_new_file(int descr);
+FileReader *LIB_filereader_new_zstd(FileReader *reader);
+
+bool LIB_file_magic_is_zstd(const char header[4]);
 
 #ifdef __cplusplus
 }

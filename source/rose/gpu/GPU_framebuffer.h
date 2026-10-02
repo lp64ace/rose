@@ -426,6 +426,11 @@ void GPU_framebuffer_clear_color(GPUFrameBuffer *fb, const float clear_col[4]);
 void GPU_framebuffer_clear_depth(GPUFrameBuffer *fb, float clear_depth);
 
 /**
+ * Read the depth attachment texture data into \a data with the format \a format.
+ */
+void GPU_framebuffer_read_depth(GPUFrameBuffer *gpu_fb, int x, int y, int w, int h, DataFormat format, void *data);
+
+/**
  * Clear the stencil attachment with the value \a clear_stencil .
  * \note `GPU_write_mask`, and stencil test do not affect this command.
  * \note Viewport and scissor regions affect this command but are not efficient nor recommended.

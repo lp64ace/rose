@@ -14,6 +14,11 @@ typedef struct ViewInfos ViewInfos;
 #define DRW_RESOURCE_CHUNK_LEN 168
 #define DRW_RESOURCE_BONES_LEN 168
 
+struct MDeformDeviceData {
+	int4 defgroup;
+	float4 weight;
+};
+
 struct ObjectMatrices {
 	float4x4 drw_modelMatrix;
 	float4x4 drw_modelMatrixInverse;

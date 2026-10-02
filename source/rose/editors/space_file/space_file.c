@@ -121,9 +121,15 @@ ROSE_INLINE void file_refresh(const rContext *C, ScrArea *area) {
 }
 
 ROSE_INLINE void file_exit(WindowManager *wm, ScrArea *area) {
-	SpaceFile *file = (SpaceFile *)area->spacedata.first;
+	SpaceFile *sfile = (SpaceFile *)area->spacedata.first;
 
-	MEM_SAFE_FREE(file->params);
+	/** Clear the file list so that the next time we refresh it! */
+	if (sfile->files) {
+		filelist_free(sfile->files);
+		sfile->files = NULL;
+	}
+
+	MEM_SAFE_FREE(sfile->params);
 }
 
 /** \} */
@@ -145,7 +151,7 @@ ROSE_INLINE void file_execution_region_init(WindowManager *wm, ARegion *region) 
 	region->v2d.keepzoom |= V2D_LOCKZOOM_X | V2D_LOCKZOOM_Y;
 
 	/* own keymap */
-	keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW);
+	keymap = WM_keymap_ensure(wm->runtime->defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW);
 	// WM_event_add_keymap_handler_v2d_mask(&region->handlers, keymap);
 }
 
@@ -246,12 +252,15 @@ ROSE_INLINE void file_panel_ui_file_select_path_draw(const rContext *C, Panel *p
 				wmOperatorType *prev = WM_operatortype_find("FILE_OT_previous", false);
 				wmOperatorType *next = WM_operatortype_find("FILE_OT_next", false);
 				wmOperatorType *parent = WM_operatortype_find("FILE_OT_parent", false);
+				wmOperatorType *refresh = WM_operatortype_find("FILE_OT_refresh", false);
 
 				uiBut *but;
-				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_BACK, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);  // Back
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_BACK, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	 // Back
 				UI_but_op_set(but, prev);
 				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FORWARD, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	// Forward
 				UI_but_op_set(but, next);
+				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FILE_REFRESH, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	 // Refresh
+				UI_but_op_set(but, refresh);
 				but = uiDefBut(block, UI_BTYPE_PUSH, ICON_FILE_PARENT, "", 0, 0, UI_UNIT_X, UI_UNIT_Y, NULL, UI_POINTER_NIL, 0, 0, 0);	// Parent
 				UI_but_op_set(but, parent);
 			}
@@ -282,7 +291,7 @@ void file_ui_region_panels_register(ARegionType *art) {
 ROSE_INLINE void file_main_region_init(WindowManager *wm, ARegion *region) {
 	wmKeyMap *keymap;
 
-	if ((keymap = WM_keymap_ensure(wm->runtime.defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
+	if ((keymap = WM_keymap_ensure(wm->runtime->defaultconf, "File Browser", SPACE_FILE, RGN_TYPE_WINDOW)) != NULL) {
 		WM_event_add_keymap_handler(&region->handlers, keymap);
 	}
 

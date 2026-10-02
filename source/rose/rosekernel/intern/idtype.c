@@ -67,6 +67,9 @@ const IDTypeInfo *KER_idtype_get_info_from_idcode(short idcode) {
 	return KER_idtype_get_info_from_idtype_index(KER_idtype_idcode_to_index(idcode));
 }
 const IDTypeInfo *KER_idtype_get_info_from_id(const ID *id) {
+	if (id->orig_id) {
+		return KER_idtype_get_info_from_id(id->orig_id);
+	}
 	return KER_idtype_get_info_from_idcode(GS(id->name));
 }
 

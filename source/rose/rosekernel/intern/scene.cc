@@ -1,6 +1,7 @@
 #include "MEM_guardedalloc.h"
 
 #include "LIB_ghash.h"
+#include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
 #include "KER_collection.h"
@@ -9,6 +10,7 @@
 #include "KER_lib_id.h"
 #include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_object.h"
 #include "KER_scene.h"
 
 #include "DEG_depsgraph.h"
@@ -23,6 +25,17 @@
 
 Scene *KER_scene_new(Main *main, const char *name) {
 	return static_cast<Scene *>(KER_id_new(main, ID_SCE, name));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scene Object Data
+ * \{ */
+
+void KER_scene_object_base_flag_sync_from_base(Base *base) {
+	Object *object = base->object;
+	object->flag_base = base->flag;
 }
 
 /** \} */
@@ -248,6 +261,8 @@ ROSE_STATIC void scene_init_data(ID *id) {
 	scene->r.cframe = 0;
 	scene->r.eframe = INT_MAX;
 	scene->r.fps = 30;
+
+	copy_v3_fl(scene->light_direction, -0.5f);
 
 	/* Master Collection */
 	scene->master_collection = KER_collection_master_add();

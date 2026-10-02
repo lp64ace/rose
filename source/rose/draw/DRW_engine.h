@@ -5,21 +5,29 @@
 
 #include "LIB_listbase.h"
 #include "LIB_thread.h"
+#include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
 struct BoundBox;
+struct ARegion;
 struct DRWViewData;
+struct Base;
+struct Depsgraph;
 struct DrawData;
 struct DrawDataList;
 struct DrawEngineType;
 struct DrawInstanceDataList;
 struct GPUBatch;
+struct GPUSamplerState;
+struct GPUShader;
+struct GPUTexture;
 struct GPUUniformBuf;
 struct GPUVertFormat;
 struct Mesh;
 struct Scene;
 struct Object;
 struct rContext;
+struct View3D;
 struct WindowManager;
 
 #ifdef __cplusplus
@@ -74,7 +82,7 @@ void DRW_view_winmat_get(struct DRWViewData *view, float mat[4][4], bool inverte
 /** \name Draw
  * \{ */
 
-struct GPUShader;
+struct DRWShadingGroup;
 
 struct DRWPass *DRW_pass_new_ex(const char *name, struct DRWPass *original, int state);
 struct DRWPass *DRW_pass_new(const char *name, int state);
@@ -88,6 +96,7 @@ void DRW_shading_group_state_enable(struct DRWShadingGroup *shgroup, int state);
 void DRW_shading_group_stencil_mask(struct DRWShadingGroup *shgroup, unsigned int mask);
 void DRW_shading_group_call_ex(struct DRWShadingGroup *shgroup, struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch);
 void DRW_shading_group_call_range_ex(struct DRWShadingGroup *shgroup, struct Object *ob, const float (*obmat)[4], struct GPUBatch *batch, unsigned int vfirst, unsigned int vcount);
+void DRW_shading_group_call_procedural_triangles(struct DRWShadingGroup *shgroup, struct Object *ob, unsigned int numtis);
 	/** Not to be confused with shading group uniforms this will be bound in order. */
 void DRW_shading_group_bind_uniform_block(struct DRWShadingGroup *shgroup, struct GPUUniformBuf *block, unsigned int location);
 
@@ -97,6 +106,9 @@ void DRW_shading_group_uniform_float(struct DRWShadingGroup *shgroup, const char
 void DRW_shading_group_uniform_v2(struct DRWShadingGroup *shgroup, const char *name, const float vec[2], unsigned int array_size);
 void DRW_shading_group_uniform_v3(struct DRWShadingGroup *shgroup, const char *name, const float vec[3], unsigned int array_size);
 void DRW_shading_group_uniform_v4(struct DRWShadingGroup *shgroup, const char *name, const float vec[4], unsigned int array_size);
+void DRW_shading_group_uniform_texture_ex(struct DRWShadingGroup *shgroup, const char *name, const struct GPUTexture *tex, struct GPUSamplerState sampler_state);
+void DRW_shading_group_uniform_texture(struct DRWShadingGroup *shgroup, const char *name, const struct GPUTexture *texture);
+void DRW_shading_group_uniform_block(struct DRWShadingGroup *shgroup, const char *name, const struct GPUUniformBuf *ubo);
 
 struct DRWCallBuffer *DRW_shading_group_call_buffer(struct DRWShadingGroup *shgroup, struct GPUVertFormat *format, PrimType prim_type);
 struct DRWCallBuffer *DRW_shading_group_call_buffer_instance(struct DRWShadingGroup *shgroup, struct GPUVertFormat *format, struct GPUBatch *batch);
@@ -110,9 +122,26 @@ void DRW_buffer_add_entry_array(struct DRWCallBuffer *callbuf, const void *attr[
 struct DRWInstanceDataList *DRW_instance_data_list_create(void);
 void DRW_instance_data_list_free(struct DRWInstanceDataList *list);
 
+enum {
+	DRW_SELECT_PASS_PRE = 1,
+	DRW_SELECT_PASS_POST,
+};
+
+typedef bool (*fnSelectPass)(int stage, void *user_data);
+typedef bool (*fnObjectFilter)(struct Object *ob, void *user_data);
+
+void DRW_draw_select_loop(struct Depsgraph *depsgraph, struct ARegion *region, struct View3D *v3d, const rcti *rect, fnSelectPass select_pass_fn, void *select_pass_user_data, fnObjectFilter object_filter_fn, void *object_filter_user_data);
 void DRW_draw_view(const struct rContext *C);
 void DRW_draw_pass(struct DRWPass *ps);
 void DRW_draw_pass_range(struct DRWPass *ps, struct DRWShadingGroup *first, struct DRWShadingGroup *last);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Select
+ * \{ */
+
+void DRW_select_buffer_context_create(struct Base **bases, const size_t bases_length);
 
 /** \} */
 

@@ -14,6 +14,7 @@ set(INC
 
 set(INC_SYS
 	# External System Include Directories
+	${ZSTD_INCLUDE_DIRS}
 	
 )
 
@@ -43,6 +44,7 @@ set(LIB
 	rose::source::rosekernel
 	
 	# External Library Dependencies
+	${ZSTD_LIBRARIES}
 	
 )
 

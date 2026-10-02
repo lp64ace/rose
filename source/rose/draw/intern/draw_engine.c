@@ -8,6 +8,7 @@
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
+#include "KER_layer.h"
 #include "KER_lib_id.h"
 
 #include "DRW_render.h"
@@ -105,10 +106,35 @@ void DRW_view_data_default_lists_from_viewport(DRWViewData *view_data, GPUViewpo
 	view_data->flag |= DRW_VIEW_DATA_VIEWPORT;
 }
 
+DefaultFramebufferList *DRW_view_data_framebuffer_list_get(DRWViewData *view_data, GPUViewport *viewport) {
+	// int view = GPU_viewport_active_view_get(viewport);
+
+	DefaultFramebufferList *dfbl = &view_data->dfbl;
+	DefaultTextureList *dtxl = &view_data->dtxl;
+
+	return dfbl;
+}
+
+DefaultTextureList *DRW_view_data_texture_list_get(DRWViewData *view_data, GPUViewport *viewport) {
+	// int view = GPU_viewport_active_view_get(viewport);
+
+	DefaultFramebufferList *dfbl = &view_data->dfbl;
+	DefaultTextureList *dtxl = &view_data->dtxl;
+
+	return dtxl;
+}
+
 void DRW_view_data_use_engine(DRWViewData *view_data, DrawEngineType *engine_type) {
 	ViewportEngineData *engine = DRW_view_data_engine_data_get_ensure(view_data, engine_type);
 
-	UNUSED_VARS(engine);
+	engine->flag |= DRW_ENGINE_DATA_ENABLED;
+}
+
+const float *DRW_viewport_size_get(void) {
+	return GDrawManager.size;
+}
+const float *DRW_viewport_invert_size_get(void) {
+	return GDrawManager.inv_size;
 }
 
 ViewportEngineData *DRW_view_data_engine_data_get_ensure(DRWViewData *view_data, DrawEngineType *engine_type) {
@@ -148,4 +174,34 @@ ViewportEngineData *DRW_view_data_engine_data_get(DRWViewData *view_data, DrawEn
 	}
 
 	return NULL;
+}
+
+void *DRW_view_layer_engine_data_get(DrawEngineType *engine) {
+	LISTBASE_FOREACH(ViewLayerEngineData *, sled, &GDrawManager.view_layer->drawdata) {
+		if (sled->engine == engine) {
+			return sled->storage;
+		}
+	}
+	return NULL;
+}
+
+void **DRW_view_layer_engine_data_ensure_ex(ViewLayer *view_layer, DrawEngineType *engine, void (*callback)(void *storage)) {
+	ViewLayerEngineData *sled;
+
+	for (sled = view_layer->drawdata.first; sled; sled = sled->next) {
+		if (sled->engine == engine) {
+			return &sled->storage;
+		}
+	}
+
+	sled = MEM_callocN(sizeof(ViewLayerEngineData), "ViewLayerEngineData");
+	sled->engine = engine;
+	sled->free = callback;
+	LIB_addtail(&view_layer->drawdata, sled);
+
+	return &sled->storage;
+}
+
+void **DRW_view_layer_engine_data_ensure(DrawEngineType *engine, void (*callback)(void *storage)) {
+	return DRW_view_layer_engine_data_ensure_ex(GDrawManager.view_layer, engine, callback);
 }

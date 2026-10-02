@@ -57,6 +57,7 @@ typedef struct Object_Runtime {
 
 	int is_data_eval_owned;
 	int local_collections_bits;
+	int select_id;
 } Object_Runtime;
 
 typedef struct Object {
@@ -117,11 +118,6 @@ enum {
 	OB_HIDE_VIEWPORT = (1 << 0),
 	OB_HIDE_RENDER = (1 << 1),
 	OB_HIDE_SELECT = (1 << 2),
-};
-
-/** #Object->flag */
-enum {
-	OBJECT_SELECTED = (1 << 0),
 };
 
 /** #Object->type */

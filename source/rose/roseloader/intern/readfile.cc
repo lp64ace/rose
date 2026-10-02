@@ -34,6 +34,7 @@
 
 #include <limits.h>
 #include <stdio.h>
+#include <zstd.h>
 
 /* -------------------------------------------------------------------- */
 /** \name OldNewMap API
@@ -941,16 +942,44 @@ ROSE_STATIC FileData *rlo_decode_and_check(FileData *fd) {
 	return fd;
 }
 
+FileReader *RLO_file_reader_uncompressed(FileReader *rawfile) {
+	if (!rawfile) {
+		return nullptr;
+	}
+
+	char first_bytes[4];
+	if (rawfile->read(rawfile, first_bytes, sizeof(first_bytes)) != sizeof(first_bytes)) {
+		/* The file is too small to possibly be a valid rose file. */
+		rawfile->close(rawfile);
+		return nullptr;
+	}
+
+	/* Rewind to the start of the file. */
+	rawfile->seek(rawfile, 0, SEEK_SET);
+
+	if (memcmp(first_bytes, "ROSE", sizeof(first_bytes)) == 0) {
+		/* The file is uncompressed. */
+		return rawfile;
+	}
+	if (LIB_file_magic_is_zstd(first_bytes)) {
+		/* The new reader takes ownership of the rawfile. */
+		return LIB_filereader_new_zstd(rawfile);
+	}
+	rawfile->close(rawfile);
+	return nullptr;
+}
+
+FileReader *RLO_file_reader_uncompressed_from_descriptor(int fd) {
+	return RLO_file_reader_uncompressed(LIB_filereader_new_file(fd));
+}
+
 ROSE_STATIC FileData *rlo_filedata_from_file_descriptor(int descr) {
-	FileReader *rawfile = LIB_filereader_new_file(descr), *file = NULL;
+	FileReader *rawfile = RLO_file_reader_uncompressed_from_descriptor(descr), *file = NULL;
 
 	char header[4];
 	if (rawfile == NULL || rawfile->read(rawfile, header, sizeof(header)) != sizeof(header)) {
 		if (rawfile) {
 			rawfile->close(rawfile);
-		}
-		else {
-			close(descr);
 		}
 		return NULL;
 	}
@@ -1112,7 +1141,12 @@ ROSE_STATIC RoseFileData *rlo_read_file_internal(FileData *fd, const char *filep
 				head = rlo_rhead_next(fd, head);
 			} break;
 			case RLO_CODE_USER: {
-				head = read_userdef(rfd, fd, head);
+				if ((flag & ROSE_READ_USERDEF) != 0) {
+					head = read_userdef(rfd, fd, head);
+				}
+				else {
+					head = rlo_rhead_next(fd, head);
+				}
 			} break;
 			default: {
 				head = read_libblock(fd, rfd->main, head, NULL);
