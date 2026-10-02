@@ -48,6 +48,98 @@ ScrArea *ED_screen_areas_iter_next(const Screen *screen, const ScrArea *area) {
 	return (ScrArea *)screen->areabase.first;
 }
 
+ScrArea *area_split(const wmWindow *win, Screen *screen, ScrArea *area, const int dir_axis, const float fac, const bool merge) {
+	ScrArea *newa = NULL;
+
+	if (area == NULL) {
+		return NULL;
+	}
+
+	rcti window_rect;
+	WM_window_rect_calc(win, &window_rect);
+
+	short split = screen_geom_find_area_split_point(area, &window_rect, dir_axis, fac);
+	if (split == 0) {
+		return NULL;
+	}
+
+	/* NOTE(campbell): regarding (fac > 0.5f) checks below.
+	 * normally it shouldn't matter which is used since the copy should match the original
+	 * however with viewport rendering and python console this isn't the case. */
+
+	if (dir_axis == SCREEN_AXIS_H) {
+		/* new vertices */
+		ScrVert *sv1 = screen_geom_vertex_add(screen, area->v1->vec.x, split);
+		ScrVert *sv2 = screen_geom_vertex_add(screen, area->v4->vec.x, split);
+
+		/* new edges */
+		screen_geom_edge_add(screen, area->v1, sv1);
+		screen_geom_edge_add(screen, sv1, area->v2);
+		screen_geom_edge_add(screen, area->v3, sv2);
+		screen_geom_edge_add(screen, sv2, area->v4);
+		screen_geom_edge_add(screen, sv1, sv2);
+
+		if (fac > 0.5f) {
+			/* new areas: top */
+			newa = screen_addarea(screen, sv1, area->v2, area->v3, sv2, area->spacetype);
+
+			/* area below */
+			area->v2 = sv1;
+			area->v3 = sv2;
+		}
+		else {
+			/* new areas: bottom */
+			newa = screen_addarea(screen, area->v1, sv1, sv2, area->v4, area->spacetype);
+
+			/* area above */
+			area->v1 = sv1;
+			area->v4 = sv2;
+		}
+
+		ED_area_data_copy(newa, area, true);
+	}
+	else {
+		/* new vertices */
+		ScrVert *sv1 = screen_geom_vertex_add(screen, split, area->v1->vec.y);
+		ScrVert *sv2 = screen_geom_vertex_add(screen, split, area->v2->vec.y);
+
+		/* new edges */
+		screen_geom_edge_add(screen, area->v1, sv1);
+		screen_geom_edge_add(screen, sv1, area->v4);
+		screen_geom_edge_add(screen, area->v2, sv2);
+		screen_geom_edge_add(screen, sv2, area->v3);
+		screen_geom_edge_add(screen, sv1, sv2);
+
+		if (fac > 0.5f) {
+			/* new areas: right */
+			newa = screen_addarea(screen, sv1, sv2, area->v3, area->v4, area->spacetype);
+
+			/* area left */
+			area->v3 = sv2;
+			area->v4 = sv1;
+		}
+		else {
+			/* new areas: left */
+			newa = screen_addarea(screen, area->v1, area->v2, sv2, sv1, area->spacetype);
+
+			/* area right */
+			area->v1 = sv1;
+			area->v2 = sv2;
+		}
+
+		ED_area_data_copy(newa, area, true);
+	}
+
+	/* remove double vertices and edges */
+	if (merge) {
+		KER_screen_remove_double_scrverts(screen);
+	}
+	KER_screen_remove_double_scredges(screen);
+	KER_screen_remove_unused_scredges(screen);
+
+	return newa;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

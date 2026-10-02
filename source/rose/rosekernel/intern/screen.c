@@ -266,6 +266,56 @@ ARegion *KER_area_find_region_xy(const ScrArea *area, int regiontype, const int 
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name ARegion
+ * \{ */
+
+static void panel_list_copy(ListBase *newlb, const ListBase *lb) {
+	LIB_listbase_clear(newlb);
+	LIB_duplicatelist(newlb, lb);
+
+	/* copy panel pointers */
+	Panel *new_panel = newlb->first;
+	Panel *panel = lb->first;
+	for (; new_panel; new_panel = new_panel->next, panel = panel->next) {
+		memset(&new_panel->runtime, 0x0, sizeof(new_panel->runtime));
+		panel_list_copy(&new_panel->children, &panel->children);
+	}
+}
+
+struct ARegion *KER_area_region_copy(const SpaceType *st, const ARegion *region) {
+	ARegion *newar = MEM_dupallocN(region);
+
+	memset(&newar->runtime, 0, sizeof(newar->runtime));
+
+	newar->prev = newar->next = NULL;
+	LIB_listbase_clear(&newar->handlers);
+	LIB_listbase_clear(&newar->uiblocks);
+	newar->visible = 0;
+	newar->draw_buffer = NULL;
+
+	/* use optional regiondata callback */
+	if (region->regiondata) {
+		ARegionType *art = KER_regiontype_from_id(st, region->regiontype);
+
+		if (art && art->duplicate) {
+			newar->regiondata = art->duplicate(region->regiondata);
+		}
+		else if (region->flag & RGN_FLAG_TEMP_REGIONDATA) {
+			newar->regiondata = NULL;
+		}
+		else {
+			newar->regiondata = MEM_dupallocN(region->regiondata);
+		}
+	}
+
+	panel_list_copy(&newar->panels, &region->panels);
+
+	return newar;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Panel
  * \{ */
 
@@ -286,11 +336,33 @@ void KER_panel_free(Panel *panel) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
-/** \name Data Free
+/** \name SpaceData
  * \{ */
 
-void KER_screen_free_data(Screen *screen) {
-	screen_free_data((ID *)screen);
+/* from lb_src to lb_dst, lb_dst is supposed to be freed */
+static void region_copylist(SpaceType *st, ListBase *lb_dst, ListBase *lb_src) {
+	LIB_listbase_clear(lb_dst);
+
+	LISTBASE_FOREACH(ARegion *, region, lb_src) {
+		ARegion *region_new = KER_area_region_copy(st, region);
+		LIB_addtail(lb_dst, region_new);
+	}
+}
+
+void KER_spacedata_copylist(ListBase *lb_dst, ListBase *lb_src) {
+	LIB_listbase_clear(lb_dst);
+
+	LISTBASE_FOREACH(SpaceLink *, sl, lb_src) {
+		SpaceType *st = KER_spacetype_from_id(sl->spacetype);
+
+		if (st && st->duplicate) {
+			SpaceLink *slnew = st->duplicate(sl);
+
+			LIB_addtail(lb_dst, slnew);
+
+			region_copylist(st, &slnew->regionbase, &sl->regionbase);
+		}
+	}
 }
 
 void KER_spacedata_freelist(ListBase *lb) {
@@ -307,6 +379,16 @@ void KER_spacedata_freelist(ListBase *lb) {
 		}
 	}
 	LIB_freelistN(lb);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Data Free
+ * \{ */
+
+void KER_screen_free_data(Screen *screen) {
+	screen_free_data((ID *)screen);
 }
 
 static void area_region_panels_free_recursive(Panel *panel) {

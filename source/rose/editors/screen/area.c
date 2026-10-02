@@ -538,6 +538,38 @@ void ED_area_exit(rContext *C, ScrArea *area) {
 	CTX_wm_area_set(C, prevsa);
 }
 
+void ED_area_data_copy(ScrArea *area_dst, ScrArea *area_src, const bool do_free) {
+	const char spacetype = area_dst->spacetype;
+	const int flag_copy = 0; /** Which flags to NOT keep from #area_dst! */
+
+	area_dst->spacetype = area_src->spacetype;
+	area_dst->type = area_src->type;
+
+	area_dst->flag = (area_dst->flag & ~flag_copy) | (area_src->flag & flag_copy);
+
+	/* area */
+	if (do_free) {
+		KER_spacedata_freelist(&area_dst->spacedata);
+	}
+	KER_spacedata_copylist(&area_dst->spacedata, &area_src->spacedata);
+
+	/* NOTE: SPACE_EMPTY is possible on new screens. */
+
+	/* regions */
+	if (do_free) {
+		SpaceType *st = KER_spacetype_from_id(spacetype);
+		LISTBASE_FOREACH(ARegion *, region, &area_dst->regionbase) {
+			KER_area_region_free(st, region);
+		}
+		LIB_freelistN(&area_dst->regionbase);
+	}
+	SpaceType *st = KER_spacetype_from_id(area_src->spacetype);
+	LISTBASE_FOREACH(ARegion *, region, &area_src->regionbase) {
+		ARegion *newar = KER_area_region_copy(st, region);
+		LIB_addtail(&area_dst->regionbase, newar);
+	}
+}
+
 void ED_area_tag_redraw(ScrArea *area) {
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		ED_region_tag_redraw(region);

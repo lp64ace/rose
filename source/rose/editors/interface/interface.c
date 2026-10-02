@@ -627,12 +627,15 @@ void UI_block_draw(const rContext *C, uiBlock *block) {
 
 	ui_draw_menu_back(region, block, &rect);
 
-	// fprintf(stdout, "[Editor] Drawing uiBlock \"%s\" [xmin: %d, xmax: %d, ymin: %d, ymax: %d]\n", block->name, rect.xmin, rect.xmax, rect.ymin, rect.ymax);
-	// fprintf(stdout, "ARegion [xmin: %d, xmax: %d, ymin: %d, ymax: %d]\n", region->winrct.xmin, region->winrct.xmax, region->winrct.ymin, region->winrct.ymax);
+	const int width = LIB_rctf_size_x(&block->rect), height = LIB_rctf_size_y(&block->rect);
 	LISTBASE_FOREACH(uiBut *, but, &block->buttons) {
 		ui_but_to_pixelrect(&rect, region, block, but);
+
+		// if (rect.xmax < 0 || region->sizey - rect.ymax < 0 || width < rect.xmin || height < region->sizey - rect.ymin) {
+		// 	continue;
+		// }
+
 		if (rect.xmin < rect.xmax && rect.ymin < rect.ymax) {
-			// fprintf(stdout, "\tuiBut : \"%s\" [xmin: %d, xmax: %d, ymin: %d, ymax: %d]\n", but->name, rect.xmin, rect.xmax, rect.ymin, rect.ymax);
 			ui_draw_but(C, region, but, &rect);
 		}
 	}

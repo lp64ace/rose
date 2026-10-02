@@ -53,6 +53,11 @@ void screen_area_set_geometry_rect(struct ScrArea *area, const rcti *rect);
 void screen_geom_vertices_scale(struct wmWindow *window, struct Screen *screen);
 void screen_geom_select_connected_edge(struct wmWindow *window, struct ScrEdge *startedge);
 
+/**
+ * \return 0 if no split is possible, otherwise the screen-coordinate at which to split.
+ */
+int screen_geom_find_area_split_point(const ScrArea *area, const rcti *window_rect, const int dir_axis, float fac);
+
 /** \} */
 
 #ifdef __cplusplus

@@ -5,6 +5,7 @@
 #include "KER_screen.h"
 
 #include "LIB_listbase.h"
+#include "LIB_math_base.h"
 #include "LIB_math_vector.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
@@ -251,4 +252,68 @@ void screen_geom_vertices_scale(wmWindow *window, Screen *screen) {
 			} break;
 		}
 	}
+}
+
+int screen_geom_find_area_split_point(const ScrArea *area, const rcti *window_rect, const int dir_axis, float fac) {
+	const int cur_area_width = screen_geom_area_width(area);
+	const int cur_area_height = screen_geom_area_height(area);
+	const int area_min_x = AREAMINX;
+	const int area_min_y = WIDGET_UNIT;
+
+	/* area big enough? */
+	if (dir_axis == SCREEN_AXIS_V) {
+		if (cur_area_width <= 2 * area_min_x) {
+			return 0;
+		}
+	}
+	else if (dir_axis == SCREEN_AXIS_H) {
+		if (cur_area_height <= 2 * area_min_y) {
+			return 0;
+		}
+	}
+
+	/* to be sure */
+	CLAMP(fac, 0.0f, 1.0f);
+
+	if (dir_axis == SCREEN_AXIS_H) {
+		int y = area->v1->vec.y + round_fl_to_int(fac * cur_area_height);
+
+		int area_min = area_min_y;
+
+		if (area->v1->vec.y > window_rect->ymin) {
+			area_min += PIXELSIZE;
+		}
+		if (area->v2->vec.y < (window_rect->ymax - 1)) {
+			area_min += PIXELSIZE;
+		}
+
+		if (y - area->v1->vec.y < area_min) {
+			y = area->v1->vec.y + area_min;
+		}
+		else if (area->v2->vec.y - y < area_min) {
+			y = area->v2->vec.y - area_min;
+		}
+
+		return y;
+	}
+
+	int x = area->v1->vec.x + round_fl_to_int(fac * cur_area_width);
+
+	int area_min = area_min_x;
+
+	if (area->v1->vec.x > window_rect->xmin) {
+		area_min += PIXELSIZE;
+	}
+	if (area->v4->vec.x < (window_rect->xmax - 1)) {
+		area_min += PIXELSIZE;
+	}
+
+	if (x - area->v1->vec.x < area_min) {
+		x = area->v1->vec.x + area_min;
+	}
+	else if (area->v4->vec.x - x < area_min) {
+		x = area->v4->vec.x - area_min;
+	}
+
+	return x;
 }
