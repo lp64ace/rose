@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+struct ViewLayer;
+
 /* -------------------------------------------------------------------- */
 /** \name Draw View Engine Data
  * \{ */

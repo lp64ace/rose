@@ -402,7 +402,7 @@ void DRW_shading_group_uniform_texture_ex(DRWShadingGroup *shgroup, const char *
 	draw_shading_group_uniform_create_ex(shgroup, location, DRW_UNIFORM_TEXTURE, texture, sampler_state, 0, 1);
 }
 
-void DRW_shading_group_uniform_texture(DRWShadingGroup *shgroup, const char *name, GPUTexture *texture) {
+void DRW_shading_group_uniform_texture(DRWShadingGroup *shgroup, const char *name, const GPUTexture *texture) {
 	DRW_shading_group_uniform_texture_ex(shgroup, name, texture, GPU_SAMPLER_DEFAULT);
 }
 

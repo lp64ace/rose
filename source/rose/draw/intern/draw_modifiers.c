@@ -63,7 +63,7 @@ ROSE_INLINE void draw_modifier_armature_cache_build(ArmatureModifierData *amd, O
 
 void draw_modifier_cache_populate(ModifierData *md, Object *object) {
 	if (!draw_modifier_is_device_supported(md)) {
-		ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+		const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
 
 		fprintf(stderr, "[Draw] Unsupported (%s) modifier was passed to #%s for object %s\n", (mti) ? mti->name : "Unkown", __func__, KER_id_name(&object->id));
 		return;
@@ -80,7 +80,7 @@ void draw_modifier_cache_populate(ModifierData *md, Object *object) {
 
 void draw_modifier_cache_build(ModifierData *md, Object *object) {
 	if (!draw_modifier_is_device_supported(md)) {
-		ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+		const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
 
 		fprintf(stderr, "[Draw] Unsupported (%s) modifier was passed to #%s for object %s\n", (mti) ? mti->name : "Unkown", __func__, KER_id_name(&object->id));
 		return;

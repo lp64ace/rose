@@ -19,6 +19,7 @@ struct DrawEngineType;
 struct DrawInstanceDataList;
 struct GPUBatch;
 struct GPUSamplerState;
+struct GPUShader;
 struct GPUTexture;
 struct GPUUniformBuf;
 struct GPUVertFormat;
@@ -81,7 +82,7 @@ void DRW_view_winmat_get(struct DRWViewData *view, float mat[4][4], bool inverte
 /** \name Draw
  * \{ */
 
-struct GPUShader;
+struct DRWShadingGroup;
 
 struct DRWPass *DRW_pass_new_ex(const char *name, struct DRWPass *original, int state);
 struct DRWPass *DRW_pass_new(const char *name, int state);

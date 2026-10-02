@@ -16,6 +16,7 @@
 
 #include "WM_api.h"
 
+#include "view3d_intern.h"
 #include "view3d_navigate.h"
 
 ROSE_INLINE void viewops_data_init_navigation(rContext *C, ViewOpsData *vod, const wmEvent *event, const ViewOpsType *nav_type) {

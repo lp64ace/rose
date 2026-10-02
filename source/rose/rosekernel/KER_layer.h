@@ -8,6 +8,7 @@
 #include "LIB_utildefines.h"
 
 struct Depsgraph;
+struct Main;
 struct Scene;
 struct RoseDataReader;
 struct RoseLibReader;

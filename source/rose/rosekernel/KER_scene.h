@@ -3,6 +3,7 @@
 
 #include "DNA_scene_types.h"
 
+struct Base;
 struct Depsgraph;
 struct Main;
 struct Scene;
