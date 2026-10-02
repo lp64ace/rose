@@ -40,6 +40,9 @@ find_package(HARFBUZZ REQUIRED
 find_package(FREETYPE REQUIRED
 	HINTS ${LIBDIR}/freetype
 )
+find_package(ZSTD REQUIRED
+	HINTS ${LIBDIR}/zstd
+)
 
 set(EIGEN3_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/Eigen3)
 
