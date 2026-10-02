@@ -981,9 +981,6 @@ ROSE_STATIC FileData *rlo_filedata_from_file_descriptor(int descr) {
 		if (rawfile) {
 			rawfile->close(rawfile);
 		}
-		else {
-			close(descr);
-		}
 		return NULL;
 	}
 
