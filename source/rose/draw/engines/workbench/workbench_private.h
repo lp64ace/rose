@@ -3,7 +3,9 @@
 
 #include "DNA_object_types.h"
 
+#include "GPU_framebuffer.h"
 #include "GPU_shader.h"
+#include "GPU_texture.h"
 #include "GPU_uniform_buffer.h"
 
 #include "DRW_render.h"

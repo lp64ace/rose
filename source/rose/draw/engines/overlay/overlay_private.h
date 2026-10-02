@@ -1,7 +1,9 @@
 #ifndef OVERLAY_PRIVATE_H
 #define OVERLAY_PRIVATE_H
 
+#include "GPU_framebuffer.h"
 #include "GPU_shader.h"
+#include "GPU_texture.h"
 #include "GPU_uniform_buffer.h"
 #include "GPU_vertex_format.h"
 
