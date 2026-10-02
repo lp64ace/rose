@@ -142,7 +142,7 @@ ROSE_INLINE void view3d_main_region_layout(rContext *C, ARegion *region) {
 	}
 }
 
-ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv3d, const float viewmat[4][4], const float winmat[4][4], rcti *rect) {
+ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv3d, const float viewmat[4][4], const float winmat[4][4], const rcti *rect) {
 	if (winmat) {
 		copy_m4_m4(rv3d->winmat, winmat);
 	}
@@ -160,7 +160,7 @@ ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv
 	}
 }
 
-void ED_view3d_draw_setup_view(ARegion *region, const float viewmat[4][4], const float winmat[4][4], rcti *rect) {
+void ED_view3d_draw_setup_view(ARegion *region, const float viewmat[4][4], const float winmat[4][4], const rcti *rect) {
 	RegionView3D *rv3d = (RegionView3D *)region->regiondata;
 
 	view3d_main_region_setup_view(region, rv3d, viewmat, winmat, rect);

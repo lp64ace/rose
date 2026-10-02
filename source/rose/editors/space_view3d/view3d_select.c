@@ -255,22 +255,15 @@ ROSE_INLINE Base *view3d_mouse_select_object_center(ARegion *region, ViewLayer *
 }
 
 ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_t maxlen, Depsgraph *depsgraph, const rcti *rect) {
-	ViewLayer *layer = DEG_get_evaluated_view_layer(depsgraph);
+	/** Only the CoW (evaluated) #ViewLayer is allowed to be used for drawing... */
+	ViewLayer *view_layer = DEG_get_evaluated_view_layer(depsgraph);
 	ARegion *region = CTX_wm_region(C);
 	View3D *v3d = CTX_wm_space_view3d(C);
 	RegionView3D *rv3d = region->regiondata;
 
-	view3d_select_buffer_cache_init_with_generic_userdata(NULL, v3d, layer);
+	view3d_select_buffer_cache_init_with_generic_userdata(NULL, v3d, view_layer);
 
 	G.flag |= G_FLAG_PICKSEL;
-
-	/* Re-use cache (rect must be smaller than the cached)
-	 * other context is assumed to be unchanged */
-	// if (GPU_select_is_cached()) {
-	// 	GPU_select_begin(buffer, maxlen, &rect, GPU_SELECT_PICK_NEAREST, 0);
-	// 	GPU_select_cache_load_id();
-	// 	GPU_select_end();
-	// }
 
 	DRW_render_context_enable(true);
 
@@ -365,8 +358,8 @@ int ED_object_select_pick(rContext *C, GPUSelectResult *buffer, size_t maxlen, i
 	ARegion *region = CTX_wm_region(C);
 	View3D *v3d = CTX_wm_space_view3d(C);
 
-	const Base *new_base = NULL;
-	const Base *old_base = view_layer->active ? BASACT(view_layer) : NULL;
+	Base *new_base = NULL;
+	Base *old_base = view_layer->active ? BASACT(view_layer) : NULL;
 	/* Always start list from `basact` when cycling the selection. */
 	Base *startbase = (old_base && old_base->next) ? old_base->next : FIRSTBASE(view_layer);
 
@@ -463,8 +456,6 @@ ROSE_INLINE wmOperatorStatus view3d_select_invoke(rContext *C, wmOperator *op, c
 }
 
 ROSE_INLINE wmOperatorStatus view3d_select_exec(rContext *C, wmOperator *op) {
-	Scene *scene = CTX_data_scene(C);
-
 	int x = RNA_int_get(op->ptr, "x");
 	int y = RNA_int_get(op->ptr, "y");
 	int radius = RNA_int_get(op->ptr, "radius");
