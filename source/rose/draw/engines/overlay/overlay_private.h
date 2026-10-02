@@ -50,9 +50,9 @@ typedef struct DRWOverlayViewportFramebufferList {
 } DRWOverlayViewportFramebufferList;
 
 typedef struct DRWOverlayViewportTextureList {
-	struct GPU_Texture *texture_depth;
-	struct GPU_Texture *texture_color;
-	struct GPU_Texture *texture_outline_object_id;
+	struct GPUTexture *texture_depth;
+	struct GPUTexture *texture_color;
+	struct GPUTexture *texture_outline_object_id;
 } DRWOverlayViewportTextureList;
 
 typedef struct DRWOverlayViewportPassList {
