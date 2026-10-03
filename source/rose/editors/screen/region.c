@@ -286,6 +286,8 @@ void ED_region_do_draw(rContext *C, ARegion *region) {
 		}
 	}
 
+	region_draw_azones(area, region);
+
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
 

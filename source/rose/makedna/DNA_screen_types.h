@@ -180,12 +180,14 @@ typedef struct ScrArea {
 	 * See the #spacedata list above.
 	 */
 	ListBase regionbase;
+	ListBase actionzones;
 	ListBase handlers;
 } ScrArea;
 
 /** #ScrArea->flag */
 enum {
 	AREA_FLAG_REGION_SIZE_UPDATE = 1 << 0,
+	AREA_FLAG_AZONES_NEED_UPDATE = 1 << 1,
 };
 
 typedef struct ARegionRuntime {
@@ -280,6 +282,68 @@ enum {
 	RGN_FLAG_SIZE_CLAMP_Y = 1 << 10,
 };
 
+/* Enum for Action Zone Edges. Which edge of area is action zone. */
+enum {
+	/** Region located on the left, _right_ edge is action zone.
+	 * Region minimized to the top left */
+	AE_RIGHT_TO_TOPLEFT,
+	/** Region located on the right, _left_ edge is action zone.
+	 * Region minimized to the top right */
+	AE_LEFT_TO_TOPRIGHT,
+	/** Region located at the bottom, _top_ edge is action zone.
+	 * Region minimized to the bottom right */
+	AE_TOP_TO_BOTTOMRIGHT,
+	/** Region located at the top, _bottom_ edge is action zone.
+	 * Region minimized to the top left */
+	AE_BOTTOM_TO_TOPLEFT,
+};
+
+enum {
+	AZ_SCROLL_VERT,
+	AZ_SCROLL_HOR,
+};
+
+/* for editing areas/regions */
+typedef struct AZone {
+	struct AZone *next, *prev;
+	ARegion *region;
+	int type;
+	int edge;
+
+	/* for draw */
+	short x1, y1, x2, y2;
+	/* for clip */
+	rcti rect;
+	/* for fade in/out */
+	float alpha;
+} AZone;
+
+/** Action-Zone Type: #AZone.type */
+enum {
+	/**
+	 * Corner widgets for:
+	 * - Splitting areas.
+	 * - Swapping areas (Ctrl).
+	 * - Copying the area into a new window (Shift).
+	 */
+	AZONE_AREA = 1,
+	/**
+	 * Use for region show/hide state:
+	 * - When a region is collapsed, draw a handle to expose.
+	 * - When a region is expanded, use the action zone to resize the region.
+	 */
+	AZONE_REGION,
+	/**
+	 * Used when in editor fullscreen draw a corner to return to normal mode.
+	 */
+	AZONE_FULLSCREEN,
+	/**
+	 * Hot-spot #AZone around scroll-bars to show/hide them.
+	 * Only show the scroll-bars when the cursor is close.
+	 */
+	AZONE_REGION_SCROLL,
+};
+
 #define AREAMINX 48
 #define PIXELSIZE 1
 #define ICON_UNIT 16
@@ -292,6 +356,9 @@ enum {
 #define UI_UNIT_Y (PIXELSIZE * WIDGET_UNIT)
 #define UI_TEXT_MARGIN_X 4
 #define UI_MENU_PADDING 0
+
+#define AZONESPOTW (0.6f * UI_UNIT_X)
+#define AZONESPOTH (0.6f * UI_UNIT_Y)
 
 #ifdef __cplusplus
 }

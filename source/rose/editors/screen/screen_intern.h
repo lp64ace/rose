@@ -24,6 +24,8 @@ void screen_area_spacelink_add(struct ScrArea *area, int spacetype);
 struct ScrArea *screen_area_create_with_geometry_ex(struct ScrAreaMap *areamap, const rcti *rect, int spacetype);
 struct ScrArea *screen_area_create_with_geometry(struct Screen *screen, const rcti *rect, int spacetype);
 
+void region_draw_azones(struct ScrArea *area, struct ARegion *region);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

@@ -1579,6 +1579,27 @@ float RNA_property_float_get_index(PointerRNA *ptr, PropertyRNA *property, int i
 	return value;
 }
 
+float RNA_float_get(PointerRNA *ptr, const char *name) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		return RNA_property_float_get(ptr, property);
+	}
+	fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	return 0;
+}
+
+void RNA_float_set(PointerRNA *ptr, const char *name, float value) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		RNA_property_float_set(ptr, property, value);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
 void RNA_property_float_set_index(PointerRNA *ptr, PropertyRNA *property, int index, float value) {
 	float tmp[RNA_MAX_ARRAY_LENGTH];
 	int len = rna_ensure_property_array_length(ptr, property);

@@ -158,6 +158,9 @@ void RNA_property_float_set_array(struct PointerRNA *ptr, struct PropertyRNA *pr
 float RNA_property_float_get_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index);
 void RNA_property_float_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, float value);
 
+float RNA_float_get(struct PointerRNA *ptr, const char *name);
+void RNA_float_set(struct PointerRNA *ptr, const char *name, float value);
+
 void RNA_property_float_range(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_hardmin, float *r_hardmax);
 void RNA_property_float_ui_range(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_softmin, float *r_softmax, float *r_step, float *r_precision);
 

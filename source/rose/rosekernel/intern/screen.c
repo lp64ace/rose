@@ -440,6 +440,7 @@ void KER_screen_area_free(ScrArea *area) {
 		KER_area_region_free(st, region);
 	}
 	LIB_freelistN(&area->regionbase);
+	LIB_freelistN(&area->actionzones);
 
 	MEM_SAFE_FREE(area->global);
 

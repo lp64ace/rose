@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 struct ARegion;
+struct AZone;
 struct Main;
 struct ScrArea;
 struct Screen;

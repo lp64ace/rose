@@ -1451,6 +1451,41 @@ PropertyRNA *RNA_def_int(void *vcontainer, const char *identifier, int default_v
 	return prop;
 }
 
+PropertyRNA *RNA_def_int_vector(void *vcontainer, const char *identifier, int length, const int *default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_INT, PROP_XYZ);
+	if (length != 0) {
+		RNA_def_property_array(prop, length);
+	}
+	if (default_value) {
+		RNA_def_property_int_array_default(prop, default_value);
+	}
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_float(void *vcontainer, const char *identifier, float default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_FLOAT, PROP_NONE);
+	RNA_def_property_float_default(prop, default_value);
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
 PropertyRNA *RNA_def_string(void *vcontainer, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description) {
 	ContainerRNA *container = (ContainerRNA *)(vcontainer);
 	PropertyRNA *prop;
@@ -1571,6 +1606,36 @@ void RNA_def_property_int_default(PropertyRNA *prop, int value) {
 		case PROP_INT: {
 			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
 			iprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_int_array_default(PropertyRNA *prop, const int *value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_INT: {
+			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
+			iprop->defaultarray = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_float_default(PropertyRNA *prop, int value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_FLOAT: {
+			FloatPropertyRNA *fprop = (FloatPropertyRNA *)prop;
+			fprop->defaultvalue = value;
 			break;
 		}
 		default:

@@ -58,6 +58,8 @@ unsigned int RNA_property_canonical_token(const char *identifier);
 struct PropertyRNA *RNA_def_property(void *container, const char *identifier, int type, int subtype);
 struct PropertyRNA *RNA_def_boolean(void *container, const char *identifier, bool default_value, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
+struct PropertyRNA *RNA_def_int_vector(void *container, const char *identifier, int length, const int *default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
+struct PropertyRNA *RNA_def_float(void *container, const char *identifier, float default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax);
 struct PropertyRNA *RNA_def_string(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string_file_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string_dir_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
@@ -100,6 +102,7 @@ void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float 
  * \{ */
 
 void RNA_def_property_int_default(struct PropertyRNA *property, int default_value);
+void RNA_def_property_int_array_default(struct PropertyRNA *property, const int *default_value);
 
 /** \} */
 
