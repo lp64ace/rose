@@ -746,9 +746,9 @@ static int area_split_modal(rContext *C, wmOperator *op, const wmEvent *event) {
 
 static void SCREEN_OT_area_split(wmOperatorType *ot) {
 	/* identifiers */
-	ot->name = "Move Area Edges";
-	ot->description = "Move selected area edges";
-	ot->idname = "SCREEN_OT_area_move";
+	ot->name = "Split Area";
+	ot->description = "Split selected area into new windows";
+	ot->idname = "SCREEN_OT_area_split";
 
 	ot->exec = area_split_exec;
 	ot->invoke = area_split_invoke;
