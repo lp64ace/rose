@@ -130,6 +130,14 @@ enum {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Screen
+ * \{ */
+
+struct ScrArea *KER_screen_find_area_xy(struct Screen *screen, int spacetype, const int xy[2]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Screen Geometry
  * \{ */
 

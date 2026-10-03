@@ -54,6 +54,10 @@ enum {
 	 * note that this must only ever be set for keyboard events `ISKEYBOARD(event->type) == true`.
 	 */
 	WM_EVENT_IS_REPEAT = 1 << 0,
+	/**
+	 * Indicates that this event's customdata require #MEM_freeN on free.
+	 */
+	WM_EVENT_CD_FREE = 1 << 1,
 };
 
 /** #wmEvent->value */

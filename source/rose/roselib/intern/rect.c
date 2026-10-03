@@ -73,6 +73,25 @@ void LIB_rcti_rctf_copy_round(struct rcti *dst, const struct rctf *src) {
 /** \name Util Methods
  * \{ */
 
+int LIB_rcti_length_x(const rcti *rect, int x) {
+	if (x < rect->xmin) {
+		return rect->xmin - x;
+	}
+	if (x > rect->xmax) {
+		return x - rect->xmax;
+	}
+	return 0;
+}
+int LIB_rcti_length_y(const rcti *rect, int y) {
+	if (y < rect->ymin) {
+		return rect->ymin - y;
+	}
+	if (y > rect->ymax) {
+		return y - rect->ymax;
+	}
+	return 0;
+}
+
 void LIB_rctf_sanitize(rctf *rect) {
 	if (rect->xmin > rect->xmax) {
 		SWAP(float, rect->xmin, rect->xmax);

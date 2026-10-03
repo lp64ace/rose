@@ -41,6 +41,16 @@ ScrArea *screen_addarea(Screen *screen, ScrVert *v1, ScrVert *v2, ScrVert *v3, S
 	return screen_addarea_ex(AREAMAP_FROM_SCREEN(screen), v1, v2, v3, v4, spacetype);
 }
 
+void screen_delarea(rContext *C, Screen *screen, ScrArea *area) {
+
+	ED_area_exit(C, area);
+
+	KER_screen_area_free(area);
+
+	LIB_remlink(&screen->areabase, area);
+	MEM_freeN(area);
+}
+
 Screen *ED_screen_add_ex(Main *main, const char *name, const rcti *rect, const int *space_types, int totspaces) {
 	Screen *screen = KER_libblock_alloc(main, ID_SCR, name, 0);
 

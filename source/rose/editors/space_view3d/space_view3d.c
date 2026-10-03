@@ -115,6 +115,16 @@ ROSE_INLINE void view3d_init(WindowManager *wm, ScrArea *area) {
 ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
 }
 
+ROSE_INLINE SpaceLink *view3d_duplicate(SpaceLink *sl) {
+	View3D *v3do = (View3D *)sl;
+	View3D *v3dn = MEM_dupallocN(sl);
+
+	v3dn->local_collections_uuid = 0;
+	v3dn->flag &= ~(V3D_LOCAL_COLLECTIONS);
+
+	return (SpaceLink *)v3dn;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -199,6 +209,7 @@ void ED_spacetype_view3d() {
 	st->free = view3d_free;
 	st->init = view3d_init;
 	st->exit = view3d_exit;
+	st->duplicate = view3d_duplicate;
 	st->operatortypes = view3d_operatortypes;
 	st->keymap = view3d_keymap;
 	st->keymapflag = ED_KEYMAP_UI;

@@ -197,6 +197,58 @@ void WM_draw_region_free(ARegion *region) {
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Window Drawing (Draw All)
+ *
+ * Reference method, draw all each time.
+ * \{ */
+
+typedef struct WindowDrawCB {
+	struct WindowDrawCB *next, *prev;
+
+	void (*draw)(const struct wmWindow *, void *);
+	void *customdata;
+
+} WindowDrawCB;
+
+void *WM_draw_cb_activate(wmWindow *window, void (*draw)(const struct wmWindow *, void *), void *customdata) {
+	WindowDrawCB *wdc = MEM_callocN(sizeof(*wdc), "WindowDrawCB");
+
+	LIB_addtail(&window->drawcalls, wdc);
+	wdc->draw = draw;
+	wdc->customdata = customdata;
+
+	return wdc;
+}
+
+void WM_draw_cb_exit(wmWindow *window, void *handle) {
+	LISTBASE_FOREACH(WindowDrawCB *, wdc, &window->drawcalls) {
+		if (wdc == (WindowDrawCB *)handle) {
+			LIB_remlink(&window->drawcalls, wdc);
+			MEM_freeN(wdc);
+			return;
+		}
+	}
+}
+
+static void wm_draw_callbacks(wmWindow *window) {
+	GPU_matrix_push();
+	GPU_matrix_identity_set();
+	GPU_matrix_push_projection();
+	GPU_matrix_identity_projection_set();
+
+	GPU_matrix_ortho_2d_set(0, window->sizex, window->sizey, 0);
+
+	LISTBASE_FOREACH(WindowDrawCB *, wdc, &window->drawcalls) {
+		wdc->draw(window, wdc->customdata);
+	}
+
+	GPU_matrix_pop_projection();
+	GPU_matrix_pop();
+}
+
+/** \} */
+
 ROSE_INLINE void wm_window_set_drawable(WindowManager *wm, wmWindow *window, bool activate) {
 	ROSE_assert(ELEM(wm->windrawable, NULL, window));
 
@@ -350,6 +402,8 @@ ROSE_INLINE void wm_draw_window_onscreen(rContext *C, wmWindow *window, int view
 		}
 		wm_draw_region_blit(region, view);
 	}
+
+	wm_draw_callbacks(window);
 
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();

@@ -305,7 +305,7 @@ enum {
 
 /* for editing areas/regions */
 typedef struct AZone {
-	struct AZone *next, *prev;
+	struct AZone *prev, *next;
 	ARegion *region;
 	int type;
 	int edge;
@@ -344,7 +344,7 @@ enum {
 	AZONE_REGION_SCROLL,
 };
 
-#define AREAMINX 48
+#define AREAGRID 4
 #define PIXELSIZE 1
 #define ICON_UNIT 16
 #define WIDGET_UNIT 24
@@ -352,13 +352,16 @@ enum {
 #define BORDERPADDING 3 * PIXELSIZE
 #define BORDERPADDING_GLOBAL 3 * PIXELSIZE
 
+#define AREAMINX (2 * WIDGET_UNIT * PIXELSIZE)
 #define UI_UNIT_X (PIXELSIZE * WIDGET_UNIT)
 #define UI_UNIT_Y (PIXELSIZE * WIDGET_UNIT)
 #define UI_TEXT_MARGIN_X 4
 #define UI_MENU_PADDING 0
 
-#define AZONESPOTW (0.6f * UI_UNIT_X)
-#define AZONESPOTH (0.6f * UI_UNIT_Y)
+#define AZONESPOTW (0.6f * WIDGET_UNIT)
+#define AZONESPOTH (0.6f * WIDGET_UNIT)
+#define AZONEFADEIN (5.0f * WIDGET_UNIT)
+#define AZONEFADEOUT (6.5f * WIDGET_UNIT)
 
 #ifdef __cplusplus
 }

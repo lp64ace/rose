@@ -35,6 +35,15 @@ enum eView2D_CommonViewTypes {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name View2D Region
+ * \{ */
+
+float UI_view2d_view_to_region_x(const struct View2D *v2d, float x);
+float UI_view2d_view_to_region_y(const struct View2D *v2d, float y);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name View2D Refresh and Validation (Spatial)
  * \{ */
 
@@ -68,6 +77,24 @@ void UI_view2d_mask_from_win(const View2D *v2d, rcti *r_mask);
  * Draw scroll-bars in the given 2D-region.
  */
 void UI_view2d_scrollers_draw(View2D *v2d, const rcti *mask_custom);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scroll-bar Utilities
+ * \{ */
+
+/* test if mouse in a scrollbar (assume that scroller availability has been tested) */
+#define IN_2D_VERT_SCROLL(v2d, co) (LIB_rcti_isect_pt_v(&v2d->vert, co))
+#define IN_2D_HORIZ_SCROLL(v2d, co) (LIB_rcti_isect_pt_v(&v2d->hor, co))
+
+#define IN_2D_VERT_SCROLL_RECT(v2d, rct) (LIB_rcti_isect(&v2d->vert, rct, NULL))
+#define IN_2D_HORIZ_SCROLL_RECT(v2d, rct) (LIB_rcti_isect(&v2d->hor, rct, NULL))
+
+char UI_view2d_mouse_in_scrollers_ex(const struct ARegion *region, const struct View2D *v2d, const int xy[2], int *r_scroll);
+char UI_view2d_mouse_in_scrollers(const struct ARegion *region, const struct View2D *v2d, const int xy[2]);
+char UI_view2d_rect_in_scrollers_ex(const struct ARegion *region, const struct View2D *v2d, const struct rcti *rect, int *r_scroll);
+char UI_view2d_rect_in_scrollers(const struct ARegion *region, const struct View2D *v2d, const struct rcti *rect);
 
 /** \} */
 

@@ -11,6 +11,12 @@ static const char *builtin_shader_create_info_name(BuiltinShader shader) {
 	switch (shader) {
 		case GPU_SHADER_TEXT:
 			return "gpu_shader_text";
+		case GPU_SHADER_2D_UNIFORM_COLOR:
+			return "gpu_shader_2D_uniform_color";
+		case GPU_SHADER_2D_FLAT_COLOR:
+			return "gpu_shader_2D_flat_color";
+		case GPU_SHADER_2D_SMOOTH_COLOR:
+			return "gpu_shader_2D_smooth_color";
 		case GPU_SHADER_2D_IMAGE_RECT_COLOR:
 			return "gpu_shader_2D_image_rect_color";
 		case GPU_SHADER_2D_IMAGE_OVERLAYS_MERGE:

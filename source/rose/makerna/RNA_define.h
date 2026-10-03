@@ -93,8 +93,6 @@ extern const float rna_default_axis_angle[4];
 extern const float rna_default_quaternion[4];
 extern const float rna_default_scale_3d[3];
 
-void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float *defaultarray);
-
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -103,6 +101,15 @@ void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float 
 
 void RNA_def_property_int_default(struct PropertyRNA *property, int default_value);
 void RNA_def_property_int_array_default(struct PropertyRNA *property, const int *default_value);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Float Property RNA Definition
+ * \{ */
+
+void RNA_def_property_float_default(struct PropertyRNA *property, float default_value);
+void RNA_def_property_float_array_default(struct PropertyRNA *prop, const float *defaultarray);
 
 /** \} */
 

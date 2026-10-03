@@ -192,6 +192,12 @@ enum {
 	WINDEACTIVATE = 0x0104, /* Window is deactivated, focus lost, (260). */
 	WINQUIT = 0x0105,
 
+	/* Actionzones, tweak, gestures: 0x500x, 0x501x */
+	/* Keep in sync with IS_EVENT_ACTIONZONE(...). */
+	EVT_ACTIONZONE_AREA = 0x5000,		/* 20480 */
+	EVT_ACTIONZONE_REGION = 0x5001,		/* 20481 */
+	EVT_ACTIONZONE_FULLSCREEN = 0x5011, /* 20497 */
+
 	/* Misc Rose internals: 0x502x. */
 	EVT_FILESELECT = 0x5020, /* 20512 */
 };
@@ -219,6 +225,7 @@ enum {
 #define ISMOUSE_GESTURE(event_type) (MOUSEPAN <= (event_type) && (event_type) <= MOUSESMARTZOOM)
 
 #define ISKEYBOARD_OR_BUTTON(event_type) (ISMOUSE_BUTTON(event_type) || ISKEYBOARD(event_type))
+#define IS_EVENT_ACTIONZONE(event_type) ELEM(event_type, EVT_ACTIONZONE_AREA, EVT_ACTIONZONE_REGION, EVT_ACTIONZONE_FULLSCREEN)
 
 /* clang-format on */
 

@@ -93,6 +93,10 @@ void wm_event_free_all(wmWindow *win) {
 	}
 }
 void wm_event_free(wmEvent *evt) {
+	if (evt->customdata != NULL && (evt->flag & WM_EVENT_CD_FREE) != 0) {
+		MEM_freeN(evt->customdata);
+	}
+
 	MEM_freeN(evt);
 }
 
@@ -724,6 +728,10 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(rContex
 			LISTBASE_FOREACH(wmKeyMapItem *, kmi, &keymap->items) {
 				if (wm_eventmatch(event, kmi)) {
 					action |= wm_handler_operator_call(C, handlers, &handler->head, event, kmi->ptr, kmi->idname);
+
+					if (action & WM_HANDLER_BREAK) {
+						break;
+					}
 				}
 			}
 		}
@@ -883,6 +891,10 @@ void WM_do_handlers(rContext *C) {
 				}
 
 				ED_screen_areas_iter(window, screen, area) {
+					if (area->flag & AREA_FLAG_AZONES_NEED_UPDATE) {
+						// ED_area_azones_update(area, evt->mouse_xy);
+					}
+
 					if (wm_event_inside_rect(evt, &area->totrct)) {
 						CTX_wm_area_set(C, area);
 

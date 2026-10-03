@@ -31,6 +31,28 @@ ROSE_STATIC void screen_foreach_id(ID *id, struct LibraryForeachIDData *data) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Screen
+ * \{ */
+
+ScrArea *KER_screen_area_map_find_area_xy(const ScrAreaMap *areamap, const int spacetype, const int xy[2]) {
+	LISTBASE_FOREACH(ScrArea *, area, &areamap->areabase) {
+		if (LIB_rcti_isect_pt_v(&area->totrct, xy)) {
+			if (ELEM(spacetype, SPACE_TYPE_ANY, area->spacetype)) {
+				return area;
+			}
+			break;
+		}
+	}
+	return NULL;
+}
+
+ScrArea *KER_screen_find_area_xy(Screen *screen, int spacetype, const int xy[2]) {
+	return KER_screen_area_map_find_area_xy(AREAMAP_FROM_SCREEN(screen), spacetype, xy);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Screen Geometry
  * \{ */
 

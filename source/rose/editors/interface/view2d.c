@@ -20,6 +20,20 @@ ROSE_STATIC int view2d_scroll_mapped(int scroll);
 ROSE_STATIC void view2d_masks(View2D *v2d, const rcti *mask_scroll);
 
 /* -------------------------------------------------------------------- */
+/** \name View2D Region
+ * \{ */
+
+float UI_view2d_view_to_region_x(const View2D *v2d, float x) {
+	return (v2d->mask.xmin + (((x - v2d->cur.xmin) / LIB_rctf_size_x(&v2d->cur)) * LIB_rcti_size_x(&v2d->mask)));
+}
+
+float UI_view2d_view_to_region_y(const View2D *v2d, float y) {
+	return (v2d->mask.ymin + (((y - v2d->cur.ymin) / LIB_rcti_size_y(&v2d->cur)) * LIB_rcti_size_y(&v2d->mask)));
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name View2D Refresh and Validation (Spatial)
  * \{ */
 
@@ -933,6 +947,70 @@ void UI_view2d_scrollers_draw(View2D *v2d, const rcti *mask_custom) {
 
 		UI_draw_widget_scroll(wcol, &ver, &slider, state);
 	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Scroll-bar Utilities
+ * \{ */
+
+char UI_view2d_mouse_in_scrollers_ex(const ARegion *region, const View2D *v2d, const int xy[2], int *r_scroll) {
+	const int scroll = view2d_scroll_mapped(v2d->scroll);
+	*r_scroll = scroll;
+
+	if (scroll) {
+		/* Move to region-coordinates. */
+		const int co[2] = {
+			xy[0] - region->winrct.xmin,
+			xy[1] - region->winrct.ymin,
+		};
+		if (scroll & V2D_SCROLL_HORIZONTAL) {
+			if (IN_2D_HORIZ_SCROLL(v2d, co)) {
+				return 'h';
+			}
+		}
+		if (scroll & V2D_SCROLL_VERTICAL) {
+			if (IN_2D_VERT_SCROLL(v2d, co)) {
+				return 'v';
+			}
+		}
+	}
+
+	return 0;
+}
+
+char UI_view2d_mouse_in_scrollers(const struct ARegion *region, const struct View2D *v2d, const int xy[2]) {
+	int scroll_dummy = 0;
+	return UI_view2d_mouse_in_scrollers_ex(region, v2d, xy, &scroll_dummy);
+}
+
+char UI_view2d_rect_in_scrollers_ex(const struct ARegion *region, const struct View2D *v2d, const struct rcti *rect, int *r_scroll) {
+	const int scroll = view2d_scroll_mapped(v2d->scroll);
+	*r_scroll = scroll;
+
+	if (scroll) {
+		/* Move to region-coordinates. */
+		rcti rect_region = *rect;
+		LIB_rcti_translate(&rect_region, -region->winrct.xmin, region->winrct.ymin);
+		if (scroll & V2D_SCROLL_HORIZONTAL) {
+			if (IN_2D_HORIZ_SCROLL_RECT(v2d, &rect_region)) {
+				return 'h';
+			}
+		}
+		if (scroll & V2D_SCROLL_VERTICAL) {
+			if (IN_2D_VERT_SCROLL_RECT(v2d, &rect_region)) {
+				return 'v';
+			}
+		}
+	}
+
+	return 0;
+}
+
+char UI_view2d_rect_in_scrollers(const struct ARegion *region, const struct View2D *v2d, const struct rcti *rect) {
+	int scroll_dummy = 0;
+	return UI_view2d_rect_in_scrollers_ex(region, v2d, rect, &scroll_dummy);
 }
 
 /** \} */

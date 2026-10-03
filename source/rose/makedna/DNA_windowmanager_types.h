@@ -67,6 +67,7 @@ typedef struct wmWindow {
 	ListBase event_queue;
 	ListBase modalhandlers;
 	ListBase handlers;
+	ListBase drawcalls;
 
 	wmWindow_Runtime runtime;
 } wmWindow;

@@ -1629,7 +1629,7 @@ void RNA_def_property_int_array_default(PropertyRNA *prop, const int *value) {
 	}
 }
 
-void RNA_def_property_float_default(PropertyRNA *prop, int value) {
+void RNA_def_property_float_default(PropertyRNA *prop, float value) {
 	StructRNA *srna = DefRNA.nstruct;
 
 	switch (prop->type) {

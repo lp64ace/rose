@@ -22,8 +22,11 @@ set(GLSL_SRC
 	
 	shaders/opengl/glsl_shader_defines.glsl
 	
+	shaders/gpu_shader_2D_flat_color_vert.glsl
 	shaders/gpu_shader_2D_image_rect_vert.glsl
 	shaders/gpu_shader_2D_image_vert.glsl
+	shaders/gpu_shader_2D_smooth_color_frag.glsl
+	shaders/gpu_shader_2D_smooth_color_vert.glsl
 	shaders/gpu_shader_2D_vert.glsl
 	shaders/gpu_shader_2D_widget_base_frag.glsl
 	shaders/gpu_shader_2D_widget_base_vert.glsl
@@ -34,6 +37,7 @@ set(GLSL_SRC
 	shaders/gpu_shader_cfg_world_clip_lib.glsl
 	shaders/gpu_shader_colorspace_lib.glsl
 	shaders/gpu_shader_depth_only_frag.glsl
+	shaders/gpu_shader_flat_color_frag.glsl
 	shaders/gpu_shader_image_color_frag.glsl
 	shaders/gpu_shader_image_overlays_merge_frag.glsl
 	shaders/gpu_shader_image_overlays_stereo_merge_frag.glsl
@@ -244,9 +248,12 @@ list(APPEND SRC ${OPENGL_SRC})
 set(INFO_SRC
 	infos/gpu_clip_planes_info.hh
 	infos/gpu_interface_info.hh
+	infos/gpu_shader_2D_flat_color_info.hh
 	infos/gpu_shader_2D_image_overlays_merge_info.hh
 	infos/gpu_shader_2D_image_overlays_stereo_merge_info.hh
 	infos/gpu_shader_2D_image_rect_color_info.hh
+	infos/gpu_shader_2D_smooth_color_info.hh
+	infos/gpu_shader_2D_uniform_color_info.hh
 	infos/gpu_shader_2D_widget_info.hh
 	infos/gpu_shader_3D_uniform_color_info.hh
 	infos/gpu_shader_simple_lighting_info.hh

@@ -207,6 +207,7 @@ ROSE_INLINE void area_azone_init(wmWindow *window, const Screen *screen, ScrArea
 	for (size_t i = 0; i < ARRAY_SIZE(coords); i++) {
 		AZone *az = (AZone *)MEM_callocN(sizeof(AZone), "AZone");
 		LIB_addtail(&area->actionzones, az);
+		az->type = AZONE_AREA;
 		az->x1 = coords[i][0];
 		az->y1 = coords[i][1];
 		az->x2 = coords[i][2];
@@ -795,7 +796,7 @@ ROSE_INLINE void ed_default_handlers(WindowManager *wm, ScrArea *area, ARegion *
 }
 
 void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
-	Screen *screem = WM_window_get_active_screen(window);
+	Screen *screen = WM_window_get_active_screen(window);
 
 	if (ED_area_is_global(area) && (area->global->flag & GLOBAL_AREA_IS_HIDDEN) != 0) {
 		return;
@@ -831,6 +832,9 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 	if (area->type->init) {
 		area->type->init(wm, area);
 	}
+
+	/* clear all azones, add the area triangle widgets */
+	area_azone_init(window, screen, area);
 
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		region_evaulate_visibility(region);
