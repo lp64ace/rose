@@ -145,34 +145,34 @@ int area_getorientation(ScrArea *sa_a, ScrArea *sa_b) {
 		return SCREEN_DIR_NONE;
 	}
 
-	const vec2s *sa_bl = &sa_a->v1->vec;
-	const vec2s *sa_tl = &sa_a->v2->vec;
-	const vec2s *sa_tr = &sa_a->v3->vec;
-	const vec2s *sa_br = &sa_a->v4->vec;
+	const vec2f *sa_bl = &sa_a->v1->vec;
+	const vec2f *sa_tl = &sa_a->v2->vec;
+	const vec2f *sa_tr = &sa_a->v3->vec;
+	const vec2f *sa_br = &sa_a->v4->vec;
 
-	const vec2s *sb_bl = &sa_b->v1->vec;
-	const vec2s *sb_tl = &sa_b->v2->vec;
-	const vec2s *sb_tr = &sa_b->v3->vec;
-	const vec2s *sb_br = &sa_b->v4->vec;
+	const vec2f *sb_bl = &sa_b->v1->vec;
+	const vec2f *sb_tl = &sa_b->v2->vec;
+	const vec2f *sb_tr = &sa_b->v3->vec;
+	const vec2f *sb_br = &sa_b->v4->vec;
 
 	if (sa_bl->x == sb_br->x && sa_tl->x == sb_tr->x) { /* sa_a to right of sa_b = W */
 		if ((ROSE_MIN(sa_tl->y, sb_tr->y) - ROSE_MAX(sa_bl->y, sb_br->y)) > AREAJOINTOLERANCEY) {
-			return 0;
+			return SCREEN_DIR_W;
 		}
 	}
 	else if (sa_tl->y == sb_bl->y && sa_tr->y == sb_br->y) { /* sa_a to bottom of sa_b = N */
 		if ((ROSE_MIN(sa_tr->x, sb_br->x) - ROSE_MAX(sa_tl->x, sb_bl->x)) > AREAJOINTOLERANCEX) {
-			return 1;
+			return SCREEN_DIR_N;
 		}
 	}
 	else if (sa_tr->x == sb_tl->x && sa_br->x == sb_bl->x) { /* sa_a to left of sa_b = E */
 		if ((ROSE_MIN(sa_tr->y, sb_tl->y) - ROSE_MAX(sa_br->y, sb_bl->y)) > AREAJOINTOLERANCEY) {
-			return 2;
+			return SCREEN_DIR_E;
 		}
 	}
 	else if (sa_bl->y == sb_tl->y && sa_br->y == sb_tr->y) { /* sa_a on top of sa_b = S */
 		if ((ROSE_MIN(sa_br->x, sb_tr->x) - ROSE_MAX(sa_bl->x, sb_tl->x)) > AREAJOINTOLERANCEX) {
-			return 3;
+			return SCREEN_DIR_S;
 		}
 	}
 

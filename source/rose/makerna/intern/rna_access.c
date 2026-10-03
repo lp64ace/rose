@@ -1339,6 +1339,28 @@ void RNA_int_set(PointerRNA *ptr, const char *name, int value) {
 	}
 }
 
+void RNA_int_get_array(struct PointerRNA *ptr, const char *name, int *values) {
+	PropertyRNA *prop = RNA_struct_find_property(ptr, name);
+
+	if (prop) {
+		RNA_property_int_get_array(ptr, prop, values);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
+void RNA_int_set_array(struct PointerRNA *ptr, const char *name, const int *values) {
+	PropertyRNA *prop = RNA_struct_find_property(ptr, name);
+
+	if (prop) {
+		RNA_property_int_set_array(ptr, prop, values);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
 void RNA_property_int_range(PointerRNA *ptr, PropertyRNA *property, int *r_hardmin, int *r_hardmax) {
 	IntPropertyRNA *iproperty = (IntPropertyRNA *)rna_ensure_property(property);
 	int softmin, softmax;

@@ -142,6 +142,8 @@ void RNA_property_int_set_array(struct PointerRNA *ptr, struct PropertyRNA *prop
 
 int RNA_int_get(struct PointerRNA *ptr, const char *name);
 void RNA_int_set(struct PointerRNA *ptr, const char *name, int value);
+void RNA_int_get_array(struct PointerRNA *ptr, const char *name, int *values);
+void RNA_int_set_array(struct PointerRNA *ptr, const char *name, const int *values);
 
 void RNA_property_int_range(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_hardmin, int *r_hardmax);
 void RNA_property_int_ui_range(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_softmin, int *r_softmax, int *r_step);

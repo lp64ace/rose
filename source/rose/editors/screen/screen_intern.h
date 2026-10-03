@@ -17,7 +17,7 @@ struct Screen;
  * \{ */
 
 /* Edges must be within these to allow joining. */
-#define AREAJOINTOLERANCEX (AREAMINX)
+#define AREAJOINTOLERANCEX (UI_UNIT_X)
 #define AREAJOINTOLERANCEY (UI_UNIT_Y)
 
 struct ScrArea *screen_addarea_ex(struct ScrAreaMap *areamap, struct ScrVert *v1, struct ScrVert *v2, struct ScrVert *v3, struct ScrVert *v4, int spacetype);

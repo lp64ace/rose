@@ -1339,6 +1339,291 @@ static void SCREEN_OT_area_split(wmOperatorType *ot) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Area edge detection utility
+ * \{ */
+
+static ScrEdge *screen_area_edge_from_cursor(const rContext *C, const int cursor[2], ScrArea **r_sa1, ScrArea **r_sa2) {
+	wmWindow *win = CTX_wm_window(C);
+	Screen *screen = CTX_wm_screen(C);
+	rcti window_rect;
+	WM_window_rect_calc(win, &window_rect);
+	ScrEdge *actedge = screen_geom_area_map_find_active_scredge(AREAMAP_FROM_SCREEN(screen), &window_rect, cursor[0], cursor[1], BORDERPADDING);
+	*r_sa1 = NULL;
+	*r_sa2 = NULL;
+	if (actedge == NULL) {
+		return NULL;
+	}
+	int borderwidth = BORDERPADDING;
+	ScrArea *sa1, *sa2;
+	if (screen_geom_edge_is_horizontal(actedge)) {
+		sa1 = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, (const int[2]){cursor[0], cursor[1] + borderwidth});
+		sa2 = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, (const int[2]){cursor[0], cursor[1] - borderwidth});
+	}
+	else {
+		sa1 = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, (const int[2]){cursor[0] + borderwidth, cursor[1]});
+		sa2 = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, (const int[2]){cursor[0] - borderwidth, cursor[1]});
+	}
+	bool isGlobal = ((sa1 && ED_area_is_global(sa1)) || (sa2 && ED_area_is_global(sa2)));
+	if (!isGlobal) {
+		*r_sa1 = sa1;
+		*r_sa2 = sa2;
+	}
+	return actedge;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Screen Join-Area Operator
+ * \{ */
+
+/* operator state vars used:
+ * x1, y1     mouse coord in first area, which will disappear
+ * x2, y2     mouse coord in 2nd area, which will become joined
+ *
+ * functions:
+ *
+ * init()   find edge based on state vars
+ * test if the edge divides two areas,
+ * store active and nonactive area,
+ *
+ * apply()  do the actual join
+ *
+ * exit()   cleanup, send notifier
+ *
+ * callbacks:
+ *
+ * exec()   calls init, apply, exit
+ *
+ * invoke() sets mouse coords in x,y
+ * call init()
+ * add modal handler
+ *
+ * modal()  accept modal events while doing it
+ * call apply() with active window and nonactive window
+ * call exit() and remove handler when LMB confirm
+ */
+
+typedef struct sAreaJoinData {
+	ScrArea *sa1;		 /* Potential source area (kept). */
+	ScrArea *sa2;		 /* Potential target area (removed or reduced). */
+	int direction;		 /* Direction of potential join. */
+	void *draw_callback; /* call #screen_draw_join_highlight */
+
+} sAreaJoinData;
+
+static void area_join_draw_cb(const struct wmWindow *UNUSED(win), void *userdata) {
+	const wmOperator *op = userdata;
+
+	sAreaJoinData *sd = op->customdata;
+	if (sd->sa1 && sd->sa2 && (sd->direction != SCREEN_DIR_NONE)) {
+		screen_draw_join_highlight(sd->sa1, sd->sa2);
+	}
+}
+
+/* validate selection inside screen, set variables OK */
+/* return false: init failed */
+static bool area_join_init(rContext *C, wmOperator *op, ScrArea *sa1, ScrArea *sa2) {
+	if (sa1 == NULL || sa2 == NULL) {
+		/* Get areas from cursor location if not specified. */
+		int cursor[2];
+		RNA_int_get_array(op->ptr, "cursor", cursor);
+		screen_area_edge_from_cursor(C, cursor, &sa1, &sa2);
+	}
+	if (sa1 == NULL || sa2 == NULL) {
+		return false;
+	}
+
+	sAreaJoinData *jd = MEM_callocN(sizeof(sAreaJoinData), "op_area_join");
+
+	jd->sa1 = sa1;
+	jd->sa2 = sa2;
+	jd->direction = SCREEN_DIR_NONE;
+
+	op->customdata = jd;
+
+	jd->draw_callback = WM_draw_cb_activate(CTX_wm_window(C), area_join_draw_cb, op);
+
+	return true;
+}
+
+/* apply the join of the areas (space types) */
+static bool area_join_apply(rContext *C, wmOperator *op) {
+	sAreaJoinData *jd = (sAreaJoinData *)op->customdata;
+	if (!jd || (jd->direction == SCREEN_DIR_NONE)) {
+		return false;
+	}
+
+	if (!screen_area_join(C, CTX_wm_screen(C), jd->sa1, jd->sa2)) {
+		return false;
+	}
+	if (CTX_wm_area(C) == jd->sa2) {
+		CTX_wm_area_set(C, NULL);
+		CTX_wm_region_set(C, NULL);
+	}
+
+	return true;
+}
+
+/* finish operation */
+static void area_join_exit(rContext *C, wmOperator *op) {
+	sAreaJoinData *jd = (sAreaJoinData *)op->customdata;
+
+	if (jd) {
+		if (jd->draw_callback) {
+			WM_draw_cb_exit(CTX_wm_window(C), jd->draw_callback);
+		}
+
+		MEM_freeN(jd);
+		op->customdata = NULL;
+	}
+
+	/* this makes sure aligned edges will result in aligned grabbing */
+	KER_screen_remove_double_scredges(CTX_wm_screen(C));
+	KER_screen_remove_unused_scredges(CTX_wm_screen(C));
+	KER_screen_remove_unused_scrverts(CTX_wm_screen(C));
+}
+
+static int area_join_exec(rContext *C, wmOperator *op) {
+	if (!area_join_init(C, op, NULL, NULL)) {
+		return OPERATOR_CANCELLED;
+	}
+
+	area_join_apply(C, op);
+	area_join_exit(C, op);
+
+	return OPERATOR_FINISHED;
+}
+
+/* interaction callback */
+static int area_join_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+	if (event->type == EVT_ACTIONZONE_AREA) {
+		sActionzoneData *sad = event->customdata;
+
+		if (sad == NULL || sad->modifier > 0) {
+			return OPERATOR_PASS_THROUGH;
+		}
+
+		/* verify *sad itself */
+		if (sad->sa1 == NULL || sad->sa2 == NULL) {
+			return OPERATOR_PASS_THROUGH;
+		}
+
+		/* is this our *sad? if areas equal it should be passed on */
+		if (sad->sa1 == sad->sa2) {
+			return OPERATOR_PASS_THROUGH;
+		}
+		if (!area_join_init(C, op, sad->sa1, sad->sa2)) {
+			return OPERATOR_CANCELLED;
+		}
+	}
+
+	/* add temp handler */
+	WM_event_add_modal_handler(C, op);
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+static void area_join_cancel(rContext *C, wmOperator *op) {
+	area_join_exit(C, op);
+}
+
+/* modal callback while selecting area (space) that will be removed */
+static int area_join_modal(rContext *C, wmOperator *op, const wmEvent *event) {
+	Screen *screen = CTX_wm_screen(C);
+	wmWindow *win = CTX_wm_window(C);
+
+	if (op->customdata == NULL) {
+		if (!area_join_init(C, op, NULL, NULL)) {
+			return OPERATOR_CANCELLED;
+		}
+	}
+	sAreaJoinData *jd = (sAreaJoinData *)op->customdata;
+
+	/* execute the events */
+	switch (event->type) {
+		case MOUSEMOVE: {
+			ScrArea *area = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, event->mouse_xy);
+			jd->direction = area_getorientation(jd->sa1, jd->sa2);
+
+			if (area == jd->sa1) {
+				/* Hovering current source, so change direction. */
+				jd->sa1 = jd->sa2;
+				jd->sa2 = area;
+				jd->direction = area_getorientation(jd->sa1, jd->sa2);
+			}
+			else if (area != jd->sa2) {
+				jd->direction = SCREEN_DIR_NONE;
+			}
+
+			screen->do_refresh |= true;
+
+			if (jd->direction == SCREEN_DIR_N) {
+				// WM_cursor_set(win, WM_CURSOR_N_ARROW);
+			}
+			else if (jd->direction == SCREEN_DIR_S) {
+				// WM_cursor_set(win, WM_CURSOR_S_ARROW);
+			}
+			else if (jd->direction == SCREEN_DIR_E) {
+				// WM_cursor_set(win, WM_CURSOR_E_ARROW);
+			}
+			else if (jd->direction == SCREEN_DIR_W) {
+				// WM_cursor_set(win, WM_CURSOR_W_ARROW);
+			}
+			else {
+				// WM_cursor_set(win, WM_CURSOR_STOP);
+			}
+
+			break;
+		}
+		case LEFTMOUSE:
+			if (event->value == KM_RELEASE) {
+				if (jd->direction == SCREEN_DIR_NONE) {
+					area_join_cancel(C, op);
+					return OPERATOR_CANCELLED;
+				}
+				ED_area_tag_redraw(jd->sa1);
+				ED_area_tag_redraw(jd->sa2);
+
+				area_join_apply(C, op);
+				screen->do_refresh |= true;
+				area_join_exit(C, op);
+				return OPERATOR_FINISHED;
+			}
+			break;
+
+		case RIGHTMOUSE:
+		case EVT_ESCKEY:
+			area_join_cancel(C, op);
+			return OPERATOR_CANCELLED;
+	}
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+/* Operator for joining two areas (space types) */
+static void SCREEN_OT_area_join(wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Join Area";
+	ot->description = "Join selected areas into new window";
+	ot->idname = "SCREEN_OT_area_join";
+
+	/* api callbacks */
+	ot->exec = area_join_exec;
+	ot->invoke = area_join_invoke;
+	ot->modal = area_join_modal;
+	ot->cancel = area_join_cancel;
+
+	/* flags */
+	ot->flag = OPTYPE_BLOCKING | OPTYPE_INTERNAL;
+
+	/* rna */
+	RNA_def_int_vector(ot->srna, "cursor", 2, NULL, INT_MIN, INT_MAX, "Cursor", "", INT_MIN, INT_MAX);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Assigning Operator Types
  * \{ */
 
@@ -1346,6 +1631,7 @@ void ED_operatortypes_screen() {
 	WM_operatortype_append(SCREEN_OT_actionzone);
 	WM_operatortype_append(SCREEN_OT_area_move);
 	WM_operatortype_append(SCREEN_OT_area_split);
+	WM_operatortype_append(SCREEN_OT_area_join);
 }
 
 /** \} */
@@ -1391,6 +1677,12 @@ void ED_keymap_screen(wmKeyConfig *keyconf) {
 	} while(false);
 
 	WM_keymap_add_item(keymap, "SCREEN_OT_area_split", &(KeyMapItem_Params){
+		.type = EVT_ACTIONZONE_AREA,
+		.value = KM_ANY,
+		.modifier = KM_ANY,
+	});
+
+	WM_keymap_add_item(keymap, "SCREEN_OT_area_join", &(KeyMapItem_Params){
 		.type = EVT_ACTIONZONE_AREA,
 		.value = KM_ANY,
 		.modifier = KM_ANY,
