@@ -41,6 +41,37 @@ struct Screen *WM_window_get_active_screen(const struct wmWindow *window);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Window Cursor
+ * \{ */
+
+typedef struct RCursor {
+	char *bitmap;
+	char *mask;
+	char hotx;
+	char hoty;
+} RCursor;
+
+enum {
+	WM_CURSOR_NONE,
+	WM_CURSOR_DEFAULT,
+	WM_CURSOR_WAIT,
+	WM_CURSOR_HELP,
+	WM_CURSOR_TEXT,
+	WM_CURSOR_CROSS,
+	WM_CURSOR_EDIT,
+	WM_CURSOR_NS_ARROW,
+	WM_CURSOR_EW_ARROW,
+	WM_CURSOR_X_MOVE,
+	WM_CURSOR_Y_MOVE,
+	WM_CURSOR_NUM,
+};
+
+void WM_init_cursor_data(void);
+void WM_cursor_set(struct wmWindow *window, int cursor);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Query Methods
  * \{ */
 

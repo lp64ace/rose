@@ -107,6 +107,92 @@ void GTKWindowWin32::Hide() {
 	ShowWindow(this->hwnd, SW_HIDE);
 }
 
+HCURSOR GetStandardCursor(int shape) {
+	UINT flags = LR_SHARED | LR_DEFAULTSIZE;
+
+	if (shape == GTK_CURSOR_DEFAULT) {
+		return (HCURSOR)::LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, flags);
+	}
+
+	switch (shape) {
+		case GTK_CURSOR_HELP:
+			return (HCURSOR)::LoadImage(NULL, IDC_HELP, IMAGE_CURSOR, 0, 0, flags);
+		case GTK_CURSOR_WAIT:
+			return (HCURSOR)::LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, flags);
+		case GTK_CURSOR_TEXT:
+			return (HCURSOR)::LoadImage(NULL, IDC_IBEAM, IMAGE_CURSOR, 0, 0, flags);
+	}
+
+	return NULL;
+}
+
+/** Reverse the bits in a uint8_t */
+static uint8_t reverse_bits_u8(uint8_t ch) {
+	ch = ((ch >> 1) & 0x55) | ((ch << 1) & 0xAA);
+	ch = ((ch >> 2) & 0x33) | ((ch << 2) & 0xCC);
+	ch = ((ch >> 4) & 0x0F) | ((ch << 4) & 0xF0);
+	return ch;
+}
+
+void GTKWindowWin32::UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int cx, int cy) {
+	uint32_t data_and[32];
+	uint32_t data_xor[32];
+	uint32_t bit, msk;
+	int x, y, cols;
+
+	cols = width / 8; /* Number of whole bytes per row (width of bitmap/mask). */
+	if (width % 8) {
+		cols++;
+	}
+
+	if (custom_cursor) {
+		DestroyCursor(custom_cursor);
+		custom_cursor = NULL;
+	}
+
+	memset(&data_and, 0xff, sizeof(data_and));
+	memset(&data_xor, 0x00, sizeof(data_xor));
+
+	for (y = 0; y < height; y++) {
+		bit = 0;
+		msk = 0;
+		for (x = cols - 1; x >= 0; x--) {
+			bit <<= 8;
+			msk <<= 8;
+			bit |= reverse_bits_u8(bitmap[cols * y + x]);
+			msk |= reverse_bits_u8(mask[cols * y + x]);
+		}
+		data_xor[y] = bit & msk;
+		data_and[y] = ~msk;
+	}
+
+	custom_cursor = ::CreateCursor(::GetModuleHandle(0), cx, cy, 32, 32, data_and, data_xor);
+
+	if (::GetForegroundWindow() == hwnd) {
+		UpdateCursor(this->GetCursorVisibility(), this->GetCursorShape());
+	}
+}
+
+void GTKWindowWin32::UpdateCursor(bool visible, int shape) {
+	if (!visible) {
+		while (::ShowCursor(FALSE) >= 0)
+			;
+	}
+	else {
+		while (::ShowCursor(TRUE) < 0)
+			;
+	}
+
+	HCURSOR cursor = GetStandardCursor(shape);
+	if (shape == GTK_CURSOR_CUSTOM) {
+		cursor = custom_cursor;
+	}
+	if (cursor == NULL) {
+		cursor = GetStandardCursor(GTK_CURSOR_DEFAULT);
+	}
+	::SetCursor(cursor);
+}
+
 int GTKWindowWin32::GetState(void) const {
 	return this->state;
 }
@@ -395,6 +481,24 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam,
 
 			if (manager->DispatchWheel) {
 				manager->DispatchWheel(window, 0, delta / WHEEL_DELTA, time);
+			}
+		} break;
+		case WM_SETCURSOR: {
+			/* The WM_SETCURSOR message is sent to a window if the mouse causes the cursor
+			 * to move within a window and mouse input is not captured.
+			 * This means we have to set the cursor shape every time the mouse moves!
+			 * The DefWindowProc function uses this message to set the cursor to an
+			 * arrow if it is not in the client area.
+			 */
+			if (LOWORD(lparam) == HTCLIENT) {
+				// Load the current cursor
+				window->UpdateCursor(window->GetCursorVisibility(), window->GetCursorShape());
+				// Bypass call to DefWindowProc
+				return 0;
+			}
+			else {
+				// Outside of client area show standard cursor
+				window->UpdateCursor(true, GTK_CURSOR_DEFAULT);
 			}
 		} break;
 	}

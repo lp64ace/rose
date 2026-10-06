@@ -92,6 +92,10 @@ Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
 /** \name Screen Utils
  * \{ */
 
+ROSE_INLINE void region_cursor_set_ex(wmWindow *windpw, ScrArea *area, ARegion *region, bool swin_changed) {
+
+}
+
 void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2]) {
 	Screen *screen = WM_window_get_active_screen(window);
 	if (screen == NULL) {
@@ -140,6 +144,8 @@ void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2])
 			}
 		}
 	}
+
+	screen_cursor_set(window, xy);
 }
 
 /** \} */

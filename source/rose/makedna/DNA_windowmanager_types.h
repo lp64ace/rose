@@ -55,6 +55,8 @@ typedef struct wmWindow {
 	/** Internal window id, used for matching screens, greater than 0. */
 	int winid;
 
+	int cursor;
+
 	/** Event state regarding information about the previous events, managed by WindowManager. */
 	struct wmEvent *event_state;
 	struct wmEvent *event_last_handled;

@@ -246,6 +246,151 @@ void WM_window_free(WindowManager *wm, wmWindow *window) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Window Cursor
+ * \{ */
+
+static RCursor *RoseCursor[WM_CURSOR_NUM] = {0};
+
+void WM_init_cursor_data(void) {
+	/* WM_CURSOR_NS_ARROW */
+	do {
+		/* clang-format off */
+		static char ns_bitmap[] = {
+			0x00, 0x00, 0x80, 0x00, 0xc0, 0x01, 0xe0, 0x03, 
+			0xf0, 0x07, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 
+			0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0xf0, 0x07, 
+			0xe0, 0x03, 0xc0, 0x01, 0x80, 0x00, 0x00, 0x00,
+		};
+
+		static char ns_mask[] = {
+			0x80, 0x00, 0xc0, 0x01, 0xe0, 0x03, 0xf0, 0x07, 
+			0xf8, 0x0f, 0xfc, 0x1f, 0xc0, 0x01, 0xc0, 0x01, 
+			0xc0, 0x01, 0xc0, 0x01, 0xfc, 0x1f, 0xf8, 0x0f, 
+			0xf0, 0x07, 0xe0, 0x03, 0xc0, 0x01, 0x80, 0x00,
+		};
+		/* clang-format on */
+
+		static RCursor NSArrowCursor = {
+			ns_bitmap,
+			ns_mask,
+			7,
+			7,
+		};
+
+		RoseCursor[WM_CURSOR_Y_MOVE] = &NSArrowCursor;
+		RoseCursor[WM_CURSOR_NS_ARROW] = &NSArrowCursor;
+	} while (false);
+
+	/* WM_CURSOR_EW_ARROW */
+	do {
+		/* clang-format off */
+		static char ew_bitmap[] = {
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 
+			0x08, 0x18, 0x18, 0x1c, 0x38, 0xfe, 0x7f, 0x1c, 0x38, 
+			0x18, 0x18, 0x10, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 
+			0x00, 0x00, 0x00, 0x00, 0x00,
+		};
+
+		static char ew_mask[] = {
+			0x00, 0x00, 0x00, 0x00, 0x20, 0x04, 0x30, 0x0c, 0x38, 
+			0x1c, 0x3c, 0x3c, 0xfe, 0x7f, 0xff, 0xff, 0xfe, 0x7f, 
+			0x3c, 0x3c, 0x38, 0x1c, 0x30, 0x0c, 0x20, 0x04, 0x00, 
+			0x00, 0x00, 0x00, 0x00, 0x00,
+		};
+		/* clang-format on */
+
+		static RCursor EWArrowCursor = {
+			ew_bitmap,
+			ew_mask,
+			7,
+			7,
+		};
+
+		RoseCursor[WM_CURSOR_X_MOVE] = &EWArrowCursor;
+		RoseCursor[WM_CURSOR_EW_ARROW] = &EWArrowCursor;
+	} while (false);
+
+	/* WM_CURSOR_CROSS */
+	do {
+		/* clang-format off */
+		static char cross_bitmap[] = {
+			0x00, 0x00, 0x80, 0x01, 0x80, 0x01, 0x80, 0x01, 0x80, 
+			0x01, 0x80, 0x01, 0x00, 0x00, 0x3e, 0x7c, 0x3e, 0x7c, 
+			0x00, 0x00, 0x80, 0x01, 0x80, 0x01, 0x80, 0x01, 0x80, 
+			0x01, 0x80, 0x01, 0x00, 0x00,
+		};
+
+		static char cross_mask[] = {
+			0xc0, 0x03, 0xc0, 0x03, 0xc0, 0x03, 0xc0, 0x03, 0xc0, 
+			0x03, 0xc0, 0x03, 0x7f, 0xfe, 0x7f, 0xfe, 0x7f, 0xfe, 
+			0xff, 0xff, 0xc0, 0x03, 0xc0, 0x03, 0xc0, 0x03, 0xc0, 
+			0x03, 0xc0, 0x03, 0xc0, 0x03,
+		};
+		/* clang-format on */
+
+		static RCursor CrossCursor = {
+			cross_bitmap,
+			cross_mask,
+			7,
+			7,
+		};
+
+		RoseCursor[WM_CURSOR_EDIT] = &CrossCursor;
+		RoseCursor[WM_CURSOR_CROSS] = &CrossCursor;
+	} while (false);
+}
+
+ROSE_INLINE int convert_to_native_standard_cursor(int shape) {
+#define CONVERT(from, to) case from: return to
+
+	switch (shape) {
+		CONVERT(WM_CURSOR_DEFAULT, GTK_CURSOR_DEFAULT);
+		CONVERT(WM_CURSOR_WAIT, GTK_CURSOR_WAIT);
+		CONVERT(WM_CURSOR_HELP, GTK_CURSOR_HELP);
+		CONVERT(WM_CURSOR_TEXT, GTK_CURSOR_TEXT);
+	}
+
+	return GTK_CURSOR_CUSTOM;
+}
+
+void WM_cursor_set(wmWindow *window, int cursor) {
+	if (window == NULL) {
+		return; // Can't set custom cursor before window init.
+	}
+
+	if (cursor == WM_CURSOR_NONE) {
+		GTK_cursor_show(window->handle, false);
+		return;
+	}
+
+	GTK_cursor_show(window->handle, true);
+
+	if (window->cursor == cursor) {
+		return; // Cursor is already set
+	}
+
+	window->cursor = cursor;
+
+	int native = convert_to_native_standard_cursor(cursor);
+	if (native != GTK_CURSOR_CUSTOM) {
+		GTK_cursor_set(window->handle, native);
+	}
+	else {
+		RCursor *rcursor = RoseCursor[cursor];
+		if (rcursor) {
+			/* Use custom bitmap cursor. */
+			GTK_cursor_custom_set(window->handle, rcursor->bitmap, rcursor->mask, 16, 16, rcursor->hotx, rcursor->hoty);
+		}
+		else {
+			/* Fallback to default cursor if no bitmap found. */
+			GTK_cursor_set(window->handle, GTK_CURSOR_DEFAULT);
+		}
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Window Screen
  * \{ */
 

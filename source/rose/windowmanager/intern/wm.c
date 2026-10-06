@@ -432,6 +432,8 @@ ROSE_INLINE void window_manager_init_data(struct ID *id) {
 		return;
 	}
 
+	WM_init_cursor_data();
+
 	DRW_render_context_create(wm);
 }
 

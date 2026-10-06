@@ -38,6 +38,26 @@ bool GTKWindowInterface::Install(int backend) {
 	return true;
 }
 
+void GTKWindowInterface::SetCursorVisible(bool visible) {
+	this->cursor_visible = visible;
+}
+
+void GTKWindowInterface::SetCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y) {
+	this->UpdateCursorCustomShape(bitmap, mask, width, height, x, y);
+}
+
+void GTKWindowInterface::SetCursorShape(int cursor) {
+	this->cursor_shape = cursor;
+}
+
+int GTKWindowInterface::GetCursorShape(void) {
+	return this->cursor_shape;
+}
+
+bool GTKWindowInterface::GetCursorVisibility(void) {
+	return this->cursor_visible;
+}
+
 GTKManagerInterface *GTKWindowInterface::GetManagerInterface() {
 	return this->manager;
 }

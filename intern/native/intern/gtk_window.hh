@@ -2,6 +2,7 @@
 #define GTK_WINDOW_HH
 
 #include "GTK_backend_type.h"
+#include "GTK_window_type.h"
 
 #include <stddef.h>
 
@@ -36,6 +37,9 @@ class GTKWindowInterface {
 	GTKManagerInterface *manager = NULL;
 	GTKRenderInterface *render = NULL;
 	int backend = GTK_WINDOW_RENDER_NONE;
+
+	int cursor_shape;
+	bool cursor_visible;
 	
 public:
 	GTKWindowInterface(GTKManagerInterface *manager);
@@ -49,6 +53,15 @@ public:
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
 
+	virtual void UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y) = 0;
+	virtual void UpdateCursor(bool visible, int shape) = 0;
+
+	void SetCursorVisible(bool visible);
+	void SetCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y);
+	void SetCursorShape(int cursor);
+	int GetCursorShape(void);
+	bool GetCursorVisibility(void);
+
 	virtual int GetState(void) const = 0;
 	virtual void GetPos(int *x, int *y) const = 0;
 	virtual void GetSize(int *w, int *h) const = 0;
@@ -60,7 +73,6 @@ protected:
 	virtual GTKRenderInterface *AllocateRender(int render) {
 		return NULL;
 	}
-	
 };
 
 #endif // GTK_WINDOW_HH

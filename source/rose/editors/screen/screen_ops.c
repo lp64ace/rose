@@ -1484,7 +1484,7 @@ static void area_join_exit(rContext *C, wmOperator *op) {
 	KER_screen_remove_unused_scrverts(CTX_wm_screen(C));
 }
 
-static int area_join_exec(rContext *C, wmOperator *op) {
+static wmOperatorStatus area_join_exec(rContext *C, wmOperator *op) {
 	if (!area_join_init(C, op, NULL, NULL)) {
 		return OPERATOR_CANCELLED;
 	}
@@ -1496,7 +1496,7 @@ static int area_join_exec(rContext *C, wmOperator *op) {
 }
 
 /* interaction callback */
-static int area_join_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
+static wmOperatorStatus area_join_invoke(rContext *C, wmOperator *op, const wmEvent *event) {
 	if (event->type == EVT_ACTIONZONE_AREA) {
 		sActionzoneData *sad = event->customdata;
 
@@ -1529,7 +1529,7 @@ static void area_join_cancel(rContext *C, wmOperator *op) {
 }
 
 /* modal callback while selecting area (space) that will be removed */
-static int area_join_modal(rContext *C, wmOperator *op, const wmEvent *event) {
+static wmOperatorStatus area_join_modal(rContext *C, wmOperator *op, const wmEvent *event) {
 	Screen *screen = CTX_wm_screen(C);
 	wmWindow *win = CTX_wm_window(C);
 

@@ -16,6 +16,7 @@ class GTKWindowWin32 final : public GTKWindowInterface {
 	WNDCLASS windowclass;
 	HWND hwnd;
 	HDC device;
+	HCURSOR custom_cursor;
 
 	int state;
 
@@ -29,6 +30,9 @@ public:
 	void Maximize();
 	void Show();
 	void Hide();
+
+	void UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y);
+	void UpdateCursor(bool visible, int cursor);
 
 	int GetState(void) const;
 	void GetPos(int *x, int *y) const;

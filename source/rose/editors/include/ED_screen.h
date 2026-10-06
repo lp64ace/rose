@@ -90,6 +90,9 @@ bool ED_area_is_global(const struct ScrArea *area);
 int ED_area_global_size_y(const struct ScrArea *area);
 int ED_area_header_size_y(const struct ScrArea *area);
 
+struct AZone *ED_area_actionzone_find_xy(struct ScrArea *area, const int xy[2]);
+struct AZone *ED_area_azones_update(struct ScrArea *area, const int xy[2]);
+
 struct ScrArea *ED_screen_areas_iter_first(const struct wmWindow *win, const struct Screen *screen);
 struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const struct ScrArea *area);
 

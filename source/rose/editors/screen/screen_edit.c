@@ -520,6 +520,54 @@ bool ED_screen_area_active(rContext *C) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Cursor
+ * \{ */
+
+void screen_cursor_set(wmWindow *window, const int xy[2]) {
+	const Screen *screen = WM_window_get_active_screen(window);
+	AZone *az = NULL;
+	ScrArea *area = NULL;
+
+	LISTBASE_FOREACH(ScrArea *, area_iter, &screen->areabase) {
+		if ((az = ED_area_actionzone_find_xy(area_iter, xy))) {
+			area = area_iter;
+			break;
+		}
+	}
+
+	if (area) {
+		if (az->type == AZONE_AREA) {
+			WM_cursor_set(window, WM_CURSOR_EDIT);
+		}
+		else if (az->type == AZONE_REGION) {
+			if (ELEM(az->edge, AE_LEFT_TO_TOPRIGHT, AE_RIGHT_TO_TOPLEFT)) {
+				WM_cursor_set(window, WM_CURSOR_X_MOVE);
+			}
+			else {
+				WM_cursor_set(window, WM_CURSOR_Y_MOVE);
+			}
+		}
+	}
+	else {
+		ScrEdge *actedge = screen_geom_find_active_scredge(window, screen, xy[0], xy[1]);
+
+		if (actedge) {
+			if (screen_geom_edge_is_horizontal(actedge)) {
+				WM_cursor_set(window, WM_CURSOR_Y_MOVE);
+			}
+			else {
+				WM_cursor_set(window, WM_CURSOR_X_MOVE);
+			}
+		}
+		else {
+			WM_cursor_set(window, WM_CURSOR_DEFAULT);
+		}
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Scene
  * \{ */
 
