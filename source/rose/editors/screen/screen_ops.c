@@ -394,33 +394,33 @@ static wmOperatorStatus actionzone_modal(rContext *C, wmOperator *op, const wmEv
 					}
 					else if (sad->modifier == 2) {
 						/* Swap areas. */
-						// WM_cursor_set(win, WM_CURSOR_SWAP_AREA);
+						WM_cursor_set(win, WM_CURSOR_SWAP_AREA);
 						is_gesture = true;
 					}
 					else if (area == sad->sa1) {
 						/* Same area, so possible split. */
-						// WM_cursor_set(win, SCREEN_DIR_IS_VERTICAL(sad->gesture_dir) ? WM_CURSOR_H_SPLIT : WM_CURSOR_V_SPLIT);
+						WM_cursor_set(win, SCREEN_DIR_IS_VERTICAL(sad->direction) ? WM_CURSOR_H_SPLIT : WM_CURSOR_V_SPLIT);
 						is_gesture = (delta_max > split_threshold);
 					}
 					else if (!area || area->global) {
 						/* No area or Top bar or Status bar. */
-						// WM_cursor_set(win, WM_CURSOR_STOP);
+						WM_cursor_set(win, WM_CURSOR_STOP);
 						is_gesture = false;
 					}
 					else {
 						/* Different area, so possible join. */
 						if (sad->direction == SCREEN_DIR_N) {
-							// WM_cursor_set(win, WM_CURSOR_N_ARROW);
+							WM_cursor_set(win, WM_CURSOR_N_ARROW);
 						}
 						else if (sad->direction == SCREEN_DIR_S) {
-							// WM_cursor_set(win, WM_CURSOR_S_ARROW);
+							WM_cursor_set(win, WM_CURSOR_S_ARROW);
 						}
 						else if (sad->direction == SCREEN_DIR_E) {
-							// WM_cursor_set(win, WM_CURSOR_E_ARROW);
+							WM_cursor_set(win, WM_CURSOR_E_ARROW);
 						}
 						else {
 							ROSE_assert(sad->direction == SCREEN_DIR_W);
-							// WM_cursor_set(win, WM_CURSOR_W_ARROW);
+							WM_cursor_set(win, WM_CURSOR_W_ARROW);
 						}
 						is_gesture = (delta_max > join_threshold);
 					}
@@ -707,7 +707,7 @@ ROSE_INLINE bool area_move_init(rContext *C, wmOperator *op) {
 		md->snap_type = SNAP_BIGGER_SMALLER_ONLY;
 	}
 	else {
-		md->snap_type = SNAP_AREAGRID;
+		md->snap_type = SNAP_NONE;
 	}
 
 	return true;
@@ -1098,10 +1098,10 @@ static void area_split_preview_update_cursor(rContext *C, wmOperator *op) {
 	sAreaSplitData *sd = (sAreaSplitData *)op->customdata;
 	const int dir_axis = RNA_int_get(op->ptr, "direction");
 	if (area_split_allowed(sd->sarea, dir_axis)) {
-		// WM_cursor_set(CTX_wm_window(C), (dir_axis == SCREEN_AXIS_H) ? WM_CURSOR_H_SPLIT : WM_CURSOR_V_SPLIT);
+		WM_cursor_set(CTX_wm_window(C), (dir_axis == SCREEN_AXIS_H) ? WM_CURSOR_H_SPLIT : WM_CURSOR_V_SPLIT);
 	}
 	else {
-		// WM_cursor_set(CTX_wm_window(C), WM_CURSOR_STOP);
+		WM_cursor_set(CTX_wm_window(C), WM_CURSOR_STOP);
 	}
 }
 
@@ -1617,19 +1617,19 @@ static wmOperatorStatus area_join_modal(rContext *C, wmOperator *op, const wmEve
 			screen->do_refresh |= true;
 
 			if (jd->direction == SCREEN_DIR_N) {
-				// WM_cursor_set(win, WM_CURSOR_N_ARROW);
+				WM_cursor_set(win, WM_CURSOR_N_ARROW);
 			}
 			else if (jd->direction == SCREEN_DIR_S) {
-				// WM_cursor_set(win, WM_CURSOR_S_ARROW);
+				WM_cursor_set(win, WM_CURSOR_S_ARROW);
 			}
 			else if (jd->direction == SCREEN_DIR_E) {
-				// WM_cursor_set(win, WM_CURSOR_E_ARROW);
+				WM_cursor_set(win, WM_CURSOR_E_ARROW);
 			}
 			else if (jd->direction == SCREEN_DIR_W) {
-				// WM_cursor_set(win, WM_CURSOR_W_ARROW);
+				WM_cursor_set(win, WM_CURSOR_W_ARROW);
 			}
 			else {
-				// WM_cursor_set(win, WM_CURSOR_STOP);
+				WM_cursor_set(win, WM_CURSOR_STOP);
 			}
 
 			break;
