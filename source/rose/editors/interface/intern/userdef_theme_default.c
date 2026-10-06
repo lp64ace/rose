@@ -69,7 +69,7 @@ const Theme U_theme_default = {
 	},
 	/** The colors that will be used for the View3D space. */
 	.space_view3d = {
-		.back = RGBA(0x353535ff),
+		.back = RGBA(0x333333ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),
 		.header = RGBA(0x1a1a1aff),
