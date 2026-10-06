@@ -21,6 +21,7 @@
 #include "WM_api.h"
 #include "WM_draw.h"
 #include "WM_handler.h"
+#include "WM_window.h"
 
 #include "screen_intern.h"
 
@@ -312,6 +313,21 @@ void ED_region_default_exit(WindowManager *wm, ARegion *region) {
 }
 
 void ED_region_default_draw(rContext *C, ARegion *region) {
+}
+
+void ED_region_cursor_set(struct wmWindow *window, struct ScrArea *area, struct ARegion *region) {
+	if (region != NULL) {
+		if (area && region->type && region->type->cursor) {
+			region->type->cursor(window, area, region);
+			return;
+		}
+	}
+
+	if (WM_cursor_set_from_tool(window, area, region)) {
+		return;
+	}
+
+	WM_cursor_set(window, WM_CURSOR_DEFAULT);
 }
 
 bool ED_region_contains_xy(const ARegion *region, const int event_xy[2]) {

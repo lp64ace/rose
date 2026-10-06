@@ -253,6 +253,11 @@ ROSE_STATIC void ui_popup_block_remove(rContext *C, uiPopupBlockHandle *handle) 
 	CTX_wm_window_set(C, ctx_win);
 	CTX_wm_area_set(C, ctx_area);
 	CTX_wm_region_set(C, ctx_region);
+
+	/* reset to region cursor (only if there's not another menu open) */
+	if (LIB_listbase_is_empty(&screen->regionbase)) {
+		win->flag |= WINDOW_TAG_MOUSE_CURSOR;
+	}
 }
 
 ROSE_STATIC uiBlock *ui_popup_block_refresh(rContext *C, uiPopupBlockHandle *handle, ARegion *butregion, uiBut *but) {
@@ -379,6 +384,8 @@ uiPopupBlockHandle *ui_popup_block_create(rContext *C, ARegion *butregion, uiBut
 
 	uiBlock *block = ui_popup_block_refresh(C, handle, butregion, but);
 	handle = block->handle;
+
+	WM_cursor_set(window, WM_CURSOR_DEFAULT);
 
 	return handle;
 }

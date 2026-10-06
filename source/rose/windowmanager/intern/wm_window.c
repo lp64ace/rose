@@ -388,6 +388,16 @@ void WM_cursor_set(wmWindow *window, int cursor) {
 	}
 }
 
+void WM_cursor_set_from_tool(wmWindow *window, ScrArea *area, ARegion *region) {
+	if (region && (region->regiontype != RGN_TYPE_WINDOW)) {
+		return false;
+	}
+
+	/** No-op */
+
+	return false;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

@@ -92,8 +92,11 @@ Screen *ED_screen_add(Main *main, const char *name, const rcti *rect) {
 /** \name Screen Utils
  * \{ */
 
-ROSE_INLINE void region_cursor_set_ex(wmWindow *windpw, ScrArea *area, ARegion *region, bool swin_changed) {
-
+ROSE_INLINE void region_cursor_set_ex(wmWindow *window, ScrArea *area, ARegion *region, bool changed) {
+	if ((window->flag & WINDOW_TAG_MOUSE_CURSOR) != 0 || changed) {
+		ED_region_cursor_set(window, area, region);
+		window->flag &= ~WINDOW_TAG_MOUSE_CURSOR;
+	}
 }
 
 void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2]) {
@@ -106,10 +109,12 @@ void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2])
 	ARegion *region_prev = screen->active_region;
 
 	ED_screen_areas_iter(window, screen, area_iter) {
-		if (xy[0] > (area_iter->totrct.xmin) && xy[0] < (area_iter->totrct.xmax)) {
-			if (xy[1] > (area_iter->totrct.ymin) && xy[1] < (area_iter->totrct.ymax)) {
-				area = area_iter;
-				break;
+		if (xy[0] > (area_iter->totrct.xmin + BORDERPADDING) && xy[0] < (area_iter->totrct.xmax - BORDERPADDING)) {
+			if (xy[1] > (area_iter->totrct.ymin + BORDERPADDING) && xy[1] < (area_iter->totrct.ymax - BORDERPADDING)) {
+				if (ED_area_azones_update(area_iter, xy) == NULL) {
+					area = area_iter;
+					break;
+				}
 			}
 		}
 	}
@@ -145,7 +150,12 @@ void ED_screen_set_active_region(rContext *C, wmWindow *window, const int xy[2])
 		}
 	}
 
-	screen_cursor_set(window, xy);
+	if (screen->active_region == NULL) {
+		screen_cursor_set(window, xy);
+	}
+	else {
+		region_cursor_set_ex(window, area, screen->active_region, region_prev != screen->active_region);
+	}
 }
 
 /** \} */

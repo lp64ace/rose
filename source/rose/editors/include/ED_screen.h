@@ -55,6 +55,8 @@ void ED_region_default_init(struct WindowManager *wm, struct ARegion *region);
 void ED_region_default_exit(struct WindowManager *wm, struct ARegion *region);
 void ED_region_default_draw(struct rContext *C, struct ARegion *region);
 
+void ED_region_cursor_set(struct wmWindow *window, struct ScrArea *area, struct ARegion *region);
+
 /**
  * \note This may return true for multiple overlapping regions.
  * If it matters, check overlapped regions first (#ARegion.overlap).

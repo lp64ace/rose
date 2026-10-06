@@ -389,7 +389,7 @@ static wmOperatorStatus actionzone_modal(rContext *C, wmOperator *op, const wmEv
 
 					if (sad->modifier == 1) {
 						/* Duplicate area into new window. */
-						// WM_cursor_set(win, WM_CURSOR_EDIT);
+						WM_cursor_set(win, WM_CURSOR_EDIT);
 						is_gesture = (delta_max > area_threshold);
 					}
 					else if (sad->modifier == 2) {
@@ -426,7 +426,7 @@ static wmOperatorStatus actionzone_modal(rContext *C, wmOperator *op, const wmEv
 					}
 				}
 				else {
-					// WM_cursor_set(win, WM_CURSOR_CROSS);
+					WM_cursor_set(win, WM_CURSOR_CROSS);
 					is_gesture = false;
 				}
 			}

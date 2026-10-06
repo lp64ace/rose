@@ -68,6 +68,7 @@ enum {
 
 void WM_init_cursor_data(void);
 void WM_cursor_set(struct wmWindow *window, int cursor);
+bool WM_cursor_set_from_tool(struct wmWindow *window, struct ScrArea *area, struct ARegion *region);
 
 /** \} */
 

@@ -77,6 +77,7 @@ typedef struct wmWindow {
 /** #wmWindow->flag */
 enum {
 	WINDOW_ADD_MOUSE_MOVE = 1 << 0,
+	WINDOW_TAG_MOUSE_CURSOR = 1 << 1,
 };
 
 typedef struct Report {

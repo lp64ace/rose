@@ -79,6 +79,7 @@ typedef struct ARegionType {
 
 	void (*layout)(struct rContext *C, struct ARegion *region);
 	void (*draw)(struct rContext *C, struct ARegion *region);
+	void (*cursor)(struct wmWindow *window, struct ScrArea *area, struct ARegion *region);
 
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
