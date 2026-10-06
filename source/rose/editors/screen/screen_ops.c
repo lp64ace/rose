@@ -593,14 +593,54 @@ typedef struct sAreaMoveData {
 	int smaller;
 	int original;
 	int step;
+	int snap_type;
 
 	int direction;
 	int event;
 } sAreaMoveData;
 
-ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int direction, int *bigger, int *smaller) {
+ROSE_INLINE bool area_move_set_limits(wmWindow *window, Screen *screen, int direction, int *bigger, int *smaller) {
 	/* we check all areas and test for free space with MINSIZE */
 	*bigger = *smaller = INT_MAX;
+
+	bool use_bigger_smaller_snap = false;
+	LISTBASE_FOREACH(ScrArea *, area, &window->global_areas.areabase) {
+		int size_min = area->global->size_min - 1;
+		int size_max = area->global->size_max - 1;
+
+		size_min = ROSE_MAX(size_min, 0);
+		ROSE_assert(size_min <= size_max);
+
+		/* logic here is only tested for lower edge :) */
+		/* left edge */
+		if ((area->v1->edit_flag && area->v2->edit_flag)) {
+			*smaller = area->v4->vec.x - size_max;
+			*bigger = area->v4->vec.x - size_min;
+			use_bigger_smaller_snap = true;
+			break;
+		}
+		/* top edge */
+		if ((area->v2->edit_flag && area->v3->edit_flag)) {
+			*smaller = area->v1->vec.y + size_min;
+			*bigger = area->v1->vec.y + size_max;
+			use_bigger_smaller_snap = true;
+			break;
+		}
+		/* right edge */
+		if ((area->v3->edit_flag && area->v4->edit_flag)) {
+			*smaller = area->v1->vec.x + size_min;
+			*bigger = area->v1->vec.x + size_max;
+			use_bigger_smaller_snap = true;
+			break;
+		}
+		/* lower edge */
+		if ((area->v4->edit_flag && area->v1->edit_flag)) {
+			*smaller = area->v2->vec.y - size_max;
+			*bigger = area->v2->vec.y - size_min;
+			use_bigger_smaller_snap = true;
+			break;
+		}
+	}
 
 	rcti window_rect;
 	WM_window_rect_calc(window, &window_rect);
@@ -627,6 +667,8 @@ ROSE_INLINE void area_move_set_limits(wmWindow *window, Screen *screen, int dire
 			}
 		}
 	}
+
+	return use_bigger_smaller_snap;
 }
 
 ROSE_INLINE bool area_move_init(rContext *C, wmOperator *op) {
@@ -661,12 +703,17 @@ ROSE_INLINE bool area_move_init(rContext *C, wmOperator *op) {
 		v1->edit_flag = v1->flag;
 	}
 
-	area_move_set_limits(window, screen, md->direction, &md->bigger, &md->smaller);
+	if (area_move_set_limits(window, screen, md->direction, &md->bigger, &md->smaller)) {
+		md->snap_type = SNAP_BIGGER_SMALLER_ONLY;
+	}
+	else {
+		md->snap_type = SNAP_AREAGRID;
+	}
 
 	return true;
 }
 
-ROSE_INLINE void area_move_apply_do(rContext *C, int delta, int original, int direction, int bigger, int smaller) {
+ROSE_INLINE void area_move_apply_do(rContext *C, int delta, int original, int direction, int bigger, int smaller, int snap_type) {
 	WindowManager *wm = CTX_wm_manager(C);
 	wmWindow *window = CTX_wm_window(C);
 	Screen *screen = CTX_wm_screen(C);
@@ -676,6 +723,17 @@ ROSE_INLINE void area_move_apply_do(rContext *C, int delta, int original, int di
 	int final = original + delta;
 
 	bool redraw = false;
+
+	if (snap_type != SNAP_BIGGER_SMALLER_ONLY) {
+		CLAMP(delta, -smaller, bigger);
+	}
+
+	if (snap_type == SNAP_NONE) {
+		final = original + delta;
+	}
+	else {
+		final = area_snap_calc_location(screen, snap_type, delta, original, direction, bigger, smaller);
+	}
 
 	int axis = (direction == SCREEN_AXIS_V) ? 0 : 1;
 	ED_screen_verts_iter(window, screen, v1) {
@@ -717,7 +775,7 @@ ROSE_INLINE void area_move_apply(rContext *C, wmOperator *op) {
 	sAreaMoveData *md = (sAreaMoveData *)(op->customdata);
 	int delta = RNA_int_get(op->ptr, "delta");
 
-	area_move_apply_do(C, delta, md->original, md->direction, md->bigger, md->smaller);
+	area_move_apply_do(C, delta, md->original, md->direction, md->bigger, md->smaller, md->snap_type);
 }
 
 ROSE_INLINE void area_move_exit(rContext *C, wmOperator *op) {
@@ -1272,7 +1330,7 @@ static wmOperatorStatus area_split_modal(rContext *C, wmOperator *op, const wmEv
 				const int snap_loc = area_snap_calc_location(CTX_wm_screen(C), SNAP_FRACTION_AND_ADJACENT, sd->delta, sd->origval, dir_axis, sd->bigger, sd->smaller);
 				sd->delta = snap_loc - sd->origval;
 			}
-			area_move_apply_do(C, sd->delta, sd->origval, dir_axis, sd->bigger, sd->smaller);
+			area_move_apply_do(C, sd->delta, sd->origval, dir_axis, sd->bigger, sd->smaller, SNAP_NONE);
 		}
 		else {
 			if (sd->sarea) {
@@ -1363,8 +1421,8 @@ static ScrEdge *screen_area_edge_from_cursor(const rContext *C, const int cursor
 		sa1 = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, (const int[2]){cursor[0] + borderwidth, cursor[1]});
 		sa2 = KER_screen_find_area_xy(screen, SPACE_TYPE_ANY, (const int[2]){cursor[0] - borderwidth, cursor[1]});
 	}
-	bool isGlobal = ((sa1 && ED_area_is_global(sa1)) || (sa2 && ED_area_is_global(sa2)));
-	if (!isGlobal) {
+	bool is_global = ((sa1 && ED_area_is_global(sa1)) || (sa2 && ED_area_is_global(sa2)));
+	if (!is_global) {
 		*r_sa1 = sa1;
 		*r_sa2 = sa2;
 	}
