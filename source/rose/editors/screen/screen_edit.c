@@ -356,6 +356,8 @@ ROSE_STATIC bool screen_area_join_ex(rContext *C, Screen *screen, ScrArea *sa1, 
 		screen_area_close(C, screen, side2);
 	}
 
+	screen->do_refresh |= true;
+
 	return true;
 }
 

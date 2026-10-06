@@ -42,7 +42,6 @@ ScrArea *screen_addarea(Screen *screen, ScrVert *v1, ScrVert *v2, ScrVert *v3, S
 }
 
 void screen_delarea(rContext *C, Screen *screen, ScrArea *area) {
-
 	ED_area_exit(C, area);
 
 	KER_screen_area_free(area);
