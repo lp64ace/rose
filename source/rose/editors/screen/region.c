@@ -77,7 +77,7 @@ void ED_panel_do_draw(rContext *C, ARegion *region, ListBase *lb, PanelType *pt,
 		int labelx = 0, labely = 0;
 		UI_panel_label_offset(block, &labelx, &labely);
 
-		panel->layout = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROW, labelx, labely, UI_UNIT_Y, BORDERPADDING);
+		panel->layout = UI_block_layout(block, UI_LAYOUT_HORIZONTAL, ITEM_LAYOUT_ROW, labelx, labely, UI_UNIT_Y, PIXELSIZE);
 		pt->draw_header(C, panel);
 		panel->layout = NULL;
 
@@ -85,7 +85,7 @@ void ED_panel_do_draw(rContext *C, ARegion *region, ListBase *lb, PanelType *pt,
 	}
 	UI_panel_header_buttons_end(panel);
 
-	panel->layout = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, region->sizex, 0);
+	panel->layout = UI_block_layout(block, UI_LAYOUT_VERTICAL, ITEM_LAYOUT_ROOT, 0, 0, region->sizex, PIXELSIZE);
 	pt->draw(C, panel);
 	panel->layout = NULL;
 
