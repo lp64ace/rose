@@ -647,7 +647,17 @@ ROSE_INLINE bool area_move_set_limits(wmWindow *window, Screen *screen, int dire
 
 	LISTBASE_FOREACH(ScrArea *, area, &screen->areabase) {
 		if (direction == SCREEN_AXIS_H) {
-			const int y1 = area->sizey - WIDGET_UNIT;
+			int areamin = WIDGET_UNIT;
+
+			if (area->v1->vec.y > window_rect.ymin) {
+				areamin += PIXELSIZE;
+			}
+			if (area->v2->vec.y < (window_rect.ymax - 1)) {
+				areamin += PIXELSIZE;
+			}
+
+			int y1 = screen_geom_area_height(area) - areamin;
+
 			/* if top or down edge selected, test height */
 			if (area->v1->edit_flag && area->v4->edit_flag) {
 				*bigger = ROSE_MIN(*bigger, y1);
@@ -657,7 +667,17 @@ ROSE_INLINE bool area_move_set_limits(wmWindow *window, Screen *screen, int dire
 			}
 		}
 		else {
-			const int x1 = area->sizex - AREAMINX - 1;
+			int areamin = AREAMINX;
+
+			if (area->v1->vec.x > window_rect.xmin) {
+				areamin += PIXELSIZE;
+			}
+			if (area->v4->vec.x < (window_rect.xmax - 1)) {
+				areamin += PIXELSIZE;
+			}
+
+			int x1 = screen_geom_area_width(area) - areamin;
+
 			/* if left or right edge selected, test width */
 			if (area->v1->edit_flag && area->v2->edit_flag) {
 				*bigger = ROSE_MIN(*bigger, x1);

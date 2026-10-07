@@ -76,6 +76,9 @@ enum {
 	SCREEN_AXIS_V = 'v',
 };
 
+int screen_geom_area_height(const struct ScrArea *area);
+int screen_geom_area_width(const struct ScrArea *area);
+
 struct ScrVert *screen_geom_vertex_add_ex(struct ScrAreaMap *areamap, short x, short y);
 struct ScrVert *screen_geom_vertex_add(struct Screen *screen, short x, short y);
 

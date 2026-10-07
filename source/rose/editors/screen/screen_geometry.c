@@ -16,10 +16,10 @@
 
 #include <limits.h>
 
-ROSE_INLINE int screen_geom_area_height(const ScrArea *area) {
+int screen_geom_area_height(const ScrArea *area) {
 	return area->v2->vec.y - area->v1->vec.y + 1;
 }
-ROSE_INLINE int screen_geom_area_width(const ScrArea *area) {
+int screen_geom_area_width(const ScrArea *area) {
 	return area->v4->vec.x - area->v1->vec.x + 1;
 }
 
