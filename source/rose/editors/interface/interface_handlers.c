@@ -720,6 +720,8 @@ ROSE_STATIC int ui_do_but(rContext *C, uiBlock *block, uiBut *but, const wmEvent
 		case UI_BTYPE_PUSH: {
 			if (ELEM(evt->type, EVT_RETKEY) && ELEM(evt->value, KM_PRESS, KM_DBL_CLICK)) {
 				ui_apply_but_func(C, but, but->arg1, but->arg2);
+
+				retval |= WM_UI_HANDLER_BREAK;
 			}
 		} break;
 	}
