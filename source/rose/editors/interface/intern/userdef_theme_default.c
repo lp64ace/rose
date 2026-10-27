@@ -72,7 +72,7 @@ const Theme U_theme_default = {
 		.back = RGBA(0x333333ff),
 		.text = RGBA(0xe0e0e0ff),
 		.text_hi = RGBA(0xffffffff),
-		.header = RGBA(0x1a1a1aff),
+		.header = RGBA(0x2a2a2aff),
 		.header_hi = RGBA(0x2a2a2aff),
 	},
 	/** The colors that will be used for the TopBar space. */

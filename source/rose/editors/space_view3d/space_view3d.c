@@ -91,11 +91,19 @@ RegionView3D *ED_view3d_region_view_init(ARegion *v3d, RegionView3D *rv3d) {
 ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 	View3D *view3d = MEM_callocN(sizeof(View3D), "SpaceLink::View3D");
 
+	// Header Region
+	{
+		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Header");
+		LIB_addtail(&view3d->regionbase, region);
+		region->regiontype = RGN_TYPE_HEADER;
+		region->alignment = RGN_ALIGN_TOP;
+	}
 	// Main Region
 	{
 		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Main");
 		LIB_addtail(&view3d->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
+		region->alignment = RGN_ALIGN_BOTTOM;
 
 		RegionView3D *rv3d = MEM_callocN(sizeof(RegionView3D), "RegionView3D");
 		region->regiondata = ED_view3d_region_view_init(region, rv3d);
@@ -219,7 +227,7 @@ void ED_spacetype_view3d() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = NULL;
+		art->draw = ED_region_header_draw;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 		art->keymapflag = ED_KEYMAP_UI;
