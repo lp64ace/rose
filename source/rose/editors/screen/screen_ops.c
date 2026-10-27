@@ -30,6 +30,22 @@
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
+/** \name Common Operator Utilities
+ * \{ */
+
+bool ED_operator_screen_active(rContext *C) {
+	if (CTX_wm_window(C) == NULL) {
+		return false;
+	}
+	if (CTX_wm_screen(C) == NULL) {
+		return false;
+	}
+	return true;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Action Zone Operator
  * \{ */
 

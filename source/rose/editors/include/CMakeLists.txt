@@ -7,6 +7,7 @@ set(SRC
 	ED_screen.h
 	ED_object.h
 	ED_space_api.h
+	ED_transform.h
 	ED_view3d.h
 	UI_icons.h
 	UI_interface.h

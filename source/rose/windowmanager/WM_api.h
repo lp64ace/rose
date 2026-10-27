@@ -186,6 +186,7 @@ struct wmOperatorType *WM_operatortype_find(const char *idname, bool quiet);
 
 bool WM_operator_poll(struct rContext *C, struct wmOperatorType *ot);
 
+void WM_operator_type_set(struct wmOperator *op, struct wmOperatorType *ot);
 void WM_operator_properties_filesel(struct wmOperatorType *ot, int filter, int type, int action, int flag);
 void WM_operator_properties_alloc(struct PointerRNA **ptr, struct IDProperty **properties, const char *opstring);
 void WM_operator_properties_free(struct PointerRNA *ptr);

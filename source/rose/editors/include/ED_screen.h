@@ -21,6 +21,14 @@ struct wmKeyConfig;
 struct wmWindow;
 
 /* -------------------------------------------------------------------- */
+/** \name Common Operator Utilities
+ * \{ */
+
+bool ED_operator_screen_active(struct rContext *C);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Screen Creation
  * \{ */
 

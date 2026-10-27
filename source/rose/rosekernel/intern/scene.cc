@@ -38,6 +38,15 @@ void KER_scene_object_base_flag_sync_from_base(Base *base) {
 	object->flag_base = base->flag;
 }
 
+void KER_scene_base_flag_to_objects(ViewLayer *view_layer) {
+	Base *base = static_cast<Base *>(view_layer->bases.first);
+
+	while (base) {
+		KER_scene_object_base_flag_sync_from_base(base);
+		base = base->next;
+	}
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

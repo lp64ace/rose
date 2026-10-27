@@ -106,6 +106,32 @@ void WM_operator_properties_create_ptr(PointerRNA *ptr, wmOperatorType *ot) {
 	*ptr = RNA_pointer_create_discrete((ID *)(G_MAIN->wm.first), ot->srna, NULL);
 }
 
+bool WM_operator_properties_default(PointerRNA *ptr, bool do_update) {
+	bool changed = false;
+	RNA_STRUCT_BEGIN(ptr, property) {
+		switch (RNA_property_type(property)) {
+			case PROP_POINTER: {
+				struct StructRNA *ptype = RNA_property_pointer_type(ptr, property);
+				if (ptype != &RNA_Struct) {
+					PointerRNA opptr = RNA_property_pointer_get(ptr, property);
+					changed |= WM_operator_properties_default(&opptr, do_update);
+				}
+				break;
+			}
+			default:
+				if ((do_update == false) || (RNA_property_is_set(ptr, property) == false)) {
+					if (RNA_property_reset(ptr, property, -1)) {
+						changed = true;
+					}
+				}
+				break;
+		}
+	}
+	RNA_STRUCT_END;
+
+	return changed;
+}
+
 void WM_operator_properties_create(PointerRNA *ptr, const char *opstring) {
 	wmOperatorType *ot = WM_operatortype_find(opstring, false);
 
@@ -131,6 +157,23 @@ void WM_operator_properties_alloc(PointerRNA **ptr, IDProperty **properties, con
 	}
 
 	(*ptr)->data = *properties;
+}
+
+void WM_operator_type_set(wmOperator *op, wmOperatorType *ot) {
+	op->type = ot;
+	op->ptr->type = ot->srna;
+
+	if (op->properties) {
+		PointerRNA ptr;
+		WM_operator_properties_create_ptr(&ptr, ot);
+		WM_operator_properties_default(&ptr, false);
+
+		if (ptr.data) {
+			IDP_SyncGroupTypes(op->properties, ptr.data, true);
+		}
+
+		WM_operator_properties_free(&ptr);
+	}
 }
 
 void WM_operator_properties_free(PointerRNA *ptr) {

@@ -37,6 +37,8 @@ struct Scene *KER_scene_new(struct Main *main, const char *name);
  */
 void KER_scene_object_base_flag_sync_from_base(struct Base *base);
 
+void KER_scene_base_flag_to_objects(struct ViewLayer *view_layer);
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

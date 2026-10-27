@@ -128,10 +128,10 @@ typedef void (*PropBooleanSetFunc)(struct PointerRNA *ptr, bool value);
 typedef void (*PropBooleanArrayGetFunc)(struct PointerRNA *ptr, bool *values);
 typedef void (*PropBooleanArraySetFunc)(struct PointerRNA *ptr, const bool *values);
 
-typedef bool (*PropBooleanGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop);
-typedef void (*PropBooleanSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, bool value);
-typedef void (*PropBooleanArrayGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, bool *values);
-typedef void (*PropBooleanArraySetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, const bool *values);
+typedef bool (*PropBooleanGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property);
+typedef void (*PropBooleanSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, bool value);
+typedef void (*PropBooleanArrayGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, bool *values);
+typedef void (*PropBooleanArraySetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, const bool *values);
 
 typedef struct BoolPropertyRNA {
 	PropertyRNA property;
@@ -164,11 +164,11 @@ typedef void (*PropIntArrayGetFunc)(struct PointerRNA *ptr, int *values);
 typedef void (*PropIntArraySetFunc)(struct PointerRNA *ptr, const int *values);
 typedef void (*PropIntRangeFunc)(struct PointerRNA *ptr, int *min, int *max, int *softmin, int *softmax);
 
-typedef int (*PropIntGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop);
-typedef void (*PropIntSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, int value);
-typedef void (*PropIntArrayGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, int *values);
-typedef void (*PropIntArraySetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, const int *values);
-typedef void (*PropIntRangeFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, int *min, int *max, int *softmin, int *softmax);
+typedef int (*PropIntGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property);
+typedef void (*PropIntSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, int value);
+typedef void (*PropIntArrayGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, int *values);
+typedef void (*PropIntArraySetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, const int *values);
+typedef void (*PropIntRangeFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, int *min, int *max, int *softmin, int *softmax);
 
 typedef struct IntPropertyRNA {
 	PropertyRNA property;
@@ -207,11 +207,11 @@ typedef void (*PropFloatArrayGetFunc)(struct PointerRNA *ptr, float *values);
 typedef void (*PropFloatArraySetFunc)(struct PointerRNA *ptr, const float *values);
 typedef void (*PropFloatRangeFunc)(struct PointerRNA *ptr, float *min, float *max, float *softmin, float *softmax);
 
-typedef float (*PropFloatGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop);
-typedef void (*PropFloatSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, float value);
-typedef void (*PropFloatArrayGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, float *values);
-typedef void (*PropFloatArraySetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, const float *values);
-typedef void (*PropFloatRangeFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, float *min, float *max, float *softmin, float *softmax);
+typedef float (*PropFloatGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property);
+typedef void (*PropFloatSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, float value);
+typedef void (*PropFloatArrayGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, float *values);
+typedef void (*PropFloatArraySetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, const float *values);
+typedef void (*PropFloatRangeFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, float *min, float *max, float *softmin, float *softmax);
 
 typedef struct FloatPropertyRNA {
 	PropertyRNA property;
@@ -242,6 +242,35 @@ typedef struct FloatPropertyRNA {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Enum Property RNA Data Structures
+ * \{ */
+
+typedef int (*PropEnumGetFunc)(struct PointerRNA *ptr);
+typedef void (*PropEnumSetFunc)(struct PointerRNA *ptr, int value);
+typedef const EnumPropertyItem *(*PropEnumItemFunc)(struct rContext *C, struct PointerRNA *ptr, struct PropertyRNA *property, bool *r_free);
+
+typedef int (*PropEnumGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property);
+typedef void (*PropEnumSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *proprety, int value);
+
+typedef struct EnumPropertyRNA {
+	PropertyRNA property;
+
+	PropEnumGetFunc get;
+	PropEnumSetFunc set;
+	PropEnumItemFunc item_fn;
+
+	PropEnumGetFuncEx get_ex;
+	PropEnumSetFuncEx set_ex;
+
+	const EnumPropertyItem *item;
+	int count;
+
+	int defaultvalue;
+} EnumPropertyRNA;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name String Property RNA Data Structures
  * \{ */
 
@@ -249,9 +278,9 @@ typedef void (*PropStringGetFunc)(struct PointerRNA *ptr, char *value);
 typedef int (*PropStringLengthFunc)(struct PointerRNA *ptr);
 typedef void (*PropStringSetFunc)(struct PointerRNA *ptr, const char *value);
 
-typedef void (*PropStringGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, char *value);
-typedef int (*PropStringLengthFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop);
-typedef void (*PropStringSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *prop, const char *value);
+typedef void (*PropStringGetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, char *value);
+typedef int (*PropStringLengthFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property);
+typedef void (*PropStringSetFuncEx)(struct PointerRNA *ptr, struct PropertyRNA *property, const char *value);
 
 typedef struct StringPropertyRNA {
 	PropertyRNA property;

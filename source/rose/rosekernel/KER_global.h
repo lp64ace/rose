@@ -30,6 +30,7 @@ enum {
 /** #Global->moving */
 enum {
 	G_TRANSFORM_WM = 1 << 0,
+	G_TRANSFORM_OBJ = 1 << 1,
 };
 
 /** \} */

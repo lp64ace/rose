@@ -60,6 +60,8 @@ struct PropertyRNA *RNA_def_boolean(void *container, const char *identifier, boo
 struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
 struct PropertyRNA *RNA_def_int_vector(void *container, const char *identifier, int length, const int *default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
 struct PropertyRNA *RNA_def_float(void *container, const char *identifier, float default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax);
+struct PropertyRNA *RNA_def_float_vector(void *container, const char *identifier, int length, const float *default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax);
+struct PropertyRNA *RNA_def_enum(void *container, const char *identifier, const EnumPropertyItem *items, int default_value, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string_file_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string_dir_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
@@ -127,6 +129,14 @@ void RNA_def_property_boolean_default(struct PropertyRNA *property, bool default
 
 void RNA_def_property_string_default(struct PropertyRNA *prop, const char *default_value);
 void RNA_def_property_string_maxlength(struct PropertyRNA *prop, int maxlength);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Enum Property RNA Definition
+ * \{ */
+
+void RNA_def_property_enum_items(struct PropertyRNA *prop, const struct EnumPropertyItem *items);
 
 /** \} */
 

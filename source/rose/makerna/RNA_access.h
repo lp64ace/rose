@@ -93,6 +93,8 @@ bool RNA_property_is_set_ex(struct PointerRNA *ptr, struct PropertyRNA *prop, bo
 bool RNA_property_is_set(struct PointerRNA *ptr, struct PropertyRNA *prop);
 void RNA_property_unset(struct PointerRNA *ptr, struct PropertyRNA *prop);
 
+bool RNA_property_reset(PointerRNA *ptr, PropertyRNA *prop, int index);
+
 void RNA_property_update(struct rContext *C, struct PointerRNA *ptr, struct PropertyRNA *prop);
 /**
  * \note its possible this returns a false positive in the case of #PROP_CONTEXT_UPDATE
@@ -127,8 +129,12 @@ const char *RNA_property_description(const struct PropertyRNA *property);
 
 bool RNA_property_boolean_get(struct PointerRNA *ptr, struct PropertyRNA *property);
 void RNA_property_boolean_set(struct PointerRNA *ptr, struct PropertyRNA *property, bool value);
-// void RNA_property_boolean_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, bool *r_value);
-// void RNA_property_boolean_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const bool *i_value);
+void RNA_property_boolean_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, bool value);
+void RNA_property_boolean_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, bool *r_value);
+void RNA_property_boolean_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const bool *r_value);
+bool RNA_property_boolean_get_default(struct PointerRNA *ptr, struct PropertyRNA *property);
+void RNA_property_boolean_get_default_array(struct PointerRNA *ptr, struct PropertyRNA *property, bool *r_value);
+bool RNA_property_boolean_get_default_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index);
 
 bool RNA_boolean_get(struct PointerRNA *ptr, const char *name);
 void RNA_boolean_set(struct PointerRNA *ptr, const char *name, bool value);
@@ -137,8 +143,12 @@ void RNA_boolean_set(struct PointerRNA *ptr, const char *name, bool value);
 
 int RNA_property_int_get(struct PointerRNA *ptr, struct PropertyRNA *property);
 void RNA_property_int_set(struct PointerRNA *ptr, struct PropertyRNA *property, int value);
+void RNA_property_int_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, int value);
 void RNA_property_int_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_value);
 void RNA_property_int_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const int *i_value);
+void RNA_property_int_get_default_array(struct PointerRNA *ptr, struct PropertyRNA *property, int *r_value);
+int RNA_property_int_get_default_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index);
+int RNA_property_int_get_default(struct PointerRNA *ptr, struct PropertyRNA *property);
 
 int RNA_int_get(struct PointerRNA *ptr, const char *name);
 void RNA_int_set(struct PointerRNA *ptr, const char *name, int value);
@@ -156,6 +166,9 @@ float RNA_property_float_get(struct PointerRNA *ptr, struct PropertyRNA *propert
 void RNA_property_float_set(struct PointerRNA *ptr, struct PropertyRNA *property, float value);
 void RNA_property_float_get_array(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_value);
 void RNA_property_float_set_array(struct PointerRNA *ptr, struct PropertyRNA *property, const float *f_value);
+void RNA_property_float_get_default_array(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_value);
+float RNA_property_float_get_default_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index);
+float RNA_property_float_get_default(struct PointerRNA *ptr, struct PropertyRNA *property);
 
 float RNA_property_float_get_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index);
 void RNA_property_float_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, float value);
@@ -168,11 +181,23 @@ void RNA_property_float_ui_range(struct PointerRNA *ptr, struct PropertyRNA *pro
 
 int RNA_property_float_clamp(struct PointerRNA *ptr, struct PropertyRNA *property, float *value);
 
+/* enum */
+
+int RNA_property_enum_get(struct PointerRNA *ptr, struct PropertyRNA *prop);
+void RNA_property_enum_set(struct PointerRNA *ptr, struct PropertyRNA *prop, int value);
+int RNA_property_enum_get_default(struct PointerRNA *ptr, struct PropertyRNA *prop);
+
+int RNA_enum_get(struct PointerRNA *ptr, const char *name);
+void RNA_enum_set(struct PointerRNA *ptr, const char *name, int value);
+
 /* string */
 
 void RNA_property_string_get(struct PointerRNA *ptr, struct PropertyRNA *property, char *value);
 void RNA_property_string_set(struct PointerRNA *ptr, struct PropertyRNA *property, const char *value);
 int RNA_property_string_length(struct PointerRNA *ptr, struct PropertyRNA *property);
+void RNA_property_string_get_default(struct PropertyRNA *property, char *buffer, int maxlen);
+char *RNA_property_string_get_default_alloc(struct PropertyRNA *property, char *buffer, int maxlen, int *r_length);
+int RNA_property_string_default_length(struct PropertyRNA *property);
 
 void RNA_string_get(struct PointerRNA *ptr, const char *name, char *value);
 void RNA_string_set(struct PointerRNA *ptr, const char *name, const char *value);
@@ -251,6 +276,9 @@ bool RNA_struct_property_is_set(struct PointerRNA *ptr, const char *identifier);
 struct PointerRNA RNA_pointer_create_discrete(struct ID *id, struct StructRNA *type, void *data);
 struct PointerRNA RNA_pointer_create_with_parent(const struct PointerRNA *parent, struct StructRNA *type, void *data);
 struct PointerRNA RNA_property_pointer_get(struct PointerRNA *ptr, struct PropertyRNA *property);
+struct PointerRNA RNA_property_pointer_get_default(struct PropertyRNA *property);
+
+void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *property, PointerRNA value);
 
 /** \} */
 
