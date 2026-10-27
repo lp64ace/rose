@@ -10,6 +10,8 @@ extern "C" {
 #endif
 
 struct GPUBatch;
+struct GPUSamplerState;
+struct GPUTexture;
 struct GPUUniformBuf;
 struct GPUVertFormat;
 

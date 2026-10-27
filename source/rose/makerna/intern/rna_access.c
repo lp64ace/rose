@@ -982,14 +982,14 @@ bool RNA_property_reset(PointerRNA *ptr, PropertyRNA *prop, int index) {
 		}
 
 		case PROP_STRING: {
-			char *value = RNA_property_string_get_default_alloc(ptr, prop, NULL, 0, NULL);
+			char *value = RNA_property_string_get_default_alloc(prop, NULL, 0, NULL);
 			RNA_property_string_set(ptr, prop, value);
 			MEM_freeN(value);
 			return true;
 		}
 
 		case PROP_POINTER: {
-			PointerRNA value = RNA_property_pointer_get_default(ptr, prop);
+			PointerRNA value = RNA_property_pointer_get_default(prop);
 			RNA_property_pointer_set(ptr, prop, value);
 			return true;
 		}
@@ -1375,7 +1375,7 @@ void RNA_property_boolean_set_array(PointerRNA *ptr, PropertyRNA *property, cons
 	else if (property->flag & PROP_EDITABLE) {
 		IDProperty *group;
 
-		group = RNA_struct_idprops(ptr, 1);
+		group = RNA_struct_idprops(ptr);
 		if (group) {
 			idprop = IDP_New(IDP_ARRAY, (const void *)IDP_INT, idprop->length, property->identifier, 0);
 			IDP_AddToGroup(group, idprop);
@@ -2256,7 +2256,7 @@ void RNA_property_enum_set(PointerRNA *ptr, PropertyRNA *prop, int value) {
 
 		val.value1 = value;
 
-		group = RNA_struct_idprops(ptr, 1);
+		group = RNA_struct_idprops(ptr);
 		if (group) {
 			IDP_AddToGroup(group, IDP_New(IDP_INT, &val, 0, prop->identifier, 0));
 		}
@@ -2393,7 +2393,7 @@ char *RNA_property_string_get_default_alloc(PropertyRNA *property, char *buffer,
 
 	char *buf;
 	if (length + 1 < maxlen) {
-		buf = maxlen;
+		buf = buffer;
 	}
 	else {
 		buf = MEM_callocN(sizeof(char) * (length + 1), __func__);
@@ -2881,7 +2881,7 @@ void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *proper
 	/* Check types. */
 	if (pproperty->set != NULL) {
 		/* Assigning to a real RNA property. */
-		if (value.type != NULL && !RNA_struct_is_a(value.type, pproperty->type)) {
+		if (value.type != NULL && !RNA_struct_is_a(value.type, pproperty->srna)) {
 			fprintf(stderr, "[RNA] %s: expected %s type, not %s\n", __func__, pproperty->srna->identifier, value.type->identifier);
 			return;
 		}
@@ -2907,8 +2907,8 @@ void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *proper
 			ROSE_assert(idprop->type == IDP_GROUP);
 
 			IDPropertyData val = {0};
-			IDProperty *group = RNA_struct_idprops(ptr, true);
-			BLI_assert(group != NULL);
+			IDProperty *group = RNA_struct_idprops(ptr);
+			ROSE_assert(group != NULL);
 
 			val.pointer = ptr->data;
 
@@ -2926,9 +2926,9 @@ void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *proper
 		IDPropertyData val = {0};
 		IDProperty *group;
 
-		val.value1 = value.data;
+		val.pointer = value.data;
 
-		group = RNA_struct_idprops(ptr, true);
+		group = RNA_struct_idprops(ptr);
 		if (group) {
 			IDP_ReplaceInGroup(group, IDP_New(IDP_ID, &val, 0, property->identifier, 0));
 		}

@@ -124,6 +124,14 @@ void RNA_def_property_boolean_default(struct PropertyRNA *property, bool default
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Enum Property RNA Definition
+ * \{ */
+
+void RNA_def_property_enum_default(struct PropertyRNA *prop, int value);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name String Property RNA Definition
  * \{ */
 

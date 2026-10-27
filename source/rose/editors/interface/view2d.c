@@ -28,7 +28,7 @@ float UI_view2d_view_to_region_x(const View2D *v2d, float x) {
 }
 
 float UI_view2d_view_to_region_y(const View2D *v2d, float y) {
-	return (v2d->mask.ymin + (((y - v2d->cur.ymin) / LIB_rcti_size_y(&v2d->cur)) * LIB_rcti_size_y(&v2d->mask)));
+	return (v2d->mask.ymin + (((y - v2d->cur.ymin) / LIB_rctf_size_y(&v2d->cur)) * LIB_rcti_size_y(&v2d->mask)));
 }
 
 /** \} */
