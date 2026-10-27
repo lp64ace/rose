@@ -107,7 +107,7 @@ void GTKWindowWin32::Hide() {
 	ShowWindow(this->hwnd, SW_HIDE);
 }
 
-HCURSOR GetStandardCursor(int shape) {
+static HCURSOR GetStandardCursor(int shape) {
 	UINT flags = LR_SHARED | LR_DEFAULTSIZE;
 
 	if (shape == GTK_CURSOR_DEFAULT) {

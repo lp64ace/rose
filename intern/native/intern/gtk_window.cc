@@ -39,6 +39,10 @@ bool GTKWindowInterface::Install(int backend) {
 }
 
 void GTKWindowInterface::SetCursorVisible(bool visible) {
+	if (this->cursor_visible != visible) {
+		UpdateCursor(visible, GetCursorShape());
+	}
+
 	this->cursor_visible = visible;
 }
 
@@ -47,6 +51,10 @@ void GTKWindowInterface::SetCursorCustomShape(const char *bitmap, const char *ma
 }
 
 void GTKWindowInterface::SetCursorShape(int cursor) {
+	if (this->cursor_shape != cursor) {
+		UpdateCursor(GetCursorVisibility(), cursor);
+	}
+	
 	this->cursor_shape = cursor;
 }
 

@@ -254,10 +254,23 @@ ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window)
 
 	ED_screen_scene_change(C, window, scene);
 
-	RoseFileData *rfd = KER_rosefile_read("C:\\Users\\Jim\\Documents\\example.rose", 0);
-	if (rfd) {
-		KER_rosefile_read_setup(C, rfd);
-	}
+	do {
+		RoseFileData *rfd;
+		
+		rfd = KER_rosefile_read("C:\\Users\\Jim\\Documents\\example.rose", 0);
+		if (rfd) {
+			KER_rosefile_read_setup(C, rfd);
+			break;
+		}
+
+		rfd = KER_rosefile_read("/home/jim/Documents/example.rose", 0);
+		if (rfd) {
+			KER_rosefile_read_setup(C, rfd);
+			break;
+		}
+
+		// No file was found, so we will just keep the default scene (empty).
+	} while(false);
 }
 
 void WM_keyconfig_init(rContext *C) {
