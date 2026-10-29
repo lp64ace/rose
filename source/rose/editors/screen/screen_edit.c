@@ -417,6 +417,7 @@ ROSE_STATIC void screen_refresh(WindowManager *wm, wmWindow *window, bool full) 
 
 	screen->winid = window->winid;
 	screen->do_refresh = false;
+	screen->context = ed_screen_context;
 }
 
 void ED_screen_refresh(WindowManager *wm, wmWindow *window) {

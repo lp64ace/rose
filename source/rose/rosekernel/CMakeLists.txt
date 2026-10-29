@@ -117,6 +117,7 @@ set(LIB
 	rose::source::functions
 	rose::source::modifiers
 	rose::source::editors::interface
+	rose::source::editors::transform
 
 	# External Library Dependencies
 	
@@ -168,6 +169,7 @@ set(LIB
 	rose::source::roseloader
 	rose::source::rosekernel
 	rose::source::windowmanager
+	rose::source::editors::transform
 	
 	# External Library Dependencies
 	${PTHREADS_LIBRARIES}

@@ -160,6 +160,9 @@ typedef struct wmKeyMapItem {
 	/** Operator properties, assigned to ptr->data and can be written to a file. */
 	struct IDProperty *properties;
 
+	/** If used, the item is from modal map. */
+	int propvalue;
+
 	/* event */
 
 	/** Event code itself (#EVT_LEFTCTRLKEY, #LEFTMOUSE etc). */
@@ -226,9 +229,19 @@ typedef struct wmKeyMap {
 
 	int spaceid;
 	int regionid;
+	int flag;
 
 	int (*poll)(struct rContext *C);
+	int (*poll_modal_item)(const struct wmOperator *op, int value);
+
+	/** For modal, #EnumPropertyItem for now. */
+	const void *modal_items;
 } wmKeyMap;
+
+/** #wmKeyMap->flag */
+enum {
+	KEYMAP_MODAL = 1 << 0,
+};
 
 typedef struct wmKeyConfig {
 	struct wmKeyConfig *prev, *next;

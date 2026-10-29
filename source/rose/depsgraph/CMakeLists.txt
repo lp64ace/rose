@@ -81,6 +81,7 @@ set(SRC
 	intern/depsgraph.hh
 	intern/depsgraph_build.cc
 	intern/depsgraph_eval.cc
+	intern/depsgraph_query_foreach.cc
 	intern/depsgraph_query.cc
 	intern/depsgraph_registry.cc
 	intern/depsgraph_registry.hh

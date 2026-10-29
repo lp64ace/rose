@@ -14,6 +14,7 @@ extern "C" {
 struct Main;
 struct Scene;
 struct StructRNA;
+struct rContext;
 
 /* -------------------------------------------------------------------- */
 /** \name Property RNA Data Structures

@@ -27,7 +27,7 @@ static const char OP_TRANSLATION[] = "TRANSFORM_OT_translate";
 static const char OP_ROTATION[] = "TRANSFORM_OT_rotate";
 static const char OP_RESIZE[] = "TRANSFORM_OT_resize";
 
-const EnumPropertyItem rna_enum_transform_mode_types[] = {
+static const EnumPropertyItem rna_enum_transform_mode_types[] = {
 	{.value = TFM_INIT, .identifier = "INIT", .icon = 0, .name = "Init", .description = ""},
 	{.value = TFM_NONE, .identifier = "NONE", .icon = 0, .name = "None", .description = ""},  // Dummy
 	{.value = TFM_TRANSLATION, .identifier = "TRANSLATION", .icon = 0, .name = "Translation", .description = ""},
@@ -36,19 +36,20 @@ const EnumPropertyItem rna_enum_transform_mode_types[] = {
 	{.value = 0, .identifier = NULL, .icon = 0, .name = NULL, .description = NULL},
 };
 
-void TRANSFORM_OT_translate(struct wmOperatorType *ot);
-void TRANSFORM_OT_rotate(struct wmOperatorType *ot);
-void TRANSFORM_OT_resize(struct wmOperatorType *ot);
-void TRANSFORM_OT_transform(struct wmOperatorType *ot);
+ROSE_STATIC void TRANSFORM_OT_translate(struct wmOperatorType *ot);
+// ROSE_STATIC void TRANSFORM_OT_rotate(struct wmOperatorType *ot);
+ROSE_STATIC void TRANSFORM_OT_resize(struct wmOperatorType *ot);
+ROSE_STATIC void TRANSFORM_OT_transform(struct wmOperatorType *ot);
 
-static const TransformModeItem transform_mode_items[] = {
+static const TransformModeItem GTransformModeItems[] = {
 	{.idname = OP_TRANSLATION, .mode = TFM_TRANSLATION, .opfunc = TRANSFORM_OT_translate},
-	{.idname = OP_ROTATION, .mode = TFM_ROTATION, .opfunc = TRANSFORM_OT_rotate},
+	// {.idname = OP_ROTATION, .mode = TFM_ROTATION, .opfunc = TRANSFORM_OT_rotate},
 	{.idname = OP_RESIZE, .mode = TFM_RESIZE, .opfunc = TRANSFORM_OT_resize},
+	{.idname = NULL, .mode = TFM_NONE, .opfunc = NULL}
 };
 
 ROSE_STATIC eTransformMode transform_operator_mode(wmOperator *op) {
-	for (TransformModeItem *tmode = transform_mode_items; tmode->idname; tmode++) {
+	for (const TransformModeItem *tmode = GTransformModeItems; tmode->idname; tmode++) {
 		if (op->type->idname == tmode->idname) {
 			return tmode->mode;
 		}
@@ -128,7 +129,7 @@ ROSE_STATIC wmOperatorStatus transform_modal(rContext *C, wmOperator *op, const 
 
 	/* XXX insert keys are called here, and require context */
 	info->context = C;
-	ret = ED_transform_event(C, info, event);
+	ret = ED_transform_event(info, event);
 	info->context = NULL;
 
 	/**
@@ -151,7 +152,7 @@ ROSE_STATIC wmOperatorStatus transform_modal(rContext *C, wmOperator *op, const 
 			 * to share callbacks between different operators.
 			 */
 			wmOperatorType *ot = NULL;
-			TransformModeItem *item = transform_mode_items;
+			const TransformModeItem *item = GTransformModeItems;
 			while (item->idname) {
 				if (item->mode == info->mode) {
 					ot = WM_operatortype_find(item->idname, false);
@@ -194,4 +195,54 @@ void TRANSFORM_OT_transform(wmOperatorType *ot) {
 
 	RNA_def_enum(ot->srna, "mode", rna_enum_transform_mode_types, TFM_TRANSLATION, "Mode", "");
 	RNA_def_float_vector(ot->srna, "value", 4, NULL, -FLT_MAX, FLT_MAX, "Values", "", -FLT_MAX, FLT_MAX);
+}
+
+ROSE_STATIC void TRANSFORM_OT_translate(struct wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Move";
+	ot->description = "Move selected items";
+	ot->idname = OP_TRANSLATION;
+	ot->flag = OPTYPE_BLOCKING;
+
+	/* api callbacks */
+	ot->invoke = transform_invoke;
+	ot->exec = transform_exec;
+	ot->modal = transform_modal;
+	ot->cancel = transform_cancel;
+	ot->poll = ED_operator_screen_active;
+}
+
+ROSE_STATIC void TRANSFORM_OT_resize(struct wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Resize";
+	ot->description = "Scale (resize) selected items";
+	ot->idname = OP_RESIZE;
+	ot->flag = OPTYPE_BLOCKING;
+
+	/* api callbacks */
+	ot->invoke = transform_invoke;
+	ot->exec = transform_exec;
+	ot->modal = transform_modal;
+	ot->cancel = transform_cancel;
+	ot->poll = ED_operator_screen_active;
+
+	RNA_def_float_vector(ot->srna, "mouse_dir_constraint", 3, (const float [3]){0.0f, 0.0f, 0.0f}, -FLT_MAX, FLT_MAX, "Mouse Directional Contraint", "", -FLT_MAX, FLT_MAX);
+}
+
+void transform_operatortypes(void) {
+	for (const TransformModeItem *tmode = GTransformModeItems; tmode->idname; tmode++) {
+		WM_operatortype_append(tmode->opfunc);
+	}
+
+	WM_operatortype_append(TRANSFORM_OT_transform);
+}
+
+void ED_keymap_transform(wmKeyConfig *keyconf) {
+	wmKeyMap *modalmap = transform_modal_keymap(keyconf);
+
+	for (const TransformModeItem *tmode = GTransformModeItems; tmode->idname; tmode++) {
+		WM_modalkeymap_assign(modalmap, tmode->idname);
+	}
+
+	WM_modalkeymap_assign(modalmap, "TRANSFORM_OT_transform");
 }

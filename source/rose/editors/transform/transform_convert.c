@@ -4,6 +4,7 @@
 #include "KER_global.h"
 #include "KER_layer.h"
 #include "KER_scene.h"
+#include "KER_object.h"
 
 #include "transform_convert.h"
 
@@ -92,4 +93,29 @@ void ED_transform_data_create(rContext *C, TransInfo *t) {
 	}
 
 	transform_data_containers_count_and_clean(t);
+}
+
+void ED_transform_data_recalc(TransInfo *t) {
+	switch (t->type) {
+		case TC_OBJECT:
+			ED_transform_object_recalc(t);
+			break;
+		default:
+			break;
+	}
+}
+
+void ED_transform_special_after_transform_update(rContext *C, TransInfo *t) {
+	if (t->data_length_all == 0 || t->mode == TFM_NONE) {
+		return;
+	}
+
+	ROSE_assert(CTX_data_main(t->context) == CTX_data_main(C));
+	switch (t->type) {
+		case TC_OBJECT:
+			ED_transform_special_after_transform_update_object(C, t);
+			break;
+		default:
+			break;
+	}
 }

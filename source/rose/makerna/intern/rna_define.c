@@ -13,6 +13,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #ifdef RNA_RUNTIME
 #	include "RNA_prototypes.h"
@@ -644,6 +645,7 @@ ROSE_STATIC size_t rna_property_type_sizeof(ePropertyType type) {
 		case PROP_BOOLEAN: return sizeof(BoolPropertyRNA);
 		case PROP_INT: return sizeof(IntPropertyRNA);
 		case PROP_FLOAT: return sizeof(FloatPropertyRNA);
+		case PROP_ENUM: return sizeof(EnumPropertyRNA);
 		case PROP_STRING: return sizeof(StringPropertyRNA);
 		case PROP_POINTER: return sizeof(PointerPropertyRNA);
 		case PROP_COLLECTION: return sizeof(CollectionPropertyRNA);
@@ -776,14 +778,14 @@ ROSE_INLINE void rna_def_property_boolean_sdna(PropertyRNA *property, const char
 	uint bit_index = 0;
 	if (length > 1) {
 		if (booleanbit <= 0) {
-			fprintf(stderr, "%s.%s is using a null or negative 'booleanbit' value of %lld, which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
+			fprintf(stderr, "%s.%s is using a null or negative 'booleanbit' value of " PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
 			DefRNA.error = true;
 			return;
 		}
 
 		bit_index = _lib_forward_scan_u64(*(const uint64_t *)(&booleanbit));
 		if ((booleanbit & ~(1 << bit_index)) != 0) {
-			fprintf(stderr, "[RNA] %s.%s is using a multi-bit 'booleanbit' value of %lld, which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
+			fprintf(stderr, "[RNA] %s.%s is using a multi-bit 'booleanbit' value of " PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
 			DefRNA.error = true;
 			return;
 		}

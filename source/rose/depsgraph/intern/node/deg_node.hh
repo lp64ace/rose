@@ -2,6 +2,7 @@
 #define DEG_NODE_H
 
 #include "DEG_depsgraph.h"
+#include "DEG_depsgraph_build.h"
 
 #include "LIB_vector.hh"
 
@@ -125,6 +126,9 @@ enum class NodeType {
 };
 
 const char *DEG_node_type_as_string(NodeType type);
+
+NodeType DEG_node_type_from_object_component(eDepsObjectComponentType component_type);
+eDepsObjectComponentType DEG_node_type_to_object_component(NodeType node_type);
 
 struct Node {
 	/* Helper class for static typeinfo in subclasses. */

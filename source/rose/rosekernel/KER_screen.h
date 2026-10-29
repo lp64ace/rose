@@ -4,6 +4,8 @@
 #include "DNA_screen_types.h"
 #include "DNA_space_types.h"
 
+#include "KER_context.h"
+
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -50,6 +52,9 @@ typedef struct SpaceType {
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
 
+	/* return context data */
+	fnContextDataCallback context;
+
 	int keymapflag;
 
 	/* region type definitions */
@@ -83,6 +88,9 @@ typedef struct ARegionType {
 
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
+
+	/* return context data */
+	fnContextDataCallback context;
 
 	int keymapflag;
 

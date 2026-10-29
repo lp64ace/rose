@@ -13,7 +13,9 @@
 extern "C" {
 #endif
 
+struct Scene;
 struct Screen;
+struct ViewLayer;
 struct wmWindow;
 
 /* -------------------------------------------------------------------- */
@@ -99,6 +101,7 @@ void WM_window_ensure_active_view_layer(struct wmWindow *window);
 
 /** Get the scene of the window for 3D view rendering. */
 struct Scene *WM_window_get_active_scene(struct wmWindow *window);
+struct ViewLayer *WM_window_get_active_view_layer(struct wmWindow *window);
 
 /** \} */
 

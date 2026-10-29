@@ -76,14 +76,25 @@ void KER_modifier_copy_data_ex(ModifierData *target, const ModifierData *md, con
 	}
 
 	if ((flag & LIB_ID_CREATE_NO_USER_REFCOUNT) == 0) {
-    if (mti->foreach_ID_link) {
-      mti->foreach_ID_link(target, NULL, modifier_copy_data_id_us_cb, NULL);
-    }
-  }
+		if (mti->foreach_ID_link) {
+			mti->foreach_ID_link(target, NULL, modifier_copy_data_id_us_cb, NULL);
+		}
+	}
+
+	if ((flag & LIB_ID_CREATE_NO_MAIN) != 0) {
+		target->uuid = md->uuid;
+	}
+	else {
+		target->uuid = LIB_session_uuid_generate();
+	}
 }
 
 ModifierData *KER_modifier_new(eModifierType type) {
-	return modifier_allocate_and_init(type);
+	ModifierData *md = modifier_allocate_and_init(type);
+
+	md->uuid = LIB_session_uuid_generate();
+
+	return md;
 }
 
 ModifierData *KER_modifier_copy_ex(const ModifierData *md, int flag) {

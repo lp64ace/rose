@@ -15,6 +15,10 @@ ROSE_INLINE void zero_v2(float v[2]);
 ROSE_INLINE void zero_v3(float v[3]);
 ROSE_INLINE void zero_v4(float v[4]);
 
+ROSE_INLINE void zero_v2_int(int v[2]);
+ROSE_INLINE void zero_v3_int(int v[3]);
+ROSE_INLINE void zero_v4_int(int v[4]);
+
 ROSE_INLINE void copy_v2_v2(float v[2], const float a[2]);
 ROSE_INLINE void copy_v3_v3(float v[3], const float a[3]);
 ROSE_INLINE void copy_v4_v4(float v[4], const float a[4]);
@@ -252,6 +256,7 @@ bool is_finite_v4(const float v[4]);
 /** \name Angle
  * \{ */
 
+float angle_normalized_v2v2(const float v1[2], const float v2[2]);
 float angle_normalized_v3v3(const float v1[3], const float v2[3]);
 
 /** \} */
@@ -264,9 +269,17 @@ ROSE_INLINE float len_v2v2(const float a[2], const float b[2]);
 ROSE_INLINE float len_v3v3(const float a[3], const float b[3]);
 ROSE_INLINE float len_v4v4(const float a[4], const float b[4]);
 
+ROSE_INLINE float len_v2v2_int(const int a[2], const int b[2]);
+ROSE_INLINE float len_v3v3_int(const int a[3], const int b[3]);
+ROSE_INLINE float len_v4v4_int(const int a[4], const int b[4]);
+
 ROSE_INLINE float len_v2(const float v[2]);
 ROSE_INLINE float len_v3(const float v[3]);
 ROSE_INLINE float len_v4(const float v[4]);
+
+ROSE_INLINE float len_v2_int(const int v[2]);
+ROSE_INLINE float len_v3_int(const int v[3]);
+ROSE_INLINE float len_v4_int(const int v[4]);
 
 ROSE_INLINE double len_v2_db(const double v[2]);
 ROSE_INLINE double len_v3_db(const double v[3]);

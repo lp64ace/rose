@@ -28,7 +28,12 @@ set(SRC
 	transform_convert_object.c
 	transform_data.c
 	transform_data.h
+	transform_input.c
+	transform_mode_resize.c
+	transform_mode.c
+	transform_mode.h
 	transform_ops.c
+	transform_orientations.c
 	
 )
 
@@ -38,8 +43,9 @@ set(SRC
 set(LIB
 	# Internal Library Dependencies
 	rose::intern::guardedalloc
-	rose::source::roselib
+	rose::source::depsgraph
 	rose::source::rosekernel
+	rose::source::roselib
 	rose::source::dna
 	rose::source::rna
 	

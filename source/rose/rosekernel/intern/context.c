@@ -1,8 +1,13 @@
 #include "MEM_guardedalloc.h"
 
+#include "RNA_access.h"
+#include "RNA_prototypes.h"
+
 #include "KER_context.h"
+#include "KER_object.h"
 #include "KER_layer.h"
 #include "KER_scene.h"
+#include "KER_screen.h"
 
 #include "DNA_windowmanager_types.h"
 
@@ -24,8 +29,173 @@ typedef struct rContext {
 	struct {
 		struct Main *main;
 		struct Scene *scene;
+		int recursion;
 	} data;
 } rContext;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Shared API
+ * \{ */
+
+struct rContextDataResult {
+	PointerRNA ptr;
+	ListBase list;
+	const char **dir;
+	eContextDataType type;
+};
+
+void CTX_data_id_list_add(rContextDataResult *result, struct ID *id) {
+	CollectionPointerLink *link = MEM_callocN(sizeof(CollectionPointerLink), "CTX_data_id_list_add");
+	link->ptr = RNA_id_pointer_create(id);
+
+	LIB_addtail(&result->list, link);
+}
+
+void CTX_data_list_add(rContextDataResult *result, ID *id, StructRNA *type, void *data) {
+	CollectionPointerLink *link = MEM_callocN(sizeof(CollectionPointerLink), "CTX_data_list_add");
+	link->ptr = RNA_pointer_create_discrete(id, type, data);
+
+	LIB_addtail(&result->list, link);
+}
+
+int ctx_data_list_count(const rContext *C, int (*func)(const rContext *, ListBase *)) {
+	ListBase list;
+
+	if (func(C, &list)) {
+		size_t total = LIB_listbase_count(&list);
+		LIB_freelistN(&list);
+		return total;
+	}
+
+	return 0;
+}
+
+bool CTX_data_dir(const char *member) {
+	return member[0] == '\0';
+}
+
+void CTX_data_dir_set(rContextDataResult *result, const char **dir) {
+	result->dir = dir;
+}
+
+void CTX_data_type_set(rContextDataResult *result, eContextDataType type) {
+	result->type = type;
+}
+
+eContextDataType CTX_data_type_get(rContextDataResult *result) {
+	return result->type;
+}
+
+ROSE_INLINE eContextResult ctx_data_get(rContext *C, const char *member, rContextDataResult *result) {
+	Screen *screen;
+	ScrArea *area;
+	ARegion *region;
+
+	eContextResult ret = CTX_RESULT_MEMBER_NOT_FOUND;
+
+	int done = 0;
+	int recursion = C->data.recursion;
+
+	memset(result, 0, sizeof(rContextDataResult));
+
+	if (!LIB_thread_is_main()) {
+		return done;
+	}
+
+	/**
+	 * we check recursion to ensure that we do not get infinite
+     * loops requesting data from ourselves in a context callback
+	 */
+	if (done != 1 && recursion < 1 && (region = CTX_wm_region(C))) {
+		C->data.recursion = 1;
+
+		if (region->type && region->type->context) {
+			ret = region->type->context(C, member, result);
+			if (ret) {
+				done = -(-ret | -done);
+			}
+		}
+	}
+	if (done != 1 && recursion < 2 && (area = CTX_wm_area(C))) {
+		C->data.recursion = 2;
+
+		if (area->type && area->type->context) {
+			ret = area->type->context(C, member, result);
+			if (ret) {
+				done = -(-ret | -done);
+			}
+		}
+	}
+	if (done != 1 && recursion < 3 && (screen = CTX_wm_screen(C))) {
+		C->data.recursion = 3;
+
+		if (screen->context) {
+			fnContextDataCallback cb = (fnContextDataCallback)screen->context;
+			ret = cb(C, member, result);
+			if (ret) {
+				done = -(-ret | -done);
+			}
+		}
+	}
+
+	C->data.recursion = recursion;
+
+	return done;
+} 
+
+ROSE_INLINE int ctx_data_collection_get(const rContext *C, const char *member, ListBase *list) {
+	rContextDataResult result;
+	if (ctx_data_get((rContext *)C, member, &result) == CTX_RESULT_OK) {
+    	ROSE_assert(result.type == CTX_DATA_TYPE_COLLECTION);
+		*list = result.list;
+		return 1;
+	}
+
+	LIB_listbase_clear(list);
+
+	return 0;
+}
+
+ROSE_INLINE int ctx_data_base_collection_get(const rContext *C, const char *member, ListBase *list) {
+	ListBase ctx_object_list;
+	if ((ctx_data_collection_get(C, member, &ctx_object_list) == false) || LIB_listbase_is_empty(&ctx_object_list)) {
+		LIB_listbase_clear(list);
+		return 0;
+	}
+
+	rContextDataResult result;
+	memset(&result, 0, sizeof(rContextDataResult));
+
+	Scene *scene = CTX_data_scene(C);
+	ViewLayer *view_layer = CTX_data_view_layer(C);
+
+	bool ok = false;
+
+	CollectionPointerLink *ctx_object;
+	for (ctx_object = ctx_object_list.first; ctx_object; ctx_object = ctx_object->next) {
+		Object *ob = ctx_object->ptr.data;
+		Base *base = KER_view_layer_base_find(view_layer, ob);
+		if (base != NULL) {
+			CTX_data_list_add(&result, &scene->id, &RNA_ObjectBase, base);
+			ok = true;
+		}
+	}
+	CTX_data_type_set(&result, CTX_DATA_TYPE_COLLECTION);
+	LIB_freelistN(&ctx_object_list);
+
+	*list = result.list;
+	return ok;
+}
+
+int CTX_data_selected_objects(const rContext *C, ListBase *list) {
+	return ctx_data_collection_get(C, "selected_objects", list);
+}
+
+int CTX_data_selected_bases(const rContext *C, ListBase *list) {
+	return ctx_data_base_collection_get(C, "selected_objects", list);
+}
 
 /** \} */
 

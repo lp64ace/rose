@@ -8,6 +8,7 @@ extern "C" {
 typedef struct RegionView3D {
 	/** GL_PROJECTION matrix. */
 	float winmat[4][4];
+	float wininv[4][4];
 	/** GL_MODELVIEW matrix. */
 	float viewmat[4][4];
 	

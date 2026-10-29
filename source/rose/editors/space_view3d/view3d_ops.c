@@ -16,6 +16,7 @@
 
 #include "ED_screen.h"
 #include "ED_object.h"
+#include "ED_transform.h"
 #include "ED_view3d.h"
 
 #include "LIB_assert.h"
@@ -54,6 +55,8 @@ void view3d_operatortypes() {
 	WM_operatortype_append(VIEW3D_OT_zoom);
 	WM_operatortype_append(VIEW3D_OT_select);
 	WM_operatortype_append(VIEW3D_OT_reset);
+
+	transform_operatortypes();
 }
 
 /** \} */
@@ -68,6 +71,26 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 
 	view3d_navigate_keymap(keymap);
 	view3d_select_keymap(keymap);
+
+	/* clang-format off */
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "TRANSFORM_OT_translate", &(KeyMapItem_Params){
+			.type = EVT_GKEY,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+	} while(false);
+
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "TRANSFORM_OT_resize", &(KeyMapItem_Params){
+			.type = EVT_SKEY,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+	} while(false);
+
+	/* clang-format on */
 }
 
 /** \} */

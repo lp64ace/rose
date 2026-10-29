@@ -370,6 +370,9 @@ void WM_exit(rContext *C) {
 	WM_operatortype_clear();
 
 	CTX_free(C);
+
+	KER_rose_atexit();
+
 	exit(0);
 }
 

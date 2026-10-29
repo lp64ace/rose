@@ -2,6 +2,7 @@
 #define DEG_DEPSGRAPH_QUERY_H
 
 #include "DEG_depsgraph.h"
+#include "DEG_depsgraph_build.h"
 
 struct CustomData_MeshMasks;
 struct Depsgraph;
@@ -48,6 +49,34 @@ struct Scene *DEG_get_evaluated_scene(const struct Depsgraph *graph);
 struct ViewLayer *DEG_get_evaluated_view_layer(const struct Depsgraph *graph);
 struct Object *DEG_get_evaluated_object(const struct Depsgraph *graph, struct Object *object);
 struct ID *DEG_get_evaluated_id(const struct Depsgraph *depsgraph, struct ID *id);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name DEG traversal
+ * \{ */
+
+typedef void (*DEGForeachIDCallback)(ID *id, void *user_data);
+typedef void (*DEGForeachIDComponentCallback)(ID *id, eDepsObjectComponentType component, void *user_data);
+
+/**
+ * Starts traversal from given component of the given ID, invokes callback for every other
+ * component  which is directly on indirectly dependent on the source one.
+ */
+enum {
+	/**
+	 * Ignore transform solvers which depends on multiple inputs and affects final transform.
+	 * Is used for cases like snapping objects which are part of a rigid body simulation:
+	 * without this there will be "false-positive" dependencies between transform components of
+	 * objects:
+	 *
+	 *     object 1 transform before solver ---> solver ------> object 1 final transform
+	 *     object 2 transform before solver -----^     \------> object 2 final transform
+	 */
+	DEG_FOREACH_COMPONENT_IGNORE_TRANSFORM_SOLVERS = (1 << 0),
+};
+
+void DEG_foreach_dependent_ID_component(const Depsgraph *depsgraph, const ID *id, eDepsObjectComponentType source, int flags, DEGForeachIDComponentCallback callback, void *user_data);
 
 /** \} */
 

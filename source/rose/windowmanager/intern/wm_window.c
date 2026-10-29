@@ -675,6 +675,25 @@ void WM_window_ensure_active_view_layer(wmWindow *window) {
 	}
 }
 
+ViewLayer *WM_window_get_active_view_layer(wmWindow *window) {
+	Scene *scene = WM_window_get_active_scene(window);
+	if (scene == NULL) {
+		return NULL;
+	}
+
+	ViewLayer *view_layer = KER_view_layer_find(scene, window->view_layer_name);
+	if (view_layer) {
+		return view_layer;
+	}
+
+	view_layer = KER_view_layer_default_view(scene);
+	if (view_layer) {
+		LIB_strcpy(window->view_layer_name, ARRAY_SIZE(window->view_layer_name), view_layer->name);
+	}
+
+	return view_layer;
+}
+
 Scene *WM_window_get_active_scene(wmWindow *window) {
 	return window->scene;
 }

@@ -34,6 +34,17 @@ struct Main *KER_rose_globals_main_swap(struct Main *nmain);
 
 /** \} */
 
+/* -------------------------------------------------------------------- */
+/** \name Rose AtExit Methods
+ * \{ */
+
+/* Rose' own atexit (avoids leaking) */
+void KER_rose_atexit_register(void (*func)(void *user_data), void *user_data);
+void KER_rose_atexit_unregister(void (*func)(void *user_data), const void *user_data);
+void KER_rose_atexit(void);
+
+/** \} */
+
 #ifdef __cplusplus
 }
 #endif

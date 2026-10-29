@@ -200,6 +200,7 @@ enum {
 
 	/* Misc Rose internals: 0x502x. */
 	EVT_FILESELECT = 0x5020, /* 20512 */
+	EVT_MODAL_MAP = 0x5022,  /* 20514 */
 };
 
 /* clang-format off */

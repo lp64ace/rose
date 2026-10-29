@@ -71,3 +71,53 @@ Main *KER_rose_globals_main_swap(Main *nmain) {
 }
 
 /** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose's AtExit
+ *
+ * \note Don't use MEM_mallocN so functions can be registered at any time.
+ * \{ */
+
+typedef struct AtExitData {
+	struct AtExitData *next;
+
+	void (*func)(void *user_data);
+	void *user_data;
+} AtExitData;
+
+static AtExitData *GAtExit = NULL;
+
+void KER_rose_atexit_register(void (*func)(void *user_data), void *user_data) {
+	struct AtExitData *ae = MEM_mallocN(sizeof(*ae), "AtExitData");
+	ae->next = GAtExit;
+	ae->func = func;
+	ae->user_data = user_data;
+	GAtExit = ae;
+}
+
+void KER_rose_atexit_unregister(void (*func)(void *user_data), const void *user_data) {
+	struct AtExitData *ae = GAtExit;
+	struct AtExitData **ae_p = &GAtExit;
+
+	while (ae) {
+		if ((ae->func == func) && (ae->user_data == user_data)) {
+			*ae_p = ae->next;
+			MEM_freeN(ae);
+			return;
+		}
+		ae_p = &ae->next;
+		ae = ae->next;
+	}
+}
+
+void KER_rose_atexit(void) {
+	struct AtExitData *ae = GAtExit, *next;
+	while (ae) {
+		next = ae->next;
+		ae->func(ae->user_data);
+		MEM_freeN(ae);
+		ae = next;
+	}
+}
+
+/** \} */

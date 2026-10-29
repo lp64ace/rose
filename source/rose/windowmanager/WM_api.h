@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 struct rContext;
+struct EnumPropertyItem;
 
 /* -------------------------------------------------------------------- */
 /** \name Main Loop
@@ -154,6 +155,8 @@ typedef struct wmOperatorType {
 
 	/** RNA for properties. */
 	struct StructRNA *srna;
+	/** Pointer to modal keymap, do not free! */
+	struct wmKeyMap *modalkeymap;
 } wmOperatorType;
 
 enum {
@@ -205,6 +208,7 @@ typedef struct wmEventHandler_KeymapResult {
 
 struct wmKeyMap *WM_keymap_ensure(struct wmKeyConfig *keyconf, const char *idname, int spaceid, int regionid);
 struct wmKeyMap *WM_keymap_active(struct WindowManager *wm, struct wmKeyMap *keymap);
+struct wmKeyMap *WM_modalkeymap_ensure(struct wmKeyConfig *keyconf, const char *idname, const struct EnumPropertyItem *items);
 
 bool WM_keymap_poll(struct rContext *C, struct wmKeyMap *keymap);
 
@@ -239,11 +243,23 @@ typedef struct KeyMapItem_Params {
  */
 #define KMI_PARAMS_MOD_FROM_ANY(mod) ((mod) >> 8)
 
+struct wmKeyMapItem *WM_modalkeymap_add_item(struct wmKeyMap *km, const KeyMapItem_Params *params, int value);
 struct wmKeyMapItem *WM_keymap_add_item(struct wmKeyMap *keymap, const char *idname, const KeyMapItem_Params *params);
-
 struct wmKeyConfig *WM_keyconfig_new(struct WindowManager *wm, const char *idname);
 
+void WM_modalkeymap_assign(struct wmKeyMap *km, const char *opname);
 void WM_keyconfig_free(struct wmKeyConfig *keyconf);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Event
+ * \{ */
+
+int WM_userdef_event_type_from_keymap_type(int kmitype);
+
+void WM_event_drag_start_mval(const struct wmEvent *event, const struct ARegion *region, int r_mval[2]);
+void WM_event_drag_start_mval_fl(const struct wmEvent *event, const struct ARegion *region, float r_mval[2]);
 
 /** \} */
 

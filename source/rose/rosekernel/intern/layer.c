@@ -1325,10 +1325,6 @@ void KER_base_set_visible(Scene *scene, ViewLayer *view_layer, Base *base, bool 
 }
 
 bool KER_base_is_visible(const View3D *v3d, const Base *base) {
-	if ((base->flag & BASE_VISIBLE_DEPSGRAPH) == 0) {
-		return false;
-	}
-
 	if (v3d == NULL) {
 		return base->flag & BASE_VISIBLE_VIEWLAYER;
 	}

@@ -20,6 +20,8 @@ int main(void) {
 	LIB_task_scheduler_init();
 #endif
 
+	LIB_threadapi_init();
+
 	rContext *C = CTX_new();
 
 	KER_modifier_init();

@@ -37,6 +37,9 @@ typedef struct Screen {
 	/** Screen level regions (menus), runtime only. */
 	ListBase regionbase;
 
+	/** Context callback. */
+	void /*fnContextDataCallback*/ *context;
+
 	/** General flags. */
 	int flag;
 	/** Window-ID from WM, starts with 1. */

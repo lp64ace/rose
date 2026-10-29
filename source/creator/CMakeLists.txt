@@ -52,6 +52,7 @@ set(LIB
 	rose::source::editors::space_view3d
 	rose::source::editors::space_properties
 	rose::source::editors::io
+	rose::source::editors::transform
 	rose::source::io::fbx
 	rose::source::rosemesh
 

@@ -744,6 +744,14 @@ void KER_object_eval_eval_base_flags(Depsgraph *depsgraph, Scene *scene, int vie
 	ROSE_assert(base->object == object);
 
 	KER_base_eval_flags(base);
+
+	if ((base->flag & BASE_ENABLED_RENDER)) {
+		base->flag |= BASE_VISIBLE_DEPSGRAPH;
+	}
+	else {
+		base->flag &= ~BASE_VISIBLE_DEPSGRAPH;
+	}
+
 	/* Copy flags and settings from base. */
 	object->flag_base = base->flag;
 	if (is_from_set) {

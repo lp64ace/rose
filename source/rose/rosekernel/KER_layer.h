@@ -78,6 +78,7 @@ bool KER_layer_collection_has_selected_objects(struct ViewLayer *view_layer, str
 bool KER_layer_collection_has_layer_collection(struct LayerCollection *parent, struct LayerCollection *collection);
 
 void KER_base_set_visible(struct Scene *scene, struct ViewLayer *view_layer, struct Base *base, bool extend);
+bool KER_base_is_visible(const struct View3D *v3d, const struct Base *base);
 
 void KER_layer_collection_set_visible(struct ViewLayer *view_layer, struct LayerCollection *collection, bool visible, bool hierarchy);
 void KER_layer_collection_set_flag(struct LayerCollection *collection, int flag, bool value);

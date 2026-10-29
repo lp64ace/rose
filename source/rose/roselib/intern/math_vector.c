@@ -387,6 +387,23 @@ bool is_finite_v4(const float v[4]) {
 /** \name Angle
  * \{ */
 
+float angle_normalized_v2v2(const float v1[2], const float v2[2]) {
+	/* this is the same as acos(dot_v2v2(v1, v2)), but more accurate */
+	if (dot_v2v2(v1, v2) >= 0.0f) {
+		float a = len_v2v2(v1, v2) / 2.0f;
+		CLAMP(a, -1.0f, 1.0f);
+		return 2.0f * asin(a);
+	}
+
+	float v2_n[2];
+	copy_v2_v2(v2_n, v2);
+	negate_v2(v2_n);
+
+	float a = len_v2v2(v1, v2_n) / 2.0f;
+	CLAMP(a, -1.0f, 1.0f);
+	return (float)M_PI - 2.0f * asin(a);
+}
+
 float angle_normalized_v3v3(const float v1[3], const float v2[3]) {
 	/* this is the same as acos(dot_v3v3(v1, v2)), but more accurate */
 	if (dot_v3v3(v1, v2) >= 0.0f) {
@@ -396,12 +413,12 @@ float angle_normalized_v3v3(const float v1[3], const float v2[3]) {
 	}
 
 	float v2_n[3];
-	copy_v2_v2(v2_n, v2);
-	negate_v2(v2_n);
+	copy_v3_v3(v2_n, v2);
+	negate_v3(v2_n);
 
 	float a = len_v3v3(v1, v2_n) / 2.0f;
 	CLAMP(a, -1.0f, 1.0f);
-	return (float)M_PI - 2.0f * asin(len_v3v3(v1, v2_n) / 2.0f);
+	return (float)M_PI - 2.0f * asin(a);
 }
 
 /** \} */

@@ -1,6 +1,8 @@
 #ifndef SCREEN_INTERN_H
 #define SCREEN_INTERN_H
 
+#include "KER_context.h"
+
 #include "DNA_screen_types.h"
 
 #ifdef __cplusplus
@@ -100,6 +102,17 @@ void screen_cursor_set(struct wmWindow *window, const int xy[2]);
  * \return 0 if no split is possible, otherwise the screen-coordinate at which to split.
  */
 int screen_geom_find_area_split_point(const ScrArea *area, const rcti *window_rect, const int dir_axis, float fac);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Screen Utilities
+ * \{ */
+
+/**
+ * Entry point for the screen context.
+ */
+eContextResult ed_screen_context(const struct rContext *C, const char *member, struct rContextDataResult *result);
 
 /** \} */
 

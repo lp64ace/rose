@@ -4,6 +4,8 @@
 
 #include "KER_context.h"
 #include "KER_idprop.h"
+#include "KER_global.h"
+#include "KER_main.h"
 
 #include "RNA_access.h"
 #include "RNA_define.h"
@@ -66,6 +68,28 @@ wmKeyMap *WM_keymap_active(WindowManager *wm, wmKeyMap *keymap) {
 	return keymap;
 }
 
+struct wmKeyMap *WM_modalkeymap_ensure(struct wmKeyConfig *keyconf, const char *idname, const struct EnumPropertyItem *items) {
+	wmKeyMap *km = WM_keymap_ensure(keyconf, idname, 0, 0);
+	km->flag |= KEYMAP_MODAL;
+
+	/* init modal items from default config */
+	WindowManager *wm = (WindowManager *)G_MAIN->wm.first;
+	if (wm->runtime->defaultconf && wm->runtime->defaultconf != keyconf) {
+		wmKeyMap *defaultkm = WM_keymap_list_find(&wm->runtime->defaultconf->keymaps, km->idname, 0, 0);
+
+		if (defaultkm) {
+			km->modal_items = defaultkm->modal_items;
+			km->poll = defaultkm->poll;
+		}
+	}
+
+	if (items) {
+		km->modal_items = items;
+	}
+
+	return km;
+}
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
@@ -95,6 +119,16 @@ ROSE_INLINE void keymap_event_set(wmKeyMapItem *kmi, const KeyMapItem_Params *pa
 
 ROSE_STATIC void keymap_item_properties_set(wmKeyMapItem *kmi) {
 	WM_operator_properties_alloc(&(kmi->ptr), &(kmi->properties), kmi->idname);
+}
+
+wmKeyMapItem *WM_modalkeymap_add_item(wmKeyMap *km, const KeyMapItem_Params *params, int value) {
+	wmKeyMapItem *kmi = MEM_callocN(sizeof(wmKeyMapItem), "keymap entry");
+
+	keymap_event_set(kmi, params);
+	kmi->propvalue = value;
+
+	LIB_addtail(&km->items, kmi);
+	return kmi;
 }
 
 wmKeyMapItem *WM_keymap_add_item(wmKeyMap *keymap, const char *idname, const KeyMapItem_Params *params) {
@@ -161,6 +195,14 @@ void WM_keyconfig_clear(wmKeyConfig *keyconf) {
 	}
 
 	LIB_listbase_clear(&keyconf->keymaps);
+}
+
+void WM_modalkeymap_assign(wmKeyMap *km, const char *opname) {
+	wmOperatorType *ot = WM_operatortype_find(opname, 0);
+
+	if (ot) {
+		ot->modalkeymap = km;
+	}
 }
 
 void WM_keyconfig_free(wmKeyConfig *keyconf) {

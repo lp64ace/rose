@@ -103,6 +103,11 @@ typedef struct CollectionPropertyIterator {
 	unsigned int valid : 1;
 } CollectionPropertyIterator;
 
+typedef struct CollectionPointerLink {
+	struct CollectionPointerLink *prev, *next;
+	PointerRNA ptr;
+} CollectionPointerLink;
+
 /** \} */
 
 /* -------------------------------------------------------------------- */

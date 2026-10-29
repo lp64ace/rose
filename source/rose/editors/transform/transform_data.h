@@ -18,6 +18,13 @@ enum {
 	TD_SELECTED = 1 << 0,
 };
 
+typedef struct TransDataExtension {
+	/** Size of the data to transform. */
+	float *size;
+	/** Initial size before transformation is applied. */
+	float isize[3];
+} TransDataExtension;
+
 typedef struct TransData {
 	TransDataBase base;
 
@@ -33,6 +40,8 @@ typedef struct TransData {
 	float axismtx[3][3];
 
 	struct Object *object;
+	/** For objects, poses. 1 single allocation per #TransInfo! */
+	struct TransDataExtension *extension;
 } TransData;
 
 #ifdef __cplusplus

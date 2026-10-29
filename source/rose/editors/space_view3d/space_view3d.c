@@ -78,6 +78,7 @@ RegionView3D *ED_view3d_region_view_init(ARegion *v3d, RegionView3D *rv3d) {
 		}
 
 		unit_m4(rv3d->winmat);
+		unit_m4(rv3d->wininv);
 		unit_m4(rv3d->viewmat);
 		unit_qt(rv3d->viewquat);
 
@@ -163,9 +164,11 @@ ROSE_INLINE void view3d_main_region_layout(rContext *C, ARegion *region) {
 ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv3d, const float viewmat[4][4], const float winmat[4][4], const rcti *rect) {
 	if (winmat) {
 		copy_m4_m4(rv3d->winmat, winmat);
+		invert_m4_m4(rv3d->wininv, rv3d->winmat);
 	}
 	else {
 		view3d_window_matrix(region, rv3d->winmat, rect);
+		invert_m4_m4(rv3d->wininv, rv3d->winmat);
 	}
 
 	if (viewmat) {
