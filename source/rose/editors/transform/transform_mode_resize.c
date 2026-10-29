@@ -12,8 +12,6 @@
 #include "transform_convert.h"
 #include "transform_mode.h"
 
-#include <stdio.h>
-
 ROSE_STATIC void transform_mat3_to_size(const float mat[3][3], const float smat[3][3], float size[3]) {
 	float rmat[3][3];
 
@@ -50,8 +48,6 @@ void ED_transform_mode_resize_element(const TransInfo *t, const TransDataContain
 	else {
 		mat3_to_size(fsize, tmat);
 	}
-
-	fprintf(stdout, "vec3(%.1f, %.1f, %.1f)\n", fsize[0], fsize[1], fsize[2]);
 
 	td->extension->size[0] = td->extension->isize[0] * (1.0f + (fsize[0] - 1.0f));
 	td->extension->size[1] = td->extension->isize[1] * (1.0f + (fsize[1] - 1.0f));

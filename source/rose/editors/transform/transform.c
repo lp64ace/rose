@@ -19,6 +19,7 @@
 #include "transform.h"
 #include "transform_data.h"
 #include "transform_convert.h"
+#include "transform_constraints.h"
 #include "transform_mode.h"
 
 /* -------------------------------------------------------------------- */
@@ -377,6 +378,46 @@ void ED_transform_post(rContext *C, TransInfo *t) {
 	}
 }
 
+ROSE_STATIC bool transform_event_modal_constraint(TransInfo *t, int type) {
+	int cur_constraint = -1;
+
+	if (t->modifiers & (MOD_CONSTRAINT_SELECT_AXIS)) {
+		t->modifiers &= ~MOD_CONSTRAINT_SELECT_AXIS;
+
+		/* Avoid changing orientation in this case. */
+		cur_constraint = -2;
+	}
+	else if (t->constraint.mode & CON_APPLY) {
+		cur_constraint = t->constraint.mode & (CON_AXIS0 | CON_AXIS1 | CON_AXIS2);
+	}
+
+	int new_constraint = 0;
+
+	switch (type) {
+		case TFM_MODAL_AXIS_X: {
+			new_constraint = CON_AXIS0;
+		} break;
+		case TFM_MODAL_AXIS_Y: {
+			new_constraint = CON_AXIS1;
+		} break;
+		case TFM_MODAL_AXIS_Z: {
+			new_constraint = CON_AXIS2;
+		} break;
+		default:
+			/* Invalid key */
+			return false;
+	}
+
+	if (cur_constraint != new_constraint) {
+		transform_constraint_set(t, new_constraint, "");
+	}
+	else {
+		transform_constraint_stop(t);
+	}
+
+	return true;
+}
+
 int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 	bool handled = false;
 
@@ -396,6 +437,13 @@ int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 			case TFM_MODAL_CONFIRM: {
 				t->state = TRANS_CONFIRM;
 				handled = true;
+			} break;
+			case TFM_MODAL_AXIS_X:
+			case TFM_MODAL_AXIS_Y:
+			case TFM_MODAL_AXIS_Z: {
+				if (transform_event_modal_constraint(t, evt->value)) {
+					handled = true;
+				}
 			} break;
 		}
 	}

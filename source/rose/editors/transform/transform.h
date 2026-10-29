@@ -58,7 +58,13 @@ typedef enum eTFlag {
 	T_INPUT_IS_VALUES_FINAL = 1 << 2,
 } eTFlag;
 
-ENUM_OPERATORS(eTFlag, T_MODAL);
+ENUM_OPERATORS(eTFlag, T_INPUT_IS_VALUES_FINAL);
+
+typedef enum eTModifier {
+	MOD_CONSTRAINT_SELECT_AXIS = 1 << 0,
+} eTModifier;
+
+ENUM_OPERATORS(eTModifier, MOD_CONSTRAINT_SELECT_AXIS);
 
 /** \} */
 
@@ -221,6 +227,7 @@ typedef struct TransInfo {
 	eTransformContext options;
 	eTransformState state;
 	eTFlag flag;
+	eTModifier modifiers;
 
 	/** Main transform mode function. */
 	void (*transform)(struct TransInfo *, const int[2]);

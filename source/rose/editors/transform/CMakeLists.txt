@@ -21,8 +21,8 @@ set(INC_SYS
 # Define Source Files
 
 set(SRC
-	transform.c
-	transform.h
+	transform_constraints.c
+	transform_constraints.h
 	transform_convert.c
 	transform_convert.h
 	transform_convert_object.c
@@ -34,6 +34,8 @@ set(SRC
 	transform_mode.h
 	transform_ops.c
 	transform_orientations.c
+	transform.c
+	transform.h
 	
 )
 

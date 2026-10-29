@@ -1,6 +1,7 @@
 #include "LIB_math_vector.h"
 #include "LIB_math_matrix.h"
 
+#include "transform.h"
 #include "transform_orientations.h"
 
 bool transform_orientations_create_from_axis(float mat[3][3], const float x[3], const float y[3], const float z[3]) {

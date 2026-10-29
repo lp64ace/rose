@@ -845,6 +845,7 @@ ROSE_INLINE float normalize_v2_v2(float r[2], const float v[2]) {
 
 	return d;
 }
+
 ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
 	float d = dot_v3v3(v, v);
 
@@ -859,6 +860,7 @@ ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
 
 	return d;
 }
+
 ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 	float d = dot_v4v4(v, v);
 
@@ -874,12 +876,65 @@ ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 	return d;
 }
 
+ROSE_INLINE float normalize_v2_v2_length(float r[2], const float v[2], float unit_length) {
+	float d = dot_v2v2(v, v);
+
+	/* A larger value causes normalize errors in a scaled down models with camera extreme close. */
+	if (d > 1.0e-35f) {
+		d = sqrtf(d);
+		mul_v2_v2fl(r, v, unit_length / d);
+	}
+	else {
+		/* Either the vector is small or one of it's values contained `nan`. */
+		zero_v2(r);
+		d = 0.0f;
+	}
+
+	return d;
+}
+
+ROSE_INLINE float normalize_v3_v3_length(float r[3], const float v[3], float unit_length) {
+	float d = dot_v3v3(v, v);
+
+	/* A larger value causes normalize errors in a scaled down models with camera extreme close. */
+	if (d > 1.0e-35f) {
+		d = sqrtf(d);
+		mul_v3_v3fl(r, v, unit_length / d);
+	}
+	else {
+		/* Either the vector is small or one of it's values contained `nan`. */
+		zero_v3(r);
+		d = 0.0f;
+	}
+
+	return d;
+}
+
+ROSE_INLINE float normalize_v4_v4_length(float r[4], const float v[4], float unit_length) {
+	float d = dot_v4v4(v, v);
+
+	/* A larger value causes normalize errors in a scaled down models with camera extreme close. */
+	if (d > 1.0e-35f) {
+		d = sqrtf(d);
+		mul_v4_v4fl(r, v, unit_length / d);
+	}
+	else {
+		/* Either the vector is small or one of it's values contained `nan`. */
+		zero_v4(r);
+		d = 0.0f;
+	}
+
+	return d;
+}
+
 ROSE_INLINE float normalize_v2(float r[2]) {
 	return normalize_v2_v2(r, r);
 }
+
 ROSE_INLINE float normalize_v3(float r[3]) {
 	return normalize_v3_v3(r, r);
 }
+
 ROSE_INLINE float normalize_v4(float r[4]) {
 	return normalize_v4_v4(r, r);
 }
