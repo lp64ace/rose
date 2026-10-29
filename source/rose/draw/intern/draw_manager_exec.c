@@ -142,6 +142,13 @@ ROSE_STATIC void draw_state_set(DRWState state) {
 	}
 
 	GPU_state_set(write_mask, blend, cull, depth, stencil, stencil_operator, provoking_vertex);
+
+	if (state & DRW_STATE_IN_FRONT_SELECT) {
+		GPU_depth_range(0.0f, 0.1f);
+	}
+	else {
+		GPU_depth_range(0.0f, 1.0f);
+	}
 }
 
 /** \} */

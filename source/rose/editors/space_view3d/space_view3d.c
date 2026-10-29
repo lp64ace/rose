@@ -80,6 +80,8 @@ RegionView3D *ED_view3d_region_view_init(ARegion *v3d, RegionView3D *rv3d) {
 		unit_m4(rv3d->winmat);
 		unit_m4(rv3d->wininv);
 		unit_m4(rv3d->viewmat);
+		unit_m4(rv3d->viewinv);
+		unit_m4(rv3d->persmat);
 		unit_qt(rv3d->viewquat);
 
 		copy_v3_fl3(rv3d->viewloc, 0.0f, 1.80f, 4.0f);
@@ -173,12 +175,16 @@ ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv
 
 	if (viewmat) {
 		copy_m4_m4(rv3d->viewmat, viewmat);
+		invert_m4_m4(rv3d->viewinv, viewmat);
 	}
 	else {
-		quat_to_mat4(rv3d->viewmat, rv3d->viewquat);
-		add_v3_v3(rv3d->viewmat[3], rv3d->viewloc);
-		invert_m4(rv3d->viewmat);
+		quat_to_mat4(rv3d->viewinv, rv3d->viewquat);
+		add_v3_v3(rv3d->viewinv[3], rv3d->viewloc);
+		invert_m4_m4(rv3d->viewmat, rv3d->viewinv);
 	}
+
+	mul_m4_m4m4(rv3d->persmat, rv3d->winmat, rv3d->viewmat);
+	mul_m4_m4m4(rv3d->persinv, rv3d->viewinv, rv3d->wininv);
 }
 
 void ED_view3d_draw_setup_view(ARegion *region, const float viewmat[4][4], const float winmat[4][4], const rcti *rect) {

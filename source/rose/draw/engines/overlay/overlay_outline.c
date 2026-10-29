@@ -25,7 +25,7 @@ void overlay_outline_cache_init(struct DRWOverlayData *vdata) {
 
 	GPUShader *geometry_prepass = DRW_overlay_shader_geometry_prepass_get();
 
-	if (true /* do overlay outline prepass */) {
+	if (!DRW_state_is_select()) {
 		if (!(psl->outline_geometry_prepass = DRW_pass_new("Outline Prepass", DRW_STATE_DEFAULT))) {
 			return;
 		}
@@ -43,7 +43,7 @@ void overlay_outline_cache_init(struct DRWOverlayData *vdata) {
 
 	GPUShader *outline = DRW_overlay_shader_outline_get();
 
-	if (true /* do overlay outline */) {
+	if (!DRW_state_is_select()) {
 		if (!(psl->outline_pass = DRW_pass_new("Outline", DRW_STATE_WRITE_COLOR | DRW_STATE_BLEND_ALPHA_PREMUL))) {
 			return;
 		}

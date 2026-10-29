@@ -9,7 +9,7 @@
 #include "LIB_utildefines.h"
 
 float ED_view3d_calc_zfac_ex(const RegionView3D *rv3d, const float co[3], bool *r_flip) {
-	float zfac = mul_project_m4_v3_zfac(rv3d->winmat, co);
+	float zfac = mul_project_m4_v3_zfac(rv3d->persmat, co);
 
 	if (r_flip) {
 		*r_flip = (zfac < 0.0f);
@@ -41,9 +41,9 @@ void ED_view3d_win_to_delta(const ARegion *region, const float xy_delta[2], cons
 	dx = 2.0f * xy_delta[0] * zfac / region->sizex;
 	dy = 2.0f * xy_delta[1] * zfac / region->sizey;
 
-	r_out[0] = (rv3d->wininv[0][0] * dx + rv3d->wininv[1][0] * dy);
-	r_out[1] = (rv3d->wininv[0][1] * dx + rv3d->wininv[1][1] * dy);
-	r_out[2] = (rv3d->wininv[0][2] * dx + rv3d->wininv[1][2] * dy);
+	r_out[0] = (rv3d->persinv[0][0] * dx + rv3d->persinv[1][0] * dy);
+	r_out[1] = (rv3d->persinv[0][1] * dx + rv3d->persinv[1][1] * dy);
+	r_out[2] = (rv3d->persinv[0][2] * dx + rv3d->persinv[1][2] * dy);
 }
 
 ROSE_INLINE eV3DProjStatus ed_view3d_project_internal(const ARegion *region, const float perspmat[4][4], const bool is_local, const float co[3], float r_co[2], const eV3DProjTest flag) {
@@ -101,7 +101,7 @@ eV3DProjStatus ED_view3d_project_int_ex(const struct ARegion *region, float pers
 
 eV3DProjStatus ED_view3d_project_int_global(const struct ARegion *region, const float co[3], int r_co[2], eV3DProjTest flag) {
 	RegionView3D *rv3d = region->regiondata;
-	return ED_view3d_project_int_ex(region, rv3d->winmat, false, co, r_co, flag);
+	return ED_view3d_project_int_ex(region, rv3d->persmat, false, co, r_co, flag);
 }
 
 eV3DProjStatus ED_view3d_project_float_ex(const ARegion *region, float perspmat[4][4], const bool is_local, const float co[3], float r_co[2], const eV3DProjTest flag) {
@@ -120,5 +120,5 @@ eV3DProjStatus ED_view3d_project_float_ex(const ARegion *region, float perspmat[
 
 eV3DProjStatus ED_view3d_project_float_global(const ARegion *region, const float co[3], float r_co[2], eV3DProjTest flag) {
 	RegionView3D *rv3d = region->regiondata;
-	return ED_view3d_project_float_ex(region, rv3d->winmat, false, co, r_co, flag);
+	return ED_view3d_project_float_ex(region, rv3d->persmat, false, co, r_co, flag);
 }

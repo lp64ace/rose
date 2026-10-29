@@ -487,6 +487,13 @@ void DRW_buffer_add_entry_struct(DRWCallBuffer* callbuf, const void* data) {
 	}
 
 	GPU_vertbuf_vert_set(buf, callbuf->count, data);
+
+	if (G.flag & G_FLAG_PICKSEL) {
+		if (resize) {
+			GPU_vertbuf_data_resize(callbuf->select, callbuf->count + DRW_BUFFER_VERTS_CHUNK);
+		}
+		GPU_vertbuf_attr_set(callbuf->select, 0, callbuf->count, &GDrawManager.selectid);
+	}
 	callbuf->count++;
 }
 
@@ -494,8 +501,20 @@ void DRW_buffer_add_entry_array(DRWCallBuffer *callbuf, const void *attr[], size
 	GPUVertBuf *buf = callbuf->buffer;
 	const bool resize = (callbuf->count >= GPU_vertbuf_get_vertex_alloc(buf));
 
+	if (resize) {
+		GPU_vertbuf_data_resize(buf, callbuf->count + DRW_BUFFER_VERTS_CHUNK);
+	}
+
 	for (size_t i = 0; i < attr_len; i++) {
 		GPU_vertbuf_attr_set(buf, i, callbuf->count, attr[i]);
 	}
+
+	if (G.flag & G_FLAG_PICKSEL) {
+		if (resize) {
+			GPU_vertbuf_data_resize(callbuf->select, callbuf->count + DRW_BUFFER_VERTS_CHUNK);
+		}
+		GPU_vertbuf_attr_set(callbuf->select, 0, callbuf->count, &GDrawManager.selectid);
+	}
+
 	callbuf->count++;
 }

@@ -35,6 +35,8 @@ typedef struct DRWManager {
 	float size[2];
 	float inv_size[2];
 
+	int flag;
+
 	/**
 	 * \brief The native system rendering context, see WM_render_*!
 	 * We should in no way include GTK here (\type GTKRender *)!
@@ -52,6 +54,11 @@ typedef struct DRWManager {
 	unsigned int selectid;
 } DRWManager;
 
+/** #DrwManager->flag */
+enum {
+	DRW_IS_SELECT = 1 << 0,
+};
+
 extern DRWManager GDrawManager;
 
 typedef struct DRWSelectBuffer {
@@ -66,5 +73,13 @@ typedef struct DRWGlobal {
 } DRWGlobal;
 
 extern DRWGlobal GDraw;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Manager State
+ * \{ */
+
+bool DRW_state_is_select(void);
 
 /** \} */
