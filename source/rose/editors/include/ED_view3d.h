@@ -1,6 +1,8 @@
 #ifndef ED_VIEW3D_H
 #define ED_VIEW3D_H
 
+#include "LIB_utildefines.h"
+
 struct ARegion;
 
 #ifdef __cplusplus
