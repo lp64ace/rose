@@ -23,6 +23,8 @@
 #include "WM_handler.h"
 #include "WM_window.h"
 
+#include "RFT_api.h"
+
 #include "screen_intern.h"
 
 /* -------------------------------------------------------------------- */
@@ -255,6 +257,17 @@ void ED_region_panels_draw(rContext *C, ARegion *region) {
 	UI_panels_draw(C, region);
 }
 
+ROSE_INLINE void region_draw_status_text(ScrArea *area, ARegion *region) {
+	int font = RFT_default();
+
+	const float width = RFT_width(font, region->heading, UI_MAX_DRAW_STR);
+	const float x = UI_UNIT_X;
+	const float y = 0.4f * UI_UNIT_Y;
+
+	RFT_position(font, x, y, 0.0f);
+	RFT_draw(font, region->heading, UI_MAX_DRAW_STR);
+}
+
 void ED_region_do_draw(rContext *C, ARegion *region) {
 	if ((region->flag & (RGN_FLAG_REDRAW | RGN_FLAG_ALWAYS_REDRAW)) == 0) {
 		return;
@@ -275,6 +288,9 @@ void ED_region_do_draw(rContext *C, ARegion *region) {
 
 	ED_region_pixelspace(region);
 
+	if (region->heading) {
+		region_draw_status_text(area, region);
+	}
 	if (region->type->draw) {
 		region->type->draw(C, region);
 	}

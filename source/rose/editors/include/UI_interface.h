@@ -12,6 +12,8 @@
 #include "LIB_utildefines.h"
 #include "LIB_bitmap.h"
 
+#define UI_MAX_DRAW_STR 256
+
 #ifdef __cplusplus
 extern "C" {
 #endif

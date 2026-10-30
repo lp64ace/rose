@@ -11,6 +11,7 @@
 #include "RNA_access.h"
 #include "RNA_define.h"
 
+#include "ED_screen.h"
 #include "ED_view3d.h"
 
 #include "WM_api.h"
@@ -393,15 +394,20 @@ ROSE_STATIC bool transform_event_modal_constraint(TransInfo *t, int type) {
 
 	int new_constraint = 0;
 
+	const char *msg = "";
+
 	switch (type) {
 		case TFM_MODAL_AXIS_X: {
 			new_constraint = CON_AXIS0;
+			msg = "along %s X";
 		} break;
 		case TFM_MODAL_AXIS_Y: {
 			new_constraint = CON_AXIS1;
+			msg = "along %s Y";
 		} break;
 		case TFM_MODAL_AXIS_Z: {
 			new_constraint = CON_AXIS2;
+			msg = "along %s Z";
 		} break;
 		default:
 			/* Invalid key */
@@ -409,7 +415,7 @@ ROSE_STATIC bool transform_event_modal_constraint(TransInfo *t, int type) {
 	}
 
 	if (cur_constraint != new_constraint) {
-		transform_constraint_set(t, new_constraint, "");
+		transform_constraint_set(t, new_constraint, msg);
 	}
 	else {
 		transform_constraint_stop(t);
@@ -472,6 +478,7 @@ wmOperatorStatus ED_transform_end(rContext *C, TransInfo *t) {
 
 		ED_transform_special_after_transform_update(C, t);
 
+		ED_area_status_text(t->area, NULL);
 		ED_transform_post(C, t);
 	}
 

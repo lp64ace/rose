@@ -1,6 +1,7 @@
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
 #include "LIB_string.h"
+#include "LIB_string_utils.h"
 #include "LIB_utildefines.h"
 
 #include "transform.h"
@@ -120,7 +121,7 @@ ROSE_STATIC void constraint_apply_axis_vec(const TransInfo *t, const TransDataCo
  * \{ */
 
 void transform_constraint_set(TransInfo *t, int constraint, const char text[]) {
-	LIB_strcpy(t->constraint.text + 1, sizeof(t->constraint.text), text);
+	LIB_strnformat(t->constraint.text + 1, sizeof(t->constraint.text), text, "global");
 	t->constraint.mode = constraint;
 	
 	transform_constraint_start(t);

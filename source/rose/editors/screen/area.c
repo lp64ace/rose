@@ -17,6 +17,7 @@
 #include "KER_screen.h"
 
 #include "LIB_listbase.h"
+#include "LIB_string.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
@@ -867,6 +868,11 @@ void ED_area_exit(rContext *C, ScrArea *area) {
 	CTX_wm_area_set(C, area);
 
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		WM_event_remove_handlers(C, &region->handlers);
+		WM_event_modal_handler_region_replace(window, region, NULL);
+
+		MEM_SAFE_FREE(region->heading);
+
 		ED_region_exit(C, region);
 	}
 
@@ -905,6 +911,27 @@ void ED_area_data_copy(ScrArea *area_dst, ScrArea *area_src, const bool do_free)
 	LISTBASE_FOREACH(ARegion *, region, &area_src->regionbase) {
 		ARegion *newar = KER_area_region_copy(st, region);
 		LIB_addtail(&area_dst->regionbase, newar);
+	}
+}
+
+void ED_area_status_text(ScrArea *area, const char *str) {
+	if (area == NULL) {
+		return;
+	}
+
+	LISTBASE_FOREACH (ARegion *, region, &area->regionbase) {
+		if (region->regiontype == RGN_TYPE_HEADER) {
+			if (str) {
+				if (region->heading == NULL) {
+					region->heading = MEM_mallocN(UI_MAX_DRAW_STR, "heading");
+				}
+				LIB_strcpy(region->heading, UI_MAX_DRAW_STR, str);
+			}
+			else {
+				MEM_SAFE_FREE(region->heading);
+			}
+			ED_region_tag_redraw(region);
+		}
 	}
 }
 

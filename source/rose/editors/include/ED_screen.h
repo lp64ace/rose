@@ -93,6 +93,8 @@ void ED_area_init(struct WindowManager *wm, struct wmWindow *window, struct ScrA
 void ED_area_exit(struct rContext *C, struct ScrArea *area);
 void ED_area_data_copy(struct ScrArea *area_dst, struct ScrArea *area_src, const bool do_free);
 
+void ED_area_status_text(struct ScrArea *area, const char *str);
+
 void ED_area_tag_redraw(struct ScrArea *area);
 void ED_area_tag_redraw_no_rebuild(struct ScrArea *area);
 

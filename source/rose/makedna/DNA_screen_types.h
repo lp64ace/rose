@@ -215,6 +215,8 @@ typedef struct ARegion {
 	short visible;
 	short overlap;
 
+	char *heading;
+
 	/** Callbacks for this region type. */
 	struct ARegionType *type;
 	struct wmDrawBuffer *draw_buffer;

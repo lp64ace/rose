@@ -4,6 +4,10 @@
 
 #include "LIB_math_vector.h"
 #include "LIB_math_matrix.h"
+#include "LIB_string.h"
+#include "LIB_string_utils.h"
+
+#include "UI_interface.h"
 
 #include "ED_screen.h"
 
@@ -11,6 +15,8 @@
 #include "transform_data.h"
 #include "transform_convert.h"
 #include "transform_mode.h"
+
+#define NUM_STR_REP_LEN 16
 
 ROSE_STATIC void transform_mat3_to_size(const float mat[3][3], const float smat[3][3], float size[3]) {
 	float rmat[3][3];
@@ -26,6 +32,21 @@ ROSE_STATIC void transform_mat3_to_size(const float mat[3][3], const float smat[
 	}
 	if (dot_v3v3(rmat[2], smat[2]) < 0.0f) {
 		size[2] = -size[2];
+	}
+}
+
+void ED_transform_mode_resize_header(TransInfo *t, const float vec[3], char *str, const int maxlen) {
+	char tvec[NUM_STR_REP_LEN * 3];
+	size_t ofs = 0;
+	LIB_strnformat(&tvec[NUM_STR_REP_LEN * 0], 16, "%.4f", vec[0]);
+	LIB_strnformat(&tvec[NUM_STR_REP_LEN * 1], 16, "%.4f", vec[1]);
+	LIB_strnformat(&tvec[NUM_STR_REP_LEN * 2], 16, "%.4f", vec[2]);
+
+	if (t->constraint.mode & CON_APPLY) {
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : %s%s", &tvec[NUM_STR_REP_LEN * 0], t->constraint.text);
+	}
+	else {
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : vec3(%s, %s, %s) %s", &tvec[NUM_STR_REP_LEN * 0], &tvec[NUM_STR_REP_LEN * 1], &tvec[NUM_STR_REP_LEN * 2], t->constraint.text);
 	}
 }
 
@@ -55,6 +76,8 @@ void ED_transform_mode_resize_element(const TransInfo *t, const TransDataContain
 }
 
 void ED_transform_mode_resize_apply(TransInfo *t, const int mval[2]) {
+	char str[UI_MAX_DRAW_STR];
+
 	if ((t->flag & T_INPUT_IS_VALUES_FINAL) != 0) {
 		copy_v3_v3(t->values_final, t->values);
 	}
@@ -81,6 +104,11 @@ void ED_transform_mode_resize_apply(TransInfo *t, const int mval[2]) {
 				pvec[j++] = t->values_final[i];
 			}
 		}
+
+		ED_transform_mode_resize_header(t, pvec, str, sizeof(str));
+	}
+	else {
+		ED_transform_mode_resize_header(t, t->values_final, str, sizeof(str));
 	}
 
 	copy_m3_m3(t->mat, mat);
@@ -93,6 +121,8 @@ void ED_transform_mode_resize_apply(TransInfo *t, const int mval[2]) {
 	}
 
 	ED_transform_data_recalc(t);
+
+	ED_area_status_text(t->area, str);
 }
 
 void ED_transform_mode_resize_init(TransInfo *t, const float mouse_dir_constraint[3]) {
