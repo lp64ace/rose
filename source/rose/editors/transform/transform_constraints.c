@@ -142,7 +142,7 @@ void transform_constraint_start(TransInfo *t) {
 }
 
 void transform_constraint_stop(TransInfo *t) {
-	t->constraint.mode &= CON_APPLY;
+	t->constraint.mode &= ~CON_APPLY;
 	*t->constraint.text = '\0';
 }
 
