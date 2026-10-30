@@ -251,6 +251,9 @@ typedef struct TransInfo {
 	/** Access #RegionView3D from other space types. */
 	float persmat[4][4];
 	float persinv[4][4];
+	/** Orientation matrix of the current space. */
+	float spacemat[3][3];
+	float spaceinv[3][3];
 
 	/** translation, to show for widget. */
 	float vec[3];

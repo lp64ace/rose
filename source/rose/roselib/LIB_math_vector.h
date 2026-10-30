@@ -256,6 +256,9 @@ bool is_finite_v4(const float v[4]);
 /** \name Angle
  * \{ */
 
+float angle_v2v2(const float v1[2], const float v2[2]);
+float angle_v3v3(const float v1[3], const float v2[3]);
+
 float angle_normalized_v2v2(const float v1[2], const float v2[2]);
 float angle_normalized_v3v3(const float v1[3], const float v2[3]);
 
@@ -296,6 +299,10 @@ ROSE_INLINE float len_squared_v4v4(const float a[4], const float b[4]);
 ROSE_INLINE float normalize_v2_v2(float r[2], const float v[2]);
 ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]);
 ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]);
+
+ROSE_INLINE float normalize_v2_length(float v[2], float length);
+ROSE_INLINE float normalize_v3_length(float v[3], float length);
+ROSE_INLINE float normalize_v4_length(float v[4], float length);
 
 ROSE_INLINE float normalize_v2_v2_length(float r[2], const float v[2], float length);
 ROSE_INLINE float normalize_v3_v3_length(float r[3], const float v[3], float length);

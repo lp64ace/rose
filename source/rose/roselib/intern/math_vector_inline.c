@@ -876,6 +876,18 @@ ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 	return d;
 }
 
+ROSE_INLINE float normalize_v2_length(float v[2], float unit_length) {
+	return normalize_v2_v2_length(v, v, unit_length);
+}
+
+ROSE_INLINE float normalize_v3_length(float v[3], float unit_length) {
+	return normalize_v3_v3_length(v, v, unit_length);
+}
+
+ROSE_INLINE float normalize_v4_length(float v[4], float unit_length) {
+	return normalize_v4_v4_length(v, v, unit_length);
+}
+
 ROSE_INLINE float normalize_v2_v2_length(float r[2], const float v[2], float unit_length) {
 	float d = dot_v2v2(v, v);
 

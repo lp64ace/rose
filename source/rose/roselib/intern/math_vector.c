@@ -387,6 +387,24 @@ bool is_finite_v4(const float v[4]) {
 /** \name Angle
  * \{ */
 
+float angle_v2v2(const float v1[2], const float v2[2]) {
+	float n1[2], n2[2];
+
+	normalize_v2_v2(n1, v1);
+	normalize_v2_v2(n2, v2);
+
+	return angle_normalized_v2v2(n1, n2);
+}
+
+float angle_v3v3(const float v1[3], const float v2[3]) {
+	float n1[3], n2[3];
+
+	normalize_v3_v3(n1, v1);
+	normalize_v3_v3(n2, v2);
+
+	return angle_normalized_v3v3(n1, n2);
+}
+
 float angle_normalized_v2v2(const float v1[2], const float v2[2]) {
 	/* this is the same as acos(dot_v2v2(v1, v2)), but more accurate */
 	if (dot_v2v2(v1, v2) >= 0.0f) {

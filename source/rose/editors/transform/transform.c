@@ -292,6 +292,9 @@ bool ED_transform_init(rContext *C, TransInfo *t, wmOperator *op, const wmEvent 
 		t->launch_event = LEFTMOUSE;
 	}
 
+	unit_m3(t->spacemat);
+	unit_m3(t->spaceinv);
+
 	ED_transform_init_info(C, t, op, event);
 
 	if (t->spacetype == SPACE_VIEW3D) {

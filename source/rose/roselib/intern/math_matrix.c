@@ -1,5 +1,6 @@
 #include "LIB_math_matrix.h"
 #include "LIB_math_vector.h"
+#include "LIB_utildefines.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -589,6 +590,93 @@ bool invert_m4_m4_safe(float Ainv[4][4], const float A[4][4]) {
 		}
 	}
 	return true;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Orthogonalize Matrix Zeroed Axes
+ *
+ * Set any zeroed axes to an orthogonal vector in relation to the other axes.
+ *
+ * Typically used so matrix inversion can be performed.
+ *
+ * \note If an object has a zero scaled axis, this function can be used to "clean" the matrix
+ * to behave as if the scale on that axis was `unit_length`. So it can be inverted
+ * or used in matrix multiply without creating degenerate matrices, see: T50103
+ * \{ */
+
+/**
+ * \return true if any axis needed to be modified.
+ */
+ROSE_STATIC bool orthogonalize_m3_zero_axes_impl(float *mat[3], const float unit_length) {
+	enum { X = 1 << 0, Y = 1 << 1, Z = 1 << 2 };
+	int flag = 0;
+	for (int i = 0; i < 3; i++) {
+		flag |= (len_squared_v3(mat[i]) == 0.0f) ? (1 << i) : 0;
+	}
+
+	/* Either all or none are zero, either way we can't properly resolve this
+	* since we need to fill invalid axes from valid ones. */
+	if (ELEM(flag, 0, X | Y | Z)) {
+		return false;
+	}
+
+	switch (flag) {
+		case X | Y: {
+			ortho_v3_v3(mat[1], mat[2]);
+		}
+		case X: {
+			cross_v3_v3v3(mat[0], mat[1], mat[2]);
+			break;
+		}
+
+		case Y | Z: {
+			ortho_v3_v3(mat[2], mat[0]);
+		}
+		case Y: {
+			cross_v3_v3v3(mat[1], mat[0], mat[2]);
+			break;
+		}
+
+		case Z | X: {
+			ortho_v3_v3(mat[0], mat[1]);
+		}
+		case Z: {
+			cross_v3_v3v3(mat[2], mat[0], mat[1]);
+			break;
+		}
+		default: {
+			ROSE_assert_unreachable();
+		}
+	}
+
+	for (int i = 0; i < 3; i++) {
+		if (flag & (1 << i)) {
+			if (normalize_v3_length(mat[i], unit_length) == 0.0f) {
+				mat[i][i] = unit_length;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool orthogonalize_m3_zero_axes(float m[3][3], const float unit_length) {
+	return orthogonalize_m3_zero_axes_impl((float *[3]){UNPACK3(m)}, unit_length);
+}
+bool orthogonalize_m4_zero_axes(float m[4][4], const float unit_length) {
+	return orthogonalize_m3_zero_axes_impl((float *[3]){UNPACK3(m)}, unit_length);
+}
+
+void invert_m3_m3_safe_ortho(float inverse[3][3], const float mat[3][3]) {
+	if (!invert_m3_m3(inverse, mat)) {
+		float temp[3][3];
+		copy_m3_m3(temp, mat);
+		if (!(orthogonalize_m3_zero_axes(temp, 1.0f) && invert_m3_m3(inverse, temp))) {
+			unit_m3(inverse);
+		}
+	}
 }
 
 /** \} */

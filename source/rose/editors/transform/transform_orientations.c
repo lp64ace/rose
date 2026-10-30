@@ -1,3 +1,5 @@
+#include "KER_context.h"
+
 #include "LIB_math_vector.h"
 #include "LIB_math_matrix.h"
 
@@ -46,4 +48,18 @@ bool transform_orientations_create_from_axis(float mat[3][3], const float x[3], 
 
 	unit_m3(mat);
 	return false;
+}
+
+void ED_transform_calc_orientation_from_type_ex(float r_mat[3][3]) {
+	// Only global for now!
+	unit_m3(r_mat);
+}
+
+void transform_orientations_matrix_get(TransInfo *t, float r_spacemtx[3][3]) {
+	ED_transform_calc_orientation_from_type_ex(r_spacemtx);
+}
+
+void transform_orientations_current_set(TransInfo *t) {
+	transform_orientations_matrix_get(t, t->spacemat);
+	invert_m3_m3_safe_ortho(t->spaceinv, t->spacemat);
 }

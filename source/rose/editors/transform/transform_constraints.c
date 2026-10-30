@@ -1,4 +1,6 @@
 #include "LIB_math_matrix.h"
+#include "LIB_math_geom.h"
+#include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
 #include "LIB_string.h"
 #include "LIB_string_utils.h"
@@ -41,7 +43,80 @@ ROSE_STATIC void view_vector_calc(const TransInfo *t, const float focus[3], floa
 }
 
 ROSE_STATIC void constraint_axis_projection(const TransInfo *t, const float axis[3], const float in[3], float out[3]) {
-	ROSE_assert_unreachable();
+	float norm[3], vec[3];
+	float t_con_center[3];
+
+	if (is_zero_v3(in)) {
+		return;
+	}
+
+	copy_v3_v3(t_con_center, t->center_global);
+
+	constraint_axis_correct_center(t, t_con_center);
+
+	float angle = fabsf(angle_v3v3(axis, t->viewinv[2]));
+	if (angle > M_PI_2) {
+		angle = M_PI - angle;
+	}
+
+	if (angle < DEG2RAD(0.5f)) {
+		project_v3_v3v3(vec, in, t->viewinv[1]);
+
+		float factor = dot_v3v3(t->viewinv[1], vec) * 2.0f;
+		if (factor < 0.0f) {
+			factor *= -factor;
+		}
+		else {
+			factor *= factor;
+		}
+
+		normalize_v3_v3_length(out, axis, -factor);
+	}
+	else {
+		float v[3];
+		float norm_center[3];
+		float plane[3];
+
+		view_vector_calc(t, t_con_center, norm_center);
+		cross_v3_v3v3(plane, norm_center, axis);
+
+		project_v3_v3v3(vec, in, plane);
+		sub_v3_v3v3(vec, in, vec);
+
+		add_v3_v3v3(v, vec, t_con_center);
+		view_vector_calc(t, v, norm);
+
+		/* give arbitrary large value if projection is impossible */
+		float factor = dot_v3v3(axis, norm);
+		if (1.0f - fabsf(factor) < 2e-4f) {
+			copy_v3_v3(out, axis);
+			if (factor < 0) {
+				mul_v3_fl(out, -1e9f);
+			}
+			else {
+				mul_v3_fl(out, 1e9f);
+			}
+		}
+		else {
+			float mul;
+			if (isect_ray_ray_v3(t_con_center, axis, v, norm, &mul, NULL)) {
+				mul_v3_v3fl(out, axis, mul);
+			}
+			else {
+				ROSE_assert_unreachable(); // How?!
+			}
+
+			if (!isfinite(out[0])) {
+				out[0] = 0.0f;
+			}
+			if (!isfinite(out[1])) {
+				out[1] = 0.0f;
+			}
+			if (!isfinite(out[2])) {
+				out[2] = 0.0f;
+			}
+		}
+	}
 }
 
 /**
@@ -101,13 +176,13 @@ ROSE_STATIC void constraint_apply_axis_vec(const TransInfo *t, const TransDataCo
 		float c[3];
 
 		if ((t->constraint.mode & CON_AXIS0) != 0) {
-			copy_v3_fl3(c, 1.0f, 0.0f, 0.0f);
+			copy_v3_v3(c, t->spacemat[0]);
 		}
 		else if ((t->constraint.mode & CON_AXIS1) != 0) {
-			copy_v3_fl3(c, 0.0f, 1.0f, 0.0f);
+			copy_v3_v3(c, t->spacemat[1]);
 		}
 		else if ((t->constraint.mode & CON_AXIS2) != 0) {
-			copy_v3_fl3(c, 0.0f, 0.0f, 1.0f);
+			copy_v3_v3(c, t->spacemat[2]);
 		}
 
 		constraint_axis_projection(t, c, in, out);
