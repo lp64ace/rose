@@ -261,10 +261,8 @@ ROSE_INLINE void region_draw_status_text(ScrArea *area, ARegion *region) {
 	int font = RFT_default();
 
 	const float width = RFT_width(font, region->heading, UI_MAX_DRAW_STR);
-	const float x = UI_UNIT_X;
-	const float y = 0.4f * UI_UNIT_Y;
 
-	RFT_position(font, x, y, 0.0f);
+	RFT_position(font, (region->sizex - width) / 2, UI_UNIT_Y * 0.4f, 0.0f);
 	RFT_draw(font, region->heading, UI_MAX_DRAW_STR);
 }
 

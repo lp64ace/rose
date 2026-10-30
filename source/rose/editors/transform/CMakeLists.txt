@@ -30,6 +30,7 @@ set(SRC
 	transform_data.h
 	transform_input.c
 	transform_mode_resize.c
+	transform_mode_translate.c
 	transform_mode.c
 	transform_mode.h
 	transform_ops.c

@@ -232,7 +232,15 @@ ROSE_STATIC void transform_center_calculate(TransInfo *t) {
 	}
 }
 
+ROSE_STATIC void transform_restore_element_base(TransDataBase *td) {
+	if (td->loc) {
+		copy_v3_v3(td->loc, td->iloc);
+	}
+}
+
 ROSE_STATIC void transform_restore_element(TransData *td) {
+	transform_restore_element_base(&td->base);
+
 	if (td->extension) {
 		if (td->extension->size) {
 			copy_v3_v3(td->extension->size, td->extension->isize);

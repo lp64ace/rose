@@ -16,8 +16,6 @@
 #include "transform_convert.h"
 #include "transform_mode.h"
 
-#define NUM_STR_REP_LEN 16
-
 ROSE_STATIC void transform_mat3_to_size(const float mat[3][3], const float smat[3][3], float size[3]) {
 	float rmat[3][3];
 
@@ -36,17 +34,17 @@ ROSE_STATIC void transform_mat3_to_size(const float mat[3][3], const float smat[
 }
 
 void ED_transform_mode_resize_header(TransInfo *t, const float vec[3], char *str, const int maxlen) {
-	char tvec[NUM_STR_REP_LEN * 3];
+	char tvec[3][NUM_STR_REP_LEN];
 	size_t ofs = 0;
-	LIB_strnformat(&tvec[NUM_STR_REP_LEN * 0], 16, "%.4f", vec[0]);
-	LIB_strnformat(&tvec[NUM_STR_REP_LEN * 1], 16, "%.4f", vec[1]);
-	LIB_strnformat(&tvec[NUM_STR_REP_LEN * 2], 16, "%.4f", vec[2]);
+	LIB_strnformat(tvec[0], 16, "%.4f", vec[0]);
+	LIB_strnformat(tvec[1], 16, "%.4f", vec[1]);
+	LIB_strnformat(tvec[2], 16, "%.4f", vec[2]);
 
 	if (t->constraint.mode & CON_APPLY) {
-		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : %s%s", &tvec[NUM_STR_REP_LEN * 0], t->constraint.text);
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : %s%s", tvec[0], t->constraint.text);
 	}
 	else {
-		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : vec3(%s, %s, %s) %s", &tvec[NUM_STR_REP_LEN * 0], &tvec[NUM_STR_REP_LEN * 1], &tvec[NUM_STR_REP_LEN * 2], t->constraint.text);
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : vec3(%s, %s, %s) %s", tvec[0], tvec[1], tvec[2], t->constraint.text);
 	}
 }
 

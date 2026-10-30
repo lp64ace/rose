@@ -19,6 +19,8 @@ struct rContext;
 struct wmKeyMap;
 struct wmKeyConfig;
 
+#define NUM_STR_REP_LEN 16
+
 #ifdef __cplusplus
 extern "C" {
 #endif
