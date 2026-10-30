@@ -1,11 +1,78 @@
 #ifndef KER_CONTEXT_H
 #define KER_CONTEXT_H
 
+#include "LIB_listbase.h"
+
+struct ID;
+struct StructRNA;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct rContext rContext;
+typedef struct rContextDataResult rContextDataResult;
+
+typedef enum eContextResult {
+	/* The context member was found, and its data is available. */
+	CTX_RESULT_OK = 1,
+
+	/* The context member was not found. */
+	CTX_RESULT_MEMBER_NOT_FOUND = 0,
+
+	/**
+	 * The context member was found, but its data is not available.
+	 * For example, "active_bone" is a valid context member, but has not data in Object mode.
+	 */
+	CTX_RESULT_NO_DATA = -1,
+} eContextResult;
+
+/* Function mapping a context member name to its value. */
+typedef int (*fnContextDataCallback)(const rContext *C, const char *member, struct rContextDataResult *result);
+
+void CTX_data_id_list_add(struct rContextDataResult *result, struct ID *id);
+void CTX_data_list_add(struct rContextDataResult *result, struct ID *id, struct StructRNA *type, void *data);
+
+int ctx_data_list_count(const struct rContext *C, int (*func)(const struct rContext *, ListBase *));
+
+#define CTX_DATA_COUNT(C, member) ctx_data_list_count(C, CTX_data_##member)
+
+/**
+ * Data Context
+ *
+ * - listbases consist of CollectionPointerLink items and must be
+ *   freed with LIB_freelistN!
+ * - the dir listbase consists of LinkData items
+ */
+
+/* data type, needed so we can tell between a NULL pointer and an empty list */
+typedef enum eContextDataType {
+	CTX_DATA_TYPE_POINTER = 0,
+	CTX_DATA_TYPE_COLLECTION,
+} eContextDataType;
+
+bool CTX_data_dir(const char *member);
+void CTX_data_dir_set(struct rContextDataResult *result, const char **dir);
+
+void CTX_data_type_set(struct rContextDataResult *result, eContextDataType type);
+eContextDataType CTX_data_type_get(struct rContextDataResult *result);
+
+#define CTX_DATA_BEGIN(C, Type, instance, member) \
+	{ \
+		ListBase ctx_data_list; \
+		CollectionPointerLink *ctx_link; \
+		CTX_data_##member(C, &ctx_data_list); \
+		for (ctx_link = (CollectionPointerLink *)ctx_data_list.first; ctx_link; ctx_link = ctx_link->next) { \
+			Type instance = (Type)ctx_link->ptr.data;
+
+#define CTΧ_DATA_END \
+		} \
+		LIB_freelistN(&ctx_data_list); \
+	} \
+	(void)0
+
+int CTX_data_selected_objects(const rContext *C, ListBase *list);
+int CTX_data_selected_bases(const rContext *C, ListBase *list);
 
 /* -------------------------------------------------------------------- */
 /** \name Create/Destroy Methods

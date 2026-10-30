@@ -8,6 +8,44 @@
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
+float ED_view3d_calc_zfac_ex(const RegionView3D *rv3d, const float co[3], bool *r_flip) {
+	float zfac = mul_project_m4_v3_zfac(rv3d->persmat, co);
+
+	if (r_flip) {
+		*r_flip = (zfac < 0.0f);
+	}
+
+	/* if x,y,z is exactly the viewport offset, zfac is 0 and we don't want that
+	* (accounting for near zero values) */
+	if (zfac < 1.e-6f && zfac > -1.e-6f) {
+		zfac = 1.0f;
+	}
+
+	/* Negative zfac means x, y, z was behind the camera (in perspective).
+	* This gives flipped directions, so revert back to ok default case. */
+	if (zfac < 0.0f) {
+		zfac = -zfac;
+	}
+
+	return zfac;
+}
+
+float ED_view3d_calc_zfac(const RegionView3D *rv3d, const float co[3]) {
+	return ED_view3d_calc_zfac_ex(rv3d, co, NULL);
+}
+
+void ED_view3d_win_to_delta(const ARegion *region, const float xy_delta[2], const float zfac, float r_out[3]) {
+	RegionView3D *rv3d = region->regiondata;
+	float dx, dy;
+
+	dx = 2.0f * xy_delta[0] * zfac / region->sizex;
+	dy = 2.0f * xy_delta[1] * zfac / region->sizey;
+
+	r_out[0] = (rv3d->persinv[0][0] * dx + rv3d->persinv[1][0] * dy);
+	r_out[1] = (rv3d->persinv[0][1] * dx + rv3d->persinv[1][1] * dy);
+	r_out[2] = (rv3d->persinv[0][2] * dx + rv3d->persinv[1][2] * dy);
+}
+
 ROSE_INLINE eV3DProjStatus ed_view3d_project_internal(const ARegion *region, const float perspmat[4][4], const bool is_local, const float co[3], float r_co[2], const eV3DProjTest flag) {
 	float vec4[4];
 
@@ -45,6 +83,27 @@ ROSE_INLINE eV3DProjStatus ed_view3d_project_internal(const ARegion *region, con
 	return V3D_PROJ_RET_OK;
 }
 
+eV3DProjStatus ED_view3d_project_int_ex(const struct ARegion *region, float perspmat[4][4], const bool is_local, const float co[3], int r_co[2], eV3DProjTest flag) {
+	float tvec[2];
+	eV3DProjStatus ret = ed_view3d_project_internal(region, perspmat, is_local, co, tvec, flag);
+	if (ret == V3D_PROJ_RET_OK) {
+		if ((tvec[0] > INT_MIN && tvec[0] < INT_MAX) &&
+			(tvec[1] > INT_MIN && tvec[1] < INT_MAX)) {
+			r_co[0] = (int)floorf(tvec[0]);
+			r_co[1] = (int)floorf(tvec[1]);
+		}
+		else {
+			ret = V3D_PROJ_RET_OVERFLOW;
+		}
+	}
+	return ret;
+}
+
+eV3DProjStatus ED_view3d_project_int_global(const struct ARegion *region, const float co[3], int r_co[2], eV3DProjTest flag) {
+	RegionView3D *rv3d = region->regiondata;
+	return ED_view3d_project_int_ex(region, rv3d->persmat, false, co, r_co, flag);
+}
+
 eV3DProjStatus ED_view3d_project_float_ex(const ARegion *region, float perspmat[4][4], const bool is_local, const float co[3], float r_co[2], const eV3DProjTest flag) {
 	float tvec[2];
 	eV3DProjStatus ret = ed_view3d_project_internal(region, perspmat, is_local, co, tvec, flag);
@@ -61,5 +120,5 @@ eV3DProjStatus ED_view3d_project_float_ex(const ARegion *region, float perspmat[
 
 eV3DProjStatus ED_view3d_project_float_global(const ARegion *region, const float co[3], float r_co[2], eV3DProjTest flag) {
 	RegionView3D *rv3d = region->regiondata;
-	return ED_view3d_project_float_ex(region, rv3d->winmat, false, co, r_co, flag);
+	return ED_view3d_project_float_ex(region, rv3d->persmat, false, co, r_co, flag);
 }

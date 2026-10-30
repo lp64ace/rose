@@ -198,12 +198,12 @@ ROSE_INLINE void file_panel_execution_buttons_draw(const rContext *C, Panel *pan
 		uiLayout *flow = UI_layout_grid(panel->layout, 0, false, false);
 
 		uiLayout *subrow;
-		if ((subrow = UI_layout_row(flow, BORDERPADDING))) {
+		if ((subrow = UI_layout_row(flow, 0))) {
 			uiLayout *subsubrow;
 
 			but = uiDefBut_RNA(block, UI_BTYPE_EDIT, "", 0, 0, 0, UI_UNIT_Y, &ptr, "filename", -1, UI_BUT_TEXT_LEFT);
 
-			if ((subsubrow = UI_layout_row(subrow, BORDERPADDING))) {
+			if ((subsubrow = UI_layout_row(subrow, 0))) {
 				file_panel_execution_execute_button(subsubrow, params->title);
 				file_panel_execution_cancel_button(subsubrow);
 			}

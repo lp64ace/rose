@@ -4,6 +4,8 @@
 #include "DNA_screen_types.h"
 #include "DNA_space_types.h"
 
+#include "KER_context.h"
+
 #include "LIB_listbase.h"
 #include "LIB_utildefines.h"
 
@@ -41,11 +43,17 @@ typedef struct SpaceType {
 	/** Called when the mouse exits the area. */
 	void (*deactivate)(struct ScrArea *area);
 
+	/** after a spacedata copy, an init should result in exact same situation */
+	struct SpaceLink *(*duplicate)(struct SpaceLink *sl);
+
 	/** Register operator types on startup. */
 	void (*operatortypes)();
 
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
+
+	/* return context data */
+	fnContextDataCallback context;
 
 	int keymapflag;
 
@@ -71,11 +79,18 @@ typedef struct ARegionType {
 	/** Does not free the #ARegion itself. */
 	void (*free)(struct ARegion *region);
 
+	/** Split region, copy data optionally */
+	void *(*duplicate)(void *pointer);
+
 	void (*layout)(struct rContext *C, struct ARegion *region);
 	void (*draw)(struct rContext *C, struct ARegion *region);
+	void (*cursor)(struct wmWindow *window, struct ScrArea *area, struct ARegion *region);
 
 	/** Add default items to WM keymap. */
 	void (*keymap)(struct wmKeyConfig *keyconf);
+
+	/* return context data */
+	fnContextDataCallback context;
 
 	int keymapflag;
 
@@ -124,6 +139,14 @@ enum {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Screen
+ * \{ */
+
+struct ScrArea *KER_screen_find_area_xy(struct Screen *screen, int spacetype, const int xy[2]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Screen Geometry
  * \{ */
 
@@ -152,6 +175,15 @@ void KER_spacetype_free(void);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name SpaceData
+ * \{ */
+
+void KER_spacedata_copylist(struct ListBase *lb_dst, struct ListBase *lb_src);
+void KER_spacedata_freelist(struct ListBase *lb);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Area
  * \{ */
 
@@ -164,6 +196,14 @@ void KER_spacetype_free(void);
 struct ARegion *KER_area_find_region_type(const struct ScrArea *area, int region_type);
 struct ARegion *KER_area_find_region_active_win(const struct ScrArea *area);
 struct ARegion *KER_area_find_region_xy(const struct ScrArea *area, int regiontype, const int xy[2]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name ARegion
+ * \{ */
+
+struct ARegion *KER_area_region_copy(const struct SpaceType *st, const struct ARegion *region);
 
 /** \} */
 

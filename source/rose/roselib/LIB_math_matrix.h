@@ -98,6 +98,8 @@ bool invert_m3_m3(float inverse[3][3], const float mat[3][3]);
 bool invert_m4(float mat[4][4]);
 bool invert_m4_m4(float inverse[4][4], const float mat[4][4]);
 
+void invert_m3_m3_safe_ortho(float inverse[3][3], const float mat[3][3]);
+
 bool invert_m4_m4_safe(float inverse[4][4], const float mat[4][4]);
 
 /** \} */

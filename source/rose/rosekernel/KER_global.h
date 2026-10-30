@@ -19,10 +19,18 @@ typedef struct Global {
 	struct Main *main;
 
 	int flag;
+	int moving;
 } Global;
 
+/** #Global->flag */
 enum {
 	G_FLAG_PICKSEL = 1 << 0,
+};
+
+/** #Global->moving */
+enum {
+	G_TRANSFORM_WM = 1 << 0,
+	G_TRANSFORM_OBJ = 1 << 1,
 };
 
 /** \} */

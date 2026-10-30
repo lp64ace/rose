@@ -158,6 +158,8 @@ enum {
 	SPACE_FILE,
 };
 
+#define SPACE_TYPE_ANY -1
+
 /** \} */
 
 #ifdef __cplusplus

@@ -121,6 +121,7 @@ void KER_action_slot_runtime_free(struct ActionSlot *slot);
  * \{ */
 
 void KER_pose_channel_runtime_reset(struct PoseChannel_Runtime *runtime);
+void KER_pose_channel_session_uuid_generate(struct PoseChannel *pchannel);
 void KER_pose_channel_runtime_free(struct PoseChannel_Runtime *runtime);
 void KER_pose_tag_recalc(struct Pose *pose);
 

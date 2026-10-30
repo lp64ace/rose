@@ -53,6 +53,50 @@ const char *DEG_node_type_as_string(NodeType type) {
     return "UNKNOWN";
 }
 
+NodeType DEG_node_type_from_object_component(eDepsObjectComponentType component_type) {
+	switch (component_type) {
+		case DEG_OB_COMP_ANY: return NodeType::UNDEFINED;
+		case DEG_OB_COMP_PARAMETERS: return NodeType::PARAMETERS;
+		case DEG_OB_COMP_ANIMATION: return NodeType::ANIMATION;
+		case DEG_OB_COMP_TRANSFORM: return NodeType::TRANSFORM;
+		case DEG_OB_COMP_GEOMETRY: return NodeType::GEOMETRY;
+		case DEG_OB_COMP_EVAL_POSE: return NodeType::EVAL_POSE;
+		case DEG_OB_COMP_BONE: return NodeType::BONE;
+	}
+	return NodeType::UNDEFINED;
+}
+
+eDepsObjectComponentType DEG_node_type_to_object_component(NodeType node_type) {
+	switch (node_type) {
+		case NodeType::PARAMETERS: return DEG_OB_COMP_PARAMETERS;
+		case NodeType::ANIMATION: return DEG_OB_COMP_ANIMATION;
+		case NodeType::TRANSFORM: return DEG_OB_COMP_TRANSFORM;
+		case NodeType::GEOMETRY: return DEG_OB_COMP_GEOMETRY;
+		case NodeType::EVAL_POSE: return DEG_OB_COMP_EVAL_POSE;
+		case NodeType::BONE: return DEG_OB_COMP_BONE;
+
+		case NodeType::OPERATION:
+		case NodeType::TIMESOURCE:
+		case NodeType::ID_REF:
+		case NodeType::LAYER_COLLECTIONS:
+		case NodeType::COPY_ON_WRITE:
+		case NodeType::OBJECT_FROM_LAYER:
+		case NodeType::ARMATURE:
+		case NodeType::DUPLI:
+		case NodeType::SYNCHRONIZATION:
+		case NodeType::SIMULATION:
+		case NodeType::UNDEFINED:
+		case NodeType::NUM_TYPES:
+			return DEG_OB_COMP_PARAMETERS;
+
+		case NodeType::VISIBILITY:
+			ROSE_assert_msg(0, "Visibility component is supposed to be only used internally.");
+			return DEG_OB_COMP_PARAMETERS;
+	}
+	ROSE_assert_msg(0, "Unhandled node type, not suppsed to happen.");
+	return DEG_OB_COMP_PARAMETERS;
+}
+
 /* clang-format on */
 
 /* -------------------------------------------------------------------- */

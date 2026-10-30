@@ -318,6 +318,25 @@ void GTK_window_hide(struct GTKWindow *vwindow) {
 	window->Hide();
 }
 
+void GTK_cursor_show(struct GTKWindow *vwindow, bool show) {
+	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
+
+	window->SetCursorVisible(show);
+}
+
+void GTK_cursor_custom_set(struct GTKWindow *vwindow, const char *bitmap, const char *mask, int width, int height, int x, int y) {
+	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
+
+	window->SetCursorCustomShape(bitmap, mask, width, height, x, y);
+	window->SetCursorShape(GTK_CURSOR_CUSTOM);
+}
+
+void GTK_cursor_set(struct GTKWindow *vwindow, int cursor) {
+	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
+
+	window->SetCursorShape(cursor);
+}
+
 bool GTK_window_is_minimized(const struct GTKWindow *vwindow) {
 	const GTKWindowInterface *window = reinterpret_cast<const GTKWindowInterface *>(vwindow);
 

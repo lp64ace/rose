@@ -55,6 +55,8 @@ typedef struct wmWindow {
 	/** Internal window id, used for matching screens, greater than 0. */
 	int winid;
 
+	int cursor;
+
 	/** Event state regarding information about the previous events, managed by WindowManager. */
 	struct wmEvent *event_state;
 	struct wmEvent *event_last_handled;
@@ -67,6 +69,7 @@ typedef struct wmWindow {
 	ListBase event_queue;
 	ListBase modalhandlers;
 	ListBase handlers;
+	ListBase drawcalls;
 
 	wmWindow_Runtime runtime;
 } wmWindow;
@@ -74,6 +77,7 @@ typedef struct wmWindow {
 /** #wmWindow->flag */
 enum {
 	WINDOW_ADD_MOUSE_MOVE = 1 << 0,
+	WINDOW_TAG_MOUSE_CURSOR = 1 << 1,
 };
 
 typedef struct Report {
@@ -156,6 +160,9 @@ typedef struct wmKeyMapItem {
 	/** Operator properties, assigned to ptr->data and can be written to a file. */
 	struct IDProperty *properties;
 
+	/** If used, the item is from modal map. */
+	int propvalue;
+
 	/* event */
 
 	/** Event code itself (#EVT_LEFTCTRLKEY, #LEFTMOUSE etc). */
@@ -222,9 +229,19 @@ typedef struct wmKeyMap {
 
 	int spaceid;
 	int regionid;
+	int flag;
 
 	int (*poll)(struct rContext *C);
+	int (*poll_modal_item)(const struct wmOperator *op, int value);
+
+	/** For modal, #EnumPropertyItem for now. */
+	const void *modal_items;
 } wmKeyMap;
+
+/** #wmKeyMap->flag */
+enum {
+	KEYMAP_MODAL = 1 << 0,
+};
 
 typedef struct wmKeyConfig {
 	struct wmKeyConfig *prev, *next;

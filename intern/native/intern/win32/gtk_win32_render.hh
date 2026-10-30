@@ -25,6 +25,8 @@ public:
 	bool SwapBuffers(void);
 	bool SwapInterval(int interval);
 
+	void UpdateCursor(bool visible, int shape);
+
 protected:
 	bool InitPixelFormat(GTKManagerWin32 *manager, GTKWindowWin32 *window, RenderSetting setting);
 };

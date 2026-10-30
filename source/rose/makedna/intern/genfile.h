@@ -299,6 +299,7 @@ const size_t DNA_sdna_offsetof(struct SDNA *sdna, const struct DNATypeStruct *ty
  * float values, instead a warning is thrown!
  */
 void *DNA_sdna_struct_reconstruct(const struct SDNA *dna_old, const struct SDNA *dna_new, uint64_t struct_nr, size_t length, const void *data_old, const char *blockname);
+bool DNA_memcast(void *ptr_a, const void *ptr_b, size_t length, const struct DNAType *tp_old, const struct DNAType *tp_new);
 
 /** \} */
 

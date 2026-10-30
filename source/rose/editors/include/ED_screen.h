@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 struct ARegion;
+struct AZone;
 struct Main;
 struct ScrArea;
 struct Screen;
@@ -18,6 +19,14 @@ struct WindowManager;
 struct rContext;
 struct wmKeyConfig;
 struct wmWindow;
+
+/* -------------------------------------------------------------------- */
+/** \name Common Operator Utilities
+ * \{ */
+
+bool ED_operator_screen_active(struct rContext *C);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Screen Creation
@@ -54,6 +63,8 @@ void ED_region_default_init(struct WindowManager *wm, struct ARegion *region);
 void ED_region_default_exit(struct WindowManager *wm, struct ARegion *region);
 void ED_region_default_draw(struct rContext *C, struct ARegion *region);
 
+void ED_region_cursor_set(struct wmWindow *window, struct ScrArea *area, struct ARegion *region);
+
 /**
  * \note This may return true for multiple overlapping regions.
  * If it matters, check overlapped regions first (#ARegion.overlap).
@@ -80,6 +91,9 @@ void ED_area_newspace(struct rContext *C, struct ScrArea *area, int space_type);
 void ED_area_prevspace(struct rContext *C, struct ScrArea *area);
 void ED_area_init(struct WindowManager *wm, struct wmWindow *window, struct ScrArea *area);
 void ED_area_exit(struct rContext *C, struct ScrArea *area);
+void ED_area_data_copy(struct ScrArea *area_dst, struct ScrArea *area_src, const bool do_free);
+
+void ED_area_status_text(struct ScrArea *area, const char *str);
 
 void ED_area_tag_redraw(struct ScrArea *area);
 void ED_area_tag_redraw_no_rebuild(struct ScrArea *area);
@@ -87,6 +101,9 @@ void ED_area_tag_redraw_no_rebuild(struct ScrArea *area);
 bool ED_area_is_global(const struct ScrArea *area);
 int ED_area_global_size_y(const struct ScrArea *area);
 int ED_area_header_size_y(const struct ScrArea *area);
+
+struct AZone *ED_area_actionzone_find_xy(struct ScrArea *area, const int xy[2]);
+struct AZone *ED_area_azones_update(struct ScrArea *area, const int xy[2]);
 
 struct ScrArea *ED_screen_areas_iter_first(const struct wmWindow *win, const struct Screen *screen);
 struct ScrArea *ED_screen_areas_iter_next(const struct Screen *screen, const struct ScrArea *area);

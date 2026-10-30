@@ -29,6 +29,22 @@ ROSE_INLINE void zero_v4(float v[4]) {
 	v[3] = 0.0f;
 }
 
+ROSE_INLINE void zero_v2_int(int v[2]) {
+	v[0] = 0;
+	v[1] = 0;
+}
+ROSE_INLINE void zero_v3_int(int v[3]) {
+	v[0] = 0;
+	v[1] = 0;
+	v[2] = 0;
+}
+ROSE_INLINE void zero_v4_int(int v[4]) {
+	v[0] = 0;
+	v[1] = 0;
+	v[2] = 0;
+	v[3] = 0;
+}
+
 ROSE_INLINE void copy_v2_v2(float v[2], const float a[2]) {
 	v[0] = a[0];
 	v[1] = a[1];
@@ -743,6 +759,22 @@ ROSE_INLINE float len_v4v4(const float a[4], const float b[4]) {
 	return len_v4(d);
 }
 
+ROSE_INLINE float len_v2v2_int(const int a[2], const int b[2]) {
+	int d[2];
+	sub_v2_v2v2_int(d, b, a);
+	return len_v2_int(d);
+}
+ROSE_INLINE float len_v3v3_int(const int a[3], const int b[3]) {
+	int d[3];
+	sub_v3_v3v3_int(d, b, a);
+	return len_v3_int(d);
+}
+ROSE_INLINE float len_v4v4_int(const int a[4], const int b[4]) {
+	int d[4];
+	sub_v4_v4v4_int(d, b, a);
+	return len_v4_int(d);
+}
+
 ROSE_INLINE float len_v2(const float v[2]) {
 	return sqrtf(v[0] * v[0] + v[1] * v[1]);
 }
@@ -750,6 +782,16 @@ ROSE_INLINE float len_v3(const float v[3]) {
 	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 ROSE_INLINE float len_v4(const float v[4]) {
+	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
+}
+
+ROSE_INLINE float len_v2_int(const int v[2]) {
+	return sqrtf(v[0] * v[0] + v[1] * v[1]);
+}
+ROSE_INLINE float len_v3_int(const int v[3]) {
+	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+ROSE_INLINE float len_v4_int(const int v[4]) {
 	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
 }
 
@@ -803,6 +845,7 @@ ROSE_INLINE float normalize_v2_v2(float r[2], const float v[2]) {
 
 	return d;
 }
+
 ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
 	float d = dot_v3v3(v, v);
 
@@ -817,6 +860,7 @@ ROSE_INLINE float normalize_v3_v3(float r[3], const float v[3]) {
 
 	return d;
 }
+
 ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 	float d = dot_v4v4(v, v);
 
@@ -832,12 +876,77 @@ ROSE_INLINE float normalize_v4_v4(float r[4], const float v[4]) {
 	return d;
 }
 
+ROSE_INLINE float normalize_v2_length(float v[2], float unit_length) {
+	return normalize_v2_v2_length(v, v, unit_length);
+}
+
+ROSE_INLINE float normalize_v3_length(float v[3], float unit_length) {
+	return normalize_v3_v3_length(v, v, unit_length);
+}
+
+ROSE_INLINE float normalize_v4_length(float v[4], float unit_length) {
+	return normalize_v4_v4_length(v, v, unit_length);
+}
+
+ROSE_INLINE float normalize_v2_v2_length(float r[2], const float v[2], float unit_length) {
+	float d = dot_v2v2(v, v);
+
+	/* A larger value causes normalize errors in a scaled down models with camera extreme close. */
+	if (d > 1.0e-35f) {
+		d = sqrtf(d);
+		mul_v2_v2fl(r, v, unit_length / d);
+	}
+	else {
+		/* Either the vector is small or one of it's values contained `nan`. */
+		zero_v2(r);
+		d = 0.0f;
+	}
+
+	return d;
+}
+
+ROSE_INLINE float normalize_v3_v3_length(float r[3], const float v[3], float unit_length) {
+	float d = dot_v3v3(v, v);
+
+	/* A larger value causes normalize errors in a scaled down models with camera extreme close. */
+	if (d > 1.0e-35f) {
+		d = sqrtf(d);
+		mul_v3_v3fl(r, v, unit_length / d);
+	}
+	else {
+		/* Either the vector is small or one of it's values contained `nan`. */
+		zero_v3(r);
+		d = 0.0f;
+	}
+
+	return d;
+}
+
+ROSE_INLINE float normalize_v4_v4_length(float r[4], const float v[4], float unit_length) {
+	float d = dot_v4v4(v, v);
+
+	/* A larger value causes normalize errors in a scaled down models with camera extreme close. */
+	if (d > 1.0e-35f) {
+		d = sqrtf(d);
+		mul_v4_v4fl(r, v, unit_length / d);
+	}
+	else {
+		/* Either the vector is small or one of it's values contained `nan`. */
+		zero_v4(r);
+		d = 0.0f;
+	}
+
+	return d;
+}
+
 ROSE_INLINE float normalize_v2(float r[2]) {
 	return normalize_v2_v2(r, r);
 }
+
 ROSE_INLINE float normalize_v3(float r[3]) {
 	return normalize_v3_v3(r, r);
 }
+
 ROSE_INLINE float normalize_v4(float r[4]) {
 	return normalize_v4_v4(r, r);
 }

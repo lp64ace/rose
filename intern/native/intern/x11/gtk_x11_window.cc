@@ -3,13 +3,30 @@
 #include "gtk_x11_window.hh"
 #include "gtk_x11_window_manager.hh"
 
+#include <X11/cursorfont.h>
+
 #include <stdio.h>
 
 GTKWindowX11::GTKWindowX11(GTKManagerX11 *manager) : GTKWindowInterface(manager), window(), visual_info(NULL) {
 	this->display = manager->display;
+
+	this->custom_cursor = None;
+	this->empty_cursor = None;
+	this->visible_cursor = None;
 }
 
 GTKWindowX11::~GTKWindowX11() {
+	for(std::map<uint, Cursor>::iterator itr = this->standard_cursors.begin(); itr != this->standard_cursors.end(); itr++) {
+		XFreeCursor(this->display, itr->second);
+	}
+
+	if (empty_cursor) {
+		XFreeCursor(display, empty_cursor);
+	}
+	if (custom_cursor) {
+		XFreeCursor(display, custom_cursor);
+	}
+
 	if (this->visual_info) {
 		XFree(this->visual_info);
     	this->visual_info = nullptr;
@@ -163,6 +180,101 @@ bool GTKWindowX11::Create(GTKWindowInterface *parent, const char *name, int widt
 #endif
 
 	return true;
+}
+
+static Cursor GetStandardCursor(Display *display, int shape) {
+	unsigned int x11_shape = XC_left_ptr;
+
+	switch (shape) {
+		case GTK_CURSOR_DEFAULT:
+			x11_shape = XC_left_ptr;
+			break;
+		case GTK_CURSOR_HELP:
+			x11_shape = XC_question_arrow;
+			break;
+		case GTK_CURSOR_WAIT:
+			x11_shape = XC_watch;
+			break;
+		case GTK_CURSOR_TEXT:
+			x11_shape = XC_xterm;
+			break;
+
+		default:
+			return None;
+	}
+
+	return XCreateFontCursor(display, x11_shape);
+}
+
+void GTKWindowX11::UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int cx, int cy) {
+	Colormap colormap = DefaultColormap(display, visual_info->screen);
+	Pixmap bitmap_pix, mask_pix;
+	XColor fg, bg;
+
+	if (XAllocNamedColor(display, colormap, "White", &fg, &fg) == 0) {
+		return;
+	}
+	if (XAllocNamedColor(display, colormap, "Black", &bg, &bg) == 0) {
+		return;
+	}
+
+	if (custom_cursor) {
+		XFreeCursor(display, custom_cursor);
+	}
+
+	bitmap_pix = XCreateBitmapFromData(display, window, (char *)bitmap, width, height);
+	mask_pix = XCreateBitmapFromData(display, window, (char *)mask, width, height);
+
+	custom_cursor = XCreatePixmapCursor(display, bitmap_pix, mask_pix, &fg, &bg, cx, cy);
+	XDefineCursor(display, window, custom_cursor);
+	XFlush(display);
+
+	visible_cursor = custom_cursor;
+
+	UpdateCursor(true, GTK_CURSOR_CUSTOM);
+
+	XFreePixmap(display, bitmap_pix);
+	XFreePixmap(display, mask_pix);
+
+	XFreeColors(display, colormap, &fg.pixel, 1, 0L);
+	XFreeColors(display, colormap, &bg.pixel, 1, 0L);
+}
+
+void GTKWindowX11::UpdateCursor(bool visible, int shape) {
+	Cursor xcursor = None;
+
+	if (visible) {
+		if (shape == GTK_CURSOR_CUSTOM) {
+			if (visible_cursor) {
+				xcursor = visible_cursor;
+			}
+			else {
+				xcursor = GetStandardCursor(display, shape);
+			}
+		}
+		
+		if (xcursor == None) {
+			xcursor = GetStandardCursor(display, shape);
+		}
+	}
+	else {
+		if (!empty_cursor) {
+			Pixmap blank;
+			XColor dummy = {0};
+			char data[1] = {0};
+
+			/* make a blank cursor */
+			blank = XCreateBitmapFromData(display, RootWindow(display, visual_info->screen), data, 1, 1);
+
+			empty_cursor = XCreatePixmapCursor(display, blank, blank, &dummy, &dummy, 0, 0);
+			XFreePixmap(display, blank);
+		}
+
+		xcursor = empty_cursor;
+	}
+
+	XDefineCursor(display, window, xcursor);
+	XFlush(display);
 }
 
 void GTKWindowX11::Minimize() {

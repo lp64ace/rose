@@ -519,6 +519,12 @@ void KER_pose_channel_runtime_reset(PoseChannel_Runtime *runtime) {
 	memset(runtime, 0, sizeof(PoseChannel_Runtime));
 }
 
+void KER_pose_channel_session_uuid_generate(PoseChannel *pchannel) {
+	PoseChannel_Runtime *runtime = &pchannel->runtime;
+
+	runtime->uuid = LIB_session_uuid_generate();
+}
+
 void KER_pose_channel_runtime_free(PoseChannel_Runtime *runtime) {
 }
 
@@ -615,6 +621,10 @@ void KER_pose_copy_data(Pose **dst_p, const Pose *src, const int flag) {
 		KER_pose_channels_hash_ensure(dst);
 	}
 
+	LISTBASE_FOREACH(PoseChannel *, pchannel, &dst->channelbase) {
+		KER_pose_channel_session_uuid_generate(pchannel);
+	}
+
 	*dst_p = dst;
 }
 
@@ -637,12 +647,6 @@ void KER_pose_rose_write(RoseWriter *writer, Pose *pose, Armature *armature) {
 	RLO_write_struct(writer, Pose, pose);
 }
 
-void KER_pose_channel_session_uuid_generate(PoseChannel *pchannel) {
-	PoseChannel_Runtime *runtime = &pchannel->runtime;
-
-	runtime->uuid = LIB_session_uuid_generate();
-}
-
 void KER_pose_rose_read_data(RoseDataReader *reader, Pose *pose) {
 	if (pose == NULL) {
 		return;
@@ -655,6 +659,7 @@ void KER_pose_rose_read_data(RoseDataReader *reader, Pose *pose) {
 
 	LISTBASE_FOREACH(PoseChannel *, pchannel, &pose->channelbase) {
 		KER_pose_channel_runtime_reset(&pchannel->runtime);
+		KER_pose_channel_session_uuid_generate(pchannel);
 
 		/**
 		 * Calculating the bone requires the #Armature data, 

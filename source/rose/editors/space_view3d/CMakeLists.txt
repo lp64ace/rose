@@ -45,6 +45,7 @@ set(LIB
 	rose::source::windowmanager
 	rose::source::editors::interface
 	rose::source::editors::object
+	rose::source::editors::transform
 	
 	# External Library Dependencies
 	

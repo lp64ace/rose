@@ -155,6 +155,10 @@ void GTK_window_make_context_current(struct GTKWindow *);
 void GTK_window_show(struct GTKWindow *);
 void GTK_window_hide(struct GTKWindow *);
 
+void GTK_cursor_show(struct GTKWindow *, bool show);
+void GTK_cursor_custom_set(struct GTKWindow *, const char *bitmap, const char *mask, int width, int height, int x, int y);
+void GTK_cursor_set(struct GTKWindow *, int cursor);
+
 bool GTK_window_is_minimized(const struct GTKWindow *);
 bool GTK_window_is_maximized(const struct GTKWindow *);
 

@@ -9,6 +9,7 @@ struct ID;
 extern "C" {
 #endif
 
+typedef struct StructRNA StructRNA;
 typedef struct PropertyRNA PropertyRNA;
 
 /* -------------------------------------------------------------------- */
@@ -22,6 +23,18 @@ typedef struct PointerRNA {
 } PointerRNA;
 
 extern const PointerRNA PointerRNA_NULL;
+
+#define RNA_STRUCT_BEGIN(ptr, property)                                                                                                                                             \
+	{                                                                                                                                                                               \
+		CollectionPropertyIterator rna_macro_iter;                                                                                                                                  \
+		for (RNA_property_collection_begin(ptr, RNA_struct_iterator_property((ptr)->type), &rna_macro_iter); rna_macro_iter.valid; RNA_property_collection_next(&rna_macro_iter)) { \
+			PropertyRNA *property = (PropertyRNA *)rna_macro_iter.ptr.data;
+
+#define RNA_STRUCT_END								  \
+			}										  \
+		RNA_property_collection_end(&rna_macro_iter); \
+	}												  \
+	((void)0)
 
 /** \} */
 
@@ -89,6 +102,11 @@ typedef struct CollectionPropertyIterator {
 	unsigned int level : 7;
 	unsigned int valid : 1;
 } CollectionPropertyIterator;
+
+typedef struct CollectionPointerLink {
+	struct CollectionPointerLink *prev, *next;
+	PointerRNA ptr;
+} CollectionPointerLink;
 
 /** \} */
 
@@ -201,6 +219,34 @@ typedef enum ePropertyInternalFlag {
 	PROP_INTERN_PTR_OWNERSHIP_FORCED = (1 << 3),
 	PROP_INTERN_BUILTIN = (1 << 4),
 } ePropertyInternalFlag;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Enum Property Item Structure
+ * \{ */
+
+/**
+ * This struct is are typically defined in arrays which define an *enum* for RNA,
+ * which is used by the RNA API both for user-interface and the Python API.
+ */
+typedef struct EnumPropertyItem {
+	/** The internal value of the enum, not exposed to users. */
+	int value;
+	/**
+	 * Note that identifiers must be unique within the array,
+	 * by convention they're upper case with underscores for separators.
+	 * - An empty string is used to define menu separators.
+	 * - NULL denotes the end of the array of items.
+	 */
+	const char *identifier;
+	/** Optional icon, typically 'ICON_NONE' */
+	int icon;
+	/** Name displayed in the interface. */
+	const char *name;
+	/** Longer description used in the interface. */
+	const char *description;
+} EnumPropertyItem;
 
 /** \} */
 

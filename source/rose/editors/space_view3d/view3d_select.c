@@ -265,7 +265,7 @@ ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_
 
 	G.flag |= G_FLAG_PICKSEL;
 
-	DRW_render_context_enable(true);
+	DRW_render_context_enable();
 
 	GPU_matrix_push();
 	GPU_matrix_identity_set();
@@ -290,7 +290,7 @@ ROSE_INLINE int view3d_gpu_select_ex(rContext *C, GPUSelectResult *buffer, size_
 	GPU_matrix_pop_projection();
 	GPU_matrix_pop();
 
-	DRW_render_context_disable(true);
+	DRW_render_context_disable();
 
 	G.flag &= ~G_FLAG_PICKSEL;
 

@@ -31,6 +31,15 @@ void LIB_rcti_rctf_copy_round(struct rcti *dst, const struct rctf *src);
 /** \name Util Methods
  * \{ */
 
+/**
+ * \returns shortest distance from \a rect to x (0 if inside)
+ */
+int LIB_rcti_length_x(const rcti *rect, int x);
+/**
+ * \returns shortest distance from \a rect to y (0 if inside)
+ */
+int LIB_rcti_length_y(const rcti *rect, int y);
+
 void LIB_rctf_sanitize(struct rctf *rect);
 void LIB_rcti_sanitize(struct rcti *rect);
 

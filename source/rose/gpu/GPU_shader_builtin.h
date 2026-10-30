@@ -9,6 +9,27 @@ struct GPUShader;
 typedef enum BuiltinShader {
 	/** Glyph drawing shader used by the "Rose Load Font" module. */
 	GPU_SHADER_TEXT,
+	/**
+	 * Take a single color for all the vertices and a 2D position for each vertex.
+	 *
+	 * \param color: uniform vec4
+	 * \param pos: in vec2
+	 */
+	GPU_SHADER_2D_UNIFORM_COLOR,
+	/**
+	 * Take a 2D position and color for each vertex without color interpolation.
+	 *
+	 * \param color: in vec4
+	 * \param pos: in vec2
+	 */
+	GPU_SHADER_2D_FLAT_COLOR,
+	/**
+	 * Take a 2D position and color for each vertex with linear interpolation in window space.
+	 *
+	 * \param color: in vec4
+	 * \param pos: in vec2
+	 */
+	GPU_SHADER_2D_SMOOTH_COLOR,
 	/** Draw a texture with a uniform color multiplied. */
 	GPU_SHADER_2D_IMAGE_RECT_COLOR,
 	/** Merge viewport overlay texture with the render output. */

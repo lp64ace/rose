@@ -1,6 +1,8 @@
 #ifndef ED_VIEW3D_H
 #define ED_VIEW3D_H
 
+#include "LIB_utildefines.h"
+
 struct ARegion;
 
 #ifdef __cplusplus
@@ -8,6 +10,22 @@ extern "C" {
 #endif
 
 #define IS_CLIPPED 12000
+
+/**
+ * Calculate a depth value from \a co, use with #ED_view3d_win_to_delta.
+ *
+ * \param r_flip: Set to `zfac < 0.0` before the value is made signed.
+ * Since it's important in some cases to know if the value was flipped.
+ *
+ * \return The unsigned depth component of `co` multiplied by `rv3d->persmat` matrix,
+ * with additional sanitation to ensure the result is never negative
+ * as this isn't useful for tool-code.
+ */
+float ED_view3d_calc_zfac_ex(const struct RegionView3D *rv3d, const float co[3], bool *r_flip);
+/** See #ED_view3d_calc_zfac_ex doc-string. */
+float ED_view3d_calc_zfac(const struct RegionView3D *rv3d, const float co[3]);
+
+void ED_view3d_win_to_delta(const struct ARegion *region, const float xy_delta[2], const float zfac, float r_out[3]);
 
 /* return values for ED_view3d_project_...() */
 typedef enum eV3DProjStatus {
@@ -60,6 +78,10 @@ typedef enum eV3DProjTest {
 #define V3D_PROJ_TEST_ALL (V3D_PROJ_TEST_CLIP_DEFAULT | V3D_PROJ_TEST_CLIP_FAR | V3D_PROJ_TEST_CLIP_ZERO | V3D_PROJ_TEST_CLIP_CONTENT)
 #define V3D_PROJ_TEST_CLIP_CONTENT_DEFAULT (V3D_PROJ_TEST_CLIP_CONTENT | V3D_PROJ_TEST_CLIP_NEAR | V3D_PROJ_TEST_CLIP_FAR | V3D_PROJ_TEST_CLIP_WIN)
 
+eV3DProjStatus ED_view3d_project_int_ex(const struct ARegion *region, float perspmat[4][4], const bool is_local, const float co[3], int r_co[2], eV3DProjTest flag);
+eV3DProjStatus ED_view3d_project_int_global(const struct ARegion *region, const float co[3], int r_co[2], eV3DProjTest flag);
+
+eV3DProjStatus ED_view3d_project_float_ex(const struct ARegion *region, float perspmat[4][4], const bool is_local, const float co[3], float r_co[2], eV3DProjTest flag);
 eV3DProjStatus ED_view3d_project_float_global(const struct ARegion *region, const float co[3], float r_co[2], eV3DProjTest flag);
 
 #ifdef __cplusplus

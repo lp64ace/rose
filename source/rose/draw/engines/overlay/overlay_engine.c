@@ -28,7 +28,7 @@ ROSE_STATIC void overlay_cache_init(void *vdata) {
 }
 
 ROSE_STATIC void overlay_cache_populate(void *vdata, Object *object) {
-	const bool draw_outlines = (object->flag_base & BASE_SELECTED) != 0;
+	const bool draw_outlines = !DRW_state_is_select();
 
 #define ROUTE(type, function) case type: function((DRWOverlayData *)vdata, object); break
 
@@ -38,7 +38,7 @@ ROSE_STATIC void overlay_cache_populate(void *vdata, Object *object) {
 
 #undef ROUTE
 
-	if (draw_outlines) {
+	if (draw_outlines && (object->flag_base & BASE_SELECTED) != 0) {
 		overlay_outline_cache_populate(vdata, object);
 	}
 }
@@ -58,61 +58,64 @@ ROSE_STATIC void overlay_init(void *vdata) {
 		stl->data = MEM_callocN(sizeof(DRWOverlayViewportPrivateData), "DRWOverlayViewportPrivateData");
 	}
 
-	DefaultTextureList *dtxl = DRW_view_data_texture_list_get(GDrawManager.vdata_engine, GDrawManager.viewport);
+	if (!DRW_state_is_select()) {
+		DefaultTextureList *dtxl = DRW_view_data_texture_list_get(GDrawManager.vdata_engine, GDrawManager.viewport);
+		
+		int size[2] = {GPU_texture_width(dtxl->depth), GPU_texture_height(dtxl->depth)};
+		if ((txl->texture_depth != NULL) && ((GPU_texture_width(txl->texture_depth) != size[0]) || (GPU_texture_height(txl->texture_depth) != size[1]))) {
+			GPU_TEXTURE_FREE_SAFE(txl->texture_depth);
+		}
+		if ((txl->texture_color != NULL) && ((GPU_texture_width(txl->texture_color) != size[0]) || (GPU_texture_height(txl->texture_color) != size[1]))) {
+			GPU_TEXTURE_FREE_SAFE(txl->texture_color);
+		}
+		if ((txl->texture_outline_object_id != NULL) && ((GPU_texture_width(txl->texture_outline_object_id) != size[0]) || (GPU_texture_height(txl->texture_outline_object_id) != size[1]))) {
+			GPU_TEXTURE_FREE_SAFE(txl->texture_outline_object_id);
+		}
 
-	const int size[2] = {GPU_texture_width(dtxl->depth), GPU_texture_height(dtxl->depth)};
-	if ((txl->texture_depth != NULL) && ((GPU_texture_width(txl->texture_depth) != size[0]) || (GPU_texture_height(txl->texture_depth) != size[1]))) {
-		GPU_TEXTURE_FREE_SAFE(txl->texture_depth);
-	}
-	if ((txl->texture_color != NULL) && ((GPU_texture_width(txl->texture_color) != size[0]) || (GPU_texture_height(txl->texture_color) != size[1]))) {
-		GPU_TEXTURE_FREE_SAFE(txl->texture_color);
-	}
-	if ((txl->texture_outline_object_id != NULL) && ((GPU_texture_width(txl->texture_outline_object_id) != size[0]) || (GPU_texture_height(txl->texture_outline_object_id) != size[1]))) {
-		GPU_TEXTURE_FREE_SAFE(txl->texture_outline_object_id);
-	}
+		if (txl->texture_color == NULL) {
+			txl->texture_color = GPU_texture_create_2d("ColorTexture", size[0], size[1], 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
+		}
+		if (txl->texture_depth == NULL) {
+			txl->texture_depth = GPU_texture_create_2d("DepthTexture", size[0], size[1], 1, GPU_DEPTH_COMPONENT32F, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
+		}
+		if (txl->texture_outline_object_id == NULL) {
+			txl->texture_outline_object_id = GPU_texture_create_2d("ObjectIdBuffer", size[0], size[1], 1, GPU_R32UI, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
+		}
 
-	if (txl->texture_color == NULL) {
-		txl->texture_color = GPU_texture_create_2d("ColorTexture", size[0], size[1], 1, GPU_RGBA32F, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
-	}
-	if (txl->texture_depth == NULL) {
-		txl->texture_depth = GPU_texture_create_2d("DepthTexture", size[0], size[1], 1, GPU_DEPTH_COMPONENT32F, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
-	}
-	if (txl->texture_outline_object_id == NULL) {
-		txl->texture_outline_object_id = GPU_texture_create_2d("ObjectIdBuffer", size[0], size[1], 1, GPU_R32UI, GPU_TEXTURE_USAGE_ATTACHMENT, NULL);
-	}
+		GPU_framebuffer_ensure_config(&fbl->outline_prepass_fb,
+									{
+										GPU_ATTACHMENT_TEXTURE(dtxl->depth),
+										GPU_ATTACHMENT_TEXTURE(txl->texture_color),
+										GPU_ATTACHMENT_TEXTURE(txl->texture_outline_object_id),
+									});
 
-	GPU_framebuffer_ensure_config(&fbl->outline_prepass_fb,
-								  {
-									  GPU_ATTACHMENT_TEXTURE(dtxl->depth),
-									  GPU_ATTACHMENT_TEXTURE(txl->texture_color),
-									  GPU_ATTACHMENT_TEXTURE(txl->texture_outline_object_id),
-								  });
+		GPU_framebuffer_ensure_config(&fbl->color_only_fb,
+									{
+										GPU_ATTACHMENT_NONE,
+										GPU_ATTACHMENT_TEXTURE(dtxl->color),
+									});
 
-	GPU_framebuffer_ensure_config(&fbl->color_only_fb,
-								  {
-									  GPU_ATTACHMENT_NONE,
-									  GPU_ATTACHMENT_TEXTURE(dtxl->color),
-								  });
-
-	DRW_overlay_private_data_init(stl->data);
-	DRW_overlay_update_world_ubo(stl->data);
+		DRW_overlay_private_data_init(stl->data);
+		DRW_overlay_update_world_ubo(stl->data);
+	}
 }
 
 ROSE_STATIC void overlay_draw(void *vdata) {
 	DRWOverlayViewportFramebufferList *fbl = ((DRWOverlayData *)vdata)->fbl;
 	DRWOverlayViewportPassList *psl = ((DRWOverlayData *)vdata)->psl;
 
-	DefaultFramebufferList *dfbl = DRW_view_data_framebuffer_list_get(GDrawManager.vdata_engine, GDrawManager.viewport);
-
 	DRW_draw_pass(psl->armature_pass);
 
-	if (psl->outline_geometry_prepass) {
-		GPU_framebuffer_bind(fbl->outline_prepass_fb);
-		DRW_draw_pass(psl->outline_geometry_prepass);
+	if (!DRW_state_is_select()) {
+		/** We do not alter framebuffers when selecting, we also don't need outlines... */
+		if (psl->outline_geometry_prepass) {
+			GPU_framebuffer_bind(fbl->outline_prepass_fb);
+			DRW_draw_pass(psl->outline_geometry_prepass);
 
-		if (psl->outline_pass) {
-			GPU_framebuffer_bind(fbl->color_only_fb);
-			DRW_draw_pass(psl->outline_pass);
+			if (psl->outline_pass) {
+				GPU_framebuffer_bind(fbl->color_only_fb);
+				DRW_draw_pass(psl->outline_pass);
+			}
 		}
 	}
 }

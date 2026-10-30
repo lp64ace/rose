@@ -253,6 +253,24 @@ ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window)
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
+
+	do {
+		RoseFileData *rfd;
+		
+		rfd = KER_rosefile_read("C:\\Users\\Jim\\Documents\\example.rose", 0);
+		if (rfd) {
+			KER_rosefile_read_setup(C, rfd);
+			break;
+		}
+
+		rfd = KER_rosefile_read("/home/jim/Documents/example.rose", 0);
+		if (rfd) {
+			KER_rosefile_read_setup(C, rfd);
+			break;
+		}
+
+		// No file was found, so we will just keep the default scene (empty).
+	} while(false);
 }
 
 void WM_keyconfig_init(rContext *C) {
@@ -352,6 +370,9 @@ void WM_exit(rContext *C) {
 	WM_operatortype_clear();
 
 	CTX_free(C);
+
+	KER_rose_atexit();
+
 	exit(0);
 }
 
@@ -431,6 +452,8 @@ ROSE_INLINE void window_manager_init_data(struct ID *id) {
 	if (!wm->handle) {
 		return;
 	}
+
+	WM_init_cursor_data();
 
 	DRW_render_context_create(wm);
 }

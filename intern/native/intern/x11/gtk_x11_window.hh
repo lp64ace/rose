@@ -11,11 +11,19 @@
 #include <GL/glx.h>
 #include <GL/glxext.h>
 
+#include <map>
+
 class GTKManagerX11;
 
 class GTKWindowX11 : public GTKWindowInterface {
     Display *display;
     Window window;
+	
+	/** Cache of XC_* ID's to XCursor structures */
+	std::map<uint, Cursor> standard_cursors;
+	Cursor empty_cursor;
+	Cursor custom_cursor;
+	Cursor visible_cursor;
 	
 	int state;
 	int active;
@@ -33,6 +41,9 @@ public:
 	~GTKWindowX11();
 
 	bool Create(GTKWindowInterface *parent, const char *name, int width, int height, int state);
+
+	void UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y);
+	void UpdateCursor(bool visible, int shape);
 
 	void Minimize();
 	void Maximize();

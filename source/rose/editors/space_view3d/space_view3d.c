@@ -78,7 +78,10 @@ RegionView3D *ED_view3d_region_view_init(ARegion *v3d, RegionView3D *rv3d) {
 		}
 
 		unit_m4(rv3d->winmat);
+		unit_m4(rv3d->wininv);
 		unit_m4(rv3d->viewmat);
+		unit_m4(rv3d->viewinv);
+		unit_m4(rv3d->persmat);
 		unit_qt(rv3d->viewquat);
 
 		copy_v3_fl3(rv3d->viewloc, 0.0f, 1.80f, 4.0f);
@@ -91,11 +94,19 @@ RegionView3D *ED_view3d_region_view_init(ARegion *v3d, RegionView3D *rv3d) {
 ROSE_INLINE SpaceLink *view3d_create(const ScrArea *area) {
 	View3D *view3d = MEM_callocN(sizeof(View3D), "SpaceLink::View3D");
 
+	// Header Region
+	{
+		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Header");
+		LIB_addtail(&view3d->regionbase, region);
+		region->regiontype = RGN_TYPE_HEADER;
+		region->alignment = RGN_ALIGN_TOP;
+	}
 	// Main Region
 	{
 		ARegion *region = MEM_callocN(sizeof(ARegion), "View3D::Main");
 		LIB_addtail(&view3d->regionbase, region);
 		region->regiontype = RGN_TYPE_WINDOW;
+		region->alignment = RGN_ALIGN_BOTTOM;
 
 		RegionView3D *rv3d = MEM_callocN(sizeof(RegionView3D), "RegionView3D");
 		region->regiondata = ED_view3d_region_view_init(region, rv3d);
@@ -113,6 +124,16 @@ ROSE_INLINE void view3d_init(WindowManager *wm, ScrArea *area) {
 }
 
 ROSE_INLINE void view3d_exit(WindowManager *wm, ScrArea *area) {
+}
+
+ROSE_INLINE SpaceLink *view3d_duplicate(SpaceLink *sl) {
+	View3D *v3do = (View3D *)sl;
+	View3D *v3dn = MEM_dupallocN(sl);
+
+	v3dn->local_collections_uuid = 0;
+	v3dn->flag &= ~(V3D_LOCAL_COLLECTIONS);
+
+	return (SpaceLink *)v3dn;
 }
 
 /** \} */
@@ -145,19 +166,25 @@ ROSE_INLINE void view3d_main_region_layout(rContext *C, ARegion *region) {
 ROSE_INLINE void view3d_main_region_setup_view(ARegion *region, RegionView3D *rv3d, const float viewmat[4][4], const float winmat[4][4], const rcti *rect) {
 	if (winmat) {
 		copy_m4_m4(rv3d->winmat, winmat);
+		invert_m4_m4(rv3d->wininv, rv3d->winmat);
 	}
 	else {
 		view3d_window_matrix(region, rv3d->winmat, rect);
+		invert_m4_m4(rv3d->wininv, rv3d->winmat);
 	}
 
 	if (viewmat) {
 		copy_m4_m4(rv3d->viewmat, viewmat);
+		invert_m4_m4(rv3d->viewinv, viewmat);
 	}
 	else {
-		quat_to_mat4(rv3d->viewmat, rv3d->viewquat);
-		add_v3_v3(rv3d->viewmat[3], rv3d->viewloc);
-		invert_m4(rv3d->viewmat);
+		quat_to_mat4(rv3d->viewinv, rv3d->viewquat);
+		add_v3_v3(rv3d->viewinv[3], rv3d->viewloc);
+		invert_m4_m4(rv3d->viewmat, rv3d->viewinv);
 	}
+
+	mul_m4_m4m4(rv3d->persmat, rv3d->winmat, rv3d->viewmat);
+	mul_m4_m4m4(rv3d->persinv, rv3d->viewinv, rv3d->wininv);
 }
 
 void ED_view3d_draw_setup_view(ARegion *region, const float viewmat[4][4], const float winmat[4][4], const rcti *rect) {
@@ -199,6 +226,7 @@ void ED_spacetype_view3d() {
 	st->free = view3d_free;
 	st->init = view3d_init;
 	st->exit = view3d_exit;
+	st->duplicate = view3d_duplicate;
 	st->operatortypes = view3d_operatortypes;
 	st->keymap = view3d_keymap;
 	st->keymapflag = ED_KEYMAP_UI;
@@ -208,7 +236,7 @@ void ED_spacetype_view3d() {
 		ARegionType *art = MEM_callocN(sizeof(ARegionType), "View3D::ARegionType::Header");
 		LIB_addtail(&st->regiontypes, art);
 		art->regionid = RGN_TYPE_HEADER;
-		art->draw = NULL;
+		art->draw = ED_region_header_draw;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
 		art->keymapflag = ED_KEYMAP_UI;

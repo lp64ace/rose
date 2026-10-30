@@ -93,6 +93,10 @@ void wm_event_free_all(wmWindow *win) {
 	}
 }
 void wm_event_free(wmEvent *evt) {
+	if (evt->customdata != NULL && (evt->flag & WM_EVENT_CD_FREE) != 0) {
+		MEM_freeN(evt->customdata);
+	}
+
 	MEM_freeN(evt);
 }
 
@@ -433,6 +437,149 @@ wmOperatorStatus WM_operator_name_call_ptr(rContext *C, wmOperatorType *ot, eOpC
 	return wm_operator_call_internal(C, ot, ptr, context, false, event);
 }
 
+ROSE_INLINE bool wm_eventmatch(const wmEvent *winevent, const wmKeyMapItem *kmi) {
+	if (kmi->flag & KMI_INACTIVE) {
+		return false;
+	}
+
+	if (winevent->flag & WM_EVENT_IS_REPEAT) {
+		if (kmi->flag & KMI_REPEAT_IGNORE) {
+			return false;
+		}
+	}
+
+	if (kmi->type != KM_ANY) {
+		if (winevent->type != kmi->type) {
+			return false;
+		}
+	}
+
+	if (kmi->val != KM_ANY) {
+		if (winevent->value != kmi->val) {
+			return false;
+		}
+	}
+
+	/* Account for rare case of when these keys are used as the 'type' not as modifiers. */
+	if (kmi->shift != KM_ANY) {
+		const int shift = (winevent->modifier & KM_SHIFT) ? KM_MOD_HELD : KM_NOTHING;
+		if ((shift != kmi->shift) && !ELEM(winevent->type, EVT_LEFTSHIFTKEY, EVT_RIGHTSHIFTKEY)) {
+			return false;
+		}
+	}
+	if (kmi->ctrl != KM_ANY) {
+		const int ctrl = (winevent->modifier & KM_CTRL) ? KM_MOD_HELD : KM_NOTHING;
+		if ((ctrl != kmi->ctrl) && !ELEM(winevent->type, EVT_LEFTCTRLKEY, EVT_RIGHTCTRLKEY)) {
+			return false;
+		}
+	}
+	if (kmi->alt != KM_ANY) {
+		const int alt = (winevent->modifier & KM_ALT) ? KM_MOD_HELD : KM_NOTHING;
+		if ((alt != kmi->alt) && !ELEM(winevent->type, EVT_LEFTALTKEY, EVT_RIGHTALTKEY)) {
+			return false;
+		}
+	}
+	if (kmi->oskey != KM_ANY) {
+		const int oskey = (winevent->modifier & KM_OSKEY) ? KM_MOD_HELD : KM_NOTHING;
+		if ((oskey != kmi->oskey) && (winevent->type != EVT_OSKEY)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+ROSE_STATIC wmKeyMapItem *wm_eventmatch_modal_keymap_items(const wmKeyMap *keymap, wmOperator *op, const wmEvent *evt) {
+	LISTBASE_FOREACH (wmKeyMapItem *, kmi, &keymap->items) {
+		/* Should already be handled by #wm_user_modal_keymap_set_items. */
+		if (wm_eventmatch(evt, kmi)) {
+			if ((keymap->poll_modal_item == NULL) || (keymap->poll_modal_item(op, kmi->propvalue))) {
+				return kmi;
+			}
+		}
+	}
+	return NULL;
+}
+
+typedef struct wmEvent_ModalMapStore {
+	int prev_type;
+	int prev_value;
+
+	bool dbl_click_disabled;
+} wmEvent_ModalMapStore;
+
+/**
+ * This function prepares events for use with #wmOperatorType.modal by:
+ *
+ * - Matching key-map items with the operators modal key-map.
+ * - Converting double click events into press events,
+ *   allowing them to be restored when the events aren't handled.
+ *
+ *   This is done since we only want to use double click events to match key-map items,
+ *   allowing modal functions to check for press/release events without having to interpret them.
+ */
+ROSE_STATIC void wm_event_modalkeymap_begin(const rContext *C, wmOperator *op, wmEvent *evt, struct wmEvent_ModalMapStore *event_backup) {
+	ROSE_assert(evt->type != EVT_MODAL_MAP);
+
+	event_backup->dbl_click_disabled = false;
+
+	if (op->type->modalkeymap) {
+		wmKeyMap *keymap = WM_keymap_active(CTX_wm_manager(C), op->type->modalkeymap);
+		wmKeyMapItem *kmi = NULL;
+
+		const wmEvent *event_match = NULL;
+		wmEvent event_no_dbl_click;
+
+		if ((kmi = wm_eventmatch_modal_keymap_items(keymap, op, evt))) {
+			event_match = evt;
+		}
+		else if (evt->value == KM_DBL_CLICK) {
+			event_no_dbl_click = *evt;
+			event_no_dbl_click.value = KM_PRESS;
+
+			if ((kmi = wm_eventmatch_modal_keymap_items(keymap, op, &event_no_dbl_click))) {
+				event_match = &event_no_dbl_click;
+			}
+		}
+
+		if (event_match != NULL) {
+			event_backup->prev_type = evt->prev_type;
+			event_backup->prev_value = evt->prev_value;
+
+			evt->prev_type = event_match->type;
+			evt->prev_value = event_match->value;
+			evt->type = EVT_MODAL_MAP;
+			evt->value = kmi->propvalue;
+
+			if (evt->prev_type == KM_DBL_CLICK) {
+				evt->prev_type = KM_PRESS;
+				event_backup->dbl_click_disabled = true;
+			}
+		}
+	}
+
+	if (evt->type != EVT_MODAL_MAP) {
+		if (evt->value == KM_DBL_CLICK) {
+			evt->value = KM_PRESS;
+			event_backup->dbl_click_disabled = true;
+		}
+	}
+}
+
+ROSE_STATIC void wm_event_modalkeymap_end(wmEvent *evt, const struct wmEvent_ModalMapStore *event_backup) {
+	if (evt->type == EVT_MODAL_MAP) {
+		evt->type = evt->prev_type;
+		evt->value = evt->prev_value;
+
+		evt->prev_type = event_backup->prev_type;
+		evt->prev_value = event_backup->prev_value;
+	}
+
+	if (event_backup->dbl_click_disabled) {
+		evt->value = KM_DBL_CLICK;
+	}
+}
+
 ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(rContext *C, ListBase *handlers, wmEventHandler *handler_base, wmEvent *event, PointerRNA *properties, const char *kmi_idname) {
 	wmOperatorStatus retval = OPERATOR_PASS_THROUGH;
 
@@ -450,22 +597,29 @@ ROSE_INLINE eHandlerActionFlag wm_handler_operator_call(rContext *C, ListBase *h
 			wm_handler_op_context(C, handler, event);
 			wm_region_mouse_co(C, event);
 
+			struct wmEvent_ModalMapStore event_backup;
+			wm_event_modalkeymap_begin(C, op, event, &event_backup);
+
 			retval = ot->modal(C, op, event);
 
-			/* Important to run 'wm_operator_finished' before setting the context members to null. */
-			if (retval & OPERATOR_FINISHED) {
-				wm_operator_finished(C, op);
-				handler->op = NULL;
-			}
-			else if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
-				WM_operator_free(op);
-				handler->op = NULL;
-			}
+			if ((CTX_wm_window(C) == window)) {
+				wm_event_modalkeymap_end(event, &event_backup);
 
-			/* Remove modal handler, operator itself should have been canceled and freed. */
-			if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
-				LIB_remlink(handlers, handler);
-				MEM_freeN(&handler->head);
+				/* Important to run 'wm_operator_finished' before setting the context members to null. */
+				if (retval & OPERATOR_FINISHED) {
+					wm_operator_finished(C, op);
+					handler->op = NULL;
+				}
+				else if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
+					WM_operator_free(op);
+					handler->op = NULL;
+				}
+
+				/* Remove modal handler, operator itself should have been canceled and freed. */
+				if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
+					LIB_remlink(handlers, handler);
+					MEM_freeN(&handler->head);
+				}
 			}
 		}
 		else {
@@ -661,58 +815,6 @@ ROSE_INLINE eHandlerActionFlag wm_handler_ui_call(rContext *C, wmEventHandler_UI
 	return WM_HANDLER_CONTINUE;
 }
 
-ROSE_INLINE bool wm_eventmatch(const wmEvent *winevent, const wmKeyMapItem *kmi) {
-	if (kmi->flag & KMI_INACTIVE) {
-		return false;
-	}
-
-	if (winevent->flag & WM_EVENT_IS_REPEAT) {
-		if (kmi->flag & KMI_REPEAT_IGNORE) {
-			return false;
-		}
-	}
-
-	if (kmi->type != KM_ANY) {
-		if (winevent->type != kmi->type) {
-			return false;
-		}
-	}
-
-	if (kmi->val != KM_ANY) {
-		if (winevent->value != kmi->val) {
-			return false;
-		}
-	}
-
-	/* Account for rare case of when these keys are used as the 'type' not as modifiers. */
-	if (kmi->shift != KM_ANY) {
-		const int shift = (winevent->modifier & KM_SHIFT) ? KM_MOD_HELD : KM_NOTHING;
-		if ((shift != kmi->shift) && !ELEM(winevent->type, EVT_LEFTSHIFTKEY, EVT_RIGHTSHIFTKEY)) {
-			return false;
-		}
-	}
-	if (kmi->ctrl != KM_ANY) {
-		const int ctrl = (winevent->modifier & KM_CTRL) ? KM_MOD_HELD : KM_NOTHING;
-		if ((ctrl != kmi->ctrl) && !ELEM(winevent->type, EVT_LEFTCTRLKEY, EVT_RIGHTCTRLKEY)) {
-			return false;
-		}
-	}
-	if (kmi->alt != KM_ANY) {
-		const int alt = (winevent->modifier & KM_ALT) ? KM_MOD_HELD : KM_NOTHING;
-		if ((alt != kmi->alt) && !ELEM(winevent->type, EVT_LEFTALTKEY, EVT_RIGHTALTKEY)) {
-			return false;
-		}
-	}
-	if (kmi->oskey != KM_ANY) {
-		const int oskey = (winevent->modifier & KM_OSKEY) ? KM_MOD_HELD : KM_NOTHING;
-		if ((oskey != kmi->oskey) && (winevent->type != EVT_OSKEY)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(rContext *C, wmEvent *event, ListBase *handlers, wmEventHandler_Keymap *handler, wmKeyMap *keymap) {
 	eHandlerActionFlag action = WM_HANDLER_CONTINUE;
 
@@ -724,6 +826,10 @@ ROSE_INLINE eHandlerActionFlag wm_handlers_do_keymap_with_keymap_handler(rContex
 			LISTBASE_FOREACH(wmKeyMapItem *, kmi, &keymap->items) {
 				if (wm_eventmatch(event, kmi)) {
 					action |= wm_handler_operator_call(C, handlers, &handler->head, event, kmi->ptr, kmi->idname);
+
+					if (action & WM_HANDLER_BREAK) {
+						break;
+					}
 				}
 			}
 		}
@@ -883,6 +989,10 @@ void WM_do_handlers(rContext *C) {
 				}
 
 				ED_screen_areas_iter(window, screen, area) {
+					if (area->flag & AREA_FLAG_AZONES_NEED_UPDATE) {
+						// ED_area_azones_update(area, evt->mouse_xy);
+					}
+
 					if (wm_event_inside_rect(evt, &area->totrct)) {
 						CTX_wm_area_set(C, area);
 
@@ -987,6 +1097,28 @@ void WM_window_post_quit_event(wmWindow *window) {
 	evt.value = KM_NOTHING;
 
 	wm_event_add(window, &evt);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Event Public API
+ * \{ */
+
+int WM_userdef_event_type_from_keymap_type(int kmitype) {
+	return kmitype;
+}
+
+void WM_event_drag_start_mval(const wmEvent *event, const ARegion *region, int r_mval[2]) {
+	const int *xy = (event->value == KM_CLICK_DRAG) ? event->prev_press_xy : event->mouse_xy;
+	r_mval[0] = xy[0] - region->winrct.xmin;
+	r_mval[1] = xy[1] - region->winrct.ymin;
+}
+
+void WM_event_drag_start_mval_fl(const wmEvent *event, const ARegion *region, float r_mval[2]) {
+	const int *xy = (event->value == KM_CLICK_DRAG) ? event->prev_press_xy : event->mouse_xy;
+	r_mval[0] = xy[0] - region->winrct.xmin;
+	r_mval[1] = xy[1] - region->winrct.ymin;
 }
 
 /** \} */

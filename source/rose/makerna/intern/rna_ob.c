@@ -1,4 +1,5 @@
 #include "DNA_object_types.h"
+#include "DNA_layer_types.h"
 
 #include "RNA_access.h"
 #include "RNA_define.h"
@@ -6,7 +7,7 @@
 #include "rna_internal.h"
 #include "rna_internal_types.h"
 
-void RNA_def_Object(RoseRNA *rna) {
+void rna_def_Object(RoseRNA *rna) {
 	do {
 		StructRNA *object = RNA_def_struct(rna, "Object", "ID");
 
@@ -44,4 +45,30 @@ void RNA_def_Object(RoseRNA *rna) {
 			RNA_def_property_ui_text(scale, "Scale", "");
 		} while (false);
 	} while (false);
+}
+
+void rna_def_ObjectBase(RoseRNA *rna) {
+	do {
+		StructRNA *base = RNA_def_struct(rna, "ObjectBase", NULL);
+		RNA_def_struct_sdna(base, "Base");
+		RNA_def_struct_ui_text(base, "Object Base", "An object instance in a render layer");
+
+		do {
+			PropertyRNA *object = RNA_def_property(base, "object", PROP_POINTER, PROP_NONE);
+			RNA_def_property_pointer_sdna(object, NULL, "object");
+			RNA_def_property_struct_type(object, "Object");
+			RNA_def_property_ui_text(object, "Object", "Object this base links to");
+		} while (false);
+
+		do {
+			PropertyRNA *select = RNA_def_property(base, "select", PROP_BOOLEAN, PROP_NONE);
+			RNA_def_property_boolean_sdna(select, NULL, "flag", BASE_SELECTED);
+			RNA_def_property_ui_text(select, "Select", "Object base selection state");
+		} while (false);
+	} while (false);
+}
+
+void RNA_def_Object(RoseRNA *rna) {
+	rna_def_Object(rna);
+	rna_def_ObjectBase(rna);
 }

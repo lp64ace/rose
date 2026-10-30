@@ -18,6 +18,7 @@ typedef struct Base {
 
     int flag;
 	int flag_collection;
+	int flag_legacy;
 
 	unsigned int local_view_bits;
 	unsigned int local_collections_bits;
@@ -37,6 +38,11 @@ enum {
     BASE_VISIBLE_DEPSGRAPH = (1 << 4),
     BASE_ENABLED_VIEWPORT = (1 << 5),
     BASE_ENABLED_RENDER = (1 << 6),
+};
+
+/** #Base->flag_legacy */
+enum {
+	BASE_WAS_SELECTED = (1 << 0),
 };
 
 typedef struct ViewLayerEngineData {
@@ -102,6 +108,7 @@ typedef struct ViewLayer {
 #define FIRSTBASE(_view_layer) ((Base *)((_view_layer)->bases.first))
 #define LASTBASE(_view_layer) ((Base *)((_view_layer)->bases.last))
 #define BASACT(_view_layer) ((_view_layer)->active)
+#define OBJACT(_view_layer) (BASACT(_view_layer) ? BASACT(_view_layer)->object : NULL)
 
 /** #ViewLayer->flag */
 enum {

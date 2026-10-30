@@ -825,7 +825,9 @@ ROSE_STATIC ReconstructStep *dna_create_reconstruct_step_for_struct(const SDNA *
 	return r_step;
 }
 
-ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RTType *told, const RTType *tnew) {
+ROSE_STATIC bool memcast(void *ptr_a, const void *ptr_b, size_t length, const RTType *told, const RTType *tnew, bool internal) {
+	bool handled = false;
+
 #define CAST(cast_new, cast_old)                                                                  \
 	do {                                                                                          \
 		if (tnew->tp_basic.rank == sizeof(cast_new) && told->tp_basic.rank == sizeof(cast_old)) { \
@@ -833,12 +835,14 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RT
 				cast_new *value_new = (cast_new *)ptr_a;                                          \
 				cast_old *value_old = (cast_old *)ptr_b;                                          \
 				value_new[index] = value_old[index];                                              \
+				handled |= true;																  \
 				continue;                                                                         \
 			}                                                                                     \
 			if (tnew->tp_basic.is_unsigned && told->tp_basic.is_unsigned) {                       \
 				unsigned cast_new *value_new = (unsigned cast_new *)ptr_a;                        \
 				unsigned cast_old *value_old = (unsigned cast_old *)ptr_b;                        \
 				value_new[index] = value_old[index];                                              \
+				handled |= true;																  \
 				continue;                                                                         \
 			}                                                                                     \
 		}                                                                                         \
@@ -855,8 +859,8 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RT
 		 * different size!
 		 */
 
-		const bool new_is_integer = ELEM(tnew->kind, TP_CHAR, TP_SHORT, TP_LONG, TP_LLONG);
-		const bool old_is_integer = ELEM(told->kind, TP_CHAR, TP_SHORT, TP_LONG, TP_LLONG);
+		const bool new_is_integer = ELEM(tnew->kind, TP_CHAR, TP_SHORT, TP_LONG, TP_LLONG) || (internal && ELEM(tnew->kind, TP_INT));
+		const bool old_is_integer = ELEM(told->kind, TP_CHAR, TP_SHORT, TP_LONG, TP_LLONG) || (internal && ELEM(told->kind, TP_INT));
 
 		if (new_is_integer && old_is_integer) {
 			CAST(char, char);
@@ -913,6 +917,12 @@ ROSE_STATIC void memcast(void *ptr_a, const void *ptr_b, size_t length, const RT
 #undef CAST_ANY
 #undef CAST
 #undef CAST_EX
+
+	return handled;
+}
+
+bool DNA_memcast(void *ptr_a, const void *ptr_b, size_t length, const DNAType *tp_old, const DNAType *tp_new) {
+	return memcast(ptr_a, ptr_b, length, (const RTType *)tp_old, (const RTType *)tp_new, true);
 }
 
 ROSE_STATIC void dna_reconstruct_struct(void *data_new, const void *data_old, ReconstructStep *step) {
@@ -951,7 +961,7 @@ ROSE_STATIC void dna_reconstruct_struct(void *data_new, const void *data_old, Re
 			 */
 			const RTType *told = step->cast.type_old;
 			const RTType *tnew = step->cast.type_new;
-			memcast(POINTER_OFFSET(data_new, step->offset_new), POINTER_OFFSET(data_old, step->offset_old), step->cast.length, told, tnew);
+			memcast(POINTER_OFFSET(data_new, step->offset_new), POINTER_OFFSET(data_old, step->offset_old), step->cast.length, told, tnew, false);
 		} break;
 		case RECONSTRUCT_STEP_RECONSTRUCT: {
 			for (size_t index = 0; index < step->reconstruct.length; index++) {

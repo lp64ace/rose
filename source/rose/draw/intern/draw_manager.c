@@ -777,7 +777,10 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 
 	const int viewport_size[2] = {LIB_rcti_size_x(rect), LIB_rcti_size_y(rect)};
 
+	GDrawManager.flag |= DRW_IS_SELECT;
+
 	DRW_manager_init(&GDrawManager, region, scene, view_layer, NULL, viewport_size);
+	DRW_engine_use(&draw_engine_overlay_type);
 	DRW_engine_use(&draw_engine_select_type);
 	DRW_engines_init(depsgraph);
 
@@ -829,6 +832,8 @@ void DRW_draw_select_loop(Depsgraph *depsgraph, ARegion *region, View3D *v3d, co
 
 	GDrawManager.vdata_engine->dtxl.depth = NULL;
 
+	GDrawManager.flag &= ~DRW_IS_SELECT;
+
 	DRW_manager_exit(&GDrawManager);
 }
 
@@ -861,6 +866,16 @@ void DRW_draw_view(const rContext *C) {
 	 */
 
 	wm_window_reset_drawable(wm);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Draw Manager State
+ * \{ */
+
+bool DRW_state_is_select(void) {
+	return (GDrawManager.flag & DRW_IS_SELECT) != 0;
 }
 
 /** \} */

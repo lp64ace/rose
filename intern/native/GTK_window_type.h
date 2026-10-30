@@ -177,6 +177,14 @@ enum {
 	GTK_KEY_MEDIA_LAST,
 };
 
+enum {
+	GTK_CURSOR_DEFAULT = 0,
+	GTK_CURSOR_HELP,
+	GTK_CURSOR_WAIT,
+	GTK_CURSOR_TEXT,
+	GTK_CURSOR_CUSTOM,
+};
+
 typedef void (*GTKDestroyCallbackFn)(struct GTKWindow *, void *userdata);
 typedef void (*GTKResizeCallbackFn)(struct GTKWindow *, int x, int y, void *userdata);
 typedef void (*GTKMoveCallbackFn)(struct GTKWindow *, int x, int y, void *userdata);

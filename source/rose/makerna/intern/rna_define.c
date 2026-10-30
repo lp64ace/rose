@@ -13,6 +13,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #ifdef RNA_RUNTIME
 #	include "RNA_prototypes.h"
@@ -644,6 +645,7 @@ ROSE_STATIC size_t rna_property_type_sizeof(ePropertyType type) {
 		case PROP_BOOLEAN: return sizeof(BoolPropertyRNA);
 		case PROP_INT: return sizeof(IntPropertyRNA);
 		case PROP_FLOAT: return sizeof(FloatPropertyRNA);
+		case PROP_ENUM: return sizeof(EnumPropertyRNA);
 		case PROP_STRING: return sizeof(StringPropertyRNA);
 		case PROP_POINTER: return sizeof(PointerPropertyRNA);
 		case PROP_COLLECTION: return sizeof(CollectionPropertyRNA);
@@ -776,14 +778,14 @@ ROSE_INLINE void rna_def_property_boolean_sdna(PropertyRNA *property, const char
 	uint bit_index = 0;
 	if (length > 1) {
 		if (booleanbit <= 0) {
-			fprintf(stderr, "%s.%s is using a null or negative 'booleanbit' value of %lld, which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
+			fprintf(stderr, "%s.%s is using a null or negative 'booleanbit' value of " PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
 			DefRNA.error = true;
 			return;
 		}
 
 		bit_index = _lib_forward_scan_u64(*(const uint64_t *)(&booleanbit));
 		if ((booleanbit & ~(1 << bit_index)) != 0) {
-			fprintf(stderr, "[RNA] %s.%s is using a multi-bit 'booleanbit' value of %lld, which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
+			fprintf(stderr, "[RNA] %s.%s is using a multi-bit 'booleanbit' value of " PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
 			DefRNA.error = true;
 			return;
 		}
@@ -1122,6 +1124,57 @@ void RNA_def_property_string_sdna(PropertyRNA *property, const char *structname,
 	}
 }
 
+void RNA_def_property_enum_sdna(PropertyRNA *property, const char *structname, const char *propname) {
+	PropertyDefRNA *defproperty;
+	EnumPropertyRNA *eproperty = (EnumPropertyRNA *)property;
+	StructRNA *srna = DefRNA.nstruct;
+
+	if (!DefRNA.preprocess) {
+		fprintf(stderr, "[RNA] #%s is only available during preprocessing.", __func__);
+		return;
+	}
+
+	if (property->type != PROP_ENUM) {
+		fprintf(stderr, "[RNA] \"%s.%s\", type is not enum.", srna->identifier, property->identifier);
+		DefRNA.error = true;
+		return;
+	}
+
+	if ((defproperty = rna_def_property_sdna(property, structname, propname))) {
+		if (property->arraydimension) {
+			property->arraydimension = 0;
+			property->totarraylength = 0;
+
+			if (!DefRNA.silent) {
+				fprintf(stderr, "[RNA] \"%s.%s\", array not supported for enum type.\n", structname, propname);
+				DefRNA.error = true;
+			}
+		}
+
+#if 0
+		/* Set the default if possible. */
+		if (defproperty->dnaoffset != -1) {
+			int SDNAnr = DNA_struct_find_index_wrapper(DefRNA.sdna, defproperty->dnastructname);
+			if (SDNAnr != -1) {
+				const void *default_data = DNA_default_table[SDNAnr];
+				if (default_data) {
+					default_data = POINTER_OFFSET(default_data, dp->dnaoffset);
+					const DNAType *underlying = DNA_sdna_enum_underlying_type(DefRNA.sdna, defproperty->dnatype);
+					if (DNA_sdna_type_basic(DefRNA.sdna, underlying) && ELEM(DNA_sdna_type_kind(DefRNA.sdna, underlying), DNA_CHAR, DNA_SHORT, DNA_INT)) {
+						DNA_memcast(&eproperty->defaultvalue, default_data, 1, underlying, Tp_Int);
+					}
+					else {
+						// Error!
+					}
+				}
+			}
+		}
+#else
+		UNUSED_VARS(eproperty);
+#endif
+	}
+}
+
 void RNA_def_property_pointer_sdna(PropertyRNA *prop, const char *structname, const char *propname) {
 	StructRNA *srna = DefRNA.nstruct;
 
@@ -1342,6 +1395,10 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 			PointerPropertyRNA *pproperty = (PointerPropertyRNA *)property;
 
 		} break;
+		case PROP_ENUM: {
+			EnumPropertyRNA *cproperty = (EnumPropertyRNA *)property;
+
+		} break;
 		case PROP_COLLECTION: {
 			CollectionPropertyRNA *cproperty = (CollectionPropertyRNA *)property;
 
@@ -1402,6 +1459,11 @@ PropertyRNA *RNA_def_property(void *vcontainer, const char *identifier, int type
 				RNA_def_property_pointer_sdna(property, NULL, identifier);
 				DefRNA.silent = 0;
 			} break;
+			case PROP_ENUM: {
+				DefRNA.silent = 1;
+				RNA_def_property_enum_sdna(property, NULL, identifier);
+				DefRNA.silent = 0;
+			} break;
 			case PROP_COLLECTION: {
 				DefRNA.silent = 1;
 				RNA_def_property_collection_sdna(property, NULL, identifier, NULL);
@@ -1447,6 +1509,78 @@ PropertyRNA *RNA_def_int(void *vcontainer, const char *identifier, int default_v
 	}
 	RNA_def_property_ui_text(prop, ui_name, ui_description);
 	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_int_vector(void *vcontainer, const char *identifier, int length, const int *default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_INT, PROP_XYZ);
+	if (length != 0) {
+		RNA_def_property_array(prop, length);
+	}
+	if (default_value) {
+		RNA_def_property_int_array_default(prop, default_value);
+	}
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_float(void *vcontainer, const char *identifier, float default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_FLOAT, PROP_NONE);
+	RNA_def_property_float_default(prop, default_value);
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_float_vector(void *vcontainer, const char *identifier, int length, const float *default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_FLOAT, PROP_XYZ);
+	if (length != 0) {
+		RNA_def_property_array(prop, length);
+	}
+	if (default_value) {
+		RNA_def_property_float_array_default(prop, default_value);
+	}
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
+PropertyRNA *RNA_def_enum(void *vcontainer, const char *identifier, const EnumPropertyItem *items, int default_value, const char *ui_name, const char *ui_description) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	if (items == NULL) {
+		fprintf(stderr, "[RNA] Error cannot define EnumPropertyRNA with items as NULL.\n");
+		return NULL;
+	}
+
+	prop = RNA_def_property(container, identifier, PROP_ENUM, PROP_NONE);
+	RNA_def_property_enum_items(prop, items);
+	RNA_def_property_enum_default(prop, default_value);
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
 
 	return prop;
 }
@@ -1571,6 +1705,51 @@ void RNA_def_property_int_default(PropertyRNA *prop, int value) {
 		case PROP_INT: {
 			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
 			iprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_int_array_default(PropertyRNA *prop, const int *value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_INT: {
+			IntPropertyRNA *iprop = (IntPropertyRNA *)prop;
+			iprop->defaultarray = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_float_default(PropertyRNA *prop, float value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_FLOAT: {
+			FloatPropertyRNA *fprop = (FloatPropertyRNA *)prop;
+			fprop->defaultvalue = value;
+			break;
+		}
+		default:
+			DefRNA.error = true;
+			break;
+	}
+}
+
+void RNA_def_property_enum_default(PropertyRNA *prop, int value) {
+	StructRNA *srna = DefRNA.nstruct;
+
+	switch (prop->type) {
+		case PROP_ENUM: {
+			EnumPropertyRNA *eprop = (EnumPropertyRNA *)prop;
+			eprop->defaultvalue = value;
 			break;
 		}
 		default:
@@ -1893,6 +2072,54 @@ void RNA_def_property_string_maxlength(PropertyRNA *property, int maxlength) {
 		}
 		default:
 			fprintf(stderr, "[RNA] \"%s.%s\", type is not string.\n", nstruct->identifier, property->identifier);
+			DefRNA.error = true;
+			break;
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Enum Property RNA Definition
+ * \{ */
+
+void RNA_def_property_enum_items(PropertyRNA *property, const EnumPropertyItem *items) {
+	StructRNA *nstruct = DefRNA.nstruct;
+
+	bool has_default = false;
+	switch (property->type) {
+		case PROP_ENUM: {
+			EnumPropertyRNA *eprop = (EnumPropertyRNA *)property;
+			eprop->item = (EnumPropertyItem *)items;
+			eprop->count = 0;
+
+			for (int i = 0; items[i].identifier; i++) {
+				eprop->count++;
+
+				if (items[i].identifier[0]) {
+					/* Don't allow spaces in internal enum items (it's fine for Python ones). */
+					if (DefRNA.preprocess && strstr(items[i].identifier, " ")) {
+						fprintf(stderr, "\"%s.%s\", enum identifiers must not contain spaces.", nstruct->identifier, property->identifier);
+						DefRNA.error = true;
+						break;
+					}
+					if (items[i].value == eprop->defaultvalue) {
+						has_default |= 1;
+					}
+				}
+			}
+
+			if (!has_default) {
+				for (int i = 0; items[i].identifier; i++) {
+					if (items[i].identifier[0]) {
+						eprop->defaultvalue = items[i].value;
+						break;
+					}
+				}
+			}
+		} break;
+		default:
+			fprintf(stderr, "[RNA] \"%s.%s\", type is not enum.\n", nstruct->identifier, property->identifier);
 			DefRNA.error = true;
 			break;
 	}

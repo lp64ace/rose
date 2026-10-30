@@ -144,7 +144,6 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 				}
 			}
 			else {
-
 				MDeformWeight top[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 				for (const size_t index : dweights.index_range()) {
 					int m = 0;
@@ -168,7 +167,7 @@ void extract_weights_mesh_vbo(const Object *obtarget, const Mesh *metarget, rose
 	});
 
 	if (too_many_deform_verts_warning.load(std::memory_order_relaxed)) {
-		fprintf(stderr, "[Draw] Warning, too many deform vertices for \"%s\".\n", metarget->id.name);
+		// fprintf(stderr, "[Draw] Warning, too many deform vertices for \"%s\".\n", metarget->id.name);
 	}
 }
 

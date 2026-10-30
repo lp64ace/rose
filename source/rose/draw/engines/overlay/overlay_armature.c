@@ -4,11 +4,14 @@
 
 #include "GPU_framebuffer.h"
 
+#include "DEG_depsgraph_query.h"
+
 #include "LIB_math_vector.h"
 #include "LIB_math_matrix.h"
 
 #include "KER_armature.h"
 #include "KER_object.h"
+#include "KER_layer.h"
 
 #include "overlay_engine.h"
 #include "overlay_private.h"
@@ -31,6 +34,8 @@ typedef struct DRWArmatureContext {
 			DRWCallBuffer *solid;
 		};
 	};
+
+	float wire_thickness;
 } DRWArmatureContext;
 
 void overlay_armature_cache_init(DRWOverlayData *vdata) {
@@ -42,12 +47,21 @@ void overlay_armature_cache_init(DRWOverlayData *vdata) {
 	DRWOverlayInstanceFormats *formats = DRW_overlay_shader_instance_formats();
 	DRWOverlayArmatureCallBuffers *cb = &pd->armature_call_buffers;
 
+	DRWState state = DRW_STATE_DEFAULT;
+
+	if (DRW_state_is_select()) {
+		state |= DRW_STATE_IN_FRONT_SELECT;
+	}
+
 	GPUShader *armature_shape = DRW_overlay_shader_armature_shape();
-	if ((psl->armature_pass = DRW_pass_new("Armature Pass", DRW_STATE_DEFAULT))) {
+	if ((psl->armature_pass = DRW_pass_new("Armature Pass", state))) {
 		GPUVertFormat *format = formats->instance_bone;
 
 		pd->armature_shgroup = DRW_shading_group_new(armature_shape, psl->armature_pass);
-		DRW_shading_group_clear_ex(pd->armature_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, 0);
+		if (!DRW_state_is_select()) {
+			/** Handled by #DRW_STATE_IN_FRONT_SELECT instead! */
+			DRW_shading_group_clear_ex(pd->armature_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, 0);
+		}
 		cb->solid.octahaedron = DRW_shading_group_call_buffer_instance(pd->armature_shgroup, format, DRW_cache_bone_octahedral_get());
 	}
 }
@@ -60,6 +74,7 @@ void overlay_armature_context_init(DRWArmatureContext *ctx, DRWOverlayViewportPr
 	ctx->outline = NULL;
 	ctx->solid = cb->solid.octahaedron;
 	ctx->object = object;
+	ctx->wire_thickness = ((object->flag_base & BASE_SELECTED) != 0) ? 1.0f : 0.0f;
 }
 
 void overlay_armature_cache_populate(DRWOverlayData *vdata, Object *object) {
@@ -110,26 +125,74 @@ void overlay_bone_instance_data_set_color(BoneInstanceData *data, const float bo
 	data->color_b = encode_2f_to_float(bone_color[2], bone_color[3]);
 }
 
-ROSE_INLINE void draw_shading_group_bone_octahedral(DRWArmatureContext *context, const float (*bone_mat)[4]) {
+ROSE_INLINE float get_bone_wire_thickness(const DRWArmatureContext *context, int boneflag) {
+	/** When we add bone selection we can check the boneflag to override the thickness! */
+	return context->wire_thickness;
+}
+
+ROSE_INLINE void get_bone_wire_color(const DRWArmatureContext *context, const PoseChannel *posechannel, const int boneflag, float color[4]) {
+	if ((context->object->flag_base & BASE_SELECTED) != 0) {
+		copy_v3_fl3(color, 0.9f, 0.5f, 0.2f);
+	}
+	else {
+		copy_v3_fl3(color, 0.0f, 0.5f, 0.0f);
+	}
+
+	color[3] = get_bone_wire_thickness(context, boneflag);
+}
+
+ROSE_INLINE void get_bone_hint_color(const DRWArmatureContext *context, const PoseChannel *posechannel, const int boneflag, float color[4]) {
+	if ((context->object->flag_base & BASE_SELECTED) != 0) {
+		copy_v3_fl3(color, 0.2f, 0.1f, 0.0f);
+	}
+	else {
+		copy_v3_fl3(color, 0.0f, 0.2f, 0.0f);
+	}
+
+	color[3] = get_bone_wire_thickness(context, boneflag);
+}
+
+ROSE_INLINE void draw_shading_group_bone_octahedral(DRWArmatureContext *context, const PoseChannel *posechannel, const float (*bone_mat)[4]) {
+	float color_wire[4];
+	float color_hint[4];
+
+	get_bone_wire_color(context, posechannel, posechannel->flag, color_wire);
+	get_bone_hint_color(context, posechannel, posechannel->flag, color_hint);
+
 	BoneInstanceData data;
 	mul_m4_m4m4(data.mat, context->object->obmat, bone_mat);
 
 	if (context->solid) {
-		overlay_bone_instance_data_set_color(&data, (const float[4]){0.0f, 0.5f, 0.0f, 1.0f});
-		overlay_bone_instance_data_set_color_hint(&data, (const float[4]){0.0f, 0.2f, 0.0f, 1.0f});
+		overlay_bone_instance_data_set_color(&data, color_wire);
+		overlay_bone_instance_data_set_color_hint(&data, color_hint);
 		DRW_buffer_add_entry_struct(context->solid, &data);
 	}
 }
 
-ROSE_INLINE void draw_bone_octahedral(DRWArmatureContext *context, PoseChannel *posechannel, Armature *armature) {
+ROSE_INLINE void draw_bone_octahedral(DRWArmatureContext *context, PoseChannel *posechannel, Armature *armature, const int select_id) {
 	PoseChannel_Runtime *runtime = &posechannel->runtime;
 
-	draw_shading_group_bone_octahedral(context, runtime->disp_mat);
+	if (select_id != -1) {
+		DRW_select_load_id(select_id);
+	}
+
+	draw_shading_group_bone_octahedral(context, posechannel, runtime->disp_mat);
+
+	if (select_id != -1) {
+		DRW_select_load_id(-1);
+	}
 }
 
 ROSE_STATIC void overlay_armature_draw(DRWArmatureContext *context) {
 	Object *object = context->object;
 	Armature *armature = (Armature *)object->data;
+
+	int select_index = -1;
+
+	if (DRW_state_is_select()) {
+		const Object *object = DEG_get_original_object(context->object);
+		select_index = object->runtime.select_id;
+	}
 
 	/** This is not actually invalid we just don't support it yet... */
 	if (armature->ebonebase != NULL) {
@@ -149,6 +212,6 @@ ROSE_STATIC void overlay_armature_draw(DRWArmatureContext *context) {
 		}
 
 		draw_bone_update_disp_matrix_default(posechannel);
-		draw_bone_octahedral(context, posechannel, armature);
+		draw_bone_octahedral(context, posechannel, armature, select_index);
 	}
 }

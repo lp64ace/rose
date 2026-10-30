@@ -4,6 +4,12 @@
 #include "DNA_space_types.h"
 #include "DNA_windowmanager_types.h"
 
+#include "GPU_immediate.h"
+#include "GPU_matrix.h"
+#include "GPU_shader.h"
+#include "GPU_state.h"
+#include "GPU_vertex_buffer.h"
+
 #include "ED_screen.h"
 
 #include "UI_interface.h"
@@ -11,6 +17,7 @@
 #include "KER_screen.h"
 
 #include "LIB_listbase.h"
+#include "LIB_string.h"
 #include "LIB_rect.h"
 #include "LIB_utildefines.h"
 
@@ -21,6 +28,335 @@
 #include "screen_intern.h"
 
 #include <stdio.h>
+
+/* -------------------------------------------------------------------- */
+/** \name Action Zones
+ * \{ */
+
+/**
+ * \brief Corner widgets use for dragging and splitting the view.
+ */
+ROSE_INLINE void area_draw_azone(int x1, int y1, int x2, int y2) {
+	/* No drawing needed since all corners are action zone, and visually distinguishable. */
+}
+
+/**
+ * \brief Edge widgets to show hidden panels such as the toolbar and headers.
+ */
+ROSE_INLINE void draw_azone_arrow(float x1, float y1, float x2, float y2, int edge) {
+	const float size = 0.2f * WIDGET_UNIT;
+	const float l = 1.0f;  /* arrow length */
+	const float s = 0.25f; /* arrow thickness */
+	const float hl = l / 2.0f;
+	const float points[6][2] = {{0, -hl}, {l, hl}, {l - s, hl + s}, {0, s + s - hl}, {s - l, hl + s}, {-l, hl}};
+	const float center[2] = {(x1 + x2) / 2, (y1 + y2) / 2};
+
+	int axis;
+	int sign;
+	switch (edge) {
+		case AE_BOTTOM_TO_TOPLEFT:
+			axis = 0;
+			sign = 1;
+			break;
+		case AE_TOP_TO_BOTTOMRIGHT:
+			axis = 0;
+			sign = -1;
+			break;
+		case AE_LEFT_TO_TOPRIGHT:
+			axis = 1;
+			sign = 1;
+			break;
+		case AE_RIGHT_TO_TOPLEFT:
+			axis = 1;
+			sign = -1;
+			break;
+		default:
+			ROSE_assert_unreachable();
+			return;
+	}
+
+	GPUVertFormat *format = immVertexFormat();
+	unsigned int pos = GPU_vertformat_add(format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+
+	GPU_blend(GPU_BLEND_ALPHA);
+	/* NOTE(fclem): There is something strange going on with Mesa and GPU_SHADER_2D_UNIFORM_COLOR
+	 * that causes a crash on some GPUs (see T76113). Using 3D variant avoid the issue. */
+	immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);
+	immUniformColor4f(0.8f, 0.8f, 0.8f, 0.4f);
+
+	immBegin(GPU_PRIM_TRI_FAN, 6);
+	for (int i = 0; i < 6; i++) {
+		if (axis == 0) {
+			immVertex2f(pos, center[0] + points[i][0] * size, center[1] + points[i][1] * sign * size);
+		}
+		else {
+			immVertex2f(pos, center[0] + points[i][1] * sign * size, center[1] + points[i][0] * size);
+		}
+	}
+	immEnd();
+
+	immUnbindProgram();
+	GPU_blend(GPU_BLEND_NONE);
+}
+
+ROSE_INLINE void region_draw_azone_tab_arrow(ScrArea *area, ARegion *region, AZone *az) {
+	GPU_blend(GPU_BLEND_ALPHA);
+
+	/* add code to draw region hidden as 'too small' */
+	switch (az->edge) {
+		case AE_TOP_TO_BOTTOMRIGHT:
+			UI_draw_roundbox_corner_set(UI_CNR_TOP_LEFT | UI_CNR_TOP_RIGHT);
+			break;
+		case AE_BOTTOM_TO_TOPLEFT:
+			UI_draw_roundbox_corner_set(UI_CNR_BOTTOM_RIGHT | UI_CNR_BOTTOM_LEFT);
+			break;
+		case AE_LEFT_TO_TOPRIGHT:
+			UI_draw_roundbox_corner_set(UI_CNR_TOP_LEFT | UI_CNR_BOTTOM_LEFT);
+			break;
+		case AE_RIGHT_TO_TOPLEFT:
+			UI_draw_roundbox_corner_set(UI_CNR_TOP_RIGHT | UI_CNR_BOTTOM_RIGHT);
+			break;
+	}
+
+	const float color[4] = {0.05f, 0.05f, 0.05f, 0.5f};
+	UI_draw_roundbox_aa(
+		&(const rctf){
+			.xmin = (float)az->x1,
+			.xmax = (float)az->x2,
+			.ymin = (float)az->y1,
+			.ymax = (float)az->y2,
+		},
+		true,
+		4.0f,
+		color);
+
+	draw_azone_arrow((float)az->x1, (float)az->y1, (float)az->x2, (float)az->y2, az->edge);
+}
+
+ROSE_INLINE void area_azone_tag_update(ScrArea *area) {
+	area->flag |= AREA_FLAG_AZONES_NEED_UPDATE;
+}
+
+void region_draw_azones(ScrArea *area, ARegion *region) {
+	if (!area) {
+		return;
+	}
+
+	GPU_line_width(1.0f);
+	GPU_blend(GPU_BLEND_ALPHA);
+
+	GPU_matrix_push();
+	GPU_matrix_translate_2f(-region->winrct.xmin, -region->winrct.ymin);
+
+	LISTBASE_FOREACH(AZone *, az, &area->actionzones) {
+		/* test if action zone is over this region */
+		rcti azrct;
+		LIB_rcti_init(&azrct, az->x1, az->x2, az->y1, az->y2);
+
+		if (LIB_rcti_isect(&region->winrct, &azrct, NULL)) {
+			if (az->type == AZONE_AREA) {
+				area_draw_azone(az->x1, az->y1, az->x2, az->y2);
+			}
+			else if (az->type == AZONE_REGION) {
+				if (az->region) {
+					/* only display tab or icons when the region is hidden */
+					if (az->region->flag & (RGN_FLAG_HIDDEN | RGN_FLAG_TOO_SMALL)) {
+						region_draw_azone_tab_arrow(area, region, az);
+					}
+				}
+			}
+			else if (az->type == AZONE_FULLSCREEN) {
+				if (az->alpha > 0.0f) {
+					// area_draw_azone_fullscreen(az->x1, az->y1, az->x2, az->y2, az->alpha);
+					ROSE_assert_unreachable();
+				}
+			}
+		}
+		if (!IS_EQF(az->alpha, 0.0f) && ELEM(az->type, AZONE_FULLSCREEN, AZONE_REGION_SCROLL)) {
+			area_azone_tag_update(area);
+		}
+	}
+
+	GPU_matrix_pop();
+
+	GPU_blend(GPU_BLEND_NONE);
+}
+
+ROSE_INLINE void area_azone_init(wmWindow *window, const Screen *screen, ScrArea *area) {
+	/* reinitialize entirely, regions and fullscreen add azones too */
+	LIB_freelistN(&area->actionzones);
+
+	if (ED_area_is_global(area)) {
+		return;
+	}
+
+	if (screen->temp) {
+		return;
+	}
+
+	const float coords[4][4] = {
+		/* Bottom-left. */
+		{area->totrct.xmin - PIXELSIZE, area->totrct.ymin - PIXELSIZE, area->totrct.xmin + AZONESPOTW, area->totrct.ymin + AZONESPOTH},
+		/* Bottom-right. */
+		{area->totrct.xmax - AZONESPOTW, area->totrct.ymin - PIXELSIZE, area->totrct.xmax + PIXELSIZE, area->totrct.ymin + AZONESPOTH},
+		/* Top-left. */
+		{area->totrct.xmin - PIXELSIZE, area->totrct.ymax - AZONESPOTH, area->totrct.xmin + AZONESPOTW, area->totrct.ymax + PIXELSIZE},
+		/* Top-right. */
+		{area->totrct.xmax - AZONESPOTW, area->totrct.ymax - AZONESPOTH, area->totrct.xmax + PIXELSIZE, area->totrct.ymax + PIXELSIZE},
+	};
+
+	for (size_t i = 0; i < ARRAY_SIZE(coords); i++) {
+		AZone *az = (AZone *)MEM_callocN(sizeof(AZone), "AZone");
+		LIB_addtail(&area->actionzones, az);
+		az->type = AZONE_AREA;
+		az->x1 = coords[i][0];
+		az->y1 = coords[i][1];
+		az->x2 = coords[i][2];
+		az->y2 = coords[i][3];
+		LIB_rcti_init(&az->rect, az->x1, az->x2, az->y1, az->y2);
+	}
+}
+
+#define AZONEPAD_EDGE (0.1f * WIDGET_UNIT)
+#define AZONEPAD_ICON (0.5f * WIDGET_UNIT)
+
+ROSE_INLINE void region_azone_edge(AZone *az, ARegion *region) {
+	/* If region is overlapped (transparent background), move #AZone to content.
+	 * Note this is an arbitrary amount that matches nicely with numbers elsewhere. */
+	int overlap_padding = (region->overlap) ? (int)(0.4f * WIDGET_UNIT) : 0;
+
+	switch (az->edge) {
+		case AE_TOP_TO_BOTTOMRIGHT:
+			az->x1 = region->winrct.xmin;
+			az->y1 = region->winrct.ymax - AZONEPAD_EDGE - overlap_padding;
+			az->x2 = region->winrct.xmax;
+			az->y2 = region->winrct.ymax + AZONEPAD_EDGE - overlap_padding;
+			break;
+		case AE_BOTTOM_TO_TOPLEFT:
+			az->x1 = region->winrct.xmin;
+			az->y1 = region->winrct.ymin + AZONEPAD_EDGE + overlap_padding;
+			az->x2 = region->winrct.xmax;
+			az->y2 = region->winrct.ymin - AZONEPAD_EDGE + overlap_padding;
+			break;
+		case AE_LEFT_TO_TOPRIGHT:
+			az->x1 = region->winrct.xmin - AZONEPAD_EDGE + overlap_padding;
+			az->y1 = region->winrct.ymin;
+			az->x2 = region->winrct.xmin + AZONEPAD_EDGE + overlap_padding;
+			az->y2 = region->winrct.ymax;
+			break;
+		case AE_RIGHT_TO_TOPLEFT:
+			az->x1 = region->winrct.xmax + AZONEPAD_EDGE - overlap_padding;
+			az->y1 = region->winrct.ymin;
+			az->x2 = region->winrct.xmax - AZONEPAD_EDGE - overlap_padding;
+			az->y2 = region->winrct.ymax;
+			break;
+	}
+	LIB_rcti_init(&az->rect, az->x1, az->x2, az->y1, az->y2);
+}
+
+/* region already made zero sized, in shape of edge */
+static void region_azone_tab_plus(ScrArea *area, AZone *az, ARegion *region) {
+	float edge_offset = 1.0f;
+	const float tab_size_x = 0.7f * WIDGET_UNIT;
+	const float tab_size_y = 0.4f * WIDGET_UNIT;
+
+	int tot = 0;
+	LISTBASE_FOREACH(AZone *, azt, &area->actionzones) {
+		if (azt->edge == az->edge) {
+			tot++;
+		}
+	}
+
+	switch (az->edge) {
+		case AE_TOP_TO_BOTTOMRIGHT: {
+			int add = (region->winrct.ymax == area->totrct.ymin) ? 1 : 0;
+			az->x1 = region->winrct.xmax - ((edge_offset + 1.0f) * tab_size_x);
+			az->y1 = region->winrct.ymax - add;
+			az->x2 = region->winrct.xmax - (edge_offset * tab_size_x);
+			az->y2 = region->winrct.ymax - add + tab_size_y;
+			break;
+		}
+		case AE_BOTTOM_TO_TOPLEFT:
+			az->x1 = region->winrct.xmax - ((edge_offset + 1.0f) * tab_size_x);
+			az->y1 = region->winrct.ymin - tab_size_y;
+			az->x2 = region->winrct.xmax - (edge_offset * tab_size_x);
+			az->y2 = region->winrct.ymin;
+			break;
+		case AE_LEFT_TO_TOPRIGHT:
+			az->x1 = region->winrct.xmin - tab_size_y;
+			az->y1 = region->winrct.ymax - ((edge_offset + 1.0f) * tab_size_x);
+			az->x2 = region->winrct.xmin;
+			az->y2 = region->winrct.ymax - (edge_offset * tab_size_x);
+			break;
+		case AE_RIGHT_TO_TOPLEFT:
+			az->x1 = region->winrct.xmax;
+			az->y1 = region->winrct.ymax - ((edge_offset + 1.0f) * tab_size_x);
+			az->x2 = region->winrct.xmax + tab_size_y;
+			az->y2 = region->winrct.ymax - (edge_offset * tab_size_x);
+			break;
+	}
+	/* rect needed for mouse pointer test */
+	LIB_rcti_init(&az->rect, az->x1, az->x2, az->y1, az->y2);
+}
+
+static bool region_azone_edge_poll(const ARegion *region) {
+	const bool is_hidden = (region->flag & (RGN_FLAG_HIDDEN | RGN_FLAG_TOO_SMALL));
+
+	if (!is_hidden && ELEM(region->regiontype, RGN_TYPE_HEADER)) {
+		return false;
+	}
+
+	return true;
+}
+
+ROSE_INLINE void region_azone_edge_init(ScrArea *area, ARegion *region, int edge) {
+	const bool is_hidden = (region->flag & (RGN_FLAG_HIDDEN | RGN_FLAG_TOO_SMALL));
+
+	if (!region_azone_edge_poll(region)) {
+		return;
+	}
+
+	AZone *az = (AZone *)MEM_callocN(sizeof(AZone), "actionzone");
+	LIB_addtail(&(area->actionzones), az);
+	az->type = AZONE_REGION;
+	az->region = region;
+	az->edge = edge;
+
+	if (is_hidden) {
+		region_azone_tab_plus(area, az, region);
+	}
+	else {
+		region_azone_edge(az, region);
+	}
+}
+
+ROSE_INLINE void region_azones_add_edge(ScrArea *area, ARegion *region, const int alignment) {
+	/* edge code (t b l r) is along which area edge azone will be drawn */
+	if (alignment == RGN_ALIGN_TOP) {
+		region_azone_edge_init(area, region, AE_BOTTOM_TO_TOPLEFT);
+	}
+	else if (alignment == RGN_ALIGN_BOTTOM) {
+		region_azone_edge_init(area, region, AE_TOP_TO_BOTTOMRIGHT);
+	}
+	else if (alignment == RGN_ALIGN_RIGHT) {
+		region_azone_edge_init(area, region, AE_LEFT_TO_TOPRIGHT);
+	}
+	else if (alignment == RGN_ALIGN_LEFT) {
+		region_azone_edge_init(area, region, AE_RIGHT_TO_TOPLEFT);
+	}
+}
+
+ROSE_INLINE void region_azones_add(const Screen *screen, ScrArea *area, ARegion *region) {
+	region_azones_add_edge(area, region, RGN_ALIGN_ENUM_FROM_MASK(region->alignment));
+
+	/* For a split region also continue the azone edge from the next region if this region is aligned
+	 * with the next */
+	if ((region->alignment & RGN_SPLIT_PREV) && region->prev) {
+		region_azones_add_edge(area, region, RGN_ALIGN_ENUM_FROM_MASK(region->prev->alignment));
+	}
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Area
@@ -130,14 +466,14 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 		region->type->prefsizey = UI_UNIT_Y;
 	}
 
-	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 0.5f : region->type->prefsizex);
+	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 2 : region->type->prefsizex);
 	int prefsizey;
 
 	if (ELEM(region->regiontype, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 		prefsizey = ED_area_header_size_y(area);
 	}
 	else {
-		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 0.5f : region->type->prefsizey);
+		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 2 : region->type->prefsizey);
 	}
 
 	if ((region->flag & RGN_FLAG_HIDDEN) != 0) {
@@ -461,7 +797,7 @@ ROSE_INLINE void ed_default_handlers(WindowManager *wm, ScrArea *area, ARegion *
 }
 
 void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
-	Screen *screem = WM_window_get_active_screen(window);
+	Screen *screen = WM_window_get_active_screen(window);
 
 	if (ED_area_is_global(area) && (area->global->flag & GLOBAL_AREA_IS_HIDDEN) != 0) {
 		return;
@@ -498,6 +834,9 @@ void ED_area_init(WindowManager *wm, wmWindow *window, ScrArea *area) {
 		area->type->init(wm, area);
 	}
 
+	/* clear all azones, add the area triangle widgets */
+	area_azone_init(window, screen, area);
+
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		region_evaulate_visibility(region);
 
@@ -529,6 +868,11 @@ void ED_area_exit(rContext *C, ScrArea *area) {
 	CTX_wm_area_set(C, area);
 
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
+		WM_event_remove_handlers(C, &region->handlers);
+		WM_event_modal_handler_region_replace(window, region, NULL);
+
+		MEM_SAFE_FREE(region->heading);
+
 		ED_region_exit(C, region);
 	}
 
@@ -536,6 +880,59 @@ void ED_area_exit(rContext *C, ScrArea *area) {
 	WM_event_modal_handler_area_replace(window, area, NULL);
 
 	CTX_wm_area_set(C, prevsa);
+}
+
+void ED_area_data_copy(ScrArea *area_dst, ScrArea *area_src, const bool do_free) {
+	const char spacetype = area_dst->spacetype;
+	const int flag_copy = 0; /** Which flags to NOT keep from #area_dst! */
+
+	area_dst->spacetype = area_src->spacetype;
+	area_dst->type = area_src->type;
+
+	area_dst->flag = (area_dst->flag & ~flag_copy) | (area_src->flag & flag_copy);
+
+	/* area */
+	if (do_free) {
+		KER_spacedata_freelist(&area_dst->spacedata);
+	}
+	KER_spacedata_copylist(&area_dst->spacedata, &area_src->spacedata);
+
+	/* NOTE: SPACE_EMPTY is possible on new screens. */
+
+	/* regions */
+	if (do_free) {
+		SpaceType *st = KER_spacetype_from_id(spacetype);
+		LISTBASE_FOREACH(ARegion *, region, &area_dst->regionbase) {
+			KER_area_region_free(st, region);
+		}
+		LIB_freelistN(&area_dst->regionbase);
+	}
+	SpaceType *st = KER_spacetype_from_id(area_src->spacetype);
+	LISTBASE_FOREACH(ARegion *, region, &area_src->regionbase) {
+		ARegion *newar = KER_area_region_copy(st, region);
+		LIB_addtail(&area_dst->regionbase, newar);
+	}
+}
+
+void ED_area_status_text(ScrArea *area, const char *str) {
+	if (area == NULL) {
+		return;
+	}
+
+	LISTBASE_FOREACH (ARegion *, region, &area->regionbase) {
+		if (region->regiontype == RGN_TYPE_HEADER) {
+			if (str) {
+				if (region->heading == NULL) {
+					region->heading = MEM_mallocN(UI_MAX_DRAW_STR, "heading");
+				}
+				LIB_strcpy(region->heading, UI_MAX_DRAW_STR, str);
+			}
+			else {
+				MEM_SAFE_FREE(region->heading);
+			}
+			ED_region_tag_redraw(region);
+		}
+	}
 }
 
 void ED_area_tag_redraw(ScrArea *area) {
@@ -564,7 +961,7 @@ int ED_area_header_size_y(const ScrArea *area) {
 		return ED_area_global_size_y(area);
 	}
 
-	return PIXELSIZE + UI_UNIT_Y;
+	return UI_UNIT_Y;
 }
 
 void screen_area_spacelink_add(ScrArea *area, int spacetype) {
@@ -613,13 +1010,20 @@ void ED_area_update_region_sizes(WindowManager *wm, wmWindow *window, ScrArea *a
 	memcpy(&overlap_rect, &area->totrct, sizeof(rcti));
 	region_rect_recursive(area, (ARegion *)area->regionbase.first, &rect, &overlap_rect, 0);
 
+	/* Dynamically sized regions may have changed region sizes, so we have to force azone update. */
+	area_azone_init(window, screen, area);
+
 	LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 		region_evaulate_visibility(region);
 
 		if (region->type->init) {
 			region->type->init(wm, region);
 		}
+
+		/* Some AZones use View2D data which is only updated in region init, so call that first! */
+		region_azones_add(screen, area, region);
 	}
+
 	area->flag &= ~AREA_FLAG_REGION_SIZE_UPDATE;
 }
 

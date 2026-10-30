@@ -42,6 +42,9 @@ void WM_draw_region_free(struct ARegion *region);
 /** \name Main Methods
  * \{ */
 
+void *WM_draw_cb_activate(struct wmWindow *win, void (*draw)(const struct wmWindow *, void *), void *customdata);
+void WM_draw_cb_exit(struct wmWindow *win, void *handle);
+
 /** Draws the window. */
 void WM_do_draw(struct rContext *C);
 

@@ -2,6 +2,7 @@
 
 #include "ED_screen.h"
 #include "ED_space_api.h"
+#include "ED_transform.h"
 
 #include "UI_view2d.h"
 
@@ -38,6 +39,8 @@ void ED_spacetypes_exit() {
 void ED_spacetypes_keymap(wmKeyConfig *keyconf) {
 	ED_keymap_screen(keyconf);
 	ED_keymap_view2d(keyconf);
+
+	ED_keymap_transform(keyconf);
 
 	ListBase *lb = KER_spacetype_list();
 

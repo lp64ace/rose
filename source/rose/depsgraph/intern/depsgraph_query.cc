@@ -1,3 +1,4 @@
+#include "DEG_depsgraph_build.h"
 #include "DEG_depsgraph_query.h"
 
 #include "KER_idtype.h"

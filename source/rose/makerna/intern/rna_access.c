@@ -907,6 +907,100 @@ void RNA_property_unset(PointerRNA *ptr, PropertyRNA *prop) {
 	}
 }
 
+bool RNA_property_reset(PointerRNA *ptr, PropertyRNA *prop, int index) {
+	int len;
+
+	/* get the length of the array to work with */
+	len = RNA_property_array_length(ptr, prop);
+
+	/* get and set the default values as appropriate for the various types */
+	switch (RNA_property_type(prop)) {
+		case PROP_BOOLEAN:
+			if (len) {
+				if (index == -1) {
+					bool *tmparray = MEM_callocN(sizeof(bool) * len, "reset_defaults - boolean");
+
+					RNA_property_boolean_get_default_array(ptr, prop, tmparray);
+					RNA_property_boolean_set_array(ptr, prop, tmparray);
+
+					MEM_freeN(tmparray);
+				}
+				else {
+					int value = RNA_property_boolean_get_default_index(ptr, prop, index);
+					RNA_property_boolean_set_index(ptr, prop, index, value);
+				}
+			}
+			else {
+				int value = RNA_property_boolean_get_default(ptr, prop);
+				RNA_property_boolean_set(ptr, prop, value);
+			}
+			return true;
+		case PROP_INT:
+			if (len) {
+				if (index == -1) {
+					int *tmparray = MEM_callocN(sizeof(int) * len, "reset_defaults - int");
+
+					RNA_property_int_get_default_array(ptr, prop, tmparray);
+					RNA_property_int_set_array(ptr, prop, tmparray);
+
+					MEM_freeN(tmparray);
+				}
+				else {
+					int value = RNA_property_int_get_default_index(ptr, prop, index);
+					RNA_property_int_set_index(ptr, prop, index, value);
+				}
+			}
+			else {
+				int value = RNA_property_int_get_default(ptr, prop);
+				RNA_property_int_set(ptr, prop, value);
+			}
+			return true;
+		case PROP_FLOAT:
+			if (len) {
+				if (index == -1) {
+					float *tmparray = MEM_callocN(sizeof(float) * len, "reset_defaults - float");
+
+					RNA_property_float_get_default_array(ptr, prop, tmparray);
+					RNA_property_float_set_array(ptr, prop, tmparray);
+
+					MEM_freeN(tmparray);
+				}
+				else {
+					float value = RNA_property_float_get_default_index(ptr, prop, index);
+					RNA_property_float_set_index(ptr, prop, index, value);
+				}
+			}
+			else {
+				float value = RNA_property_float_get_default(ptr, prop);
+				RNA_property_float_set(ptr, prop, value);
+			}
+			return true;
+		case PROP_ENUM: {
+			int value = RNA_property_enum_get_default(ptr, prop);
+			RNA_property_enum_set(ptr, prop, value);
+			return true;
+		}
+
+		case PROP_STRING: {
+			char *value = RNA_property_string_get_default_alloc(prop, NULL, 0, NULL);
+			RNA_property_string_set(ptr, prop, value);
+			MEM_freeN(value);
+			return true;
+		}
+
+		case PROP_POINTER: {
+			PointerRNA value = RNA_property_pointer_get_default(prop);
+			RNA_property_pointer_set(ptr, prop, value);
+			return true;
+		}
+
+		default:
+			/* FIXME: are there still any cases that haven't been handled?
+			 * comment out "default" block to check :) */
+			return false;
+	}
+}
+
 void RNA_property_update(rContext *C, PointerRNA *ptr, PropertyRNA *prop) {
 	rna_property_update(C, CTX_data_main(C), CTX_data_scene(C), ptr, prop);
 }
@@ -1171,6 +1265,177 @@ void RNA_property_boolean_set(PointerRNA *ptr, PropertyRNA *property, bool value
 	}
 }
 
+void RNA_property_boolean_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, bool value) {
+	bool tmp[RNA_MAX_ARRAY_LENGTH];
+	int len = rna_ensure_property_array_length(ptr, property);
+
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+	ROSE_assert(RNA_property_array_check(property) != false);
+	ROSE_assert(index >= 0);
+	ROSE_assert(index < len);
+	ROSE_assert(ELEM(value, false, true));
+
+	if (len <= RNA_MAX_ARRAY_LENGTH) {
+		RNA_property_boolean_get_array(ptr, property, tmp);
+		tmp[index] = value;
+		RNA_property_boolean_set_array(ptr, property, tmp);
+	}
+	else {
+		bool *tmparray;
+
+		tmparray = MEM_mallocN(sizeof(bool) * len, __func__);
+		RNA_property_boolean_get_array(ptr, property, tmparray);
+		tmparray[index] = value;
+		RNA_property_boolean_set_array(ptr, property, tmparray);
+		MEM_freeN(tmparray);
+	}
+}
+
+ROSE_STATIC void rna_property_boolean_fill_default_array_values(const bool *defarr, int defarr_length, bool defvalue, int out_length, bool *r_values) {
+	if (defarr && defarr_length > 0) {
+		defarr_length = ROSE_MIN(defarr_length, out_length);
+		memcpy(r_values, defarr, sizeof(bool) * defarr_length);
+	}
+	else {
+		defarr_length = 0;
+	}
+
+	for (int i = defarr_length; i < out_length; i++) {
+		r_values[i] = defvalue;
+	}
+}
+
+ROSE_STATIC void rna_property_boolean_get_default_array_values(PointerRNA *ptr, BoolPropertyRNA *bproperty, bool *r_value) {
+	int length = bproperty->property.totarraylength;
+	int out = RNA_property_array_length(ptr, &bproperty->property);
+
+	rna_property_boolean_fill_default_array_values(bproperty->defaultarray, length, bproperty->defaultvalue, out, r_value);
+}
+
+void RNA_property_boolean_get_array(PointerRNA *ptr, PropertyRNA *property, bool *r_value) {
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+	ROSE_assert(RNA_property_array_check(property) != false);
+
+	BoolPropertyRNA *bproperty = (BoolPropertyRNA *)property;
+	IDProperty *idprop;
+
+	if ((idprop = rna_idproperty_check(&property, ptr))) {
+		if (property->arraydimension == 0) {
+			r_value[0] = RNA_property_boolean_get(ptr, property);
+		}
+		else {
+			int *values_src = IDP_Array(idprop);
+			for (int i = 0; i < idprop->length; i++) {
+				r_value[i] = (bool)values_src[i];
+			}
+		}
+	}
+	else if (property->arraydimension == 0) {
+		r_value[0] = RNA_property_boolean_get(ptr, property);
+	}
+	else if (bproperty->getarray) {
+		bproperty->getarray(ptr, r_value);
+	}
+	else if (bproperty->getarray_ex) {
+		bproperty->getarray_ex(ptr, property, r_value);
+	}
+	else {
+		rna_property_boolean_get_default_array_values(ptr, bproperty, r_value);
+	}
+}
+
+void RNA_property_boolean_set_array(PointerRNA *ptr, PropertyRNA *property, const bool *r_value) {
+	BoolPropertyRNA *bprop = (BoolPropertyRNA *)property;
+	IDProperty *idprop;
+
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+	ROSE_assert(RNA_property_array_check(property) != false);
+
+	if ((idprop = rna_idproperty_check(&property, ptr))) {
+		if (property->arraydimension == 0) {
+			IDP_Int(idprop) = r_value[0];
+		}
+		else {
+			int *values_dst = IDP_Array(idprop);
+			for (uint i = 0; i < idprop->length; i++) {
+				values_dst[i] = (int)r_value[i];
+			}
+		}
+		rna_idproperty_touch(idprop);
+	}
+	else if (property->arraydimension == 0) {
+		RNA_property_boolean_set(ptr, property, r_value[0]);
+	}
+	else if (bprop->setarray) {
+		bprop->setarray(ptr, r_value);
+	}
+	else if (bprop->setarray_ex) {
+		bprop->setarray_ex(ptr, property, r_value);
+	}
+	else if (property->flag & PROP_EDITABLE) {
+		IDProperty *group;
+
+		group = RNA_struct_idprops(ptr);
+		if (group) {
+			idprop = IDP_New(IDP_ARRAY, (const void *)IDP_INT, idprop->length, property->identifier, 0);
+			IDP_AddToGroup(group, idprop);
+			int *values_dst = IDP_Array(idprop);
+			for (uint i = 0; i < idprop->length; i++) {
+				values_dst[i] = (int)r_value[i];
+			}
+		}
+	}
+}
+
+bool RNA_property_boolean_get_default(PointerRNA *ptr, PropertyRNA *property) {
+	BoolPropertyRNA *bproperty = (BoolPropertyRNA *)rna_ensure_property(property);
+
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+	ROSE_assert(RNA_property_array_check(property) == false);
+	ROSE_assert(ELEM(bproperty->defaultvalue, false, true));
+
+	return bproperty->defaultvalue;
+}
+
+void RNA_property_boolean_get_default_array(PointerRNA *ptr, PropertyRNA *property, bool *r_value) {
+	ROSE_assert(RNA_property_type(property) == PROP_BOOLEAN);
+	ROSE_assert(RNA_property_array_check(property) != false);
+
+	BoolPropertyRNA *bproperty = (BoolPropertyRNA *)rna_ensure_property(property);
+
+
+	if (property->arraydimension == 0) {
+		r_value[0] = bproperty->defaultvalue;
+	}
+	else {
+		rna_property_boolean_get_default_array_values(ptr, bproperty, r_value);
+	}
+}
+
+bool RNA_property_boolean_get_default_index(PointerRNA *ptr, PropertyRNA *prop, int index) {
+	bool tmp[RNA_MAX_ARRAY_LENGTH];
+	int length = rna_ensure_property_array_length(ptr, prop);
+
+	ROSE_assert(RNA_property_type(prop) == PROP_BOOLEAN);
+	ROSE_assert(RNA_property_array_check(prop) != false);
+	ROSE_assert(index >= 0);
+	ROSE_assert(index < length);
+
+
+	if (length <= RNA_MAX_ARRAY_LENGTH) {
+		RNA_property_boolean_get_default_array(ptr, prop, tmp);
+		return tmp[index];
+	}
+	bool *tmparray, value;
+
+	tmparray = MEM_mallocN(sizeof(bool) * length, __func__);
+	RNA_property_boolean_get_default_array(ptr, prop, tmparray);
+	value = tmparray[index];
+	MEM_freeN(tmparray);
+
+	return value;
+}
+
 bool RNA_boolean_get(PointerRNA *ptr, const char *name) {
 	PropertyRNA *property = RNA_struct_find_property(ptr, name);
 
@@ -1249,6 +1514,34 @@ void RNA_property_int_set(PointerRNA *ptr, PropertyRNA *property, int value) {
 	}
 }
 
+void RNA_property_int_set_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index, int value) {
+	ROSE_assert(RNA_property_type(property) == PROP_INT);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(p.is_array);
+	ROSE_assert(index >= 0);
+	ROSE_assert(index < p.length);
+
+	IntPropertyRNA *iproperty = (IntPropertyRNA *)p.rnaprop;
+
+	int tmp[RNA_MAX_ARRAY_LENGTH];
+
+	if (p.length <= RNA_MAX_ARRAY_LENGTH) {
+		RNA_property_int_get_array(ptr, property, tmp);
+		tmp[index] = value;
+		RNA_property_int_set_array(ptr, property, tmp);
+	}
+	else {
+		int *tmparray = MEM_mallocN(sizeof(int) * p.length, __func__);
+		RNA_property_int_get_array(ptr, property, tmparray);
+		tmparray[index] = value;
+		RNA_property_int_set_array(ptr, property, tmparray);
+		MEM_freeN(tmparray);
+	}
+}
+
 void RNA_property_int_get_array(PointerRNA *ptr, PropertyRNA *property, int *r_value) {
 	ROSE_assert(RNA_property_type(property) == PROP_INT);
 
@@ -1318,6 +1611,91 @@ void RNA_property_int_set_array(PointerRNA *ptr, PropertyRNA *property, const in
 	}
 }
 
+ROSE_STATIC void rna_property_int_fill_default_array_values(const int *defarr, int defarr_length, int defvalue, int out_length, int *r_values) {
+	if (defarr && defarr_length > 0) {
+		defarr_length = ROSE_MIN(defarr_length, out_length);
+		memcpy(r_values, defarr, sizeof(int) * defarr_length);
+	}
+	else {
+		defarr_length = 0;
+	}
+
+	for (int i = defarr_length; i < out_length; i++) {
+		r_values[i] = defvalue;
+	}
+}
+
+ROSE_STATIC void rna_property_int_get_default_array_values(PointerRNA *ptr, IntPropertyRNA *iprop, int *r_values) {
+	int length = iprop->property.totarraylength;
+	int out_length = RNA_property_array_length(ptr, (PropertyRNA *)iprop);
+
+	rna_property_int_fill_default_array_values(iprop->defaultarray, length, iprop->defaultvalue, out_length, r_values);
+}
+
+void RNA_property_int_get_default_array(PointerRNA *ptr, PropertyRNA *property, int *r_value) {
+	IntPropertyRNA *iprop = (IntPropertyRNA *)rna_ensure_property(property);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(p.is_array);
+
+	if (p.idprop) {
+		ROSE_assert_unreachable();
+
+		return;
+	}
+
+	rna_property_int_get_default_array_values(ptr, iprop, r_value);
+}
+
+int RNA_property_int_get_default_index(PointerRNA *ptr, PropertyRNA *property, int index) {
+	IntPropertyRNA *iprop = (IntPropertyRNA *)rna_ensure_property(property);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(p.is_array);
+
+	if (p.idprop) {
+		ROSE_assert_unreachable();
+
+		return 0;
+	}
+
+	int tmp[RNA_MAX_ARRAY_LENGTH];
+
+	if (p.length <= RNA_MAX_ARRAY_LENGTH) {
+		RNA_property_int_get_default_array(ptr, property, tmp);
+		return tmp[index];
+	}
+
+	int *tmparray, value;
+	tmparray = MEM_mallocN(sizeof(int) * p.length, __func__);
+	RNA_property_int_get_default_array(ptr, property, tmparray);
+	value = tmparray[index];
+	MEM_freeN(tmparray);
+
+	return value;
+}
+
+int RNA_property_int_get_default(PointerRNA *ptr, PropertyRNA *property) {
+	IntPropertyRNA *iprop = (IntPropertyRNA *)rna_ensure_property(property);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(!p.is_array);
+
+	if (p.idprop) {
+		ROSE_assert_unreachable();
+
+		return 0;
+	}
+
+	return iprop->defaultvalue;
+}
+
 int RNA_int_get(PointerRNA *ptr, const char *name) {
 	PropertyRNA *property = RNA_struct_find_property(ptr, name);
 
@@ -1333,6 +1711,28 @@ void RNA_int_set(PointerRNA *ptr, const char *name, int value) {
 
 	if (property) {
 		RNA_property_int_set(ptr, property, value);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
+void RNA_int_get_array(struct PointerRNA *ptr, const char *name, int *values) {
+	PropertyRNA *prop = RNA_struct_find_property(ptr, name);
+
+	if (prop) {
+		RNA_property_int_get_array(ptr, prop, values);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
+void RNA_int_set_array(struct PointerRNA *ptr, const char *name, const int *values) {
+	PropertyRNA *prop = RNA_struct_find_property(ptr, name);
+
+	if (prop) {
+		RNA_property_int_set_array(ptr, prop, values);
 	}
 	else {
 		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
@@ -1489,6 +1889,7 @@ void RNA_property_float_set(PointerRNA *ptr, PropertyRNA *property, float value)
 
 void RNA_property_float_get_array(PointerRNA *ptr, PropertyRNA *property, float *r_value) {
 	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
+	ROSE_assert(RNA_property_array_check(property) == true);
 
 	PropertyRNAorID p;
 	rna_property_rna_or_id_get(property, ptr, &p);
@@ -1496,7 +1897,20 @@ void RNA_property_float_get_array(PointerRNA *ptr, PropertyRNA *property, float 
 	ROSE_assert(p.is_array);
 
 	if (p.idprop) {
-		ROSE_assert_unreachable();
+		IDProperty *idprop = p.idprop;
+
+		ROSE_assert(idprop->length == RNA_property_array_length(ptr, property) || (property->flag & PROP_IDPROPERTY));
+
+		if (property->arraydimension == 0) {
+			if (idprop->subtype == IDP_FLOAT) {
+				memcpy(r_value, IDP_Array(idprop), sizeof(float) * p.length);
+			}
+			else {
+				for (int i = 0; i < p.length; i++) {
+					r_value[i] = (float)(((double *)IDP_Array(idprop))[i]);
+				}
+			}
+		}
 
 		return;
 	}
@@ -1530,6 +1944,7 @@ void RNA_property_float_get_array(PointerRNA *ptr, PropertyRNA *property, float 
 
 void RNA_property_float_set_array(PointerRNA *ptr, PropertyRNA *property, const float *f_value) {
 	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
+	ROSE_assert(RNA_property_array_check(property) == true);
 
 	PropertyRNAorID p;
 	rna_property_rna_or_id_get(property, ptr, &p);
@@ -1537,8 +1952,16 @@ void RNA_property_float_set_array(PointerRNA *ptr, PropertyRNA *property, const 
 	ROSE_assert(p.is_array);
 
 	if (p.idprop) {
-		ROSE_assert_unreachable();
+		if (p.idprop->subtype == IDP_FLOAT) {
+			memcpy(IDP_Array(p.idprop), f_value, sizeof(float) * p.length);
+		}
+		else {
+			for (int i = 0; i < p.length; i++) {
+				((double *)IDP_Array(p.idprop))[i] = f_value[i];
+			}
+		}
 
+		rna_idproperty_touch(p.idprop);
 		return;
 	}
 
@@ -1554,6 +1977,88 @@ void RNA_property_float_set_array(PointerRNA *ptr, PropertyRNA *property, const 
 
 		return;
 	}
+}
+
+ROSE_STATIC void rna_property_float_fill_default_array_values(const float *defarr, int defarr_length, float defvalue, int out_length, float *r_values) {
+	if (defarr && defarr_length > 0) {
+		defarr_length = ROSE_MIN(defarr_length, out_length);
+		memcpy(r_values, defarr, sizeof(float) * defarr_length);
+	}
+	else {
+		defarr_length = 0;
+	}
+
+	for (int i = defarr_length; i < out_length; i++) {
+		r_values[i] = defvalue;
+	}
+}
+
+ROSE_STATIC void rna_property_float_get_default_array_values(PointerRNA *ptr, FloatPropertyRNA *fproperty, float *r_values) {
+	int length = fproperty->property.totarraylength;
+	int out_length = RNA_property_array_length(ptr, (PropertyRNA *)fproperty);
+
+	rna_property_float_fill_default_array_values(fproperty->defaultarray, length, fproperty->defaultvalue, out_length, r_values);
+}
+
+void RNA_property_float_get_default_array(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_value) {
+	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
+	ROSE_assert(RNA_property_array_check(property) == true);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(p.is_array);
+
+	if (p.idprop) {
+		ROSE_assert_unreachable();
+
+		return;
+	}
+
+	rna_property_float_get_default_array_values(ptr, (FloatPropertyRNA *)property, r_value);
+}
+
+float RNA_property_float_get_default_index(struct PointerRNA *ptr, struct PropertyRNA *property, int index) {
+	float tmp[RNA_MAX_ARRAY_LENGTH];
+	int len = rna_ensure_property_array_length(ptr, property);
+
+	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
+	ROSE_assert(RNA_property_array_check(property) != false);
+	ROSE_assert(index >= 0);
+	ROSE_assert(index < len);
+
+	if (len <= RNA_MAX_ARRAY_LENGTH) {
+		RNA_property_float_get_default_array(ptr, property, tmp);
+		return tmp[index];
+	}
+	float *tmparray, value;
+
+	tmparray = MEM_mallocN(sizeof(float) * len, __func__);
+	RNA_property_float_get_default_array(ptr, property, tmparray);
+	value = tmparray[index];
+	MEM_freeN(tmparray);
+
+	return value;
+}
+
+float RNA_property_float_get_default(struct PointerRNA *ptr, struct PropertyRNA *property) {
+	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
+	ROSE_assert(RNA_property_array_check(property) == true);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(!p.is_array);
+
+	if (p.idprop) {
+		ROSE_assert_unreachable();
+
+		return 0.0f;
+	}
+
+	FloatPropertyRNA *fproperty = (FloatPropertyRNA *)property;
+
+	return fproperty->defaultvalue;
 }
 
 float RNA_property_float_get_index(PointerRNA *ptr, PropertyRNA *property, int index) {
@@ -1577,6 +2082,27 @@ float RNA_property_float_get_index(PointerRNA *ptr, PropertyRNA *property, int i
 	MEM_freeN(tmparray);
 
 	return value;
+}
+
+float RNA_float_get(PointerRNA *ptr, const char *name) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		return RNA_property_float_get(ptr, property);
+	}
+	fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	return 0;
+}
+
+void RNA_float_set(PointerRNA *ptr, const char *name, float value) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		RNA_property_float_set(ptr, property, value);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
 }
 
 void RNA_property_float_set_index(PointerRNA *ptr, PropertyRNA *property, int index, float value) {
@@ -1688,6 +2214,96 @@ int RNA_property_float_clamp(PointerRNA *ptr, PropertyRNA *property, float *valu
 	return 0;
 }
 
+/* enum */
+
+int RNA_property_enum_get(PointerRNA *ptr, PropertyRNA *prop) {
+	EnumPropertyRNA *eprop = (EnumPropertyRNA *)prop;
+	IDProperty *idprop;
+
+	ROSE_assert(RNA_property_type(prop) == PROP_ENUM);
+
+	if ((idprop = rna_idproperty_check(&prop, ptr))) {
+		return IDP_Int(idprop);
+	}
+	if (eprop->get) {
+		return eprop->get(ptr);
+	}
+	if (eprop->get_ex) {
+		return eprop->get_ex(ptr, prop);
+	}
+	return eprop->defaultvalue;
+}
+
+void RNA_property_enum_set(PointerRNA *ptr, PropertyRNA *prop, int value) {
+	EnumPropertyRNA *eprop = (EnumPropertyRNA *)prop;
+	IDProperty *idprop;
+
+	ROSE_assert(RNA_property_type(prop) == PROP_ENUM);
+
+	if ((idprop = rna_idproperty_check(&prop, ptr))) {
+		IDP_Int(idprop) = value;
+		rna_idproperty_touch(idprop);
+	}
+	else if (eprop->set) {
+		eprop->set(ptr, value);
+	}
+	else if (eprop->set_ex) {
+		eprop->set_ex(ptr, prop, value);
+	}
+	else if (prop->flag & PROP_EDITABLE) {
+		IDPropertyData val = {0};
+		IDProperty *group;
+
+		val.value1 = value;
+
+		group = RNA_struct_idprops(ptr);
+		if (group) {
+			IDP_AddToGroup(group, IDP_New(IDP_INT, &val, 0, prop->identifier, 0));
+		}
+	}
+}
+
+int RNA_property_enum_get_default(PointerRNA *ptr, PropertyRNA *property) {
+	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
+	ROSE_assert(RNA_property_array_check(property) == false);
+
+	PropertyRNAorID p;
+	rna_property_rna_or_id_get(property, ptr, &p);
+
+	ROSE_assert(!p.is_array);
+
+	if (p.idprop) {
+		ROSE_assert_unreachable();
+
+		return 0;
+	}
+
+	EnumPropertyRNA *eproperty = (EnumPropertyRNA *)property;
+
+	return eproperty->defaultvalue;
+}
+
+int RNA_enum_get(struct PointerRNA *ptr, const char *name) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		return RNA_property_enum_get(ptr, property);
+	}
+	fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	return 0;
+}
+
+void RNA_enum_set(struct PointerRNA *ptr, const char *name, int value) {
+	PropertyRNA *prop = RNA_struct_find_property(ptr, name);
+
+	if (prop) {
+		RNA_property_enum_set(ptr, prop, value);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
 /* string */
 
 void RNA_property_string_get(PointerRNA *ptr, PropertyRNA *property, char *value) {
@@ -1754,6 +2370,56 @@ int RNA_property_string_length(PointerRNA *ptr, PropertyRNA *property) {
 	rna_property_rna_or_id_get(property, ptr, &p);
 
 	return property_string_length_storage(ptr, p);
+}
+
+void RNA_property_string_get_default(PropertyRNA *property, char *buffer, int maxlen) {
+	ROSE_assert(RNA_property_type(property) == PROP_STRING);
+
+	if (property->magic != RNA_MAGIC) {
+		ROSE_assert_unreachable();
+
+		return;
+	}
+
+	StringPropertyRNA *sproperty = (StringPropertyRNA *)property;
+
+	LIB_strcpy(buffer, maxlen, sproperty->defaultvalue);
+}
+
+char *RNA_property_string_get_default_alloc(PropertyRNA *property, char *buffer, int maxlen, int *r_length) {
+	ROSE_assert(RNA_property_type(property) == PROP_STRING);
+
+	int length = RNA_property_string_default_length(property);
+
+	char *buf;
+	if (length + 1 < maxlen) {
+		buf = buffer;
+	}
+	else {
+		buf = MEM_callocN(sizeof(char) * (length + 1), __func__);
+	}
+
+	RNA_property_string_get_default(property, buf, length + 1);
+
+	if (r_length) {
+		*r_length = length;
+	}
+
+	return buf;
+}
+
+int RNA_property_string_default_length(PropertyRNA *property) {
+	ROSE_assert(RNA_property_type(property) == PROP_STRING);
+
+	if (property->magic != RNA_MAGIC) {
+		ROSE_assert_unreachable();
+
+		return 0;
+	}
+
+	StringPropertyRNA *sproperty = (StringPropertyRNA *)property;
+
+	return LIB_strlen(sproperty->defaultvalue);
 }
 
 void RNA_string_get(PointerRNA *ptr, const char *name, char *value) {
@@ -2197,6 +2863,76 @@ PointerRNA RNA_pointer_create_with_parent(const PointerRNA *parent, StructRNA *t
 
 PointerRNA RNA_property_pointer_get(PointerRNA *ptr, PropertyRNA *prop) {
 	return property_pointer_get(ptr, prop);
+}
+
+PointerRNA RNA_property_pointer_get_default(PropertyRNA *property) {
+	ROSE_assert(RNA_property_type(property) == PROP_POINTER);
+
+	return PointerRNA_NULL;
+}
+
+void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *property, PointerRNA value) {
+	/* Detect IDProperty and retrieve the actual PropertyRNA pointer before cast. */
+	IDProperty *idprop = rna_idproperty_check(&property, ptr);
+
+	PointerPropertyRNA *pproperty = (PointerPropertyRNA *)property;
+	ROSE_assert(RNA_property_type(property) == PROP_POINTER);
+
+	/* Check types. */
+	if (pproperty->set != NULL) {
+		/* Assigning to a real RNA property. */
+		if (value.type != NULL && !RNA_struct_is_a(value.type, pproperty->srna)) {
+			fprintf(stderr, "[RNA] %s: expected %s type, not %s\n", __func__, pproperty->srna->identifier, value.type->identifier);
+			return;
+		}
+	}
+	else {
+		/* Assigning to an IDProperty disguised as RNA one. */
+		if (value.type != NULL && !RNA_struct_is_a(value.type, &RNA_ID)) {
+			fprintf(stderr, "[RNA] %s: expected ID type, not %s", __func__, pproperty->srna->identifier);
+			return;
+		}
+	}
+
+	/* We got an existing IDProperty. */
+	if (idprop != NULL) {
+		/* Not-yet-defined ID IDProps have an IDP_GROUP type, not an IDP_ID one - because of reasons?
+		 * XXX This has to be investigated fully - there might be a good reason for it, but off hands
+		 * this seems really weird... */
+		if (idprop->type == IDP_ID) {
+			IDP_AssignID(idprop, value.data, 0);
+			rna_idproperty_touch(idprop);
+		}
+		else {
+			ROSE_assert(idprop->type == IDP_GROUP);
+
+			IDPropertyData val = {0};
+			IDProperty *group = RNA_struct_idprops(ptr);
+			ROSE_assert(group != NULL);
+
+			val.pointer = ptr->data;
+
+			IDP_ReplaceInGroup_ex(group, IDP_New(IDP_ID, &val, 0, idprop->name, 0), idprop);
+		}
+	}
+	/* RNA property. */
+	else if (pproperty->set) {
+		if (!((property->flag & PROP_NEVER_NULL) && value.data == NULL)) {
+			pproperty->set(ptr, value);
+		}
+	}
+	/* IDProperty disguised as RNA property (and not yet defined in ptr). */
+	else if (property->flag & PROP_EDITABLE) {
+		IDPropertyData val = {0};
+		IDProperty *group;
+
+		val.pointer = value.data;
+
+		group = RNA_struct_idprops(ptr);
+		if (group) {
+			IDP_ReplaceInGroup(group, IDP_New(IDP_ID, &val, 0, property->identifier, 0));
+		}
+	}
 }
 
 /** \} */
