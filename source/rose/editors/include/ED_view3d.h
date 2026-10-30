@@ -4,6 +4,7 @@
 #include "LIB_utildefines.h"
 
 struct ARegion;
+struct RegionView3D;
 
 #ifdef __cplusplus
 extern "C" {

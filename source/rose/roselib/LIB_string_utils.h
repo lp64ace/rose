@@ -3,6 +3,8 @@
 
 #include "LIB_string.h"
 
+struct ListBase;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
