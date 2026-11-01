@@ -25,6 +25,7 @@ typedef struct DRWOverlayInstanceFormats {
 
 typedef struct DRWOverlayArmatureCallBuffersInner {
 	struct DRWCallBuffer *octahaedron;
+	struct DRWCallBuffer *octahaedron_wire;
 } DRWOverlayArmatureCallBuffersInner;
 
 typedef struct DRWOverlayArmatureCallBuffers {

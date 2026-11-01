@@ -215,11 +215,76 @@ void transform_constraint_set(TransInfo *t, int constraint, const char text[]) {
 void transform_constraint_start(TransInfo *t) {
 	t->constraint.mode |= CON_APPLY;
 	*t->constraint.text = ' ';
+	t->number.index_max = ROSE_MIN(transform_constraint_space_dimension(t) - 1, t->index_max);
 }
 
 void transform_constraint_stop(TransInfo *t) {
 	t->constraint.mode &= ~CON_APPLY;
 	*t->constraint.text = '\0';
+	t->number.index_max = t->index_max;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Constraints
+ * \{ */
+
+int transform_constraint_space_dimension(TransInfo *t) {
+	int n = 0;
+
+	if (t->constraint.mode & CON_AXIS0) {
+		n++;
+	}
+	if (t->constraint.mode & CON_AXIS1) {
+		n++;
+	}
+	if (t->constraint.mode & CON_AXIS2) {
+		n++;
+	}
+
+	return n;
+}
+
+void transform_constraint_number_input(TransInfo *t, float vec[3]) {
+	int mode = t->constraint.mode;
+
+	if (mode & CON_APPLY) {
+		const int dims = transform_constraint_space_dimension(t);
+		if (dims == 2) {
+			int axis = mode & (CON_AXIS0 | CON_AXIS1 | CON_AXIS2);
+			if (axis == (CON_AXIS0 | CON_AXIS1)) {
+				vec[2] = 0.0f;
+			}
+			else if (axis == (CON_AXIS1 | CON_AXIS2)) {
+				vec[2] = vec[1];
+				vec[1] = vec[0];
+				vec[0] = 0.0f;
+			}
+			else if (axis == (CON_AXIS0 | CON_AXIS2)) {
+				vec[2] = vec[1];
+				vec[1] = 0.0f;
+			}
+		}
+		else if (dims == 1) {
+			if (mode & CON_AXIS0) {
+				vec[1] = 0.0f;
+				vec[2] = 0.0f;
+			}
+			if (mode & CON_AXIS1) {
+				vec[1] = vec[0];
+
+				vec[0] = 0.0f;
+				vec[2] = 0.0f;
+			}
+			if (mode & CON_AXIS2) {
+				vec[2] = vec[0];
+
+				vec[0] = 0.0f;
+				vec[1] = 0.0f;
+			}
+		}
+	}
 }
 
 /** \} */

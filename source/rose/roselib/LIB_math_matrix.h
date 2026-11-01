@@ -88,6 +88,15 @@ void mul_v2_m3v2(float r[2], const float M[3][3], const float a[2]);
 void mul_v2_m3v3(float r[2], const float M[3][3], const float a[3]);
 void mul_v3_m3v3(float r[3], const float M[3][3], const float a[3]);
 
+void _va_mul_m3_series_3(float R[3][3], const float M1[3][3], const float M2[3][3]);
+void _va_mul_m3_series_4(float R[3][3], const float M1[3][3], const float M2[3][3], float M3[3][3]);
+
+void _va_mul_m4_series_3(float R[4][4], const float M1[4][4], const float M2[4][4]);
+void _va_mul_m4_series_4(float R[4][4], const float M1[4][4], const float M2[4][4], float M3[4][4]);
+
+#define mul_m3_series(...) VA_NARGS_CALL_OVERLOAD(_va_mul_m3_series_, __VA_ARGS__)
+#define mul_m4_series(...) VA_NARGS_CALL_OVERLOAD(_va_mul_m4_series_, __VA_ARGS__)
+
 void mul_m3_v2(const float m[3][3], float r[2]);
 void mul_m3_v3(const float M[3][3], float r[3]);
 
@@ -97,6 +106,9 @@ bool invert_m3(float mat[3][3]);
 bool invert_m3_m3(float inverse[3][3], const float mat[3][3]);
 bool invert_m4(float mat[4][4]);
 bool invert_m4_m4(float inverse[4][4], const float mat[4][4]);
+
+bool orthogonalize_m3_zero_axes(float m[3][3], const float unit_length);
+bool orthogonalize_m4_zero_axes(float m[4][4], const float unit_length);
 
 void invert_m3_m3_safe_ortho(float inverse[3][3], const float mat[3][3]);
 

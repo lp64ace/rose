@@ -4,6 +4,7 @@
 set(SRC
 	ED_armature.h
 	ED_fileselect.h
+	ED_numinput.h
 	ED_screen.h
 	ED_object.h
 	ED_space_api.h

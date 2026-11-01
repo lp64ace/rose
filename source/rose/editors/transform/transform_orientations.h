@@ -1,6 +1,8 @@
 #ifndef TRANSFORM_ORIENTATIONS_H
 #define TRANSFORM_ORIENTATIONS_H
 
+#include "DNA_view3d_types.h"
+
 struct TransInfo;
 
 #ifdef __cplusplus
@@ -13,6 +15,7 @@ extern "C" {
 bool transform_orientations_create_from_axis(float mat[3][3], const float x[3], const float y[3], const float z[3]);
 
 /** Set the current t->spacemat according to the type of orientation. */
+void transform_orientations_default_modal_set(struct TransInfo *t, int type);
 void transform_orientations_current_set(struct TransInfo *t);
 
 #ifdef __cplusplus

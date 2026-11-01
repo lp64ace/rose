@@ -61,6 +61,7 @@ struct PropertyRNA *RNA_def_int(void *container, const char *identifier, int def
 struct PropertyRNA *RNA_def_int_vector(void *container, const char *identifier, int length, const int *default_value, int hardmin, int hardmax, const char *ui_name, const char *ui_description, int softmin, int softmax);
 struct PropertyRNA *RNA_def_float(void *container, const char *identifier, float default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax);
 struct PropertyRNA *RNA_def_float_vector(void *container, const char *identifier, int length, const float *default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax);
+struct PropertyRNA *RNA_def_float_rotation(void *container, const char *identifier, int length, const float *default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax);
 struct PropertyRNA *RNA_def_enum(void *container, const char *identifier, const EnumPropertyItem *items, int default_value, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);
 struct PropertyRNA *RNA_def_string_file_path(void *container, const char *identifier, const char *default_value, int maxlen, const char *ui_name, const char *ui_description);

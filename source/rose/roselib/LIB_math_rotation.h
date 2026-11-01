@@ -58,12 +58,22 @@ void invert_qt(float q[4]);
 void invert_qt_qt(float q1[4], const float q2[4]);
 
 void invert_qt_normalized(float q[4]);
+void invert_qt_qt_normalized(float q1[4], const float q2[4]);
 
 void mat3_normalized_to_quat(float q[4], const float mat[3][3]);
 void mat4_normalized_to_quat(float q[4], const float mat[4][4]);
 
 void mat3_to_quat(float q[4], const float mat[3][3]);
 void mat4_to_quat(float q[4], const float mat[4][4]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name XYZ Eulers
+ * \{ */
+
+void add_eul_euleul(float r_eul[3], float a[3], float b[3], short order);
+void sub_eul_euleul(float r_eul[3], float a[3], float b[3], short order);
 
 /** \} */
 
@@ -98,6 +108,7 @@ void mat3_normalized_to_eulO(float eul[3], const short order, const float m[3][3
 void mat4_normalized_to_eulO(float eul[3], const short order, const float m[4][4]);
 
 void quat_to_compatible_eulO(float eul[3], const float oldrot[3], const short order, const float quat[4]);
+void mat3_to_compatible_eulO(float eul[3], const float oldrot[3], const short order, const float mat[3][3]);
 
 /** \} */
 

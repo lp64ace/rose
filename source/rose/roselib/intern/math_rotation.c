@@ -236,6 +236,11 @@ void invert_qt_normalized(float q[4]) {
 	conjugate_qt(q);
 }
 
+void invert_qt_qt_normalized(float q1[4], const float q2[4]) {
+	copy_qt_qt(q1, q2);
+	invert_qt_normalized(q1);
+}
+
 void mat3_normalized_to_quat_fast(float q[4], const float mat[3][3]) {
 	/* Caller must ensure matrices aren't negative for valid results, see: #24291, #94231. */
 	ROSE_assert(!is_negative_m3(mat));
@@ -362,6 +367,35 @@ void mat4_to_quat(float q[4], const float mat[4][4]) {
 	copy_m3_m4(unit_mat_abs, mat);
 	normalize_m3(unit_mat_abs);
 	mat3_normalized_to_quat_with_checks(q, unit_mat_abs);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name XYZ Eulers
+ * \{ */
+
+void add_eul_euleul(float r_eul[3], float a[3], float b[3], short order) {
+	float quat[4], quat_b[4];
+
+	eulO_to_quat(quat, a, order);
+	eulO_to_quat(quat_b, b, order);
+
+	mul_qt_qtqt(quat, quat_b, quat);
+
+	quat_to_eulO(r_eul, order, quat);
+}
+
+void sub_eul_euleul(float r_eul[3], float a[3], float b[3], short order) {
+	float quat[4], quat_b[4];
+
+	eulO_to_quat(quat, a, order);
+	eulO_to_quat(quat_b, b, order);
+
+	invert_qt_normalized(quat_b);
+	mul_qt_qtqt(quat, quat_b, quat);
+
+	quat_to_eulO(r_eul, order, quat);
 }
 
 /** \} */
@@ -597,6 +631,13 @@ void quat_to_compatible_eulO(float eul[3], const float oldrot[3], const short or
 	float unit_mat[3][3];
 
 	quat_to_mat3(unit_mat, quat);
+	mat3_normalized_to_compatible_eulO(eul, oldrot, order, unit_mat);
+}
+
+void mat3_to_compatible_eulO(float eul[3], const float oldrot[3], const short order, const float mat[3][3]) {
+	float unit_mat[3][3];
+
+	normalize_m3_m3(unit_mat, mat);
 	mat3_normalized_to_compatible_eulO(eul, oldrot, order, unit_mat);
 }
 

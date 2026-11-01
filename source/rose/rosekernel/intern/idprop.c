@@ -222,7 +222,6 @@ IDProperty *IDP_New(int type, const void *data, size_t length, const char *name,
 				}
 				property->length = property->alloc = length;
 			}
-			return NULL;
 		} break;
 		case IDP_STRING: {
 			property = MEM_callocN(sizeof(IDProperty), "IDProperty(String)");

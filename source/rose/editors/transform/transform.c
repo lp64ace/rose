@@ -6,6 +6,7 @@
 
 #include "LIB_math_base.h"
 #include "LIB_math_matrix.h"
+#include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
 
 #include "RNA_access.h"
@@ -13,6 +14,7 @@
 
 #include "ED_screen.h"
 #include "ED_view3d.h"
+#include "ED_numinput.h"
 
 #include "WM_api.h"
 #include "WM_event.h"
@@ -210,6 +212,7 @@ void ED_transform_init_info(rContext *C, TransInfo *t, wmOperator *op, const wmE
 	}
 
 	transform_view_matrices_init(t);
+	ED_number_input_init(&t->number);
 }
 
 ROSE_STATIC void transform_center_calculate(TransInfo *t) {
@@ -242,6 +245,18 @@ ROSE_STATIC void transform_restore_element(TransData *td) {
 	transform_restore_element_base(&td->base);
 
 	if (td->extension) {
+		if (td->extension->rot) {
+			copy_v3_v3(td->extension->rot, td->extension->irot);
+		}
+		if (td->extension->angle) {
+			*td->extension->angle = td->extension->iangle;
+		}
+		if (td->extension->axis) {
+			copy_v3_v3(td->extension->axis, td->extension->iaxis);
+		}
+		if (td->extension->quat) {
+			copy_qt_qt(td->extension->quat, td->extension->iquat);
+		}
 		if (td->extension->size) {
 			copy_v3_v3(td->extension->size, td->extension->isize);
 		}
@@ -292,6 +307,7 @@ bool ED_transform_init(rContext *C, TransInfo *t, wmOperator *op, const wmEvent 
 		t->launch_event = LEFTMOUSE;
 	}
 
+	unit_m3(t->orient.matrix);
 	unit_m3(t->spacemat);
 	unit_m3(t->spaceinv);
 
@@ -335,6 +351,14 @@ bool ED_transform_init(rContext *C, TransInfo *t, wmOperator *op, const wmEvent 
 	/* Transformation axis from operator */
 	if ((property = RNA_struct_find_property(op->ptr, "orient_axis")) && RNA_property_is_set(op->ptr, property)) {
 		t->axis = RNA_property_enum_get(op->ptr, property);
+	}
+
+	if (t->constraint.mode & CON_APPLY) {
+		transform_constraint_set(t, t->constraint.mode, "%s");
+	}
+
+	if (t->flag & T_MODAL) {
+		ED_mouse_input_apply(t, &t->mouse, t->mouse.imval, t->values);
 	}
 
 	t->context = NULL;
@@ -435,6 +459,8 @@ ROSE_STATIC bool transform_event_modal_constraint(TransInfo *t, int type) {
 	return true;
 }
 
+#include <stdio.h>
+
 int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 	bool handled = false;
 
@@ -443,6 +469,12 @@ int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 
 		ED_mouse_input_apply(t, &t->mouse, t->mval, t->values);
 		handled = true;
+	}
+	else if (evt->value == KM_PRESS) {
+		if (ED_number_input_has(&t->number) && ED_number_input_handle(t->context, &t->number, evt)) {
+			ED_transform_data_recalc(t);
+			handled = true;
+		}
 	}
 
 	if (evt->type == EVT_MODAL_MAP) {
@@ -463,6 +495,11 @@ int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 				}
 			} break;
 		}
+	}
+
+	if (!handled && ((evt->value == KM_PRESS) || (evt->type == EVT_MODAL_MAP)) && ED_number_input_handle(t->context, &t->number, evt)) {
+		ED_transform_data_recalc(t);
+		handled = true;
 	}
 
 	if (handled) {

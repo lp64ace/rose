@@ -1,5 +1,11 @@
 #include "KER_context.h"
 
+#include "KER_layer.h"
+#include "KER_object.h"
+#include "KER_scene.h"
+
+#include "DNA_view3d_types.h"
+
 #include "LIB_math_vector.h"
 #include "LIB_math_matrix.h"
 
@@ -50,16 +56,54 @@ bool transform_orientations_create_from_axis(float mat[3][3], const float x[3], 
 	return false;
 }
 
-void ED_transform_calc_orientation_from_type_ex(float r_mat[3][3]) {
-	// Only global for now!
-	unit_m3(r_mat);
+int ED_transform_calc_orientation_from_type_ex(const Scene *scene, ViewLayer *view_layer, const View3D *v3d, const RegionView3D *rv3d, Object *object, const short index, const int pivot, float r_mat[3][3]) {
+	switch (index) {
+		case V3D_ORIENT_GLOBAL: {
+			unit_m3(r_mat);
+		} break;
+		case V3D_ORIENT_LOCAL: {
+			if (object) {
+				transform_orientations_create_from_axis(r_mat, UNPACK3(object->obmat));
+			}
+		} break;
+		case V3D_ORIENT_VIEW: {
+			if (rv3d != NULL) {
+				copy_m3_m4(r_mat, rv3d->viewinv);
+				normalize_m3(r_mat);
+			}
+			else {
+				unit_m3(r_mat);
+			}
+		} break;
+	}
+
+	return index;
 }
 
-void transform_orientations_matrix_get(TransInfo *t, float r_spacemtx[3][3]) {
-	ED_transform_calc_orientation_from_type_ex(r_spacemtx);
+void transform_orientations_default_modal_set(TransInfo *t, int type) {
+	/* Currently only these types are supported. */
+	ROSE_assert(ELEM(type, V3D_ORIENT_GLOBAL, V3D_ORIENT_VIEW));
+
+	if (!(t->flag & T_MODAL)) {
+		return;
+	}
+
+	if (t->orient.type == type) {
+		return;
+	}
+
+	View3D *v3d = NULL;
+	RegionView3D *rv3d = NULL;
+
+	if ((type == V3D_ORIENT_VIEW) && (t->spacetype == SPACE_VIEW3D) && t->region && (t->region->regiontype == RGN_TYPE_WINDOW)) {
+		v3d = t->view;
+		rv3d = t->region->regiondata;
+	}
+
+	t->orient.type = ED_transform_calc_orientation_from_type_ex(t->scene, t->view_layer, v3d, rv3d, NULL, type, V3D_AROUND_CENTER_BOUNDS, t->orient.matrix);
 }
 
 void transform_orientations_current_set(TransInfo *t) {
-	transform_orientations_matrix_get(t, t->spacemat);
+	copy_m3_m3(t->spacemat, t->orient.matrix);
 	invert_m3_m3_safe_ortho(t->spaceinv, t->spacemat);
 }

@@ -9,10 +9,12 @@
 
 #include "UI_interface.h"
 
+#include "ED_numinput.h"
 #include "ED_screen.h"
 
 #include "transform.h"
 #include "transform_data.h"
+#include "transform_constraints.h"
 #include "transform_convert.h"
 #include "transform_mode.h"
 
@@ -34,17 +36,31 @@ ROSE_STATIC void transform_mat3_to_size(const float mat[3][3], const float smat[
 }
 
 void ED_transform_mode_resize_header(TransInfo *t, const float vec[3], char *str, const int maxlen) {
-	char tvec[3][NUM_STR_REP_LEN];
+	char tvec[NUM_STR_REP_LEN * 3];
 	size_t ofs = 0;
-	LIB_strnformat(tvec[0], 16, "%.4f", vec[0]);
-	LIB_strnformat(tvec[1], 16, "%.4f", vec[1]);
-	LIB_strnformat(tvec[2], 16, "%.4f", vec[2]);
-
-	if (t->constraint.mode & CON_APPLY) {
-		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : %s%s", tvec[0], t->constraint.text);
+	if (ED_number_input_has(&t->number)) {
+		ED_number_input_output(&t->number, tvec);
 	}
 	else {
-		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : vec3(%s, %s, %s) %s", tvec[0], tvec[1], tvec[2], t->constraint.text);
+		LIB_strnformat(&tvec[NUM_STR_REP_LEN * 0], NUM_STR_REP_LEN, "%.4f", vec[0]);
+		LIB_strnformat(&tvec[NUM_STR_REP_LEN * 1], NUM_STR_REP_LEN, "%.4f", vec[1]);
+		LIB_strnformat(&tvec[NUM_STR_REP_LEN * 2], NUM_STR_REP_LEN, "%.4f", vec[2]);
+	}
+
+	if (t->constraint.mode & CON_APPLY) {
+		if (transform_constraint_space_dimension(t) == 1) {
+			const char *tvec0 = &tvec[NUM_STR_REP_LEN * 0];
+			ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : %s%s", tvec0, t->constraint.text);
+		}
+		else {
+			ROSE_assert_unreachable();
+		}
+	}
+	else {
+		const char *tvec0 = &tvec[NUM_STR_REP_LEN * 0];
+		const char *tvec1 = &tvec[NUM_STR_REP_LEN * 1];
+		const char *tvec2 = &tvec[NUM_STR_REP_LEN * 2];
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Scale : vec3(%s, %s, %s) %s", tvec0, tvec1, tvec2, t->constraint.text);
 	}
 }
 
@@ -84,6 +100,10 @@ void ED_transform_mode_resize_apply(TransInfo *t, const int mval[2]) {
 
 		copy_v3_fl(t->values_final, ratio);
 		add_v3_v3(t->values_final, t->values_modal_offset);
+
+		if (ED_number_input_apply(&t->number, t->values_final)) {
+			transform_constraint_number_input(t, t->values_final);
+		}
 	}
 
 	float mat[3][3];
@@ -128,7 +148,7 @@ void ED_transform_mode_resize_init(TransInfo *t, const float mouse_dir_constrain
 	t->transform = ED_transform_mode_resize_apply;
 
 	if (is_zero_v3(mouse_dir_constraint)) {
-		ED_mouse_input_mode(t, &t->mouse, INPUT_SPRING_FLIP);
+		ED_mouse_input_mode(t, &t->mouse, INPUT_SPRING);
 	}
 	else {
 		int mval_start[3];
@@ -159,4 +179,7 @@ void ED_transform_mode_resize_init(TransInfo *t, const float mouse_dir_constrain
 		ED_mouse_input_set_custom_points(t, &t->mouse, mval_end, mval_start);
 		ED_mouse_input_mode(t, &t->mouse, INPUT_CUSTOM_RATIO);
 	}
+
+	t->index_max = 2;
+	t->number.index_max = 2;
 }

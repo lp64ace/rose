@@ -30,6 +30,7 @@ set(SRC
 	transform_data.h
 	transform_input.c
 	transform_mode_resize.c
+	transform_mode_rotate.c
 	transform_mode_translate.c
 	transform_mode.c
 	transform_mode.h
@@ -51,6 +52,7 @@ set(LIB
 	rose::source::roselib
 	rose::source::dna
 	rose::source::rna
+	rose::source::editors::util
 	
 	# External Library Dependencies
 	

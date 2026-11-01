@@ -47,7 +47,7 @@ void overlay_armature_cache_init(DRWOverlayData *vdata) {
 	DRWOverlayInstanceFormats *formats = DRW_overlay_shader_instance_formats();
 	DRWOverlayArmatureCallBuffers *cb = &pd->armature_call_buffers;
 
-	DRWState state = DRW_STATE_DEFAULT;
+	DRWState state = DRW_STATE_DEFAULT | DRW_STATE_BLEND_ALPHA_PREMUL;
 
 	if (DRW_state_is_select()) {
 		state |= DRW_STATE_IN_FRONT_SELECT;
@@ -63,6 +63,7 @@ void overlay_armature_cache_init(DRWOverlayData *vdata) {
 			DRW_shading_group_clear_ex(pd->armature_shgroup, GPU_DEPTH_BIT, NULL, 1.0f, 0);
 		}
 		cb->solid.octahaedron = DRW_shading_group_call_buffer_instance(pd->armature_shgroup, format, DRW_cache_bone_octahedral_get());
+		cb->solid.octahaedron_wire = DRW_shading_group_call_buffer_instance(pd->armature_shgroup, format, DRW_cache_bone_octahedral_wire_get());
 	}
 }
 
@@ -73,6 +74,7 @@ void overlay_armature_context_init(DRWArmatureContext *ctx, DRWOverlayViewportPr
 
 	ctx->outline = NULL;
 	ctx->solid = cb->solid.octahaedron;
+	ctx->outline = cb->solid.octahaedron_wire;
 	ctx->object = object;
 	ctx->wire_thickness = ((object->flag_base & BASE_SELECTED) != 0) ? 1.0f : 0.0f;
 }
@@ -130,42 +132,55 @@ ROSE_INLINE float get_bone_wire_thickness(const DRWArmatureContext *context, int
 	return context->wire_thickness;
 }
 
+ROSE_INLINE void get_bone_base_color(const DRWArmatureContext *context, const PoseChannel *posechannel, const int boneflag, float color[4]) {
+	copy_v3_fl3(color, 0.0f, 0.4f, 0.0f);
+
+	color[3] = 0.75f;
+}
+
 ROSE_INLINE void get_bone_wire_color(const DRWArmatureContext *context, const PoseChannel *posechannel, const int boneflag, float color[4]) {
-	if ((context->object->flag_base & BASE_SELECTED) != 0) {
-		copy_v3_fl3(color, 0.9f, 0.5f, 0.2f);
+	if ((context->object->flag_base & BASE_SELECTED) == 0) {
+		copy_v3_fl3(color, 0.0f, 0.5f, 0.0f);
 	}
 	else {
-		copy_v3_fl3(color, 0.0f, 0.5f, 0.0f);
+		copy_v3_fl3(color, 0.9f, 0.5f, 0.2f);
 	}
 
 	color[3] = get_bone_wire_thickness(context, boneflag);
+
+	mul_v3_fl(color, color[3]);
 }
 
 ROSE_INLINE void get_bone_hint_color(const DRWArmatureContext *context, const PoseChannel *posechannel, const int boneflag, float color[4]) {
-	if ((context->object->flag_base & BASE_SELECTED) != 0) {
-		copy_v3_fl3(color, 0.2f, 0.1f, 0.0f);
-	}
-	else {
-		copy_v3_fl3(color, 0.0f, 0.2f, 0.0f);
-	}
+	copy_v3_fl3(color, 0.0f, 0.2f, 0.0f);
 
-	color[3] = get_bone_wire_thickness(context, boneflag);
+	color[3] = 0.75f;
 }
 
 ROSE_INLINE void draw_shading_group_bone_octahedral(DRWArmatureContext *context, const PoseChannel *posechannel, const float (*bone_mat)[4]) {
+	float color_base[4];
 	float color_wire[4];
 	float color_hint[4];
 
 	get_bone_wire_color(context, posechannel, posechannel->flag, color_wire);
 	get_bone_hint_color(context, posechannel, posechannel->flag, color_hint);
+	get_bone_base_color(context, posechannel, posechannel->flag, color_base);
 
 	BoneInstanceData data;
 	mul_m4_m4m4(data.mat, context->object->obmat, bone_mat);
-
+	
 	if (context->solid) {
-		overlay_bone_instance_data_set_color(&data, color_wire);
+		overlay_bone_instance_data_set_color(&data, color_base);
 		overlay_bone_instance_data_set_color_hint(&data, color_hint);
 		DRW_buffer_add_entry_struct(context->solid, &data);
+	}
+
+	if (color_wire[3]) {
+		if (context->outline) {
+			overlay_bone_instance_data_set_color(&data, color_wire);
+			overlay_bone_instance_data_set_color_hint(&data, color_wire);
+			DRW_buffer_add_entry_struct(context->outline, &data);
+		}
 	}
 }
 

@@ -376,7 +376,7 @@ ROSE_INLINE bool ui_but_is_float(uiBut *but) {
  * defines that follow depend on this. */
 #define UI_PRECISION_FLOAT_MAX 6
 
-ROSE_INLINE int ui_calc_float_precision(int precision, double value) {
+int ui_calc_float_precision(int precision, double value) {
 	static const double pow10_neg[UI_PRECISION_FLOAT_MAX + 1] = {1e0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6};
 	static const double max_pow = 10000000.0; /* pow(10, UI_PRECISION_FLOAT_MAX) */
 

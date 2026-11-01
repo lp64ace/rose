@@ -135,7 +135,8 @@ void ED_mouse_input_init(TransInfo *t, MouseInput *mi, const float center[2], co
 }
 
 ROSE_INLINE void mouse_input_calculate_factor(MouseInput *mi) {
-	mi->factor = len_v2v2_int(mi->center, mi->imval);
+	float mdir[2] = {(float)mi->center[1] - mi->imval[1], (float)mi->center[0] - mi->imval[0]};
+	mi->factor = len_v2(mdir);
 
 	if (mi->factor == 0.0f) {
 		mi->factor = 1.0f;
@@ -153,7 +154,12 @@ void ED_mouse_input_mode(TransInfo *t, MouseInput *mi, eMouseInputMode mode) {
 			InputAngle_Data *data = MEM_callocN(sizeof(InputAngle_Data), "InputAngle_Data");
 			data->mval_prev[0] = mi->imval[0];
 			data->mval_prev[1] = mi->imval[1];
+			mi->data = data;
 			mi->apply = input_angle;
+		} break;
+		case INPUT_SPRING: {
+			mouse_input_calculate_factor(mi);
+			mi->apply = input_spring;
 		} break;
 		case INPUT_SPRING_FLIP: {
 			mouse_input_calculate_factor(mi);

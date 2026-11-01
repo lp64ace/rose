@@ -6,6 +6,7 @@
 #include "DEG_depsgraph_build.h"
 #include "DEG_depsgraph_query.h"
 
+#include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
 #include "LIB_math_matrix.h"
 
@@ -83,8 +84,68 @@ ROSE_STATIC void transform_object_to_transformat_data(TransInfo *t, TransData *t
 	copy_v3_v3(td->base.iloc, object->loc);
 	copy_v3_v3(td->base.center, object->obmat[3]);
 
+	if (object->rotmode > 0) {
+		td->extension->rot = object->rot;
+		td->extension->axis = NULL;
+		td->extension->angle = NULL;
+		td->extension->quat = NULL;
+
+		copy_v3_v3(td->extension->irot, object->rot);
+		copy_v3_v3(td->extension->drot, object->drot);
+	}
+	else if (object->rotmode == ROT_MODE_AXISANGLE) {
+		td->extension->rot = NULL;
+		td->extension->axis = object->rotAxis;
+		td->extension->angle = &object->rotAngle;
+		td->extension->quat = NULL;
+
+		td->extension->iangle = object->rotAngle;
+		copy_v3_v3(td->extension->iaxis, object->rotAxis);
+	}
+	else {
+		td->extension->rot = NULL;
+		td->extension->axis = NULL;
+		td->extension->angle = NULL;
+		td->extension->quat = object->quat;
+
+		copy_qt_qt(td->extension->iquat, object->quat);
+		copy_qt_qt(td->extension->dquat, object->dquat);
+	}
+	td->extension->rotmode = object->rotmode;
+
 	td->extension->size = object->scale;
 	copy_v3_v3(td->extension->isize, object->scale);
+
+	if (object->parent) {
+		float obmtx[3][3], totmat[3][3], obinv[3][3];
+
+		/**
+		 * Get the effect of parenting, and/or certain constraints.
+		 * NOTE: some Constraints, and also Tracking should never get this
+		 *       done, as it doesn't work well.
+		 */
+		KER_object_to_mat3(object, obmtx);
+		copy_m3_m4(totmat, object->obmat);
+
+		/**
+		 * If the object scale is zero on any axis, this might result in a zero matrix.
+		 * In this case, the transformation would not do anything, see: T50103.
+		 * */
+		orthogonalize_m3_zero_axes(obmtx, 1.0f);
+		orthogonalize_m3_zero_axes(totmat, 1.0f);
+
+		/**
+		 * Use safe invert even though the input matrices have had zero axes set to unit length,
+		 * in the unlikely case of failure (float precision for eg) this uses unit matrix fallback.
+		 * */
+		invert_m3_m3_safe_ortho(obinv, totmat);
+		mul_m3_m3m3(td->smtx, obmtx, obinv);
+		invert_m3_m3_safe_ortho(td->mtx, td->smtx);
+	}
+	else {
+		unit_m3(td->smtx);
+		unit_m3(td->mtx);
+	}
 }
 
 /** \} */

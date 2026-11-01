@@ -21,6 +21,17 @@ typedef struct RegionView3D {
 	float viewloc[3];
 } RegionView3D;
 
+enum {
+	V3D_ORIENT_GLOBAL = 0,
+	V3D_ORIENT_LOCAL = 1,
+	V3D_ORIENT_VIEW = 2,
+};
+
+enum {
+	/* center of the bounding box */
+	V3D_AROUND_CENTER_BOUNDS = 0,
+};
+
 #ifdef __cplusplus
 }
 #endif

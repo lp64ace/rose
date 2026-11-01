@@ -43,41 +43,55 @@ void ED_transform_mode_translation_apply_ex(TransInfo *t, const float value[3]) 
 
 void ED_transform_mode_translation_header(TransInfo *t, const float vec[3], char *str, const size_t maxlen) {
 	size_t ofs = 0;
-	char dvec_str[3][NUM_STR_REP_LEN];
+	char dvec_str[NUM_STR_REP_LEN * 3];
 	char dist_str[NUM_STR_REP_LEN];
 
 	float dvec[3], dist;
 	copy_v3_v3(dvec, vec);
 
-	if (t->constraint.mode & CON_APPLY) {
-		int i = 0;
-		if (t->constraint.mode & CON_AXIS0) {
-			dvec[i++] = dvec[0];
-		}
-		if (t->constraint.mode & CON_AXIS1) {
-			dvec[i++] = dvec[1];
-		}
-		if (t->constraint.mode & CON_AXIS2) {
-			dvec[i++] = dvec[2];
-		}
-		while (i != 3) {
-			dvec[i++] = 0.0f;
-		}
+	if (ED_number_input_has(&t->number)) {
+		ED_number_input_output(&t->number, dvec_str);
+
+		dist = len_v3(dvec);
 	}
+	else {
+		if (t->constraint.mode & CON_APPLY) {
+			int i = 0;
+			if (t->constraint.mode & CON_AXIS0) {
+				dvec[i++] = dvec[0];
+			}
+			if (t->constraint.mode & CON_AXIS1) {
+				dvec[i++] = dvec[1];
+			}
+			if (t->constraint.mode & CON_AXIS2) {
+				dvec[i++] = dvec[2];
+			}
+			while (i != 3) {
+				dvec[i++] = 0.0f;
+			}
+		}
 
-	dist = len_v3(dvec);
+		dist = len_v3(dvec);
 
-	LIB_strnformat(dvec_str[0], sizeof(dvec_str[0]), IN_RANGE_INCL(dvec[0], -1e10f, 1e10f) ? "%.4f" : "%.4e", dvec[0]);
-	LIB_strnformat(dvec_str[1], sizeof(dvec_str[1]), IN_RANGE_INCL(dvec[1], -1e10f, 1e10f) ? "%.4f" : "%.4e", dvec[1]);
-	LIB_strnformat(dvec_str[2], sizeof(dvec_str[2]), IN_RANGE_INCL(dvec[2], -1e10f, 1e10f) ? "%.4f" : "%.4e", dvec[2]);
+		char *dvec0 = &dvec_str[0 * NUM_STR_REP_LEN];
+		char *dvec1 = &dvec_str[1 * NUM_STR_REP_LEN];
+		char *dvec2 = &dvec_str[2 * NUM_STR_REP_LEN];
+		LIB_strnformat(dvec0, NUM_STR_REP_LEN, IN_RANGE_INCL(dvec[0], -1e10f, 1e10f) ? "%.4f" : "%.4e", dvec[0]);
+		LIB_strnformat(dvec1, NUM_STR_REP_LEN, IN_RANGE_INCL(dvec[1], -1e10f, 1e10f) ? "%.4f" : "%.4e", dvec[1]);
+		LIB_strnformat(dvec2, NUM_STR_REP_LEN, IN_RANGE_INCL(dvec[2], -1e10f, 1e10f) ? "%.4f" : "%.4e", dvec[2]);
+	}
 
 	LIB_strnformat(dist_str, sizeof(dist_str), IN_RANGE_INCL(dist, -1e10f, 1e10f) ? "%.4f" : "%.4e", dist);
 
+	char *dvec0 = &dvec_str[0 * NUM_STR_REP_LEN];
+	char *dvec1 = &dvec_str[1 * NUM_STR_REP_LEN];
+	char *dvec2 = &dvec_str[2 * NUM_STR_REP_LEN];
+
 	if (t->constraint.mode & CON_APPLY) {
-		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Translate : %s (%s)%s", dvec_str[0], dist_str, t->constraint.text);
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Translate : %s (%s)%s", dvec0, dist_str, t->constraint.text);
 	}
 	else {
-		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Translate : vec3(%s, %s, %s) (%s)%s", dvec_str[0], dvec_str[1], dvec_str[2], dist_str, t->constraint.text);
+		ofs += LIB_strnformat(str + ofs, maxlen - ofs, "Translate : vec3(%s, %s, %s) (%s)%s", dvec0, dvec1, dvec2, dist_str, t->constraint.text);
 	}
 }
 
@@ -87,6 +101,22 @@ void ED_transform_mode_translation_apply(TransInfo *t, const int mval[2]) {
 	float global_dir[3];
 	if ((t->flag & T_INPUT_IS_VALUES_FINAL) != 0) {
 		copy_v3_v3(global_dir, t->values);
+	}
+	else if (ED_number_input_apply(&t->number, global_dir)) {
+		if (t->constraint.mode & CON_APPLY) {
+			if (t->constraint.mode & CON_AXIS0) {
+				mul_v3_v3fl(global_dir, t->spacemat[0], global_dir[0]);
+			}
+			if (t->constraint.mode & CON_AXIS1) {
+				mul_v3_v3fl(global_dir, t->spacemat[1], global_dir[0]);
+			}
+			if (t->constraint.mode & CON_AXIS2) {
+				mul_v3_v3fl(global_dir, t->spacemat[2], global_dir[0]);
+			}
+		}
+		else {
+			mul_v3_m3v3(global_dir, t->spacemat, global_dir);
+		}
 	}
 	else {
 		copy_v3_v3(global_dir, t->values);
@@ -118,5 +148,10 @@ void ED_transform_mode_translation_init(struct TransInfo *t) {
 
 	ED_mouse_input_mode(t, &t->mouse, INPUT_VECTOR);
 
+	t->index_max = 2;
+	t->number.flag = 0;
+	t->number.index_max = t->index_max;
+
+	transform_orientations_default_modal_set(t, V3D_ORIENT_GLOBAL);
 	transform_orientations_current_set(t);
 }

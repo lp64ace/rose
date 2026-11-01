@@ -408,6 +408,72 @@ void LIB_str_cursor_step_bounds_utf8(const char *p, int n, int pos, int *l, int 
 	}
 }
 
+void LIB_str_cursor_step_utf8(const char *str, int maxlen, int *pos, eStrCursorJumpDirection direction, eStrCursorJumpType jump, bool use_init_step) {
+	ROSE_assert(maxlen >= 0);
+	const int pos_orig = *pos;
+
+	if (direction == STRCUR_DIR_NEXT) {
+		if (use_init_step) {
+			LIB_str_cursor_step_next_utf8(str, maxlen, pos);
+		}
+		else {
+			ROSE_assert(jump == STRCUR_JUMP_DELIM);
+		}
+
+		if (jump != STRCUR_JUMP_NONE) {
+			const eStrCursorDelimType delim_type = (*pos < maxlen) ? cursor_delim_type_utf8(str, maxlen, *pos) : STRCUR_DELIM_NONE;
+			/**
+			 * Jump between special characters (/,\,_,-, etc.),
+			 * look at function cursor_delim_type() for complete list of special character, ctr ->
+			 */
+			while (*pos < maxlen) {
+				if (LIB_str_cursor_step_next_utf8(str, maxlen, pos)) {
+					if (*pos == maxlen) {
+						break;
+					}
+					if ((jump != STRCUR_JUMP_ALL) && (delim_type != cursor_delim_type_utf8(str, maxlen, *pos))) {
+						break;
+					}
+				}
+				else {
+					break; /* unlikely but just in case */
+				}
+			}
+		}
+	}
+	else if (direction == STRCUR_DIR_PREV) {
+		if (use_init_step) {
+			LIB_str_cursor_step_prev_utf8(str, maxlen, pos);
+		}
+		else {
+			ROSE_assert(jump == STRCUR_JUMP_DELIM);
+		}
+
+		if (jump != STRCUR_JUMP_NONE) {
+			const eStrCursorDelimType delim_type = (*pos > 0) ? cursor_delim_type_utf8(str, maxlen, *pos - 1) : STRCUR_DELIM_NONE;
+			/**
+			 * Jump between special characters (/,\,_,-, etc.),
+			 * look at function cursor_delim_type() for complete list of special character, ctr ->
+			 */
+			while (*pos > 0) {
+				const int pos_prev = *pos;
+				if (LIB_str_cursor_step_prev_utf8(str, maxlen, pos)) {
+					if ((jump != STRCUR_JUMP_ALL) && (delim_type != cursor_delim_type_utf8(str, maxlen, *pos))) {
+						/* left only: compensate for index/change in direction */
+						if ((pos_orig - *pos) >= 1) {
+							*pos = pos_prev;
+						}
+						break;
+					}
+				}
+				else {
+					break;
+				}
+			}
+		}
+	}
+}
+
 unsigned int LIB_str_utf8_as_unicode_or_error(const char *p) {
 	const unsigned char c = *(const unsigned char *)p;
 

@@ -16,6 +16,7 @@
 typedef struct DRWCache {
 	GPUBatch *draw_fullscreen_quad;
 	GPUBatch *draw_bone_octahedral;
+	GPUBatch *draw_bone_octahedral_wire;
 	GPUBatch *draw_procedural_tris;
 } DRWCache;
 
@@ -121,6 +122,21 @@ static const uint bone_octahedral_solid_tris[8][3] = {
 	{5, 4, 1},
 };
 
+static const uint bone_octahedral_wire_lines_adjacency[12][4] = {
+	{ 0,  1,  2,  6},
+    { 0, 12,  1,  6},
+    { 0,  3, 12,  6},
+    { 0,  2,  3,  6},
+    { 1,  6,  2,  3},
+    { 1, 12,  6,  3},
+    { 1,  0, 12,  3},
+    { 1,  2,  0,  3},
+    { 2,  0,  1, 12},
+    { 2,  3,  0, 12},
+    { 2,  6,  3, 12},
+    { 2,  1,  6, 12},
+};
+
 /* aligned with bone_octahedral_solid_tris */
 static const float bone_octahedral_solid_normals[8][3] = {
 	{ M_SQRT1_2, -M_SQRT1_2,  0.000000f},
@@ -146,7 +162,7 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 		GPUVertBuf *vbo = GPU_vertbuf_create_with_format(&format);
 		GPU_vertbuf_data_alloc(vbo, 24);
 
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < ARRAY_SIZE(bone_octahedral_solid_tris); i++) {
 			for (int j = 0; j < 3; j++) {
 				GPU_vertbuf_attr_set(vbo, pos, v_idx, bone_octahedral_verts[bone_octahedral_solid_tris[i][j]]);
 				GPU_vertbuf_attr_set(vbo, nor, v_idx, bone_octahedral_solid_normals[i]);
@@ -157,6 +173,25 @@ GPUBatch *DRW_cache_bone_octahedral_get(void) {
 		GCache.draw_bone_octahedral = GPU_batch_create_ex(GPU_PRIM_TRIS, vbo, NULL, GPU_BATCH_OWNS_VBO);
 	}
 	return GCache.draw_bone_octahedral;
+}
+
+GPUBatch *DRW_cache_bone_octahedral_wire_get(void) {
+	GPUBatch *octahedral = DRW_cache_bone_octahedral_get();
+
+	if (!GCache.draw_bone_octahedral_wire) {
+		GPUIndexBufBuilder elb;
+		GPU_indexbuf_init(&elb, GPU_PRIM_LINES_ADJ, 12, 24);
+
+		for (int i = 0; i < ARRAY_SIZE(bone_octahedral_wire_lines_adjacency); i++) {
+			const uint *line = bone_octahedral_wire_lines_adjacency[i];
+			GPU_indexbuf_add_line_adj_verts(&elb, line[0], line[1], line[2], line[3]);
+		}
+
+		GPUIndexBuf *ibo = GPU_indexbuf_build(&elb);
+
+		GCache.draw_bone_octahedral_wire = GPU_batch_create_ex(GPU_PRIM_LINES_ADJ, octahedral->verts[0], ibo, GPU_BATCH_OWNS_INDEX);
+	}
+	return GCache.draw_bone_octahedral_wire;
 }
 
 /** \} */
