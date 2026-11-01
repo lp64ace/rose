@@ -100,6 +100,8 @@ ROSE_STATIC void overlay_init(void *vdata) {
 	}
 }
 
+#include "GPU_state.h"
+
 ROSE_STATIC void overlay_draw(void *vdata) {
 	DRWOverlayViewportFramebufferList *fbl = ((DRWOverlayData *)vdata)->fbl;
 	DRWOverlayViewportPassList *psl = ((DRWOverlayData *)vdata)->psl;
