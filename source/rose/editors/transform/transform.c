@@ -307,6 +307,7 @@ bool ED_transform_init(rContext *C, TransInfo *t, wmOperator *op, const wmEvent 
 		t->launch_event = LEFTMOUSE;
 	}
 
+	unit_m3(t->orient.matrix);
 	unit_m3(t->spacemat);
 	unit_m3(t->spaceinv);
 

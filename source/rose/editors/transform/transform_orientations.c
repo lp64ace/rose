@@ -101,8 +101,6 @@ void transform_orientations_default_modal_set(TransInfo *t, int type) {
 	}
 
 	t->orient.type = ED_transform_calc_orientation_from_type_ex(t->scene, t->view_layer, v3d, rv3d, NULL, type, V3D_AROUND_CENTER_BOUNDS, t->orient.matrix);
-
-	transform_orientations_current_set(t);
 }
 
 void transform_orientations_current_set(TransInfo *t) {
