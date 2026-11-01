@@ -122,7 +122,7 @@ static const uint bone_octahedral_solid_tris[8][3] = {
 	{5, 4, 1},
 };
 
-static const uint bone_octahedral_wire_lines_adjacency[8][4] = {
+static const uint bone_octahedral_wire_lines_adjacency[12][4] = {
 	{ 0,  1,  2,  6},
     { 0, 12,  1,  6},
     { 0,  3, 12,  6},
