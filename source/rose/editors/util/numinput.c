@@ -84,7 +84,7 @@ void ED_number_input_output(NumInput *ni, char *str) {
 					LIB_strnformat(value, sizeof(value), "%.*f", precision, ni->value[index] * factor);
 				}
 
-				LIB_strncpy(before_cursor, sizeof(before_cursor), ni->text, ni->txt_current + 1);
+				LIB_strncpy(before_cursor, sizeof(before_cursor), ni->text, ni->txt_current);
 				LIB_strnformat(&str[i * length], length, "[%s%s|%s%s] = %s", heading_exp, before_cursor, &ni->text[ni->txt_current], trailing_exp, value);
 			}
 			else {
@@ -182,7 +182,6 @@ ROSE_STATIC bool editstr_insert_at_cursor(NumInput *ni, const char *buf, const i
 }
 
 bool user_string_to_member(rContext *C, const char *str, int type, double *r_value, const bool use_single_line_error, char **r_error) {
-	UNUSED_VARS(C, type, use_single_line_error, r_error);
 	*r_value = atof(str);
 	return true;
 }
@@ -198,12 +197,8 @@ static bool editstr_is_simple_numinput(const char ascii) {
 }
 
 bool ED_number_input_handle(rContext *C, NumInput *ni, const wmEvent *event) {
-	if (event->input[1] != '\0') {
-		return false;
-	}
-
 	const char *utf8 = NULL;
-	char evt_ascii = event->input[0];
+	char evt_ascii = LIB_str_utf8_size_or_error(event->input) == 1 ? event->input[0] : '\0';
 	char arr_ascii[2] = {'\0', '\0'};
 	int index = ni->txt_index;
 
@@ -328,7 +323,7 @@ bool ED_number_input_handle(rContext *C, NumInput *ni, const wmEvent *event) {
 			ni->flag_value[index] &= ~(NUM_NEGATE | NUM_INVERSE);
 #endif
 
-			index = (index + ni->index_max + ((event->modifier & KM_CTRL) ? 0 : 2)) % (ni->index_max + 1);
+			index = (index + ni->index_max + ((event->modifier & KM_SHIFT) ? 0 : 2)) % (ni->index_max + 1);
 			ni->txt_index = index;
 
 			if (ni->flag_value[index] & NUM_EDITED) {

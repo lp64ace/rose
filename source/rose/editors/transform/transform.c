@@ -456,7 +456,7 @@ int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 		ED_mouse_input_apply(t, &t->mouse, t->mval, t->values);
 		handled = true;
 	}
-	else if ((evt->value == KM_PRESS) || (evt->type == EVT_MODAL_MAP)) {
+	else if (evt->value == KM_PRESS) {
 		if (ED_number_input_has(&t->number) && ED_number_input_handle(t->context, &t->number, evt)) {
 			ED_transform_data_recalc(t);
 			handled = true;
