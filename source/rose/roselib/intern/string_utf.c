@@ -408,7 +408,7 @@ void LIB_str_cursor_step_bounds_utf8(const char *p, int n, int pos, int *l, int 
 	}
 }
 
-bool LIB_str_cursor_step_utf8(const char *str, int maxlen, int *pos, eStrCursorJumpDirection direction, eStrCursorJumpType jump, bool use_init_step) {
+void LIB_str_cursor_step_utf8(const char *str, int maxlen, int *pos, eStrCursorJumpDirection direction, eStrCursorJumpType jump, bool use_init_step) {
 	ROSE_assert(maxlen >= 0);
 	const int pos_orig = *pos;
 

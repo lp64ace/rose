@@ -48,7 +48,7 @@ typedef enum eStrCursorJumpDirection {
 	STRCUR_DIR_NEXT,
 } eStrCursorJumpDirection;
 
-bool LIB_str_cursor_step_utf8(const char *str, int str_maxlen, int *pos, eStrCursorJumpDirection direction, eStrCursorJumpType jump, bool use_init_step);
+void LIB_str_cursor_step_utf8(const char *str, int str_maxlen, int *pos, eStrCursorJumpDirection direction, eStrCursorJumpType jump, bool use_init_step);
 
 void LIB_str_cursor_step_bounds_utf8(const char *p, int maxlen, int pos, int *left, int *right);
 
