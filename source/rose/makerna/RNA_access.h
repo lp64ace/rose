@@ -175,6 +175,8 @@ void RNA_property_float_set_index(struct PointerRNA *ptr, struct PropertyRNA *pr
 
 float RNA_float_get(struct PointerRNA *ptr, const char *name);
 void RNA_float_set(struct PointerRNA *ptr, const char *name, float value);
+void RNA_float_get_array(struct PointerRNA *ptr, const char *name, float *values);
+void RNA_float_set_array(struct PointerRNA *ptr, const char *name, const float *values);
 
 void RNA_property_float_range(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_hardmin, float *r_hardmax);
 void RNA_property_float_ui_range(struct PointerRNA *ptr, struct PropertyRNA *property, float *r_softmin, float *r_softmax, float *r_step, float *r_precision);
@@ -259,7 +261,7 @@ struct PropertyRNA *RNA_struct_find_collection_property_check(struct PointerRNA 
 /**
  * Returns the IDProperty group stored in the given PointerRNA's ID, or NULL if none.
  */
-struct IDProperty *RNA_struct_idprops(struct PointerRNA *ptr);
+struct IDProperty *RNA_struct_idprops(struct PointerRNA *ptr, bool create);
 
 const char *RNA_struct_identifier(const struct StructRNA *type);
 const char *RNA_struct_name(const struct StructRNA *type);

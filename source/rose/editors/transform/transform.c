@@ -13,6 +13,7 @@
 
 #include "ED_screen.h"
 #include "ED_view3d.h"
+#include "ED_numinput.h"
 
 #include "WM_api.h"
 #include "WM_event.h"
@@ -210,6 +211,7 @@ void ED_transform_init_info(rContext *C, TransInfo *t, wmOperator *op, const wmE
 	}
 
 	transform_view_matrices_init(t);
+	ED_number_input_init(&t->number);
 }
 
 ROSE_STATIC void transform_center_calculate(TransInfo *t) {
@@ -337,6 +339,14 @@ bool ED_transform_init(rContext *C, TransInfo *t, wmOperator *op, const wmEvent 
 		t->axis = RNA_property_enum_get(op->ptr, property);
 	}
 
+	if (t->constraint.mode & CON_APPLY) {
+		transform_constraint_set(t, t->constraint.mode, "%s");
+	}
+
+	if (t->flag & T_MODAL) {
+		ED_mouse_input_apply(t, &t->mouse, t->mouse.imval, t->values);
+	}
+
 	t->context = NULL;
 
 	return 1;
@@ -435,6 +445,8 @@ ROSE_STATIC bool transform_event_modal_constraint(TransInfo *t, int type) {
 	return true;
 }
 
+#include <stdio.h>
+
 int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 	bool handled = false;
 
@@ -443,6 +455,12 @@ int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 
 		ED_mouse_input_apply(t, &t->mouse, t->mval, t->values);
 		handled = true;
+	}
+	else if ((evt->value == KM_PRESS) || (evt->type == EVT_MODAL_MAP)) {
+		if (ED_number_input_has(&t->number) && ED_number_input_handle(t->context, &t->number, evt)) {
+			ED_transform_data_recalc(t);
+			handled = true;
+		}
 	}
 
 	if (evt->type == EVT_MODAL_MAP) {
@@ -463,6 +481,11 @@ int ED_transform_event(TransInfo *t, const wmEvent *evt) {
 				}
 			} break;
 		}
+	}
+
+	if (!handled && ((evt->value == KM_PRESS) || (evt->type == EVT_MODAL_MAP)) && ED_number_input_handle(t->context, &t->number, evt)) {
+		ED_transform_data_recalc(t);
+		handled = true;
 	}
 
 	if (handled) {

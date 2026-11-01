@@ -1,6 +1,7 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
+#include "ED_numinput.h"
 #include "ED_transform.h"
 
 #include "LIB_assert.h"
@@ -18,8 +19,6 @@ struct Object;
 struct rContext;
 struct wmKeyMap;
 struct wmKeyConfig;
-
-#define NUM_STR_REP_LEN 16
 
 #ifdef __cplusplus
 extern "C" {
@@ -237,12 +236,15 @@ typedef struct TransInfo {
 	/** Constraint Data for the Transformation. */
 	TransCon constraint;
 
+	NumInput number;
 	MouseInput mouse;
 
 	/** center of transformation (in global-space) */
 	float center_global[3];
 	/** center in screen coordinates. */
 	float center2d[2];
+	/** maximum index on the input vector. */
+	int index_max;
 
 	/** copy from #RegionView3D, prevents feedback. */
 	float viewmat[4][4];
@@ -307,6 +309,7 @@ typedef enum eMouseInputMode {
 	INPUT_NONE,
 	INPUT_VECTOR,
 	INPUT_ANGLE,
+	INPUT_SPRING,
 	INPUT_SPRING_FLIP,
 	INPUT_CUSTOM_RATIO,
 } eMouseInputMode;

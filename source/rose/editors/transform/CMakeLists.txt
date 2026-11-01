@@ -51,6 +51,7 @@ set(LIB
 	rose::source::roselib
 	rose::source::dna
 	rose::source::rna
+	rose::source::editors::util
 	
 	# External Library Dependencies
 	

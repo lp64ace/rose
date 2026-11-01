@@ -440,7 +440,7 @@ ROSE_INLINE bool rna_path_parse_callback(const PointerRNA *ptr, const char *path
 
 		if (brackets) {
 			/** Look up property name in current struct. */
-			IDProperty *group = RNA_struct_idprops(&curptr);
+			IDProperty *group = RNA_struct_idprops(&curptr, false);
 
 			if (group && quoted) {
 				property = (PropertyRNA *)IDP_GetPropertyFromGroup(group, token);
@@ -1375,7 +1375,7 @@ void RNA_property_boolean_set_array(PointerRNA *ptr, PropertyRNA *property, cons
 	else if (property->flag & PROP_EDITABLE) {
 		IDProperty *group;
 
-		group = RNA_struct_idprops(ptr);
+		group = RNA_struct_system_idprops(ptr, true);
 		if (group) {
 			idprop = IDP_New(IDP_ARRAY, (const void *)IDP_INT, idprop->length, property->identifier, 0);
 			IDP_AddToGroup(group, idprop);
@@ -1592,8 +1592,9 @@ void RNA_property_int_set_array(PointerRNA *ptr, PropertyRNA *property, const in
 	ROSE_assert(p.is_array);
 
 	if (p.idprop) {
-		ROSE_assert_unreachable();
+		memcpy(IDP_Array(p.idprop), i_value, sizeof(int) * p.length);
 
+		rna_idproperty_touch(p.idprop);
 		return;
 	}
 
@@ -1607,6 +1608,19 @@ void RNA_property_int_set_array(PointerRNA *ptr, PropertyRNA *property, const in
 	if (iproperty->setarray_ex) {
 		iproperty->setarray_ex(ptr, property, i_value);
 
+		return;
+	}
+	if (iproperty->property.flag & PROP_EDITABLE) {
+		IDProperty *group = RNA_struct_system_idprops(ptr, true);
+		if (group) {
+			IDProperty *idprop = IDP_New(IDP_ARRAY, (const void *)IDP_INT, p.length, property->identifier, 0);
+			IDP_AddToGroup(group, idprop);
+			int *values_dst = IDP_Array(idprop);
+			for (uint i = 0; i < p.length; i++) {
+				values_dst[i] = (int)i_value[i];
+			}
+			rna_idproperty_touch(idprop);
+		}
 		return;
 	}
 }
@@ -1901,14 +1915,12 @@ void RNA_property_float_get_array(PointerRNA *ptr, PropertyRNA *property, float 
 
 		ROSE_assert(idprop->length == RNA_property_array_length(ptr, property) || (property->flag & PROP_IDPROPERTY));
 
-		if (property->arraydimension == 0) {
-			if (idprop->subtype == IDP_FLOAT) {
-				memcpy(r_value, IDP_Array(idprop), sizeof(float) * p.length);
-			}
-			else {
-				for (int i = 0; i < p.length; i++) {
-					r_value[i] = (float)(((double *)IDP_Array(idprop))[i]);
-				}
+		if (idprop->subtype == IDP_FLOAT) {
+			memcpy(r_value, IDP_Array(idprop), sizeof(float) * p.length);
+		}
+		else {
+			for (int i = 0; i < p.length; i++) {
+				r_value[i] = (float)(((double *)IDP_Array(idprop))[i]);
 			}
 		}
 
@@ -1977,6 +1989,20 @@ void RNA_property_float_set_array(PointerRNA *ptr, PropertyRNA *property, const 
 
 		return;
 	}
+
+	if (fproperty->property.flag & PROP_EDITABLE) {
+		IDProperty *group = RNA_struct_system_idprops(ptr, true);
+		if (group) {
+			IDProperty *idprop = IDP_New(IDP_ARRAY, (const void *)IDP_FLOAT, p.length, property->identifier, 0);
+			IDP_AddToGroup(group, idprop);
+			float *values_dst = IDP_Array(idprop);
+			for (uint i = 0; i < p.length; i++) {
+				values_dst[i] = (int)f_value[i];
+			}
+			rna_idproperty_touch(idprop);
+		}
+		return;
+	}
 }
 
 ROSE_STATIC void rna_property_float_fill_default_array_values(const float *defarr, int defarr_length, float defvalue, int out_length, float *r_values) {
@@ -2043,7 +2069,7 @@ float RNA_property_float_get_default_index(struct PointerRNA *ptr, struct Proper
 
 float RNA_property_float_get_default(struct PointerRNA *ptr, struct PropertyRNA *property) {
 	ROSE_assert(RNA_property_type(property) == PROP_FLOAT);
-	ROSE_assert(RNA_property_array_check(property) == true);
+	ROSE_assert(RNA_property_array_check(property) == false);
 
 	PropertyRNAorID p;
 	rna_property_rna_or_id_get(property, ptr, &p);
@@ -2099,6 +2125,28 @@ void RNA_float_set(PointerRNA *ptr, const char *name, float value) {
 
 	if (property) {
 		RNA_property_float_set(ptr, property, value);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
+void RNA_float_get_array(PointerRNA *ptr, const char *name, float *values) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		RNA_property_float_get_array(ptr, property, values);
+	}
+	else {
+		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
+	}
+}
+
+void RNA_float_set_array(PointerRNA *ptr, const char *name, const float *values) {
+	PropertyRNA *property = RNA_struct_find_property(ptr, name);
+
+	if (property) {
+		RNA_property_float_set_array(ptr, property, values);
 	}
 	else {
 		fprintf(stderr, "[RNA] %s: \"%s.%s\" not found.\n", __func__, ptr->type->identifier, name);
@@ -2256,7 +2304,7 @@ void RNA_property_enum_set(PointerRNA *ptr, PropertyRNA *prop, int value) {
 
 		val.value1 = value;
 
-		group = RNA_struct_idprops(ptr);
+		group = RNA_struct_system_idprops(ptr, true);
 		if (group) {
 			IDP_AddToGroup(group, IDP_New(IDP_INT, &val, 0, prop->identifier, 0));
 		}
@@ -2611,8 +2659,29 @@ PropertyRNA *RNA_struct_find_collection_property_check(PointerRNA *pointer, cons
 	return NULL;
 }
 
-IDProperty *RNA_struct_idprops(PointerRNA *ptr) {
-	return NULL;
+IDProperty **RNA_struct_idprops_p(PointerRNA *ptr) {
+	StructRNA *type = ptr->type;
+	if (type == NULL) {
+		return NULL;
+	}
+	if (type->idproperties == NULL) {
+		return NULL;
+	}
+
+	return type->idproperties(ptr);
+}
+
+IDProperty *RNA_struct_idprops(PointerRNA *ptr, bool create) {
+	IDProperty **property_ptr = RNA_struct_idprops_p(ptr);
+	if (property_ptr == NULL) {
+		return NULL;
+	}
+
+	if (create && *property_ptr == NULL) {
+		*property_ptr = IDP_New(IDP_GROUP, NULL, 0, "RNAStruct->idproperty", 0);
+	}
+
+	return *property_ptr;
 }
 
 const char *RNA_struct_identifier(const StructRNA *type) {
@@ -2907,7 +2976,7 @@ void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *proper
 			ROSE_assert(idprop->type == IDP_GROUP);
 
 			IDPropertyData val = {0};
-			IDProperty *group = RNA_struct_idprops(ptr);
+			IDProperty *group = RNA_struct_system_idprops(ptr, true);
 			ROSE_assert(group != NULL);
 
 			val.pointer = ptr->data;
@@ -2928,7 +2997,7 @@ void RNA_property_pointer_set(struct PointerRNA *ptr, struct PropertyRNA *proper
 
 		val.pointer = value.data;
 
-		group = RNA_struct_idprops(ptr);
+		group = RNA_struct_system_idprops(ptr, true);
 		if (group) {
 			IDP_ReplaceInGroup(group, IDP_New(IDP_ID, &val, 0, property->identifier, 0));
 		}

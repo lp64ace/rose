@@ -349,6 +349,14 @@ void UI_block_layout_resolve(struct uiBlock *block, int *r_x, int *r_y);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Helper Functions
+ * \{ */
+
+int ui_calc_float_precision(int precision, double value);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name UI Handlers
  * \{ */
 

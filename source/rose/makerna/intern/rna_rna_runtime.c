@@ -101,7 +101,7 @@ void rna_Struct_properties_next(CollectionPropertyIterator *iter) {
 		 * valid (runtime-defined) RNA property to wrap them, which will have been processed above as
 		 * part of `rna_inheritance_properties_listbase_next`. */
 		if (!iter->valid) {
-			group = RNA_struct_idprops(&iter->builtin_parent);
+			group = RNA_struct_idprops(&iter->builtin_parent, false);
 
 			if (group) {
 				rna_iterator_listbase_end(iter);

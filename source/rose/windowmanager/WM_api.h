@@ -192,6 +192,7 @@ bool WM_operator_poll(struct rContext *C, struct wmOperatorType *ot);
 void WM_operator_type_set(struct wmOperator *op, struct wmOperatorType *ot);
 void WM_operator_properties_filesel(struct wmOperatorType *ot, int filter, int type, int action, int flag);
 void WM_operator_properties_alloc(struct PointerRNA **ptr, struct IDProperty **properties, const char *opstring);
+bool WM_operator_properties_default(struct PointerRNA *ptr, bool do_update);
 void WM_operator_properties_free(struct PointerRNA *ptr);
 void WM_operator_free(struct wmOperator *op);
 

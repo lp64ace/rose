@@ -37,6 +37,19 @@ const char *LIB_str_find_prev_char_utf8(const char *p, const char *str_start);
 bool LIB_str_cursor_step_next_utf8(const char *str, int str_maxlen, int *pos);
 bool LIB_str_cursor_step_prev_utf8(const char *str, int str_maxlen, int *pos);
 
+typedef enum eStrCursorJumpType {
+	STRCUR_JUMP_NONE,
+	STRCUR_JUMP_DELIM,
+	STRCUR_JUMP_ALL,
+} eStrCursorJumpType;
+
+typedef enum eStrCursorJumpDirection {
+	STRCUR_DIR_PREV,
+	STRCUR_DIR_NEXT,
+} eStrCursorJumpDirection;
+
+bool LIB_str_cursor_step_utf8(const char *str, int str_maxlen, int *pos, eStrCursorJumpDirection direction, eStrCursorJumpType jump, bool use_init_step);
+
 void LIB_str_cursor_step_bounds_utf8(const char *p, int maxlen, int pos, int *left, int *right);
 
 unsigned int LIB_str_utf8_char_width_or_error(const char *p);
