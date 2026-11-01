@@ -4,6 +4,7 @@
 #include "RNA_define.h"
 
 #include "LIB_assert.h"
+#include "LIB_math_base.h"
 #include "LIB_math_vector.h"
 #include "LIB_utildefines.h"
 
