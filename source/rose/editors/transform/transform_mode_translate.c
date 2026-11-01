@@ -108,10 +108,10 @@ void ED_transform_mode_translation_apply(TransInfo *t, const int mval[2]) {
 				mul_v3_v3fl(global_dir, t->spacemat[0], global_dir[0]);
 			}
 			if (t->constraint.mode & CON_AXIS1) {
-				mul_v3_v3fl(global_dir, t->spacemat[1], global_dir[1]);
+				mul_v3_v3fl(global_dir, t->spacemat[1], global_dir[0]);
 			}
 			if (t->constraint.mode & CON_AXIS2) {
-				mul_v3_v3fl(global_dir, t->spacemat[2], global_dir[2]);
+				mul_v3_v3fl(global_dir, t->spacemat[2], global_dir[0]);
 			}
 		}
 		else {
@@ -152,5 +152,6 @@ void ED_transform_mode_translation_init(struct TransInfo *t) {
 	t->number.flag = 0;
 	t->number.index_max = t->index_max;
 
+	transform_orientations_default_modal_set(t, V3D_ORIENT_GLOBAL);
 	transform_orientations_current_set(t);
 }

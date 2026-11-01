@@ -213,6 +213,11 @@ typedef struct TransDataContainer {
 	TransCustomDataContainer custom;
 } TransDataContainer;
 
+typedef struct TransOrient {
+	int type;
+	float matrix[3][3];
+} TransOrient;
+
 typedef struct TransInfo {
 	TransDataContainer *data_container;
 	int data_container_length;
@@ -238,6 +243,8 @@ typedef struct TransInfo {
 
 	NumInput number;
 	MouseInput mouse;
+
+	TransOrient orient;
 
 	/** center of transformation (in global-space) */
 	float center_global[3];

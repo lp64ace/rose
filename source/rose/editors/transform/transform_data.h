@@ -19,6 +19,16 @@ enum {
 };
 
 typedef struct TransDataExtension {
+	/** Rotation mode. */
+	int rotmode;
+	/** Euler rotation. */
+	float *rot, drot[3], irot[3];
+	/** Quaternion rotation. */
+	float *quat, dquat[4], iquat[4];
+	/** Axis angle rotation (axis) */
+	float *axis, iaxis[3];
+	/** Axis angle rotation (angle) */
+	float *angle, iangle;
 	/** Size of the data to transform. */
 	float *size;
 	/** Initial size before transformation is applied. */

@@ -18,7 +18,7 @@ void ED_transform_mode_init(TransInfo *t, wmOperator *op, eTransformMode mode) {
 			ED_transform_mode_translation_init(t);
 			break;
 		case TFM_ROTATION:
-			// ED_transform_mode_rotation_init(t);
+			ED_transform_mode_rotation_init(t);
 			break;
 		case TFM_RESIZE: {
 			float mouse_dir_constraint[3];

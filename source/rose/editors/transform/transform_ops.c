@@ -40,13 +40,13 @@ static const EnumPropertyItem rna_enum_transform_mode_types[] = {
 };
 
 ROSE_STATIC void TRANSFORM_OT_translate(struct wmOperatorType *ot);
-// ROSE_STATIC void TRANSFORM_OT_rotate(struct wmOperatorType *ot);
+ROSE_STATIC void TRANSFORM_OT_rotate(struct wmOperatorType *ot);
 ROSE_STATIC void TRANSFORM_OT_resize(struct wmOperatorType *ot);
 ROSE_STATIC void TRANSFORM_OT_transform(struct wmOperatorType *ot);
 
 static const TransformModeItem GTransformModeItems[] = {
 	{.idname = OP_TRANSLATION, .mode = TFM_TRANSLATION, .opfunc = TRANSFORM_OT_translate},
-	// {.idname = OP_ROTATION, .mode = TFM_ROTATION, .opfunc = TRANSFORM_OT_rotate},
+	{.idname = OP_ROTATION, .mode = TFM_ROTATION, .opfunc = TRANSFORM_OT_rotate},
 	{.idname = OP_RESIZE, .mode = TFM_RESIZE, .opfunc = TRANSFORM_OT_resize},
 	{.idname = NULL, .mode = TFM_NONE, .opfunc = NULL}
 };
@@ -231,6 +231,23 @@ ROSE_STATIC void TRANSFORM_OT_resize(struct wmOperatorType *ot) {
 
 	RNA_def_float_vector(ot->srna, "mouse_dir_constraint", 3, VecZero, -FLT_MAX, FLT_MAX, "Mouse Directional Contraint", "", -FLT_MAX, FLT_MAX);
 	RNA_def_float_vector(ot->srna, "value", 3, VecOne, -FLT_MAX, FLT_MAX, "Mouse Directional Contraint", "", -FLT_MAX, FLT_MAX);
+}
+
+ROSE_STATIC void TRANSFORM_OT_rotate(struct wmOperatorType *ot) {
+	/* identifiers */
+	ot->name = "Rotate";
+	ot->description = "Rotate selected items";
+	ot->idname = OP_ROTATION;
+	ot->flag = OPTYPE_BLOCKING;
+
+	/* api callbacks */
+	ot->invoke = transform_invoke;
+	ot->exec = transform_exec;
+	ot->modal = transform_modal;
+	ot->cancel = transform_cancel;
+	ot->poll = ED_operator_screen_active;
+
+	RNA_def_float_rotation(ot->srna, "value", 0, NULL, -FLT_MAX, FLT_MAX, "Angle", "", -M_PI * 2, M_PI * 2);
 }
 
 void transform_operatortypes(void) {

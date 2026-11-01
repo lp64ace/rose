@@ -1568,6 +1568,26 @@ PropertyRNA *RNA_def_float_vector(void *vcontainer, const char *identifier, int 
 	return prop;
 }
 
+PropertyRNA *RNA_def_float_rotation(void *vcontainer, const char *identifier, int length, const float *default_value, float hardmin, float hardmax, const char *ui_name, const char *ui_description, float softmin, float softmax) {
+	ContainerRNA *container = (ContainerRNA *)(vcontainer);
+	PropertyRNA *prop;
+
+	prop = RNA_def_property(container, identifier, PROP_FLOAT, (length >= 3) ? PROP_EULER : PROP_ANGLE);
+	if (length != 0) {
+		RNA_def_property_array(prop, length);
+	}
+	if (default_value) {
+		RNA_def_property_float_array_default(prop, default_value);
+	}
+	if (hardmin != hardmax) {
+		RNA_def_property_range(prop, hardmin, hardmax);
+	}
+	RNA_def_property_ui_text(prop, ui_name, ui_description);
+	RNA_def_property_ui_range(prop, softmin, softmax, 1, 3);
+
+	return prop;
+}
+
 PropertyRNA *RNA_def_enum(void *vcontainer, const char *identifier, const EnumPropertyItem *items, int default_value, const char *ui_name, const char *ui_description) {
 	ContainerRNA *container = (ContainerRNA *)(vcontainer);
 	PropertyRNA *prop;

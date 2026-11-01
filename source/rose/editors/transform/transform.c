@@ -6,6 +6,7 @@
 
 #include "LIB_math_base.h"
 #include "LIB_math_matrix.h"
+#include "LIB_math_rotation.h"
 #include "LIB_math_vector.h"
 
 #include "RNA_access.h"
@@ -244,6 +245,18 @@ ROSE_STATIC void transform_restore_element(TransData *td) {
 	transform_restore_element_base(&td->base);
 
 	if (td->extension) {
+		if (td->extension->rot) {
+			copy_v3_v3(td->extension->rot, td->extension->irot);
+		}
+		if (td->extension->angle) {
+			*td->extension->angle = td->extension->iangle;
+		}
+		if (td->extension->axis) {
+			copy_v3_v3(td->extension->axis, td->extension->iaxis);
+		}
+		if (td->extension->quat) {
+			copy_qt_qt(td->extension->quat, td->extension->iquat);
+		}
 		if (td->extension->size) {
 			copy_v3_v3(td->extension->size, td->extension->isize);
 		}

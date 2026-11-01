@@ -154,6 +154,7 @@ void ED_mouse_input_mode(TransInfo *t, MouseInput *mi, eMouseInputMode mode) {
 			InputAngle_Data *data = MEM_callocN(sizeof(InputAngle_Data), "InputAngle_Data");
 			data->mval_prev[0] = mi->imval[0];
 			data->mval_prev[1] = mi->imval[1];
+			mi->data = data;
 			mi->apply = input_angle;
 		} break;
 		case INPUT_SPRING: {

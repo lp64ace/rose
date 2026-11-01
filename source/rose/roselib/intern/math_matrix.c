@@ -449,6 +449,24 @@ void mul_v3_m3v3(float r[3], const float M[3][3], const float v[3]) {
 	r[2] = M[0][2] * t[0] + M[1][2] * t[1] + M[2][2] * t[2];
 }
 
+void _va_mul_m3_series_3(float R[3][3], const float M1[3][3], const float M2[3][3]) {
+	mul_m3_m3m3(R, M1, M2);
+}
+
+void _va_mul_m3_series_4(float R[3][3], const float M1[3][3], const float M2[3][3], float M3[3][3]) {
+	mul_m3_m3m3(R, M1, M2);
+	mul_m3_m3m3(R, R, M3);
+}
+
+void _va_mul_m4_series_3(float R[4][4], const float M1[4][4], const float M2[4][4]) {
+	mul_m4_m4m4(R, M1, M2);
+}
+
+void _va_mul_m4_series_4(float R[4][4], const float M1[4][4], const float M2[4][4], float M3[4][4]) {
+	mul_m4_m4m4(R, M1, M2);
+	mul_m4_m4m4(R, R, M3);
+}
+
 void mul_m3_v2(const float m[3][3], float r[2]) {
 	mul_v2_m3v2(r, m, r);
 }

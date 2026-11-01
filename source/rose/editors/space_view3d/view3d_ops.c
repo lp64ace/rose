@@ -90,6 +90,14 @@ void view3d_keymap(wmKeyConfig *keyconf) {
 		});
 	} while(false);
 
+	do {
+		wmKeyMapItem *kmi = WM_keymap_add_item(keymap, "TRANSFORM_OT_rotate", &(KeyMapItem_Params){
+			.type = EVT_RKEY,
+			.value = KM_PRESS,
+			.modifier = KM_NOTHING,
+		});
+	} while(false);
+
 	/* clang-format on */
 }
 
