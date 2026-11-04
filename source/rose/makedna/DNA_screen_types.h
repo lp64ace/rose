@@ -314,6 +314,7 @@ typedef struct AZone {
 	ARegion *region;
 	int type;
 	int edge;
+	int direction;
 
 	/* for draw */
 	short x1, y1, x2, y2;

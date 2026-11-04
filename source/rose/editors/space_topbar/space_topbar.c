@@ -38,12 +38,6 @@ ROSE_INLINE SpaceLink *topbar_create(const ScrArea *area) {
 		region->regiontype = RGN_TYPE_HEADER;
 		region->alignment = RGN_ALIGN_TOP;
 	}
-	// Main Region
-	{
-		ARegion *region = MEM_callocN(sizeof(ARegion), "SpaceTopBar::Main");
-		LIB_addtail(&topbar->regionbase, region);
-		region->regiontype = RGN_TYPE_WINDOW;
-	}
 	topbar->spacetype = SPACE_TOPBAR;
 
 	return (SpaceLink *)topbar;
@@ -165,16 +159,6 @@ void ED_spacetype_topbar() {
 		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
-		art->keymapflag = ED_KEYMAP_UI;
-	}
-	// Main Region
-	{
-		ARegionType *art = MEM_callocN(sizeof(ARegionType), "SpaceTopBar::ARegionType::Main");
-		LIB_addtail(&st->regiontypes, art);
-		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = NULL;
-		art->init = ED_region_default_init;
-		art->exit = ED_region_default_exit;
 		art->keymapflag = ED_KEYMAP_UI;
 	}
 
