@@ -168,7 +168,7 @@ typedef struct wmKeyMapItem {
 	/** Event code itself (#EVT_LEFTCTRLKEY, #LEFTMOUSE etc). */
 	int type;
 	/** Button state (#KM_ANY, #KM_PRESS, #KM_DBL_CLICK, #KM_PRESS_DRAG, #KM_NOTHING etc). */
-	int val;
+	int value;
 
 	/* Modifier keys:
 	 * Valid values:

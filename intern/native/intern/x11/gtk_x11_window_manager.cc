@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdio.h>
 
+static KeySym convert_sym(const int gtk_key);
 static int convert_key(const KeySym x11_key);
 static int convert_code(XkbDescPtr xkb_descr, const KeyCode x11_code);
 static int convert_key_ex(const KeySym x11_key, XkbDescPtr xkb_descr, const KeyCode x11_code);
@@ -182,6 +183,47 @@ void GTKManagerX11::Poll() {
 #endif
 		EventProcedure(&evt);
 	}
+}
+
+int GTKManagerX11::GetKeyState(int key) const {
+	// Get current keyboard state
+    char keymap[32];
+    XQueryKeymap(this->display, keymap);
+
+	// Convert KeySym to KeyCode
+    KeyCode keycode = XKeysymToKeycode(display, convert_sym(key));
+	if (keycode == 0) {
+		return 0;
+	}
+
+	int ret = 0;
+
+	if (keymap[keycode >> 3] & (1 << (keycode & 7))) {
+		ret |= GTK_KEYPRESSED;
+	}
+
+	XkbStateRec xkbState;
+    if (XkbGetState(this->display, XkbUseCoreKbd, &xkbState) == Success) {
+		if (xkbState.locked_mods & LockMask) {
+            if (key == GTK_KEY_CAPSLOCK) {
+                ret |= GTK_KEYTOGGLED;
+			}
+        }
+
+		if (xkbState.locked_mods & Mod2Mask) {
+            if (key == GTK_KEY_NUMLOCK) {
+                ret |= GTK_KEYTOGGLED;
+			}
+        }
+
+		if (xkbState.locked_mods & Mod3Mask) {
+            if (key == GTK_KEY_SCRLOCK) {
+                ret |= GTK_KEYTOGGLED;
+			}
+        }
+	}
+
+	return ret;
 }
 
 static unsigned char bit_is_on(const unsigned char *ptr, int bit) {
@@ -725,6 +767,36 @@ static int convert_key(const KeySym x11_key) {
 		
 #undef ASSOCIATE
 	}
+	
+	return key;
+}
+
+static KeySym convert_sym(const int gtk_key) {
+	KeySym key = None;
+	
+	if ((gtk_key >= GTK_KEY_A) && (gtk_key <= GTK_KEY_Z)) {
+		key = (gtk_key + XK_A - GTK_KEY_A);
+	}
+	else if ((gtk_key >= GTK_KEY_0) && (gtk_key <= GTK_KEY_9)) {
+		key = (gtk_key + XK_0 - GTK_KEY_0);
+	}
+	else {
+		
+#define ASSOCIATE(store, what, to) case what: store = to; break;
+		
+		switch(gtk_key) {
+			ASSOCIATE(key, GTK_KEY_TAB, XK_Tab);
+			ASSOCIATE(key, GTK_KEY_SPACE, XK_space);
+
+			default: {
+				// fprintf(stdout, "[Linux/Key] Warning! Failed to associate %lu with any key.\n", x11_key);
+			} break;
+		}
+		
+#undef ASSOCIATE
+	}
+	
+	// Add more support as needed!
 	
 	return key;
 }

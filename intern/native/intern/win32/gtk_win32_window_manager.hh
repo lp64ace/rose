@@ -55,6 +55,8 @@ public:
 	bool HasEvents();
 	void Poll();
 
+	int GetKeyState(int key) const;
+
 	bool SetClipboard(const char *buffer, unsigned int length, bool selection);
 	bool GetClipboard(char **buffer, unsigned int *length, bool selection) const;
 
@@ -77,6 +79,7 @@ protected:
 	}
 };
 
-int ConvertInputKey(short win32_key, short scan_code, short extend);
+int ConvertToInputKey(short win32_key, short scan_code, short extend);
+int ConvertToVirtualKey(int gtk_key);
 
 #endif	// GTK_WIN32_WINDOW_MANAGER_HH

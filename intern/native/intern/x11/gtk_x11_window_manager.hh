@@ -50,6 +50,8 @@ public:
 
 	bool HasEvents();
 	void Poll();
+
+	int GetKeyState(int key) const;
 	
 	GTKWindowX11 *GetWindowByHandle(Window window);
 	

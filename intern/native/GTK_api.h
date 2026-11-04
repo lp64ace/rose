@@ -152,6 +152,8 @@ void GTK_window_swap_buffers(struct GTKWindow *);
  */
 void GTK_window_make_context_current(struct GTKWindow *);
 
+int GTK_window_key_state(struct GTKWindowManager *, struct GTKWindow *, int key);
+
 void GTK_window_show(struct GTKWindow *);
 void GTK_window_hide(struct GTKWindow *);
 

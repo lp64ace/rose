@@ -178,6 +178,13 @@ enum {
 };
 
 enum {
+	/** The key is down, otherwise it is up. */
+	GTK_KEYPRESSED = 1 << 0,
+	/** The key is toggled, a key such as CAPS LOCK is toggled it is turned ON. */
+	GTK_KEYTOGGLED = 1 << 1,
+};
+
+enum {
 	GTK_CURSOR_DEFAULT = 0,
 	GTK_CURSOR_HELP,
 	GTK_CURSOR_WAIT,

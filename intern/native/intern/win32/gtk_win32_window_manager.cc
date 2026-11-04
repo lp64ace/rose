@@ -41,6 +41,12 @@ void GTKManagerWin32::Poll() {
 	}
 }
 
+int GTKManagerWin32::GetKeyState(int key) const {
+	SHORT state = ::GetKeyState(ConvertToVirtualKey(key));
+
+	return ((state & 0x8000) ? GTK_KEYPRESSED : 0) | ((state & 0x0001) ? GTK_KEYTOGGLED : 0);
+}
+
 bool GTKManagerWin32::SetClipboard(const char *buffer, unsigned int length, bool selection) {
 	if (selection || !buffer) {
 		return false;
@@ -315,7 +321,7 @@ void GTKManagerWin32::ExitKeyboardLayout() {
 #	define VK_GR_LESS 0xE2
 #endif /* VK_GR_LESS */
 
-int ConvertInputKey(short win32_key, short scan_code, short extend) {
+int ConvertToInputKey(short win32_key, short scan_code, short extend) {
 	int key = GTK_KEY_UNKOWN;
 
 	if ((win32_key >= '0') && (win32_key <= '9')) {
@@ -490,6 +496,34 @@ int ConvertInputKey(short win32_key, short scan_code, short extend) {
 				key = GTK_KEY_MEDIA_LAST;
 			} break;
 		}
+	}
+
+	return key;
+}
+
+int ConvertToVirtualKey(int gtk_key) {
+	int key = 0;
+
+	if ((gtk_key >= GTK_KEY_0) && (gtk_key <= GTK_KEY_9)) {
+		key = '0' + (gtk_key - GTK_KEY_0);
+	}
+	else if ((gtk_key >= GTK_KEY_A) && (gtk_key <= GTK_KEY_Z)) {
+		key = 'A' + (gtk_key - GTK_KEY_A);
+	}
+	else if ((gtk_key >= GTK_KEY_F1) && (gtk_key <= GTK_KEY_F24)) {
+		key = VK_F1 + (gtk_key - GTK_KEY_F24);
+	}
+	else if ((gtk_key >= GTK_KEY_NUMPAD_0) && (gtk_key <= GTK_KEY_NUMPAD_9)) {
+		key = VK_NUMPAD0 + (gtk_key - GTK_KEY_NUMPAD_0);
+	}
+
+	switch (gtk_key) {
+		case GTK_KEY_TAB: {
+			key = VK_TAB;
+		} break;
+		case GTK_KEY_SPACE: {
+			key = VK_SPACE;
+		} break;
 	}
 
 	return key;

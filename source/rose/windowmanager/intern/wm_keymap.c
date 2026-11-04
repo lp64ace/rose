@@ -98,7 +98,7 @@ struct wmKeyMap *WM_modalkeymap_ensure(struct wmKeyConfig *keyconf, const char *
 
 ROSE_INLINE void keymap_event_set(wmKeyMapItem *kmi, const KeyMapItem_Params *params) {
 	kmi->type = params->type;
-	kmi->val = params->value;
+	kmi->value = params->value;
 
 	if (params->modifier == KM_ANY) {
 		kmi->shift = kmi->ctrl = kmi->alt = kmi->oskey = KM_ANY;

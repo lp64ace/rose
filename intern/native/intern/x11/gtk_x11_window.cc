@@ -288,6 +288,10 @@ void GTKWindowX11::Hide() {
 	XUnmapWindow(this->display, this->window);
 }
 
+bool GTKWindowX11::HasInputFocus() const {
+	return this->active;
+}
+
 int GTKWindowX11::GetState(void) const {
 	return this->state;
 }

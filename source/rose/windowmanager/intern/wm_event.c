@@ -30,6 +30,10 @@
 
 #include <stdio.h>
 
+ROSE_STATIC int translate_key(int event_key);
+ROSE_STATIC int convert_key(int tiny_window_key);
+ROSE_STATIC int convert_btn(int tiny_window_btn);
+
 /* -------------------------------------------------------------------- */
 /** \name Event Management
  * \{ */
@@ -454,8 +458,8 @@ ROSE_INLINE bool wm_eventmatch(const wmEvent *winevent, const wmKeyMapItem *kmi)
 		}
 	}
 
-	if (kmi->val != KM_ANY) {
-		if (winevent->value != kmi->val) {
+	if (kmi->value != KM_ANY) {
+		if (winevent->value != kmi->value) {
 			return false;
 		}
 	}
@@ -990,7 +994,7 @@ void WM_do_handlers(rContext *C) {
 
 				ED_screen_areas_iter(window, screen, area) {
 					if (area->flag & AREA_FLAG_AZONES_NEED_UPDATE) {
-						// ED_area_azones_update(area, evt->mouse_xy);
+						ED_area_azones_update(area, evt->mouse_xy);
 					}
 
 					if (wm_event_inside_rect(evt, &area->totrct)) {
@@ -1119,6 +1123,42 @@ void WM_event_drag_start_mval_fl(const wmEvent *event, const ARegion *region, fl
 	const int *xy = (event->value == KM_CLICK_DRAG) ? event->prev_press_xy : event->mouse_xy;
 	r_mval[0] = xy[0] - region->winrct.xmin;
 	r_mval[1] = xy[1] - region->winrct.ymin;
+}
+
+int WM_event_key(struct rContext *C, int key) {
+	WindowManager *wm = CTX_wm_manager(C);
+	if (!wm) {
+		return 0;
+	}
+
+	wmWindow *window = CTX_wm_window(C);
+
+	int gtkkey = translate_key(key);
+
+	if (gtkkey == GTK_KEY_UNKOWN) {
+		return 0;
+	}
+
+	int state = 0;
+
+	if (window) {
+		state |= GTK_window_key_state(wm->handle, window->handle, gtkkey);
+	}
+	else {
+		state |= GTK_window_key_state(wm->handle, NULL, gtkkey);
+	}
+
+	if ((state & GTK_KEYPRESSED) != 0 && (state & GTK_KEYTOGGLED) == 0) {
+		return KM_PRESS;
+	}
+
+	/**
+	 * We do not support keys that have multiple states in WM_event_key, 
+	 * they are culled by #translate_key.
+	 */
+	ROSE_assert((state & GTK_KEYTOGGLED) == 0);
+
+	return KM_NOTHING;
 }
 
 /** \} */
@@ -1276,9 +1316,6 @@ void WM_event_fileselect_event(WindowManager *wm, void *ophandle, int eventval) 
 /* -------------------------------------------------------------------- */
 /** \name Main Event Translate
  * \{ */
-
-ROSE_STATIC int convert_key(int tiny_window_key);
-ROSE_STATIC int convert_btn(int tiny_window_btn);
 
 ROSE_STATIC wmEvent *wm_event_add_mousemove(wmWindow *win, const wmEvent *evt) {
 	wmEvent *event_last = (wmEvent *)win->event_queue.last;
@@ -1644,6 +1681,30 @@ ROSE_STATIC int convert_key(int tiny_window_key) {
 #undef ASSOCIATE
 
 	return EVENT_NONE;
+}
+
+ROSE_STATIC int translate_key(int key) {
+	if (key >= EVT_AKEY && key <= EVT_ZKEY) {
+		return (GTK_KEY_A + (key - EVT_AKEY));
+	}
+	if (key >= EVT_ZEROKEY && key <= EVT_NINEKEY) {
+		return (GTK_KEY_0 + (key - EVT_ZEROKEY));
+	}
+
+#define ASSOCIATE(what, to) \
+	case what:              \
+		return to;
+
+	switch (key) {
+		ASSOCIATE(EVT_TABKEY, GTK_KEY_TAB);
+		ASSOCIATE(EVT_SPACEKEY, GTK_KEY_SPACE);
+	}
+
+#undef ASSOCIATE
+
+	ROSE_assert_unreachable();
+
+	return GTK_KEY_UNKOWN;
 }
 
 ROSE_STATIC int convert_btn(int tiny_window_btn) {
