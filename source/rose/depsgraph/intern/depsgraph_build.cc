@@ -19,6 +19,8 @@
 #include "intern/node/deg_node_id.hh"
 #include "intern/node/deg_node_operation.hh"
 
+#include "intern/builder/deg_builder_relations.hh"
+
 #include "intern/depsgraph.hh"
 #include "intern/depsgraph_registry.hh"
 #include "intern/depsgraph_relation.hh"
@@ -28,6 +30,10 @@
 #include "builder/pipeline_view_layer.hh"
 
 namespace deg = rose::depsgraph;
+
+ROSE_INLINE deg::DepsNodeHandle *get_node_handle(DepsNodeHandle *node_handle) {
+	return reinterpret_cast<deg::DepsNodeHandle *>(node_handle);
+}
 
 void DEG_graph_build_from_view_layer(Depsgraph *graph) {
 	deg::ViewLayerBuilderPipeline builder(graph);
@@ -62,4 +68,16 @@ void DEG_relations_tag_update(Main *main) {
 	for (deg::Depsgraph *depsgraph : deg::get_all_registered_graphs(main)) {
 		DEG_graph_tag_relations_update(reinterpret_cast<Depsgraph *>(depsgraph));
 	}
+}
+
+void DEG_add_object_relation(DepsNodeHandle *node_handle, Object *object, eDepsObjectComponentType component, const char *description) {
+	deg::NodeType type = deg::DEG_node_type_from_object_component(component);
+	deg::ComponentKey comp_key(&object->id, type);
+	deg::DepsNodeHandle *deg_node_handle = get_node_handle(node_handle);
+	deg_node_handle->builder->add_node_handle_relation(comp_key, deg_node_handle, description);
+}
+
+void DEG_add_depends_on_transform_relation(DepsNodeHandle *node_handle, const char *description) {
+	deg::DepsNodeHandle *deg_node_handle = get_node_handle(node_handle);
+	deg_node_handle->builder->add_depends_on_transform_relation(deg_node_handle, description);
 }

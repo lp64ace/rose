@@ -70,9 +70,37 @@ ROSE_INLINE void mesh_calc_modifiers(Depsgraph *depsgraph, Scene *scene, Object 
 				continue;
 			}
 
-			// TODO!
+			ModifierData *prev = md->prev;
+			if (prev && (prev->flag & MODIFIER_DEVICE_ONLY) != 0) {
+				if (prev->type == OnlyDeform) {
+					/** 
+					 * We have an OnlyDeform modifier that is set to run on the CPU right after 
+					 * an OnlyDeform modifier that is set to run on the GPU!
+					 */
+					fprintf(stderr, "[Kernel] Mixed modifier order for CPU and GPU detected, ignoring trailing modifier stack!\n");
+					break;
+				}
+			}
 
-			ROSE_assert_unreachable();
+			if (!deformed_verts) {
+				if (mesh_final) {
+					deformed_verts = KER_mesh_vert_coords_alloc(mesh_final, &num_deformed_verts);
+				}
+				else {
+					deformed_verts = KER_mesh_vert_coords_alloc(mesh_input, &num_deformed_verts);
+				}
+			}
+			else if (is_prev_deform && mti->depends_on_normals && mti->depends_on_normals(md)) {
+				if (mesh_final == NULL) {
+					mesh_final = KER_mesh_copy_for_eval(mesh_input, true);
+				}
+				/** We need to calculate normals for this to work!!! */
+				KER_mesh_vert_coords_apply(mesh_final, deformed_verts);
+			}
+
+			KER_modifier_deform_verts(md, &mectx, mesh_final, deformed_verts, num_deformed_verts);
+
+			is_prev_deform |= true;
 		}
 
 		/* Result of all leading deforming modifiers is cached for
@@ -82,7 +110,7 @@ ROSE_INLINE void mesh_calc_modifiers(Depsgraph *depsgraph, Scene *scene, Object 
 			mesh_deform = KER_mesh_copy_for_eval(mesh_input, true);
 
 			if (deformed_verts) {
-				ROSE_assert_unreachable();
+				KER_mesh_vert_coords_apply(mesh_deform, deformed_verts);
 			}
 		}
 	}
@@ -100,9 +128,31 @@ ROSE_INLINE void mesh_calc_modifiers(Depsgraph *depsgraph, Scene *scene, Object 
 			continue;
 		}
 
-		// TODO!
+		switch (mti->type) {
+			case OnlyDeform: {
+				if (!deformed_verts) {
+					if (mesh_final) {
+						deformed_verts = KER_mesh_vert_coords_alloc(mesh_final, &num_deformed_verts);
+					}
+					else {
+						deformed_verts = KER_mesh_vert_coords_alloc(mesh_input, &num_deformed_verts);
+					}
+				}
+				else if (is_prev_deform && mti->depends_on_normals && mti->depends_on_normals(md)) {
+					if (mesh_final == NULL) {
+						mesh_final = KER_mesh_copy_for_eval(mesh_input, true);
+					}
+					KER_mesh_vert_coords_apply(mesh_final, deformed_verts);
+				}
 
-		ROSE_assert_unreachable();
+				KER_modifier_deform_verts(md, &mectx, mesh_final, deformed_verts, num_deformed_verts);
+			} break;
+			default: {
+				ROSE_assert_unreachable();
+			} break;
+		}
+
+		is_prev_deform = (mti->type == OnlyDeform);
 	}
 
 	/* Yay, we are done. If we have a Mesh and deformed vertices,
@@ -117,7 +167,9 @@ ROSE_INLINE void mesh_calc_modifiers(Depsgraph *depsgraph, Scene *scene, Object 
 		}
 	}
 	if (deformed_verts) {
-		ROSE_assert_unreachable();
+		KER_mesh_vert_coords_apply(mesh_final, deformed_verts);
+		MEM_freeN(deformed_verts);
+		deformed_verts = NULL;
 	}
 
 	/* Denotes whether the object which the modifier stack came from owns the mesh or whether the

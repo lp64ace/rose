@@ -13,6 +13,7 @@ struct ID;
 struct Mesh;
 struct ModifierData;
 struct ModifierEvalContext;
+struct ModifierUpdateDepsgraphContext;
 struct Object;
 struct Scene;
 struct RoseDataReader;
@@ -122,6 +123,13 @@ typedef struct ModifierTypeInfo {
 	void (*free_data)(struct ModifierData *md);
 
 	/**
+	 * Add the appropriate relations to the dependency graph.
+	 *
+	 * This function is optional.
+	 */
+	void (*update_depsgraph)(struct ModifierData *md, const struct ModifierUpdateDepsgraphContext *ctx);
+
+	/**
 	 * Should return true if the modifier needs to be recalculated on time
 	 * changes.
 	 *
@@ -201,10 +209,18 @@ void KER_modifier_free(struct ModifierData *md);
 
 void KER_modifier_remove_from_list(struct Object *object, struct ModifierData *md);
 
+bool KER_modifier_depends_ontime(struct Scene *scene, struct ModifierData *md);
+
 typedef struct ModifierEvalContext {
 	struct Scene *scene;
 	struct Object *object;
 } ModifierEvalContext;
+
+typedef struct ModifierUpdateDepsgraphContext {
+	struct Scene *scene;
+	struct Object *object;
+	struct DepsNodeHandle *node;
+} ModifierUpdateDepsgraphContext;
 
 /**
  * \return False if the modifier did not support deforming the positions.

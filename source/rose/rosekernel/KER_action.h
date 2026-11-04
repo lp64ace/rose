@@ -13,6 +13,7 @@ struct Armature;
 struct FCurveDescriptor;
 struct Main;
 struct Object;
+struct Scene;
 struct Pose;
 struct PoseChannel;
 struct RoseDataReader;

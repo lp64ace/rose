@@ -572,11 +572,7 @@ void DepsgraphNodeBuilder::build_object(int base_index, Object *object, eDepsNod
 		build_object(-1, object->parent, DEG_ID_LINKED_INDIRECTLY, is_visible);
 	}
 	/* Modifiers. */
-	if (object->modifiers.first != nullptr) {
-		BuilderWalkUserData data;
-		data.builder = this;
-		KER_modifiers_foreach_ID_link(object, modifier_walk, &data);
-	}
+	build_object_modifiers(object);
 	/* Object data. */
 	build_object_data(object);
 	/* Parameters, used by both drivers/animation and also to inform dependency
@@ -753,6 +749,22 @@ void DepsgraphNodeBuilder::build_object_data_geometry_datablock(ID *obdata) {
 void DepsgraphNodeBuilder::build_object_dimensions(Object *object) {
 	/* Object dimensions (bounding box) node. Will depend on both geometry and transform. */
 	add_operation_node(&object->id, NodeType::PARAMETERS, OperationCode::DIMENSIONS);
+}
+
+void DepsgraphNodeBuilder::build_object_modifiers(Object *object) {
+	if (LIB_listbase_is_empty(&object->modifiers)) {
+		return;
+	}
+
+	IDNode *id_node = find_id_node(&object->id);
+
+	LISTBASE_FOREACH (ModifierData *, md, &object->modifiers) {
+		OperationNode *modifier_node = add_operation_node(&object->id, NodeType::GEOMETRY, OperationCode::MODIFIER, nullptr, md->name);
+	}
+
+	BuilderWalkUserData data;
+	data.builder = this;
+	KER_modifiers_foreach_ID_link(object, modifier_walk, &data);
 }
 
 void DepsgraphNodeBuilder::build_object_flags(int base_index, Object *object, eDepsNode_LinkedState_Type linked_state) {

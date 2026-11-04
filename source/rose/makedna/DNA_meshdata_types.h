@@ -8,6 +8,16 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------- */
+/** \name Geometry Elements
+ * \{ */
+
+typedef struct MVert {
+	float co[3];
+} MVert;
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Loop Tessellation Runtime Data
  * \{ */
 

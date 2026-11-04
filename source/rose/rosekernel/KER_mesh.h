@@ -53,6 +53,16 @@ void KER_mesh_eval_delete(struct Mesh *eval);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Mesh Data (Helpers)
+ * \{ */
+
+float (*KER_mesh_vert_coords_alloc(const struct Mesh *mesh, int *r_length))[3];
+
+void KER_mesh_vert_coords_apply(struct Mesh *mesh, const float (*coords)[3]);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Mesh Geometry
  * \{ */
 
