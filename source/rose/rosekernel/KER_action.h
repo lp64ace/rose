@@ -28,6 +28,14 @@ typedef bool (*fnActionSlotCallback)(struct ID *animated, const struct Action *a
 bool KER_id_foreach_action_slot_use(struct ID *animated, fnActionSlotCallback callback, void *userdata);
 
 /* -------------------------------------------------------------------- */
+/** \name ID Utilities
+ * \{ */
+
+void KER_action_restart(struct Scene *scene, struct ID *id);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Action Layer
  * \{ */
 

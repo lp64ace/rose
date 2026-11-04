@@ -9,6 +9,9 @@
 #include "KER_main.h"
 #include "KER_object.h"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
+
 #include "LIB_ghash.h"
 #include "LIB_hash_mm2a.h"
 #include "LIB_listbase.h"
@@ -35,6 +38,20 @@ bool KER_id_foreach_action_slot_use(ID *animated, fnActionSlotCallback callback,
 
 	return true;
 }
+
+/* -------------------------------------------------------------------- */
+/** \name ID Utilities
+ * \{ */
+
+void KER_action_restart(Scene *scene, ID *id) {
+	AnimData *adt = KER_animdata_from_id(id);
+	if (!adt) {
+		return;
+	}
+	adt->stime = KER_scene_frame_get(scene);
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Action Layer
@@ -372,7 +389,10 @@ bool KER_action_assign(Action *action, ID *id) {
 	if (!adt) {
 		return false;
 	}
-	return generic_assign_action(id, action, &adt->action, &adt->handle);
+	if (!generic_assign_action(id, action, &adt->action, &adt->handle)) {
+		return false;
+	}
+	return true;
 }
 
 bool KER_action_slot_assign(ActionSlot *slot, ID *id) {
@@ -380,7 +400,10 @@ bool KER_action_slot_assign(ActionSlot *slot, ID *id) {
 	if (!adt) {
 		return false;
 	}
-	return generic_assign_action_slot(slot, id, &adt->action, &adt->handle);
+	if (!generic_assign_action_slot(slot, id, &adt->action, &adt->handle)) {
+		return false;
+	}
+	return true;
 }
 
 bool KER_action_is_layered(const Action *action) {
