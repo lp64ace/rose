@@ -7,6 +7,7 @@
 #include "gl_framebuffer.hh"
 #include "gl_texture.hh"
 
+#include "gl_backend.hh"
 #include "gl_state.hh"
 
 namespace rose::gpu {
@@ -588,7 +589,9 @@ uint8_t GLStateManager::bound_image_slots() {
  * \{ */
 
 void GLStateManager::issue_barrier(Barrier barrier_bits) {
-	glMemoryBarrier(to_gl(barrier_bits));
+	if (gl_version() >= 42) {
+		glMemoryBarrier(to_gl(barrier_bits));
+	}
 }
 
 GLFence::~GLFence() {

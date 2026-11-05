@@ -65,7 +65,7 @@ if(UNIX)
 endif()
 
 # Turned off by default so that we can Debug without having to worry about multi-threading!
-option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." ON)
+option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." OFF)
 mark_as_advanced(WITH_TBB)
 
 # ----------------------------------------------------------------------------

@@ -9,6 +9,7 @@
 #include "KER_mesh.h"
 #include "KER_modifier.h"
 
+#include "GPU_info.h"
 #include "GPU_state.h"
 
 #include "LIB_math_matrix.h"
