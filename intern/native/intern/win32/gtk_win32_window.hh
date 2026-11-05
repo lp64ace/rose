@@ -31,6 +31,8 @@ public:
 	void Show();
 	void Hide();
 
+	bool HasInputFocus() const;
+
 	void UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y);
 	void UpdateCursor(bool visible, int cursor);
 

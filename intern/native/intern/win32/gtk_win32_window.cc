@@ -107,6 +107,10 @@ void GTKWindowWin32::Hide() {
 	ShowWindow(this->hwnd, SW_HIDE);
 }
 
+bool GTKWindowWin32::HasInputFocus() const {
+	return (GetForegroundWindow() == this->hwnd);
+}
+
 static HCURSOR GetStandardCursor(int shape) {
 	UINT flags = LR_SHARED | LR_DEFAULTSIZE;
 
