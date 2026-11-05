@@ -114,6 +114,7 @@ char *rna_path_token_in_brackets(const char **path, char *fixedbuf, size_t fixed
 /** \} */
 
 void RNA_def_rna(struct RoseRNA *rna);
+void RNA_def_nla(struct RoseRNA *rna);
 void RNA_def_ID(struct RoseRNA *rna);
 void RNA_def_Object(struct RoseRNA *rna);
 void RNA_def_Pose(struct RoseRNA *rna);

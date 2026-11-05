@@ -20,6 +20,7 @@
 #include "KER_lib_query.h"
 #include "KER_mesh.hh"
 #include "KER_modifier.h"
+#include "KER_nla.h"
 #include "KER_object.h"
 #include "KER_scene.h"
 
@@ -405,7 +406,7 @@ void DepsgraphNodeBuilder::build_animdata(ID *id) {
 	/* Make sure ID node exists. */
 	(void)add_id_node(id);
 	ID *id_cow = get_cow_id(id);
-	if (adt->action != NULL) {
+	if (adt->action != NULL || !LIB_listbase_is_empty(&adt->nla_tracks)) {
 		OperationNode *operation_node;
 		/* Explicit entry operation. */
 		operation_node = add_operation_node(id, NodeType::ANIMATION, OperationCode::ANIMATION_ENTRY);
@@ -417,6 +418,25 @@ void DepsgraphNodeBuilder::build_animdata(ID *id) {
 		/* Explicit exit operation. */
 		operation_node = add_operation_node(id, NodeType::ANIMATION, OperationCode::ANIMATION_EXIT);
 		operation_node->set_as_exit();
+	}
+
+	LISTBASE_FOREACH (NlaTrack *, track, &adt->nla_tracks) {
+		if (!KER_nla_track_is_enabled(adt, track)) {
+			continue;
+		}
+
+		build_animdata_nla_strip_targets(&track->strips);
+	}
+}
+
+void DepsgraphNodeBuilder::build_animdata_nla_strip_targets(ListBase *strips) {
+	LISTBASE_FOREACH (NlaStrip *, strip, strips) {
+		if (strip->action != NULL) {
+			build_action(strip->action);
+		}
+		else if (!LIB_listbase_is_empty(&strip->strips)) {
+			build_animdata_nla_strip_targets(&strip->strips);
+		}
 	}
 }
 

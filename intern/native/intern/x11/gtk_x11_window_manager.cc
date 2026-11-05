@@ -503,6 +503,7 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 						DispatchKeyDown(window, mkey, is_repeat_keycode, utf8_buf, time);
 					}
 
+#if defined(WITH_X11_XINPUT)
 					if (xic) {
 						int i = 0;
 						while (true) {
@@ -523,6 +524,7 @@ void GTKManagerX11::EventProcedure(XEvent *evt) {
 							}
 						}
 					}
+#endif
 				} break;
 				case KeyRelease: {
 					this->keycode_last_repeat_key = -1;

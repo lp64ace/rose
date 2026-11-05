@@ -42,6 +42,7 @@ void RNA_def_struct_clear_flag(struct StructRNA *nstruct, int flag);
 
 void RNA_def_struct_name_property(struct StructRNA *srna, struct PropertyRNA *prop);
 void RNA_def_struct_refine_func(struct StructRNA *srna, const char *func);
+void RNA_def_struct_path_func(struct StructRNA *srna, const char *path);
 void RNA_def_struct_idprops_func(struct StructRNA *srna, const char *idproperties);
 void RNA_def_struct_system_idprops_func(struct StructRNA *srna, const char *system_idproperties);
 
@@ -194,6 +195,14 @@ int rna_Property_identifier_length(struct PointerRNA *ptr);
 
 void rna_Property_description_get(struct PointerRNA *ptr, char *value);
 int rna_Property_description_length(struct PointerRNA *ptr);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name NLA Exposed Functions
+ * \{ */
+
+char *rna_NlaStrip_path(const struct PointerRNA *ptr);
 
 /** \} */
 

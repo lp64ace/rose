@@ -449,7 +449,7 @@ void MEM_guarded_print_memlist() {
 
 			if (tail->tag3 == MEMTAG3) {
 				fprintf(stdout, "    { size %zu, align %zu, name '%s'", head->size, head->align, head->identity);
-				if (head->size < 128) {
+				if (head->size < 256) {
 					fprintf(stdout, ", content '");
 					for (unsigned char *p = (unsigned char *)(head + 1); p < (unsigned char *)tail; p++) {
 						fprintf(stdout, "%02x", *p);

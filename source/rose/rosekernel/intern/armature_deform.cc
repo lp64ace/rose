@@ -161,22 +161,22 @@ ROSE_INLINE void armature_vert_task_with_dvert(const ArmatureDeformParams &param
 ROSE_INLINE void armature_deform_coords(const Object *obarmature, const Object *obtarget, const ListBase *defbase, const rose::MutableSpan<float3> vert_coords, const rose::MutableSpan<float3x3> vert_deform_mats, rose::Span<MDeformVert> dverts, const Mesh *metarget) {
 	ArmatureDeformParams params = get_armature_deform_params(obarmature, obtarget, defbase, vert_coords, vert_deform_mats);
 
-	rose::threading::parallel_for(vert_coords.index_range(), 1024, [&](const IndexRange range) {
-		for (const size_t index : range) {
-			const MDeformVert *dvert = NULL;
-			if (params.use_dverts) {
-				if (metarget) {
-					ROSE_assert(index < metarget->totvert);
-					dvert = &(dverts[index]);
-				}
-				else if (index < dverts.size()) {
-					dvert = &(dverts[index]);
-				}
-			}
+	if (params.use_dverts) {
+		rose::threading::parallel_for(vert_coords.index_range(), 32, [&](const IndexRange range) {
+			for (const size_t index : range) {
+				ROSE_assert(metarget == NULL || index < metarget->totvert);
 
-			armature_vert_task_with_dvert(params, index, dvert);
-		}
-	});
+				armature_vert_task_with_dvert(params, index, &(dverts[index]));
+			}
+		});
+	}
+	else {
+		rose::threading::parallel_for(vert_coords.index_range(), 32, [&](const IndexRange range) {
+			for (const size_t index : range) {
+				armature_vert_task_with_dvert(params, index, NULL);
+			}
+		});
+	}
 }
 
 }  // namespace rose::kernel

@@ -58,8 +58,8 @@ template<> inline short4 convert_normal(const float3 &src) {
 	return normal.high;
 }
 
-/** Her for debugging the normal calculation */
-#define DRAW_POLY_NORMALS 0
+/** Herw for debugging the normal calculation */
+#define DRAW_POLY_NORMALS 1
 #define DRAW_VERT_NORMALS 0
 
 template<typename T> ROSE_STATIC void extract_normals_mesh(const Mesh *mesh, rose::MutableSpan<T> normals) {

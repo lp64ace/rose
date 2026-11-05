@@ -117,6 +117,8 @@ public:
 	virtual void build_generic_id(ID *id);
 	virtual void build_idproperties(IDProperty *idproperty);
 	virtual void build_animdata_curves_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, FCurve **curves, int totcurve);
+	virtual void build_animdata_nla_strip_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, ListBase *strips);
+	virtual void build_animdata_action_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, Action *action, int slot);
 	virtual void build_animdata_curves(ID *id);
 	virtual void build_animdata(ID *id);
 	virtual void build_parameters(ID *id);

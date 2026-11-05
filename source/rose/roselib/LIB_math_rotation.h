@@ -52,6 +52,11 @@ float normalize_qt_qt(float r[4], const float q[4]);
 
 void mul_qt_qtqt(float q[4], const float a[4], const float b[4]);
 
+/**
+ * Raise a unit quaternion to the specified power.
+ */
+void pow_qt_fl_normalized(float q[4], float fac);
+
 void conjugate_qt(float q[4]);
 
 void invert_qt(float q[4]);

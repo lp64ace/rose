@@ -51,6 +51,7 @@ typedef struct wmWindow {
 	double last_draw;
 	float delta_time;
 	float fps;
+	float maxfps;
 
 	/** Internal window id, used for matching screens, greater than 0. */
 	int winid;

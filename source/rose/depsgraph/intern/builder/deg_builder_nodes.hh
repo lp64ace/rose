@@ -89,6 +89,7 @@ public:
 	 * \param id: ID-Block which hosts the #AnimData
 	 */
 	virtual void build_animdata(ID *id);
+	virtual void build_animdata_nla_strip_targets(ListBase *strips);
 	virtual void build_parameters(ID *id);
 
 	virtual void build_action(Action *action);

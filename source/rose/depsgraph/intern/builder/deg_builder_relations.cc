@@ -14,6 +14,7 @@
 #include "KER_idprop.h"
 #include "KER_mesh.hh"
 #include "KER_modifier.h"
+#include "KER_nla.h"
 #include "KER_object.h"
 
 #include "LIB_listbase.h"
@@ -242,7 +243,7 @@ void DepsgraphRelationBuilder::build_animdata_curves(ID *id) {
 	if (adt->action != nullptr) {
 		build_action(adt->action);
 	}
-	if (adt->action == nullptr) {
+	if (adt->action == nullptr && LIB_listbase_is_empty(&adt->nla_tracks)) {
 		return;
 	}
 
@@ -273,6 +274,13 @@ void DepsgraphRelationBuilder::build_animdata_curves(ID *id) {
 		if ((bag = KER_action_channelbag_for_action_slot_ex(adt->action, adt->handle))) {
 			build_animdata_curves_targets(id, adt_key, operation_from, bag->fcurves, bag->totcurve);
 		}
+	}
+	LISTBASE_FOREACH (NlaTrack *, track, &adt->nla_tracks) {
+		if (!KER_nla_track_is_enabled(adt, track)) {
+			continue;
+		}
+
+		build_animdata_nla_strip_targets(id, adt_key, operation_from, &track->strips);
 	}
 }
 void DepsgraphRelationBuilder::build_animdata_curves_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, FCurve **curves, int totcurve) {
@@ -307,6 +315,54 @@ void DepsgraphRelationBuilder::build_animdata_curves_targets(ID *id, ComponentKe
 		if (id_node_from != id_node_to) {
 			ComponentKey cow_key(id_node_to->id_orig, NodeType::COPY_ON_WRITE);
 			add_relation(cow_key, adt_key, "Animated CoW -> Animation", RELATION_CHECK_BEFORE_ADD | RELATION_FLAG_NO_FLUSH);
+		}
+	}
+}
+
+void DepsgraphRelationBuilder::build_animdata_nla_strip_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, ListBase *strips) {
+	LISTBASE_FOREACH (NlaStrip *, strip, strips) {
+		if (strip->action != NULL) {
+			build_action(strip->action);
+
+			ComponentKey action_key(&strip->action->id, NodeType::ANIMATION);
+			add_relation(action_key, adt_key, "Action -> Animation");
+
+			build_animdata_action_targets(id, adt_key, operation_from, strip->action, strip->handle);
+		}
+		else {
+			build_animdata_nla_strip_targets(id, adt_key, operation_from, &strip->strips);
+		}
+	}
+}
+
+void DepsgraphRelationBuilder::build_animdata_action_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, Action *action, int handle) {
+	ROSE_assert(id != NULL);
+	ROSE_assert(operation_from != NULL);
+	ROSE_assert(action != NULL);
+
+	ActionSlot *slot = KER_action_slot_for_handle(action, handle);
+	if (slot == NULL) {
+		return;
+	}
+
+	for (ActionLayer **layer_p = action->layers; layer_p != action->layers + action->totlayer; layer_p++) {
+		ActionLayer *layer = *layer_p;
+
+		for (ActionStrip **strip_p = layer->strips; strip_p != layer->strips + layer->totstrip; strip_p++) {
+			ActionStrip *strip = *strip_p;
+
+			switch (strip->strip_type) {
+				case ACTION_STRIP_KEYFRAME: {
+					ActionStripKeyframeData *strip_data = KER_action_strip_data(action, strip);
+					ActionChannelBag *bag = KER_action_channelbag_for_action_slot(action, slot);
+
+					if (bag == NULL) {
+						break;
+					}
+
+					build_animdata_curves_targets(id, adt_key, operation_from, bag->fcurves, bag->totcurve);
+				} break;
+			}
 		}
 	}
 }

@@ -1043,6 +1043,12 @@ ePropertyType RNA_property_type(const PropertyRNA *property) {
 	return p->type;
 }
 
+ePropertySubType RNA_property_subtype(const PropertyRNA *property) {
+	PropertyRNA *p = rna_ensure_property((PropertyRNA *)property);
+
+	return p->subtype;
+}
+
 bool RNA_property_is_idprop(const PropertyRNA *property) {
 	return (property->magic != RNA_MAGIC);
 }

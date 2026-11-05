@@ -40,6 +40,7 @@ set(RUN_SRC
 	rna_access.c
 	rna_access.cc
 	rna_id_runtime.c
+	rna_nla_runtime.c
 	rna_pose_runtime.c
 	rna_rna_runtime.c
 	rna_rna_runtime.cc
@@ -52,6 +53,7 @@ set(RUN_SRC
 
 set(IN_SRC
 	rna_id.c
+	rna_nla.c
 	rna_ob.c
 	rna_pose.c
 	rna_rna.c
