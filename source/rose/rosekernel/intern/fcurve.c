@@ -504,7 +504,7 @@ bool KER_fcurve_calc_range(const FCurve *fcurve, float *r_min, float *r_max, boo
 
 	if (fcurve->bezt) {
 		int index_range[2];
-		foundvert = get_bounding_bezt_indices(fcurve, selected_keys_only, nullptr, &index_range[0], &index_range[1]);
+		foundvert = get_bounding_bezt_indices(fcurve, selected_keys_only, NULL, &index_range[0], &index_range[1]);
 		if (!foundvert) {
 			return false;
 		}
