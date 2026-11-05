@@ -130,6 +130,13 @@ typedef struct ModifierTypeInfo {
 	void (*update_depsgraph)(struct ModifierData *md, const struct ModifierUpdateDepsgraphContext *ctx);
 
 	/**
+	 * Should return true if the modifier can be computed on device.
+	 * 
+	 * This function is optional (assumes false if not present).
+	 */
+	bool (*supports_device_only)(struct ModifierData *md);
+
+	/**
 	 * Should return true if the modifier needs to be recalculated on time
 	 * changes.
 	 *

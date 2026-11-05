@@ -9,6 +9,8 @@
 #include "KER_object.h"
 #include "KER_mesh.h"
 
+#include "GPU_info.h"
+
 void KER_armature_modifier_copy_data(const ArmatureModifierData *source, ArmatureModifierData *target, int flag) {
 	target->object = source->object;
 }
@@ -26,15 +28,19 @@ ROSE_STATIC void deform_verts(ModifierData *md, const ModifierEvalContext *ctx, 
 ROSE_STATIC void update_depsgraph(ModifierData *md, const ModifierUpdateDepsgraphContext *ctx) {
 	ArmatureModifierData *amd = (ArmatureModifierData *)md;
 
-	if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
-		return;
-	}
-
 	if (amd->object != NULL) {
 		DEG_add_object_relation(ctx->node, amd->object, DEG_OB_COMP_EVAL_POSE, "Armature Modifier");
 		DEG_add_object_relation(ctx->node, amd->object, DEG_OB_COMP_TRANSFORM, "Armature Modifier");
 	}
 	DEG_add_depends_on_transform_relation(ctx->node, "Armature Modifier");
+}
+
+ROSE_STATIC bool supports_device_only(ModifierData *md) {
+	if (!GPU_get_info_i(GPU_INFO_COMPUTE_SHADER_SUPPORT)) {
+		return false;
+	}
+
+	return false;
 }
 
 ROSE_STATIC void deform_foreach_id(ModifierData *md, Object *ob, IDWalkFunc walk, void *user_data) {
@@ -59,6 +65,7 @@ ModifierTypeInfo MODType_ARMATURE = {
 	.init_data = NULL,
 	.free_data = NULL,
 	.update_depsgraph = update_depsgraph,
+	.supports_device_only = supports_device_only,
 	.depends_on_time = NULL,
 	.depends_on_normals = NULL,
 	.foreach_ID_link = deform_foreach_id,

@@ -66,8 +66,10 @@ ROSE_INLINE void mesh_calc_modifiers(Depsgraph *depsgraph, Scene *scene, Object 
 				break;
 			}
 
-			if (md->flag & MODIFIER_DEVICE_ONLY) {
-				continue;
+			if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+				if (mti->supports_device_only && mti->supports_device_only(md)) {
+					continue;
+				}
 			}
 
 			ModifierData *prev = md->prev;
@@ -124,8 +126,10 @@ ROSE_INLINE void mesh_calc_modifiers(Depsgraph *depsgraph, Scene *scene, Object 
 			continue;
 		}
 
-		if (md->flag & MODIFIER_DEVICE_ONLY) {
-			continue;
+		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			if (mti->supports_device_only && mti->supports_device_only(md)) {
+				continue;
+			}
 		}
 
 		switch (mti->type) {

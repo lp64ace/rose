@@ -52,8 +52,10 @@ bool draw_modifier_is_device(ModifierData *md) {
 
 bool draw_modifier_is_device_supported(ModifierData *md) {
 	if (draw_modifier_is_device(md)) {
-		/** Armature deformation is currently supported to be computed on device using geometry shaders. */
-		return ELEM(md->type, MODIFIER_TYPE_ARMATURE);
+		ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
+		if (mti->supports_device_only && mti->supports_device_only(md)) {
+			return true;
+		}
 	}
 	return false;
 }

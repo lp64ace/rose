@@ -519,6 +519,12 @@ void DepsgraphRelationBuilder::build_object_modifiers(Object *object) {
 		add_relation(previous_key, modifier_key, "Modifier");
 
 		const ModifierTypeInfo *mti = KER_modifier_get_info(eModifierType(md->type));
+		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			if (mti->supports_device_only && mti->supports_device_only(md)) {
+				continue;
+			}
+		}
+		
 		if (mti->update_depsgraph) {
 			DepsNodeHandle handle = create_node_handle(modifier_key);
 			ctx.node = reinterpret_cast<::DepsNodeHandle *>(&handle);
