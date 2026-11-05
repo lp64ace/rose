@@ -974,9 +974,6 @@ ROSE_STATIC void armature_rose_read_data(RoseDataReader *reader, ID *id) {
 
 	RLO_read_list(reader, &armature->bonebase);
 
-	RLO_read_data_address(reader, &armature->adt);
-	KER_animdata_rose_read_data(reader, armature->adt);
-
 	LISTBASE_FOREACH(Bone *, bone, &armature->bonebase) {
 		direct_link_bones(reader, bone);
 	}

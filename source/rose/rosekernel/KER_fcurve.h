@@ -51,7 +51,9 @@ void KER_fcurve_modifier_free(struct ListBase *modifiers, struct FModifier *modi
 void KER_fcurve_modifiers_free(struct ListBase *modifiers);
 
 void KER_fcurve_rose_read_data(struct RoseDataReader *reader, struct FCurve *fcurve);
+void KER_fcurve_rose_read_data_listbase(struct RoseDataReader *reader, struct ListBase *fcurves);
 void KER_fcurve_rose_write_data(struct RoseWriter *writer, struct FCurve *fcurve);
+void KER_fcurves_rose_write_data(struct RoseWriter *writer, struct ListBase *fcurves);
 
 /** \} */
 

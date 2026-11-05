@@ -487,7 +487,10 @@ static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowM
 
 	double t = GTK_elapsed_time(wm->handle);
 
-	if (win->maxfps == 0.0f || t - win->last_draw >= 1.0f / win->maxfps) {
+	if (win->maxfps != 0.0f) {
+		do_time = t - win->last_draw >= 1.0f / win->maxfps;
+	}
+	else {
 		do_time = true;
 	}
 
@@ -495,8 +498,8 @@ static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowM
 		if (region->visible && (region->flag & RGN_FLAG_REDRAW) != 0) {
 			do_draw = do_time;
 		}
-		if (allow_always_redraw) {
-			if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+		if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+			if (allow_always_redraw) {
 				do_draw = do_time;
 			}
 		}
@@ -507,8 +510,8 @@ static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowM
 			if (region->visible && (region->flag & RGN_FLAG_REDRAW) != 0) {
 				do_draw = do_time;
 			}
-			if (allow_always_redraw) {
-				if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+			if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+				if (allow_always_redraw) {
 					do_draw = do_time;
 				}
 			}

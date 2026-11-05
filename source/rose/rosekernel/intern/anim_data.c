@@ -124,14 +124,23 @@ void KER_animdata_free(ID *id, const bool do_id_user) {
 
 void KER_animdata_rose_write(RoseWriter *writer, AnimData *adt) {
 	RLO_write_struct(writer, AnimData, adt);
+
+	KER_nla_rose_write(writer, &adt->nla_tracks);
 }
 
-void KER_animdata_rose_read_data(RoseDataReader *reader, AnimData *adt) {
+void KER_animdata_rose_read_data(RoseDataReader *reader, ID *id) {
+	IdAdtTemplate *iat = id_can_have_animdata(id) ? (IdAdtTemplate *)id : NULL;
+	if (!iat || !iat->adt) {
+		return;
+	}
+
+	AnimData *adt = RLO_read_struct(reader, AnimData, &iat->adt);
 	if (adt == NULL) {
 		return;
 	}
 
-	// No-op
+	RLO_read_struct_list(reader, NlaTrack, &adt->nla_tracks);
+	KER_nla_rose_read_data(reader, id, &adt->nla_tracks);
 }
 
 void KER_animdata_rose_read_lib(RoseLibReader *reader, ID *id, AnimData *adt) {
@@ -140,6 +149,10 @@ void KER_animdata_rose_read_lib(RoseLibReader *reader, ID *id, AnimData *adt) {
 	}
 
 	RLO_read_id_address(reader, id->lib, &adt->action);
+
+	LISTBASE_FOREACH (NlaTrack *, track, &adt->nla_tracks) {
+		KER_nla_rose_read_lib(reader, id, &track->strips);
+	}
 }
 
 /** \} */

@@ -10,6 +10,8 @@
 
 #include "nla_private.hh"
 
+#include "RLO_read_write.h"
+
 #include <stdio.h>
 
 /* -------------------------------------------------------------------- */
@@ -249,6 +251,58 @@ void KER_nla_tracks_free(ListBase *tracks, bool do_id_user) {
 	}
 
 	LIB_listbase_clear(tracks);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Rose Read/Write
+ * \{ */
+
+ROSE_STATIC void rose_write_nla_strips(RoseWriter *writer, ListBase *strips) {
+	LISTBASE_FOREACH (NlaStrip *, strip, strips) {
+		RLO_write_struct(writer, NlaStrip, strip);
+
+		KER_fcurves_rose_write_data(writer, &strip->fcurves);
+		// KER_fmodifiers_rose_write_data(writer, &strip->modifiers);
+
+		rose_write_nla_strips(writer, &strip->strips);
+	}
+}
+
+void KER_nla_rose_write(RoseWriter *writer, ListBase *tracks) {
+	LISTBASE_FOREACH (NlaTrack *, track, tracks) {
+		RLO_write_struct(writer, NlaTrack, track);
+
+		rose_write_nla_strips(writer, &track->strips);
+	}
+}
+
+ROSE_STATIC void rose_data_read_nla_strips(RoseDataReader *reader, ListBase *strips) {
+	LISTBASE_FOREACH (NlaStrip *, strip, strips) {
+		RLO_read_struct_list(reader, NlaStrip, &strip->strips);
+		rose_data_read_nla_strips(reader, &strip->strips);
+
+		RLO_read_struct_list(reader, FCurve, &strip->fcurves);
+		KER_fcurve_rose_read_data_listbase(reader, &strip->fcurves);
+
+		RLO_read_struct_list(reader, FModifier, &strip->modifiers);
+		// KER_fmodifier_rose_read_data_listbase(reader, &strip->fcurves);
+	}
+}
+
+void KER_nla_rose_read_data(RoseDataReader *reader, ID *id, ListBase *tracks) {
+	LISTBASE_FOREACH (NlaTrack *, track, tracks) {
+		RLO_read_struct_list(reader, NlaStrip, &track->strips);
+
+		rose_data_read_nla_strips(reader, &track->strips);
+	}
+}
+
+void KER_nla_rose_read_lib(RoseLibReader *reader, ID *id, ListBase *strips) {
+	LISTBASE_FOREACH (NlaStrip *, strip, strips) {
+		RLO_read_id_address(reader, id->lib, &strip->action);
+	}
 }
 
 /** \} */

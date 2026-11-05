@@ -131,6 +131,12 @@ void KER_fcurve_rose_read_data(RoseDataReader *reader, FCurve *fcurve) {
 	memset(&fcurve->runtime, 0, sizeof(FCurve_Runtime));
 }
 
+void KER_fcurve_rose_read_data_listbase(RoseDataReader *reader, ListBase *fcurves) {
+	LISTBASE_FOREACH (FCurve *, fcurve, fcurves) {
+		KER_fcurve_rose_read_data(reader, fcurve);
+	}
+}
+
 void KER_fcurve_rose_write_data(RoseWriter *writer, FCurve *fcurve) {
 	if (fcurve->bezt) {
 		RLO_write_struct_array(writer, BezTriple, fcurve->totvert, fcurve->bezt);
@@ -148,6 +154,12 @@ void KER_fcurve_rose_write_data(RoseWriter *writer, FCurve *fcurve) {
 	memset(&shallow_copy.runtime, 0, sizeof(FCurve_Runtime));
 
 	RLO_write_struct_at_address(writer, FCurve, fcurve, &shallow_copy);
+}
+
+void KER_fcurves_rose_write_data(RoseWriter *writer, ListBase *fcurves) {
+	LISTBASE_FOREACH (FCurve *, fcurve, fcurves) {
+		KER_fcurve_rose_write_data(writer, fcurve);
+	}
 }
 
 /** \} */

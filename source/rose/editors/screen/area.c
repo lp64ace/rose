@@ -491,14 +491,14 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 		region->type->prefsizey = UI_UNIT_Y;
 	}
 
-	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 2 : region->type->prefsizex);
+	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 0.5f : region->type->prefsizex);
 	int prefsizey;
 
 	if (ELEM(region->regiontype, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 		prefsizey = ED_area_header_size_y(area);
 	}
 	else {
-		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 2 : region->type->prefsizey);
+		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 0.5f : region->type->prefsizey);
 	}
 
 	if ((region->flag & RGN_FLAG_HIDDEN) != 0) {

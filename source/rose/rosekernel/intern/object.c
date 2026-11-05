@@ -177,9 +177,6 @@ void object_rose_write(RoseWriter *writer, ID *id, const void *address) {
 void object_rose_read_data(RoseDataReader *reader, ID *id) {
 	Object *ob = (Object *)id;
 
-	RLO_read_data_address(reader, &ob->adt);
-	KER_animdata_rose_read_data(reader, ob->adt);
-
 	RLO_read_data_address(reader, &ob->pose);
 	KER_pose_rose_read_data(reader, ob->pose);
 

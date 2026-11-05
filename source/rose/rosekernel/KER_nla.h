@@ -78,6 +78,16 @@ void KER_nla_tracks_free(struct ListBase *tracks, bool do_id_user);
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Rose Read/Write
+ * \{ */
+
+void KER_nla_rose_write(struct RoseWriter *writer, struct ListBase *tracks);
+void KER_nla_rose_read_data(struct RoseDataReader *reader, struct ID *id, struct ListBase *tracks);
+void KER_nla_rose_read_lib(struct RoseLibReader *reader, struct ID *id, struct ListBase *strips);
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name NlaTrack
  * \{ */
 

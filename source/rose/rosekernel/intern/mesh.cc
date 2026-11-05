@@ -291,9 +291,6 @@ ROSE_STATIC void mesh_rose_write(RoseWriter *writer, ID *id, const void *address
 ROSE_STATIC void mesh_rose_read_data(RoseDataReader *reader, ID *id) {
 	Mesh *mesh = (Mesh *)id;
 	
-	RLO_read_data_address(reader, &mesh->adt);
-	KER_animdata_rose_read_data(reader, mesh->adt);
-
 	RLO_read_struct_list(reader, DeformGroup, &mesh->vertex_group_names);
 
 	CustomData_rose_read(reader, &mesh->vdata, mesh->totvert);
