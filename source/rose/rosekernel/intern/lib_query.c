@@ -1,3 +1,4 @@
+#include "KER_anim_data.h"
 #include "KER_idprop.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
@@ -240,6 +241,15 @@ ROSE_STATIC bool library_foreach_ID_link(Main *main, ID *owner_id, ID *id, Libra
 		if (KER_lib_query_foreachid_iter_stop(&data)) {
 			library_foreach_ID_data_cleanup(&data);
 			return false;
+		}
+
+		AnimData *adt = KER_animdata_from_id(id);
+		if (adt) {
+			KER_animdata_foreach_id(adt, &data);
+			if (KER_lib_query_foreachid_iter_stop(&data)) {
+				library_foreach_ID_data_cleanup(&data);
+				return false;
+			}
 		}
 
 		const IDTypeInfo *id_type = KER_idtype_get_info_from_id(id);

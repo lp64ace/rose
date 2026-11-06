@@ -57,6 +57,8 @@ public:
 	virtual void Poll(void) = 0;
 	virtual double Time(void) const;
 
+	virtual int GetKeyState(int key) const = 0;
+
 	virtual bool SetClipboard(const char *buffer, unsigned int length, bool selection) {
 		return false;
 	}

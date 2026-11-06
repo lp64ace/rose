@@ -4,7 +4,9 @@
 #include "KER_anim_data.h"
 #include "KER_idtype.h"
 #include "KER_lib_id.h"
+#include "KER_lib_query.h"
 #include "KER_main.h"
+#include "KER_nla.h"
 #include "KER_fcurve.h"
 
 #include "LIB_utildefines.h"
@@ -69,6 +71,23 @@ AnimData *KER_animdata_copy_ex(Main *main, AnimData *adt, int flag) {
 		id_us_add((ID *)new_adt->action);
 	}
 
+	KER_nla_tracks_copy_from_adt(main, new_adt, adt, flag);
+
+	const bool is_main = (flag & LIB_ID_CREATE_NO_MAIN) == 0;
+	if (is_main) {
+	/**
+	 * Action references were changed, so the Slot-to-user map is incomplete now. Only necessary
+	 * when this happens in the main database though, as the user cache only tracks original IDs,
+	 * not evaluated copies.
+	 *
+	 * This function does not have access to the animated ID, so it cannot just add that ID to the
+	 * slot's users, hence the invalidation of the users map.
+	 */
+		if (main) {
+			KER_action_slot_runtime_users_invalidate(main);
+		}
+	}
+
 	return new_adt;
 }
 
@@ -91,6 +110,8 @@ void KER_animdata_free(ID *id, const bool do_id_user) {
 		}
 	}
 
+	KER_nla_tracks_free(&adt->nla_tracks, do_id_user);
+
 	MEM_freeN(adt);
 	iat->adt = NULL;
 }
@@ -103,14 +124,23 @@ void KER_animdata_free(ID *id, const bool do_id_user) {
 
 void KER_animdata_rose_write(RoseWriter *writer, AnimData *adt) {
 	RLO_write_struct(writer, AnimData, adt);
+
+	KER_nla_rose_write(writer, &adt->nla_tracks);
 }
 
-void KER_animdata_rose_read_data(RoseDataReader *reader, AnimData *adt) {
+void KER_animdata_rose_read_data(RoseDataReader *reader, ID *id) {
+	IdAdtTemplate *iat = id_can_have_animdata(id) ? (IdAdtTemplate *)id : NULL;
+	if (!iat || !iat->adt) {
+		return;
+	}
+
+	AnimData *adt = RLO_read_struct(reader, AnimData, &iat->adt);
 	if (adt == NULL) {
 		return;
 	}
 
-	// No-op
+	RLO_read_struct_list(reader, NlaTrack, &adt->nla_tracks);
+	KER_nla_rose_read_data(reader, id, &adt->nla_tracks);
 }
 
 void KER_animdata_rose_read_lib(RoseLibReader *reader, ID *id, AnimData *adt) {
@@ -119,6 +149,26 @@ void KER_animdata_rose_read_lib(RoseLibReader *reader, ID *id, AnimData *adt) {
 	}
 
 	RLO_read_id_address(reader, id->lib, &adt->action);
+
+	LISTBASE_FOREACH (NlaTrack *, track, &adt->nla_tracks) {
+		KER_nla_rose_read_lib(reader, id, &track->strips);
+	}
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Iteration
+ * \{ */
+
+void KER_animdata_foreach_id(AnimData *adt, struct LibraryForeachIDData *data) {
+	KER_LIB_FOREACHID_PROCESS_IDSUPER(data, adt->action, IDWALK_CB_USER);
+	
+	LISTBASE_FOREACH (NlaTrack *, nla_track, &adt->nla_tracks) {
+		LISTBASE_FOREACH (NlaStrip *, nla_strip, &nla_track->strips) {
+			KER_nla_strip_foreach_id(nla_strip, data);
+		}
+	}
 }
 
 /** \} */

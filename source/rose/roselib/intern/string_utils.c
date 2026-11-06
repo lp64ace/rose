@@ -64,9 +64,9 @@ void LIB_uniquename_cb(UniquenameCheckCallback unique_check, void *arg, const ch
 			else {
 				char *tempname_buf;
 				memcpy(tempname, left, maxncpy - numlen);
-				memcpy(tempname + maxncpy - numlen, numstr, numlen + 1);
+				memcpy(tempname + len, numstr, numlen + 1);
 			}
-		} while (unique_check(arg, name));
+		} while (unique_check(arg, tempname));
 
 		LIB_strcpy(name, maxncpy, tempname);
 	}

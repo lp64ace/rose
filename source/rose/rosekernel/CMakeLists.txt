@@ -51,6 +51,7 @@ set(SRC
 	KER_mesh.hh
 	KER_mesh_types.hh
 	KER_modifier.h
+	KER_nla.h
 	KER_object.h
 	KER_object_deform.h
 	KER_report.h
@@ -63,7 +64,7 @@ set(SRC
 	intern/action.c
 	intern/action_runtime.cc
 	intern/anim_data.c
-	intern/anim_sys.c
+	intern/anim_sys.cc
 	intern/armature.c
 	intern/armature_deform.cc
 	intern/camera.c
@@ -90,6 +91,8 @@ set(SRC
 	intern/mesh_runtime.cc
 	intern/mesh_tessellate.cc
 	intern/modifier.c
+	intern/nla_private.hh
+	intern/nla.cc
 	intern/object.c
 	intern/object_deform.c
 	intern/object_runtime.cc

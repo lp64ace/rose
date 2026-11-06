@@ -101,6 +101,13 @@ public:
 	template<typename KeyType> Relation *add_node_handle_relation(const KeyType &key_from, const DepsNodeHandle *handle, const char *description, int flags = 0);
 	template<typename KeyTo> Relation *add_depends_on_transform_relation(ID *id, const KeyTo &key_to, const char *description, int flags = 0);
 
+	/**
+	 * Adds relation from proper transformation operation to the modifier.
+	 * Takes care of checking for possible physics solvers modifying position
+	 * of this object.
+	 */
+	void add_depends_on_transform_relation(const DepsNodeHandle *handle, const char *description);
+
 	void begin_build();
 
 	virtual void build_copy_on_write_relations();
@@ -110,6 +117,8 @@ public:
 	virtual void build_generic_id(ID *id);
 	virtual void build_idproperties(IDProperty *idproperty);
 	virtual void build_animdata_curves_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, FCurve **curves, int totcurve);
+	virtual void build_animdata_nla_strip_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, ListBase *strips);
+	virtual void build_animdata_action_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, Action *action, int slot);
 	virtual void build_animdata_curves(ID *id);
 	virtual void build_animdata(ID *id);
 	virtual void build_parameters(ID *id);
@@ -119,6 +128,7 @@ public:
 	virtual void build_armature_bones(ListBase *bones);
 	virtual void build_collection(LayerCollection *from_layer_collection, Object *object, Collection *collection);
 	virtual void build_object(Object *object);
+	virtual void build_object_modifiers(Object *object);
 	virtual void build_object_dimensions(Object *object);
 	virtual void build_object_from_view_layer_base(Object *object);
 	virtual void build_object_layer_component_relations(Object *object);
@@ -147,6 +157,8 @@ protected:
 	/* Add relation which ensures visibility of `id_from` when `id_to` is visible.
 	 * For the more detailed explanation see comment for `NodeType::VISIBILITY`. */
 	void add_visibility_relation(ID *id_from, ID *id_to);
+
+	template<typename KeyType> DepsNodeHandle create_node_handle(const KeyType &key, const char *default_name = "");
 
 private:
 	struct BuilderWalkUserData {

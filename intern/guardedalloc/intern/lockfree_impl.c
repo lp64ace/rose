@@ -229,7 +229,7 @@ void *MEM_lockfree_recallocN_id(void *vptr, size_t size, char const *identity) {
 		}
 	}
 	else {
-		newp = MEM_lockfree_mallocN(size, identity);
+		newp = MEM_lockfree_callocN(size, identity);
 	}
 
 	return newp;

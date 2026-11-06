@@ -53,6 +53,8 @@ public:
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
 
+	virtual bool HasInputFocus() const = 0;
+
 	virtual void UpdateCursorCustomShape(const char *bitmap, const char *mask, int width, int height, int x, int y) = 0;
 	virtual void UpdateCursor(bool visible, int shape) = 0;
 

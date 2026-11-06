@@ -37,12 +37,6 @@ ROSE_INLINE SpaceLink *statusbar_create(const ScrArea *area) {
 
 		region->flag |= RGN_FLAG_ALWAYS_REDRAW;
 	}
-	// Main Region
-	{
-		ARegion *region = MEM_callocN(sizeof(ARegion), "SpaceStatusBar::Main");
-		LIB_addtail(&statusbar->regionbase, region);
-		region->regiontype = RGN_TYPE_WINDOW;
-	}
 	statusbar->spacetype = SPACE_STATUSBAR;
 
 	return (SpaceLink *)statusbar;
@@ -105,16 +99,6 @@ void ED_spacetype_statusbar() {
 		art->draw = NULL;
 		art->init = ED_region_header_init;
 		art->exit = ED_region_header_exit;
-		art->keymapflag = ED_KEYMAP_UI;
-	}
-	// Main
-	{
-		ARegionType *art = MEM_callocN(sizeof(ARegionType), "StatusBar::ARegionType::Main");
-		LIB_addtail(&st->regiontypes, art);
-		art->regionid = RGN_TYPE_WINDOW;
-		art->draw = NULL;
-		art->init = ED_region_default_init;
-		art->exit = ED_region_default_exit;
 		art->keymapflag = ED_KEYMAP_UI;
 	}
 

@@ -20,6 +20,7 @@
 #include "KER_main.h"
 #include "KER_mesh.h"
 #include "KER_modifier.h"
+#include "KER_nla.h"
 #include "KER_object.h"
 #include "KER_report.h"
 #include "KER_rose.h"
@@ -253,24 +254,6 @@ ROSE_INLINE void wm_init_scene(rContext *C, Main *main, struct wmWindow *window)
 	Scene *scene = KER_scene_new(main, "Scene");
 
 	ED_screen_scene_change(C, window, scene);
-
-	do {
-		RoseFileData *rfd;
-		
-		rfd = KER_rosefile_read("C:\\Users\\Jim\\Documents\\example.rose", 0);
-		if (rfd) {
-			KER_rosefile_read_setup(C, rfd);
-			break;
-		}
-
-		rfd = KER_rosefile_read("/home/jim/Documents/example.rose", 0);
-		if (rfd) {
-			KER_rosefile_read_setup(C, rfd);
-			break;
-		}
-
-		// No file was found, so we will just keep the default scene (empty).
-	} while(false);
 }
 
 void WM_keyconfig_init(rContext *C) {

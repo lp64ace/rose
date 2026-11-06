@@ -55,6 +55,15 @@ FCurve *KER_fcurve_copy(const struct FCurve *fcu) {
 	return fcu_d;
 }
 
+void KER_fcurves_copy(ListBase *dst, const ListBase *src) {
+	LIB_listbase_clear(dst);
+
+	LISTBASE_FOREACH (const FCurve *, fcurve, src) {
+		FCurve *new_fcurve = KER_fcurve_copy(fcurve);
+		LIB_addtail(dst, new_fcurve);
+	}
+}
+
 void KER_fcurves_free(ListBase *list) {
 	LISTBASE_FOREACH_MUTABLE(FCurve *, fcurve, list) {
 		KER_fcurve_free(fcurve);
@@ -87,6 +96,31 @@ void KER_fcurve_free(FCurve *fcurve) {
 	MEM_freeN(fcurve);
 }
 
+void KER_fcurve_modifier_free(ListBase *modifiers, FModifier *modifier) {
+	if (modifier == NULL) {
+		return;
+	}
+
+	if (modifiers) {
+		LIB_freelinkN(modifiers, modifier);
+	}
+	else {
+		MEM_freeN(modifier);
+	}
+}
+
+void KER_fcurve_modifiers_free(ListBase *modifiers) {
+	if (modifiers == NULL) {
+		return;
+	}
+
+	LISTBASE_FOREACH_MUTABLE(FModifier *, modifier, modifiers) {
+		KER_fcurve_modifier_free(modifiers, modifier);
+	}
+
+	LIB_listbase_clear(modifiers);
+}
+
 void KER_fcurve_rose_read_data(RoseDataReader *reader, FCurve *fcurve) {
 	RLO_read_struct_array(reader, BezTriple, fcurve->totvert, &fcurve->bezt);
 	RLO_read_struct_array(reader, FPoint, fcurve->totvert, &fcurve->fpt);
@@ -95,6 +129,12 @@ void KER_fcurve_rose_read_data(RoseDataReader *reader, FCurve *fcurve) {
 	RLO_read_struct(reader, ActionGroup, &fcurve->group);
 
 	memset(&fcurve->runtime, 0, sizeof(FCurve_Runtime));
+}
+
+void KER_fcurve_rose_read_data_listbase(RoseDataReader *reader, ListBase *fcurves) {
+	LISTBASE_FOREACH (FCurve *, fcurve, fcurves) {
+		KER_fcurve_rose_read_data(reader, fcurve);
+	}
 }
 
 void KER_fcurve_rose_write_data(RoseWriter *writer, FCurve *fcurve) {
@@ -114,6 +154,12 @@ void KER_fcurve_rose_write_data(RoseWriter *writer, FCurve *fcurve) {
 	memset(&shallow_copy.runtime, 0, sizeof(FCurve_Runtime));
 
 	RLO_write_struct_at_address(writer, FCurve, fcurve, &shallow_copy);
+}
+
+void KER_fcurves_rose_write_data(RoseWriter *writer, ListBase *fcurves) {
+	LISTBASE_FOREACH (FCurve *, fcurve, fcurves) {
+		KER_fcurve_rose_write_data(writer, fcurve);
+	}
 }
 
 /** \} */
@@ -368,6 +414,116 @@ ROSE_INLINE void berekeny(float f1, float f2, float f3, float f4, float *o, int 
 /** \name F-Curve Evaluate
  * \{ */
 
+/**
+ * Get the first and last index to the bezt array that satisfies the given parameters.
+ *
+ * \param selected_keys_only: Only accept indices of bezt that are selected.
+ * Is a subset of frame_range.
+ * \param frame_range: Only consider keyframes in that frame interval. Can be nullptr.
+ */
+ROSE_STATIC bool get_bounding_bezt_indices(const FCurve *fcu, const bool selected_keys_only, const float frame_range[2], int *r_first, int *r_last) {
+	/* Sanity checks. */
+	if (fcu->bezt == NULL) {
+		return false;
+	}
+
+	*r_first = 0;
+	*r_last = fcu->totvert - 1;
+
+	bool found = false;
+	if (frame_range != NULL) {
+    	/* If a range is passed in find the first and last keyframe within that range. */
+    	bool replace = false;
+    	*r_first = KER_fcurve_bezt_binarysearch_index_ex(fcu->bezt, frame_range[0], fcu->totvert, 1e-4f, &replace);
+    	*r_last = KER_fcurve_bezt_binarysearch_index_ex(fcu->bezt, frame_range[1], fcu->totvert, 1e-4f, &replace);
+
+		/* If first and last index are the same, no keyframes were found in the range. */
+		if (*r_first == *r_last) {
+			return false;
+		}
+
+		/**
+		 * The binary search returns an index where a keyframe would be inserted,
+		 * so it needs to be clamped to ensure it is in range of the array.
+		 */
+		*r_first = ROSE_MIN(ROSE_MAX(*r_first, 0), fcu->totvert - 1);
+		*r_last = ROSE_MIN(ROSE_MAX(*r_last - 1, 0), fcu->totvert - 1);
+  	}
+
+	/* Only include selected items? */
+	if (selected_keys_only) {
+		/* Find first selected. */
+		for (int i = *r_first; i <= *r_last; i++) {
+			BezTriple *bezt = &fcu->bezt[i];
+			if (BEZT_ISSEL_ANY(bezt)) {
+				*r_first = i;
+				found = true;
+				break;
+			}
+		}
+
+		/* Find last selected. */
+		for (int i = *r_last; i >= *r_first; i--) {
+			BezTriple *bezt = &fcu->bezt[i];
+			if (BEZT_ISSEL_ANY(bezt)) {
+				*r_last = i;
+				found = true;
+				break;
+			}
+		}
+	}
+	else {
+		found = true;
+	}
+
+	return found;
+}
+
+ROSE_STATIC void calculate_bezt_bounds_x(BezTriple *bezt_array, const int index_range[2], const bool include_handles, float *r_min, float *r_max) {
+	*r_min = bezt_array[index_range[0]].vec[1][0];
+	*r_max = bezt_array[index_range[1]].vec[1][0];
+
+	if (include_handles) {
+		/* Need to check all handles because they might extend beyond their neighboring keys. */
+		for (int i = index_range[0]; i <= index_range[1]; i++) {
+			const BezTriple *bezt = &bezt_array[i];
+			*r_min = ROSE_MIN(*r_min, bezt->vec[0][0], bezt->vec[1][0]);
+			*r_max = ROSE_MAX(*r_max, bezt->vec[1][0], bezt->vec[2][0]);
+		}
+	}
+}
+
+bool KER_fcurve_calc_range(const FCurve *fcurve, float *r_min, float *r_max, bool selected_keys_only) {
+	float min = 0.0f;
+	float max = 0.0f;
+	bool foundvert = false;
+
+	if (fcurve->totvert == 0) {
+		return false;
+	}
+
+	if (fcurve->bezt) {
+		int index_range[2];
+		foundvert = get_bounding_bezt_indices(fcurve, selected_keys_only, NULL, &index_range[0], &index_range[1]);
+		if (!foundvert) {
+			return false;
+		}
+		const bool include_handles = false;
+		calculate_bezt_bounds_x(fcurve->bezt, index_range, include_handles, &min, &max);
+	}
+	else if (fcurve->fpt) {
+		min = fcurve->fpt[0].vec[0];
+		max = fcurve->fpt[fcurve->totvert - 1].vec[0];
+
+		foundvert = true;
+	}
+
+	*r_min = min;
+	*r_max = max;
+
+	return foundvert;
+}
+
 ROSE_INLINE float fcurve_eval_keyframes_extrapolate(const FCurve *fcu, const BezTriple *bezts, float evaltime, int endpoint_offset, int direction_to_neighbor) {
 	/* The first/last keyframe. */
 	const BezTriple *endpoint_bezt = bezts + endpoint_offset;
@@ -563,7 +719,7 @@ ROSE_INLINE float fcurve_eval_samples(const FCurve *fcu, const FPoint *fpts, flo
 	return cvalue;
 }
 
-ROSE_INLINE float fcurve_evaluate_ex(FCurve *fcurve, float ctime, float cvalue) {
+ROSE_INLINE float fcurve_evaluate_ex(const FCurve *fcurve, float ctime, float cvalue) {
 	if (fcurve->bezt) {
 		cvalue = fcurve_eval_keyframes(fcurve, fcurve->bezt, ctime);
 	}
@@ -574,15 +730,15 @@ ROSE_INLINE float fcurve_evaluate_ex(FCurve *fcurve, float ctime, float cvalue) 
 	return cvalue;
 }
 
-ROSE_INLINE float fcurve_evaluate(FCurve *fcurve, float ctime) {
+ROSE_INLINE float fcurve_evaluate(const FCurve *fcurve, float ctime) {
 	return fcurve_evaluate_ex(fcurve, ctime, 0.0f);
 }
 
-bool KER_fcurve_is_empty(FCurve *fcurve) {
+bool KER_fcurve_is_empty(const FCurve *fcurve) {
 	return fcurve->totvert == 0;
 }
 
-float KER_fcurve_evaluate(PathResolvedRNA *rna, FCurve *fcurve, float ctime) {
+float KER_fcurve_evaluate(PathResolvedRNA *rna, const FCurve *fcurve, float ctime) {
 	if (KER_fcurve_is_empty(fcurve)) {
 		return 0.0f;
 	}

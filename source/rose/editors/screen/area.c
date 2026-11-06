@@ -299,7 +299,7 @@ static void region_azone_tab_plus(ScrArea *area, AZone *az, ARegion *region) {
 	LIB_rcti_init(&az->rect, az->x1, az->x2, az->y1, az->y2);
 }
 
-static bool region_azone_edge_poll(const ARegion *region) {
+static bool region_azone_edge_poll(const ScrArea *area, const ARegion *region) {
 	const bool is_hidden = (region->flag & (RGN_FLAG_HIDDEN | RGN_FLAG_TOO_SMALL));
 
 	if (!is_hidden && ELEM(region->regiontype, RGN_TYPE_HEADER)) {
@@ -312,7 +312,7 @@ static bool region_azone_edge_poll(const ARegion *region) {
 ROSE_INLINE void region_azone_edge_init(ScrArea *area, ARegion *region, int edge) {
 	const bool is_hidden = (region->flag & (RGN_FLAG_HIDDEN | RGN_FLAG_TOO_SMALL));
 
-	if (!region_azone_edge_poll(region)) {
+	if (!region_azone_edge_poll(area, region)) {
 		return;
 	}
 
@@ -346,6 +346,29 @@ ROSE_INLINE void region_azones_add_edge(ScrArea *area, ARegion *region, const in
 	}
 }
 
+ROSE_STATIC void region_azone_scrollbar_init(ScrArea *area, ARegion *region, int direction) {
+  AZone *az = MEM_callocN(sizeof(AZone), __func__);
+
+  LIB_addtail(&area->actionzones, az);
+  az->type = AZONE_REGION_SCROLL;
+  az->region = region;
+  az->direction = direction;
+
+  /* No need to specify rect for scrollbar az. For intersection we'll test against the area around
+   * the region's scroller instead, in `area_actionzone_get_rect`. */
+}
+
+ROSE_STATIC void region_azones_scrollbars_init(ScrArea *area, ARegion *region) {
+	const View2D *v2d = &region->v2d;
+
+	if (v2d->scroll & V2D_SCROLL_VERTICAL) {
+		region_azone_scrollbar_init(area, region, AZ_SCROLL_VERT);
+	}
+	if (v2d->scroll & V2D_SCROLL_HORIZONTAL) {
+		region_azone_scrollbar_init(area, region, AZ_SCROLL_HOR);
+	}
+}
+
 ROSE_INLINE void region_azones_add(const Screen *screen, ScrArea *area, ARegion *region) {
 	region_azones_add_edge(area, region, RGN_ALIGN_ENUM_FROM_MASK(region->alignment));
 
@@ -354,6 +377,8 @@ ROSE_INLINE void region_azones_add(const Screen *screen, ScrArea *area, ARegion 
 	if ((region->alignment & RGN_SPLIT_PREV) && region->prev) {
 		region_azones_add_edge(area, region, RGN_ALIGN_ENUM_FROM_MASK(region->prev->alignment));
 	}
+
+	// region_azones_scrollbars_init(area, region);
 }
 
 /** \} */
@@ -466,14 +491,14 @@ ROSE_STATIC void region_rect_recursive(ScrArea *area, ARegion *region, rcti *rem
 		region->type->prefsizey = UI_UNIT_Y;
 	}
 
-	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 2 : region->type->prefsizex);
+	int prefsizex = PIXELSIZE * ((region->sizex > 1) ? region->sizex + 0.5f : region->type->prefsizex);
 	int prefsizey;
 
 	if (ELEM(region->regiontype, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
 		prefsizey = ED_area_header_size_y(area);
 	}
 	else {
-		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 2 : region->type->prefsizey);
+		prefsizey = PIXELSIZE * ((region->sizey > 1) ? region->sizey + 0.5f : region->type->prefsizey);
 	}
 
 	if ((region->flag & RGN_FLAG_HIDDEN) != 0) {

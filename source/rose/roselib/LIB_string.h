@@ -222,6 +222,20 @@ const char *LIB_strnext(const char *begin, const char *end, const char *itr, int
 const char *LIB_strprev(const char *begin, const char *end, const char *itr, int c);
 
 /**
+ * This roughly matches C and Python's string escaping with double quotes - `"`.
+ *
+ * Since every character may need escaping,
+ * it's common to create a buffer twice as large as the input.
+ *
+ * \param dst: The destination string, at least \a maxncpy, typically `(strlen(src) * 2) + 1`.
+ * \param maxncpy: The maximum number of bytes allowable to copy.
+ * \param src: The un-escaped source string.
+ *
+ * \note This is used for creating animation paths in rose files.
+ */
+size_t LIB_str_escape(char *dst, size_t maxncpy, const char *src);
+
+/**
  * Find the next unescaped quote character in a string.
  */
 const char *LIB_str_escape_find_quote(const char *p);

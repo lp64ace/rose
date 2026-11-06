@@ -609,14 +609,15 @@ void DRW_render_context_disable_ex(bool restore) {
 
 #ifndef NDEBUG
 ROSE_INLINE void draw_object_modifier_list_debug_check(Object *object) {
-	LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
-		if (md == (ModifierData *)object->modifiers.last) {
-			continue;
+	bool is_next_deform = false;
+	LISTBASE_FOREACH_BACKWARD(ModifierData *, md, &object->modifiers) {
+		if (is_next_deform && (md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			/** Cannot compute device modifiers before computing deform modifiers on CPU. */
+			ROSE_assert_unreachable();
 		}
 
-		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
-			/** Only the last modifier can be applied on device, the rest must be applied on the host. */
-			ROSE_assert_unreachable();
+		if (md->type == OnlyDeform) {
+			is_next_deform |= true;
 		}
 	}
 }
@@ -649,9 +650,11 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 		}
 	}
 
-	ModifierData *md = (ModifierData *)object->modifiers.last;
+	for (ModifierData *md = (ModifierData *)object->modifiers.last; md; md = md->prev) {
+		if (!draw_modifier_is_device(md)) {
+			continue;
+		}
 
-	if (draw_modifier_is_device(md)) {
 		/**
 		 * Finally since the modifier is tagged by the user to be built on the device,
 		 * we force cache population for it on device.
@@ -671,19 +674,18 @@ ROSE_STATIC void drw_engine_cache_populate(struct Object *object) {
 	draw_object_modifier_list_debug_check(object);
 #endif
 
-	// Remember us motherfucker, we are still waiting for modifier overrides, calculate them here!
-	if (!LIB_listbase_is_empty(&object->modifiers)) {
-		ModifierData *md = (ModifierData *)object->modifiers.last;
-
-		if (draw_modifier_is_device(md)) {
-			/**
-			 * Finally since the modifier is tagged by the user to be built on the device,
-			 * we force built it on device.
-			 *
-			 * \note Not all modifiers are allowed to be computed on device, unsupported modifiers will be ignored.
-			 */
-			draw_modifier_cache_build(md, object);
+	for (ModifierData *md = (ModifierData *)object->modifiers.last; md; md = md->prev) {
+		if (!draw_modifier_is_device(md)) {
+			continue;
 		}
+
+		/**
+		 * Finally since the modifier is tagged by the user to be built on the device,
+		 * we force built it on device.
+		 *
+		 * \note Not all modifiers are allowed to be computed on device, unsupported modifiers will be ignored.
+		 */
+		draw_modifier_cache_build(md, object);
 	}
 }
 

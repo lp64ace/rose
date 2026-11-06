@@ -25,6 +25,9 @@ enum {
 void KER_animsys_evaluate_animdata(struct ID *id, struct AnimData *adt, float time, int recalc);
 void KER_animsys_eval_animdata(struct Depsgraph *depsgraph, struct ID *id);
 
+void KER_anim_evaluate_fcurves_ex(struct PointerRNA *ptr, struct FCurve **fcurves, int totcurve, float ctime, bool flush_to_original);
+void KER_anim_evaluate_fcurves(struct PointerRNA *ptr, struct FCurve **fcurves, int totcurve, float ctime);
+
 bool KER_animsys_rna_path_resolve(struct PointerRNA *ptr, const char *path, int index, struct PathResolvedRNA *result);
 bool KER_animsys_rna_curve_resolve(struct PointerRNA *ptr, struct FCurve *fcurve, struct PathResolvedRNA *result);
 

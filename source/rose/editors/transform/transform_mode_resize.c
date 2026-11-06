@@ -182,4 +182,8 @@ void ED_transform_mode_resize_init(TransInfo *t, const float mouse_dir_constrain
 
 	t->index_max = 2;
 	t->number.index_max = 2;
+	t->number.flag_value[0] |= NUM_NULL_ONE;
+	t->number.flag_value[1] |= NUM_NULL_ONE;
+	t->number.flag_value[2] |= NUM_NULL_ONE;
+	t->number.flag |= NUM_AFFECT_ALL;
 }

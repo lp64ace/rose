@@ -64,6 +64,7 @@ if(UNIX)
 	mark_as_advanced(WITH_COMPILER_CCACHE)
 endif()
 
+# Turned off by default so that we can Debug without having to worry about multi-threading!
 option(WITH_TBB "Enable multi-threading. TBB is also required for features such as Cycles, OpenVDB and USD." OFF)
 mark_as_advanced(WITH_TBB)
 
@@ -91,7 +92,6 @@ endif()
 
 if(ROSE_BUILD_X11)
 	message(STATUS "[Support] Building '${CMAKE_PROJECT_NAME}' including X11 support")
-	
 	option(WITH_X11_XINPUT "Enable X11 Xinput (tablet support and unicode input)" ON)
 endif()
 

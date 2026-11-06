@@ -10,6 +10,7 @@ struct Main;
 struct RoseDataReader;
 struct RoseLibReader;
 struct RoseWriter;
+struct LibraryForeachIDData;
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +40,7 @@ void KER_animdata_free(struct ID *id, const bool do_id_user);
  * \{ */
 
 void KER_animdata_rose_write(struct RoseWriter *writer, struct AnimData *adt);
-void KER_animdata_rose_read_data(struct RoseDataReader *reader, struct AnimData *adt);
+void KER_animdata_rose_read_data(struct RoseDataReader *reader, struct ID *id);
 void KER_animdata_rose_read_lib(struct RoseLibReader *reader, struct ID *id, struct AnimData *adt);
 
 /** \} */
@@ -53,6 +54,12 @@ typedef void (*ID_FCurve_Edit_Callback)(struct ID *id, struct FCurve *fcurve, vo
 
 /* Look over all f-curves of a given ID. */
 void KER_fcurves_id_cb(struct ID *id, ID_FCurve_Edit_Callback func, void *user_data);
+
+/**
+ * Callback used by lib_query to walk over all ID usages
+ * (mimics `foreach_id` callback of #IDTypeInfo structure).
+ */
+void KER_animdata_foreach_id(struct AnimData *adt, struct LibraryForeachIDData *data);
 
 /** \} */
 

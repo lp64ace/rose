@@ -332,6 +332,34 @@ const char *LIB_strprev(const char *begin, const char *end, const char *itr, int
 	return begin - 1;
 }
 
+size_t LIB_str_escape(char *dst, size_t maxncpy, const char *src) {
+	ROSE_assert(maxncpy != 0);
+
+	size_t length = 0;
+	for (; length < maxncpy && src[0] != '\0'; dst++, src++, length++) {
+		char c = *src;
+		if (ELEM(c, '\\', '"') ||                       /* Use as-is. */
+			((c == '\t') && ((void)(c = 't'), true)) || /* Tab. */
+			((c == '\n') && ((void)(c = 'n'), true)) || /* Newline. */
+			((c == '\r') && ((void)(c = 'r'), true)) || /* Carriage return. */
+			((c == '\a') && ((void)(c = 'a'), true)) || /* Bell. */
+			((c == '\b') && ((void)(c = 'b'), true)) || /* Backspace. */
+			((c == '\f') && ((void)(c = 'f'), true)))   /* Form-feed. */
+		{
+			if (length + 1 >= maxncpy) {
+				break;
+			}
+
+			*dst++ = '\\';
+			length++;
+		}
+		*dst = c;
+	}
+	*dst = '\0';
+	
+	return length;
+}
+
 const char *LIB_str_escape_find_quote(const char *p) {
 	bool escape = false;
 	while (*p && (*p != '"' || escape)) {

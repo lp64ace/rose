@@ -482,9 +482,11 @@ void IDP_DirectLinkProperty(IDProperty *prop, RoseDataReader *reader) {
 		case IDP_ID:
 			break; /* Nothing special to do here. */
 		default:
+#ifndef NDEBUG
 			/* Unknown IDP type, nuke it (we cannot handle unknown types everywhere in code,
 			* IDP are way too polymorphic to do it safely. */
 			printf("%s: found unknown IDProperty type %d, reset to Integer one !\n", __func__, prop->type);
+#endif
 			/* Note: we do not attempt to free unknown prop, we have no way to know how to do that! */
 			prop->type = IDP_INT;
 			prop->subtype = 0;
@@ -498,8 +500,10 @@ void IDP_RoseReadData(RoseDataReader *reader, IDProperty **property, const char 
 			IDP_DirectLinkGroup(*property, reader);
 		}
 		else {
+#ifndef NDEBUG
 			/* corrupt file! */
 			printf("%s: found non group data, freeing type %d!\n", allocname, (*property)->type);
+#endif
 			/* don't risk id, data's likely corrupt. */
 			// IDP_FreePropertyContent(*prop);
 			*property = NULL;

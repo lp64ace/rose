@@ -151,12 +151,22 @@ bool KER_modifier_depends_ontime(Scene *scene, ModifierData *md) {
 bool KER_modifier_deform_verts(ModifierData *md, const ModifierEvalContext *ctx, struct Mesh *mesh, float (*positions)[3], size_t length) {
 	const ModifierTypeInfo *mti = KER_modifier_get_info(md->type);
 
+	if (mesh && mti->depends_on_normals && mti->depends_on_normals(md)) {
+		KER_mesh_vert_normals_ensure(mesh);
+		KER_mesh_poly_normals_ensure(mesh);
+		KER_mesh_corner_normals_ensure(mesh);
+	}
+
+	if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+		if (mti->supports_device_only && mti->supports_device_only(md)) {
+			return true;
+		}
+	}
+
 	if (mti->deform_verts) {
-		if ((md->flag & MODIFIER_DEVICE_ONLY) == 0) {
-			mti->deform_verts(md, ctx, mesh, positions, length);
-			if (mesh) {
-				KER_mesh_positions_changed(mesh);
-			}
+		mti->deform_verts(md, ctx, mesh, positions, length);
+		if (mesh) {
+			KER_mesh_positions_changed(mesh);
 		}
 
 		return true;

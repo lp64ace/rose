@@ -26,6 +26,7 @@ typedef struct RNAProcessItem {
 
 RNAProcessItem RNAItems[] = {
 	{.filename = "rna_rna.c", .define = RNA_def_rna},
+	{.filename = "rna_nla.c", .define = RNA_def_nla},
 	{.filename = "rna_id.c", .define = RNA_def_ID},
 	{.filename = "rna_ob.c", .define = RNA_def_Object},
 	{.filename = "rna_pose.c", .define = RNA_def_Pose},

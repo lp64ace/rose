@@ -34,6 +34,9 @@ enum {
 	HD_ALIGN_DOUBLESIDE,
 };
 
+#define BEZT_ISSEL_ANY(bezt) (((bezt)->f2 & BEZT_FLAG_SELECT) || ((bezt)->f1 & BEZT_FLAG_SELECT) || ((bezt)->f3 & BEZT_FLAG_SELECT))
+#define BEZT_ISSEL_ALL(bezt) (((bezt)->f2 & BEZT_FLAG_SELECT) && ((bezt)->f1 & BEZT_FLAG_SELECT) && ((bezt)->f3 & BEZT_FLAG_SELECT))
+
 #define BEZT_IS_AUTOH(bezt) (ELEM((bezt)->h1, HD_AUTO, HD_AUTO_ANIM) && ELEM((bezt)->h2, HD_AUTO, HD_AUTO_ANIM))
 
 /** #BezTriple->type */

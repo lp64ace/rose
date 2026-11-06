@@ -50,6 +50,8 @@ public:
 	void Show();
 	void Hide();
 
+	bool HasInputFocus() const;
+
 	int GetState(void) const;
 	void GetPos(int *x, int *y) const;
 	void GetSize(int *w, int *h) const;

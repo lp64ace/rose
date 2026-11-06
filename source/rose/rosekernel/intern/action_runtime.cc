@@ -108,7 +108,7 @@ void KER_action_slot_foreach_id(ActionSlot *slot, struct LibraryForeachIDData *d
 
 		Main *main = KER_lib_query_foreachid_process_main_get(data);
 		if (should_invalidate) {
-			KER_action_slot_runtime_users_invalidate(slot, main);
+			KER_action_slot_runtime_users_invalidate(main);
 		}
 	}
 }
@@ -133,7 +133,7 @@ void KER_action_slot_runtime_users_remove(const ActionSlot *slot, ID *id) {
 	runtime->users.remove_if([&](const ID *user) { return user == id; });
 }
 
-void KER_action_slot_runtime_users_invalidate(ActionSlot *slot, Main *main) {
+void KER_action_slot_runtime_users_invalidate(Main *main) {
 	main->is_action_slot_to_id_map_dirty = true;
 }
 

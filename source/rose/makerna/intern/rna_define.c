@@ -555,6 +555,18 @@ void RNA_def_struct_refine_func(StructRNA *srna, const char *func) {
 	}
 }
 
+void RNA_def_struct_path_func(StructRNA *srna, const char *path) {
+	if (!DefRNA.preprocess) {
+		/* we should never get here */
+		fprintf(stderr, "[RNA] #%s is only at preprocess time.\n", __func__);
+		return;
+	}
+
+	if (path) {
+		srna->path = (StructPathFunc)path;
+	}
+}
+
 void RNA_def_struct_idprops_func(StructRNA *srna, const char *idproperties) {
 	if (!DefRNA.preprocess) {
 		fprintf(stderr, "[RNA] #%s is available only during preprocessing.\n", __func__);
@@ -627,6 +639,7 @@ const char *RNA_property_type_subtypename(ePropertySubType type) {
 		case RNA_SUBTYPE_VALUE(PROP_COLOR): return "PROP_COLOR";
 		case RNA_SUBTYPE_VALUE(PROP_TRANSLATION): return "PROP_TRANSLATION";
 		case RNA_SUBTYPE_VALUE(PROP_EULER): return "PROP_EULER";
+		case RNA_SUBTYPE_VALUE(PROP_QUATERNION): return "PROP_QUATERNION";
 		case RNA_SUBTYPE_VALUE(PROP_AXISANGLE): return "PROP_AXISANGLE";
 		case RNA_SUBTYPE_VALUE(PROP_XYZ): return "PROP_XYZ";
 		case RNA_SUBTYPE_VALUE(PROP_XYZ_LENGTH): return "PROP_XYZ_LENGTH";
@@ -778,14 +791,14 @@ ROSE_INLINE void rna_def_property_boolean_sdna(PropertyRNA *property, const char
 	uint bit_index = 0;
 	if (length > 1) {
 		if (booleanbit <= 0) {
-			fprintf(stderr, "%s.%s is using a null or negative 'booleanbit' value of " PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
+			fprintf(stderr, "%s.%s is using a null or negative 'booleanbit' value of %" PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
 			DefRNA.error = true;
 			return;
 		}
 
 		bit_index = _lib_forward_scan_u64(*(const uint64_t *)(&booleanbit));
 		if ((booleanbit & ~(1 << bit_index)) != 0) {
-			fprintf(stderr, "[RNA] %s.%s is using a multi-bit 'booleanbit' value of " PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
+			fprintf(stderr, "[RNA] %s.%s is using a multi-bit 'booleanbit' value of %" PRId64 ", which is invalid for 'bitset arrays' boolean properties.\n", nstruct->identifier, property->identifier, booleanbit);
 			DefRNA.error = true;
 			return;
 		}

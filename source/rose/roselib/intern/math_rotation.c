@@ -210,6 +210,14 @@ void mul_qt_v3(const float q[4], float r[3]) {
 	r[1] = t2;
 }
 
+void pow_qt_fl_normalized(float q[4], float fac) {
+	const float angle = fac * acosf(ROSE_MAX(ROSE_MIN(q[0], 1.0f), -1.0f));
+	const float co = cosf(angle);
+	const float si = sinf(angle);
+	q[0] = co;
+	normalize_v3_length(q + 1, si);
+}
+
 void conjugate_qt(float q[4]) {
 	q[1] = -q[1];
 	q[2] = -q[2];

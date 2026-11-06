@@ -306,6 +306,17 @@ void GTK_window_size(struct GTKWindow *vwindow, int *w, int *h) {
 	return window->GetSize(w, h);
 }
 
+int GTK_window_key_state(struct GTKWindowManager *vmanager, struct GTKWindow *vwindow, int key) {
+	GTKManagerInterface *manager = reinterpret_cast<GTKManagerInterface *>(vmanager);
+	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
+
+	if (window && !window->HasInputFocus()) {
+		return 0;
+	}
+
+	return manager->GetKeyState(key);
+}
+
 void GTK_window_show(struct GTKWindow *vwindow) {
 	GTKWindowInterface *window = reinterpret_cast<GTKWindowInterface *>(vwindow);
 

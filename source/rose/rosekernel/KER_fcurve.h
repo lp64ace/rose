@@ -2,9 +2,11 @@
 #define KER_FCURVE_H
 
 #include "DNA_anim_types.h"
+#include "DNA_curve_types.h"
 
 #include "RNA_define.h"
 
+struct FModifier;
 struct RoseDataReader;
 struct RoseWriter;
 
@@ -41,11 +43,17 @@ typedef struct FCurveDescriptor {
 struct FCurve *KER_fcurve_new(void);
 struct FCurve *KER_fcurve_copy(const struct FCurve *fcurve);
 
+void KER_fcurves_copy(ListBase *dst, const ListBase *src);
+
 void KER_fcurves_free(struct ListBase *list);
 void KER_fcurve_free(struct FCurve *fcurve);
+void KER_fcurve_modifier_free(struct ListBase *modifiers, struct FModifier *modifier);
+void KER_fcurve_modifiers_free(struct ListBase *modifiers);
 
 void KER_fcurve_rose_read_data(struct RoseDataReader *reader, struct FCurve *fcurve);
+void KER_fcurve_rose_read_data_listbase(struct RoseDataReader *reader, struct ListBase *fcurves);
 void KER_fcurve_rose_write_data(struct RoseWriter *writer, struct FCurve *fcurve);
+void KER_fcurves_rose_write_data(struct RoseWriter *writer, struct ListBase *fcurves);
 
 /** \} */
 
@@ -53,7 +61,13 @@ void KER_fcurve_rose_write_data(struct RoseWriter *writer, struct FCurve *fcurve
 /** \name F-Curve Evaluate
  * \{ */
 
-float KER_fcurve_evaluate(struct PathResolvedRNA *rna, struct FCurve *fcurve, float ctime);
+ /**
+ * Calculate the x range of the given F-Curve's data.
+ * \return true if a range has been found.
+ */
+bool KER_fcurve_calc_range(const FCurve *fcurve, float *r_min, float *r_max, bool selected_keys_only);
+
+float KER_fcurve_evaluate(struct PathResolvedRNA *rna, const struct FCurve *fcurve, float ctime);
 
 /** \} */
 

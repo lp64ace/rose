@@ -77,6 +77,36 @@ void KER_mesh_eval_geometry(Depsgraph *depsgraph, Mesh *mesh) {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Derived Mesh Data
+ * \{ */
+
+void KER_mesh_vert_coords_get(const Mesh *mesh, float (*r_coords)[3]) {
+	const float (*coords)[3] = KER_mesh_vert_positions(mesh);
+	for (int i = 0; i < mesh->totvert; i++) {
+		copy_v3_v3(r_coords[i], coords[i]);
+	}
+}
+
+float (*KER_mesh_vert_coords_alloc(const Mesh *mesh, int *r_length))[3] {
+	float(*vert_coords)[3] = (float(*)[3])MEM_mallocN(sizeof(float[3]) * mesh->totvert, __func__);
+	KER_mesh_vert_coords_get(mesh, vert_coords);
+	if (r_length) {
+		*r_length = mesh->totvert;
+	}
+	return vert_coords;
+}
+
+void KER_mesh_vert_coords_apply(Mesh *mesh, const float (*new_coords)[3]) {
+	float (*coords)[3] = KER_mesh_vert_positions_for_write(mesh);
+	for (int i = 0; i < mesh->totvert; i++) {
+		copy_v3_v3(coords[i], new_coords[i]);
+	}
+	KER_mesh_normals_tag_dirty(mesh);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Mesh Geometry
  * \{ */
 
@@ -261,9 +291,6 @@ ROSE_STATIC void mesh_rose_write(RoseWriter *writer, ID *id, const void *address
 ROSE_STATIC void mesh_rose_read_data(RoseDataReader *reader, ID *id) {
 	Mesh *mesh = (Mesh *)id;
 	
-	RLO_read_data_address(reader, &mesh->adt);
-	KER_animdata_rose_read_data(reader, mesh->adt);
-
 	RLO_read_struct_list(reader, DeformGroup, &mesh->vertex_group_names);
 
 	CustomData_rose_read(reader, &mesh->vdata, mesh->totvert);

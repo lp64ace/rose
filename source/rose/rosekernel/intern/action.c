@@ -9,6 +9,9 @@
 #include "KER_main.h"
 #include "KER_object.h"
 
+#include "DEG_depsgraph.h"
+#include "DEG_depsgraph_query.h"
+
 #include "LIB_ghash.h"
 #include "LIB_hash_mm2a.h"
 #include "LIB_listbase.h"
@@ -35,6 +38,20 @@ bool KER_id_foreach_action_slot_use(ID *animated, fnActionSlotCallback callback,
 
 	return true;
 }
+
+/* -------------------------------------------------------------------- */
+/** \name ID Utilities
+ * \{ */
+
+void KER_action_restart(Scene *scene, ID *id) {
+	AnimData *adt = KER_animdata_from_id(id);
+	if (!adt) {
+		return;
+	}
+	adt->stime = KER_scene_frame_get(scene);
+}
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Action Layer
@@ -372,7 +389,36 @@ bool KER_action_assign(Action *action, ID *id) {
 	if (!adt) {
 		return false;
 	}
-	return generic_assign_action(id, action, &adt->action, &adt->handle);
+	if (!generic_assign_action(id, action, &adt->action, &adt->handle)) {
+		return false;
+	}
+	return true;
+}
+
+bool KER_action_assign_nla(NlaStrip *strip, Action *action, ID *id) {
+	if (!generic_assign_action(id, action, &strip->action, &strip->handle)) {
+		return false;
+	}
+
+	if (strip->handle == 0 && action->totslot == 1) {
+		ActionSlot *first_slot = action->slots[0];
+		if (KER_action_slot_suitable_for_id(first_slot, id)) {
+			bool result = generic_assign_action_slot(first_slot, id, &strip->action, &strip->handle);
+			ROSE_assert(result);
+		}
+	}
+
+	/* Regardless of slot auto-selection, the Action assignment worked just fine. */
+	return true;
+}
+
+bool KER_action_assign_nla_ex(NlaStrip *strip, Action *action, int handle, ID *id) {
+	ActionSlot *slot = KER_action_slot_for_handle(action, handle);
+	if (!KER_action_slot_suitable_for_id(slot, id)) {
+		return false;
+	}
+
+	return generic_assign_action_slot(slot, id, &strip->action, &strip->handle);
 }
 
 bool KER_action_slot_assign(ActionSlot *slot, ID *id) {
@@ -380,11 +426,21 @@ bool KER_action_slot_assign(ActionSlot *slot, ID *id) {
 	if (!adt) {
 		return false;
 	}
-	return generic_assign_action_slot(slot, id, &adt->action, &adt->handle);
+	if (!generic_assign_action_slot(slot, id, &adt->action, &adt->handle)) {
+		return false;
+	}
+	return true;
 }
 
 bool KER_action_is_layered(const Action *action) {
 	if (action->totlayer > 0 || action->totslot > 0) {
+		return true;
+	}
+	return false;
+}
+
+bool KER_action_is_cyclic(const Action *action) {
+	if (action && (action->flag & ACT_FRAME_RANGE) != 0 && (action->flag & ACT_CYCLIC) != 0) {
 		return true;
 	}
 	return false;
@@ -449,6 +505,44 @@ ActionSlot *KER_action_slot_add_for_idtype(struct Action *action, short idtype) 
 	LIB_strcpy(nslot->identifier + 2, ARRAY_SIZE(nslot->identifier) - 2, ACTION_SLOT_DEFAULT_NAME);
 
 	return nslot;
+}
+
+ROSE_STATIC void get_frame_range_of_fcurves(FCurve **fcurves, int totcurve, float *r_start, float *r_end, const bool include_modifiers) {
+	float min = 999999999.0f, max = -999999999.0f;
+	bool foundvert = false, foundmod = false;
+
+	for (FCurve **itr = fcurves; itr != fcurves + totcurve; itr++) {
+		FCurve *fcurve = *itr;
+
+		if (fcurve->totvert) {
+			float nmin, nmax;
+
+			KER_fcurve_calc_range(fcurve, &nmin, &nmax, false);
+
+			min = ROSE_MIN(min, nmin);
+			max = ROSE_MAX(max, nmax);
+			foundvert = true;
+		}
+	}
+
+	*r_start = 0.0f;
+	*r_end = 0.0f;
+
+	if (foundvert != false || foundmod != false) {
+		*r_start = min;
+		*r_end = max;
+	}
+}
+
+void KER_action_slot_get_frame_range(Action *action, int slot, float *r_start, float *r_end) {
+	if (action->flag & ACT_FRAME_RANGE) {
+		*r_start = action->frame_start;
+		*r_end = action->frame_end;
+		return;
+	}
+
+	ActionChannelBag *bag = KER_action_channelbag_for_action_slot_ex(action, slot);
+	get_frame_range_of_fcurves(bag->fcurves, bag->totcurve, r_start, r_end, false);
 }
 
 void KER_action_slot_identifier_define(Action *action, ActionSlot *slot, const char *name) {

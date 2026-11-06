@@ -536,6 +536,8 @@ ROSE_STATIC void direct_link_id_common(RoseDataReader *reader, Library *curlib, 
 	id->newid = NULL; /* Needed because .rose may have been saved with crap value here... */
 	id->orig_id = NULL;
 
+	KER_animdata_rose_read_data(reader, id);
+
 	if (id->properties) {
 		RLO_read_data_address(reader, &id->properties);
 		IDP_RoseReadData(reader, &id->properties, __func__);

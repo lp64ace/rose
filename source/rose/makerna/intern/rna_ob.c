@@ -25,7 +25,7 @@ void rna_def_Object(RoseRNA *rna) {
 		} while (false);
 
 		do {
-			PropertyRNA *quat = RNA_def_property(object, "quaternion", PROP_FLOAT, PROP_NONE);
+			PropertyRNA *quat = RNA_def_property(object, "quaternion", PROP_FLOAT, PROP_QUATERNION);
 			RNA_def_property_float_sdna(quat, NULL, "quat");
 			RNA_def_property_float_array_default(quat, rna_default_quaternion);
 			RNA_def_property_ui_text(quat, "Quaternion Rotation", "Rotation in Quaternions");

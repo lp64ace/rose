@@ -2,15 +2,21 @@
 
 #include "LIB_listbase.h"
 
+#include "DEG_depsgraph_build.h"
+
 #include "KER_armature.h"
 #include "KER_lib_query.h"
 #include "KER_object.h"
 #include "KER_mesh.h"
 
-ROSE_STATIC void deform_foreach_id(ModifierData *md, Object *ob, IDWalkFunc walk, void *user_data) {
-	ArmatureModifierData *amd = (ArmatureModifierData *)md;
+#include "GPU_info.h"
 
-	walk(user_data, ob, (ID **)&amd->object, IDWALK_CB_NOP);
+void KER_armature_modifier_copy_data(const ArmatureModifierData *source, ArmatureModifierData *target, int flag) {
+	target->object = source->object;
+}
+
+ROSE_STATIC void deform_copy_data(const ModifierData *source, ModifierData *target, int flag) {
+	KER_armature_modifier_copy_data((const ArmatureModifierData *)source, (ArmatureModifierData *)target, flag);
 }
 
 ROSE_STATIC void deform_verts(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh, float (*positions)[3], size_t length) {
@@ -19,12 +25,28 @@ ROSE_STATIC void deform_verts(ModifierData *md, const ModifierEvalContext *ctx, 
 	KER_armature_deform_coords_with_mesh(amd->object, ctx->object, positions, length, mesh);
 }
 
-void KER_armature_modifier_copy_data(const ArmatureModifierData *source, ArmatureModifierData *target, int flag) {
-	target->object = source->object;
+ROSE_STATIC void update_depsgraph(ModifierData *md, const ModifierUpdateDepsgraphContext *ctx) {
+	ArmatureModifierData *amd = (ArmatureModifierData *)md;
+
+	if (amd->object != NULL) {
+		DEG_add_object_relation(ctx->node, amd->object, DEG_OB_COMP_EVAL_POSE, "Armature Modifier");
+		DEG_add_object_relation(ctx->node, amd->object, DEG_OB_COMP_TRANSFORM, "Armature Modifier");
+	}
+	DEG_add_depends_on_transform_relation(ctx->node, "Armature Modifier");
 }
 
-ROSE_STATIC void deform_copy_data(const ModifierData *source, ModifierData *target, int flag) {
-	KER_armature_modifier_copy_data((const ArmatureModifierData *)source, (ArmatureModifierData *)target, flag);
+ROSE_STATIC bool supports_device_only(ModifierData *md) {
+	if (!GPU_get_info_i(GPU_INFO_COMPUTE_SHADER_SUPPORT)) {
+		return false;
+	}
+
+	return true;
+}
+
+ROSE_STATIC void deform_foreach_id(ModifierData *md, Object *ob, IDWalkFunc walk, void *user_data) {
+	ArmatureModifierData *amd = (ArmatureModifierData *)md;
+
+	walk(user_data, ob, (ID **)&amd->object, IDWALK_CB_NOP);
 }
 
 ModifierTypeInfo MODType_ARMATURE = {
@@ -42,6 +64,8 @@ ModifierTypeInfo MODType_ARMATURE = {
 
 	.init_data = NULL,
 	.free_data = NULL,
+	.update_depsgraph = update_depsgraph,
+	.supports_device_only = supports_device_only,
 	.depends_on_time = NULL,
 	.depends_on_normals = NULL,
 	.foreach_ID_link = deform_foreach_id,

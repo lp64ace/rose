@@ -67,7 +67,7 @@ enum {
 	KM_PRESS = 1,
 	KM_RELEASE = 2,
 	KM_CLICK = 3,
-	KM_DBL_CLICK = 3,
+	KM_DBL_CLICK = 4,
 	/**
 	 * \note The cursor location at the point dragging start is set to #wmEvent->old.[xy]
 	 *

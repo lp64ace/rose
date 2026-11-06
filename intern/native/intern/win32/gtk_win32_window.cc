@@ -107,6 +107,10 @@ void GTKWindowWin32::Hide() {
 	ShowWindow(this->hwnd, SW_HIDE);
 }
 
+bool GTKWindowWin32::HasInputFocus() const {
+	return (GetForegroundWindow() == this->hwnd);
+}
+
 static HCURSOR GetStandardCursor(int shape) {
 	UINT flags = LR_SHARED | LR_DEFAULTSIZE;
 
@@ -342,7 +346,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, unsigned int message, WPARAM wparam,
 					bool keydown = !(raw.data.keyboard.Flags & RI_KEY_BREAK) && msg != WM_KEYUP && msg != WM_SYSKEYUP;
 					bool repeat = false;
 
-					int tiny_window_key = ConvertInputKey(virtual_key, make_code, flags & (RI_KEY_E1 | RI_KEY_E0));
+					int tiny_window_key = ConvertToInputKey(virtual_key, make_code, flags & (RI_KEY_E1 | RI_KEY_E0));
 
 					if (keydown) {
 						if (HIBYTE(GetKeyState(virtual_key)) != 0) {

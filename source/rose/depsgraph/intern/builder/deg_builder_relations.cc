@@ -14,6 +14,7 @@
 #include "KER_idprop.h"
 #include "KER_mesh.hh"
 #include "KER_modifier.h"
+#include "KER_nla.h"
 #include "KER_object.h"
 
 #include "LIB_listbase.h"
@@ -242,7 +243,7 @@ void DepsgraphRelationBuilder::build_animdata_curves(ID *id) {
 	if (adt->action != nullptr) {
 		build_action(adt->action);
 	}
-	if (adt->action == nullptr) {
+	if (adt->action == nullptr && LIB_listbase_is_empty(&adt->nla_tracks)) {
 		return;
 	}
 
@@ -273,6 +274,13 @@ void DepsgraphRelationBuilder::build_animdata_curves(ID *id) {
 		if ((bag = KER_action_channelbag_for_action_slot_ex(adt->action, adt->handle))) {
 			build_animdata_curves_targets(id, adt_key, operation_from, bag->fcurves, bag->totcurve);
 		}
+	}
+	LISTBASE_FOREACH (NlaTrack *, track, &adt->nla_tracks) {
+		if (!KER_nla_track_is_enabled(adt, track)) {
+			continue;
+		}
+
+		build_animdata_nla_strip_targets(id, adt_key, operation_from, &track->strips);
 	}
 }
 void DepsgraphRelationBuilder::build_animdata_curves_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, FCurve **curves, int totcurve) {
@@ -307,6 +315,54 @@ void DepsgraphRelationBuilder::build_animdata_curves_targets(ID *id, ComponentKe
 		if (id_node_from != id_node_to) {
 			ComponentKey cow_key(id_node_to->id_orig, NodeType::COPY_ON_WRITE);
 			add_relation(cow_key, adt_key, "Animated CoW -> Animation", RELATION_CHECK_BEFORE_ADD | RELATION_FLAG_NO_FLUSH);
+		}
+	}
+}
+
+void DepsgraphRelationBuilder::build_animdata_nla_strip_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, ListBase *strips) {
+	LISTBASE_FOREACH (NlaStrip *, strip, strips) {
+		if (strip->action != NULL) {
+			build_action(strip->action);
+
+			ComponentKey action_key(&strip->action->id, NodeType::ANIMATION);
+			add_relation(action_key, adt_key, "Action -> Animation");
+
+			build_animdata_action_targets(id, adt_key, operation_from, strip->action, strip->handle);
+		}
+		else {
+			build_animdata_nla_strip_targets(id, adt_key, operation_from, &strip->strips);
+		}
+	}
+}
+
+void DepsgraphRelationBuilder::build_animdata_action_targets(ID *id, ComponentKey &adt_key, OperationNode *operation_from, Action *action, int handle) {
+	ROSE_assert(id != NULL);
+	ROSE_assert(operation_from != NULL);
+	ROSE_assert(action != NULL);
+
+	ActionSlot *slot = KER_action_slot_for_handle(action, handle);
+	if (slot == NULL) {
+		return;
+	}
+
+	for (ActionLayer **layer_p = action->layers; layer_p != action->layers + action->totlayer; layer_p++) {
+		ActionLayer *layer = *layer_p;
+
+		for (ActionStrip **strip_p = layer->strips; strip_p != layer->strips + layer->totstrip; strip_p++) {
+			ActionStrip *strip = *strip_p;
+
+			switch (strip->strip_type) {
+				case ACTION_STRIP_KEYFRAME: {
+					ActionStripKeyframeData *strip_data = KER_action_strip_data(action, strip);
+					ActionChannelBag *bag = KER_action_channelbag_for_action_slot(action, slot);
+
+					if (bag == NULL) {
+						break;
+					}
+
+					build_animdata_curves_targets(id, adt_key, operation_from, bag->fcurves, bag->totcurve);
+				} break;
+			}
 		}
 	}
 }
@@ -423,12 +479,9 @@ void DepsgraphRelationBuilder::build_object(Object *object) {
 		/* Local -> parent. */
 		add_relation(local_transform_key, parent_transform_key, "ObLocal -> ObParent");
 	}
+
 	/* Modifiers. */
-	if (object->modifiers.first != nullptr) {
-		BuilderWalkUserData data;
-		data.builder = this;
-		KER_modifiers_foreach_ID_link(object, modifier_walk, &data);
-	}
+	build_object_modifiers(object);
 
 	add_relation(base_op_key, ob_eval_key, "Eval");
 	add_relation(ob_eval_key, final_transform_key, "Eval -> Final Transform");
@@ -443,6 +496,54 @@ void DepsgraphRelationBuilder::build_object(Object *object) {
 	add_relation(final_transform_key, synchronize_key, "Synchronize to Original");
 	/* Parameters. */
 	build_parameters(&object->id);
+}
+
+void DepsgraphRelationBuilder::build_object_modifiers(Object *object) {
+	if (LIB_listbase_is_empty(&object->modifiers)) {
+		return;
+	}
+
+
+	const OperationKey eval_init_key(&object->id, NodeType::GEOMETRY, OperationCode::GEOMETRY_EVAL_INIT);
+	const OperationKey eval_key(&object->id, NodeType::GEOMETRY, OperationCode::GEOMETRY_EVAL);
+
+	ModifierUpdateDepsgraphContext ctx = {};
+	ctx.scene = scene_;
+	ctx.object = object;
+
+	OperationKey previous_key = eval_init_key;
+	LISTBASE_FOREACH (ModifierData *, md, &object->modifiers) {
+		const OperationKey modifier_key(&object->id, NodeType::GEOMETRY, OperationCode::MODIFIER, md->name);
+
+		/* Relation for the modifier stack chain. */
+		add_relation(previous_key, modifier_key, "Modifier");
+
+		const ModifierTypeInfo *mti = KER_modifier_get_info(eModifierType(md->type));
+		if ((md->flag & MODIFIER_DEVICE_ONLY) != 0) {
+			if (mti->supports_device_only && mti->supports_device_only(md)) {
+				continue;
+			}
+		}
+		
+		if (mti->update_depsgraph) {
+			DepsNodeHandle handle = create_node_handle(modifier_key);
+			ctx.node = reinterpret_cast<::DepsNodeHandle *>(&handle);
+			mti->update_depsgraph(md, &ctx);
+
+			/* Time dependency. */
+			if (KER_modifier_depends_ontime(scene_, md)) {
+				const TimeSourceKey time_src_key;
+				add_relation(time_src_key, modifier_key, "Time Source -> Modifier");
+			}
+
+			previous_key = modifier_key;
+		}
+	}
+	add_relation(previous_key, eval_key, "modifier stack order");
+
+	BuilderWalkUserData data;
+	data.builder = this;
+	KER_modifiers_foreach_ID_link(object, modifier_walk, &data);
 }
 
 void DepsgraphRelationBuilder::build_object_dimensions(Object *object) {
@@ -634,17 +735,11 @@ void DepsgraphRelationBuilder::build_object_data_geometry(Object *object) {
 	/* Link components to each other. */
 	add_relation(obdata_geom_key, geom_key, "Object Geometry Base Data");
 	OperationKey obdata_ubereval_key(&object->id, NodeType::GEOMETRY, OperationCode::GEOMETRY_EVAL);
-	/* Modifiers */
-	if (object->modifiers.first != nullptr) {
-		LISTBASE_FOREACH(ModifierData *, md, &object->modifiers) {
-			const ModifierTypeInfo *mti = KER_modifier_get_info((eModifierType)md->type);
-
-			// TODO;
-		}
-	}
-	/* Make sure uber update is the last in the dependencies. */
-	if (object->type != OB_ARMATURE) {
-		/* Armatures does no longer require uber node. */
+	/**
+	 * Make sure uber update is the last in the dependencies.
+	 * Only do it here unless there are modifiers. This avoids transitive relations.
+	 */
+	if (LIB_listbase_is_empty(&object->modifiers)) {
 		OperationKey obdata_ubereval_key(&object->id, NodeType::GEOMETRY, OperationCode::GEOMETRY_EVAL);
 		add_relation(geom_init_key, obdata_ubereval_key, "Object Geometry UberEval");
 	}
@@ -784,6 +879,18 @@ OperationNode *DepsgraphRelationBuilder::find_node(const OperationKey &key) cons
 
 bool DepsgraphRelationBuilder::has_node(const OperationKey &key) const {
 	return find_node(key) != nullptr;
+}
+
+void DepsgraphRelationBuilder::add_depends_on_transform_relation(const DepsNodeHandle *handle, const char *description) {
+	IDNode *id_node = handle->node->owner->owner;
+	ID *id = id_node->id_orig;
+	const OperationKey geometry_key(id, NodeType::GEOMETRY, OperationCode::MODIFIER, handle->node->name.c_str());
+	/* Wire up the actual relation. */
+	add_depends_on_transform_relation(id, geometry_key, description);
+}
+
+template<typename KeyType> DepsNodeHandle DepsgraphRelationBuilder::create_node_handle(const KeyType &key, const char *default_name) {
+	return DepsNodeHandle(this, get_node(key), default_name);
 }
 
 Relation *DepsgraphRelationBuilder::add_time_relation(TimeSourceNode *timesrc, Node *node_to, const char *description, int flags) {

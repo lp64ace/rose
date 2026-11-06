@@ -63,6 +63,7 @@ void RNA_path_free(struct StaticPathRNA *path);
  * \{ */
 
 ePropertyType RNA_property_type(const struct PropertyRNA *property);
+ePropertySubType RNA_property_subtype(const struct PropertyRNA *property);
 bool RNA_property_is_idprop(const struct PropertyRNA *property);
 
 /**

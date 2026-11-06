@@ -13,6 +13,7 @@ struct Armature;
 struct FCurveDescriptor;
 struct Main;
 struct Object;
+struct Scene;
 struct Pose;
 struct PoseChannel;
 struct RoseDataReader;
@@ -26,6 +27,14 @@ extern "C" {
 typedef bool (*fnActionSlotCallback)(struct ID *animated, const struct Action *action, int handle, void *userdata);
 
 bool KER_id_foreach_action_slot_use(struct ID *animated, fnActionSlotCallback callback, void *userdata);
+
+/* -------------------------------------------------------------------- */
+/** \name ID Utilities
+ * \{ */
+
+void KER_action_restart(struct Scene *scene, struct ID *id);
+
+/** \} */
 
 /* -------------------------------------------------------------------- */
 /** \name Action Layer
@@ -70,12 +79,15 @@ struct ActionChannelBag *KER_action_strip_keyframe_data_ensure_channelbag_for_sl
 
 void KER_action_keystrip_ensure(struct Action *action);
 bool KER_action_assign(struct Action *action, struct ID *id);
+bool KER_action_assign_nla(struct NlaStrip *strip, struct Action *action, struct ID *id);
+bool KER_action_assign_nla_ex(struct NlaStrip *strip, struct Action *action, int handle, struct ID *id);
 
 /**
  * This is a valid layered Action if there is ANY layered info (because that
  * takes precedence) or when there is no legacy info.
  */
 bool KER_action_is_layered(const struct Action *action);
+bool KER_action_is_cyclic(const struct Action *action);
 
 bool KER_action_has_slot(const struct Action *action, const struct ActionSlot *slot);
 
@@ -92,6 +104,8 @@ struct ActionSlot *KER_action_slot_for_handle(struct Action *action, int handle)
 
 /** Allocates and append a new action slot for the specified #Action. */
 struct ActionSlot *KER_action_slot_add_for_idtype(struct Action *action, short idtype);
+
+void KER_action_slot_get_frame_range(struct Action *action, int slot, float *r_start, float *r_end);
 
 void KER_action_slot_identifier_define(struct Action *action, struct ActionSlot *slot, const char *name);
 void KER_action_slot_setup_for_id(struct ActionSlot *slot, const struct ID *id);
@@ -111,7 +125,7 @@ void KER_action_slot_foreach_id(ActionSlot *slot, struct LibraryForeachIDData *d
 void KER_action_slot_runtime_init(struct ActionSlot *slot);
 void KER_action_slot_runtime_users_add(const struct ActionSlot *slot, struct ID *id);
 void KER_action_slot_runtime_users_remove(const struct ActionSlot *slot, struct ID *id);
-void KER_action_slot_runtime_users_invalidate(struct ActionSlot *slot, struct Main *main);
+void KER_action_slot_runtime_users_invalidate(struct Main *main);
 void KER_action_slot_runtime_free(struct ActionSlot *slot);
 
 /** \} */

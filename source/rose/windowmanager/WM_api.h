@@ -262,6 +262,8 @@ int WM_userdef_event_type_from_keymap_type(int kmitype);
 void WM_event_drag_start_mval(const struct wmEvent *event, const struct ARegion *region, int r_mval[2]);
 void WM_event_drag_start_mval_fl(const struct wmEvent *event, const struct ARegion *region, float r_mval[2]);
 
+int WM_event_key(struct rContext *C, int key);
+
 /** \} */
 
 #ifdef __cplusplus

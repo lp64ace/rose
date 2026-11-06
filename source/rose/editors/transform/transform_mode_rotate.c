@@ -31,7 +31,7 @@ typedef struct RotateMatrixCache {
 	 * we also need another update on next iteration to go back to default matrix,
 	 * hence the '2' value used here, instead of a mere boolean).
 	 */
-	unsigned int do_update_matrix : 1;
+	unsigned int do_update_matrix : 2;
 	float mat[3][3];
 } RotateMatrixCache;
 
@@ -143,8 +143,6 @@ void ED_transform_mode_rotation_apply_element(const TransInfo *t, const TransDat
 
 	ED_transform_mode_rotation_apply_element_ex(t, tc, td, mat, center);
 }
-
-#include <stdio.h>
 
 void ED_transform_mode_rotation_apply_ex(const TransInfo *t, const TransDataContainer *tc, TransData *td, const float axis[3], const float angle, const float step, const bool is_large_rotation, struct RotateMatrixCache *rmc) {
 	float t_axis[3];

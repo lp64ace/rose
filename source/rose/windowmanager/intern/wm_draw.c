@@ -455,7 +455,7 @@ void wm_window_update_animation_time(WindowManager *wm, wmWindow *window) {
 	window->fps = 1.0f / (float)dt;
 
 	/** 30 frames per second updates for the statistics. */
-	if (t - window->runtime.last_frame_statistics_reset_time >= 0.5f) {
+	if (t - window->runtime.last_frame_statistics_reset_time >= 0.25f) {
 		double duration = t - window->runtime.last_frame_statistics_reset_time;
 		memcpy(&window->runtime.last, &window->runtime.next, sizeof(window->runtime.last));
 		window->runtime.last_frame_statistics_reset_time = t;
@@ -483,14 +483,24 @@ void wm_window_update_animation_time(WindowManager *wm, wmWindow *window) {
 static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowManager *wm, wmWindow *win, bool allow_always_redraw) {
 	Screen *screen = WM_window_get_active_screen(win);
 	bool do_draw = false;
+	bool do_time = false;
+
+	double t = GTK_elapsed_time(wm->handle);
+
+	if (win->maxfps != 0.0f) {
+		do_time = t - win->last_draw >= 1.0f / win->maxfps;
+	}
+	else {
+		do_time = true;
+	}
 
 	LISTBASE_FOREACH(ARegion *, region, &screen->regionbase) {
 		if (region->visible && (region->flag & RGN_FLAG_REDRAW) != 0) {
-			do_draw = true;
+			do_draw = do_time;
 		}
-		if (allow_always_redraw) {
-			if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
-				do_draw = true;
+		if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+			if (allow_always_redraw) {
+				do_draw = do_time;
 			}
 		}
 	}
@@ -498,11 +508,11 @@ static bool wm_draw_update_test_window_internal(Main *main, rContext *C, WindowM
 	ED_screen_areas_iter(win, screen, area) {
 		LISTBASE_FOREACH(ARegion *, region, &area->regionbase) {
 			if (region->visible && (region->flag & RGN_FLAG_REDRAW) != 0) {
-				do_draw = true;
+				do_draw = do_time;
 			}
-			if (allow_always_redraw) {
-				if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
-					do_draw = true;
+			if (region->visible && (region->flag & RGN_FLAG_ALWAYS_REDRAW) != 0) {
+				if (allow_always_redraw) {
+					do_draw = do_time;
 				}
 			}
 		}

@@ -47,6 +47,7 @@ const char *DEG_operation_code_as_string(OperationCode opcode) {
 		case OperationCode::RIGIDBODY_TRANSFORM_COPY: return "RIGIDBODY_TRANSFORM_COPY";
 		/* Geometry. */
 		case OperationCode::GEOMETRY_EVAL_INIT: return "GEOMETRY_EVAL_INIT";
+		case OperationCode::MODIFIER: return "MODIFIER";
 		case OperationCode::GEOMETRY_EVAL: return "GEOMETRY_EVAL";
 		case OperationCode::GEOMETRY_EVAL_DONE: return "GEOMETRY_EVAL_DONE";
 		case OperationCode::GEOMETRY_SHAPEKEY: return "GEOMETRY_SHAPEKEY";
