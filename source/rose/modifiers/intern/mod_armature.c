@@ -40,7 +40,7 @@ ROSE_STATIC bool supports_device_only(ModifierData *md) {
 		return false;
 	}
 
-	return false;
+	return true;
 }
 
 ROSE_STATIC void deform_foreach_id(ModifierData *md, Object *ob, IDWalkFunc walk, void *user_data) {

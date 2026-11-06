@@ -434,7 +434,7 @@ ROSE_STATIC NlaEvalChannelSnapshot *nla_eval_snapshot_find_channel(NlaEvalSnapsh
 
 /* Retrieve or create the channel value snapshot, copying from the other snapshot (or default values) */
 ROSE_STATIC NlaEvalChannelSnapshot *nla_eval_snapshot_ensure_channel(NlaEvalSnapshot *snapshot, NlaEvalChannel *nec) {
-  NlaEvalChannelSnapshot **slot = nla_eval_snapshot_ensure_slot(snapshot, nec);
+	NlaEvalChannelSnapshot **slot = nla_eval_snapshot_ensure_slot(snapshot, nec);
 
 	if (*slot == nullptr) {
 		NlaEvalChannelSnapshot *base_snapshot, *nec_snapshot;
@@ -447,7 +447,7 @@ ROSE_STATIC NlaEvalChannelSnapshot *nla_eval_snapshot_ensure_channel(NlaEvalSnap
 		*slot = nec_snapshot;
 	}
 
-  return *slot;
+	return *slot;
 }
 
 /* Free all memory owned by this blending snapshot structure. */
